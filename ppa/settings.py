@@ -28,12 +28,15 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'grappelli',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_cas_ng',
+    'pucas',
 ]
 
 MIDDLEWARE = [
@@ -46,12 +49,19 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'django_cas_ng.backends.CASBackend',
+)
+
 ROOT_URLCONF = 'ppa.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, "templates")
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -117,6 +127,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 
+GRAPPELLI_ADMIN_TITLE = 'Princeton Prosody Archive Admin'
+
+
 # PUCAS configuration for CAS/LDAP login and user provisioning.
 # Only includes non-sensitive configurations that do not change
 PUCAS_LDAP = {
@@ -154,3 +167,13 @@ if os.path.exists(f):
     module.__file__ = f
     sys.modules[module_name] = module
     exec(open(f, "rb").read())
+
+
+# if in debug mode and django-debug-toolbar is available, add to installed apps
+if DEBUG:
+    try:
+        import debug_toolbar
+        INSTALLED_APPS.append('debug_toolbar')
+        MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
+    except ImportError:
+        pass
