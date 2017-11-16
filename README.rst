@@ -34,4 +34,17 @@ Initial setup and installation:
 
     python manage.py migrate
 
+- Create a new Solr core with a basic configuration and managed schema
+  (you can copy `configsets/basic_configs/` configuration files included with
+  Solr), and then run a manage command to add schema fields::
+
+    python manage.py solr_schema
+
+  Reload the core to ensure schema changes take effect.
+
+- Bulk import (*provisional*): requires a local copy of Hathi data as
+  pairtree provided by rsync.  Configure the path in `localsettings.py`
+  and then run::
+
+    python manage.py ppa_import
 

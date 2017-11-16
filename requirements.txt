@@ -2,3 +2,6 @@ django>=1.11,<1.12
 #mysqlclient
 pucas
 django-grappelli
+solrclient
+pairtree
+pandas
