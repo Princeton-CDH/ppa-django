@@ -19,5 +19,8 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    # grappelli URLS for admin related lookups & autocompletes
+    url(r'^grappelli/', include('grappelli.urls')),
+    # pucas urls for CAS login
     url(r'^accounts/', include('pucas.cas_urls')),
 ]
