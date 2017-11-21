@@ -23,4 +23,5 @@ urlpatterns = [
     url(r'^grappelli/', include('grappelli.urls')),
     # pucas urls for CAS login
     url(r'^accounts/', include('pucas.cas_urls')),
+    url(r'^archive/', include('ppa.archive.urls')),
 ]
