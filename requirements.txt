@@ -4,4 +4,3 @@ pucas
 django-grappelli
 solrclient
 pairtree
-pandas
