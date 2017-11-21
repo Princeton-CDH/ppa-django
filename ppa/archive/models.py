@@ -12,6 +12,11 @@ class DigitizedWork(models.Model):
     source_id = models.CharField(max_length=255, unique=True)
     #: title of the work
     title = models.CharField(max_length=255)
+    #: enumeration/chronology
+    enumcron = models.CharField('Enumeration/Chronology', max_length=255,
+        null=True)
+        # TODO: what is the generic/non-hathi name for this? volume/version?
+
     # TODO: foreign key for author?
     author = models.CharField(max_length=255)
     pub_place = models.CharField('Place of Publication', max_length=255)
