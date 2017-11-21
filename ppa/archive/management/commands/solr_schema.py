@@ -21,12 +21,14 @@ class Command(BaseCommand):
         {'name': 'content', 'type': 'text_en', 'required': False},   # TODO text!
         {'name': 'item_type', 'type': 'string', 'required': False},
         {'name': 'title', 'type': 'text_en', 'required': False},
+        {'name': 'enumcron', 'type': 'string', 'required': False},
         {'name': 'author', 'type': 'text_en', 'required': False},
         {'name': 'pub_date', 'type': 'string', 'required': False},
-        {'name': 'text', 'type': 'text_en', 'required': False, 'stored': False},
+        {'name': 'text', 'type': 'text_en', 'required': False, 'stored': False,
+         'multiValued': True},
         # TODO: copyfield text for searching across everything (fulltext + metadata)
     ]
-    text_fields = ['htid', 'content', 'title', 'author', 'pub_date']
+    text_fields = ['htid', 'content', 'title', 'author', 'pub_date', 'enumcron']
 
 
     def handle(self, *args, **kwargs):

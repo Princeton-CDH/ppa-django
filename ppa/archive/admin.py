@@ -4,7 +4,7 @@ from ppa.archive.models import DigitizedWork
 
 
 class DigitizedWorkAdmin(admin.ModelAdmin):
-    list_display = ('source_id', 'title', 'author', 'pub_place',
+    list_display = ('source_id', 'title', 'author', 'enumcron', 'pub_place',
         'pub_date', 'page_count', 'added', 'updated')
     readonly_fields = ('source_id', 'page_count', 'added', 'updated')
 
