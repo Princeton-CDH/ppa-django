@@ -91,7 +91,7 @@ class Command(BaseCommand):
 
             # update work details in solr
             # TODO: solrdoc method on model
-            solr_doc = {'id': htid, 'item_type': 'work', 'title': digwork.title,
+            solr_doc = {'id': htid, 'htid': htid, 'item_type': 'work', 'title': digwork.title,
                         'pub_date': digwork.pub_date, 'enumcron': digwork.enumcron}
             idx = self.solr.index(self.solr_collection, [solr_doc])
 
