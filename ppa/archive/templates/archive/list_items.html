@@ -1,0 +1,22 @@
+<h1>archive</h1>
+
+<p>{{ total }} items</p>
+{{ items }}
+<hr/>
+
+
+<ul>
+    {% for item in items %}
+    <li>
+        <h3>{{ item.title }}</h3>
+        <p>{% if item.enumcron %}{{ item.enumcron }}, {% endif %}{{ item.pub_date}}</p>
+        <p><small>{{ item.htid }}</small></p>
+        {% for id, results in page_groups.items %}
+            {% if id == item.id %}
+                {{ results.numFound }} pages
+                {# {{ results }} #}
+            {% endif %}
+        {% endfor %}
+    </li>
+    {% endfor %}
+</ul>
