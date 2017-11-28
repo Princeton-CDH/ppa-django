@@ -1,9 +1,11 @@
-<h1>archive</h1>
+{% extends "base.html" %}
+{% block page-title %}Archive | {% endblock %}
+
+{% block content %}
+<h1>Archive</h1>
 
 <p>{{ total }} items</p>
-{{ items }}
 <hr/>
-
 
 <ul>
     {% for item in items %}
@@ -20,3 +22,4 @@
     </li>
     {% endfor %}
 </ul>
+{% endblock %}
