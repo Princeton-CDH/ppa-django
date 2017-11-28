@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
+from django.views.generic.base import TemplateView
 
 
 urlpatterns = [
@@ -23,5 +24,7 @@ urlpatterns = [
     url(r'^grappelli/', include('grappelli.urls')),
     # pucas urls for CAS login
     url(r'^accounts/', include('pucas.cas_urls')),
-    url(r'^archive/', include('ppa.archive.urls')),
+    # placeholder for home page
+    url(r'^$', TemplateView.as_view(template_name='site_index.html'), name='site-index'),
+    url(r'^archive/', include('ppa.archive.urls', namespace='archive')),
 ]
