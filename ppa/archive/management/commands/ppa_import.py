@@ -76,9 +76,9 @@ class Command(BaseCommand):
             if bibdata:
                 digwork.title = bibdata.title
                 # NOTE: may also include sort title
-                # pub date is list; just use first for now
-                digwork.pub_date = bibdata.pub_dates[0]
-                # digwork.enumcron = bibdata.pub_dates[0]
+                # pub date is list; just use first for now (if available)
+                if bibdata.pub_dates:
+                    digwork.pub_date = bibdata.pub_dates[0]
                 copy_details = bibdata.copy_details(htid)
                 digwork.enumcron = copy_details['enumcron'] or ''
                 # TODO: should also consider storing:
