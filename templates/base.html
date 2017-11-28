@@ -12,18 +12,19 @@ by default; use page_rdf_type to override with a webpage subclass.
 
     <!-- styles -->
     {% block css %}{% endblock %} {# add any local css here #}
-    {# test banner TODO #}
-    {# <link rel="stylesheet" type="text/css" href="{% static "css/test-banner.css" %}" /> #}
+    <link rel="stylesheet" type="text/css" href="{% static "css/test-banner.css" %}" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="{% static 'js/local.js' %}"></script>
     {% block javascript %}{% endblock %} {# add any additional javascript here #}
     {% block head_extras %}{% endblock %}  {# any header metadata, etc #}
   </head>
   <body>
+    {% include 'snippets/test_banner.html' %}
       <nav>
         <ul>
           <li>PPA</li>
           <li><a href="{% url 'archive:list' %}">View the Archive</a></li>
       </nav>
-
     <main>
       {% block content %}{% endblock %}
     </main>
