@@ -12,7 +12,7 @@
     {{ block.super }}
     {# Use the div#grp-branding for branding elements, e.g. a logo #}
     {# <div id="grp-branding">CDH</div> #}
-    {# {% include 'snippets/test_banner.html' %} #}
+    {% include 'snippets/test_banner.html' %}
     <div id="sw-version">v. {{ SW_VERSION }}</div>
 {% endblock %}
 
@@ -38,4 +38,6 @@
         });
     })(grp.jQuery);
     </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="{% static 'js/local.js' %}"></script>
 {% endblock %}

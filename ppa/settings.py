@@ -87,6 +87,7 @@ TEMPLATES = [
                 'mezzanine.conf.context_processors.settings',
                 'mezzanine.pages.context_processors.page',
                 'ppa.context_extras',
+                'ppa.context_processors.template_globals',
             ],
             'builtins': [
                 'mezzanine.template.loader_tags',
