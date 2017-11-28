@@ -1,6 +1,9 @@
 # utilities for working with hathitrust materials and apis
+import io
 
+import pymarc
 import requests
+from cached_property import cached_property
 
 
 class HathiBibliographicAPI(object):
@@ -40,18 +43,30 @@ class HathiBibliographicRecord(object):
 
     @property
     def title(self):
+        '''First title (standard title)'''
         # returns list of titles - standard title; could also have
         # title without leading article and other language titles
         return self.info['titles'][0]
 
     @property
     def pub_dates(self):
+        ''' list of available publication dates'''
         return self.info['publishDates']
 
     def copy_details(self, htid):
+        '''Details for a specific copy identified by hathi id'''
         for item in self._data['items']:
             if item['htid'] == htid:
                 return item
+
+    @cached_property
+    def marcxml(self):
+        '''Record marcxml if included (full records only), as an instance of
+        :class:`pymarc.Record`'''
+        marcxml = self._data['records'][self.record_id].get('marc-xml', None)
+        if marcxml:
+            return pymarc.parse_xml_to_array(io.StringIO(marcxml))[0]
+
 
 
 

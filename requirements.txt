@@ -4,3 +4,5 @@ pucas
 django-grappelli
 solrclient
 pairtree
+pymarc
+cached_property
