@@ -22,4 +22,8 @@ DATABASES = {
     },
 }
 
+
+# required by mezzanine for unit tests
+ALLOWED_HOSTS = ['*']
+
 # secret key added as a travis build step
