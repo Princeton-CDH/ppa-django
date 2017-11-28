@@ -1,5 +1,5 @@
 django>=1.11,<1.12
-#mysqlclient
+mysqlclient
 pucas
 django-grappelli
 solrclient
