@@ -1,0 +1,41 @@
+{% extends "admin/base.html" %}
+{% load i18n grp_tags static %}
+
+{% block title %}{{ title }} | {% get_site_title %}{% endblock %}
+
+{% block branding %}
+    {# Use the div#grp-branding for branding elements, e.g. a logo #}
+    {# <div id="grp-branding">CDH</div> #}
+{% endblock %}
+
+{% block nav-global %}
+    {{ block.super }}
+    {# Use the div#grp-branding for branding elements, e.g. a logo #}
+    {# <div id="grp-branding">CDH</div> #}
+    {# {% include 'snippets/test_banner.html' %} #}
+    <div id="sw-version">v. {{ SW_VERSION }}</div>
+{% endblock %}
+
+ {% block userlinks %}
+    {# could link directly to public archive view here #}
+    {{ block.super }}
+ {% endblock %}
+
+{% block extrastyle %}
+    <link rel="stylesheet" type="text/css" href="{% static "css/test-banner.css" %}" />
+{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    {# csrf adapted from mezzanine admin base site template #}
+    <script>
+    window.__csrf_token = '{{ csrf_token }}';
+    (function($) {
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                xhr.setRequestHeader('X-CSRFToken', window.__csrf_token);
+            }
+        });
+    })(grp.jQuery);
+    </script>
+{% endblock %}
