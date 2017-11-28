@@ -33,8 +33,9 @@ class ItemListView(TemplateView):
             # simple keyword search across all text content
             solr_q = join_q = "text:(%s)" % query
             # use join to ensure we always get the work if any pages match
-            # FIXME: solr join query errors on () or "" to group multiple terms
-            # solr_q = 'text:"%s" OR {!join from=htid to=id}text:%s' % (query, query)
+            # using query syntax as documented at
+            # http://comments.gmane.org/gmane.comp.jakarta.lucene.solr.user/95646
+            # to support exact phrase searches
             solr_q = 'text:(%s) OR {!join from=htid to=id v=$join_query}' % (query)
         else:
             # no search term - find everything
