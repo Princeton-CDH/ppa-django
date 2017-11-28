@@ -58,3 +58,33 @@ PUCAS_LDAP.update({
     'SEARCH_BASE': '',
     'SEARCH_FILTER': "(uid=%(user)s)",
 })
+
+
+# Admin email configuration for error messages
+# ADMINS = [('name', 'email')]
+# SERVER_EMAIL = '
+
+# Email configuration for sending messages
+# EMAIL_SUBJECT_PREFIX = '[PPA] '
+
+# Solution following https://stackoverflow.com/a/9541647
+# Sends a logging email even when DEBUG is on
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+            'include_html': True
+        }
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+    }
+}
+
