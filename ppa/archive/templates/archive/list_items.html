@@ -1,10 +1,15 @@
 {% extends "base.html" %}
-{% block page-title %}Archive | {% endblock %}
+{% block page-subtitle %}Archive | {% endblock %}
 
 {% block content %}
 <h1>Archive</h1>
 
-<p>{{ total }} items</p>
+<form>
+{{ search_form }}
+<input type="submit"/>
+</form>
+
+<p>{{ total }} item{{ total|pluralize }}</p>
 <hr/>
 
 <ul>
@@ -15,7 +20,7 @@
         <p><small>{{ item.htid }}</small></p>
         {% for id, results in page_groups.items %}
             {% if id == item.id %}
-                {{ results.numFound }} pages
+                {{ results.numFound }} matching page{{ results.numFound|pluralize }}
                 {# {{ results }} #}
             {% endif %}
         {% endfor %}
