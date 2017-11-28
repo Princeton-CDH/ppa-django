@@ -48,3 +48,17 @@ Initial setup and installation:
 
     python manage.py ppa_import
 
+
+Unit Tests
+~~~~~~~~~~
+
+Unit tests are written with `py.test <http://doc.pytest.org/>`_ but use
+Django fixture loading and convenience testing methods when that makes
+things easier. To run them, first install development requirements::
+
+    pip install -r dev-requirements.txt
+
+Run tests using py.test::
+
+    py.test
+
