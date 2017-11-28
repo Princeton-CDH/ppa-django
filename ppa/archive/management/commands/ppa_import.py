@@ -72,7 +72,7 @@ class Command(BaseCommand):
             digwork, created = DigitizedWork.objects.get_or_create(source_id=htid)
 
             # get brief bibliographic record from hathi bib api
-            bibdata = bib_api.brief_record('htid', htid)
+            bibdata = bib_api.record('htid', htid)
             if bibdata:
                 digwork.title = bibdata.title
                 # NOTE: may also include sort title
@@ -81,6 +81,9 @@ class Command(BaseCommand):
                     digwork.pub_date = bibdata.pub_dates[0]
                 copy_details = bibdata.copy_details(htid)
                 digwork.enumcron = copy_details['enumcron'] or ''
+                if bibdata.marcxml:
+                    digwork.author = bibdata.marcxml.author() or ''
+
                 # TODO: should also consider storing:
                 # - last update, rights code / rights string, item url
                 # (maybe solr only?)
@@ -92,7 +95,8 @@ class Command(BaseCommand):
             # update work details in solr
             # TODO: solrdoc method on model
             solr_doc = {'id': htid, 'htid': htid, 'item_type': 'work', 'title': digwork.title,
-                        'pub_date': digwork.pub_date, 'enumcron': digwork.enumcron}
+                        'pub_date': digwork.pub_date, 'enumcron': digwork.enumcron,
+                        'author': digwork.author}
             idx = self.solr.index(self.solr_collection, [solr_doc])
 
         self.solr.commit(self.solr_collection)
