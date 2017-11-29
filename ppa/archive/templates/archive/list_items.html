@@ -21,7 +21,7 @@
         <p><small>{{ item.htid }}</small></p>
         {% for id, results in page_groups.items %}
             {% if id == item.id %}
-                {{ results.numFound }} matching page{{ results.numFound|pluralize }}
+                {{ results.numFound }} page{{ results.numFound|pluralize }}
                 {# {{ results }} #}
             {% endif %}
         {% endfor %}
