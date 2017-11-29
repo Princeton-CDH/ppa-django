@@ -18,12 +18,6 @@ class Command(BaseCommand):
     solr = None
     solr_collection = None
     hathi_pairtree = {}
-    hathfiles_columns = ['volume_id', 'access', 'rights', 'htbibid',
-        'enumchron', 'source', 'source_inst_id', 'oclc', 'isbn', 'issn',
-        'lccn', 'title', 'imprint', 'rights_code', 'updated', 'govdoc',
-        'publication_date', 'publication_place', 'language', 'bib_format',
-        'coll_code', 'content_provider', 'resp_entity', 'digitization_agent'
-        ]
 
     def handle(self, *args, **kwargs):
         # TODO: error handling etc
