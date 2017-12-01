@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 {% block page-subtitle %}Archive | {% endblock %}
 
 {% block content %}
@@ -9,7 +10,7 @@
 <input type="submit"/>
 </form>
 
-<p>{{ total }} item{{ total|pluralize }}</p>
+<p>{{ total|intcomma }} item{{ total|pluralize }}</p>
 <hr/>
 
 <ul>
@@ -21,7 +22,7 @@
         <p><small>{{ item.htid }}</small></p>
         {% for id, results in page_groups.items %}
             {% if id == item.id %}
-                {{ results.numFound }} page{{ results.numFound|pluralize }}
+                {{ results.numFound|intcomma }} page{{ results.numFound|pluralize }}
                 {# {{ results }} #}
             {% endif %}
         {% endfor %}
