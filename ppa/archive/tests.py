@@ -1,13 +1,19 @@
 import json
 import os.path
+from unittest.mock import patch, Mock
 
 from django.conf import settings
-from django.test import TestCase
+from django.test import TestCase, override_settings
 import pymarc
+import requests
+from SolrClient import SolrClient
 
 from ppa.archive.hathi import HathiBibliographicRecord
+from ppa.archive.solr import get_solr_connection, SolrSchema, CoreAdmin
+
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
+
 
 class TestHathiBibliographicRecord(TestCase):
     bibdata_full = os.path.join(FIXTURES_PATH,
@@ -54,5 +60,108 @@ class TestHathiBibliographicRecord(TestCase):
         # test no marcxml in data, e.g. brief record
         assert self.brief_record.marcxml is None
 
+
+
+TEST_SOLR_CONNECTIONS = {
+    'default': {
+        'COLLECTION': 'testppa',
+        'URL': 'http://example.com:8984/solr/',
+        'ADMIN_URL': 'http://example.com:8984/solr/admin/cores'
+    }
+}
+
+@override_settings(SOLR_CONNECTIONS=TEST_SOLR_CONNECTIONS)
+def test_get_solr_connection():
+    # test basic solr connection setup
+    solr, collection = get_solr_connection()
+    assert isinstance(solr, SolrClient)
+    assert solr.host == TEST_SOLR_CONNECTIONS['default']['URL']
+    assert collection == TEST_SOLR_CONNECTIONS['default']['COLLECTION']
+
+    # TODO: test error handling once we have some
+
+
+@override_settings(SOLR_CONNECTIONS=TEST_SOLR_CONNECTIONS)
+@patch('ppa.archive.solr.get_solr_connection')
+class TestSolrSchema(TestCase):
+
+    def test_solr_schema_fields(self, mock_get_solr_connection):
+        mocksolr = Mock()
+        mock_get_solr_connection.return_value = (mocksolr, 'testcoll')
+        mocksolr.schema.get_schema_fields.return_value = {
+            'fields': [
+                {'name': 'author', 'type': 'text_en', 'required': False},
+                {'name': 'title', 'type': 'text_en', 'required': False},
+                {'name': 'date', 'type': 'int', 'required': False},
+            ]
+        }
+        schema = SolrSchema()
+        fields = schema.solr_schema_fields()
+        for expected_field in ['author', 'title', 'date']:
+            assert expected_field in fields
+
+    def test_update_solr_schema(self, mock_get_solr_connection):
+        mocksolr = Mock()
+        coll = 'testcoll'
+        mock_get_solr_connection.return_value = (mocksolr, coll)
+        # simulate no fields in solr
+        mocksolr.schema.get_schema_fields.return_value = {'fields': []}
+
+        schema = SolrSchema()
+        schema.fields = [
+            {'name': 'author', 'type': 'text_en', 'required': False},
+            {'name': 'title', 'type': 'text_en', 'required': False},
+            {'name': 'pub_date', 'type': 'int', 'required': False},
+        ]
+
+        created, updated = schema.update_solr_schema()
+        assert created == 3
+        assert updated == 0
+        for field_def in schema.fields:
+            mocksolr.schema.create_field.assert_any_call(coll, field_def)
+
+        mocksolr.schema.replace_field.assert_not_called()
+
+        # simulate all fields in solr
+        mocksolr.schema.get_schema_fields.return_value = {'fields': schema.fields}
+        mocksolr.schema.create_field.reset_mock()
+
+        created, updated = schema.update_solr_schema()
+        assert created == 0
+        assert updated == 3
+        mocksolr.schema.create_field.assert_not_called()
+        for field_def in schema.fields:
+            mocksolr.schema.replace_field.assert_any_call(coll, field_def)
+
+
+@override_settings(SOLR_CONNECTIONS=TEST_SOLR_CONNECTIONS)
+class TestCoreAdmin(TestCase):
+
+    def test_init(self):
+        core_adm = CoreAdmin()
+        assert core_adm.admin_url == settings.SOLR_CONNECTIONS['default']['ADMIN_URL']
+
+    @patch('ppa.archive.solr.requests')
+    def test_reload(self, mockrequests):
+        # simulate success
+        mockrequests.codes = requests.codes
+        mockrequests.get.return_value.status_code = requests.codes.ok
+        core_adm = CoreAdmin()
+        # should return true for success
+        assert core_adm.reload()
+        # should call with configured collection
+        mockrequests.get.assert_called_with(core_adm.admin_url,
+            params={'action': 'RELOAD',
+                    'core': settings.SOLR_CONNECTIONS['default']['COLLECTION']})
+
+        # reload specific core
+        assert core_adm.reload('othercore')
+        mockrequests.get.assert_called_with(core_adm.admin_url,
+            params={'action': 'RELOAD',
+                    'core': 'othercore'})
+
+        # failure
+        mockrequests.get.return_value.status_code = requests.codes.not_found
+        assert not core_adm.reload('othercore')
 
 
