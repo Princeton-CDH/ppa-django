@@ -69,6 +69,8 @@ class DigitizedWork(models.Model):
             'item_type': 'work',
             'title': self.title,
             'pub_date': self.pub_date,
+            'pub_place': self.pub_place,
+            'publisher': self.publisher,
             'enumcron': self.enumcron,
             'author': self.author
         }
