@@ -18,7 +18,8 @@
     <li>
         <h3>{{ item.title }}</h3>
         <p>{{ item.author }}</p>
-        <p>{% if item.enumcron %}{{ item.enumcron }}, {% endif %}{{ item.pub_date}}</p>
+        {% if item.enumcron %}<p>{{ item.enumcron }}</p> {% endif %}
+        <p>{{ item.publisher }} {{ item.pub_place }} {{ item.pub_date }}</p>
         <p><small>{{ item.htid }}</small></p>
         {% for id, results in page_groups.items %}
             {% if id == item.id %}
