@@ -14,8 +14,8 @@ class Command(BaseCommand):
         created, updated = schema.update_solr_schema()
         # summarize what was done
         if created:
-            self.stdout.write('Created %d field%s' %
-                (created, '' if created == 0 else 's'))
+            self.stdout.write('Added %d field%s' %
+                (created, '' if created == 0 else 'sg'))
         if updated:
             self.stdout.write('Updated %d field%s' %
                 (updated, '' if updated == 0 else 's'))

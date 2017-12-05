@@ -26,11 +26,14 @@ class SolrSchema(object):
         {'name': 'enumcron', 'type': 'string', 'required': False},
         {'name': 'author', 'type': 'text_en', 'required': False},
         {'name': 'pub_date', 'type': 'string', 'required': False},
+        {'name': 'pub_place', 'type': 'string', 'required': False},
+        {'name': 'publisher', 'type': 'string', 'required': False},
         {'name': 'text', 'type': 'text_en', 'required': False, 'stored': False,
          'multiValued': True},
     ]
     # fields to be copied into general purpose text field for searching
-    text_fields = ['htid', 'content', 'title', 'author', 'pub_date', 'enumcron']
+    text_fields = ['htid', 'content', 'title', 'author', 'pub_date', 'enumcron',
+        'pub_place', 'publisher']
     # todo: facet fields
 
     def __init__(self):
