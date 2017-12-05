@@ -19,10 +19,13 @@ class Command(BaseCommand):
     solr = None
     solr_collection = None
     hathi_pairtree = {}
+    #: normal verbosity level
+    v_normal = 1
 
     def handle(self, *args, **kwargs):
         self.solr, self.solr_collection = get_solr_connection()
         bib_api = HathiBibliographicAPI()
+        verbosity = kwargs.get('verbosity', self.v_normal)
 
         # bulk import only for now
         # - eventually support list of ids + rsync?
@@ -30,9 +33,10 @@ class Command(BaseCommand):
         # - get list of ids, rsync data, grab metadata
         # - populate db and solr (should add/update if already exists)
         total = self.count_hathi_ids()
-        self.stdout.write('Found %d items to import' % total)
+        self.stdout.write('%d items to import' % total)
         for htid in self.get_hathi_ids():
-            self.stdout.write(htid)
+            if verbosity >= self.v_normal:
+                self.stdout.write(htid)
             prefix, pt_id = htid.split('.', 1)
             # pairtree id to path for data files
             ptobj = self.hathi_pairtree[prefix].get_object(pt_id,
