@@ -106,6 +106,10 @@ class TestSolrSchema(TestCase):
         mock_get_solr_connection.return_value = (mocksolr, coll)
         # simulate no fields in solr
         mocksolr.schema.get_schema_fields.return_value = {'fields': []}
+        test_copy_field = {'source': 'id', 'dest': 'text'}
+        mocksolr.schema.get_schema_copyfields.return_value = [
+            test_copy_field
+        ]
 
         schema = SolrSchema()
         schema.fields = [
@@ -114,24 +118,46 @@ class TestSolrSchema(TestCase):
             {'name': 'pub_date', 'type': 'int', 'required': False},
         ]
 
-        created, updated = schema.update_solr_schema()
+        created, updated, removed = schema.update_solr_schema()
         assert created == 3
         assert updated == 0
+        assert removed == 0
         for field_def in schema.fields:
             mocksolr.schema.create_field.assert_any_call(coll, field_def)
 
         mocksolr.schema.replace_field.assert_not_called()
+        mocksolr.schema.delete_field.assert_not_called()
+        mocksolr.schema.delete_copy_field.assert_called_with(coll, test_copy_field)
 
         # simulate all fields in solr
         mocksolr.schema.get_schema_fields.return_value = {'fields': schema.fields}
         mocksolr.schema.create_field.reset_mock()
 
-        created, updated = schema.update_solr_schema()
+        created, updated, removed = schema.update_solr_schema()
         assert created == 0
         assert updated == 3
+        assert removed == 0
         mocksolr.schema.create_field.assert_not_called()
         for field_def in schema.fields:
             mocksolr.schema.replace_field.assert_any_call(coll, field_def)
+        mocksolr.schema.delete_field.assert_not_called()
+
+        # remove outdated fields
+        mocksolr.schema.get_schema_fields.return_value = {'fields':
+            schema.fields + [
+            {'name': '_root_'},
+            {'name': '_text_'},
+            {'name': '_version_'},
+            {'name': 'id'},
+            {'name': 'oldfield'},
+        ]}
+        mocksolr.schema.create_field.reset_mock()
+        mocksolr.schema.replace_field.reset_mock()
+        created, updated, removed = schema.update_solr_schema()
+        assert created == 0
+        assert updated == 3
+        assert removed == 1
+        mocksolr.schema.delete_field.assert_called_once_with(coll, 'oldfield')
 
 
 @override_settings(SOLR_CONNECTIONS=TEST_SOLR_CONNECTIONS)

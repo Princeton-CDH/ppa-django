@@ -11,15 +11,18 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         schema = solr.SolrSchema()
-        created, updated = schema.update_solr_schema()
+        created, updated, removed = schema.update_solr_schema()
         # summarize what was done
         if created:
             self.stdout.write('Added %d field%s' %
-                (created, '' if created == 0 else 'sg'))
+                (created, '' if created == 1 else 'sg'))
         if updated:
             self.stdout.write('Updated %d field%s' %
-                (updated, '' if updated == 0 else 's'))
+                (updated, '' if updated == 1 else 's'))
+        if removed:
+            self.stdout.write('Removed %d field%s' %
+                (removed, '' if removed == 1 else 's'))
 
         # use solr core admin to trigger reload, so schema
         # changes take effect
-        solr.CoreAdmin().reload('foo')
+        solr.CoreAdmin().reload()

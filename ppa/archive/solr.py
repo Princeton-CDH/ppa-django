@@ -19,7 +19,7 @@ class SolrSchema(object):
 
     #: solr field definitions for basic fields
     fields = [
-        {'name': 'htid', 'type': 'string', 'required': False},
+        {'name': 'srcid', 'type': 'string', 'required': False},
         {'name': 'content', 'type': 'text_en', 'required': False},
         {'name': 'item_type', 'type': 'string', 'required': False},
         {'name': 'title', 'type': 'text_en', 'required': False},
@@ -28,11 +28,13 @@ class SolrSchema(object):
         {'name': 'pub_date', 'type': 'string', 'required': False},
         {'name': 'pub_place', 'type': 'string', 'required': False},
         {'name': 'publisher', 'type': 'string', 'required': False},
+        {'name': 'src_url', 'type': 'string', 'required': False},
+        {'name': 'order', 'type': 'string', 'required': False},
         {'name': 'text', 'type': 'text_en', 'required': False, 'stored': False,
          'multiValued': True},
     ]
     # fields to be copied into general purpose text field for searching
-    text_fields = ['htid', 'content', 'title', 'author', 'pub_date', 'enumcron',
+    text_fields = ['srcid', 'content', 'title', 'author', 'pub_date', 'enumcron',
         'pub_place', 'publisher']
     # todo: facet fields
 
@@ -49,7 +51,7 @@ class SolrSchema(object):
         the configured fields.  Returns a tuple with the number of fields
         created and updated.'''
         current_fields = self.solr_schema_fields()
-        created = updated = 0
+        created = updated = removed = 0
         for field in self.fields:
             if field['name'] not in current_fields:
                 self.solr.schema.create_field(self.solr_collection, field)
@@ -58,14 +60,26 @@ class SolrSchema(object):
                 self.solr.schema.replace_field(self.solr_collection, field)
                 updated += 1
 
+        # remove and recreate copy fields to avoid adding them multiple times
+        copy_fields = self.solr.schema.get_schema_copyfields(self.solr_collection)
+        for cp_field in copy_fields:
+            self.solr.schema.delete_copy_field(self.solr_collection, cp_field)
+
         for field in self.text_fields:
             self.solr.schema.create_copy_field(self.solr_collection,
                 {'source': field, 'dest': 'text'})
 
-        # NOTE: doesn't remove fields in solr that are
-        # no longer configured
+        # remove previously defined fields that are no longer current
+        field_names = [field['name'] for field in self.fields]
+        for field in current_fields:
+            # don't remove special fields!
+            if field == 'id' or field.startswith('_'):
+                continue
+            if field not in field_names:
+                removed += 1
+                self.solr.schema.delete_field(self.solr_collection, field)
 
-        return (created, updated)
+        return (created, updated, removed)
 
 
 class CoreAdmin(object):
