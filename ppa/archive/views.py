@@ -36,7 +36,7 @@ class ItemListView(TemplateView):
             # using query syntax as documented at
             # http://comments.gmane.org/gmane.comp.jakarta.lucene.solr.user/95646
             # to support exact phrase searches
-            solr_q = 'text:(%s) OR {!join from=htid to=id v=$join_query}' % (query)
+            solr_q = 'text:(%s) OR {!join from=srcid to=id v=$join_query}' % (query)
         else:
             # no search term - find everything
             solr_q = "*:*"
@@ -44,7 +44,10 @@ class ItemListView(TemplateView):
 
         response = solr.query(solr_collection, {
             'q': solr_q,
-            'fq': '{!collapse field=htid sort="item_type desc"}',
+            # 'fq': '{!collapse field=srcid sort="item_type desc"}',
+            # 'fq': '{!collapse field=srcid sort="item_type desc, order asc"}',
+            # ?? what is order within the group?
+            'fq': '{!collapse field=srcid sort="order asc"}',
             'expand': 'true',
             'join_query': join_q,
             'rows': 50  # override solr default of 10 results; display 50 at a time for now

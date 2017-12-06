@@ -20,11 +20,16 @@
         <p>{{ item.author }}</p>
         {% if item.enumcron %}<p>{{ item.enumcron }}</p> {% endif %}
         <p>{{ item.publisher }} {{ item.pub_place }} {{ item.pub_date }}</p>
-        <p><small>{{ item.htid }}</small></p>
+        <p><small><a href="{{ item.src_url }}">{{ item.srcid }}</a></small></p>
         {% for id, results in page_groups.items %}
             {% if id == item.id %}
                 {{ results.numFound|intcomma }} page{{ results.numFound|pluralize }}
                 {# {{ results }} #}
+                <p>pages
+                {% for page in results.docs %}
+                    {{ page.order }}
+                {% endfor %}
+                </p>
             {% endif %}
         {% endfor %}
     </li>
