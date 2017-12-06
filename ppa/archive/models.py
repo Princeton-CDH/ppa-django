@@ -10,6 +10,8 @@ class DigitizedWork(models.Model):
     # original id / url?
     #: source identifier; hathi id for HathiTrust materials
     source_id = models.CharField(max_length=255, unique=True)
+    #: source url where the original can be accessed
+    source_url = models.URLField(max_length=255, unique=True)
     #: title of the work; using TextField to allow for long titles
     title = models.TextField()
     #: enumeration/chronology
@@ -46,8 +48,9 @@ class DigitizedWork(models.Model):
         if bibdata.pub_dates:
             self.pub_date = bibdata.pub_dates[0]
         copy_details = bibdata.copy_details(self.source_id)
-        # hathi version/volume information for this specificy copy of a work
+        # hathi version/volume information for this specific copy of a work
         self.enumcron = copy_details['enumcron'] or ''
+        self.source_url = copy_details['itemURL']
         # set fields from marc if available
         if bibdata.marcxml:
             self.author = bibdata.marcxml.author() or ''
@@ -65,14 +68,17 @@ class DigitizedWork(models.Model):
         '''data for indexing in Solr'''
         return {
             'id': self.source_id,
-            'htid': self.source_id,
-            'item_type': 'work',
+            'srcid': self.source_id,
+            'src_url': self.source_url,
             'title': self.title,
             'pub_date': self.pub_date,
             'pub_place': self.pub_place,
             'publisher': self.publisher,
             'enumcron': self.enumcron,
-            'author': self.author
+            'author': self.author,
+            # hard-coded to distinguish from & sort with pages
+            'item_type': 'work',
+            'order': '0',
         }
 
 

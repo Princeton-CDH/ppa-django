@@ -57,8 +57,9 @@ class Command(BaseCommand):
                         page_id = os.path.splitext(os.path.basename(pagefilename))[0]
                         solr_docs.append({
                            'id': '%s.%s' % (htid, page_id),
-                           'htid': htid,
+                           'srcid': htid,   # for grouping with work record
                            'content': pagefile.read().decode('utf-8'),
+                           'order': page_id,
                            'item_type': 'page'
                         })
                 self.solr.index(self.solr_collection, solr_docs)
