@@ -111,7 +111,8 @@ class Command(BaseCommand):
                            'order': page_id,
                            'item_type': 'page'
                         })
-                self.solr.index(self.solr_collection, solr_docs)
+                self.solr.index(self.solr_collection, solr_docs,
+                    params={"commitWithin": 10000})  # commit within 10 seconds
 
             stats['pages'] += len(solr_docs) - 1
 
@@ -127,9 +128,7 @@ class Command(BaseCommand):
             if progbar:
                 progbar.update(stats['count'])
 
-        # commit newly indexed changes so they will be visible for searches
-        # FIXME: this doesn't seem to be working consistently; (maybe
-        # only in tandem with schema changes?)
+        # commit all indexed changes so they will be stored
         self.solr.commit(self.solr_collection)
 
         summary = '\nProcessed {:,d} item{} for import.' + \
