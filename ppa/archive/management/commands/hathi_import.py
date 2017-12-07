@@ -1,3 +1,4 @@
+from collections import defaultdict
 from glob import glob
 import os
 import time
@@ -5,7 +6,9 @@ from zipfile import ZipFile
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.template.defaultfilters import pluralize
 from pairtree import pairtree_path, pairtree_client
+import progressbar
 
 from ppa.archive.hathi import HathiBibliographicAPI
 from ppa.archive.models import DigitizedWork
@@ -25,6 +28,8 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('-u', '--update', action='store_true',
             help='''Update local content even if source record has not changed.''')
+        parser.add_argument('--progress', action='store_true',
+            help='''Display a progress bar to track the status of the import.''')
 
     def handle(self, *args, **kwargs):
         self.solr, self.solr_collection = get_solr_connection()
@@ -33,14 +38,23 @@ class Command(BaseCommand):
 
         # bulk import only for now
         # - eventually support list of ids + rsync?
+
+        stats = defaultdict(int)
+
         # for now, start with existing rsync data
         # - get list of ids, rsync data, grab metadata
         # - populate db and solr (should add/update if already exists)
-        total = self.count_hathi_ids()
-        self.stdout.write('%d items to import' % total)
+        stats['total'] = self.count_hathi_ids()
+        if kwargs['progress']:
+            progbar = progressbar.ProgressBar(redirect_stdout=True,
+                max_value=stats['total'])
+        else:
+            progbar = None
+
         for htid in self.get_hathi_ids():
             if self.verbosity >= self.v_normal:
                 self.stdout.write(htid)
+            stats['count'] += 1
             # find existing record or create a new one
             digwork, created = DigitizedWork.objects.get_or_create(source_id=htid)
             # get bibliographic data from Hathi api
@@ -55,7 +69,10 @@ class Command(BaseCommand):
                     if self.verbosity > self.v_normal:
                         self.stdout.write('Source record last updated %s, no reindex needed'
                             % source_updated)
+                    if progbar:
+                        progbar.update(stats['count'])
                     # don't index; continue to next item
+                    stats['skipped'] += 1
                     continue
                 else:
                     # report in verbose mode
@@ -96,14 +113,31 @@ class Command(BaseCommand):
                         })
                 self.solr.index(self.solr_collection, solr_docs)
 
+            stats['pages'] += len(solr_docs) - 1
+
             # store page count in the database after indexing pages
             digwork.page_count = page_count
             digwork.save()
+
+            if created:
+                stats['created'] += 1
+            else:
+                stats['updated'] += 1
+
+            if progbar:
+                progbar.update(stats['count'])
 
         # commit newly indexed changes so they will be visible for searches
         # FIXME: this doesn't seem to be working consistently; (maybe
         # only in tandem with schema changes?)
         self.solr.commit(self.solr_collection)
+
+        summary = '\nProcessed {:,d} item{} for import.' + \
+        '\nAdded {:,d}; updated {:,d}; skipped {:,d}; indexed {:,d} page{}.'
+        summary = summary.format(stats['total'], pluralize(stats['total']),
+            stats['created'], stats['updated'], stats['skipped'],
+            stats['pages'], pluralize(stats['pages']))
+        self.stdout.write(summary)
 
     def get_hathi_ids(self):
         # generator of hathi ids from previously rsynced hathitrust data,
