@@ -1,4 +1,5 @@
 # utilities for working with hathitrust materials and apis
+from datetime import datetime
 import io
 
 import pymarc
@@ -58,6 +59,14 @@ class HathiBibliographicRecord(object):
         for item in self._data['items']:
             if item['htid'] == htid:
                 return item
+
+    def copy_last_updated(self, htid):
+        '''Return last update date for a specificy copy identified by
+        hathi id.  Returns as :class:`datetime.date`'''
+        # get last update from copy details
+        last_update = self.copy_details(htid)['lastUpdate']
+        # use datetime to parse, then return just thed ate
+        return datetime.strptime(last_update, '%Y%m%d').date()
 
     @cached_property
     def marcxml(self):

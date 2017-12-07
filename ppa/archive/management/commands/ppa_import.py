@@ -1,10 +1,10 @@
+from datetime import datetime, date
 from glob import glob
 import os
 from zipfile import ZipFile
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from SolrClient import SolrClient
 from pairtree import pairtree_path, pairtree_client
 
 from ppa.archive.hathi import HathiBibliographicAPI
@@ -22,6 +22,10 @@ class Command(BaseCommand):
     #: normal verbosity level
     v_normal = 1
 
+    def add_arguments(self, parser):
+        parser.add_argument('-u', '--update', action='store_true',
+            help='''Update local content even if source record has not changed.''')
+
     def handle(self, *args, **kwargs):
         self.solr, self.solr_collection = get_solr_connection()
         bib_api = HathiBibliographicAPI()
@@ -37,6 +41,32 @@ class Command(BaseCommand):
         for htid in self.get_hathi_ids():
             if verbosity >= self.v_normal:
                 self.stdout.write(htid)
+            # find existing record or create a new one
+            digwork, created = DigitizedWork.objects.get_or_create(source_id=htid)
+            # get bibliographic data from Hathi api
+            # - needed to check if update is required for existing records,
+            # and needed to populate metadata for new records
+            bibdata = bib_api.record('htid', htid)
+            # if this is an existing record, check if updates are needed
+            if not created and not kwargs['update']:
+                source_updated = bibdata.copy_last_updated(htid)
+                if digwork.updated.date() > source_updated:
+                    # local copy is newer than last source modification date
+                    if self.verbosity > self.v_normal:
+                        self.stdout.write('Source record last updated %s, no reindex needed'
+                            % source_updated)
+                    # don't index; continue to next item
+                    continue
+                else:
+                    # report in verbose mode
+                    if self.verbosity > self.v_normal:
+                        self.stdout.write('Source record last updated %s, needs reindexing'
+                            % source_updated)
+
+            # update or populate digitized item in the database
+            digwork.populate_from_bibdata(bibdata)
+            digwork.save()
+
             prefix, pt_id = htid.split('.', 1)
             # pairtree id to path for data files
             ptobj = self.hathi_pairtree[prefix].get_object(pt_id,
@@ -46,8 +76,10 @@ class Command(BaseCommand):
             content_dir = pairtree_path.id_encode(pt_id)
             # - expect a mets file and a zip file
             ht_metsfile, ht_zipfile = ptobj.list_parts(content_dir)
-            # print(ptobj.list_parts(pairtree_path.id_encode(pt_id)))
-            solr_docs = []
+
+            # create a list to gather solr information to index
+            # digitized work and pages all at once
+            solr_docs = [digwork.index_data()]
             # read zipfile contents in place, without unzipping
             with ZipFile(os.path.join(ptobj.id_to_dirpath(), content_dir, ht_zipfile)) as ht_zip:
                 filenames = ht_zip.namelist()
@@ -64,26 +96,18 @@ class Command(BaseCommand):
                         })
                 self.solr.index(self.solr_collection, solr_docs)
 
-            # create stub database record
-            digwork, created = DigitizedWork.objects.get_or_create(source_id=htid)
-
-            # get brief bibliographic record from hathi bib api
-            # TODO: maybe only if created?
-            bibdata = bib_api.record('htid', htid)
-            if bibdata:
-                digwork.populate_from_bibdata(bibdata)
-
+            # store page count in the database after indexing pages
             digwork.page_count = page_count
-            # TODO: only save if changed (so updated time will be accurate)
             digwork.save()
 
-            # update work details in solr
-            self.solr.index(self.solr_collection, [digwork.index_data()])
-
+        # commit newly indexed changes so they will be visible for searches
+        # FIXME: this doesn't seem to be working consistently; (maybe
+        # only in tandme with schema changes?)
         self.solr.commit(self.solr_collection)
 
     def get_hathi_ids(self):
-        # generator of hathi ids from previously rsynced hathitrust data
+        # generator of hathi ids from previously rsynced hathitrust data,
+        # based on the configured path in settings
 
         # HathiTrust data is constructed with instutition short name
         # with pairtree root underneath each
