@@ -10,7 +10,7 @@ from django.template.defaultfilters import pluralize
 from pairtree import pairtree_path, pairtree_client
 import progressbar
 
-from ppa.archive.hathi import HathiBibliographicAPI
+from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound
 from ppa.archive.models import DigitizedWork
 from ppa.archive.solr import get_solr_connection
 
@@ -24,12 +24,15 @@ class Command(BaseCommand):
     hathi_pairtree = {}
     #: normal verbosity level
     v_normal = 1
+    verbosity = v_normal
 
     def add_arguments(self, parser):
+        parser.add_argument('htids', nargs='*',
+            help='Optional list of specific volumes to index by HathiTrust id.')
         parser.add_argument('-u', '--update', action='store_true',
-            help='''Update local content even if source record has not changed.''')
+            help='Update local content even if source record has not changed.')
         parser.add_argument('--progress', action='store_true',
-            help='''Display a progress bar to track the status of the import.''')
+            help='Display a progress bar to track the status of the import.')
 
     def handle(self, *args, **kwargs):
         self.solr, self.solr_collection = get_solr_connection()
@@ -39,28 +42,49 @@ class Command(BaseCommand):
         # bulk import only for now
         # - eventually support list of ids + rsync?
 
-        stats = defaultdict(int)
-
         # for now, start with existing rsync data
         # - get list of ids, rsync data, grab metadata
         # - populate db and solr (should add/update if already exists)
-        stats['total'] = self.count_hathi_ids()
+
+        stats = defaultdict(int)
+
+        # if ids are explicitly specified on the command line, only
+        # index those items
+        # (currently still requires rsync data to be present on the filesystem)
+        if kwargs['htids']:
+            ids_to_index = kwargs['htids']
+            stats['total'] = len(ids_to_index)
+        else:
+            # otherwise, find and index everything in the pairtree data
+            ids_to_index = self.get_hathi_ids()
+            stats['total'] = self.count_hathi_ids()
+
         if kwargs['progress']:
             progbar = progressbar.ProgressBar(redirect_stdout=True,
                 max_value=stats['total'])
         else:
             progbar = None
 
-        for htid in self.get_hathi_ids():
+        # initialize access to rsync data as dict of pairtrees by prefix
+        self.initialize_pairtrees()
+
+        for htid in ids_to_index:
             if self.verbosity >= self.v_normal:
                 self.stdout.write(htid)
             stats['count'] += 1
-            # find existing record or create a new one
-            digwork, created = DigitizedWork.objects.get_or_create(source_id=htid)
             # get bibliographic data from Hathi api
             # - needed to check if update is required for existing records,
             # and needed to populate metadata for new records
-            bibdata = bib_api.record('htid', htid)
+            try:
+                # should only error on user-supplied ids, but still possible
+                bibdata = bib_api.record('htid', htid)
+            except HathiItemNotFound:
+                self.stdout.write("Error: Bibliographic data not found for '%s'" % htid)
+                stats['error'] += 1
+                continue
+
+            # find existing record or create a new one
+            digwork, created = DigitizedWork.objects.get_or_create(source_id=htid)
             # if this is an existing record, check if updates are needed
             if not created and not kwargs['update']:
                 source_updated = bibdata.copy_last_updated(htid)
@@ -132,30 +156,38 @@ class Command(BaseCommand):
         self.solr.commit(self.solr_collection)
 
         summary = '\nProcessed {:,d} item{} for import.' + \
-        '\nAdded {:,d}; updated {:,d}; skipped {:,d}; indexed {:,d} page{}.'
+        '\nAdded {:,d}; updated {:,d}; skipped {:,d}; {:,d} error{}; indexed {:,d} page{}.'
         summary = summary.format(stats['total'], pluralize(stats['total']),
             stats['created'], stats['updated'], stats['skipped'],
+            stats['error'], pluralize(stats['error']),
             stats['pages'], pluralize(stats['pages']))
+
         self.stdout.write(summary)
+
+    def initialize_pairtrees(self):
+        # HathiTrust data is constructed with instutition short name
+        # with pairtree root underneath each
+        if not self.hathi_pairtree:
+            hathi_dirs = glob(os.path.join(settings.HATHI_DATA, '*'))
+            for ht_data_dir in hathi_dirs:
+                prefix = os.path.basename(ht_data_dir)
+
+                hathi_ptree = pairtree_client.PairtreeStorageClient(prefix, ht_data_dir)
+                # store initialized pairtree client by prefix for later use
+                self.hathi_pairtree[prefix] = hathi_ptree
 
     def get_hathi_ids(self):
         # generator of hathi ids from previously rsynced hathitrust data,
         # based on the configured path in settings
 
-        # HathiTrust data is constructed with instutition short name
-        # with pairtree root underneath each
-        hathi_dirs = glob(os.path.join(settings.HATHI_DATA, '*'))
-        for ht_data_dir in hathi_dirs:
-            prefix = os.path.basename(ht_data_dir)
-
-            hathi_ptree = pairtree_client.PairtreeStorageClient(prefix, ht_data_dir)
-            # store initialized pairtree client by prefix for later use
-            self.hathi_pairtree[prefix] = hathi_ptree
+        self.initialize_pairtrees()
+        for prefix, hathi_ptree in self.hathi_pairtree.items():
             for hathi_id in hathi_ptree.list_ids():
                 # NOTE: prefix should automatially be handled based on
                 # pairtree_prefix, but python pairtree library doesn't
                 # yet include logic for that
                 yield '%s.%s' % (prefix, hathi_id)
+
 
     def count_hathi_ids(self):
         # count items in the pairtree structure without loading
