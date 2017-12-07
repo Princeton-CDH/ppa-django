@@ -13,7 +13,7 @@ from ppa.archive.solr import get_solr_connection
 
 
 class Command(BaseCommand):
-    '''Import digitized items into PPA to be managed and searched'''
+    '''Import HathiTrust digitized items into PPA to be managed and searched'''
     help = __doc__
 
     solr = None

@@ -58,11 +58,11 @@ Initial setup and installation:
 
   Reload the core to ensure schema changes take effect.
 
-- Bulk import (*provisional*): requires a local copy of Hathi data as
+- Bulk import (*provisional*): requires a local copy of HathiTrust data as
   pairtree provided by rsync.  Configure the path in `localsettings.py`
   and then run::
 
-    python manage.py ppa_import
+    python manage.py hathi_import
 
 
 Unit Tests
