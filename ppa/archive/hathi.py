@@ -7,6 +7,10 @@ import requests
 from cached_property import cached_property
 
 
+class HathiItemNotFound(Exception):
+    pass
+
+
 class HathiBibliographicAPI(object):
     # https://www.hathitrust.org/bib_api
 
@@ -22,6 +26,10 @@ class HathiBibliographicAPI(object):
         resp = requests.get(url)
         # TODO: handle errors
         if resp.status_code == requests.codes.ok:
+            # for an invalid id, hathi seems to return a 200 ok
+            # but json has no records
+            if not resp.json()['records']:
+                raise HathiItemNotFound
             return HathiBibliographicRecord(resp.json())
 
 
