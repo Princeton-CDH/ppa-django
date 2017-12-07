@@ -1,3 +1,4 @@
+from datetime import date
 import json
 import os.path
 from unittest.mock import patch, Mock
@@ -52,6 +53,11 @@ class TestHathiBibliographicRecord(TestCase):
         assert copy_details['orig'] == 'Princeton University'
 
         assert record.copy_details('bogus') is None
+
+    def test_copy_last_updated(self):
+        update_date = self.record.copy_last_updated('njp.32101013082597')
+        assert isinstance(update_date, date)
+        assert update_date == date(2017, 3, 24)
 
     def test_marcxml(self):
         record = self.record
