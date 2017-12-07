@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('source_id', models.CharField(max_length=255, unique=True)),
-                ('source_url', models.URLField(max_length=255, unique=True)),
+                ('source_url', models.URLField(max_length=255)),
                 ('title', models.TextField()),
                 ('enumcron', models.CharField(max_length=255, null=True, verbose_name='Enumeration/Chronology')),
                 ('author', models.CharField(max_length=255)),
