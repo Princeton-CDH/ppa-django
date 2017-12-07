@@ -1,6 +1,5 @@
 from django.db import models
 
-# Create your models here.
 
 class DigitizedWork(models.Model):
     # stub record to manage digitized works included in PPA
@@ -11,7 +10,7 @@ class DigitizedWork(models.Model):
     #: source identifier; hathi id for HathiTrust materials
     source_id = models.CharField(max_length=255, unique=True)
     #: source url where the original can be accessed
-    source_url = models.URLField(max_length=255, unique=True)
+    source_url = models.URLField(max_length=255)
     #: title of the work; using TextField to allow for long titles
     title = models.TextField()
     #: enumeration/chronology
@@ -50,6 +49,8 @@ class DigitizedWork(models.Model):
         copy_details = bibdata.copy_details(self.source_id)
         # hathi version/volume information for this specific copy of a work
         self.enumcron = copy_details['enumcron'] or ''
+        # hathi source url can currently be inferred from htid, but is
+        # included in the bibdata in case it changes - so let's just store it
         self.source_url = copy_details['itemURL']
         # set fields from marc if available
         if bibdata.marcxml:
