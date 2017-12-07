@@ -1,6 +1,6 @@
-from datetime import datetime, date
 from glob import glob
 import os
+import time
 from zipfile import ZipFile
 
 from django.conf import settings
@@ -29,7 +29,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         self.solr, self.solr_collection = get_solr_connection()
         bib_api = HathiBibliographicAPI()
-        verbosity = kwargs.get('verbosity', self.v_normal)
+        self.verbosity = kwargs.get('verbosity', self.v_normal)
 
         # bulk import only for now
         # - eventually support list of ids + rsync?
@@ -39,7 +39,7 @@ class Command(BaseCommand):
         total = self.count_hathi_ids()
         self.stdout.write('%d items to import' % total)
         for htid in self.get_hathi_ids():
-            if verbosity >= self.v_normal:
+            if self.verbosity >= self.v_normal:
                 self.stdout.write(htid)
             # find existing record or create a new one
             digwork, created = DigitizedWork.objects.get_or_create(source_id=htid)
@@ -102,7 +102,7 @@ class Command(BaseCommand):
 
         # commit newly indexed changes so they will be visible for searches
         # FIXME: this doesn't seem to be working consistently; (maybe
-        # only in tandme with schema changes?)
+        # only in tandem with schema changes?)
         self.solr.commit(self.solr_collection)
 
     def get_hathi_ids(self):
@@ -129,6 +129,11 @@ class Command(BaseCommand):
         # all into memory at once
         # NOTE: probably should still check how slow this is on
         # the full dataset...
-        return sum(1 for i in self.get_hathi_ids())
+        start = time.time()
+        count = sum(1 for i in self.get_hathi_ids())
+        if self.verbosity > self.v_normal:
+            self.stdout.write('Counted hathi ids in %f sec' %
+                (time.time() - start))
+        return count
 
 
