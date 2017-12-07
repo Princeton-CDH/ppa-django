@@ -21,9 +21,10 @@ class DigitizedWork(models.Model):
     # TODO: foreign key for author?
     author = models.CharField(max_length=255)
     #: place of publication
-    pub_place = models.CharField('Place of Publication', max_length=255)
+    pub_place = models.CharField('Place of Publication', max_length=255,
+        blank=True)
     #: publisher
-    publisher = models.CharField(max_length=255)
+    publisher = models.TextField(max_length=255, blank=True)
     # using char for now in case not all numeric
     pub_date = models.CharField('Publication Date', max_length=255)
     #: number of pages in the work
@@ -56,8 +57,8 @@ class DigitizedWork(models.Model):
         if bibdata.marcxml:
             self.author = bibdata.marcxml.author() or ''
             if '260' in bibdata.marcxml:
-                self.pub_place = bibdata.marcxml['260']['a']
-                self.publisher = bibdata.marcxml['260']['b']
+                self.pub_place = bibdata.marcxml['260']['a'] or ''
+                self.publisher = bibdata.marcxml['260']['b'] or ''
             # maybe: consider getting volume & series directly from
             # marc rather than relying on hathi enumcron ()
 
