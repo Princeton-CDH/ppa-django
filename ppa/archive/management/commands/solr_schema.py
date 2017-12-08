@@ -15,7 +15,7 @@ class Command(BaseCommand):
         # summarize what was done
         if created:
             self.stdout.write('Added %d field%s' %
-                (created, '' if created == 1 else 'sg'))
+                (created, '' if created == 1 else 's'))
         if updated:
             self.stdout.write('Updated %d field%s' %
                 (updated, '' if updated == 1 else 's'))
