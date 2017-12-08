@@ -37,18 +37,29 @@ class ItemListView(TemplateView):
             # http://comments.gmane.org/gmane.comp.jakarta.lucene.solr.user/95646
             # to support exact phrase searches
             solr_q = 'text:(%s) OR {!join from=srcid to=id v=$join_query}' % (query)
+            # sort by relevance, return score for display
+            sort = 'relevance'
+            solr_sort = 'score desc'
+            fields = '*,score'
         else:
             # no search term - find everything
             solr_q = "*:*"
+            # for now, use title for default sort
+            sort = 'title'
+            solr_sort = 'title_exact asc'
+            fields = '*'
+
         logger.debug("Solr search query: %s", solr_q)
 
         response = solr.query(solr_collection, {
             'q': solr_q,
-            # 'fq': '{!collapse field=srcid sort="item_type desc"}',
-            # 'fq': '{!collapse field=srcid sort="item_type desc, order asc"}',
-            # ?? what is order within the group?
+            'sort': solr_sort,
+            'fl': fields,
+            # collapse work and pages; sort so work is first, then by page
             'fq': '{!collapse field=srcid sort="order asc"}',
+            # default expand sort is score desc
             'expand': 'true',
+            'expand.rows': 10,   # number of items in the collapsed group, i.e pages to display
             'join_query': join_q,
             'rows': 50  # override solr default of 10 results; display 50 at a time for now
         })
@@ -56,6 +67,7 @@ class ItemListView(TemplateView):
             'search_form': form,
             'total': response.get_num_found(),
             'items': response.docs,
+            'sort': sort,
             'page_groups': json.loads(response.get_json())['expanded']
         })
         return context
