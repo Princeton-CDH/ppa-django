@@ -10,28 +10,32 @@
 <input type="submit"/>
 </form>
 
-<p>{{ total|intcomma }} item{{ total|pluralize }}</p>
+<p>{{ total|intcomma }} digitized work{{ total|pluralize }}; results sorted by {{ sort }}.</p>
 <hr/>
 
 <ul>
     {% for item in items %}
     <li>
         <h3>{{ item.title }}</h3>
+        <p>sort title: {{ item.title_exact }}</p>
         <p>{{ item.author }}</p>
         {% if item.enumcron %}<p>{{ item.enumcron }}</p> {% endif %}
         <p>{{ item.publisher }} {{ item.pub_place }} {{ item.pub_date }}</p>
         <p><small><a href="{{ item.src_url }}">{{ item.srcid }}</a></small></p>
         {% for id, results in page_groups.items %}
             {% if id == item.id %}
-                {{ results.numFound|intcomma }} page{{ results.numFound|pluralize }}
+                <p>{{ results.numFound|intcomma }} page{{ results.numFound|pluralize }};
                 {# {{ results }} #}
-                <p>pages
+                pages
                 {% for page in results.docs %}
-                    {{ page.order }}
+                    {{ page.order }} {% if sort == 'relevance' %}<small> relevance: {{ page.score }}</small>{% endif %};
                 {% endfor %}
                 </p>
             {% endif %}
         {% endfor %}
+        {% if sort == 'relevance' %}
+            <p><small>relevance: {{ item.score }}</small></p>
+        {% endif %}
     </li>
     {% endfor %}
 </ul>
