@@ -26,16 +26,24 @@ class SolrSchema(object):
         {'name': 'enumcron', 'type': 'string', 'required': False},
         {'name': 'author', 'type': 'text_en', 'required': False},
         {'name': 'pub_date', 'type': 'string', 'required': False},
-        {'name': 'pub_place', 'type': 'string', 'required': False},
-        {'name': 'publisher', 'type': 'string', 'required': False},
+        {'name': 'pub_place', 'type': 'text_en', 'required': False},
+        {'name': 'publisher', 'type': 'text_en', 'required': False},
         {'name': 'src_url', 'type': 'string', 'required': False},
         {'name': 'order', 'type': 'string', 'required': False},
         {'name': 'text', 'type': 'text_en', 'required': False, 'stored': False,
          'multiValued': True},
+
+         # sort/facet copy fields
+        {'name': 'title_exact', 'type': 'string', 'required': False},
+        {'name': 'author_exact', 'type': 'string', 'required': False},
     ]
     # fields to be copied into general purpose text field for searching
     text_fields = ['srcid', 'content', 'title', 'author', 'pub_date', 'enumcron',
         'pub_place', 'publisher']
+    copy_fields = [
+        ('title', 'title_exact'),
+        ('author', 'author_exact'),
+    ]
     # todo: facet fields
 
     def __init__(self):
@@ -62,12 +70,25 @@ class SolrSchema(object):
 
         # remove and recreate copy fields to avoid adding them multiple times
         copy_fields = self.solr.schema.get_schema_copyfields(self.solr_collection)
-        for cp_field in copy_fields:
-            self.solr.schema.delete_copy_field(self.solr_collection, cp_field)
 
+        current_cp_fields = []
         for field in self.text_fields:
-            self.solr.schema.create_copy_field(self.solr_collection,
-                {'source': field, 'dest': 'text'})
+            cp_field = {'source': field, 'dest': 'text'}
+            current_cp_fields.append(cp_field)
+            if cp_field not in copy_fields:
+                self.solr.schema.create_copy_field(self.solr_collection,
+                    cp_field)
+        for src_field, dest_field in self.copy_fields:
+            cp_field = {'source': src_field, 'dest': dest_field}
+            current_cp_fields.append(cp_field)
+            if cp_field not in copy_fields:
+                self.solr.schema.create_copy_field(self.solr_collection,
+                    cp_field)
+
+        # delete previous copy cp fields that are no longer wanted
+        for cp_field in copy_fields:
+            if cp_field not in current_cp_fields:
+                self.solr.schema.delete_copy_field(self.solr_collection, cp_field)
 
         # remove previously defined fields that are no longer current
         field_names = [field['name'] for field in self.fields]
