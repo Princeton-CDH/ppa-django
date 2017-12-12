@@ -11,14 +11,14 @@ from ppa.archive.forms import SearchForm
 logger = logging.getLogger(__name__)
 
 
-class ItemListView(TemplateView):
+class DigitizedWorkListView(TemplateView):
 
-    template_name = 'archive/list_items.html'
+    template_name = 'archive/list_digitizedworks.html'
     # NOTE: listview would be nice, but would have to figure out how to
     # make solrclient compatible with django pagination
 
     def get_context_data(self, **kwargs):
-        context = super(ItemListView, self).get_context_data(**kwargs)
+        context = super(DigitizedWorkListView, self).get_context_data(**kwargs)
         # todo: utility method to init solr client
         # - with maybe a wrapper that sets default
         solr_config = settings.SOLR_CONNECTIONS['default']
