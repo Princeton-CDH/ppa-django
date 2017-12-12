@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
                 ('source_id', models.CharField(max_length=255, unique=True)),
                 ('source_url', models.URLField(max_length=255)),
                 ('title', models.TextField()),
-                ('enumcron', models.CharField(max_length=255, null=True, verbose_name='Enumeration/Chronology')),
+                ('enumcron', models.CharField(max_length=255, blank=True, verbose_name='Enumeration/Chronology')),
                 ('author', models.CharField(max_length=255)),
                 ('pub_place', models.CharField(max_length=255, verbose_name='Place of Publication', blank=True)),
                 ('publisher', models.TextField(blank=True)),
