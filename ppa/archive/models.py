@@ -13,12 +13,12 @@ class DigitizedWork(models.Model):
     source_url = models.URLField(max_length=255)
     #: title of the work; using TextField to allow for long titles
     title = models.TextField()
-    #: enumeration/chronology
+    #: enumeration/chronology (hathi-specific)
     enumcron = models.CharField('Enumeration/Chronology', max_length=255,
-        null=True)
-        # TODO: what is the generic/non-hathi name for this? volume/version?
+        blank=True)
+    # TODO: what is the generic/non-hathi name for this? volume/version?
 
-    # TODO: foreign key for author?
+    # NOTE: may eventually to convert to foreign key
     author = models.CharField(max_length=255)
     #: place of publication
     pub_place = models.CharField('Place of Publication', max_length=255,
