@@ -120,3 +120,68 @@ class CoreAdmin(object):
         return response.status_code == requests.codes.ok
 
 
+class PagedSolrQuery(object):
+    # wrap solrclient query in a way that allows search results to be
+    # paginated by django paginator
+
+    query_opts = {}
+    _result = None
+
+    def __init__(self, query_opts=None):
+        self.solr, self.solr_collection = get_solr_connection()
+
+        self.query_opts = query_opts or {}
+
+    def count(self):
+        if self._result is None:
+            query_opts = self.query_opts.copy()
+            query_opts['rows'] = 0
+            self._result = self.solr.query(self.solr_collection, query_opts)
+
+        return self._result.get_num_found()
+
+    def set_limits(self, start, stop):
+        self.query_opts.update({
+            'start': start,
+            'rows': stop - start + 1
+        })
+
+    def get_results(self):
+        self._result = self.solr.query(self.solr_collection, self.query_opts)
+        return self._result.docs
+
+    def get_json(self):
+        return self._result.get_json()
+
+    def __getitem__(self, k):
+        '''Return a single result or a slice of results'''
+        # based on django queryset logic
+        if not isinstance(k, (int, slice)):
+            raise TypeError
+        assert ((not isinstance(k, slice) and (k >= 0)) or
+                (isinstance(k, slice) and (k.start is None or k.start >= 0) and
+                 (k.stop is None or k.stop >= 0))), \
+            "Negative indexing is not supported."
+
+        if isinstance(k, slice):
+            # qs = self._chain() # do we need something like this?
+            if k.start is not None:
+                start = int(k.start)
+            else:
+                start = None
+            if k.stop is not None:
+                stop = int(k.stop)
+            else:
+                stop = None
+            self.set_limits(start, stop)
+            # qs.query.set_limits(start, stop)
+            # return list(qs)[::k.step] if k.step else qs
+            return list(self.get_results())[::k.step] if k.step else self.get_results()
+
+        # single item
+        # qs = self._chain()
+        self.set_limits(k, k + 1)
+        # qs.query.set_limits(k, k + 1)
+        # qs._fetch_all()
+        return self.get_results()[0]
+        # return qs._result_cache[0]
