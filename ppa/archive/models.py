@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 
 
 class DigitizedWork(models.Model):
@@ -33,6 +34,9 @@ class DigitizedWork(models.Model):
     added = models.DateTimeField(auto_now_add=True)
     #: date of last modification of the local record
     updated = models.DateTimeField(auto_now=True)
+
+    def get_absolute_url(self):
+        return reverse('archive:details', kwargs={'id': self.source_id})
 
     def populate_from_bibdata(self, bibdata):
         '''Update record fields based on Hathi bibdata information.
@@ -82,9 +86,3 @@ class DigitizedWork(models.Model):
             'item_type': 'work',
             'order': '0',
         }
-
-
-
-
-
-
