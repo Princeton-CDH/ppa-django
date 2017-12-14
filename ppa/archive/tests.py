@@ -331,9 +331,11 @@ def empty_solr():
         # reload core before and after to ensure field list is accurate
         CoreAdmin().reload()
         solr_schema = SolrSchema()
-        for cp_field in solr_schema.solr.schema.get_schema_copyfields(solr_schema.solr_collection):
-            solr_schema.solr.schema.delete_copy_field(solr_schema.solr_collection, cp_field)
+        cp_fields = solr_schema.solr.schema.get_schema_copyfields(solr_schema.solr_collection)
         current_fields = solr_schema.solr_schema_fields()
+
+        for cp_field in cp_fields:
+            solr_schema.solr.schema.delete_copy_field(solr_schema.solr_collection, cp_field)
         for field in current_fields:
             solr_schema.solr.schema.delete_field(solr_schema.solr_collection, field)
         CoreAdmin().reload()
