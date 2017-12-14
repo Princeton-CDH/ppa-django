@@ -17,7 +17,7 @@ install:
 
 before_script:
   - SOLR_VERSION=$SOLR_VERSION SOLR_CORE=$SOLR_CORE bash ci/config_solr.sh
-  - python manage.py build_solr_schema --configure-directory=solr-$SOLR_VERSION/server/solr/$SOLR_CORE/conf --reload-core $SOLR_CORE
+
 
 script:
   - py.test --cov=ppa
