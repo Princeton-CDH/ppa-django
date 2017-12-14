@@ -1,6 +1,5 @@
-from django.conf import settings
-from django.core.management.base import BaseCommand
-from SolrClient import SolrClient, Collections
+from django.core.management.base import BaseCommand, CommandError
+from SolrClient.exceptions import ConnectionError
 
 from ppa.archive import solr
 
@@ -11,7 +10,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         schema = solr.SolrSchema()
-        created, updated, removed = schema.update_solr_schema()
+        try:
+            created, updated, removed = schema.update_solr_schema()
+        except ConnectionError:
+            raise CommandError('Error connecting to Solr. ' +
+                'Check your configuration and make sure Solr is running.')
         # summarize what was done
         if created:
             self.stdout.write('Added %d field%s' %

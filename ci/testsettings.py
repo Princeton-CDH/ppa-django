@@ -26,4 +26,14 @@ DATABASES = {
 # required by mezzanine for unit tests
 ALLOWED_HOSTS = ['*']
 
+# required for integration tests that query Solr
+SOLR_CONNECTIONS = {
+  'test': {
+        'COLLECTION': 'test-ppa',
+        'URL': 'http://localhost:8983/solr/',
+        'ADMIN_URL': 'http://localhost:8983/solr/admin/cores'
+    },
+}
+
+
 # secret key added as a travis build step
