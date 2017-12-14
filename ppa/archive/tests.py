@@ -263,6 +263,10 @@ class TestCoreAdmin(TestCase):
 
 class TestDigitizedWork(TestCase):
 
+    def test_str(self):
+        digwork = DigitizedWork(source_id='njp.32101013082597')
+        assert str(digwork) == digwork.source_id
+
     def test_populate_from_bibdata(self):
         with open(TestHathiBibliographicRecord.bibdata_full) as bibdata:
             full_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))

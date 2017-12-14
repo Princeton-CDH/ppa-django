@@ -38,6 +38,10 @@ class DigitizedWork(models.Model):
     def get_absolute_url(self):
         return reverse('archive:details', kwargs={'id': self.source_id})
 
+    def __str__(self):
+        '''Default string display. Uses :attr:`source_id`'''
+        return self.source_id
+
     def populate_from_bibdata(self, bibdata):
         '''Update record fields based on Hathi bibdata information.
         Full record is required in order to set all fields
