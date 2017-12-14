@@ -15,6 +15,7 @@ def load_group_fixture(apps, schema_editor):
         app_config.models_module = True
         create_permissions(app_config, apps=apps, verbosity=0)
         app_config.models_module = None
+
     call_command('loaddata', 'initial_groups', app_label='common', verbose=0)
 
 
@@ -23,8 +24,9 @@ class Migration(migrations.Migration):
     dependencies = [
         ('auth', '0001_initial'),
         ('archive', '0001_initial'),
-        ('pages', '0001_initial'),
+        ('pages', '0004_auto_20170411_0504'),
         ('redirects', '0001_initial'),
+        ('generic', '0003_auto_20170411_0504'),
     ]
 
     operations = [
