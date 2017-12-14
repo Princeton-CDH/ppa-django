@@ -1,9 +1,12 @@
 from datetime import date
+from io import StringIO
 import json
 import os.path
 from unittest.mock import patch, Mock
 
 from django.conf import settings
+from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
 import pymarc
 import pytest
@@ -132,8 +135,8 @@ class TestHathiBibliographicRecord(TestCase):
 TEST_SOLR_CONNECTIONS = {
     'default': {
         'COLLECTION': 'testppa',
-        'URL': 'http://example.com:8984/solr/',
-        'ADMIN_URL': 'http://example.com:8984/solr/admin/cores'
+        'URL': 'http://localhost:191918984/solr/',
+        'ADMIN_URL': 'http://localhost:191918984/solr/admin/cores'
     }
 }
 
@@ -315,5 +318,54 @@ class TestDigitizedWork(TestCase):
         # with enumcron
         digwork.enumcron = 'v.7 (1848)'
         assert digwork.index_data()['enumcron'] == digwork.enumcron
+
+
+@pytest.fixture
+def empty_solr():
+    # pytest solr fixture; updates solr schema
+    with override_settings(SOLR_CONNECTIONS={'default': settings.SOLR_CONNECTIONS['test']}):
+        solr_schema = SolrSchema()
+        for cp_field in solr_schema.solr.schema.get_schema_copyfields(solr_schema.solr_collection):
+            solr_schema.solr.schema.delete_copy_field(solr_schema.solr_collection, cp_field)
+        current_fields = solr_schema.solr_schema_fields()
+        for field in current_fields:
+            solr_schema.solr.schema.delete_field(solr_schema.solr_collection, field)
+
+
+@pytest.fixture
+def solr():
+    # pytest solr fixture; updates solr schema
+    with override_settings(SOLR_CONNECTIONS={'default': settings.SOLR_CONNECTIONS['test']}):
+        SolrSchema().update_solr_schema()
+
+
+class TestSolrSchemaCommand(TestCase):
+
+    def test_connection_error(self):
+        # simulate no solr running
+        with override_settings(SOLR_CONNECTIONS=TEST_SOLR_CONNECTIONS):
+            with pytest.raises(CommandError):
+                call_command('solr_schema')
+
+    @pytest.mark.usefixtures("empty_solr")
+    def test_empty_solr(self):
+        with override_settings(SOLR_CONNECTIONS={'default': settings.SOLR_CONNECTIONS['test']}):
+            output = StringIO("")
+            call_command('solr_schema', stdout=output)
+            output.seek(0)
+            output = output.read()
+            assert 'Added ' in output
+            assert 'Updated ' not in output
+
+    @pytest.mark.usefixtures("solr")
+    def test_update_solr(self):
+        with override_settings(SOLR_CONNECTIONS={'default': settings.SOLR_CONNECTIONS['test']}):
+            output = StringIO("")
+            call_command('solr_schema', stdout=output)
+            output.seek(0)
+            output = output.read()
+            assert 'Updated ' in output
+            assert 'Added ' not in output
+
 
 
