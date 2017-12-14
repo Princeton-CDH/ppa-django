@@ -116,7 +116,11 @@ class Command(BaseCommand):
             # pairtree encoded version of the id
             content_dir = pairtree_path.id_encode(pt_id)
             # - expect a mets file and a zip file
-            ht_metsfile, ht_zipfile = ptobj.list_parts(content_dir)
+            # - don't rely on them being returned in the same order on every machine
+            parts = ptobj.list_parts(content_dir)
+            # find the first zipfile in the list (should only be one)
+            ht_zipfile = [part for part in parts if part.endswith('zip')][0]
+            # currently not making use of the metsfile
 
             # create a list to gather solr information to index
             # digitized work and pages all at once
@@ -152,8 +156,9 @@ class Command(BaseCommand):
             if progbar:
                 progbar.update(stats['count'])
 
-        # commit all indexed changes so they will be stored
-        self.solr.commit(self.solr_collection)
+        # commit any indexed changes so they will be stored
+        if stats['created'] or stats['updated']:
+            self.solr.commit(self.solr_collection)
 
         summary = '\nProcessed {:,d} item{} for import.' + \
         '\nAdded {:,d}; updated {:,d}; skipped {:,d}; {:,d} error{}; indexed {:,d} page{}.'
