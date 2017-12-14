@@ -5,6 +5,9 @@ import time
 from zipfile import ZipFile
 
 from django.conf import settings
+from django.contrib.admin.models import LogEntry, ADDITION, CHANGE
+from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from django.template.defaultfilters import pluralize
 from pairtree import pairtree_path, pairtree_client
@@ -48,6 +51,9 @@ class Command(BaseCommand):
 
         stats = defaultdict(int)
 
+        # retrieve script user for generating log entries / record history
+        script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
+
         # if ids are explicitly specified on the command line, only
         # index those items
         # (currently still requires rsync data to be present on the filesystem)
@@ -85,7 +91,19 @@ class Command(BaseCommand):
 
             # find existing record or create a new one
             digwork, created = DigitizedWork.objects.get_or_create(source_id=htid)
+
+            if created:
+                # create log entry for record creation
+                LogEntry.objects.log_action(
+                    user_id=script_user.id,
+                    content_type_id=ContentType.objects.get_for_model(digwork).pk,
+                    object_id=digwork.pk,
+                    object_repr=str(digwork),
+                    change_message='Created via hathi_import script',
+                    action_flag=ADDITION)
+
             # if this is an existing record, check if updates are needed
+            source_updated = None
             if not created and not kwargs['update']:
                 source_updated = bibdata.copy_last_updated(htid)
                 if digwork.updated.date() > source_updated:
@@ -107,6 +125,23 @@ class Command(BaseCommand):
             # update or populate digitized item in the database
             digwork.populate_from_bibdata(bibdata)
             digwork.save()
+
+            if not created:
+                # create log entry for updating an existing record
+                # 0 include details about why the update happened if possible
+                msg_detail = ''
+                if kwargs['update']:
+                    msg_detail = ' (forced update)'
+                else:
+                    msg_detail = '; source record last updated %s' % source_updated
+
+                LogEntry.objects.log_action(
+                    user_id=script_user.id,
+                    content_type_id=ContentType.objects.get_for_model(digwork).pk,
+                    object_id=digwork.pk,
+                    object_repr=str(digwork),
+                    change_message='Updated via hathi_import script%s' % msg_detail,
+                    action_flag=CHANGE)
 
             prefix, pt_id = htid.split('.', 1)
             # pairtree id to path for data files
@@ -192,7 +227,6 @@ class Command(BaseCommand):
                 # pairtree_prefix, but python pairtree library doesn't
                 # yet include logic for that
                 yield '%s.%s' % (prefix, hathi_id)
-
 
     def count_hathi_ids(self):
         # count items in the pairtree structure without loading
