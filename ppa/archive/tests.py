@@ -6,15 +6,76 @@ from unittest.mock import patch, Mock
 from django.conf import settings
 from django.test import TestCase, override_settings
 import pymarc
+import pytest
 import requests
 from SolrClient import SolrClient
 
-from ppa.archive.hathi import HathiBibliographicRecord
+from ppa.archive import hathi
+# from ppa.archive .hathi import HathiBibliographicRecord, HathiBibliographicAPI,
 from ppa.archive.models import DigitizedWork
 from ppa.archive.solr import get_solr_connection, SolrSchema, CoreAdmin
 
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
+
+
+@patch('ppa.archive.hathi.requests')
+class TestHathiBibliographicAPI(TestCase):
+    bibdata = os.path.join(FIXTURES_PATH,
+        'bibdata_brief_njp.32101013082597.json')
+
+    def test_brief_record(self, mockrequests):
+        mockrequests.codes = requests.codes
+        mockrequests.get.return_value.status_code = requests.codes.ok
+
+        bib_api = hathi.HathiBibliographicAPI()
+        htid = 'njp.32101013082597'
+
+        # no result found
+        mockrequests.get.return_value.json.return_value = {}
+        with pytest.raises(hathi.HathiItemNotFound):
+            bib_api.brief_record('htid', htid)
+
+        # use fixture to simulate result found
+        with open(self.bibdata) as sample_bibdata:
+            mockrequests.get.return_value.json.return_value = json.load(sample_bibdata)
+
+        record = bib_api.brief_record('htid', htid)
+        assert isinstance(record, hathi.HathiBibliographicRecord)
+
+        # check expected url was called
+        mockrequests.get.assert_any_call(
+            'http://catalog.hathitrust.org/api/volumes/brief/htid/%s.json' % htid)
+
+        # ark ids are not escaped
+        htid = 'aeu.ark:/13960/t1pg22p71'
+        bib_api.brief_record('htid', htid)
+        mockrequests.get.assert_any_call(
+            'http://catalog.hathitrust.org/api/volumes/brief/htid/%s.json' % htid)
+
+        # alternate id
+        oclc_id = '424023'
+        bib_api.brief_record('oclc', oclc_id)
+        mockrequests.get.assert_any_call(
+            'http://catalog.hathitrust.org/api/volumes/brief/oclc/%s.json' % oclc_id)
+
+    def test_record(self, mockrequests):
+        mockrequests.codes = requests.codes
+        mockrequests.get.return_value.status_code = requests.codes.ok
+
+        bib_api = hathi.HathiBibliographicAPI()
+        htid = 'njp.32101013082597'
+
+        # use fixture to simulate result found
+        with open(self.bibdata) as sample_bibdata:
+            mockrequests.get.return_value.json.return_value = json.load(sample_bibdata)
+
+        record = bib_api.record('htid', htid)
+        assert isinstance(record, hathi.HathiBibliographicRecord)
+
+        # check expected url was called - full instead of brief
+        mockrequests.get.assert_any_call(
+            'http://catalog.hathitrust.org/api/volumes/full/htid/%s.json' % htid)
 
 
 class TestHathiBibliographicRecord(TestCase):
@@ -25,10 +86,10 @@ class TestHathiBibliographicRecord(TestCase):
 
     def setUp(self):
         with open(self.bibdata_full) as bibdata:
-            self.record = HathiBibliographicRecord(json.load(bibdata))
+            self.record = hathi.HathiBibliographicRecord(json.load(bibdata))
 
         with open(self.bibdata_brief) as bibdata:
-            self.brief_record = HathiBibliographicRecord(json.load(bibdata))
+            self.brief_record = hathi.HathiBibliographicRecord(json.load(bibdata))
 
     def test_properties(self):
         record = self.record
@@ -201,10 +262,10 @@ class TestDigitizedWork(TestCase):
 
     def test_populate_from_bibdata(self):
         with open(TestHathiBibliographicRecord.bibdata_full) as bibdata:
-            full_bibdata = HathiBibliographicRecord(json.load(bibdata))
+            full_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
 
         with open(TestHathiBibliographicRecord.bibdata_brief) as bibdata:
-            brief_bibdata = HathiBibliographicRecord(json.load(bibdata))
+            brief_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
 
         digwork = DigitizedWork(source_id='njp.32101013082597')
         digwork.populate_from_bibdata(brief_bibdata)
