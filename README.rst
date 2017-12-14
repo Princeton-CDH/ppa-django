@@ -50,9 +50,12 @@ Initial setup and installation:
 
     python manage.py migrate
 
-- Create a new Solr core with a basic configuration and managed schema
-  (you can copy `configsets/basic_configs/` configuration files included with
-  Solr), and then run a manage command to add schema fields::
+- Create a new Solr core with a basic configuration and managed schema,
+  using the same core/collection name you configured in local settings::
+
+    solr create -c SOLR_CORE -n basic_configs
+
+- Run the manage command to configure the schema::
 
     python manage.py solr_schema
 
@@ -80,4 +83,4 @@ Run tests using py.test::
     py.test
 
 Make sure you configure a test solr connection and set up an empty
-Solr core using the same instructions as for the development core.
+Solr core using the same instructions as for the development core.g
