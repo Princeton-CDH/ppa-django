@@ -328,19 +328,25 @@ class TestDigitizedWork(TestCase):
 def empty_solr():
     # pytest solr fixture; updates solr schema
     with override_settings(SOLR_CONNECTIONS={'default': settings.SOLR_CONNECTIONS['test']}):
+        # reload core before and after to ensure field list is accurate
+        CoreAdmin().reload()
         solr_schema = SolrSchema()
         for cp_field in solr_schema.solr.schema.get_schema_copyfields(solr_schema.solr_collection):
             solr_schema.solr.schema.delete_copy_field(solr_schema.solr_collection, cp_field)
         current_fields = solr_schema.solr_schema_fields()
         for field in current_fields:
             solr_schema.solr.schema.delete_field(solr_schema.solr_collection, field)
+        CoreAdmin().reload()
 
 
 @pytest.fixture
 def solr():
     # pytest solr fixture; updates solr schema
     with override_settings(SOLR_CONNECTIONS={'default': settings.SOLR_CONNECTIONS['test']}):
+        # reload core before and after to ensure field list is accurate
+        CoreAdmin().reload()
         SolrSchema().update_solr_schema()
+        CoreAdmin().reload()
 
 
 class TestSolrSchemaCommand(TestCase):
@@ -370,6 +376,5 @@ class TestSolrSchemaCommand(TestCase):
             output = output.read()
             assert 'Updated ' in output
             assert 'Added ' not in output
-
 
 
