@@ -28,10 +28,10 @@ ALLOWED_HOSTS = ['*']
 
 # required for integration tests that query Solr
 SOLR_CONNECTIONS = {
-    'test': {
+  'test': {
         'COLLECTION': 'test-ppa',
-        'URL': 'http://127.0.0.1:8983/solr/',
-        'ADMIN_URL': 'http://127.0.0.1:8983/solr/admin/cores'
+        'URL': 'http://localhost:8983/solr/',
+        'ADMIN_URL': 'http://localhost:8983/solr/admin/cores'
     },
 }
 
