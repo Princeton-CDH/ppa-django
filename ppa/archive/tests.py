@@ -16,7 +16,8 @@ from SolrClient import SolrClient
 from ppa.archive import hathi
 # from ppa.archive .hathi import HathiBibliographicRecord, HathiBibliographicAPI,
 from ppa.archive.models import DigitizedWork
-from ppa.archive.solr import get_solr_connection, SolrSchema, CoreAdmin
+from ppa.archive.solr import get_solr_connection, SolrSchema, CoreAdmin, \
+    PagedSolrQuery
 
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
@@ -379,5 +380,77 @@ class TestSolrSchemaCommand(TestCase):
             output = output.read()
             assert 'Updated ' in output
             assert 'Added ' not in output
+
+@patch('ppa.archive.solr.get_solr_connection')
+class TestPagedSolrQuery(TestCase):
+
+    def test_init(self, mock_get_solr_connection):
+        mocksolr = Mock()
+        coll = 'testcoll'
+        mock_get_solr_connection.return_value = (mocksolr, coll)
+
+        psq = PagedSolrQuery()
+        assert psq.solr == mocksolr
+        assert psq.solr_collection == coll
+        assert psq.query_opts == {}
+
+        opts = {'q': '*:*'}
+        psq = PagedSolrQuery(query_opts=opts)
+        assert psq.query_opts == opts
+
+    def test_get_results(self, mock_get_solr_connection):
+        mocksolr = Mock()
+        coll = 'testcoll'
+        mock_get_solr_connection.return_value = (mocksolr, coll)
+        psq = PagedSolrQuery()
+        results = psq.get_results()
+        mocksolr.query.assert_called_once_with(coll, psq.query_opts)
+        assert results == mocksolr.query.return_value.docs
+
+    def test_count(self, mock_get_solr_connection):
+        mocksolr = Mock()
+        coll = 'testcoll'
+        mock_get_solr_connection.return_value = (mocksolr, coll)
+        mocksolr.query.return_value.get_num_found.return_value = 42
+        psq = PagedSolrQuery()
+        assert psq.count() == 42
+
+    def test_get_json(self, mock_get_solr_connection):
+        mocksolr = Mock()
+        coll = 'testcoll'
+        mock_get_solr_connection.return_value = (mocksolr, coll)
+        mocksolr.query.return_value.get_num_found.return_value = 42
+        psq = PagedSolrQuery()
+        assert psq.get_json() == mocksolr.query.return_value.get_json.return_value
+
+    def test_set_limits(self, mock_get_solr_connection):
+        mock_get_solr_connection.return_value = (Mock(), 'coll')
+        psq = PagedSolrQuery()
+        psq.set_limits(1, 10)
+        assert psq.query_opts['start'] == 1
+        assert psq.query_opts['rows'] == 10
+        psq.set_limits(100, 120)
+        assert psq.query_opts['start'] == 100
+        assert psq.query_opts['rows'] == 21
+
+    def test_slice(self, mock_get_solr_connection):
+        mocksolr = Mock()
+        mock_get_solr_connection.return_value = (mocksolr, 'coll')
+
+        psq = PagedSolrQuery()
+        with patch.object(psq, 'set_limits') as mock_set_limits:
+            # slice
+            psq[:10]
+            mock_set_limits.assert_any_call(None, 10)
+            psq[4:10]
+            mock_set_limits.assert_any_call(4, 10)
+            psq[20:]
+            mock_set_limits.assert_any_call(20, None)
+
+            with patch.object(psq, 'get_results') as mock_get_results:
+                mock_get_results.return_value = [3,]
+                assert psq[0] == 3
+                mock_set_limits.assert_any_call(0, 1)
+
 
 

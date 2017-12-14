@@ -141,6 +141,11 @@ class PagedSolrQuery(object):
         self.solr, self.solr_collection = get_solr_connection()
 
         self.query_opts = query_opts or {}
+        # possibly should default to 'q': '*:*' ...
+
+    def get_results(self):
+        self._result = self.solr.query(self.solr_collection, self.query_opts)
+        return self._result.docs
 
     def count(self):
         if self._result is None:
@@ -150,18 +155,23 @@ class PagedSolrQuery(object):
 
         return self._result.get_num_found()
 
+    def get_json(self):
+        '''Return query response as JSON data, to allow full access to anything
+        included in Solr data.'''
+        if self._result is None:
+            self.get_results()
+        return self._result.get_json()
+
+
     def set_limits(self, start, stop):
+        '''Return a subsection of the results, to support slicing.'''
+        # FIXME: it probably matters here that solr start is 1-based ...
+        if start is None:
+            start = 0
         self.query_opts.update({
             'start': start,
             'rows': stop - start + 1
         })
-
-    def get_results(self):
-        self._result = self.solr.query(self.solr_collection, self.query_opts)
-        return self._result.docs
-
-    def get_json(self):
-        return self._result.get_json()
 
     def __getitem__(self, k):
         '''Return a single result or a slice of results'''
