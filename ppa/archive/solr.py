@@ -1,6 +1,11 @@
+import logging
+
 from django.conf import settings
 import requests
 from SolrClient import SolrClient
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_solr_connection():
@@ -48,6 +53,7 @@ class SolrSchema(object):
 
     def __init__(self):
         self.solr, self.solr_collection = get_solr_connection()
+        logger.info('Using %s core.', self.solr_collection)
 
     def solr_schema_fields(self):
         '''List of currently configured Solr schema fields'''
