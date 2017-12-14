@@ -16,7 +16,7 @@
 <ul>
     {% for item in object_list %}
     <li>
-        <h3>{{ item.title }}</h3>
+        <h3><a href="{% url 'archive:detail' item.srcid %}">{{ item.title }}</a></h3>
         <p>sort title: {{ item.title_exact }}</p>
         <p>{{ item.author }}</p>
         {% if item.enumcron %}<p>{{ item.enumcron }}</p> {% endif %}
