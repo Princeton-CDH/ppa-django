@@ -25,8 +25,8 @@ else
 fi
 
 # Try to make a core
-echo "Trying to make a core"
-$bin create -c $SOLR_CORE
+echo "Creating solr core with managed schema"
+$bin create -c $SOLR_CORE -n basic_configs
 
 if [ $? -ne 0 ];
 then
