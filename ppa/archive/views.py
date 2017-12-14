@@ -73,12 +73,10 @@ class DigitizedWorkListView(ListView):
         return context
 
 
-class ItemDetailView(DetailView):
-
+class DigitizedWorkDetailView(DetailView):
+    '''Display details for a single digitized work'''
     model = DigitizedWork
+    slug_field = 'source_id'
+    slug_url_kwarg = 'source_id'
 
-    def get_object(self, queryset=None):
-        '''Override get_object to use source_id as lookup criterion'''
-        source_id = self.kwargs.get('id', None)
-        return get_object_or_404(DigitizedWork, source_id=source_id)
 

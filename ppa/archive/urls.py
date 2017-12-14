@@ -5,5 +5,5 @@ from ppa.archive import views
 
 urlpatterns = [
     url('^$', views.DigitizedWorkListView.as_view(), name='list'),
-    url('^(?P<id>.+)/$', views.ItemDetailView.as_view(), name='detail'),
+    url('^(?P<source_id>.+)/$', views.DigitizedWorkDetailView.as_view(), name='detail'),
 ]
