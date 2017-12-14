@@ -58,7 +58,11 @@ class SolrSchema(object):
         '''Update the configured solr instance schema to match
         the configured fields.  Returns a tuple with the number of fields
         created and updated.'''
-        current_fields = self.solr_schema_fields()
+        try:
+            current_fields = self.solr_schema_fields()
+        except ConnectionRefusedError:
+            raise
+
         created = updated = removed = 0
         for field in self.fields:
             if field['name'] not in current_fields:

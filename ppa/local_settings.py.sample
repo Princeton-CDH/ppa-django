@@ -43,8 +43,12 @@ SOLR_CONNECTIONS = {
         'COLLECTION': 'ppa',
         'URL': 'http://127.0.0.1:8983/solr/',
         'ADMIN_URL': 'http://127.0.0.1:8983/solr/admin/cores'
+    },
+   'test': {
+        'COLLECTION': 'ppa-test',
+        'URL': 'http://127.0.0.1:8983/solr/',
+        'ADMIN_URL': 'http://127.0.0.1:8983/solr/admin/cores'
     }
-
 }
 
 # local path to hathi pairtree data provided via rsync

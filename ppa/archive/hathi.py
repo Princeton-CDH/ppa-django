@@ -28,7 +28,7 @@ class HathiBibliographicAPI(object):
         if resp.status_code == requests.codes.ok:
             # for an invalid id, hathi seems to return a 200 ok
             # but json has no records
-            if not resp.json()['records']:
+            if not resp.json().get('records', None):
                 raise HathiItemNotFound
             return HathiBibliographicRecord(resp.json())
 
