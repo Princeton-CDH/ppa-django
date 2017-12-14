@@ -1,12 +1,8 @@
 import json
 import logging
-import operator
 
-from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.views.generic import ListView, DetailView
-from SolrClient import SolrClient
-from SolrClient import SolrResponse
 
 from ppa.archive.forms import SearchForm
 from ppa.archive.models import DigitizedWork
