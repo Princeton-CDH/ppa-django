@@ -182,6 +182,10 @@ PACKAGE_NAME_FILEBROWSER = "filebrowser_safe"
 PACKAGE_NAME_GRAPPELLI = "grappelli"
 
 
+# username for logging activity by local scripts
+SCRIPT_USERNAME = 'script'
+
+
 #########################
 # OPTIONAL APPLICATIONS #
 #########################
