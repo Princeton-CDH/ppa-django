@@ -14,7 +14,7 @@ fi
 tar xzf $file
 
 # Start the solr instance with all default settings
-echo "Starting solr and making core..."
+echo "Starting solr and creating core ${SOLR_CORE}..."
 bin="solr-${version}/bin/solr"
 $bin start
 if [ $? -eq 0 ];
