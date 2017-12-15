@@ -8,6 +8,7 @@ from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
+from django.urls import reverse
 import pymarc
 import pytest
 import requests
@@ -264,6 +265,8 @@ class TestCoreAdmin(TestCase):
 
 class TestDigitizedWork(TestCase):
 
+    fixtures = ['sample_digitized_works']
+
     def test_str(self):
         digwork = DigitizedWork(source_id='njp.32101013082597')
         assert str(digwork) == digwork.source_id
@@ -323,6 +326,11 @@ class TestDigitizedWork(TestCase):
         # with enumcron
         digwork.enumcron = 'v.7 (1848)'
         assert digwork.index_data()['enumcron'] == digwork.enumcron
+
+    def test_get_absolute_url(self):
+        work = DigitizedWork.objects.first()
+        assert work.get_absolute_url() == \
+            reverse('archive:detail', kwargs={'source_id': work.source_id})
 
 
 @pytest.fixture
@@ -451,6 +459,3 @@ class TestPagedSolrQuery(TestCase):
                 mock_get_results.return_value = [3,]
                 assert psq[0] == 3
                 mock_set_limits.assert_any_call(0, 1)
-
-
-

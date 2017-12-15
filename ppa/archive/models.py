@@ -36,7 +36,7 @@ class DigitizedWork(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     def get_absolute_url(self):
-        return reverse('archive:details', kwargs={'id': self.source_id})
+        return reverse('archive:detail', kwargs={'source_id': self.source_id})
 
     def __str__(self):
         '''Default string display. Uses :attr:`source_id`'''
