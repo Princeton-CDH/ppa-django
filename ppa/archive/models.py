@@ -20,14 +20,14 @@ class DigitizedWork(models.Model):
     # TODO: what is the generic/non-hathi name for this? volume/version?
 
     # NOTE: may eventually to convert to foreign key
-    author = models.CharField(max_length=255)
+    author = models.CharField(max_length=255, blank=True)
     #: place of publication
     pub_place = models.CharField('Place of Publication', max_length=255,
         blank=True)
     #: publisher
     publisher = models.TextField(max_length=255, blank=True)
     # using char for now in case not all numeric
-    pub_date = models.CharField('Publication Date', max_length=255)
+    pub_date = models.CharField('Publication Date', max_length=255, blank=True)
     #: number of pages in the work
     page_count = models.PositiveIntegerField(null=True, blank=True)
     #: date added to the archive
