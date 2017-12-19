@@ -37,6 +37,8 @@
             <p><small>relevance: {{ item.score }}</small></p>
         {% endif %}
     </li>
+    {% empty %}
+    <li>No matching items found</li>
     {% endfor %}
 </ul>
 
