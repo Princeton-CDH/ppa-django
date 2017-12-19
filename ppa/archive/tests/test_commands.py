@@ -45,6 +45,9 @@ def empty_solr():
             solr_schema.solr.schema.delete_field(solr_schema.solr_collection, field)
         CoreAdmin().reload()
 
+        yield settings
+
+
 
 @pytest.fixture
 def solr():
@@ -54,6 +57,8 @@ def solr():
         CoreAdmin().reload()
         SolrSchema().update_solr_schema()
         CoreAdmin().reload()
+
+        yield settings
 
 
 class TestSolrSchemaCommand(TestCase):
@@ -70,20 +75,18 @@ class TestSolrSchemaCommand(TestCase):
     @pytest.mark.usefixtures("empty_solr")
     def test_empty_solr(self):
         with override_settings(SOLR_CONNECTIONS={'default': settings.SOLR_CONNECTIONS['test']}):
-            output = StringIO("")
-            call_command('solr_schema', stdout=output)
-            output.seek(0)
-            output = output.read()
+            stdout = StringIO()
+            call_command('solr_schema', stdout=stdout)
+            output = stdout.getvalue()
             assert 'Added ' in output
             assert 'Updated ' not in output
 
     @pytest.mark.usefixtures("solr")
     def test_update_solr(self):
         with override_settings(SOLR_CONNECTIONS={'default': settings.SOLR_CONNECTIONS['test']}):
-            output = StringIO("")
-            call_command('solr_schema', stdout=output)
-            output.seek(0)
-            output = output.read()
+            stdout = StringIO()
+            call_command('solr_schema', stdout=stdout)
+            output = stdout.getvalue()
             assert 'Updated ' in output
             assert 'Added ' not in output
 
@@ -123,6 +126,7 @@ class TestHathiImportCommand(TestCase):
     def test_get_hathi_ids(self, mock_pairtree_client):
         # pairtree_client.PairtreeStorageClient().list_ids()
         cmd = hathi_import.Command()
+        cmd.hathi_pairtree = {}  # force pairtree dict to initialize
         # use the same id values for each prefix
         id_values = ['one', 'two', 'three']
         mock_pairtree_client.PairtreeStorageClient \
@@ -138,7 +142,7 @@ class TestHathiImportCommand(TestCase):
                 assert '%s.%s' % (prefix, test_id) in hathi_idlist
 
     @patch('ppa.archive.management.commands.hathi_import.pairtree_client')
-    def test_get_hathi_ids(self, mock_pairtree_client):
+    def test_count_hathi_ids(self, mock_pairtree_client):
         # pairtree_client.PairtreeStorageClient().list_ids()
         cmd = hathi_import.Command()
         # use the same id values for each prefix
@@ -312,7 +316,8 @@ class TestHathiImportCommand(TestCase):
 
     @patch('ppa.archive.management.commands.hathi_import.HathiBibliographicAPI')
     @patch('ppa.archive.management.commands.hathi_import.progressbar')
-    def test_call_command(self, mockprogbar, mockhathi_bibapi):
+    @patch('ppa.archive.management.commands.hathi_import.get_solr_connection')
+    def test_call_command(self, mock_get_solr, mockprogbar, mockhathi_bibapi):
 
         # patch methods with actual logic to check handle method behavior
         with patch.object(hathi_import.Command, 'get_hathi_ids') as mock_get_htids, \
@@ -324,6 +329,7 @@ class TestHathiImportCommand(TestCase):
             mock_get_htids.return_value = mock_htids
             digwork = DigitizedWork(source_id='test.123')
             mock_import_digwork.return_value = digwork
+            mock_get_solr.return_value = (Mock, 'testcoll')
 
             # default behavior = read ids from pairtree
             stdout = StringIO()
@@ -343,6 +349,6 @@ class TestHathiImportCommand(TestCase):
             mock_import_digwork.assert_any_call('htid2')
 
             # request progress bar
-            call_command('hathi_import', progress=1, verbosity=0)
+            call_command('hathi_import', progress=1, verbosity=0, stdout=stdout)
             mockprogbar.ProgressBar.assert_called_with(redirect_stdout=True,
                     max_value=len(mock_htids))
