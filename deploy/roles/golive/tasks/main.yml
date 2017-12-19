@@ -1,10 +1,3 @@
-- name: Make a database dump to /tmp just in case
-  mysql_db:
-    state: dump
-    login_host: "{{ db_host}}"
-    name: "{{ db_name }}"
-    target: "{{ db_backup }}"
-
 - name: Run database migrations
   django_manage:
     command: migrate
