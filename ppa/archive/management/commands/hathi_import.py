@@ -1,5 +1,6 @@
 from collections import defaultdict
 from glob import glob
+import logging
 import os
 import time
 from zipfile import ZipFile
@@ -16,6 +17,9 @@ import progressbar
 from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound
 from ppa.archive.models import DigitizedWork
 from ppa.archive.solr import get_solr_connection
+
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -235,9 +239,7 @@ class Command(BaseCommand):
         # the full dataset...
         start = time.time()
         count = sum(1 for i in self.get_hathi_ids())
-        if self.verbosity > self.v_normal:
-            self.stdout.write('Counted hathi ids in %f sec' %
-                (time.time() - start))
+        logger.debug('Counted hathi ids in %f sec' % (time.time() - start))
         return count
 
 
