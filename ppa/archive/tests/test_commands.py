@@ -42,6 +42,9 @@ def empty_solr():
         for cp_field in cp_fields:
             solr_schema.solr.schema.delete_copy_field(solr_schema.solr_collection, cp_field)
         for field in current_fields:
+            # don't delete default/built-in fields!
+            if field == 'id' or field.startswith('_'):
+                continue
             solr_schema.solr.schema.delete_field(solr_schema.solr_collection, field)
         CoreAdmin().reload()
 
