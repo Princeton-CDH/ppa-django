@@ -13,5 +13,10 @@ class LocalUserAdmin(UserAdmin):
     group_names.short_description = 'groups'
 
 
+class CollapsibleTabularInline(admin.TabularInline):
+    '''Django admin tabular inline with grappelli collapsible classes added'''
+    classes = ('grp-collapse grp-open',)
+
+
 admin.site.unregister(User)
 admin.site.register(User, LocalUserAdmin)
