@@ -96,46 +96,8 @@ class Command(BaseCommand):
                     progbar.update(self.stats['count'])
                 continue
 
-            prefix, pt_id = htid.split('.', 1)
-            # pairtree id to path for data files
-            ptobj = self.hathi_pairtree[prefix].get_object(pt_id,
-                create_if_doesnt_exist=False)
-            # contents are stored in a directory named based on a
-            # pairtree encoded version of the id
-            content_dir = pairtree_path.id_encode(pt_id)
-            # - expect a mets file and a zip file
-            # - don't rely on them being returned in the same order on every machine
-            parts = ptobj.list_parts(content_dir)
-            # find the first zipfile in the list (should only be one)
-            ht_zipfile = [part for part in parts if part.endswith('zip')][0]
-            # currently not making use of the metsfile
-
-            # create a list to gather solr information to index
-            # digitized work and pages all at once
-            solr_docs = [digwork.index_data()]
-            # read zipfile contents in place, without unzipping
-            with ZipFile(os.path.join(ptobj.id_to_dirpath(), content_dir, ht_zipfile)) as ht_zip:
-                filenames = ht_zip.namelist()
-                page_count = len(filenames)
-                for pagefilename in filenames:
-                    with ht_zip.open(pagefilename) as pagefile:
-                        page_id = os.path.splitext(os.path.basename(pagefilename))[0]
-                        solr_docs.append({
-                           'id': '%s.%s' % (htid, page_id),
-                           'srcid': htid,   # for grouping with work record
-                           'content': pagefile.read().decode('utf-8'),
-                           'order': page_id,
-                           'item_type': 'page'
-                        })
-                self.solr.index(self.solr_collection, solr_docs,
-                    params={"commitWithin": 10000})  # commit within 10 seconds
-
-            self.stats['pages'] += len(solr_docs) - 1
-
-            # store page count in the database after indexing pages
-            digwork.page_count = page_count
-            digwork.save()
-
+            # index pages in solr and update digwork page count
+            self.index_pages(digwork)
 
             if progbar:
                 progbar.update(self.stats['count'])
@@ -266,6 +228,52 @@ class Command(BaseCommand):
             self.stats['updated'] += 1
 
         return digwork
+
+    def index_pages(self, digwork):
+        '''Read page content for a digitized work from the pairtree and
+        index in solr.'''
+        htid = digwork.source_id
+        prefix, pt_id = htid.split('.', 1)
+        # pairtree id to path for data files
+        ptobj = self.hathi_pairtree[prefix].get_object(pt_id,
+            create_if_doesnt_exist=False)
+        # contents are stored in a directory named based on a
+        # pairtree encoded version of the id
+        content_dir = pairtree_path.id_encode(pt_id)
+        # - expect a mets file and a zip file
+        # - don't rely on them being returned in the same order on every machine
+        parts = ptobj.list_parts(content_dir)
+        # find the first zipfile in the list (should only be one)
+        ht_zipfile = [part for part in parts if part.endswith('zip')][0]
+        # currently not making use of the metsfile
+
+        # create a list to gather solr information to index
+        # digitized work and pages all at once
+        solr_docs = [digwork.index_data()]
+        # read zipfile contents in place, without unzipping
+        with ZipFile(os.path.join(ptobj.id_to_dirpath(), content_dir, ht_zipfile)) as ht_zip:
+            filenames = ht_zip.namelist()
+            page_count = len(filenames)
+            for pagefilename in filenames:
+                with ht_zip.open(pagefilename) as pagefile:
+                    page_id = os.path.splitext(os.path.basename(pagefilename))[0]
+                    solr_docs.append({
+                       'id': '%s.%s' % (htid, page_id),
+                       'srcid': htid,   # for grouping with work record
+                       'content': pagefile.read().decode('utf-8'),
+                       'order': page_id,
+                       'item_type': 'page'
+                    })
+            self.solr.index(self.solr_collection, solr_docs,
+                params={"commitWithin": 10000})  # commit within 10 seconds
+
+        self.stats['pages'] += page_count
+
+        # store page count in the database after indexing pages, if changed
+        if digwork.page_count != page_count:
+            digwork.page_count = page_count
+            digwork.save()
+
 
 
 
