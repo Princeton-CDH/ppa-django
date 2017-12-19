@@ -90,3 +90,12 @@ class DigitizedWork(models.Model):
             'item_type': 'work',
             'order': '0',
         }
+
+
+class Collection(models.Model):
+    '''A collection of :class:~ppa.archive.models.DigitizedWork instances.'''
+    name = models.CharField(max_length=255)
+    digitized_works = models.ManyToManyField(DigitizedWork)
+
+    def __str__(self):
+        return self.name

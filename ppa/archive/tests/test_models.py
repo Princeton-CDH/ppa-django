@@ -6,7 +6,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from ppa.archive import hathi
-from ppa.archive.models import DigitizedWork
+from ppa.archive.models import DigitizedWork, Collection
 
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
@@ -85,3 +85,9 @@ class TestDigitizedWork(TestCase):
         assert work.get_absolute_url() == \
             reverse('archive:detail', kwargs={'source_id': work.source_id})
 
+
+class TestCollection(TestCase):
+
+    def test_str(self):
+        collection = Collection(name='Random Assortment')
+        assert str(collection) == 'Random Assortment'
