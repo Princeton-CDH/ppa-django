@@ -68,7 +68,7 @@ class DigitizedWorkListView(ListView):
             'search_form': self.form,
             # total and object_list provided by paginator
             'sort': self.sort,
-            'page_groups': json.loads(self.solrq.get_json())['expanded']
+            'page_groups': json.loads(self.solrq.get_json()).get('expanded', {})
         })
         return context
 
