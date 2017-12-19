@@ -310,3 +310,39 @@ class TestHathiImportCommand(TestCase):
         # exact value not important, just that it's present
         assert 'commitWithin' in solr_idx_kwargs['params']
 
+    @patch('ppa.archive.management.commands.hathi_import.HathiBibliographicAPI')
+    @patch('ppa.archive.management.commands.hathi_import.progressbar')
+    def test_call_command(self, mockprogbar, mockhathi_bibapi):
+
+        # patch methods with actual logic to check handle method behavior
+        with patch.object(hathi_import.Command, 'get_hathi_ids') as mock_get_htids, \
+          patch.object(hathi_import.Command, 'initialize_pairtrees') as mock_init_ptree, \
+          patch.object(hathi_import.Command, 'import_digitizedwork') as mock_import_digwork, \
+          patch.object(hathi_import.Command, 'index_pages') as mock_index_pages:
+
+            mock_htids = ['ab.1234', 'cd.5678']
+            mock_get_htids.return_value = mock_htids
+            digwork = DigitizedWork(source_id='test.123')
+            mock_import_digwork.return_value = digwork
+
+            # default behavior = read ids from pairtree
+            stdout = StringIO()
+            call_command('hathi_import', stdout=stdout)
+
+            mock_init_ptree.assert_any_call()
+            for htid in mock_htids:
+                mock_import_digwork.assert_any_call(htid)
+            mock_index_pages.assert_called_with(digwork)
+
+            output = stdout.getvalue()
+            assert 'Processed 2 items for import.' in output
+
+            # request specific ids
+            call_command('hathi_import', 'htid1', 'htid2', stdout=stdout)
+            mock_import_digwork.assert_any_call('htid1')
+            mock_import_digwork.assert_any_call('htid2')
+
+            # request progress bar
+            call_command('hathi_import', progress=1, verbosity=0)
+            mockprogbar.ProgressBar.assert_called_with(redirect_stdout=True,
+                    max_value=len(mock_htids))
