@@ -28,7 +28,11 @@ class Command(BaseCommand):
 
     solr = None
     solr_collection = None
+    bib_api = None
     hathi_pairtree = {}
+    stats = None
+    script_user = None
+    options = {}
     #: normal verbosity level
     v_normal = 1
     verbosity = v_normal
@@ -43,8 +47,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         self.solr, self.solr_collection = get_solr_connection()
-        bib_api = HathiBibliographicAPI()
+        self.bib_api = HathiBibliographicAPI()
         self.verbosity = kwargs.get('verbosity', self.v_normal)
+        self.options = kwargs
 
         # bulk import only for now
         # - eventually support list of ids + rsync?
@@ -53,25 +58,25 @@ class Command(BaseCommand):
         # - get list of ids, rsync data, grab metadata
         # - populate db and solr (should add/update if already exists)
 
-        stats = defaultdict(int)
+        self.stats = defaultdict(int)
 
         # retrieve script user for generating log entries / record history
-        script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
+        self.script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
 
         # if ids are explicitly specified on the command line, only
         # index those items
         # (currently still requires rsync data to be present on the filesystem)
-        if kwargs['htids']:
-            ids_to_index = kwargs['htids']
-            stats['total'] = len(ids_to_index)
+        if self.options['htids']:
+            ids_to_index = self.options['htids']
+            self.stats['total'] = len(ids_to_index)
         else:
             # otherwise, find and index everything in the pairtree data
             ids_to_index = self.get_hathi_ids()
-            stats['total'] = self.count_hathi_ids()
+            self.stats['total'] = self.count_hathi_ids()
 
-        if kwargs['progress']:
+        if self.options['progress']:
             progbar = progressbar.ProgressBar(redirect_stdout=True,
-                max_value=stats['total'])
+                max_value=self.stats['total'])
         else:
             progbar = None
 
@@ -81,71 +86,15 @@ class Command(BaseCommand):
         for htid in ids_to_index:
             if self.verbosity >= self.v_normal:
                 self.stdout.write(htid)
-            stats['count'] += 1
-            # get bibliographic data from Hathi api
-            # - needed to check if update is required for existing records,
-            # and needed to populate metadata for new records
-            try:
-                # should only error on user-supplied ids, but still possible
-                bibdata = bib_api.record('htid', htid)
-            except HathiItemNotFound:
-                self.stdout.write("Error: Bibliographic data not found for '%s'" % htid)
-                stats['error'] += 1
+            self.stats['count'] += 1
+
+            digwork = self.import_digitizedwork(htid)
+            # if no item is returned, either there is an error or no update
+            # is needed; update count and go to the next item
+            if not digwork:
+                if progbar:
+                    progbar.update(self.stats['count'])
                 continue
-
-            # find existing record or create a new one
-            digwork, created = DigitizedWork.objects.get_or_create(source_id=htid)
-
-            if created:
-                # create log entry for record creation
-                LogEntry.objects.log_action(
-                    user_id=script_user.id,
-                    content_type_id=ContentType.objects.get_for_model(digwork).pk,
-                    object_id=digwork.pk,
-                    object_repr=str(digwork),
-                    change_message='Created via hathi_import script',
-                    action_flag=ADDITION)
-
-            # if this is an existing record, check if updates are needed
-            source_updated = None
-            if not created and not kwargs['update']:
-                source_updated = bibdata.copy_last_updated(htid)
-                if digwork.updated.date() > source_updated:
-                    # local copy is newer than last source modification date
-                    if self.verbosity > self.v_normal:
-                        self.stdout.write('Source record last updated %s, no reindex needed'
-                            % source_updated)
-                    if progbar:
-                        progbar.update(stats['count'])
-                    # don't index; continue to next item
-                    stats['skipped'] += 1
-                    continue
-                else:
-                    # report in verbose mode
-                    if self.verbosity > self.v_normal:
-                        self.stdout.write('Source record last updated %s, needs reindexing'
-                            % source_updated)
-
-            # update or populate digitized item in the database
-            digwork.populate_from_bibdata(bibdata)
-            digwork.save()
-
-            if not created:
-                # create log entry for updating an existing record
-                # 0 include details about why the update happened if possible
-                msg_detail = ''
-                if kwargs['update']:
-                    msg_detail = ' (forced update)'
-                else:
-                    msg_detail = '; source record last updated %s' % source_updated
-
-                LogEntry.objects.log_action(
-                    user_id=script_user.id,
-                    content_type_id=ContentType.objects.get_for_model(digwork).pk,
-                    object_id=digwork.pk,
-                    object_repr=str(digwork),
-                    change_message='Updated via hathi_import script%s' % msg_detail,
-                    action_flag=CHANGE)
 
             prefix, pt_id = htid.split('.', 1)
             # pairtree id to path for data files
@@ -181,30 +130,26 @@ class Command(BaseCommand):
                 self.solr.index(self.solr_collection, solr_docs,
                     params={"commitWithin": 10000})  # commit within 10 seconds
 
-            stats['pages'] += len(solr_docs) - 1
+            self.stats['pages'] += len(solr_docs) - 1
 
             # store page count in the database after indexing pages
             digwork.page_count = page_count
             digwork.save()
 
-            if created:
-                stats['created'] += 1
-            else:
-                stats['updated'] += 1
 
             if progbar:
-                progbar.update(stats['count'])
+                progbar.update(self.stats['count'])
 
         # commit any indexed changes so they will be stored
-        if stats['created'] or stats['updated']:
+        if self.stats['created'] or self.stats['updated']:
             self.solr.commit(self.solr_collection)
 
         summary = '\nProcessed {:,d} item{} for import.' + \
         '\nAdded {:,d}; updated {:,d}; skipped {:,d}; {:,d} error{}; indexed {:,d} page{}.'
-        summary = summary.format(stats['total'], pluralize(stats['total']),
-            stats['created'], stats['updated'], stats['skipped'],
-            stats['error'], pluralize(stats['error']),
-            stats['pages'], pluralize(stats['pages']))
+        summary = summary.format(self.stats['total'], pluralize(self.stats['total']),
+            self.stats['created'], self.stats['updated'], self.stats['skipped'],
+            self.stats['error'], pluralize(self.stats['error']),
+            self.stats['pages'], pluralize(self.stats['pages']))
 
         self.stdout.write(summary)
 
@@ -241,5 +186,87 @@ class Command(BaseCommand):
         count = sum(1 for i in self.get_hathi_ids())
         logger.debug('Counted hathi ids in %f sec' % (time.time() - start))
         return count
+
+    def import_digitizedwork(self, htid):
+        '''Import a single work into the database and index in solr.
+        Retrieves bibliographic data from Hathi api. If the record already
+        exists in the database, it is only updated if the hathi record
+        has changed or if an update is requested by the user.
+        Creates admin log entry for record creation or record update.
+        Returns None if there is an error retrieving bibliographic data
+        or no update is needed; otherwise, returns the
+        :class:`~ppa.archive.models.DigitizedWork`.'''
+
+        # get bibliographic data for this record from Hathi api
+        # - needed to check if update is required for existing records,
+        # and needed to populate metadata for new records
+        try:
+            # should only error on user-supplied ids, but still possible
+            bibdata = self.bib_api.record('htid', htid)
+        except HathiItemNotFound:
+            self.stdout.write("Error: Bibliographic data not found for '%s'" % htid)
+            self.stats['error'] += 1
+            return
+
+        # find existing record or create a new one
+        digwork, created = DigitizedWork.objects.get_or_create(source_id=htid)
+
+        if created:
+            # create log entry for record creation
+            LogEntry.objects.log_action(
+                user_id=self.script_user.id,
+                content_type_id=ContentType.objects.get_for_model(digwork).pk,
+                object_id=digwork.pk,
+                object_repr=str(digwork),
+                change_message='Created via hathi_import script',
+                action_flag=ADDITION)
+
+        # if this is an existing record, check if updates are needed
+        source_updated = None
+        if not created and not self.options['update']:
+            source_updated = bibdata.copy_last_updated(htid)
+            if digwork.updated.date() > source_updated:
+                # local copy is newer than last source modification date
+                if self.verbosity > self.v_normal:
+                    self.stdout.write('Source record last updated %s, no update needed'
+                        % source_updated)
+                # don't index; continue to next item
+                self.stats['skipped'] += 1
+                return
+            else:
+                # report in verbose mode
+                if self.verbosity > self.v_normal:
+                    self.stdout.write('Source record last updated %s, updated needed'
+                        % source_updated)
+
+        # update or populate digitized item in the database
+        digwork.populate_from_bibdata(bibdata)
+        digwork.save()
+
+        if not created:
+            # create log entry for updating an existing record
+            # 0 include details about why the update happened if possible
+            msg_detail = ''
+            if self.options['update']:
+                msg_detail = ' (forced update)'
+            else:
+                msg_detail = '; source record last updated %s' % source_updated
+
+            LogEntry.objects.log_action(
+                user_id=self.script_user.id,
+                content_type_id=ContentType.objects.get_for_model(digwork).pk,
+                object_id=digwork.pk,
+                object_repr=str(digwork),
+                change_message='Updated via hathi_import script%s' % msg_detail,
+                action_flag=CHANGE)
+
+        if created:
+            self.stats['created'] += 1
+        else:
+            self.stats['updated'] += 1
+
+        return digwork
+
+
 
 
