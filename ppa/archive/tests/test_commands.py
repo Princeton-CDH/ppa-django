@@ -6,6 +6,7 @@ import os
 import tempfile
 import types
 from unittest.mock import patch, Mock
+from zipfile import ZipFile
 
 from django.conf import settings
 from django.contrib.admin.models import LogEntry, ADDITION, CHANGE
@@ -14,7 +15,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
+from pairtree import pairtree_client, pairtree_path
 import pytest
+from SolrClient import SolrClient
 
 from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound, \
     HathiBibliographicRecord
@@ -236,10 +239,74 @@ class TestHathiImportCommand(TestCase):
         assert ' (forced update)' in log_entry.change_message
         assert log_entry.action_flag == CHANGE
 
+    @patch('ppa.archive.management.commands.hathi_import.ZipFile', spec=ZipFile)
+    def test_index_pages(self, mockzipfile):
+        cmd = hathi_import.Command(stdout=StringIO())
+        cmd.stats = defaultdict(int)
+        prefix, pt_id = ('ab', '12345:6')
+        mock_pairtree_client = Mock(spec=pairtree_client.PairtreeStorageClient)
+        cmd.hathi_pairtree = {prefix: mock_pairtree_client}
+        cmd.solr = Mock(spec=SolrClient)
+        cmd.solr_collection = 'testidx'
+        digwork = DigitizedWork(source_id='.'.join([prefix, pt_id]))
 
+        pt_obj = mock_pairtree_client.get_object.return_value
+        pt_obj.list_parts.return_value = ['12345.mets.xml', '12345.zip']
+        pt_obj.id_to_dirpath.return_value = 'ab/path/12345+6'
+        # parts = ptobj.list_parts(content_dir)
+        # __enter__ required because zipfile used as context block
+        mockzip_obj = mockzipfile.return_value.__enter__.return_value
+        page_files = ['0001.txt', '00002.txt']
+        mockzip_obj.namelist.return_value = page_files
+        # simulate reading zip file contents
+        mockzip_obj.open.return_value.__enter__.return_value \
+            .read.return_value.decode.return_value = 'page content'
 
+        # actually index the content
+        cmd.index_pages(digwork)
 
+        # inspect pairtree logic
+        mock_pairtree_client.get_object.assert_any_call(pt_id, create_if_doesnt_exist=False)
+        # list parts called on encoded version of pairtree id
+        content_dir = pairtree_path.id_encode(pt_id)
+        pt_obj.list_parts.assert_any_call(content_dir)
+        pt_obj.id_to_dirpath.assert_any_call()
 
+        # inspect zipfile logic
+        mockzip_obj.namelist.assert_called_with()
+        for filename in mockzip_obj.namelist():
+            mockzip_obj.open.assert_any_call(filename)
 
+        zipfile_path = os.path.join(pt_obj.id_to_dirpath(), content_dir, '12345.zip')
+        mockzipfile.assert_called_with(zipfile_path)
 
+        # stats and digitized work page counts updated
+        assert cmd.stats['pages'] == 2
+        digwork = DigitizedWork.objects.get(source_id=digwork.source_id)
+        assert digwork.page_count == 2
+
+        # inspect solr index data
+        solr_idx_args, solr_idx_kwargs = cmd.solr.index.call_args
+        assert solr_idx_args[0] == cmd.solr_collection
+        solr_docs = solr_idx_args[1]
+        # first solr doc is for the work
+        assert solr_docs[0] == digwork.index_data()
+        # subsequent solr docs for the pages
+        page_index_data = solr_docs[1]
+        assert page_index_data['srcid'] == digwork.source_id
+        assert page_index_data['item_type'] == 'page'
+        # page id based on source id + filename
+        page_label = page_files[0].replace('.txt', '')
+        assert page_index_data['id'] == '.'.join([digwork.source_id, page_label])
+        assert page_index_data['order'] == page_label
+        assert page_index_data['content'] == 'page content'
+
+        page_index_data = solr_docs[2]
+        page_label = page_files[1].replace('.txt', '')
+        assert page_index_data['srcid'] == digwork.source_id
+        assert page_index_data['id'] == '.'.join([digwork.source_id, page_label])
+        assert page_index_data['order'] == page_label
+
+        # exact value not important, just that it's present
+        assert 'commitWithin' in solr_idx_kwargs['params']
 
