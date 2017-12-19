@@ -45,6 +45,7 @@ def empty_solr():
             solr_schema.solr.schema.delete_field(solr_schema.solr_collection, field)
         CoreAdmin().reload()
 
+        # yield settings so tests run with overridden solr connection
         yield settings
 
 
@@ -58,6 +59,7 @@ def solr():
         SolrSchema().update_solr_schema()
         CoreAdmin().reload()
 
+        # yield settings so tests run with overridden solr connection
         yield settings
 
 
@@ -71,24 +73,22 @@ class TestSolrSchemaCommand(TestCase):
             with pytest.raises(CommandError):
                 call_command('solr_schema')
 
-    @pytest.mark.skip   # skip for now - causing an error on travis-ci
+    # @pytest.mark.skip   # skip for now - causing an error on travis-ci
     @pytest.mark.usefixtures("empty_solr")
     def test_empty_solr(self):
-        with override_settings(SOLR_CONNECTIONS={'default': settings.SOLR_CONNECTIONS['test']}):
-            stdout = StringIO()
-            call_command('solr_schema', stdout=stdout)
-            output = stdout.getvalue()
-            assert 'Added ' in output
-            assert 'Updated ' not in output
+        stdout = StringIO()
+        call_command('solr_schema', stdout=stdout)
+        output = stdout.getvalue()
+        assert 'Added ' in output
+        assert 'Updated ' not in output
 
     @pytest.mark.usefixtures("solr")
     def test_update_solr(self):
-        with override_settings(SOLR_CONNECTIONS={'default': settings.SOLR_CONNECTIONS['test']}):
-            stdout = StringIO()
-            call_command('solr_schema', stdout=stdout)
-            output = stdout.getvalue()
-            assert 'Updated ' in output
-            assert 'Added ' not in output
+        stdout = StringIO()
+        call_command('solr_schema', stdout=stdout)
+        output = stdout.getvalue()
+        assert 'Updated ' in output
+        assert 'Added ' not in output
 
 
 @pytest.fixture(scope='class')
