@@ -2,6 +2,8 @@ from django.test import TestCase
 from django.urls import reverse
 import pytest
 
+from ppa.archive.models import DigitizedWork, Collection
+
 
 class TestArchiveViews(TestCase):
 
@@ -81,3 +83,24 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url)
         assert response.status_code == 200
         self.assertContains(response, 'No matching items')
+
+
+class TestCollectionListView(TestCase):
+
+    def setUp(self):
+        '''Create some collections'''
+        self.coll1 = Collection.objects.create(name='Random Grabbag')
+        self.coll2 = Collection.objects.create(name='Foo through Time')
+
+    def test_context(self):
+        '''Check that the context is as expected'''
+        collection_list = reverse('archive:list-collections')
+        response = self.client.get(collection_list)
+
+        # there should be an object_list in context
+        assert 'object_list' in response.context
+        # it should be len 2
+        assert len(response.context['object_list']) == 2
+        # it should have both collections that exist in it
+        assert self.coll1 in response.context['object_list']
+        assert self.coll2 in response.context['object_list']
