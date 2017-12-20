@@ -30,6 +30,8 @@ class DigitizedWork(models.Model):
     pub_date = models.CharField('Publication Date', max_length=255, blank=True)
     #: number of pages in the work
     page_count = models.PositiveIntegerField(null=True, blank=True)
+    #: collections that this work is part of
+    collections = models.ManyToManyField('Collection')
     #: date added to the archive
     added = models.DateTimeField(auto_now_add=True)
     #: date of last modification of the local record
@@ -95,8 +97,6 @@ class DigitizedWork(models.Model):
 class Collection(models.Model):
     '''A collection of :class:~ppa.archive.models.DigitizedWork instances.'''
     name = models.CharField(max_length=255)
-    digitized_works = models.ManyToManyField(DigitizedWork,
-        help_text='Lookup digitized work by title or HathiTrust ID.')
 
     def __str__(self):
         return self.name
