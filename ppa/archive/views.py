@@ -1,8 +1,8 @@
 import json
 import logging
 
-from django.shortcuts import get_object_or_404
 from django.views.generic import ListView, DetailView
+from SolrClient.exceptions import SolrError
 
 from ppa.archive.forms import SearchForm
 from ppa.archive.models import DigitizedWork
@@ -57,18 +57,30 @@ class DigitizedWorkListView(ListView):
             'expand': 'true',
             'expand.rows': 10,   # number of items in the collapsed group, i.e pages to display
             'join_query': join_q,
-            # 'rows': 50  # override solr default of 10 results; display 50 at a time for now
         })
         return self.solrq
 
     def get_context_data(self, **kwargs):
-        context = super(DigitizedWorkListView, self).get_context_data(**kwargs)
+        page_groups = None
+        try:
+            # catch an error querying solr when the search terms cannot be parsed
+            # (e.g., incomplete exact phrase)
+            context = super(DigitizedWorkListView, self).get_context_data(**kwargs)
+            page_groups = json.loads(self.solrq.get_json()).get('expanded', {})
+        except SolrError as solr_err:
+            context = {'object_list': []}
+            if 'Cannot parse' in str(solr_err):
+                error_msg = 'Unable to parse search query; please revise and try again.'
+            else:
+                error_msg = 'Something went wrong.'
+            context = {'object_list': [], 'error': error_msg}
 
         context.update({
             'search_form': self.form,
             # total and object_list provided by paginator
             'sort': self.sort,
-            'page_groups': json.loads(self.solrq.get_json()).get('expanded', {})
+            'page_groups': page_groups
+
         })
         return context
 
