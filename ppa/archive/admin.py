@@ -1,7 +1,7 @@
 
 from django.contrib import admin
+from ppa.archive.models import DigitizedWork
 
-from ppa.archive.models import DigitizedWork, Collection
 
 
 class DigitizedWorkAdmin(admin.ModelAdmin):
@@ -11,6 +11,7 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         'added', 'updated')
     search_fields = ('source_id', 'title', 'author', 'enumcron', 'pub_date',
         'publisher')
+    filter_horizontal = ('collections',)
     # date_hierarchy = 'added'  # is this useful?
     # currently nothing useful to filter on; eventually will have collectio
     # list_filter = []
