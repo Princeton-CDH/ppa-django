@@ -98,7 +98,7 @@ class TestArchiveViews(TestCase):
         solr_work_docs = [digwork.index_data() for digwork in digitized_works]
         solr, solr_collection = get_solr_connection()
         index_data = solr_work_docs + solr_page_docs
-        solr.index(solr_collection, index_data, params={"commitWithin": 1000})
+        solr.index(solr_collection, index_data, params={"commitWithin": 100})
         sleep(1)
 
         # no query - should find all
@@ -164,7 +164,7 @@ class TestArchiveViews(TestCase):
         self.assertContains(response, 'Unable to parse search query')
 
         # nothing indexed - should not error
-        solr.delete_doc_by_query(solr_collection, '*:*', params={"commitWithin": 1000})
+        solr.delete_doc_by_query(solr_collection, '*:*', params={"commitWithin": 100})
         sleep(1)
         response = self.client.get(url)
         assert response.status_code == 200
