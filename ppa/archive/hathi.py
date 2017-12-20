@@ -8,11 +8,15 @@ from cached_property import cached_property
 
 
 class HathiItemNotFound(Exception):
+    '''Item not found in bibliographic API'''
     pass
 
 
 class HathiBibliographicAPI(object):
-    # https://www.hathitrust.org/bib_api
+    '''Wrapper for HathiTrust Bibliographic API.
+
+    https://www.hathitrust.org/bib_api
+    '''
 
     api_root = 'http://catalog.hathitrust.org/api'
 
@@ -32,11 +36,20 @@ class HathiBibliographicAPI(object):
                 raise HathiItemNotFound
             return HathiBibliographicRecord(resp.json())
 
-
     def brief_record(self, id_type, id_value):
+        '''Get brief record by id type and value.
+
+        :returns: :class:`HathiBibliographicRecord`
+        :raises: :class:`HathiItemNotFound`
+        '''
         return self._get_record('brief', id_type, id_value)
 
     def record(self, id_type, id_value):
+        '''Get full record by id type and value.
+
+        :returns: :class:`HathiBibliographicRecord`
+        :raises: :class:`HathiItemNotFound`
+        '''
         return self._get_record('full', id_type, id_value)
 
     # also possible: get multiple records at once
