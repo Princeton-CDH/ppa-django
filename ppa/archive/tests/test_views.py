@@ -104,3 +104,28 @@ class TestCollectionListView(TestCase):
         # it should have both collections that exist in it
         assert self.coll1 in response.context['object_list']
         assert self.coll2 in response.context['object_list']
+
+    def test_template(self):
+        '''Check that the template is rendering as expected'''
+        collection_list = reverse('archive:list-collections')
+        response = self.client.get(collection_list)
+        # - basic checks right templates
+        self.assertTemplateUsed(response, 'base.html')
+        self.assertTemplateUsed(response, 'archive/list_collections.html')
+        # - detailed checks of template
+        self.assertContains(
+            response, '<ul>',
+            msg_prefix='should contain a complete <ul> element', count=2
+        )
+        self.assertContains(
+            response, '<li>',
+            msg_prefix='should contain two complete <li> elements', count=4
+        )
+        self.assertContains(
+            response, 'Random Grabbag',
+            msg_prefix='should list a collection called Random Grabbag'
+        )
+        self.assertContains(
+            response, 'Foo through Time',
+            msg_prefix='should list a collection called Foo through Time'
+        )
