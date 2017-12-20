@@ -18,3 +18,6 @@ db_host: "{{ lookup('env', 'DB_HOST') }}"
 db_backup: '/tmp/pre-{{ version }}-{{ repo_info.after }}-{{ djangoapp }}.sql'
 # Symlink for /var/www
 symlink: 'ppa'
+# library paths
+remote_path: '/opt/rh/rh-python36/root/usr/bin/:{{ ansible_env.PATH }}'
+remote_ld: '{{ lookup("env", "LD_LIBRARY_PATH")}}:/opt/rh/rh-python36/root/usr/lib64'
