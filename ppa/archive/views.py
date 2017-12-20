@@ -1,6 +1,9 @@
+import csv
+from datetime import date
 import json
 import logging
 
+from django.http import HttpResponse
 from django.views.generic import ListView, DetailView
 from SolrClient.exceptions import SolrError
 
@@ -90,5 +93,35 @@ class DigitizedWorkDetailView(DetailView):
     model = DigitizedWork
     slug_field = 'source_id'
     slug_url_kwarg = 'source_id'
+
+
+
+class DigitizedWorkCSV(ListView):
+    model = DigitizedWork
+    header_row = ['Database ID', 'Source ID', 'Title', 'Author', 'Publication Date',
+        'Publication Place', 'Publisher', 'Enumcron']
+
+    def get_csv_filename(self):
+        return 'ppa-digitizedworks-%s.csv' % date.today().isoformat()
+        return self.csv_filename
+
+    def get_data(self):
+        return ((dw.id, dw.source_id, dw.title, dw.author,
+                 dw.pub_date, dw.pub_place, dw.publisher, dw.enumcron)
+                for dw in self.get_queryset())
+
+    def render_to_csv(self, data):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="%s"' % \
+            self.get_csv_filename()
+
+        writer = csv.writer(response)
+        writer.writerow(self.header_row)
+        for row in data:
+            writer.writerow(row)
+        return response
+
+    def get(self, *args, **kwargs):
+        return self.render_to_csv(self.get_data())
 
 
