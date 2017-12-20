@@ -32,17 +32,17 @@ Development instructions
 
 Initial setup and installation:
 
--  **recommended:** create and activate a python 3.5 virtualenv::
+- **recommended:** create and activate a python 3.5 virtualenv::
 
      virtualenv ppa -p python3.5
      source ppa/bin/activate
 
--  Use pip to install required python dependencies::
+- Use pip to install required python dependencies::
 
-     pip install -r requirements.txt
+    pip install -r requirements.txt
      pip install -r dev-requirements.txt
 
--  Copy sample local settings and configure for your environment::
+- Copy sample local settings and configure for your environment::
 
    cp ppa/local_settings.py.sample ppa/local_settings.py
 
