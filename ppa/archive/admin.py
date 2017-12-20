@@ -3,7 +3,6 @@ from django.contrib import admin
 from ppa.archive.models import DigitizedWork
 
 
-
 class DigitizedWorkAdmin(admin.ModelAdmin):
     list_display = ('source_id', 'title', 'author', 'enumcron', 'pub_place',
         'publisher', 'pub_date', 'page_count', 'added', 'updated')
