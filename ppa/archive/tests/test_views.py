@@ -123,7 +123,7 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url, {'query': 'wintry'})
         # relevance sort for keyword search
         assert response.context['sort'] == 'relevance'
-        wintry = digitized_works.filter(title__contains='Wintry').first()
+        wintry = DigitizedWork.objects.get(title__icontains='Wintry')
         self.assertContains(response, '1 digitized work;')
         self.assertContains(response, 'results sorted by relevance')
         self.assertContains(response, wintry.source_id)
@@ -140,7 +140,7 @@ class TestArchiveViews(TestCase):
 
         # search text in publisher name
         response = self.client.get(url, {'query': 'McClurg'})
-        for digwork in digitized_works.filter(publisher__icontains='mcclurg'):
+        for digwork in DigitizedWork.objects.filter(publisher__icontains='mcclurg'):
             self.assertContains(response, digwork.source_id)
 
         # search text in publication place - matches wintry
