@@ -1,9 +1,6 @@
-from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 import pytest
-
-from ppa.archive.models import DigitizedWork, Collection
 
 
 class TestArchiveViews(TestCase):
@@ -84,13 +81,3 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url)
         assert response.status_code == 200
         self.assertContains(response, 'No matching items')
-
-
-class TestCollectionListView(TestCase):
-
-    fixtures = ['sample_digitized_works']
-
-    def setUp(self):
-        '''Set up a collection to be listed'''
-        self.coll = Collection.objects.create(name='Dially Stuff')
-        self.coll.digitizedworks.set()
