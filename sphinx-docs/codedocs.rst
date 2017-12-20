@@ -38,12 +38,12 @@ Hathi
 Manage Commands
 ^^^^^^^^^^^^^^^
 
-solr schema
+Solr schema
 ~~~~~~~~~~~
 
 .. automodule:: ppa.archive.management.commands.solr_schema
 
-hathi import
+Hathi Import
 ~~~~~~~~~~~~
 
 .. automodule:: ppa.archive.management.commands.hathi_import

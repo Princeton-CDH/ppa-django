@@ -1,3 +1,35 @@
+'''
+**hathi_import** is a custom manage command for bulk import of HathiTrust
+materials into the local database for management and Solr for search and
+browse.  Expects a local copy of dataset files in pairtree format
+retrieved by rsync.  (Note that pairtree data must include pairtree
+version file to be valid.)
+
+Contents are inspected from the configured **HATHI_DATA** path;
+:class:`~ppa.archive.models.DigitizedWork` records are created or updated
+based on identifiers found and metadata retrieved from the HathiTrust
+Bibliographic API.  Page content is indexed in Solr, but otherwise only
+reflected in the database via a total page count per work.  By default,
+existing records are updated only when the Hathi record has changed
+or if requested via update flag.
+
+Supports importing specific items by hathi id, but the pairtree content
+for the items still must exist at the configured path.
+
+Example usage::
+
+    # import everything with defaults
+    python manage.py hathi_import
+    # import specific items
+    python manage.py hathi_import htid1 htid2 htid3
+    # re-import and update records
+    python manage.py hathi_import --update
+    # display progressbar to show status and ETA
+    python manage.py hathi_import -v 0 --progress
+
+'''
+
+
 from collections import defaultdict
 from glob import glob
 import logging
