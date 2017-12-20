@@ -10,6 +10,11 @@
 <input type="submit"/>
 </form>
 
+{% if error %}
+{# if something went wrong (e.g., bad query), display error message and nothing else #}
+<p>{{ error }}</p>
+{% else %}
+
 <p>{{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}; results sorted by {{ sort }}.</p>
 <hr/>
 
@@ -59,4 +64,6 @@
         {% endif %}
     </span>
 </div>
+
+{% endif %}
 {% endblock %}
