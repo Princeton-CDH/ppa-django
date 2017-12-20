@@ -99,7 +99,7 @@ class TestArchiveViews(TestCase):
         solr, solr_collection = get_solr_connection()
         index_data = solr_work_docs + solr_page_docs
         solr.index(solr_collection, index_data, params={"commitWithin": 100})
-        sleep(1)
+        sleep(2)
 
         # no query - should find all
         response = self.client.get(url)
@@ -165,7 +165,7 @@ class TestArchiveViews(TestCase):
 
         # nothing indexed - should not error
         solr.delete_doc_by_query(solr_collection, '*:*', params={"commitWithin": 100})
-        sleep(1)
+        sleep(2)
         response = self.client.get(url)
         assert response.status_code == 200
         self.assertContains(response, 'No matching items')
