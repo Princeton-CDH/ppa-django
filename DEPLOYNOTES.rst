@@ -1,0 +1,32 @@
+.. _DEPLOYNOTES:
+
+Deploy and Upgrade notes
+========================
+
+0.5 Bulk Import and Simple Search
+---------------------------------
+
+* Configure your database in local settings and run migrations::
+
+    python manage.py migrate
+
+* Create a new Solr core with a basic configuration and managed schema::
+
+    solr create -c SOLR_CORE -n basic_configs
+
+  Configure the Solr core name and urls in local settings, and then update
+  the schema::
+
+    python manage.py solr_schema
+
+* Bulk import assumes you already have a local copy of the desired
+  HathiTrust materials retrieved via rsync (see https://www.hathitrust.org/datasets).
+  Be sure to include pairtree version and prefix files in the rsync data.
+  The path to the top directory of the local Hathi data should be
+  configured in localsettings as **HATHI_DATA**.  Once the data is present
+  and the path is configured, run the import script (with optional
+  progress bar)::
+
+    python manage.py hathi_import
+    python manage.py hathi_import -v 0 --progress
+
