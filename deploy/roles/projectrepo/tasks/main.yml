@@ -13,7 +13,7 @@
     dest: '{{ clone_root }}/{{ repo }}'
     version: '{{ gitref }}'
   register: repo_info
- - name: Get version information
+- name: Get version information
   script: get_ver.py {{ clone_root}}/{{ repo }} {{ djangoapp }}
   register: ver
   check_mode: no
