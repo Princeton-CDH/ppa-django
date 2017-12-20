@@ -1,7 +1,10 @@
 import json
 import logging
+from dal import autocomplete
 
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.utils.html import format_html
 from django.views.generic import ListView, DetailView
 
 from ppa.archive.forms import SearchForm
@@ -80,3 +83,18 @@ class DigitizedWorkDetailView(DetailView):
     slug_url_kwarg = 'source_id'
 
 
+class DigitizedWorkAutocomplete(autocomplete.Select2QuerySetView):
+    '''Display an autocomplete for :class:~ppa.archive.models.DigitizedWork
+    by title or sourceid'''
+    def get_result_label(self, item):
+        truncated_title = ' '.join(item.title.split()[:5])
+        return format_html(
+            '<strong>{}</strong><br>{}',
+            truncated_title, item.source_id
+        )
+
+    def get_queryset(self):
+        return DigitizedWork.objects.filter(
+                Q(title__icontains=self.q) |
+                Q(source_id__icontains=self.q)
+        ).order_by('source_id')
