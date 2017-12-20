@@ -83,4 +83,27 @@ Run tests using py.test::
     py.test
 
 Make sure you configure a test solr connection and set up an empty
-Solr core using the same instructions as for the development core.g
+Solr core using the same instructions as for the development core.
+
+
+Documentation
+-------------
+
+Documentation is generated using `sphinx <http://www.sphinx-doc.org/>`__
+To generate documentation them, first install development requirements::
+
+    pip install -r dev-requirements.txt
+
+Then build documentation using the customized make file in the `docs`
+directory::
+
+    cd sphinx-docs
+    make html
+
+When building for a release ``make docs`` will create a folder called ``docs``,
+build the HTML documents and static assets, and force add it to the commit for
+use with Github Pages.
+
+License
+-------
+This project is licensed under the `Apache 2.0 License <https://github.com/Princeton-CDH/ppa-django/blob/master/LICENSE>`_.
