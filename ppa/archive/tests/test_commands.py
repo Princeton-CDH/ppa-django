@@ -215,7 +215,7 @@ class TestHathiImportCommand(TestCase):
         cmd.hathi_pairtree = {prefix: mock_pairtree_client}
         cmd.solr = Mock(spec=SolrClient)
         cmd.solr_collection = 'testidx'
-        digwork = DigitizedWork(source_id='.'.join([prefix, pt_id]))
+        digwork = DigitizedWork.objects.create(source_id='.'.join([prefix, pt_id]))
 
         pt_obj = mock_pairtree_client.get_object.return_value
         pt_obj.list_parts.return_value = ['12345.mets.xml', '12345.zip']

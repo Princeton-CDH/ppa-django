@@ -88,6 +88,8 @@ class DigitizedWork(models.Model):
             'publisher': self.publisher,
             'enumcron': self.enumcron,
             'author': self.author,
+            'collections': [collection.name for collection
+                            in self.collections.all()],
             # hard-coded to distinguish from & sort with pages
             'item_type': 'work',
             'order': '0',

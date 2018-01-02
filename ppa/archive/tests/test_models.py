@@ -59,11 +59,15 @@ class TestDigitizedWork(TestCase):
         # TODO: test publication info unavailable?
 
     def test_index_data(self):
-        digwork = DigitizedWork(source_id='njp.32101013082597',
+        digwork = DigitizedWork.objects.create(source_id='njp.32101013082597',
             title='Structure of English Verse', pub_date=1884,
             author='Charles Witcomb', pub_place='Paris',
             publisher='Mesnil-Dramard',
             source_url='https://hdl.handle.net/2027/njp.32101013082597')
+        coll1 = Collection.objects.create(name='Flotsam')
+        coll2 = Collection.objects.create(name='Jetsam')
+        digwork.collections.add(coll1)
+        digwork.collections.add(coll2)
         index_data = digwork.index_data()
         assert index_data['id'] == digwork.source_id
         assert index_data['srcid'] == digwork.source_id
@@ -72,6 +76,7 @@ class TestDigitizedWork(TestCase):
         assert index_data['author'] == digwork.author
         assert index_data['pub_place'] == digwork.pub_place
         assert index_data['pub_date'] == digwork.pub_date
+        assert index_data['collections'] == ['Flotsam', 'Jetsam']
         assert index_data['publisher'] == digwork.publisher
         assert index_data['src_url'] == digwork.source_url
         assert not index_data['enumcron']
