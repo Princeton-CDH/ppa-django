@@ -1,6 +1,8 @@
 from django.db import models
 from django.urls import reverse
 
+from ppa.archive.solr import get_solr_connection
+
 
 class DigitizedWork(models.Model):
     # stub record to manage digitized works included in PPA
@@ -75,6 +77,16 @@ class DigitizedWork(models.Model):
         # should also consider storing:
         # - last update, rights code / rights string, item url
         # (maybe solr only?)
+
+    def index(self):
+        '''Index a :class:~ppa.archive.models.DigitizedWork
+        and force commit to make result available.
+        '''
+        solr, solr_collection = get_solr_connection()
+        solr.index(solr_collection, [self.index_data()])
+        # force method to hold until old cache is invalidated
+        # so that results show using openSearcher and waitSearcher
+        solr.commit(solr_collection, openSearcher=True, waitSearcher=True)
 
     def index_data(self):
         '''data for indexing in Solr'''
