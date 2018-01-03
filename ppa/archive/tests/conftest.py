@@ -2,7 +2,7 @@ from django.conf import settings
 from django.test import override_settings
 import pytest
 
-from ppa.archive.solr import SolrSchema, CoreAdmin
+from ppa.archive.solr import SolrSchema, CoreAdmin, get_solr_connection
 
 
 @pytest.fixture
@@ -36,9 +36,12 @@ def solr():
         # reload core before and after to ensure field list is accurate
         CoreAdmin().reload()
         SolrSchema().update_solr_schema()
+        # clear documents so that integration tests start with an empty docset
+        solr, solr_collection = get_solr_connection()
+        solr.delete_doc_by_query(solr_collection, '*:*')
+        solr.commit(solr_collection)
         CoreAdmin().reload()
+
 
         # yield settings so tests run with overridden solr connection
         yield settings
-
-

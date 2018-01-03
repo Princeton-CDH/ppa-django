@@ -1,5 +1,6 @@
 import json
 import os.path
+import pytest
 
 from django.conf import settings
 from django.test import TestCase
@@ -7,7 +8,7 @@ from django.urls import reverse
 
 from ppa.archive import hathi
 from ppa.archive.models import DigitizedWork, Collection
-
+from ppa.archive.solr import get_solr_connection
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
 
@@ -23,6 +24,22 @@ class TestDigitizedWork(TestCase):
     def test_str(self):
         digwork = DigitizedWork(source_id='njp.32101013082597')
         assert str(digwork) == digwork.source_id
+
+    @pytest.mark.usefixtures('solr')
+    def test_index(self):
+        with open(self.bibdata_brief) as bibdata:
+            brief_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
+
+        digwork = DigitizedWork(source_id='njp.32101013082597')
+        digwork.populate_from_bibdata(brief_bibdata)
+        digwork.save()
+        solr, solr_collection = get_solr_connection()
+        res = solr.query(solr_collection, {'q': '*:*'})
+        assert res.get_results_count() == 0
+        digwork.index()
+        res = solr.query(solr_collection, {'q': '*:*'})
+        assert res.get_results_count() == 1
+        assert res.docs[0]['id'] == 'njp.32101013082597'
 
     def test_populate_from_bibdata(self):
         with open(self.bibdata_full) as bibdata:
