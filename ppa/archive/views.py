@@ -107,7 +107,6 @@ class DigitizedWorkCSV(ListView):
 
     def get_csv_filename(self):
         return 'ppa-digitizedworks-%s.csv' % date.today().isoformat()
-        return self.csv_filename
 
     def get_data(self):
         return ((dw.id, dw.source_id, dw.title, dw.author,
