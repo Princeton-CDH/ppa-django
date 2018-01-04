@@ -12,8 +12,7 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         'publisher')
     filter_horizontal = ('collections',)
     # date_hierarchy = 'added'  # is this useful?
-    # currently nothing useful to filter on; eventually will have collectio
-    # list_filter = []
+    list_filter = ['collections']
 
 
 admin.site.register(DigitizedWork, DigitizedWorkAdmin)
