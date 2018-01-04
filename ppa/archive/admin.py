@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from ppa.archive.models import DigitizedWork
+from ppa.archive.models import DigitizedWork, Collection
 
 
 class DigitizedWorkAdmin(admin.ModelAdmin):
@@ -17,3 +17,4 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
 
 
 admin.site.register(DigitizedWork, DigitizedWorkAdmin)
+admin.site.register(Collection)
