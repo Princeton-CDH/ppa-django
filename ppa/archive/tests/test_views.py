@@ -3,6 +3,7 @@ from datetime import date
 from io import StringIO
 from time import sleep
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 import pytest
@@ -13,8 +14,12 @@ from ppa.archive.views import DigitizedWorkCSV
 
 
 class TestArchiveViews(TestCase):
-
     fixtures = ['sample_digitized_works']
+
+    def setUp(self):
+        self.admin_pass = 'password'
+        self.admin_user = get_user_model().objects.create_superuser(
+            'admin', 'admin@example.com', self.admin_pass)
 
     def test_digitizedwork_detailview(self):
         # get a work and its detail page to test with
@@ -24,7 +29,6 @@ class TestArchiveViews(TestCase):
         # get the detail view page and check that the response is 200
         response = self.client.get(url)
         assert response.status_code == 200
-
 
         # now check that the right template is used
         assert 'archive/digitizedwork_detail.html' in \
@@ -202,6 +206,23 @@ class TestArchiveViews(TestCase):
         assert digwork.publisher in digwork_data
         assert digwork.publisher in digwork_data
         assert digwork.enumcron in digwork_data
+
+    def test_digitizedwork_admin_changelist(self):
+        # log in as admin to access admin site views
+        self.client.login(username=self.admin_user.username,
+            password=self.admin_pass)
+        # get digitized work change list
+        response = self.client.get(reverse('admin:archive_digitizedwork_changelist'))
+        self.assertContains(response, reverse('archive:csv'),
+            msg_prefix='digitized work change list should include CSV download link')
+        self.assertContains(response, 'Download as CSV',
+            msg_prefix='digitized work change list should include CSV download button')
+
+        # link should not be on other change lists
+        response = self.client.get(reverse('admin:auth_user_changelist'))
+        self.assertNotContains(response, reverse('archive:csv'),
+            msg_prefix='CSV download link should only be on digitized work list')
+
 
 
 
