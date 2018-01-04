@@ -24,9 +24,13 @@ class DigitizedWorkListView(ListView):
 
     def get_queryset(self, **kwargs):
         self.form = SearchForm(self.request.GET)
-        query = join_q = None
+        query = join_q = collections = None
         if self.form.is_valid():
             query = self.form.cleaned_data.get("query", "")
+            # NOTE: This allows us to get the name of collections for
+            # collections_exact, but not integrated into the query yet.
+            # this returns a query set of collections
+            collections = self.form.cleaned_data.get("collections", None)
         if query:
             # simple keyword search across all text content
             solr_q = join_q = "text:(%s)" % query
