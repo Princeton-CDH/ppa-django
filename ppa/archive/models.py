@@ -46,6 +46,11 @@ class DigitizedWork(models.Model):
         '''Default string display. Uses :attr:`source_id`'''
         return self.source_id
 
+    def save(self, *args, **kwargs):
+        '''Save and also reindex on save'''
+        super(DigitizedWork, self).save(*args, **kwargs)
+        self.index()
+
     def populate_from_bibdata(self, bibdata):
         '''Update record fields based on Hathi bibdata information.
         Full record is required in order to set all fields
