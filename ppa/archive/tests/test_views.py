@@ -1,3 +1,6 @@
+import csv
+from datetime import date
+from io import StringIO
 from time import sleep
 
 from django.test import TestCase
@@ -6,6 +9,7 @@ import pytest
 
 from ppa.archive.models import DigitizedWork
 from ppa.archive.solr import get_solr_connection
+from ppa.archive.views import DigitizedWorkCSV
 
 
 class TestArchiveViews(TestCase):
@@ -169,3 +173,36 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url)
         assert response.status_code == 200
         self.assertContains(response, 'No matching items')
+
+    def test_digitizedwork_csv(self):
+        # get the csv export and inspect the response
+        response = self.client.get(reverse('archive:csv'))
+        assert response.status_code == 200
+        assert response['content-type'] == 'text/csv'
+        assert response['content-disposition'].startswith('attachment; filename="')
+        assert 'ppa-digitizedworks-%s.csv' % date.today().isoformat() in \
+            response['content-disposition']
+
+        # read content as csv and inspect
+        csvreader = csv.reader(StringIO(response.content.decode()))
+        rows = [row for row in csvreader]
+        digworks = DigitizedWork.objects.order_by('id').all()
+        # check for header row
+        assert rows[0] == DigitizedWorkCSV.header_row
+        # check for expected number of records - header + one row for each work
+        assert len(rows) == digworks.count() + 1
+        # spot check expected data
+        digwork = digworks.first()
+        digwork_data = rows[1]
+        assert digwork.source_id in digwork_data
+        assert digwork.title in digwork_data
+        assert digwork.author in digwork_data
+        assert digwork.pub_date in digwork_data
+        assert digwork.pub_place in digwork_data
+        assert digwork.publisher in digwork_data
+        assert digwork.publisher in digwork_data
+        assert digwork.enumcron in digwork_data
+
+
+
+
