@@ -1,11 +1,13 @@
 import csv
 from datetime import date
 from io import StringIO
+import re
 from time import sleep
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils.timezone import now
 import pytest
 
 from ppa.archive.models import DigitizedWork
@@ -183,9 +185,12 @@ class TestArchiveViews(TestCase):
         response = self.client.get(reverse('archive:csv'))
         assert response.status_code == 200
         assert response['content-type'] == 'text/csv'
-        assert response['content-disposition'].startswith('attachment; filename="')
-        assert 'ppa-digitizedworks-%s.csv' % date.today().isoformat() in \
-            response['content-disposition']
+        content_disposition = response['content-disposition']
+        assert content_disposition.startswith('attachment; filename="')
+        assert 'ppa-digitizedworks-' in content_disposition
+        assert content_disposition.endswith('.csv"')
+        assert now().strftime('%Y%m%d') in content_disposition
+        assert re.search(r'\d{8}T\d{2}:\d{2}:\d{2}', content_disposition)
 
         # read content as csv and inspect
         csvreader = csv.reader(StringIO(response.content.decode()))

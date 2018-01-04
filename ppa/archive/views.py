@@ -1,9 +1,9 @@
 import csv
-from datetime import date
 import json
 import logging
 
 from django.http import HttpResponse
+from django.utils.timezone import now
 from django.views.generic import ListView, DetailView
 from SolrClient.exceptions import SolrError
 
@@ -106,7 +106,7 @@ class DigitizedWorkCSV(ListView):
         'Publication Place', 'Publisher', 'Enumcron']
 
     def get_csv_filename(self):
-        return 'ppa-digitizedworks-%s.csv' % date.today().isoformat()
+        return 'ppa-digitizedworks-%s.csv' % now().strftime('%Y%m%dT%H:%M:%S')
 
     def get_data(self):
         return ((dw.id, dw.source_id, dw.title, dw.author,
