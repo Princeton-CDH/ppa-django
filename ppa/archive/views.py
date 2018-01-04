@@ -31,14 +31,30 @@ class DigitizedWorkListView(ListView):
             # collections_exact, but not integrated into the query yet.
             # this returns a query set of collections
             collections = self.form.cleaned_data.get("collections", None)
+
+        # solr supports multiple filter queries, and documents must
+        # match all of them; collect them as a list to allow multiple
+        filter_q = []
+
+        coll_query = ''
+        # use filter query to restrict by collection if specified
+        if collections:
+            # OR to allow multiple; quotes to handle multiword collection names
+            coll_query = 'collections_exact:(%s)' % \
+                (' OR '.join(['"%s"' % coll.name for coll in collections]))
+            # work in collection or page associated with work in collection
+            filter_q.append('(%(coll)s OR {!join from=id to=srcid v=$coll_query})' \
+                % {'coll': coll_query})
+
         if query:
             # simple keyword search across all text content
             solr_q = join_q = "text:(%s)" % query
+
             # use join to ensure we always get the work if any pages match
             # using query syntax as documented at
             # http://comments.gmane.org/gmane.comp.jakarta.lucene.solr.user/95646
             # to support exact phrase searches
-            solr_q = 'text:(%s) OR {!join from=srcid to=id v=$join_query}' % (query)
+            solr_q = 'text:(%s) OR {!join from=srcid to=id v=$join_query}' % query
             # sort by relevance, return score for display
             self.sort = 'relevance'
             solr_sort = 'score desc'
@@ -53,16 +69,20 @@ class DigitizedWorkListView(ListView):
 
         logger.debug("Solr search query: %s", solr_q)
 
+        # use filter query to collapse works and pages into groups
+        # sort so work is first, then by page order
+        filter_q.append('{!collapse field=srcid sort="order asc"}')
+
         self.solrq = PagedSolrQuery({
             'q': solr_q,
             'sort': solr_sort,
             'fl': fields,
-            # collapse work and pages; sort so work is first, then by page
-            'fq': '{!collapse field=srcid sort="order asc"}',
+            'fq': filter_q,
             # default expand sort is score desc
             'expand': 'true',
             'expand.rows': 10,   # number of items in the collapsed group, i.e pages to display
             'join_query': join_q,
+            'coll_query': coll_query
             # 'rows': 50  # override solr default of 10 results; display 50 at a time for now
         })
         return self.solrq
