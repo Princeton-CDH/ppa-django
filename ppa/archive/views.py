@@ -1,6 +1,9 @@
+import csv
 import json
 import logging
 
+from django.http import HttpResponse
+from django.utils.timezone import now
 from django.views.generic import ListView, DetailView
 from SolrClient.exceptions import SolrError
 
@@ -90,5 +93,38 @@ class DigitizedWorkDetailView(DetailView):
     model = DigitizedWork
     slug_field = 'source_id'
     slug_url_kwarg = 'source_id'
+
+
+
+class DigitizedWorkCSV(ListView):
+    '''Export of digitized work details as CSV download.'''
+    # NOTE: csv logic could be extracted as a view mixin for reuse
+    model = DigitizedWork
+    # order by id for now, for simplicity
+    ordering = 'id'
+    header_row = ['Database ID', 'Source ID', 'Title', 'Author', 'Publication Date',
+        'Publication Place', 'Publisher', 'Enumcron']
+
+    def get_csv_filename(self):
+        return 'ppa-digitizedworks-%s.csv' % now().strftime('%Y%m%dT%H:%M:%S')
+
+    def get_data(self):
+        return ((dw.id, dw.source_id, dw.title, dw.author,
+                 dw.pub_date, dw.pub_place, dw.publisher, dw.enumcron)
+                for dw in self.get_queryset())
+
+    def render_to_csv(self, data):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="%s"' % \
+            self.get_csv_filename()
+
+        writer = csv.writer(response)
+        writer.writerow(self.header_row)
+        for row in data:
+            writer.writerow(row)
+        return response
+
+    def get(self, *args, **kwargs):
+        return self.render_to_csv(self.get_data())
 
 

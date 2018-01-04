@@ -1,16 +1,27 @@
+import csv
+from datetime import date
+from io import StringIO
+import re
 from time import sleep
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils.timezone import now
 import pytest
 
 from ppa.archive.models import DigitizedWork
 from ppa.archive.solr import get_solr_connection
+from ppa.archive.views import DigitizedWorkCSV
 
 
 class TestArchiveViews(TestCase):
-
     fixtures = ['sample_digitized_works']
+
+    def setUp(self):
+        self.admin_pass = 'password'
+        self.admin_user = get_user_model().objects.create_superuser(
+            'admin', 'admin@example.com', self.admin_pass)
 
     def test_digitizedwork_detailview(self):
         # get a work and its detail page to test with
@@ -20,7 +31,6 @@ class TestArchiveViews(TestCase):
         # get the detail view page and check that the response is 200
         response = self.client.get(url)
         assert response.status_code == 200
-
 
         # now check that the right template is used
         assert 'archive/digitizedwork_detail.html' in \
@@ -169,3 +179,56 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url)
         assert response.status_code == 200
         self.assertContains(response, 'No matching items')
+
+    def test_digitizedwork_csv(self):
+        # get the csv export and inspect the response
+        response = self.client.get(reverse('archive:csv'))
+        assert response.status_code == 200
+        assert response['content-type'] == 'text/csv'
+        content_disposition = response['content-disposition']
+        assert content_disposition.startswith('attachment; filename="')
+        assert 'ppa-digitizedworks-' in content_disposition
+        assert content_disposition.endswith('.csv"')
+        assert now().strftime('%Y%m%d') in content_disposition
+        assert re.search(r'\d{8}T\d{2}:\d{2}:\d{2}', content_disposition)
+
+        # read content as csv and inspect
+        csvreader = csv.reader(StringIO(response.content.decode()))
+        rows = [row for row in csvreader]
+        digworks = DigitizedWork.objects.order_by('id').all()
+        # check for header row
+        assert rows[0] == DigitizedWorkCSV.header_row
+        # check for expected number of records - header + one row for each work
+        assert len(rows) == digworks.count() + 1
+        # spot check expected data
+        digwork = digworks.first()
+        digwork_data = rows[1]
+        assert digwork.source_id in digwork_data
+        assert digwork.title in digwork_data
+        assert digwork.author in digwork_data
+        assert digwork.pub_date in digwork_data
+        assert digwork.pub_place in digwork_data
+        assert digwork.publisher in digwork_data
+        assert digwork.publisher in digwork_data
+        assert digwork.enumcron in digwork_data
+
+    def test_digitizedwork_admin_changelist(self):
+        # log in as admin to access admin site views
+        self.client.login(username=self.admin_user.username,
+            password=self.admin_pass)
+        # get digitized work change list
+        response = self.client.get(reverse('admin:archive_digitizedwork_changelist'))
+        self.assertContains(response, reverse('archive:csv'),
+            msg_prefix='digitized work change list should include CSV download link')
+        self.assertContains(response, 'Download as CSV',
+            msg_prefix='digitized work change list should include CSV download button')
+
+        # link should not be on other change lists
+        response = self.client.get(reverse('admin:auth_user_changelist'))
+        self.assertNotContains(response, reverse('archive:csv'),
+            msg_prefix='CSV download link should only be on digitized work list')
+
+
+
+
+
