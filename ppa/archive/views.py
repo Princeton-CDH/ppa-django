@@ -97,7 +97,11 @@ class DigitizedWorkDetailView(DetailView):
 
 
 class DigitizedWorkCSV(ListView):
+    '''Export of digitized work details as CSV download.'''
+    # NOTE: csv logic could be extracted as a view mixin for reuse
     model = DigitizedWork
+    # order by id for now, for simplicity
+    ordering = 'id'
     header_row = ['Database ID', 'Source ID', 'Title', 'Author', 'Publication Date',
         'Publication Place', 'Publisher', 'Enumcron']
 
