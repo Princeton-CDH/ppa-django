@@ -148,6 +148,20 @@ class PagedSolrQuery(object):
         self.query_opts = query_opts or {}
         # possibly should default to 'q': '*:*' ...
 
+    def add_facet(self, facet_name):
+        '''Add a facet to the paged query and set facet = true'''
+        if 'facet' not in self.query_opts:
+            self.query_opts['facet'] = 'true'
+            self.query_opts['facet.field'] = [facet_name]
+        else:
+            self.query_opts['facet.field'].append(facet_name)
+
+    def get_facets(self):
+        '''Wrap SolrClient.SolrResponse.get_facets()'''
+        if self._result is None:
+            self.get_results()
+        return self._result.get_facets()
+
     def get_results(self):
         self._result = self.solr.query(self.solr_collection, self.query_opts)
         return self._result.docs
@@ -166,7 +180,6 @@ class PagedSolrQuery(object):
         if self._result is None:
             self.get_results()
         return self._result.get_json()
-
 
     def set_limits(self, start, stop):
         '''Return a subsection of the results, to support slicing.'''
