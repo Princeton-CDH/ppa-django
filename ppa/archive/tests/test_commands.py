@@ -206,6 +206,7 @@ class TestHathiImportCommand(TestCase):
         assert ' (forced update)' in log_entry.change_message
         assert log_entry.action_flag == CHANGE
 
+    @pytest.mark.usefixtures('solr')
     @patch('ppa.archive.management.commands.hathi_import.ZipFile', spec=ZipFile)
     def test_index_pages(self, mockzipfile):
         cmd = hathi_import.Command(stdout=StringIO())

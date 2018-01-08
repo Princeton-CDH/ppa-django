@@ -34,9 +34,15 @@ class TestDigitizedWork(TestCase):
         digwork.populate_from_bibdata(brief_bibdata)
         digwork.save()
         solr, solr_collection = get_solr_connection()
+        # delete the index that happens as part of save
+        solr.delete_doc_by_query(solr_collection, '*')
+        solr.commit(solr_collection, openSearcher=True, waitSearcher=True)
+        # digwork should be unindexed
         res = solr.query(solr_collection, {'q': '*:*'})
         assert res.get_results_count() == 0
+        # reindex to check that the method works on a saved object
         digwork.index()
+        # digwork should be returned by a query
         res = solr.query(solr_collection, {'q': '*:*'})
         assert res.get_results_count() == 1
         assert res.docs[0]['id'] == 'njp.32101013082597'
@@ -75,6 +81,7 @@ class TestDigitizedWork(TestCase):
 
         # TODO: test publication info unavailable?
 
+    @pytest.mark.usefixture('solr')
     def test_index_data(self):
         digwork = DigitizedWork.objects.create(source_id='njp.32101013082597',
             title='Structure of English Verse', pub_date=1884,
