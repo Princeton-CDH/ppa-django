@@ -1,9 +1,6 @@
 import json
 import logging
 
-from django.db.models import Q
-from django.shortcuts import get_object_or_404
-from django.utils.html import format_html
 from django.views.generic import ListView, DetailView
 
 from ppa.archive.forms import SearchForm
