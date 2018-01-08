@@ -41,7 +41,7 @@ class DigitizedWorkListView(ListView):
         if collections:
             # OR to allow multiple; quotes to handle multiword collection names
             coll_query = 'collections_exact:(%s)' % \
-                (' OR '.join(['"%s"' % coll.name for coll in collections]))
+                (' OR '.join(['"%s"' % coll for coll in collections]))
             # work in collection or page associated with work in collection
             filter_q.append('(%(coll)s OR {!join from=id to=srcid v=$coll_query})' \
                 % {'coll': coll_query})
@@ -85,10 +85,17 @@ class DigitizedWorkListView(ListView):
             'coll_query': coll_query
             # 'rows': 50  # override solr default of 10 results; display 50 at a time for now
         })
+
+        for field in self.form.facet_fields:
+            self.solrq.add_facet(field)
+
         return self.solrq
 
     def get_context_data(self, **kwargs):
         context = super(DigitizedWorkListView, self).get_context_data(**kwargs)
+
+        facet_dict = self.solrq.get_facets()
+        self.form.set_choices_from_facets(facet_dict)
 
         context.update({
             'search_form': self.form,
