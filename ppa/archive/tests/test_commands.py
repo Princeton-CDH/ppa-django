@@ -114,6 +114,7 @@ class TestHathiImportCommand(TestCase):
             .return_value.list_ids.return_value = id_values
         assert cmd.count_hathi_ids() == len(self.hathi_prefixes) * len(id_values)
 
+    @pytest.mark.usefixtures('solr')
     def test_import_digitizedwork(self):
         cmd = hathi_import.Command(stdout=StringIO())
         cmd.bib_api = Mock(spec=HathiBibliographicAPI)

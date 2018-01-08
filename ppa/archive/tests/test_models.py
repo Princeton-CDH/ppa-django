@@ -81,7 +81,7 @@ class TestDigitizedWork(TestCase):
 
         # TODO: test publication info unavailable?
 
-    @pytest.mark.usefixture('solr')
+    @pytest.mark.usefixtures('solr')
     def test_index_data(self):
         digwork = DigitizedWork.objects.create(source_id='njp.32101013082597',
             title='Structure of English Verse', pub_date=1884,
