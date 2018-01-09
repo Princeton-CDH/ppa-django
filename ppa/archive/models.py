@@ -33,7 +33,7 @@ class DigitizedWork(models.Model):
     #: number of pages in the work
     page_count = models.PositiveIntegerField(null=True, blank=True)
     #: collections that this work is part of
-    collections = models.ManyToManyField('Collection')
+    collections = models.ManyToManyField('Collection', blank=True)
     #: date added to the archive
     added = models.DateTimeField(auto_now_add=True)
     #: date of last modification of the local record
@@ -45,11 +45,6 @@ class DigitizedWork(models.Model):
     def __str__(self):
         '''Default string display. Uses :attr:`source_id`'''
         return self.source_id
-
-    def save(self, *args, **kwargs):
-        '''Save and also reindex on save'''
-        super(DigitizedWork, self).save(*args, **kwargs)
-        self.index()
 
     def populate_from_bibdata(self, bibdata):
         '''Update record fields based on Hathi bibdata information.
@@ -115,7 +110,18 @@ class DigitizedWork(models.Model):
 
 class Collection(models.Model):
     '''A collection of :class:~ppa.archive.models.DigitizedWork instances.'''
+    #: the name of the collection
     name = models.CharField(max_length=255)
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        '''Override so that on save, any associated
+        works have their names updated.'''
+        # Note: This is an expensive operation, but collection names shouldn't
+        # change often.
+        super(Collection, self).save(*args, **kwargs)
+        digworks = self.digitizedwork_set.all()
+        for work in digworks:
+            work.index()
