@@ -82,6 +82,8 @@ class DigitizedWork(models.Model):
         '''Index a :class:~ppa.archive.models.DigitizedWork
         and force commit to make result available.
         '''
+        # NOTE: This must be called manually after collections are
+        # added.
         solr, solr_collection = get_solr_connection()
         solr.index(solr_collection, [self.index_data()])
         # force method to hold until old cache is invalidated
@@ -117,10 +119,10 @@ class Collection(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        '''Override so that on save, any associated
+        '''Override method so that on save, any associated
         works have their names updated.'''
-        # Note: This is an expensive operation, but collection names shouldn't
-        # change often.
+        # Note: This is a potentially expensive operation,
+        # but collection shouldn't change often.
         super(Collection, self).save(*args, **kwargs)
         digworks = self.digitizedwork_set.all()
         for work in digworks:
