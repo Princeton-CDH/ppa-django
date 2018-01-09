@@ -34,9 +34,6 @@ class TestDigitizedWork(TestCase):
         digwork.populate_from_bibdata(brief_bibdata)
         digwork.save()
         solr, solr_collection = get_solr_connection()
-        # delete the index that happens as part of save
-        solr.delete_doc_by_query(solr_collection, '*')
-        solr.commit(solr_collection, openSearcher=True, waitSearcher=True)
         # digwork should be unindexed
         res = solr.query(solr_collection, {'q': '*:*'})
         assert res.get_results_count() == 0
@@ -81,7 +78,6 @@ class TestDigitizedWork(TestCase):
 
         # TODO: test publication info unavailable?
 
-    @pytest.mark.usefixtures('solr')
     def test_index_data(self):
         digwork = DigitizedWork.objects.create(source_id='njp.32101013082597',
             title='Structure of English Verse', pub_date=1884,
@@ -129,7 +125,7 @@ class TestCollection(TestCase):
         digwork = DigitizedWork(source_id='njp.32101013082597')
         digwork.save()
         digwork.collections.add(collection)
-        digwork.save()
+        digwork.index()
 
         solr, solr_collection = get_solr_connection()
         res = solr.query(solr_collection, {'q': 'collections_exact:Foo'})
@@ -137,3 +133,6 @@ class TestCollection(TestCase):
         assert res.docs[0]['collections_exact'] == ['Foo']
         collection.name = 'Foobar'
         collection.save()
+        res = solr.query(solr_collection, {'q': 'collections_exact:Foobar'})
+        assert res.get_results_count() == 1
+        assert res.docs[0]['collections_exact'] == ['Foobar']
