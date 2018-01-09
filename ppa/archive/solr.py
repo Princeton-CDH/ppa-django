@@ -157,7 +157,8 @@ class PagedSolrQuery(object):
             self.query_opts['facet.field'].append(facet_name)
 
     def get_facets(self):
-        '''Wrap SolrClient.SolrResponse.get_facets()'''
+        '''Wrap SolrClient.SolrResponse.get_facets() to get query facets as a dict
+        of dicts.'''
         if self._result is None:
             self.get_results()
         return self._result.get_facets()
