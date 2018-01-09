@@ -115,8 +115,25 @@ class TestDigitizedWork(TestCase):
             reverse('archive:detail', kwargs={'source_id': work.source_id})
 
 
+@pytest.mark.usefixtures('solr')
 class TestCollection(TestCase):
+
+    fixtures = ['sample_digitized_works']
 
     def test_str(self):
         collection = Collection(name='Random Assortment')
         assert str(collection) == 'Random Assortment'
+
+    def test_save(self):
+        collection = Collection.objects.create(name='Foo')
+        digwork = DigitizedWork(source_id='njp.32101013082597')
+        digwork.save()
+        digwork.collections.add(collection)
+        digwork.save()
+
+        solr, solr_collection = get_solr_connection()
+        res = solr.query(solr_collection, {'q': 'collections_exact:Foo'})
+        assert res.get_results_count() == 1
+        assert res.docs[0]['collections_exact'] == ['Foo']
+        collection.name = 'Foobar'
+        collection.save()
