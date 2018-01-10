@@ -1,5 +1,3 @@
-import pytest
-
 from unittest.mock import patch, Mock
 
 from django.conf import settings
