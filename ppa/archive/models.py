@@ -12,15 +12,42 @@ class Collection(models.Model):
     def __str__(self):
         return self.name
 
+    def full_index(self):
+        '''Index or reindex a collection's associated works.'''
+        # guard against this being called on an unsaved instance
+        if not self.pk:
+            raise ValueError(
+                'Collection instance needs to have a primary key value before '
+                'this method is called.'
+            )
+        digworks = self.digitizedwork_set.all()
+        last = len(digworks) - 1
+        for i, work in enumerate(digworks):
+            # iterate using enumerate and if on last, commit the whole batch
+            if i != last:
+                work.index()
+            else:
+                work.index(commit=True)
+
     def save(self, *args, **kwargs):
         '''Override method so that on save, any associated
-        works have their names updated.'''
-        # Note: This is a potentially expensive operation,
-        # but collection shouldn't change often.
+        works have their names updated if collection name has changed.'''
+        # first handle cases where this is a new save, just save and return
+        if not self.pk:
+            super(Collection, self).save(*args, **kwargs)
+            return
+        # if it has been saved, get the original
+        orig = Collection.objects.get(pk=self.pk)
+        if orig.name != self.name:
+            # update object with new name
+            super(Collection, self).save(*args, **kwargs)
+            # reindex its works and commit the result
+            self.full_index()
+        # saved but no name change, so just save
         super(Collection, self).save(*args, **kwargs)
-        digworks = self.digitizedwork_set.all()
-        for work in digworks:
-            work.index()
+
+
+
 
 
 class DigitizedWork(models.Model):
