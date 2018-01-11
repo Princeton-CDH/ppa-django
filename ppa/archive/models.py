@@ -4,6 +4,25 @@ from django.urls import reverse
 from ppa.archive.solr import get_solr_connection
 
 
+class Collection(models.Model):
+    '''A collection of :class:~ppa.archive.models.DigitizedWork instances.'''
+    #: the name of the collection
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        '''Override method so that on save, any associated
+        works have their names updated.'''
+        # Note: This is a potentially expensive operation,
+        # but collection shouldn't change often.
+        super(Collection, self).save(*args, **kwargs)
+        digworks = self.digitizedwork_set.all()
+        for work in digworks:
+            work.index()
+
+
 class DigitizedWork(models.Model):
     # stub record to manage digitized works included in PPA
     # basic metadata
@@ -33,7 +52,7 @@ class DigitizedWork(models.Model):
     #: number of pages in the work
     page_count = models.PositiveIntegerField(null=True, blank=True)
     #: collections that this work is part of
-    collections = models.ManyToManyField('Collection', blank=True)
+    collections = models.ManyToManyField(Collection, blank=True)
     #: date added to the archive
     added = models.DateTimeField(auto_now_add=True)
     #: date of last modification of the local record
@@ -108,22 +127,3 @@ class DigitizedWork(models.Model):
             'item_type': 'work',
             'order': '0',
         }
-
-
-class Collection(models.Model):
-    '''A collection of :class:~ppa.archive.models.DigitizedWork instances.'''
-    #: the name of the collection
-    name = models.CharField(max_length=255)
-
-    def __str__(self):
-        return self.name
-
-    def save(self, *args, **kwargs):
-        '''Override method so that on save, any associated
-        works have their names updated.'''
-        # Note: This is a potentially expensive operation,
-        # but collection shouldn't change often.
-        super(Collection, self).save(*args, **kwargs)
-        digworks = self.digitizedwork_set.all()
-        for work in digworks:
-            work.index()
