@@ -25,8 +25,7 @@ class DigitizedWorkListView(ListView):
         if self.form.is_valid():
             query = self.form.cleaned_data.get("query", "")
             # NOTE: This allows us to get the name of collections for
-            # collections_exact, but not integrated into the query yet.
-            # this returns a query set of collections
+            # collections_exact and set collections to a list of collection names
             collections = self.form.cleaned_data.get("collections", None)
 
         # solr supports multiple filter queries, and documents must
