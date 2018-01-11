@@ -97,17 +97,19 @@ class DigitizedWork(models.Model):
         # - last update, rights code / rights string, item url
         # (maybe solr only?)
 
-    def index(self):
+    def index(self, commit=False):
         '''Index a :class:~ppa.archive.models.DigitizedWork
-        and force commit to make result available.
+        and allow optional commit to ensure results are available.
         '''
-        # NOTE: This must be called manually after collections are
-        # added.
+
         solr, solr_collection = get_solr_connection()
         solr.index(solr_collection, [self.index_data()])
-        # force method to hold until old cache is invalidated
-        # so that results show using openSearcher and waitSearcher
-        solr.commit(solr_collection, openSearcher=True, waitSearcher=True)
+
+        if commit:
+            # force method to hold until old cache is invalidated
+            # so that results show using openSearcher and waitSearcher
+            solr.commit(solr_collection, openSearcher=True, waitSearcher=True)
+
 
     def index_data(self):
         '''data for indexing in Solr'''
