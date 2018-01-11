@@ -4,7 +4,9 @@ from django.utils.safestring import mark_safe
 
 class FacetChoiceField(forms.MultipleChoiceField):
     '''Add CheckboxSelectMultiple field with facets taken from solr query'''
-    # customize multiple choice field for use with facets
+    # Borrowed from https://github.com/Princeton-CDH/derrida-django/blob/develop/derrida/books/forms.py
+    # customize multiple choice field for use with facets.
+    # no other adaptations needed
     # - turn of choice validation (shouldn't fail if facets don't get loaded)
     # - default to not required
     # - use checkbox select multiple as default widget
@@ -34,6 +36,14 @@ class SearchForm(forms.Form):
 
     def set_choices_from_facets(self, facets):
         '''Set choices on field from a dictionary of facets'''
+        # Also borrowed from Derrida module referenced for FacetChoiceField
+        # Uses mapping of solr_facet_fields and facet_fields in class
+        # definition but does not yet import full functionality of
+        # derrida-django's ReferenceSearchForm
+
+        # The primary adaptation involves use of a dictionary of dictionaries
+        # for facets in SolrClient vs. the functionality of
+        # django-haystack/pysolr.
         for key, facet_dict in facets.items():
             formfield = self.solr_facet_fields.get(key, key)
             if formfield in self.fields:
