@@ -110,7 +110,6 @@ class DigitizedWork(models.Model):
             # so that results show using openSearcher and waitSearcher
             solr.commit(solr_collection, openSearcher=True, waitSearcher=True)
 
-
     def index_data(self):
         '''data for indexing in Solr'''
         return {

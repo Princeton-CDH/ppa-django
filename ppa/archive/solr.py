@@ -148,14 +148,6 @@ class PagedSolrQuery(object):
         self.query_opts = query_opts or {}
         # possibly should default to 'q': '*:*' ...
 
-    def add_facet(self, facet_name):
-        '''Add a facet to the paged query and set facet = true'''
-        if 'facet' not in self.query_opts:
-            self.query_opts['facet'] = 'true'
-            self.query_opts['facet.field'] = [facet_name]
-        else:
-            self.query_opts['facet.field'].append(facet_name)
-
     def get_facets(self):
         '''Wrap SolrClient.SolrResponse.get_facets() to get query facets as a dict
         of dicts.'''

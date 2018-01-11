@@ -75,6 +75,9 @@ class DigitizedWorkListView(ListView):
             'sort': solr_sort,
             'fl': fields,
             'fq': filter_q,
+            # turn on faceting and add any self.form facet_fields
+            'facet': 'true',
+            'facet.field': [field for field in self.form.facet_fields]
             # default expand sort is score desc
             'expand': 'true',
             'expand.rows': 10,   # number of items in the collapsed group, i.e pages to display
@@ -82,9 +85,6 @@ class DigitizedWorkListView(ListView):
             'coll_query': coll_query
             # 'rows': 50  # override solr default of 10 results; display 50 at a time for now
         })
-
-        for field in self.form.facet_fields:
-            self.solrq.add_facet(field)
 
         return self.solrq
 
