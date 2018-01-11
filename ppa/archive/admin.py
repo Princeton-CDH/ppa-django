@@ -16,8 +16,11 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
 
     def save_related(self, request, form, formsets, change):
         '''Ensure reindex is called when admin form is saved'''
-        # m2m relations are handled separately by the form so the standard
-        # save override will not help
+        # m2m relations are handled separately by the admin form so the standard
+        # save override will not help as the m2m relationship are not yet set when
+        # model's save method is called. See the doc string for save_related
+        # at https://docs.djangoproject.com/en/1.11/_modules/django/contrib/admin/options/#ModelAdmin.save_related
+        
         super(DigitizedWorkAdmin, self).save_related(
             request, form, formsets, change
         )
