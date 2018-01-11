@@ -155,20 +155,6 @@ class TestPagedSolrQuery(TestCase):
         psq = PagedSolrQuery(query_opts=opts)
         assert psq.query_opts == opts
 
-    def test_add_facet(self, mock_get_solr_connection):
-        mocksolr = Mock()
-        coll = 'testcoll'
-        mock_get_solr_connection.return_value = (mocksolr, coll)
-        psq = PagedSolrQuery()
-        assert 'facet' not in psq.query_opts
-        # add a facet, should have facet set to true and a facet field
-        psq.add_facet('foo')
-        assert psq.query_opts['facet'] == 'true'
-        assert psq.query_opts['facet.field'] == ['foo']
-        # add another, facet.field should now be a list of two
-        psq.add_facet('bar')
-        assert psq.query_opts['facet.field'] == ['foo', 'bar']
-
     def test_get_facets(self, mock_get_solr_connection):
         mocksolr = Mock()
         coll = 'testcoll'
