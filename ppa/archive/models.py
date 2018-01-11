@@ -44,10 +44,8 @@ class Collection(models.Model):
             # reindex its works and commit the result
             self.full_index()
         # saved but no name change, so just save
-        super(Collection, self).save(*args, **kwargs)
-
-
-
+        else:
+            super(Collection, self).save(*args, **kwargs)
 
 
 class DigitizedWork(models.Model):

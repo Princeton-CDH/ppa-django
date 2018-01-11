@@ -1,7 +1,8 @@
 import json
 import os.path
-import pytest
+from unittest.mock import call, patch
 
+import pytest
 from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
@@ -39,6 +40,10 @@ class TestDigitizedWork(TestCase):
         assert res.get_results_count() == 0
         # reindex to check that the method works on a saved object
         digwork.index()
+        # digwork should be unindexed still because no commit
+        res = solr.query(solr_collection, {'q': '*:*'})
+        assert res.get_results_count() == 0
+        digwork.index(commit=True)
         # digwork should be returned by a query
         res = solr.query(solr_collection, {'q': '*:*'})
         assert res.get_results_count() == 1
@@ -111,28 +116,79 @@ class TestDigitizedWork(TestCase):
             reverse('archive:detail', kwargs={'source_id': work.source_id})
 
 
-@pytest.mark.usefixtures('solr')
 class TestCollection(TestCase):
 
     fixtures = ['sample_digitized_works']
+
+    def setUp(self):
+        # arrange two digital works to use in testing
+        self.dig1 = DigitizedWork.objects.get(source_id='chi.78013704')
+        self.dig2 = DigitizedWork.objects.get(source_id='chi.13880510')
 
     def test_str(self):
         collection = Collection(name='Random Assortment')
         assert str(collection) == 'Random Assortment'
 
-    def test_save(self):
-        collection = Collection.objects.create(name='Foo')
-        digwork = DigitizedWork(source_id='njp.32101013082597')
-        digwork.save()
-        digwork.collections.add(collection)
-        digwork.index()
+    @patch('ppa.archive.models.DigitizedWork.index')
+    def test_full_index(self, mockindex):
 
-        solr, solr_collection = get_solr_connection()
-        res = solr.query(solr_collection, {'q': 'collections_exact:Foo'})
-        assert res.get_results_count() == 1
-        assert res.docs[0]['collections_exact'] == ['Foo']
-        collection.name = 'Foobar'
-        collection.save()
-        res = solr.query(solr_collection, {'q': 'collections_exact:Foobar'})
-        assert res.get_results_count() == 1
-        assert res.docs[0]['collections_exact'] == ['Foobar']
+        # check that the method raises ValueError if used on an unsaved Collection
+        unsaved = Collection(name='Unsaved')
+        with pytest.raises(ValueError):
+            unsaved.full_index()
+
+        # create collection and associate with digitizedworks
+        coll1 = Collection.objects.create(name='Foo')
+        self.dig1.collections.add(coll1)
+        self.dig2.collections.add(coll1)
+        # refresh coll1 from database with its m2ms now intact
+        coll1 = Collection.objects.get(pk=coll1.pk)
+        coll1.full_index()
+        # should call once without commit and once with commit on last call
+        call1 = call()
+        call2 = call(commit=True)
+        mockindex.assert_has_calls([call1, call2])
+
+    @patch('ppa.archive.models.Collection.full_index')
+    def test_save(self, mockfullindex):
+        # - check flow control on full_index
+        # simple save, no previous pk, should simply save
+        # in all three cases, the super models.Model save method should be called
+        # implicit save in create
+        coll1 = Collection.objects.create(name='Foo')
+        assert not mockfullindex.called
+        # no change to name, mockfulldindex not called
+        coll1.save()
+        assert not mockfullindex.called
+        # change to name, full_index should have been called
+        coll1.name = 'Bar'
+        coll1.save()
+        assert mockfullindex.called
+
+        # set name back
+        coll1.name = 'Foo'
+        coll1.save()
+
+        # - now check flow control on calls to super method of models.Model
+        # have to manually modify pk to force flow control
+        with patch('ppa.archive.models.models.Model.save') as mocksuper:
+            # each iteration in each state of pk and name should call super
+            # one time
+
+            # new save
+            coll1.pk = None
+            coll1.save()
+            # mock full index was called twice in the previous code
+            # with two name changes
+            assert mockfullindex.call_count == 2
+            assert mocksuper.call_count == 1
+            # previously saved, no name change
+            coll1.pk = 1
+            coll1.save()
+            assert mockfullindex.call_count == 2
+            assert mocksuper.call_count == 2
+            # previously saved, name change
+            coll1.name = 'Bar'
+            coll1.save()
+            assert mockfullindex.call_count == 3
+            assert mocksuper.call_count == 3
