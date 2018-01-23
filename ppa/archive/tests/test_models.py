@@ -42,10 +42,11 @@ class TestDigitizedWork(TestCase):
         assert res.get_results_count() == 0
         # reindex to check that the method works on a saved object
         digwork.index()
-        # digwork should be unindexed still because no commit
+        # digwork should be unindexed still because no commitWithin
         res = solr.query(solr_collection, {'q': '*:*'})
         assert res.get_results_count() == 0
-        digwork.index(commit=True)
+        digwork.index(params={'commitWithin': 500})
+        sleep(1)
         # digwork should be returned by a query
         res = solr.query(solr_collection, {'q': '*:*'})
         assert res.get_results_count() == 1
@@ -141,9 +142,16 @@ class TestCollection(TestCase):
         # change the name and reindex all works
         coll1.name = 'Bar'
         coll1.save()
-        coll1.full_index()
-        sleep(2)
+        coll1.full_index()  # should have the default 150 second and not be picked up
+        # search for new name should yield no results, no committed yet
         solr, solr_collection = get_solr_connection()
+        res = solr.query(solr_collection, {'q': 'collections_exact:Bar'})
+        data = json.loads(res.get_json())
+        assert 'response' in data
+        assert data['response']['numFound'] == 0
+        coll1.full_index(params={'commitWithin': 1000})
+        sleep(2)
+        # - now collection change
         # search for old name should yield no results
         res = solr.query(solr_collection, {'q': 'collections_exact:Foo'})
         data = json.loads(res.get_json())

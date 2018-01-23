@@ -20,12 +20,12 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         # save override will not help as the m2m relationship are not yet set when
         # model's save method is called. See the doc string for save_related
         # at https://docs.djangoproject.com/en/1.11/_modules/django/contrib/admin/options/#ModelAdmin.save_related
-        
+
         super(DigitizedWorkAdmin, self).save_related(
             request, form, formsets, change
         )
         digwork = DigitizedWork.objects.get(id=form.instance.pk)
-        digwork.index()
+        digwork.index(params={"commitWithin": 10000})
 
 
 admin.site.register(DigitizedWork, DigitizedWorkAdmin)

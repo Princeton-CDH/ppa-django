@@ -12,7 +12,7 @@ class Collection(models.Model):
     def __str__(self):
         return self.name
 
-    def full_index(self):
+    def full_index(self, params=None):
         '''Index or reindex a collection's associated works.'''
         # guard against this being called on an unsaved instance
         if not self.pk:
@@ -25,7 +25,7 @@ class Collection(models.Model):
         solr_docs = [work.index_data() for work in digworks]
         # adapted from hathi import logic
         solr.index(solr_collection, solr_docs,
-            params={"commitWithin": 2000})  # commit within 2 seconds)
+            params=params)
 
     def save(self, *args, **kwargs):
         '''Override method so that on save, any associated
@@ -120,18 +120,13 @@ class DigitizedWork(models.Model):
         # - last update, rights code / rights string, item url
         # (maybe solr only?)
 
-    def index(self, commit=False):
+    def index(self, params=None):
         '''Index a :class:~ppa.archive.models.DigitizedWork
         and allow optional commit to ensure results are available.
         '''
 
         solr, solr_collection = get_solr_connection()
-        solr.index(solr_collection, [self.index_data()])
-
-        if commit:
-            # force method to hold until old cache is invalidated
-            # so that results show using openSearcher and waitSearcher
-            solr.commit(solr_collection, openSearcher=True, waitSearcher=True)
+        solr.index(solr_collection, [self.index_data()], params=params)
 
     def index_data(self):
         '''data for indexing in Solr'''
