@@ -1,0 +1,21 @@
+{% extends "base.html"  %}
+
+{% block page-subtitle %}Archive | {{ object.title }} {% endblock %}
+
+{% block content %}
+<h1>{{ object.title }}</h1>
+<hr/>
+<ul style="list-style: none;">
+    <li><b>HathiTrust ID:</b> {{ object.source_id }}</li>
+    <li><b>HathiTrust URL:</b> <a href="{{ object.source_url}}">{{ object.source_url }}</a></li>
+    <li><b>Volume/Chronology:</b> {{ object.enumcron }}</a></li>
+    <li><b>Author:</b> {{ object.author }}</li>
+    <li><b>Place of Publication:</b> {{ object.pub_place }}</li>
+    <li><b>Publisher:</b> {{ object.publisher }}</li>
+    <li><b>Publication Date:</b> {{ object.pub_date }}</li>
+    <li><b>Pages:</b> {{ object.page_count }} pgs.</li>
+    <br />
+    <li><b>Added:</b> {{ object.added|date:"d M Y" }}</li>
+    <li><b>Last Updated:</b> {{ object.updated|date:"d M Y" }}</li>
+</ul>
+{% endblock %}

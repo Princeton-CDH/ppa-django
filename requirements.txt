@@ -1,0 +1,13 @@
+django>=1.11,<2.0
+mysqlclient
+pucas
+django-grappelli
+solrclient
+pairtree
+pymarc
+cached_property
+#mezzanine
+# mezzanine from github required for django 1.11 compatibility; should be > 4.2.3
+git+https://github.com/stephenmcd/mezzanine.git@397409d#egg=mezzanine
+django-apptemplates
+progressbar2
