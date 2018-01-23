@@ -20,14 +20,13 @@ class Collection(models.Model):
                 'Collection instance needs to have a primary key value before '
                 'this method is called.'
             )
+        solr, solr_collection = get_solr_connection()
         digworks = self.digitizedwork_set.all()
-        last = len(digworks) - 1
-        for i, work in enumerate(digworks):
-            # iterate using enumerate and if on last, commit the whole batch
-            if i != last:
-                work.index()
-            else:
-                work.index(commit=True)
+        solr_docs = [work.index_data() for work in digworks]
+        # adapted from hathi import logic
+        solr.index(solr_collection, solr_docs,
+            params={"commitWithin": 2000})  # commit within 2 seconds)
+
 
     def save(self, *args, **kwargs):
         '''Override method so that on save, any associated

@@ -1,6 +1,8 @@
 import json
 import os.path
+from time import sleep
 from unittest.mock import call, patch
+
 
 import pytest
 from django.conf import settings
@@ -129,25 +131,33 @@ class TestCollection(TestCase):
         collection = Collection(name='Random Assortment')
         assert str(collection) == 'Random Assortment'
 
-    @patch('ppa.archive.models.DigitizedWork.index')
-    def test_full_index(self, mockindex):
-
-        # check that the method raises ValueError if used on an unsaved Collection
-        unsaved = Collection(name='Unsaved')
-        with pytest.raises(ValueError):
-            unsaved.full_index()
+    @pytest.mark.usefixtures('solr')
+    def test_full_index(self):
 
         # create collection and associate with digitizedworks
         coll1 = Collection.objects.create(name='Foo')
         self.dig1.collections.add(coll1)
         self.dig2.collections.add(coll1)
-        # refresh coll1 from database with its m2ms now intact
-        coll1 = Collection.objects.get(pk=coll1.pk)
+        # change the name and reindex all works
+        coll1.name = 'Bar'
+        coll1.save()
         coll1.full_index()
-        # should call once without commit and once with commit on last call
-        call1 = call()
-        call2 = call(commit=True)
-        mockindex.assert_has_calls([call1, call2])
+        sleep(2)
+        solr, solr_collection = get_solr_connection()
+        # search for old name should yield no results
+        res = solr.query(solr_collection, {'q': 'collections_exact:Foo'})
+        data = json.loads(res.get_json())
+        assert 'response' in data
+        assert data['response']['numFound'] == 0
+        # search for new name should yield two results
+        res = solr.query(solr_collection, {'q': 'collections_exact:Bar'})
+        data = json.loads(res.get_json())
+        assert 'response' in data
+        assert data['response']['numFound'] == 2
+        srcids = [doc['srcid'] for doc in data['response']['docs']]
+        assert self.dig1.source_id in srcids
+        assert self.dig2.source_id in srcids
+
 
     @patch('ppa.archive.models.Collection.full_index')
     def test_save(self, mockfullindex):

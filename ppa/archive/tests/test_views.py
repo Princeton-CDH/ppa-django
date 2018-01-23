@@ -109,9 +109,9 @@ class TestCollectionListView(TestCase):
         self.assertTemplateUsed(response, 'base.html')
         self.assertTemplateUsed(response, 'archive/list_collections.html')
         # - detailed checks of template
-            self.assertContains(
-            response, 'Random Grabbag',
-            msg_prefix='should list a collection called Random Grabbag'
+        self.assertContains(
+        response, 'Random Grabbag',
+        msg_prefix='should list a collection called Random Grabbag'
         )
         self.assertContains(
             response, 'Foo through Time',
