@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 class DigitizedWorkListView(ListView):
+    '''Search and browse digitized works.  Based on Solr index
+    of works and pages.'''
 
     template_name = 'archive/list_digitizedworks.html'
     # NOTE: listview would be nice, but would have to figure out how to

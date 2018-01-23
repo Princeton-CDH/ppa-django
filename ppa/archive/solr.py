@@ -22,7 +22,7 @@ class SolrSchema(object):
     '''Solr Schema object.  Includes project schema configuration and
     methods to update configured Solr instance.'''
 
-    #: solr field definitions for basic fields
+    #: solr schema field definitions
     fields = [
         {'name': 'srcid', 'type': 'string', 'required': False},
         {'name': 'content', 'type': 'text_en', 'required': False},
@@ -42,14 +42,14 @@ class SolrSchema(object):
         {'name': 'title_exact', 'type': 'string', 'required': False},
         {'name': 'author_exact', 'type': 'string', 'required': False},
     ]
-    # fields to be copied into general purpose text field for searching
+    #: fields to be copied into general purpose text field for searching
     text_fields = ['srcid', 'content', 'title', 'author', 'pub_date', 'enumcron',
         'pub_place', 'publisher']
+    #: copy fields, e.g. for facets
     copy_fields = [
         ('title', 'title_exact'),
         ('author', 'author_exact'),
     ]
-    # todo: facet fields
 
     def __init__(self):
         self.solr, self.solr_collection = get_solr_connection()
@@ -131,8 +131,8 @@ class CoreAdmin(object):
 
 
 class PagedSolrQuery(object):
-    # wrap solrclient query in a way that allows search results to be
-    # paginated by django paginator
+    '''A Solr query object that wraps a :mod:`SolrClient` query in a way
+    that allows search results to be paginated by django paginator.'''
 
     query_opts = {}
     _result = None
@@ -148,6 +148,7 @@ class PagedSolrQuery(object):
         return self._result.docs
 
     def count(self):
+        '''Total number of results in the query'''
         if self._result is None:
             query_opts = self.query_opts.copy()
             query_opts['rows'] = 0
