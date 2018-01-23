@@ -184,21 +184,25 @@ class TestCollection(TestCase):
         with patch('ppa.archive.models.models.Model.save') as mocksuper:
             # each iteration in each state of pk and name should call super
             # one time
-
-            # new save
-            coll1.pk = None
-            coll1.save()
-            # mock full index was called twice in the previous code
-            # with two name changes
-            assert mockfullindex.call_count == 2
-            assert mocksuper.call_count == 1
-            # previously saved, no name change
-            coll1.pk = 1
-            coll1.save()
-            assert mockfullindex.call_count == 2
-            assert mocksuper.call_count == 2
-            # previously saved, name change
-            coll1.name = 'Bar'
-            coll1.save()
-            assert mockfullindex.call_count == 3
-            assert mocksuper.call_count == 3
+            with patch('ppa.archive.models.Collection.objects.get') as mockget:
+            # Fully mock out get to avoid problems with travis-ci
+                # new save
+                coll1.pk = None
+                coll1.save()
+                # mock full index was called twice in the previous code
+                # with two name changes
+                assert mockfullindex.call_count == 2
+                assert mocksuper.call_count == 1
+                # previously saved, no name change
+                coll1.pk = 1
+                mockget.return_value = coll1
+                coll1.save()
+                # index call count does not increase
+                assert mockfullindex.call_count == 2
+                assert mocksuper.call_count == 2
+                # previously saved, name change
+                # call count should increase, as does full index
+                mockget.return_value = Collection(pk=1, name='Bar')
+                coll1.save()
+                assert mockfullindex.call_count == 3
+                assert mocksuper.call_count == 3

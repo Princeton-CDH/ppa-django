@@ -27,7 +27,6 @@ class Collection(models.Model):
         solr.index(solr_collection, solr_docs,
             params={"commitWithin": 2000})  # commit within 2 seconds)
 
-
     def save(self, *args, **kwargs):
         '''Override method so that on save, any associated
         works have their names updated if collection name has changed.'''
