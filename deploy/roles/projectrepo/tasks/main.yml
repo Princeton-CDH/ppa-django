@@ -1,0 +1,24 @@
+- name: Clone settings repository locally
+  git:
+      repo: 'git@github.com:Princeton-CDH/deployment.git'
+      dest: '{{ home }}/.deploy/'
+      version: 'master'
+  delegate_to: localhost
+  environment:
+      PATH: '/opt/rh/rh-python35/root/usr/bin/:{{ lookup("env","PATH") }}'
+      LD_LIBRARY_PATH: '/opt/rh/rh-python35/root/usr/lib64'
+- name: Clone the repo if doesn't already exist and make sure it's on gitref
+  git:
+    repo: '{{ repo_url }}/'
+    dest: '{{ clone_root }}/{{ repo }}'
+    version: '{{ gitref }}'
+  register: repo_info
+- name: Get version information
+  script: get_ver.py {{ clone_root}}/{{ repo }} {{ djangoapp }}
+  register: ver
+  check_mode: no
+- name: Sync checkout to deploy directory
+  synchronize:
+    src: '{{ clone_root }}/{{ repo }}/'
+    dest: '{{ deploy }}'
+  delegate_to: '{{ inventory_hostname }}'
