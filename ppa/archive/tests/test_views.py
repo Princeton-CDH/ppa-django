@@ -97,10 +97,6 @@ class TestCollectionListView(TestCase):
         collection_list = reverse('archive:list-collections')
         response = self.client.get(collection_list)
 
-        # there should be an object_list in context
-        assert 'object_list' in response.context
-        # it should be len 2
-        assert len(response.context['object_list']) == 2
         # it should have both collections that exist in it
         assert self.coll1 in response.context['object_list']
         assert self.coll2 in response.context['object_list']
@@ -113,15 +109,7 @@ class TestCollectionListView(TestCase):
         self.assertTemplateUsed(response, 'base.html')
         self.assertTemplateUsed(response, 'archive/list_collections.html')
         # - detailed checks of template
-        self.assertContains(
-            response, '<ul>',
-            msg_prefix='should contain a complete <ul> element', count=2
-        )
-        self.assertContains(
-            response, '<li>',
-            msg_prefix='should contain two complete <li> elements', count=4
-        )
-        self.assertContains(
+            self.assertContains(
             response, 'Random Grabbag',
             msg_prefix='should list a collection called Random Grabbag'
         )
