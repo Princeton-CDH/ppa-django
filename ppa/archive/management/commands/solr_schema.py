@@ -1,3 +1,17 @@
+'''
+**solr_schema** is a custom manage command to update the schema for the
+configured Solr instance.  Reports on the number of fields that are
+added or updated, and any that are out of date and were removed.
+
+Actual logic implemented in
+:meth:`ppa.archive.solr.SolrSchema.update_solr_schema`
+
+Example use::
+
+    python manage.py solr_schema
+
+'''
+
 from django.core.management.base import BaseCommand, CommandError
 from SolrClient.exceptions import ConnectionError
 

@@ -1,0 +1,230 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>ppa.archive.views &#8212; Princeton Prosody Archive 0.5.0-pre documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.5.0-pre',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for ppa.archive.views</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">django.views.generic</span> <span class="k">import</span> <span class="n">ListView</span><span class="p">,</span> <span class="n">DetailView</span>
+<span class="kn">from</span> <span class="nn">SolrClient.exceptions</span> <span class="k">import</span> <span class="n">SolrError</span>
+
+<span class="kn">from</span> <span class="nn">ppa.archive.forms</span> <span class="k">import</span> <span class="n">SearchForm</span>
+<span class="kn">from</span> <span class="nn">ppa.archive.models</span> <span class="k">import</span> <span class="n">DigitizedWork</span>
+<span class="kn">from</span> <span class="nn">ppa.archive.solr</span> <span class="k">import</span> <span class="n">PagedSolrQuery</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="DigitizedWorkListView"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.DigitizedWorkListView">[docs]</a><span class="k">class</span> <span class="nc">DigitizedWorkListView</span><span class="p">(</span><span class="n">ListView</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Search and browse digitized works.  Based on Solr index</span>
+<span class="sd">    of works and pages.&#39;&#39;&#39;</span>
+
+    <span class="n">template_name</span> <span class="o">=</span> <span class="s1">&#39;archive/list_digitizedworks.html&#39;</span>
+    <span class="c1"># NOTE: listview would be nice, but would have to figure out how to</span>
+    <span class="c1"># make solrclient compatible with django pagination</span>
+
+    <span class="n">paginate_by</span> <span class="o">=</span> <span class="mi">50</span>
+
+    <span class="k">def</span> <span class="nf">get_queryset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">form</span> <span class="o">=</span> <span class="n">SearchForm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="p">)</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">join_q</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+            <span class="n">query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form</span><span class="o">.</span><span class="n">cleaned_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;query&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">query</span><span class="p">:</span>
+            <span class="c1"># simple keyword search across all text content</span>
+            <span class="n">solr_q</span> <span class="o">=</span> <span class="n">join_q</span> <span class="o">=</span> <span class="s2">&quot;text:(</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="n">query</span>
+            <span class="c1"># use join to ensure we always get the work if any pages match</span>
+            <span class="c1"># using query syntax as documented at</span>
+            <span class="c1"># http://comments.gmane.org/gmane.comp.jakarta.lucene.solr.user/95646</span>
+            <span class="c1"># to support exact phrase searches</span>
+            <span class="n">solr_q</span> <span class="o">=</span> <span class="s1">&#39;text:(</span><span class="si">%s</span><span class="s1">) OR {!join from=srcid to=id v=$join_query}&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">query</span><span class="p">)</span>
+            <span class="c1"># sort by relevance, return score for display</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sort</span> <span class="o">=</span> <span class="s1">&#39;relevance&#39;</span>
+            <span class="n">solr_sort</span> <span class="o">=</span> <span class="s1">&#39;score desc&#39;</span>
+            <span class="n">fields</span> <span class="o">=</span> <span class="s1">&#39;*,score&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># no search term - find everything</span>
+            <span class="n">solr_q</span> <span class="o">=</span> <span class="s2">&quot;*:*&quot;</span>
+            <span class="c1"># for now, use title for default sort</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sort</span> <span class="o">=</span> <span class="s1">&#39;title&#39;</span>
+            <span class="n">solr_sort</span> <span class="o">=</span> <span class="s1">&#39;title_exact asc&#39;</span>
+            <span class="n">fields</span> <span class="o">=</span> <span class="s1">&#39;*&#39;</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Solr search query: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">solr_q</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solrq</span> <span class="o">=</span> <span class="n">PagedSolrQuery</span><span class="p">({</span>
+            <span class="s1">&#39;q&#39;</span><span class="p">:</span> <span class="n">solr_q</span><span class="p">,</span>
+            <span class="s1">&#39;sort&#39;</span><span class="p">:</span> <span class="n">solr_sort</span><span class="p">,</span>
+            <span class="s1">&#39;fl&#39;</span><span class="p">:</span> <span class="n">fields</span><span class="p">,</span>
+            <span class="c1"># collapse work and pages; sort so work is first, then by page</span>
+            <span class="s1">&#39;fq&#39;</span><span class="p">:</span> <span class="s1">&#39;{!collapse field=srcid sort=&quot;order asc&quot;}&#39;</span><span class="p">,</span>
+            <span class="c1"># default expand sort is score desc</span>
+            <span class="s1">&#39;expand&#39;</span><span class="p">:</span> <span class="s1">&#39;true&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;expand.rows&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>   <span class="c1"># number of items in the collapsed group, i.e pages to display</span>
+            <span class="s1">&#39;join_query&#39;</span><span class="p">:</span> <span class="n">join_q</span><span class="p">,</span>
+        <span class="p">})</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">solrq</span>
+
+    <span class="k">def</span> <span class="nf">get_context_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">page_groups</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># catch an error querying solr when the search terms cannot be parsed</span>
+            <span class="c1"># (e.g., incomplete exact phrase)</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">DigitizedWorkListView</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get_context_data</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">page_groups</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solrq</span><span class="o">.</span><span class="n">get_json</span><span class="p">())</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;expanded&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">except</span> <span class="n">SolrError</span> <span class="k">as</span> <span class="n">solr_err</span><span class="p">:</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;object_list&#39;</span><span class="p">:</span> <span class="p">[]}</span>
+            <span class="k">if</span> <span class="s1">&#39;Cannot parse&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">solr_err</span><span class="p">):</span>
+                <span class="n">error_msg</span> <span class="o">=</span> <span class="s1">&#39;Unable to parse search query; please revise and try again.&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">error_msg</span> <span class="o">=</span> <span class="s1">&#39;Something went wrong.&#39;</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;object_list&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="n">error_msg</span><span class="p">}</span>
+
+        <span class="n">context</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+            <span class="s1">&#39;search_form&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">form</span><span class="p">,</span>
+            <span class="c1"># total and object_list provided by paginator</span>
+            <span class="s1">&#39;sort&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sort</span><span class="p">,</span>
+            <span class="s1">&#39;page_groups&#39;</span><span class="p">:</span> <span class="n">page_groups</span>
+
+        <span class="p">})</span>
+        <span class="k">return</span> <span class="n">context</span></div>
+
+
+<div class="viewcode-block" id="DigitizedWorkDetailView"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.DigitizedWorkDetailView">[docs]</a><span class="k">class</span> <span class="nc">DigitizedWorkDetailView</span><span class="p">(</span><span class="n">DetailView</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Display details for a single digitized work&#39;&#39;&#39;</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">DigitizedWork</span>
+    <span class="n">slug_field</span> <span class="o">=</span> <span class="s1">&#39;source_id&#39;</span>
+    <span class="n">slug_url_kwarg</span> <span class="o">=</span> <span class="s1">&#39;source_id&#39;</span></div>
+
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Princeton Prosody Archive</a></h1>
+
+
+
+<p class="blurb">Django web application for "Princeton Prosody Archive" CDH project</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=Princeton-CDH&repo=ppa-django&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+    
+
+<p>
+<a href="https://travis-ci.org/Princeton-CDH/ppa-django">
+    <img
+        alt="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
+        src="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
+    />
+</a>
+</p>
+
+
+
+
+    
+
+<p>
+<a href="https://codecov.io/github/Princeton-CDH/ppa-django">
+    <img
+    alt="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
+    src="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
+    />
+</a>
+</p>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../codedocs.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deploynotes.html">Deploy Notes</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><div class="powered_by">
+<p>Powered by:</p>
+<a href="http://cdh.princeton.edu/">
+<img src="https://cdh.princeton.edu/static/img/CDH_logo.svg"
+    alt="Center for Digital Humanities @ Princeton" />
+</a>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, CDH @ Princeton University.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
