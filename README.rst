@@ -11,20 +11,20 @@ at `<https://princeton-cdh.github.io/ppa-django/>`_.
 
 https://princeton-cdh.github.io/ppa-django/
 
-.. image:: https://travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master
+.. image:: https://travis-ci.org/Princeton-CDH/ppa-django.svg?branch=develop
    :target: https://travis-ci.org/Princeton-CDH/ppa-django
    :alt: Build status
 
-.. image:: https://landscape.io/github/Princeton-CDH/ppa-django/master/landscape.svg?style=flat
-   :target: https://landscape.io/github/Princeton-CDH/ppa-django/master
+.. image:: https://landscape.io/github/Princeton-CDH/ppa-django/develop/landscape.svg?style=flat
+   :target: https://landscape.io/github/Princeton-CDH/ppa-django/develop
    :alt: Code Health
 
-.. image:: https://codecov.io/gh/Princeton-CDH/ppa-django/branch/master/graph/badge.svg
+.. image:: https://codecov.io/gh/Princeton-CDH/ppa-django/branch/develop/graph/badge.svg
    :target: https://codecov.io/gh/Princeton-CDH/ppa-django
    :alt: Code coverage
 
-.. image:: https://requires.io/github/Princeton-CDH/ppa-django/requirements.svg?branch=master
-   :target: https://requires.io/github/Princeton-CDH/ppa-django/requirements/?branch=master
+.. image:: https://requires.io/github/Princeton-CDH/ppa-django/requirements.svg?branch=develop
+   :target: https://requires.io/github/Princeton-CDH/ppa-django/requirements/?branch=develop
    :alt: Requirements Status
 
 This repo uses `git-flow <https://github.com/nvie/gitflow>`_ conventions; **master**
