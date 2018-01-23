@@ -9,8 +9,6 @@ Django web application for the new `Princeton Prosody Archive
 Code and architecture documentation for the current release available
 at `<https://princeton-cdh.github.io/ppa-django/>`_.
 
-https://princeton-cdh.github.io/ppa-django/
-
 .. image:: https://travis-ci.org/Princeton-CDH/ppa-django.svg?branch=develop
    :target: https://travis-ci.org/Princeton-CDH/ppa-django
    :alt: Build status
