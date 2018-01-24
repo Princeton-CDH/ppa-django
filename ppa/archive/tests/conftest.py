@@ -28,20 +28,19 @@ def empty_solr():
         yield settings
 
 
-
 @pytest.fixture
 def solr():
     # pytest solr fixture; updates solr schema
     with override_settings(SOLR_CONNECTIONS={'default': settings.SOLR_CONNECTIONS['test']}):
         # reload core before and after to ensure field list is accurate
+        solr_schema = SolrSchema()
         CoreAdmin().reload()
-        SolrSchema().update_solr_schema()
-        # clear documents so that integration tests start with an empty docset
-        solr, solr_collection = get_solr_connection()
-        solr.delete_doc_by_query(solr_collection, '*:*')
-        solr.commit(solr_collection)
+        solr_schema.update_solr_schema()
         CoreAdmin().reload()
 
 
         # yield settings so tests run with overridden solr connection
         yield settings
+
+        # clear out any data indexed in test collection
+        solr_schema.solr.delete_doc_by_query(solr_schema.solr_collection, '*:*')

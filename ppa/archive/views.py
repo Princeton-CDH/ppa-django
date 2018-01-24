@@ -1,7 +1,11 @@
+import csv
 import json
 import logging
 
+from django.http import HttpResponse
+from django.utils.timezone import now
 from django.views.generic import ListView, DetailView
+from SolrClient.exceptions import SolrError
 
 from ppa.archive.forms import SearchForm
 from ppa.archive.models import DigitizedWork, Collection
@@ -88,16 +92,29 @@ class DigitizedWorkListView(ListView):
         return self.solrq
 
     def get_context_data(self, **kwargs):
-        context = super(DigitizedWorkListView, self).get_context_data(**kwargs)
+        page_groups = None
+        try:
+            # catch an error querying solr when the search terms cannot be parsed
+            # (e.g., incomplete exact phrase)
+            context = super(DigitizedWorkListView, self).get_context_data(**kwargs)
+            page_groups = json.loads(self.solrq.get_json()).get('expanded', {})
+            facet_dict = self.solrq.get_facets()
+            self.form.set_choices_from_facets(facet_dict)
 
-        facet_dict = self.solrq.get_facets()
-        self.form.set_choices_from_facets(facet_dict)
+        except SolrError as solr_err:
+            context = {'object_list': []}
+            if 'Cannot parse' in str(solr_err):
+                error_msg = 'Unable to parse search query; please revise and try again.'
+            else:
+                error_msg = 'Something went wrong.'
+            context = {'object_list': [], 'error': error_msg}
 
         context.update({
             'search_form': self.form,
             # total and object_list provided by paginator
             'sort': self.sort,
-            'page_groups': json.loads(self.solrq.get_json()).get('expanded', {})
+            'page_groups': page_groups
+
         })
         return context
 
@@ -115,3 +132,35 @@ class CollectionListView(ListView):
     # NOTE: For consistency with DigitizedWork's list view
     template_name = 'archive/list_collections.html'
     ordering = ('name',)
+
+
+class DigitizedWorkCSV(ListView):
+    '''Export of digitized work details as CSV download.'''
+    # NOTE: csv logic could be extracted as a view mixin for reuse
+    model = DigitizedWork
+    # order by id for now, for simplicity
+    ordering = 'id'
+    header_row = ['Database ID', 'Source ID', 'Title', 'Author', 'Publication Date',
+        'Publication Place', 'Publisher', 'Enumcron']
+
+    def get_csv_filename(self):
+        return 'ppa-digitizedworks-%s.csv' % now().strftime('%Y%m%dT%H:%M:%S')
+
+    def get_data(self):
+        return ((dw.id, dw.source_id, dw.title, dw.author,
+                 dw.pub_date, dw.pub_place, dw.publisher, dw.enumcron)
+                for dw in self.get_queryset())
+
+    def render_to_csv(self, data):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="%s"' % \
+            self.get_csv_filename()
+
+        writer = csv.writer(response)
+        writer.writerow(self.header_row)
+        for row in data:
+            writer.writerow(row)
+        return response
+
+    def get(self, *args, **kwargs):
+        return self.render_to_csv(self.get_data())
