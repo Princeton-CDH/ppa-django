@@ -5,7 +5,7 @@ python:
 
 env:
   global:
-    - SOLR_VERSION=6.6.0
+    - SOLR_VERSION=6.6.2
     - SOLR_CORE=test-ppa
 
 install:
