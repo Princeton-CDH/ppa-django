@@ -1,7 +1,11 @@
 # Config variables local to the script
-version=${SOLR_VERSION:-6.6.2}
+version=${SOLR_VERSION:6.6.2}
 file="solr-${version}.tgz"
 url="http://mirror.reverse.net/pub/apache/lucene/solr/${version}/${file}"
+
+# Make a downloads dir to cache and change working dir to it
+mkdir -p downloads
+cd downloads
 
 # Check if the file exists for some reason, shouldn't but out of parsimony
 if [ -f $file ];
