@@ -9,7 +9,6 @@ from ppa.archive.solr import get_solr_connection, SolrSchema, CoreAdmin, \
     PagedSolrQuery
 
 
-
 TEST_SOLR_CONNECTIONS = {
     'default': {
         'COLLECTION': 'testppa',
@@ -17,6 +16,7 @@ TEST_SOLR_CONNECTIONS = {
         'ADMIN_URL': 'http://localhost:191918984/solr/admin/cores'
     }
 }
+
 
 @override_settings(SOLR_CONNECTIONS=TEST_SOLR_CONNECTIONS)
 def test_get_solr_connection():
@@ -154,6 +154,19 @@ class TestPagedSolrQuery(TestCase):
         opts = {'q': '*:*'}
         psq = PagedSolrQuery(query_opts=opts)
         assert psq.query_opts == opts
+
+    def test_get_facets(self, mock_get_solr_connection):
+        mocksolr = Mock()
+        coll = 'testcoll'
+        mock_get_solr_connection.return_value = (mocksolr, coll)
+        psq = PagedSolrQuery()
+        # no result
+        assert psq._result is None
+        psq.get_facets()
+        # result should be set by calling get_results()
+        assert psq._result
+        # mocksolr's get_facets should have been called
+        assert psq._result.get_facets.called
 
     def test_get_results(self, mock_get_solr_connection):
         mocksolr = Mock()

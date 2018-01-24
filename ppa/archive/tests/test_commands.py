@@ -114,6 +114,7 @@ class TestHathiImportCommand(TestCase):
             .return_value.list_ids.return_value = id_values
         assert cmd.count_hathi_ids() == len(self.hathi_prefixes) * len(id_values)
 
+    @pytest.mark.usefixtures('solr')
     def test_import_digitizedwork(self):
         cmd = hathi_import.Command(stdout=StringIO())
         cmd.bib_api = Mock(spec=HathiBibliographicAPI)
@@ -206,6 +207,7 @@ class TestHathiImportCommand(TestCase):
         assert ' (forced update)' in log_entry.change_message
         assert log_entry.action_flag == CHANGE
 
+    @pytest.mark.usefixtures('solr')
     @patch('ppa.archive.management.commands.hathi_import.ZipFile', spec=ZipFile)
     def test_index_pages(self, mockzipfile):
         cmd = hathi_import.Command(stdout=StringIO())
@@ -215,7 +217,7 @@ class TestHathiImportCommand(TestCase):
         cmd.hathi_pairtree = {prefix: mock_pairtree_client}
         cmd.solr = Mock(spec=SolrClient)
         cmd.solr_collection = 'testidx'
-        digwork = DigitizedWork(source_id='.'.join([prefix, pt_id]))
+        digwork = DigitizedWork.objects.create(source_id='.'.join([prefix, pt_id]))
 
         pt_obj = mock_pairtree_client.get_object.return_value
         pt_obj.list_parts.return_value = ['12345.mets.xml', '12345.zip']

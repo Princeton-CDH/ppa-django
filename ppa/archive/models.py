@@ -1,6 +1,50 @@
 from django.db import models
 from django.urls import reverse
 
+from ppa.archive.solr import get_solr_connection
+
+
+class Collection(models.Model):
+    '''A collection of :class:~ppa.archive.models.DigitizedWork instances.'''
+    #: the name of the collection
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+    def full_index(self, params=None):
+        '''Index or reindex a collection's associated works.'''
+        # guard against this being called on an unsaved instance
+        if not self.pk:
+            raise ValueError(
+                'Collection instance needs to have a primary key value before '
+                'this method is called.'
+            )
+        solr, solr_collection = get_solr_connection()
+        digworks = self.digitizedwork_set.all()
+        solr_docs = [work.index_data() for work in digworks]
+        # adapted from hathi import logic
+        solr.index(solr_collection, solr_docs,
+            params=params)
+
+    def save(self, *args, **kwargs):
+        '''Override method so that on save, any associated
+        works have their names updated if collection name has changed.'''
+        # first handle cases where this is a new save, just save and return
+        if not self.pk:
+            super(Collection, self).save(*args, **kwargs)
+            return
+        # if it has been saved, get the original
+        orig = Collection.objects.get(pk=self.pk)
+        if orig.name != self.name:
+            # update object with new name
+            super(Collection, self).save(*args, **kwargs)
+            # reindex its works and commit the result
+            self.full_index()
+        # saved but no name change, so just save
+        else:
+            super(Collection, self).save(*args, **kwargs)
+
 
 class DigitizedWork(models.Model):
     # stub record to manage digitized works included in PPA
@@ -30,6 +74,8 @@ class DigitizedWork(models.Model):
     pub_date = models.CharField('Publication Date', max_length=255, blank=True)
     #: number of pages in the work
     page_count = models.PositiveIntegerField(null=True, blank=True)
+    #: collections that this work is part of
+    collections = models.ManyToManyField(Collection, blank=True)
     #: date added to the archive
     added = models.DateTimeField(auto_now_add=True)
     #: date of last modification of the local record
@@ -74,6 +120,14 @@ class DigitizedWork(models.Model):
         # - last update, rights code / rights string, item url
         # (maybe solr only?)
 
+    def index(self, params=None):
+        '''Index a :class:~ppa.archive.models.DigitizedWork
+        and allow optional commit to ensure results are available.
+        '''
+
+        solr, solr_collection = get_solr_connection()
+        solr.index(solr_collection, [self.index_data()], params=params)
+
     def index_data(self):
         '''data for indexing in Solr'''
         return {
@@ -86,6 +140,8 @@ class DigitizedWork(models.Model):
             'publisher': self.publisher,
             'enumcron': self.enumcron,
             'author': self.author,
+            'collections': [collection.name for collection
+                            in self.collections.all()],
             # hard-coded to distinguish from & sort with pages
             'item_type': 'work',
             'order': '0',

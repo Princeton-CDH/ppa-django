@@ -38,6 +38,9 @@
                 </p>
             {% endif %}
         {% endfor %}
+        {% if item.collections %}
+        <p><b>collections:</b> {{ item.collections|join:", " }}</p>
+        {% endif %}
         {% if sort == 'relevance' %}
             <p><small>relevance: {{ item.score }}</small></p>
         {% endif %}
