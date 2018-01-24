@@ -104,7 +104,11 @@ class TestArchiveViews(TestCase):
             {'content': content, 'order': i, 'item_type': 'page',
              'srcid': htid, 'id': '%s.%s' % (htid, i)}
             for i, content in enumerate(sample_page_content)]
+        # add a collection to use in testing the view
+        collection = Collection.objects.create(name='Test Collection')
         digitized_works = DigitizedWork.objects.all()
+        self.wintry = digitized_works.filter(title__icontains='Wintry')[0]
+        self.wintry.collections.add(collection)
         solr_work_docs = [digwork.index_data() for digwork in digitized_works]
         solr, solr_collection = get_solr_connection()
         index_data = solr_work_docs + solr_page_docs
@@ -133,7 +137,7 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url, {'query': 'wintry'})
         # relevance sort for keyword search
         assert response.context['sort'] == 'relevance'
-        wintry = DigitizedWork.objects.get(title__icontains='Wintry')
+        wintry = self.wintry
         self.assertContains(response, '1 digitized work;')
         self.assertContains(response, 'results sorted by relevance')
         self.assertContains(response, wintry.source_id)
@@ -172,6 +176,13 @@ class TestArchiveViews(TestCase):
         # bad syntax
         response = self.client.get(url, {'query': '"incomplete phrase'})
         self.assertContains(response, 'Unable to parse search query')
+
+        # collection search
+        response = self.client.get(url, {'query': 'collections_exact:"Test Collection"'})
+        res = response.render()
+        print(res.content)
+        self.assertContains(response, '1 digitized work;')
+        self.assertContains(response, wintry.source_id)
 
         # nothing indexed - should not error
         solr.delete_doc_by_query(solr_collection, '*:*', params={"commitWithin": 100})
@@ -227,8 +238,6 @@ class TestArchiveViews(TestCase):
         response = self.client.get(reverse('admin:auth_user_changelist'))
         self.assertNotContains(response, reverse('archive:csv'),
             msg_prefix='CSV download link should only be on digitized work list')
-
-
 
 
 
