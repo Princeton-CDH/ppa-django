@@ -8,7 +8,7 @@ if [ -f $file ];
 then
         echo "File exists, skipping download..."
 else
-        wget $url
+        curl $url > $file
 fi
 # Untar
 tar xzf $file
