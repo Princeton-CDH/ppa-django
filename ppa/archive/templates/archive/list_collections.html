@@ -7,7 +7,7 @@
 <hr>
     <ul>
     {% for item in object_list %}
-        <li><strong>{{ item.name }}</strong></li>
+        <li><a href="{% url 'archive:list' %}?collections={{ item.name|urlencode }}"<strong>{{ item.name }}</strong></a></li>
     {% endfor %}
     </ul>
 {% endblock %}
