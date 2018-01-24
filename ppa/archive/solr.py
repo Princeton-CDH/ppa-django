@@ -35,12 +35,16 @@ class SolrSchema(object):
         {'name': 'publisher', 'type': 'text_en', 'required': False},
         {'name': 'src_url', 'type': 'string', 'required': False},
         {'name': 'order', 'type': 'string', 'required': False},
+        {'name': 'collections', 'type': 'text_en', 'required': False,
+         'multiValued': True},
         {'name': 'text', 'type': 'text_en', 'required': False, 'stored': False,
          'multiValued': True},
 
          # sort/facet copy fields
         {'name': 'title_exact', 'type': 'string', 'required': False},
         {'name': 'author_exact', 'type': 'string', 'required': False},
+        {'name': 'collections_exact', 'type': 'string', 'required': False,
+         'multiValued': True}
     ]
     #: fields to be copied into general purpose text field for searching
     text_fields = ['srcid', 'content', 'title', 'author', 'pub_date', 'enumcron',
@@ -49,6 +53,7 @@ class SolrSchema(object):
     copy_fields = [
         ('title', 'title_exact'),
         ('author', 'author_exact'),
+        ('collections', 'collections_exact'),
     ]
 
     def __init__(self):
@@ -143,6 +148,13 @@ class PagedSolrQuery(object):
         self.query_opts = query_opts or {}
         # possibly should default to 'q': '*:*' ...
 
+    def get_facets(self):
+        '''Wrap SolrClient.SolrResponse.get_facets() to get query facets as a dict
+        of dicts.'''
+        if self._result is None:
+            self.get_results()
+        return self._result.get_facets()
+
     def get_results(self):
         self._result = self.solr.query(self.solr_collection, self.query_opts)
         return self._result.docs
@@ -162,7 +174,6 @@ class PagedSolrQuery(object):
         if self._result is None:
             self.get_results()
         return self._result.get_json()
-
 
     def set_limits(self, start, stop):
         '''Return a subsection of the results, to support slicing.'''

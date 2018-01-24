@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils.timezone import now
 import pytest
 
-from ppa.archive.models import DigitizedWork
+from ppa.archive.models import DigitizedWork, Collection
 from ppa.archive.solr import get_solr_connection
 from ppa.archive.views import DigitizedWorkCSV
 
@@ -104,7 +104,11 @@ class TestArchiveViews(TestCase):
             {'content': content, 'order': i, 'item_type': 'page',
              'srcid': htid, 'id': '%s.%s' % (htid, i)}
             for i, content in enumerate(sample_page_content)]
+        # add a collection to use in testing the view
+        collection = Collection.objects.create(name='Test Collection')
         digitized_works = DigitizedWork.objects.all()
+        self.wintry = digitized_works.filter(title__icontains='Wintry')[0]
+        self.wintry.collections.add(collection)
         solr_work_docs = [digwork.index_data() for digwork in digitized_works]
         solr, solr_collection = get_solr_connection()
         index_data = solr_work_docs + solr_page_docs
@@ -133,7 +137,7 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url, {'query': 'wintry'})
         # relevance sort for keyword search
         assert response.context['sort'] == 'relevance'
-        wintry = DigitizedWork.objects.get(title__icontains='Wintry')
+        wintry = self.wintry
         self.assertContains(response, '1 digitized work;')
         self.assertContains(response, 'results sorted by relevance')
         self.assertContains(response, wintry.source_id)
@@ -172,6 +176,13 @@ class TestArchiveViews(TestCase):
         # bad syntax
         response = self.client.get(url, {'query': '"incomplete phrase'})
         self.assertContains(response, 'Unable to parse search query')
+
+        # collection search
+        response = self.client.get(url, {'query': 'collections_exact:"Test Collection"'})
+        res = response.render()
+        print(res.content)
+        self.assertContains(response, '1 digitized work;')
+        self.assertContains(response, wintry.source_id)
 
         # nothing indexed - should not error
         solr.delete_doc_by_query(solr_collection, '*:*', params={"commitWithin": 100})
@@ -230,5 +241,35 @@ class TestArchiveViews(TestCase):
 
 
 
+class TestCollectionListView(TestCase):
 
+    def setUp(self):
+        '''Create some collections'''
+        self.coll1 = Collection.objects.create(name='Random Grabbag')
+        self.coll2 = Collection.objects.create(name='Foo through Time')
 
+    def test_context(self):
+        '''Check that the context is as expected'''
+        collection_list = reverse('archive:list-collections')
+        response = self.client.get(collection_list)
+
+        # it should have both collections that exist in it
+        assert self.coll1 in response.context['object_list']
+        assert self.coll2 in response.context['object_list']
+
+    def test_template(self):
+        '''Check that the template is rendering as expected'''
+        collection_list = reverse('archive:list-collections')
+        response = self.client.get(collection_list)
+        # - basic checks right templates
+        self.assertTemplateUsed(response, 'base.html')
+        self.assertTemplateUsed(response, 'archive/list_collections.html')
+        # - detailed checks of template
+        self.assertContains(
+        response, 'Random Grabbag',
+        msg_prefix='should list a collection called Random Grabbag'
+        )
+        self.assertContains(
+            response, 'Foo through Time',
+            msg_prefix='should list a collection called Foo through Time'
+        )
