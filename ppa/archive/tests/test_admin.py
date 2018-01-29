@@ -2,10 +2,12 @@ from unittest.mock import patch, Mock
 
 from django import forms
 from django.contrib.admin.sites import AdminSite
+from django.http import HttpResponseRedirect
 from django.test import TestCase, override_settings, RequestFactory
+from django.urls import reverse
 
-from ppa.archive.admin import DigitizedWorkAdmin
-from ppa.archive.models import DigitizedWork
+from ppa.archive.admin import CollectionAdmin, DigitizedWorkAdmin
+from ppa.archive.models import Collection, DigitizedWork
 
 TEST_SOLR_CONNECTIONS = {
     'default': {
@@ -46,3 +48,15 @@ class TestDigitizedWorkAdmin(TestCase):
         digadmin.save_related(request, form, [], False)
         # mocked index method of the digwork object should have been called
         digwork.index.assert_called_with(params={'commitWithin': 10000})
+
+
+class TestCollectionAdmin(TestCase):
+
+    def test_bulk_add_collection(self):
+        regadmin = CollectionAdmin(Collection, AdminSite())
+        fakerequest = Mock()
+        fakerequest.POST.getlist.return_value = ['1', '2', '3']
+        redirect = regadmin.bulk_add_collection(fakerequest, [])
+        assert isinstance(redirect, HttpResponseRedirect)
+        assert redirect.url == \
+            '%s?ids=1,2,3' % reverse('admin:index')
