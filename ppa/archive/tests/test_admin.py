@@ -6,8 +6,8 @@ from django.http import HttpResponseRedirect
 from django.test import TestCase, override_settings, RequestFactory
 from django.urls import reverse
 
-from ppa.archive.admin import CollectionAdmin, DigitizedWorkAdmin
-from ppa.archive.models import Collection, DigitizedWork
+from ppa.archive.admin import DigitizedWorkAdmin
+from ppa.archive.models import DigitizedWork
 
 TEST_SOLR_CONNECTIONS = {
     'default': {
@@ -18,13 +18,13 @@ TEST_SOLR_CONNECTIONS = {
 }
 
 
-@override_settings(SOLR_CONNECTIONS=TEST_SOLR_CONNECTIONS)
-@patch('ppa.archive.solr.get_solr_connection')
 class TestDigitizedWorkAdmin(TestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
 
+    @override_settings(SOLR_CONNECTIONS=TEST_SOLR_CONNECTIONS)
+    @patch('ppa.archive.solr.get_solr_connection')
     @patch('ppa.archive.models.DigitizedWork.index')
     def test_save_related(self, mockindex, mock_get_solr_connection):
         '''Test that override of save_related calls index'''
@@ -49,17 +49,14 @@ class TestDigitizedWorkAdmin(TestCase):
         # mocked index method of the digwork object should have been called
         digwork.index.assert_called_with(params={'commitWithin': 10000})
 
-
-class TestCollectionAdmin(TestCase):
-
     def test_bulk_add_collection(self):
-        # create a CollectionAmin object
-        regadmin = CollectionAdmin(Collection, AdminSite())
+        # create a DigitizedWorkAdmin object
+        digworkadmin = DigitizedWorkAdmin(DigitizedWork, AdminSite())
         fakerequest = Mock()
         # mock items 1,2,3 being selected
         fakerequest.POST.getlist.return_value = ['1', '2', '3']
-        redirect = regadmin.bulk_add_collection(fakerequest, [])
+        redirect = digworkadmin.bulk_add_collection(fakerequest, [])
         # should return a redirect
         assert isinstance(redirect, HttpResponseRedirect)
         # url should reverse the appropriate route and append ?ids=1,2,3
-            '%s?ids=1,2,3' % reverse('admin:index')
+        assert redirect.url == '%s?ids=1,2,3' % reverse('admin:index')

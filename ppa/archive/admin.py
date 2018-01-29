@@ -30,15 +30,18 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         digwork = DigitizedWork.objects.get(id=form.instance.pk)
         digwork.index(params={"commitWithin": 10000})
 
-
-class CollectionAdmin(admin.ModelAdmin):
-
     def bulk_add_collection(self, request, queryset):
+        '''
+        Bulk add a queryset of :class:ppa.archive.DigitizedWork to
+        a :class:ppa.archive.Collection.
+        '''
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
         return HttpResponseRedirect('%s?ids=%s' %
                                     (reverse('admin:index'), ','.join(selected)))
 
     bulk_add_collection.short_description = 'Add selected digital works to collections'
+
+
 
 admin.site.register(DigitizedWork, DigitizedWorkAdmin)
 admin.site.register(Collection)
