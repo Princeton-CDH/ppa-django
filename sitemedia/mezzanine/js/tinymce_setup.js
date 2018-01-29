@@ -79,6 +79,8 @@
         convert_urls: false,
         menubar: false,
         statusbar: false,
+        // This limits the toolbar functionality and also prevents
+        // users from entering code view.
         toolbar: ("undo redo | bold italic link | fullscreen"),
         file_browser_callback: custom_file_browser,
         content_css: window.__tinymce_css,
