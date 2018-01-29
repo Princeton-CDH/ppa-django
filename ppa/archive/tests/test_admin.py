@@ -53,10 +53,13 @@ class TestDigitizedWorkAdmin(TestCase):
 class TestCollectionAdmin(TestCase):
 
     def test_bulk_add_collection(self):
+        # create a CollectionAmin object
         regadmin = CollectionAdmin(Collection, AdminSite())
         fakerequest = Mock()
+        # mock items 1,2,3 being selected
         fakerequest.POST.getlist.return_value = ['1', '2', '3']
         redirect = regadmin.bulk_add_collection(fakerequest, [])
+        # should return a redirect
         assert isinstance(redirect, HttpResponseRedirect)
-        assert redirect.url == \
+        # url should reverse the appropriate route and append ?ids=1,2,3
             '%s?ids=1,2,3' % reverse('admin:index')
