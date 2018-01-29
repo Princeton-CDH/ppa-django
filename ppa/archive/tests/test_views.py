@@ -248,7 +248,7 @@ class TestCollectionListView(TestCase):
         self.coll1 = Collection.objects.create(name='Random Grabbag')
         self.coll2 = Collection.objects.create(
             name='Foo through Time',
-            description="A <b>very</b> useful collection."
+            description="A <em>very</em> useful collection."
         )
 
     def test_context(self):
@@ -277,6 +277,6 @@ class TestCollectionListView(TestCase):
             msg_prefix='should list a collection called Foo through Time'
         )
         self.assertContains(
-            response, '<b>very</b>', html=True,
+            response, '<em>very</em>', html=True,
             msg_prefix='should render the description with HTML intact.'
         )
