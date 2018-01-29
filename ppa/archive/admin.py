@@ -39,8 +39,7 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         return HttpResponseRedirect('%s?ids=%s' %
                                     (reverse('admin:index'), ','.join(selected)))
 
-    bulk_add_collection.short_description = 'Add selected digital works to collections'
-
+    bulk_add_collection.short_description = 'Add selected digitized works to collections'
 
 
 admin.site.register(DigitizedWork, DigitizedWorkAdmin)
