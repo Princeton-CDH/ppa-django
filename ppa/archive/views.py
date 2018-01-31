@@ -5,9 +5,10 @@ import logging
 from django.http import HttpResponse
 from django.utils.timezone import now
 from django.views.generic import ListView, DetailView
+from django.views.generic.edit import FormMixin
 from SolrClient.exceptions import SolrError
 
-from ppa.archive.forms import SearchForm
+from ppa.archive.forms import SearchForm, BulkAddCollectionForm
 from ppa.archive.models import DigitizedWork, Collection
 from ppa.archive.solr import PagedSolrQuery
 
@@ -166,3 +167,21 @@ class DigitizedWorkCSV(ListView):
 
     def get(self, *args, **kwargs):
         return self.render_to_csv(self.get_data())
+
+
+class BulkAddCollectionView(ListView, FormMixin):
+    '''
+    View to bulk add a queryset of :class:ppa.archive.models.DigitizedWork to a set of
+    :class:ppa.archive.models.Collection
+    '''
+
+    model = DigitizedWork
+    template_name = 'admin/archive/digitizedwork/bulk_add_collections.html'
+    form_class = BulkAddCollectionForm
+
+    def get_queryset(self, *args, **kwargs):
+        '''Return a queryset filtered by id, or empty list if no ids'''
+        ids = self.request.GET.get('ids', None)
+        if ids:
+            return Collection.objects.filter(id__in=ids.split(','))
+        return []
