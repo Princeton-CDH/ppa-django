@@ -59,4 +59,4 @@ class TestDigitizedWorkAdmin(TestCase):
         # should return a redirect
         assert isinstance(redirect, HttpResponseRedirect)
         # url should reverse the appropriate route and append ?ids=1,2,3
-        assert redirect.url == '%s?ids=1,2,3' % reverse('admin:index')
+        assert redirect.url == '%s?ids=1,2,3' % reverse('archive:bulk-add')

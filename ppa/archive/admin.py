@@ -16,6 +16,7 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
     filter_horizontal = ('collections',)
     # date_hierarchy = 'added'  # is this useful?
     list_filter = ['collections']
+    actions = ['bulk_add_collection']
 
     def save_related(self, request, form, formsets, change):
         '''Ensure reindex is called when admin form is saved'''
@@ -37,9 +38,10 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         '''
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
         return HttpResponseRedirect('%s?ids=%s' %
-                                    (reverse('admin:index'), ','.join(selected)))
+                                    (reverse('archive:bulk-add'), ','.join(selected)))
 
-    bulk_add_collection.short_description = 'Add selected digitized works to collections'
+    bulk_add_collection.short_description = ('Add selected digitized works '
+                                             'to collections')
 
 
 admin.site.register(DigitizedWork, DigitizedWorkAdmin)

@@ -2,8 +2,11 @@ import csv
 import json
 import logging
 
+from django.contrib import messages
 from django.http import HttpResponse
+from django.shortcuts import redirect
 from django.utils.timezone import now
+from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView
 from django.views.generic.edit import FormMixin, ProcessFormView
 from SolrClient.exceptions import SolrError
@@ -171,13 +174,14 @@ class DigitizedWorkCSV(ListView):
 
 class BulkAddCollectionView(ListView, FormMixin, ProcessFormView):
     '''
-    View to bulk add a queryset of :class:ppa.archive.models.DigitizedWork to a set of
-    :class:ppa.archive.models.Collection
+    View to bulk add a queryset of :class:ppa.archive.models.DigitizedWork
+    to a set of :class:ppa.archive.models.Collection instances.
     '''
 
     model = DigitizedWork
     template_name = 'admin/archive/digitizedwork/bulk_add_collections.html'
     form_class = BulkAddCollectionForm
+    success_url = reverse_lazy('admin:archive_digitizedwork_changelist')
 
     def get_queryset(self, *args, **kwargs):
         '''Return a queryset filtered by id, or empty list if no ids'''
@@ -196,3 +200,36 @@ class BulkAddCollectionView(ListView, FormMixin, ProcessFormView):
         if ids:
             initial['digitized_work_ids'] = ids
         return initial
+
+    def post(self, request, *args, **kwargs):
+        '''
+        Add :class:ppa.archive.models.DigitizedWork instances passed in form
+        data to selected instances of :class:ppa.archive.models.Collection,
+        then return to change_list view.
+        '''
+        form = BulkAddCollectionForm(request.POST)
+        # override default post functionality to set collections
+        if form.is_valid():
+            data = form.cleaned_data
+            ids = data['digitized_work_ids'].split(',')
+            # get digitzed works from validated form
+            digitized_works = DigitizedWork.objects.filter(id__in=ids)
+            for collection in data['collections']:
+                collection.digitizedwork_set.set(digitized_works)
+
+            # TODO: Add solr indexing
+            
+            # create a success message to add to message framework stating
+            # what happened
+            htids = ', '.join(work.source_id for work in digitized_works)
+            collections = ', '.join(collection.name for
+                                    collection in data['collections'])
+            messages.success(request, '%s successfully added to: %s.'
+                             % (htids, collections))
+        # call the super post method to trigger redirects
+        # should be safe because checks form validity in either instance
+        # before redirect
+        return (
+            super(BulkAddCollectionView, self)
+            .post(self, request, *args, **kwargs)
+        )
