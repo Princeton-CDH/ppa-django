@@ -5,7 +5,7 @@ import logging
 from django.http import HttpResponse
 from django.utils.timezone import now
 from django.views.generic import ListView, DetailView
-from django.views.generic.edit import FormMixin
+from django.views.generic.edit import FormMixin, ProcessFormView
 from SolrClient.exceptions import SolrError
 
 from ppa.archive.forms import SearchForm, BulkAddCollectionForm
@@ -169,7 +169,7 @@ class DigitizedWorkCSV(ListView):
         return self.render_to_csv(self.get_data())
 
 
-class BulkAddCollectionView(ListView, FormMixin):
+class BulkAddCollectionView(ListView, FormMixin, ProcessFormView):
     '''
     View to bulk add a queryset of :class:ppa.archive.models.DigitizedWork to a set of
     :class:ppa.archive.models.Collection
@@ -183,5 +183,16 @@ class BulkAddCollectionView(ListView, FormMixin):
         '''Return a queryset filtered by id, or empty list if no ids'''
         ids = self.request.GET.get('ids', None)
         if ids:
-            return Collection.objects.filter(id__in=ids.split(','))
+            return DigitizedWork.objects.filter(id__in=ids.split(','))
         return []
+
+    def get_initial(self):
+        '''
+        Set the hidden field with the :class:ppa.archive.models.DigitizedWork
+        to add to collection(s) to pass to POST request.
+        '''
+        initial = super(BulkAddCollectionView, self).get_initial()
+        ids = self.request.GET.get('ids', None)
+        if ids:
+            initial['digitized_work_ids'] = ids
+        return initial
