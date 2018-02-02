@@ -289,3 +289,13 @@ class TestBulkAddCollectionView(TestCase):
             response,
             'Please select digitized works from the admin interface.'
         )
+        # sending a set of pks that don't exist should produce the same result
+        response = self.client.get(bulk_add, {'ids': '1,2,3'})
+        self.assertContains(response,
+            '<h1>Bulk Add to Collections</h1>', html=True)
+        self.assertContains(
+            response,
+            'Please select digitized works from the admin interface.'
+        )
+        # TODO: Add checks that pks get passed to hidden form and that POST
+        # behaves as expected
