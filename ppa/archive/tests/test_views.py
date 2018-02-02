@@ -273,3 +273,19 @@ class TestCollectionListView(TestCase):
             response, 'Foo through Time',
             msg_prefix='should list a collection called Foo through Time'
         )
+
+
+class TestBulkAddCollectionView(TestCase):
+
+    def test_get(self):
+
+        # - a get to the view with ids should return a message to use
+        # the admin interface and not enable the form for submission
+        bulk_add = reverse('archive:bulk-add')
+        response = self.client.get(bulk_add)
+        self.assertContains(response,
+            '<h1>Bulk Add to Collections</h1>', html=True)
+        self.assertContains(
+            response,
+            'Please select digitized works from the admin interface.'
+        )

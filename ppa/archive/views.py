@@ -186,9 +186,9 @@ class BulkAddCollectionView(ListView, FormMixin, ProcessFormView):
     def get_queryset(self, *args, **kwargs):
         '''Return a queryset filtered by id, or empty list if no ids'''
         ids = self.request.GET.get('ids', None)
-        if ids:
-            return DigitizedWork.objects.filter(id__in=ids.split(','))
-        return []
+        # if somehow a problematic non-pk is pushed, will be ignored in filter
+        return DigitizedWork.objects.filter(id__in=ids.split(',')
+                                            if ids else [])
 
     def get_initial(self):
         '''
@@ -196,7 +196,10 @@ class BulkAddCollectionView(ListView, FormMixin, ProcessFormView):
         to add to collection(s) to pass to POST request.
         '''
         initial = super(BulkAddCollectionView, self).get_initial()
-        ids = self.request.GET.get('ids', None)
+        # this ensures that the hidden field for POST only ever contains
+        # actual PKs
+        ids = ','.join(str(val) for val in
+                       self.get_queryset().values_list('id', flat=True))
         if ids:
             initial['digitized_work_ids'] = ids
         return initial
