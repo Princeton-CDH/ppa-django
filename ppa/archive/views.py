@@ -13,7 +13,7 @@ from SolrClient.exceptions import SolrError
 
 from ppa.archive.forms import SearchForm, BulkAddCollectionForm
 from ppa.archive.models import DigitizedWork, Collection
-from ppa.archive.solr import PagedSolrQuery
+from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 
 
 logger = logging.getLogger(__name__)
@@ -216,9 +216,11 @@ class BulkAddCollectionView(ListView, FormMixin, ProcessFormView):
             digitized_works = DigitizedWork.objects.filter(id__in=ids)
             for collection in data['collections']:
                 collection.digitizedwork_set.set(digitized_works)
-
-            # TODO: Add solr indexing
-            
+            # reindex solr with the new collection data
+            solr_docs = [work.index_data() for work in digitized_works]
+            solr, solr_collection = get_solr_connection()
+            solr.index(solr_collection, solr_docs,
+                params={'commitWithin': 2000})
             # create a success message to add to message framework stating
             # what happened
             htids = ', '.join(work.source_id for work in digitized_works)
