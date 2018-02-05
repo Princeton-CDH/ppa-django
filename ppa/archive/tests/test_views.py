@@ -306,9 +306,10 @@ class TestBulkAddCollectionView(TestCase):
         # block (html expects the all the content between the closing tag too!)
         self.assertContains(
             response,
-            '<form method="post">',
+            '<form method="post"',
         )
         # values are passed to hidden form field correctly
+        print(response.render().content)
         self.assertContains(
             response,
             '<input type="hidden" name="digitized_work_ids" '
