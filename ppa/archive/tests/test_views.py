@@ -298,7 +298,7 @@ class TestBulkAddCollectionView(TestCase):
             'Please select digitized works from the admin interface.'
         )
         # create a collection and send valid pks
-        Collection.objects.create(name='Random Grabbag')
+        coll1 = Collection.objects.create(name='Random Grabbag')
         response = self.client.get(bulk_add, {'ids': '1,2'})
         self.assertContains(response,
             '<h1>Bulk Add to Collections</h1>', html=True)
@@ -316,7 +316,7 @@ class TestBulkAddCollectionView(TestCase):
             html=True)
         self.assertContains(
             response,
-            '<option value="1">Random Grabbag</option>',
+            '<option value="%d">Random Grabbag</option>' % coll1.id ,
             html=True
         )
 
@@ -331,14 +331,19 @@ class TestBulkAddCollectionView(TestCase):
         # adds them to the appropriate collection
         # make a collection
         coll1 = Collection.objects.create(name='Random Grabbag')
+        digworks = DigitizedWork.objects.all()[0:2]
+        pks = list(digworks.values_list('id', flat=True))
         bulk_add = reverse('archive:bulk-add')
         # post to the add to collection url
-        self.client.post(bulk_add,
-            {'digitized_work_ids': '1,2', 'collections': coll1.pk})
+        self.client.post(
+            bulk_add,
+            {'digitized_work_ids': '%s' % ','.join(str(pk) for pk in pks),
+             'collections': coll1.pk}
+        )
         # digitized works with pks 1,2 are added to the collection
         digworks = DigitizedWork.objects.filter(collections__pk=1)
         assert digworks.count() == 2
-        assert list(digworks.values_list('id', flat=True)) == [1, 2]
+        assert list(digworks.values_list('id', flat=True)) == pks
 
         # - check that solr indexing was called correctly via mocks
         assert mockgetsolr.called
