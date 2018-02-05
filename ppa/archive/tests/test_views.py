@@ -1,8 +1,8 @@
 import csv
-from datetime import date
 from io import StringIO
 import re
 from time import sleep
+from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -240,7 +240,6 @@ class TestArchiveViews(TestCase):
             msg_prefix='CSV download link should only be on digitized work list')
 
 
-
 class TestCollectionListView(TestCase):
 
     def setUp(self):
@@ -277,8 +276,9 @@ class TestCollectionListView(TestCase):
 
 class TestBulkAddCollectionView(TestCase):
 
-    def test_get(self):
+    fixtures = ['sample_digitized_works']
 
+    def test_get(self):
         # - a get to the view with ids should return a message to use
         # the admin interface and not enable the form for submission
         bulk_add = reverse('archive:bulk-add')
@@ -290,12 +290,59 @@ class TestBulkAddCollectionView(TestCase):
             'Please select digitized works from the admin interface.'
         )
         # sending a set of pks that don't exist should produce the same result
-        response = self.client.get(bulk_add, {'ids': '1,2,3'})
+        response = self.client.get(bulk_add, {'ids': '100,101'})
         self.assertContains(response,
             '<h1>Bulk Add to Collections</h1>', html=True)
         self.assertContains(
             response,
             'Please select digitized works from the admin interface.'
         )
-        # TODO: Add checks that pks get passed to hidden form and that POST
-        # behaves as expected
+        # create a collection and send valid pks
+        Collection.objects.create(name='Random Grabbag')
+        response = self.client.get(bulk_add, {'ids': '1,2'})
+        self.assertContains(response,
+            '<h1>Bulk Add to Collections</h1>', html=True)
+        # check html=False so we can look for just the opening tag of the form
+        # block (html expects the all the content between the closing tag too!)
+        self.assertContains(
+            response,
+            '<form method="post">',
+        )
+        # values are passed to hidden form field correctly
+        self.assertContains(
+            response,
+            '<input type="hidden" name="digitized_work_ids" '
+            'value="1,2" id="id_digitized_work_ids" />',
+            html=True)
+        self.assertContains(
+            response,
+            '<option value="1">Random Grabbag</option>',
+            html=True
+        )
+
+    @patch('ppa.archive.views.get_solr_connection')
+    def test_post(self, mockgetsolr):
+
+        mocksolr = Mock()
+        mockcollection = Mock()
+        mockgetsolr.return_value = mocksolr, mockcollection
+
+        # - check that a post to the bulk-add route with valid pks
+        # adds them to the appropriate collection
+        # make a collection
+        coll1 = Collection.objects.create(name='Random Grabbag')
+        bulk_add = reverse('archive:bulk-add')
+        # post to the add to collection url
+        self.client.post(bulk_add,
+            {'digitized_work_ids': '1,2', 'collections': coll1.pk})
+        # digitized works with pks 1,2 are added to the collection
+        digworks = DigitizedWork.objects.filter(collections__pk=1)
+        assert digworks.count() == 2
+        assert list(digworks.values_list('id', flat=True)) == [1, 2]
+
+        # - check that solr indexing was called correctly via mocks
+        assert mockgetsolr.called
+        solr_docs = [work.index_data() for work in digworks]
+        mocksolr.index.assert_called_with(
+            mockcollection, solr_docs, params={'commitWithin': 2000}
+        )
