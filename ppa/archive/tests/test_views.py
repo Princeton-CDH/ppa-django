@@ -341,7 +341,7 @@ class TestBulkAddCollectionView(TestCase):
              'collections': coll1.pk}
         )
         # digitized works with pks 1,2 are added to the collection
-        digworks = DigitizedWork.objects.filter(collections__pk=1)
+        digworks = DigitizedWork.objects.filter(collections__pk=coll1.pk)
         assert digworks.count() == 2
         assert list(digworks.values_list('id', flat=True)) == pks
 
