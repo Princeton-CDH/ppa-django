@@ -81,11 +81,11 @@ class TestArchiveViews(TestCase):
             msg_prefix='Missing publication date (pub_date)'
         )
         self.assertContains(
-            response, dial.added.strftime("%d Dec %Y"),
+            response, dial.added.strftime("%d %b %Y"),
             msg_prefix='Missing added or in wrong format (d M Y in filter)'
         )
         self.assertContains(
-            response, dial.updated.strftime("%d Dec %Y"),
+            response, dial.updated.strftime("%d %b %Y"),
             msg_prefix='Missing updated or in wrong format (d M Y in filter)'
         )
 
