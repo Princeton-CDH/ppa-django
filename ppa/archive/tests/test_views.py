@@ -211,17 +211,18 @@ class TestArchiveViews(TestCase):
         assert rows[0] == DigitizedWorkCSV.header_row
         # check for expected number of records - header + one row for each work
         assert len(rows) == digworks.count() + 1
-        # spot check expected data
-        digwork = digworks.first()
-        digwork_data = rows[1]
-        assert digwork.source_id in digwork_data
-        assert digwork.title in digwork_data
-        assert digwork.author in digwork_data
-        assert digwork.pub_date in digwork_data
-        assert digwork.pub_place in digwork_data
-        assert digwork.publisher in digwork_data
-        assert digwork.publisher in digwork_data
-        assert digwork.enumcron in digwork_data
+        # check expected data in CSV output
+        for digwork, digwork_data in zip(digworks, rows[1:]):
+            assert digwork.source_id in digwork_data
+            assert digwork.title in digwork_data
+            assert digwork.author in digwork_data
+            assert digwork.pub_date in digwork_data
+            assert digwork.pub_place in digwork_data
+            assert digwork.publisher in digwork_data
+            assert digwork.publisher in digwork_data
+            assert digwork.enumcron in digwork_data
+            assert '; '.join([coll.name for coll in digwork.collections.all()]) \
+                in digwork_data
 
     def test_digitizedwork_admin_changelist(self):
         # log in as admin to access admin site views
