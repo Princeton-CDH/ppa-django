@@ -36,9 +36,13 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         Bulk add a queryset of :class:ppa.archive.DigitizedWork to
         a :class:ppa.archive.Collection.
         '''
+        # Uses POST from admin rather than a database query to get the pks
+        # per the suggested practices in Django documentation
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
-        return HttpResponseRedirect('%s?ids=%s' %
-                                    (reverse('archive:bulk-add'), ','.join(selected)))
+
+        return HttpResponseRedirect(
+            '%s?ids=%s' % (reverse('archive:bulk-add'), ','.join(selected))
+        )
 
     bulk_add_collection.short_description = ('Add selected digitized works '
                                              'to collections')
