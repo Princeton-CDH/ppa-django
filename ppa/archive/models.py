@@ -1,5 +1,6 @@
 from django.db import models
 from django.urls import reverse
+from mezzanine.core.fields import RichTextField
 
 from ppa.archive.solr import get_solr_connection
 
@@ -8,6 +9,8 @@ class Collection(models.Model):
     '''A collection of :class:~ppa.archive.models.DigitizedWork instances.'''
     #: the name of the collection
     name = models.CharField(max_length=255)
+    #: a RichText description of the collection
+    description = RichTextField(blank=True)
 
     def __str__(self):
         return self.name
