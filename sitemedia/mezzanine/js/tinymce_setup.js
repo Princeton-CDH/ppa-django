@@ -65,6 +65,7 @@
         return false;
     }
 
+    // default tinyMCE config for Mezzanine
     var tinymce_config = {
         height: '500px',
         language: language_codes[window.__language_code] || 'en',
@@ -79,17 +80,36 @@
         convert_urls: false,
         menubar: false,
         statusbar: false,
-        // This limits the toolbar functionality and also prevents
-        // users from entering code view.
-        toolbar: ("undo redo | bold italic link | fullscreen"),
+        toolbar: ("insertfile undo redo | styleselect | bold italic | " +
+                  "alignleft aligncenter alignright alignjustify | " +
+                  "bullist numlist outdent indent | link image table | " +
+                  "code fullscreen"),
         file_browser_callback: custom_file_browser,
         content_css: window.__tinymce_css,
         valid_elements: "*[*]"  // Don't strip anything since this is handled by bleach.
     };
 
+    // subset version for description field of collections
+    var coll_desc_config = tinymce_config;
+    coll_desc_config.toolbar = ("undo redo | bold italic link | fullscreen");
+
     function initialise_richtext_fields($elements) {
+
+        // customized tinyMCE configs, keyed by id
+        var configs = {
+            'id_description': coll_desc_config
+        }
+
         if ($elements && typeof tinyMCE != 'undefined') {
-            $elements.tinymce(tinymce_config);
+            // if the element is in configs, use its custom config
+            $elements.filter(function() {
+                if (this.id in configs) {
+                    $(this).tinymce(configs[this.id]);
+                } else {
+                    // otherwise, just use the default
+                    $(this).tinymce(tiny_mce)
+                }
+            });
         }
     }
 
