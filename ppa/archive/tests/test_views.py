@@ -278,7 +278,34 @@ class TestBulkAddCollectionView(TestCase):
 
     fixtures = ['sample_digitized_works']
 
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(username='test',
+                                                         password='secret')
+        self.user.save()
+
+        get_user_model().objects.create_superuser(
+            username='super', password='secret', email='foo@bar.com'
+        )
+
+    def test_permissions(self):
+        # - anonymous login is redirected to sign in
+        bulk_add = reverse('archive:bulk-add')
+        response = self.client.get(bulk_add)
+        assert response.status_code == 302
+        # - so is a user without staff permissions
+        self.client.login(username='test', password='secret')
+        response = self.client.get(bulk_add)
+        assert response.status_code == 302
+        self.user.is_staff = True
+        self.user.save()
+        # a logged in staff user is not redirected
+        response = self.client.get(bulk_add)
+        assert response.status_code == 200
+
     def test_get(self):
+
+        self.client.login(username='super', password='secret')
+
         # - a get to the view with ids should return a message to use
         # the admin interface and not enable the form for submission
         bulk_add = reverse('archive:bulk-add')
@@ -327,6 +354,8 @@ class TestBulkAddCollectionView(TestCase):
         mocksolr = Mock()
         mockcollection = Mock()
         mockgetsolr.return_value = mocksolr, mockcollection
+
+        self.client.login(username='super', password='secret')
 
         # - check that a post to the bulk-add route with valid pks
         # adds them to the appropriate collection

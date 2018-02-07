@@ -176,6 +176,8 @@ class BulkAddCollectionView(ListView, FormMixin, ProcessFormView):
     '''
     View to bulk add a queryset of :class:ppa.archive.models.DigitizedWork
     to a set of :class:ppa.archive.models.Collection instances.
+
+    Restricted to staff users via staff_member_required on url.
     '''
 
     model = DigitizedWork
