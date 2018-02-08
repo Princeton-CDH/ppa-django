@@ -221,7 +221,7 @@ class TestArchiveViews(TestCase):
             assert digwork.publisher in digwork_data
             assert digwork.publisher in digwork_data
             assert digwork.enumcron in digwork_data
-            assert '; '.join([coll.name for coll in digwork.collections.all()]) \
+            assert ';'.join([coll.name for coll in digwork.collections.all()]) \
                 in digwork_data
 
     def test_digitizedwork_admin_changelist(self):
