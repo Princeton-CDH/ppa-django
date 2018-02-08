@@ -151,7 +151,7 @@ class DigitizedWorkCSV(ListView):
     def get_data(self):
         return ((dw.id, dw.source_id, dw.title, dw.author,
                  dw.pub_date, dw.pub_place, dw.publisher, dw.enumcron,
-                 '; '.join([coll.name for coll in dw.collections.all()])
+                 ';'.join([coll.name for coll in dw.collections.all()])
                  )
                 for dw in self.get_queryset().prefetch_related('collections'))
         # NOTE: prefetch collections so they are retrieved more efficiently
