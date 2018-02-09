@@ -142,8 +142,9 @@ class DigitizedWorkCSV(ListView):
     model = DigitizedWork
     # order by id for now, for simplicity
     ordering = 'id'
-    header_row = ['Database ID', 'Source ID', 'Title', 'Author', 'Publication Date',
-        'Publication Place', 'Publisher', 'Enumcron', 'Collection']
+    header_row = ['Database ID', 'Source ID', 'Title', 'Author',
+        'Publication Date', 'Publication Place', 'Publisher', 'Enumcron',
+        'Collection', 'Page Count', 'Date Added', 'Last Updated']
 
     def get_csv_filename(self):
         return 'ppa-digitizedworks-%s.csv' % now().strftime('%Y%m%dT%H:%M:%S')
@@ -151,7 +152,8 @@ class DigitizedWorkCSV(ListView):
     def get_data(self):
         return ((dw.id, dw.source_id, dw.title, dw.author,
                  dw.pub_date, dw.pub_place, dw.publisher, dw.enumcron,
-                 ';'.join([coll.name for coll in dw.collections.all()])
+                 ';'.join([coll.name for coll in dw.collections.all()]),
+                 dw.page_count, dw.added, dw.updated
                  )
                 for dw in self.get_queryset().prefetch_related('collections'))
         # NOTE: prefetch collections so they are retrieved more efficiently

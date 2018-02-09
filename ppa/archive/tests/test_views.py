@@ -223,6 +223,9 @@ class TestArchiveViews(TestCase):
             assert digwork.enumcron in digwork_data
             assert ';'.join([coll.name for coll in digwork.collections.all()]) \
                 in digwork_data
+            assert '%d' % digwork.page_count in digwork_data
+            assert '%s' % digwork.added in digwork_data
+            assert '%s' % digwork.updated in digwork_data
 
     def test_digitizedwork_admin_changelist(self):
         # log in as admin to access admin site views
