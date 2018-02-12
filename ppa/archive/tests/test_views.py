@@ -289,7 +289,7 @@ class TestAddToCollection(TestCase):
 
     def test_permissions(self):
         # - anonymous login is redirected to sign in
-        bulk_add = reverse('archive:bulk-add')
+        bulk_add = reverse('archive:add-to-collection')
         response = self.client.get(bulk_add)
         assert response.status_code == 302
         # - so is a user without staff permissions
@@ -308,7 +308,7 @@ class TestAddToCollection(TestCase):
 
         # - a get to the view with ids should return a message to use
         # the admin interface and not enable the form for submission
-        bulk_add = reverse('archive:bulk-add')
+        bulk_add = reverse('archive:add-to-collection')
         response = self.client.get(bulk_add)
         self.assertContains(response,
             '<h1>Bulk Add to Collections</h1>', html=True)

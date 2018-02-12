@@ -10,7 +10,7 @@ urlpatterns = [
     url(
         '^add-to-collection/$',
         staff_member_required(views.AddToCollection.as_view()),
-        name='bulk-add'
+        name='add-to-collection'
     ),
     url('^csv/$', views.DigitizedWorkCSV.as_view(), name='csv'),
     url('^(?P<source_id>.+)/$',
