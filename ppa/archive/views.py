@@ -4,7 +4,6 @@ import logging
 
 from django.contrib import messages
 from django.http import HttpResponse
-from django.shortcuts import redirect
 from django.utils.timezone import now
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView
@@ -174,8 +173,8 @@ class DigitizedWorkCSV(ListView):
 
 class BulkAddCollectionView(ListView, FormMixin, ProcessFormView):
     '''
-    View to bulk add a queryset of :class:ppa.archive.models.DigitizedWork
-    to a set of :class:ppa.archive.models.Collection instances.
+    View to bulk add a queryset of :class:`ppa.archive.models.DigitizedWork`
+    to a set of :class:`ppa.archive.models.Collection instances`.
 
     Restricted to staff users via staff_member_required on url.
     '''
@@ -187,19 +186,22 @@ class BulkAddCollectionView(ListView, FormMixin, ProcessFormView):
 
     def get_queryset(self, *args, **kwargs):
         '''Return a queryset filtered by id, or empty list if no ids'''
-        ids = self.request.GET.get('ids', None)
+        # get ids from session if there are any
+        ids = self.request.session.get('selected_works', [])
         # if somehow a problematic non-pk is pushed, will be ignored in filter
         return DigitizedWork.objects.filter(id__in=ids.split(',')
                                             if ids else [])
 
     def get_initial(self):
         '''
-        Set the hidden field with the :class:ppa.archive.models.DigitizedWork
-        to add to collection(s) to pass to POST request.
+        Set a hidden form field with the
+        :class:`ppa.archive.models.DigitizedWork` instances to add to
+        collection(s) to pass to POST request. Filters any that may not exist
+        by using the querset's filter method against the actual database.
         '''
         initial = super(BulkAddCollectionView, self).get_initial()
         # this ensures that the hidden field for POST only ever contains
-        # actual PKs
+        # actual PKs on both the form and the queryset shown to the user
         ids = ','.join(str(val) for val in
                        self.get_queryset().values_list('id', flat=True))
         if ids:
@@ -208,11 +210,13 @@ class BulkAddCollectionView(ListView, FormMixin, ProcessFormView):
 
     def post(self, request, *args, **kwargs):
         '''
-        Add :class:ppa.archive.models.DigitizedWork instances passed in form
+        Add :class:`ppa.archive.models.DigitizedWork` instances passed in form
         data to selected instances of :class:ppa.archive.models.Collection,
         then return to change_list view.
         '''
         form = BulkAddCollectionForm(request.POST)
+        # clear the session variable just in case
+        del request.session['selected_works']
         # override default post functionality to set collections
         if form.is_valid():
             data = form.cleaned_data
@@ -225,14 +229,14 @@ class BulkAddCollectionView(ListView, FormMixin, ProcessFormView):
             solr_docs = [work.index_data() for work in digitized_works]
             solr, solr_collection = get_solr_connection()
             solr.index(solr_collection, solr_docs,
-                params={'commitWithin': 2000})
+                       params={'commitWithin': 2000})
             # create a success message to add to message framework stating
             # what happened
-            htids = ', '.join(work.source_id for work in digitized_works)
+            num_works = digitized_works.count()
             collections = ', '.join(collection.name for
                                     collection in data['collections'])
-            messages.success(request, '%s successfully added to: %s.'
-                             % (htids, collections))
+            messages.success(request, 'Successfully added %d works to: %s.'
+                             % (num_works, collections))
         # call the super post method to trigger redirects
         # should be safe because checks form validity in either instance
         # before redirect

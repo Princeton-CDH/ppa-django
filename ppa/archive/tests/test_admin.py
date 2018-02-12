@@ -20,6 +20,8 @@ TEST_SOLR_CONNECTIONS = {
 
 class TestDigitizedWorkAdmin(TestCase):
 
+    fixtures = ['sample_digitized_works']
+
     def setUp(self):
         self.factory = RequestFactory()
 
@@ -28,11 +30,6 @@ class TestDigitizedWorkAdmin(TestCase):
     @patch('ppa.archive.models.DigitizedWork.index')
     def test_save_related(self, mockindex, mock_get_solr_connection):
         '''Test that override of save_related calls index'''
-        # fake form for save_related
-        class DigitizedWorkModelForm(forms.ModelForm):
-            class Meta:
-                model = DigitizedWork
-                exclude = []
 
         # fake request
         request = self.factory.get('/madeup/url')
@@ -40,7 +37,8 @@ class TestDigitizedWorkAdmin(TestCase):
         site = AdminSite()
         # make a digital work to get in overridden method
         digwork = DigitizedWork.objects.create(source_id='njp.32101013082597')
-        form = DigitizedWorkModelForm()
+        # mocked form
+        form = Mock()
         form.instance.pk = digwork.pk
         form.save_m2m = Mock()
         digadmin = DigitizedWorkAdmin(DigitizedWork, site)
@@ -53,10 +51,14 @@ class TestDigitizedWorkAdmin(TestCase):
         # create a DigitizedWorkAdmin object
         digworkadmin = DigitizedWorkAdmin(DigitizedWork, AdminSite())
         fakerequest = Mock()
-        # mock items 1,2,3 being selected
-        fakerequest.POST.getlist.return_value = ['1', '2', '3']
-        redirect = digworkadmin.bulk_add_collection(fakerequest, [])
+        fakerequest.session = {}
+        queryset = DigitizedWork.objects.all()
+        redirect = digworkadmin.bulk_add_collection(fakerequest, queryset)
         # should return a redirect
         assert isinstance(redirect, HttpResponseRedirect)
-        # url should reverse the appropriate route and append ?ids=1,2,3
-        assert redirect.url == '%s?ids=1,2,3' % reverse('archive:bulk-add')
+        # url should reverse the appropriate route
+        assert redirect.url == reverse('archive:bulk-add')
+        # session on request should be set with a key called selected_works that is not empty
+        assert fakerequest.session['selected_works']
+        # the selected_works key should have the ids of the three fixtures
+        assert fakerequest.session['selected_works'] == "1,2,3"

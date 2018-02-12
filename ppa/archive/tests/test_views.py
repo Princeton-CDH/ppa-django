@@ -317,7 +317,10 @@ class TestBulkAddCollectionView(TestCase):
             'Please select digitized works from the admin interface.'
         )
         # sending a set of pks that don't exist should produce the same result
-        response = self.client.get(bulk_add, {'ids': '100,101'})
+        session = self.client.session
+        session['selected_works'] = '100,101'
+        session.save()
+        response = self.client.get(bulk_add)
         self.assertContains(response,
             '<h1>Bulk Add to Collections</h1>', html=True)
         self.assertContains(
@@ -326,17 +329,18 @@ class TestBulkAddCollectionView(TestCase):
         )
         # create a collection and send valid pks
         coll1 = Collection.objects.create(name='Random Grabbag')
-        response = self.client.get(bulk_add, {'ids': '1,2'})
+        session['selected_works'] = '1,2'
+        session.save()
+        response = self.client.get(bulk_add)
         self.assertContains(response,
             '<h1>Bulk Add to Collections</h1>', html=True)
         # check html=False so we can look for just the opening tag of the form
-        # block (html expects the all the content between the closing tag too!)
+        # block (html expects all the content between the closing tag too!)
         self.assertContains(
             response,
             '<form method="post"',
         )
         # values are passed to hidden form field correctly
-        print(response.render().content)
         self.assertContains(
             response,
             '<input type="hidden" name="digitized_work_ids" '
@@ -361,9 +365,13 @@ class TestBulkAddCollectionView(TestCase):
         # adds them to the appropriate collection
         # make a collection
         coll1 = Collection.objects.create(name='Random Grabbag')
-        digworks = DigitizedWork.objects.all()[0:2]
+        digworks = DigitizedWork.objects.order_by('id')[0:2]
         pks = list(digworks.values_list('id', flat=True))
         bulk_add = reverse('archive:bulk-add')
+        session = self.client.session
+        session['selected_works'] = ','.join(map(str, pks))
+        session.save()
+        
         # post to the add to collection url
         self.client.post(
             bulk_add,
@@ -374,7 +382,8 @@ class TestBulkAddCollectionView(TestCase):
         digworks = DigitizedWork.objects.filter(collections__pk=coll1.pk)
         assert digworks.count() == 2
         assert list(digworks.values_list('id', flat=True)) == pks
-
+        # the session variable is cleared
+        assert 'selected_works' not in self.client.session
         # - check that solr indexing was called correctly via mocks
         assert mockgetsolr.called
         solr_docs = [work.index_data() for work in digworks]
