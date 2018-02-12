@@ -10,7 +10,7 @@ from django.views.generic import ListView, DetailView
 from django.views.generic.edit import FormMixin, ProcessFormView
 from SolrClient.exceptions import SolrError
 
-from ppa.archive.forms import SearchForm, BulkAddCollectionForm
+from ppa.archive.forms import SearchForm, AddToCollectionForm
 from ppa.archive.models import DigitizedWork, Collection
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 
@@ -171,7 +171,7 @@ class DigitizedWorkCSV(ListView):
         return self.render_to_csv(self.get_data())
 
 
-class BulkAddCollectionView(ListView, FormMixin, ProcessFormView):
+class AddToCollection(ListView, FormMixin, ProcessFormView):
     '''
     View to bulk add a queryset of :class:`ppa.archive.models.DigitizedWork`
     to a set of :class:`ppa.archive.models.Collection instances`.
@@ -180,8 +180,8 @@ class BulkAddCollectionView(ListView, FormMixin, ProcessFormView):
     '''
 
     model = DigitizedWork
-    template_name = 'admin/archive/digitizedwork/bulk_add_collections.html'
-    form_class = BulkAddCollectionForm
+    template_name = 'archive/add_to_collection.html'
+    form_class = AddToCollectionForm
     success_url = reverse_lazy('admin:archive_digitizedwork_changelist')
 
     def get_queryset(self, *args, **kwargs):
@@ -199,7 +199,7 @@ class BulkAddCollectionView(ListView, FormMixin, ProcessFormView):
         collection(s) to pass to POST request. Filters any that may not exist
         by using the querset's filter method against the actual database.
         '''
-        initial = super(BulkAddCollectionView, self).get_initial()
+        initial = super(AddToCollection, self).get_initial()
         # this ensures that the hidden field for POST only ever contains
         # actual PKs on both the form and the queryset shown to the user
         ids = ','.join(str(val) for val in
@@ -214,7 +214,7 @@ class BulkAddCollectionView(ListView, FormMixin, ProcessFormView):
         data to selected instances of :class:ppa.archive.models.Collection,
         then return to change_list view.
         '''
-        form = BulkAddCollectionForm(request.POST)
+        form = AddToCollectionForm(request.POST)
         # clear the session variable just in case
         del request.session['selected_works']
         # override default post functionality to set collections
@@ -241,6 +241,6 @@ class BulkAddCollectionView(ListView, FormMixin, ProcessFormView):
         # should be safe because checks form validity in either instance
         # before redirect
         return (
-            super(BulkAddCollectionView, self)
+            super(AddToCollection, self)
             .post(self, request, *args, **kwargs)
         )

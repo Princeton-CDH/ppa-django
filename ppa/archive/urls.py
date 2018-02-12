@@ -8,8 +8,8 @@ urlpatterns = [
     url('^collections/$', views.CollectionListView.as_view(),
         name='list-collections'),
     url(
-        '^collections/add/$',
-        staff_member_required(views.BulkAddCollectionView.as_view()),
+        '^add-to-collection/$',
+        staff_member_required(views.AddToCollection.as_view()),
         name='bulk-add'
     ),
     url('^csv/$', views.DigitizedWorkCSV.as_view(), name='csv'),

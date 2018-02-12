@@ -54,12 +54,15 @@ class SearchForm(forms.Form):
                     for val, count in facet_dict.items()]
 
 
-class BulkAddCollectionForm(forms.Form):
+class AddToCollectionForm(forms.Form):
     '''
     Form to select a set of :class:ppa.archive.models.Collection to which
     to bulk add a queryset of :class:ppa.archive.models.DigitizedWork
     '''
 
     collections = forms.ModelMultipleChoiceField(
-        required=True, queryset=Collection.objects.all().order_by('name'))
-    digitized_work_ids = forms.CharField(required=True, widget=forms.HiddenInput())
+        required=True, queryset=Collection.objects.all().order_by('name'),
+        help_text='Hold down ctrl or command key (on MacOS) to select '
+                  'multiple collections.')
+    digitized_work_ids = forms.CharField(required=True,
+        widget=forms.HiddenInput())

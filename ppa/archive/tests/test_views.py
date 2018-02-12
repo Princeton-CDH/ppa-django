@@ -274,7 +274,7 @@ class TestCollectionListView(TestCase):
         )
 
 
-class TestBulkAddCollectionView(TestCase):
+class TestAddToCollection(TestCase):
 
     fixtures = ['sample_digitized_works']
 
@@ -371,7 +371,7 @@ class TestBulkAddCollectionView(TestCase):
         session = self.client.session
         session['selected_works'] = ','.join(map(str, pks))
         session.save()
-        
+
         # post to the add to collection url
         self.client.post(
             bulk_add,
