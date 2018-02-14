@@ -12,6 +12,17 @@ page content.
 Database
 --------
 
+Collections (Release 0.6)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+.. image:: _static/ppa-schema-v06.png
+    :target: _static/ppa-schema-v06.png
+    :alt: PPA Database Schema, version 0.6
+
+This database revision adds Collections to the schema, as well as
+some generic functionality import from Mezzanine as the result of using its
+rich text field for the description field of Collections.
+
+
 Initial Schema (Release 0.5)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. image:: _static/ppa-schema-v05.png
