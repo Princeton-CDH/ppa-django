@@ -310,7 +310,7 @@ class TestAddToCollection(TestCase):
         bulk_add = reverse('archive:add-to-collection')
         response = self.client.get(bulk_add)
         self.assertContains(response,
-            '<h1>Add DigitizedWorks to Collections</h1>', html=True)
+            '<h1>Add Digitized Works to Collections</h1>', html=True)
         self.assertContains(
             response,
             'Please select digitized works from the admin interface.'
