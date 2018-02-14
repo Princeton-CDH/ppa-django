@@ -194,7 +194,7 @@ class AddToCollection(ListView, FormMixin, ProcessFormView):
         ids = self.request.session.get('collection-add-ids', [])
         # if somehow a problematic non-pk is pushed, will be ignored in filter
         digworks = DigitizedWork.objects.filter(id__in=ids if ids else [])
-        # revise the stored list in session
+        # revise the stored list in session to eliminate invalid ids
         self.request.session.ids = list(digworks)
         return digworks
 
@@ -213,7 +213,7 @@ class AddToCollection(ListView, FormMixin, ProcessFormView):
             # clear the session variable to prevent repeat submission
             del request.session['collection-add-ids']
             # get digitzed works from validated form
-            digitized_works = DigitizedWork.objects.filter(id__in=ids)
+            digitized_works = self.get_queryset()
             for collection in data['collections']:
                 collection.digitizedwork_set.set(digitized_works)
             # reindex solr with the new collection data
