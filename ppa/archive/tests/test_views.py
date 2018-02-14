@@ -1,8 +1,8 @@
 import csv
-from datetime import date
 from io import StringIO
 import re
 from time import sleep
+from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -180,7 +180,6 @@ class TestArchiveViews(TestCase):
         # collection search
         response = self.client.get(url, {'query': 'collections_exact:"Test Collection"'})
         res = response.render()
-        print(res.content)
         self.assertContains(response, '1 digitized work;')
         self.assertContains(response, wintry.source_id)
 
@@ -244,7 +243,6 @@ class TestArchiveViews(TestCase):
             msg_prefix='CSV download link should only be on digitized work list')
 
 
-
 class TestCollectionListView(TestCase):
 
     def setUp(self):
@@ -283,4 +281,142 @@ class TestCollectionListView(TestCase):
         self.assertContains(
             response, '<em>very</em>', html=True,
             msg_prefix='should render the description with HTML intact.'
+        )
+
+
+class TestAddToCollection(TestCase):
+
+    fixtures = ['sample_digitized_works']
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(username='test',
+                                                         password='secret')
+        self.user.save()
+
+        get_user_model().objects.create_superuser(
+            username='super', password='secret', email='foo@bar.com'
+        )
+
+    def test_permissions(self):
+        # - anonymous login is redirected to sign in
+        bulk_add = reverse('archive:add-to-collection')
+        response = self.client.get(bulk_add)
+        assert response.status_code == 302
+        # - so is a user without staff permissions
+        self.client.login(username='test', password='secret')
+        response = self.client.get(bulk_add)
+        assert response.status_code == 302
+        self.user.is_staff = True
+        self.user.save()
+        # a logged in staff user is not redirected
+        response = self.client.get(bulk_add)
+        assert response.status_code == 200
+
+    def test_get(self):
+
+        self.client.login(username='super', password='secret')
+
+        # - a get to the view with ids should return a message to use
+        # the admin interface and not enable the form for submission
+        bulk_add = reverse('archive:add-to-collection')
+        response = self.client.get(bulk_add)
+        self.assertContains(response,
+            '<h1>Add Digitized Works to Collections</h1>', html=True)
+        self.assertContains(
+            response,
+            'Please select digitized works from the admin interface.'
+        )
+        # sending a set of pks that don't exist should produce the same result
+        session = self.client.session
+        session['collection-add-ids'] = [100, 101]
+        session.save()
+        response = self.client.get(bulk_add)
+        # check that the session var has been set to an empy list
+        session['collection-add-ids'] == []
+        self.assertContains(
+            response,
+            'Please select digitized works from the admin interface.'
+        )
+        # create a collection and send valid pks
+        coll1 = Collection.objects.create(name='Random Grabbag')
+        session['collection-add-ids'] = [1, 2]
+        session.save()
+        response = self.client.get(bulk_add)
+        # check html=False so we can look for just the opening tag of the form
+        # block (html expects all the content between the closing tag too!)
+        self.assertContains(
+            response,
+            '<form method="post"',
+        )
+        self.assertContains(
+            response,
+            '<option value="%d">Random Grabbag</option>' % coll1.id,
+            html=True
+        )
+
+    @patch('ppa.archive.views.get_solr_connection')
+    def test_post(self, mockgetsolr):
+
+        mocksolr = Mock()
+        mockcollection = Mock()
+        mockgetsolr.return_value = mocksolr, mockcollection
+
+        self.client.login(username='super', password='secret')
+
+        # - check that a post to the bulk-add route with valid pks
+        # adds them to the appropriate collection
+        # make a collection
+        coll1 = Collection.objects.create(name='Random Grabbag')
+        digworks = DigitizedWork.objects.order_by('id')[0:2]
+        pks = list(digworks.values_list('id', flat=True))
+        bulk_add = reverse('archive:add-to-collection')
+        session = self.client.session
+        session['collection-add-ids'] = pks
+        session.save()
+
+        # post to the add to collection url
+        self.client.post(
+            bulk_add,
+            {'collections': coll1.pk}
+        )
+        # digitized works with pks 1,2 are added to the collection
+        digworks = DigitizedWork.objects.filter(collections__pk=coll1.pk)
+        assert digworks.count() == 2
+        assert list(digworks.values_list('id', flat=True)) == \
+            session['collection-add-ids']
+        # the session variable is cleared
+        assert 'collection-add-ids' not in self.client.session
+        # - check that solr indexing was called correctly via mocks
+        assert mockgetsolr.called
+        solr_docs = [work.index_data() for work in digworks]
+        mocksolr.index.assert_called_with(
+            mockcollection, solr_docs, params={'commitWithin': 2000}
+        )
+        session['collection-add-ids'] = pks
+        session.save()
+        # test a dud post (i.e. without a Collection)
+        # should redirect with an error
+        response = self.client.post(
+            bulk_add,
+            {'collections': None}
+        )
+        assert response.status_code == 200
+        # check that the error message rendered for a missing Collection
+        self.assertContains(
+            response,
+            '<ul class="errorlist"><li>Please select at least one '
+            'Collection</li></ul>',
+            html=True
+        )
+        session['collection-add-ids'] = None
+        session.save()
+        response = self.client.post(
+            bulk_add,
+            {'collections': coll1.pk}
+        )
+        # Default message for an unset collection pk list
+        self.assertContains(
+            response,
+            '<p> Please select digitized works from the admin interface. </p>',
+            html=True
         )

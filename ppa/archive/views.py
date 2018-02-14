@@ -2,14 +2,19 @@ import csv
 import json
 import logging
 
+from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.http import HttpResponse
+from django.shortcuts import redirect
 from django.utils.timezone import now
+from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, DetailView
+from django.views.generic.edit import FormMixin, ProcessFormView
 from SolrClient.exceptions import SolrError
 
-from ppa.archive.forms import SearchForm
+from ppa.archive.forms import SearchForm, AddToCollectionForm
 from ppa.archive.models import DigitizedWork, Collection
-from ppa.archive.solr import PagedSolrQuery
+from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 
 
 logger = logging.getLogger(__name__)
@@ -172,3 +177,74 @@ class DigitizedWorkCSV(ListView):
 
     def get(self, *args, **kwargs):
         return self.render_to_csv(self.get_data())
+
+
+class AddToCollection(ListView, FormMixin, ProcessFormView):
+    '''
+    View to bulk add a queryset of :class:`ppa.archive.models.DigitizedWork`
+    to a set of :class:`ppa.archive.models.Collection instances`.
+
+    Restricted to staff users via staff_member_required on url.
+    '''
+
+    model = DigitizedWork
+    template_name = 'archive/add_to_collection.html'
+    form_class = AddToCollectionForm
+    success_url = reverse_lazy('admin:archive_digitizedwork_changelist')
+
+    def get_queryset(self, *args, **kwargs):
+        '''Return a queryset filtered by id, or empty list if no ids'''
+        # get ids from session if there are any
+        ids = self.request.session.get('collection-add-ids', [])
+        # if somehow a problematic non-pk is pushed, will be ignored in filter
+        digworks = DigitizedWork.objects.filter(id__in=ids
+                                                if ids else []).order_by('id')
+        # revise the stored list in session to eliminate any pks
+        # that don't exist
+        self.request.session['collection-add-ids'] = \
+            list(digworks.values_list('id', flat=True))
+        return digworks
+
+    def post(self, request, *args, **kwargs):
+        '''
+        Add :class:`ppa.archive.models.DigitizedWork` instances passed in form
+        data to selected instances of :class:`ppa.archive.models.Collection`,
+        then return to change_list view.
+
+        Expects a list of DigitizedWork ids to be set in the request session.
+
+        '''
+        form = AddToCollectionForm(request.POST)
+        if form.is_valid() and request.session['collection-add-ids']:
+            data = form.cleaned_data
+            # get digitzed works from validated form
+            digitized_works = self.get_queryset()
+            del request.session['collection-add-ids']
+            for collection in data['collections']:
+                collection.digitizedwork_set.set(digitized_works)
+            # reindex solr with the new collection data
+            solr_docs = [work.index_data() for work in digitized_works]
+            solr, solr_collection = get_solr_connection()
+            solr.index(solr_collection, solr_docs,
+                       params={'commitWithin': 2000})
+            # create a success message to add to message framework stating
+            # what happened
+            num_works = digitized_works.count()
+            collections = ', '.join(collection.name for
+                                    collection in data['collections'])
+            messages.success(request, 'Successfully added %d works to: %s.'
+                             % (num_works, collections))
+            # redirect to the change list with the message intact
+            return redirect(reverse('admin:archive_digitizedwork_changelist'))
+        # make form error more descriptive, default to an error re: pks
+        if 'collections' in form.errors:
+            del form.errors['collections']
+            form.add_error(
+                'collections',
+                ValidationError('Please select at least one Collection')
+            )
+        # Provide an object list for ListView and emulate CBV calling
+        # render_to_response to pass form with errors; just calling super
+        # doesn't pass the form with error set
+        self.object_list = self.get_queryset()
+        return self.render_to_response(self.get_context_data(form=form))
