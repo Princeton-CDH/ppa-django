@@ -23,7 +23,8 @@ creators|Rebecca Koeser
 
 module|django|#5B806B|django_content_type
 module|archive|#465B73|archive_digitizedwork
-
+module|mezzanine_pages|#327746|pages_page
+module|mezzanine_generic|#918421|generic_keyword
 
 #This next line lets you license your diagram under the copyright(or copyleft) of your choice
 #The license will display in the bottom left corner
@@ -34,16 +35,33 @@ license|This work is licensed under the Creative Commons Attribution 3.0 License
 #The following lines assign a module and an annotation to each entity in the database
 #The structure is as follows
 #ENTITY NAME(*exactly* as it appears in your schema)|MODULE NAME|BRIEF DESCRIPTION OF ENTITY
+archive_digitizedwork_collections|archive|
+archive_collection|archive|
+archive_digitizedwork|archive|
 auth_group|django|
 auth_group_permissions|django|
 auth_permission|django|
 auth_user|django|
 auth_user_groups|django|
 auth_user_user_permissions|django|
-archive_digitizedwork|archive|
+conf_setting|django|
+core_sitepermission|django|
+core_sitepermission_sites|django|
 django_admin_log|django|
 django_cas_ng_proxygrantingticket|django|
 django_cas_ng_sessionticket|django|
+django_comments|django|
+django_comment_flags|django|
 django_content_type|django|
 django_migrations|django|
 django_session|django|
+django_redirect|django|
+django_site|django|
+generic_assignedkeyword|mezzanine_generic|
+generic_keyword|mezzanine_generic|
+generic_rating|mezzanine_generic|
+generic_threadedcomment|mezzanine_generic|
+pages_page|mezzanine_pages|
+pages_link|mezzanine_pages|
+pages_richtextpage|mezzanine_pages|
+
