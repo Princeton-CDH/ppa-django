@@ -1,4 +1,3 @@
-
 from django.contrib import admin
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -38,10 +37,9 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         '''
         # Uses POST from admin rather than a database query to get the pks
         # per the suggested practices in Django documentation
-        selected = ','.join(str(val) for val in
-                            queryset.order_by('id').values_list('id', flat=True))
-        request.session['selected_works'] = selected
-        return HttpResponseRedirect(reverse('archive:bulk-add'))
+        selected = list(queryset.order_by('id').values_list('id', flat=True))
+        request.session['collection-add-ids'] = selected
+        return HttpResponseRedirect(reverse('archive:add-to-collection'))
 
     bulk_add_collection.short_description = ('Add selected digitized works '
                                              'to collections')

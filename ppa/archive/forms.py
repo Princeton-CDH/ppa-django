@@ -64,5 +64,3 @@ class AddToCollectionForm(forms.Form):
         required=True, queryset=Collection.objects.all().order_by('name'),
         help_text='Hold down ctrl or command key (on MacOS) to select '
                   'multiple collections.')
-    digitized_work_ids = forms.CharField(required=True,
-        widget=forms.HiddenInput())

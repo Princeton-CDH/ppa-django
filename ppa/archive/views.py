@@ -3,9 +3,11 @@ import json
 import logging
 
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.http import HttpResponse
+from django.shortcuts import redirect
 from django.utils.timezone import now
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, DetailView
 from django.views.generic.edit import FormMixin, ProcessFormView
 from SolrClient.exceptions import SolrError
@@ -187,26 +189,12 @@ class AddToCollection(ListView, FormMixin, ProcessFormView):
     def get_queryset(self, *args, **kwargs):
         '''Return a queryset filtered by id, or empty list if no ids'''
         # get ids from session if there are any
-        ids = self.request.session.get('selected_works', [])
+        ids = self.request.session.get('collection-add-ids', [])
         # if somehow a problematic non-pk is pushed, will be ignored in filter
-        return DigitizedWork.objects.filter(id__in=ids.split(',')
-                                            if ids else [])
-
-    def get_initial(self):
-        '''
-        Set a hidden form field with the
-        :class:`ppa.archive.models.DigitizedWork` instances to add to
-        collection(s) to pass to POST request. Filters any that may not exist
-        by using the querset's filter method against the actual database.
-        '''
-        initial = super(AddToCollection, self).get_initial()
-        # this ensures that the hidden field for POST only ever contains
-        # actual PKs on both the form and the queryset shown to the user
-        ids = ','.join(str(val) for val in
-                       self.get_queryset().values_list('id', flat=True))
-        if ids:
-            initial['digitized_work_ids'] = ids
-        return initial
+        digworks = DigitizedWork.objects.filter(id__in=ids if ids else [])
+        # revise the stored list in session
+        self.request.session.ids = list(digworks)
+        return digworks
 
     def post(self, request, *args, **kwargs):
         '''
@@ -215,12 +203,13 @@ class AddToCollection(ListView, FormMixin, ProcessFormView):
         then return to change_list view.
         '''
         form = AddToCollectionForm(request.POST)
-        # clear the session variable just in case
-        del request.session['selected_works']
-        # override default post functionality to set collections
-        if form.is_valid():
+        ids = []
+        if 'collection-add-ids' in request.session:
+            ids = request.session['collection-add-ids']
+        if form.is_valid() and ids:
             data = form.cleaned_data
-            ids = data['digitized_work_ids'].split(',')
+            # clear the session variable to prevent repeat submission
+            del request.session['collection-add-ids']
             # get digitzed works from validated form
             digitized_works = DigitizedWork.objects.filter(id__in=ids)
             for collection in data['collections']:
@@ -237,10 +226,17 @@ class AddToCollection(ListView, FormMixin, ProcessFormView):
                                     collection in data['collections'])
             messages.success(request, 'Successfully added %d works to: %s.'
                              % (num_works, collections))
-        # call the super post method to trigger redirects
-        # should be safe because checks form validity in either instance
-        # before redirect
-        return (
-            super(AddToCollection, self)
-            .post(self, request, *args, **kwargs)
-        )
+            # redirect to the change list with the message intact
+            return redirect(reverse('admin:archive_digitizedwork_changelist'))
+        # make form error more descriptive, default to an error re: pks
+        if 'collections' in form.errors:
+            del form.errors['collections']
+            form.add_error(
+                'collections',
+                ValidationError('Please select at least one Collection')
+            )
+        # Provide an object list for ListView and emulate CBV calling
+        # render_to_response to pass form with errors; just calling super
+        # doesn't pass the form with error set
+        self.object_list = self.get_queryset()
+        return self.render_to_response(self.get_context_data(form=form))
