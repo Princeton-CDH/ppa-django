@@ -1,6 +1,7 @@
 from django import forms
 from django.utils.safestring import mark_safe
 
+from ppa.archive.models import Collection
 
 class FacetChoiceField(forms.MultipleChoiceField):
     '''Add CheckboxSelectMultiple field with facets taken from solr query'''
@@ -51,3 +52,15 @@ class SearchForm(forms.Form):
                 self.fields[formfield].choices = [
                     (val, mark_safe('%s <span>%d</span>' % (val, count)))
                     for val, count in facet_dict.items()]
+
+
+class AddToCollectionForm(forms.Form):
+    '''
+    Form to select a set of :class:ppa.archive.models.Collection to which
+    to bulk add a queryset of :class:ppa.archive.models.DigitizedWork
+    '''
+
+    collections = forms.ModelMultipleChoiceField(
+        required=True, queryset=Collection.objects.all().order_by('name'),
+        help_text='Hold down ctrl or command key (on MacOS) to select '
+                  'multiple collections.')
