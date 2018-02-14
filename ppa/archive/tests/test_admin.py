@@ -30,7 +30,6 @@ class TestDigitizedWorkAdmin(TestCase):
     @patch('ppa.archive.models.DigitizedWork.index')
     def test_save_related(self, mockindex, mock_get_solr_connection):
         '''Test that override of save_related calls index'''
-
         # fake request
         request = self.factory.get('/madeup/url')
         # fake adminsite
@@ -57,8 +56,16 @@ class TestDigitizedWorkAdmin(TestCase):
         # should return a redirect
         assert isinstance(redirect, HttpResponseRedirect)
         # url should reverse the appropriate route
-        assert redirect.url == reverse('archive:bulk-add')
-        # session on request should be set with a key called selected_works that is not empty
-        assert fakerequest.session['selected_works']
-        # the selected_works key should have the ids of the three fixtures
-        assert fakerequest.session['selected_works'] == "1,2,3"
+        assert redirect.url == reverse('archive:add-to-collection')
+        # session on request should be set with a key called collection-add-ids
+        # that is not empty
+        assert fakerequest.session['collection-add-ids']
+        # the key should have the ids of the three fixtures
+        assert fakerequest.session['collection-add-ids'] == [1, 2, 3]
+        redirect = digworkadmin.bulk_add_collection(fakerequest, queryset)
+        # test against an empty queryset just in case
+        DigitizedWork.objects.all().delete()
+        queryset = DigitizedWork.objects.all()
+        redirect = digworkadmin.bulk_add_collection(fakerequest, queryset)
+        # session variable should be set to an empty list
+        assert fakerequest.session['collection-add-ids'] == []

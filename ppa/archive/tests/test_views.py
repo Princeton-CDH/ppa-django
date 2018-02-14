@@ -311,41 +311,31 @@ class TestAddToCollection(TestCase):
         bulk_add = reverse('archive:add-to-collection')
         response = self.client.get(bulk_add)
         self.assertContains(response,
-            '<h1>Bulk Add to Collections</h1>', html=True)
+            '<h1>Add DigitizedWorks to Collections</h1>', html=True)
         self.assertContains(
             response,
             'Please select digitized works from the admin interface.'
         )
         # sending a set of pks that don't exist should produce the same result
         session = self.client.session
-        session['selected_works'] = '100,101'
+        session['collection-add-ids'] = [100, 101]
         session.save()
         response = self.client.get(bulk_add)
-        self.assertContains(response,
-            '<h1>Bulk Add to Collections</h1>', html=True)
         self.assertContains(
             response,
             'Please select digitized works from the admin interface.'
         )
         # create a collection and send valid pks
         coll1 = Collection.objects.create(name='Random Grabbag')
-        session['selected_works'] = '1,2'
+        session['collection-add-ids'] = [1, 2]
         session.save()
         response = self.client.get(bulk_add)
-        self.assertContains(response,
-            '<h1>Bulk Add to Collections</h1>', html=True)
         # check html=False so we can look for just the opening tag of the form
         # block (html expects all the content between the closing tag too!)
         self.assertContains(
             response,
             '<form method="post"',
         )
-        # values are passed to hidden form field correctly
-        self.assertContains(
-            response,
-            '<input type="hidden" name="digitized_work_ids" '
-            'value="1,2" id="id_digitized_work_ids" />',
-            html=True)
         self.assertContains(
             response,
             '<option value="%d">Random Grabbag</option>' % coll1.id ,
@@ -367,26 +357,54 @@ class TestAddToCollection(TestCase):
         coll1 = Collection.objects.create(name='Random Grabbag')
         digworks = DigitizedWork.objects.order_by('id')[0:2]
         pks = list(digworks.values_list('id', flat=True))
-        bulk_add = reverse('archive:bulk-add')
+        bulk_add = reverse('archive:add-to-collection')
         session = self.client.session
-        session['selected_works'] = ','.join(map(str, pks))
+        session['collection-add-ids'] = pks
         session.save()
 
         # post to the add to collection url
         self.client.post(
             bulk_add,
-            {'digitized_work_ids': '%s' % ','.join(str(pk) for pk in pks),
-             'collections': coll1.pk}
+            {'collections': coll1.pk}
         )
         # digitized works with pks 1,2 are added to the collection
         digworks = DigitizedWork.objects.filter(collections__pk=coll1.pk)
         assert digworks.count() == 2
-        assert list(digworks.values_list('id', flat=True)) == pks
+        assert list(digworks.values_list('id', flat=True)) == \
+            session['collection-add-ids']
         # the session variable is cleared
-        assert 'selected_works' not in self.client.session
+        assert 'collection-add-ids' not in self.client.session
         # - check that solr indexing was called correctly via mocks
         assert mockgetsolr.called
         solr_docs = [work.index_data() for work in digworks]
         mocksolr.index.assert_called_with(
             mockcollection, solr_docs, params={'commitWithin': 2000}
+        )
+        session['collection-add-ids'] = pks
+        session.save()
+        # test a dud post (i.e. without a Collection)
+        # should redirect with an error
+        response = self.client.post(
+            bulk_add,
+            {'collections': None}
+        )
+        assert response.status_code == 200
+        # check that the error message rendered for a missing Collection
+        self.assertContains(
+            response,
+            '<ul class="errorlist"><li>Please select at least one '
+            'Collection</li></ul>',
+            html=True
+        )
+        session['collection-add-ids'] = None
+        session.save()
+        response = self.client.post(
+            bulk_add,
+            {'collections': coll1.pk}
+        )
+        # Default message for an unset collection pk list
+        self.assertContains(
+            response,
+            '<p> Please select digitized works from the admin interface. </p>',
+            html=True
         )
