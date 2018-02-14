@@ -147,16 +147,22 @@ class DigitizedWorkCSV(ListView):
     model = DigitizedWork
     # order by id for now, for simplicity
     ordering = 'id'
-    header_row = ['Database ID', 'Source ID', 'Title', 'Author', 'Publication Date',
-        'Publication Place', 'Publisher', 'Enumcron']
+    header_row = ['Database ID', 'Source ID', 'Title', 'Author',
+        'Publication Date', 'Publication Place', 'Publisher', 'Enumcron',
+        'Collection', 'Page Count', 'Date Added', 'Last Updated']
 
     def get_csv_filename(self):
         return 'ppa-digitizedworks-%s.csv' % now().strftime('%Y%m%dT%H:%M:%S')
 
     def get_data(self):
         return ((dw.id, dw.source_id, dw.title, dw.author,
-                 dw.pub_date, dw.pub_place, dw.publisher, dw.enumcron)
-                for dw in self.get_queryset())
+                 dw.pub_date, dw.pub_place, dw.publisher, dw.enumcron,
+                 ';'.join([coll.name for coll in dw.collections.all()]),
+                 dw.page_count, dw.added, dw.updated
+                 )
+                for dw in self.get_queryset().prefetch_related('collections'))
+        # NOTE: prefetch collections so they are retrieved more efficiently
+        # all at once, rather than one at a time for each item
 
     def render_to_csv(self, data):
         response = HttpResponse(content_type='text/csv')

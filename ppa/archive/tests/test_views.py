@@ -81,11 +81,11 @@ class TestArchiveViews(TestCase):
             msg_prefix='Missing publication date (pub_date)'
         )
         self.assertContains(
-            response, dial.added.strftime("%d Dec %Y"),
+            response, dial.added.strftime("%d %b %Y"),
             msg_prefix='Missing added or in wrong format (d M Y in filter)'
         )
         self.assertContains(
-            response, dial.updated.strftime("%d Dec %Y"),
+            response, dial.updated.strftime("%d %b %Y"),
             msg_prefix='Missing updated or in wrong format (d M Y in filter)'
         )
 
@@ -210,17 +210,21 @@ class TestArchiveViews(TestCase):
         assert rows[0] == DigitizedWorkCSV.header_row
         # check for expected number of records - header + one row for each work
         assert len(rows) == digworks.count() + 1
-        # spot check expected data
-        digwork = digworks.first()
-        digwork_data = rows[1]
-        assert digwork.source_id in digwork_data
-        assert digwork.title in digwork_data
-        assert digwork.author in digwork_data
-        assert digwork.pub_date in digwork_data
-        assert digwork.pub_place in digwork_data
-        assert digwork.publisher in digwork_data
-        assert digwork.publisher in digwork_data
-        assert digwork.enumcron in digwork_data
+        # check expected data in CSV output
+        for digwork, digwork_data in zip(digworks, rows[1:]):
+            assert digwork.source_id in digwork_data
+            assert digwork.title in digwork_data
+            assert digwork.author in digwork_data
+            assert digwork.pub_date in digwork_data
+            assert digwork.pub_place in digwork_data
+            assert digwork.publisher in digwork_data
+            assert digwork.publisher in digwork_data
+            assert digwork.enumcron in digwork_data
+            assert ';'.join([coll.name for coll in digwork.collections.all()]) \
+                in digwork_data
+            assert '%d' % digwork.page_count in digwork_data
+            assert '%s' % digwork.added in digwork_data
+            assert '%s' % digwork.updated in digwork_data
 
     def test_digitizedwork_admin_changelist(self):
         # log in as admin to access admin site views
@@ -244,7 +248,10 @@ class TestCollectionListView(TestCase):
     def setUp(self):
         '''Create some collections'''
         self.coll1 = Collection.objects.create(name='Random Grabbag')
-        self.coll2 = Collection.objects.create(name='Foo through Time')
+        self.coll2 = Collection.objects.create(
+            name='Foo through Time',
+            description="A <em>very</em> useful collection."
+        )
 
     def test_context(self):
         '''Check that the context is as expected'''
@@ -270,6 +277,10 @@ class TestCollectionListView(TestCase):
         self.assertContains(
             response, 'Foo through Time',
             msg_prefix='should list a collection called Foo through Time'
+        )
+        self.assertContains(
+            response, '<em>very</em>', html=True,
+            msg_prefix='should render the description with HTML intact.'
         )
 
 
@@ -339,7 +350,7 @@ class TestAddToCollection(TestCase):
         )
         self.assertContains(
             response,
-            '<option value="%d">Random Grabbag</option>' % coll1.id ,
+            '<option value="%d">Random Grabbag</option>' % coll1.id,
             html=True
         )
 
