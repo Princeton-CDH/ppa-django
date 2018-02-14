@@ -178,6 +178,8 @@ class AddToCollection(ListView, FormMixin, ProcessFormView):
     View to bulk add a queryset of :class:`ppa.archive.models.DigitizedWork`
     to a set of :class:`ppa.archive.models.Collection instances`.
 
+    Expects a list of DigitizedWork ids to be set in the request session.
+
     Restricted to staff users via staff_member_required on url.
     '''
 
