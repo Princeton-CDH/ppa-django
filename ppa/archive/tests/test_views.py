@@ -180,7 +180,6 @@ class TestArchiveViews(TestCase):
         # collection search
         response = self.client.get(url, {'query': 'collections_exact:"Test Collection"'})
         res = response.render()
-        print(res.content)
         self.assertContains(response, '1 digitized work;')
         self.assertContains(response, wintry.source_id)
 
