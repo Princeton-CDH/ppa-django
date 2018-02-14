@@ -194,7 +194,8 @@ class AddToCollection(ListView, FormMixin, ProcessFormView):
         ids = self.request.session.get('collection-add-ids', [])
         # if somehow a problematic non-pk is pushed, will be ignored in filter
         digworks = DigitizedWork.objects.filter(id__in=ids if ids else [])
-        # revise the stored list in session to eliminate invalid ids
+        # revise the stored list in session to eliminate any pks
+        # that don't exist
         self.request.session.ids = list(digworks)
         return digworks
 
