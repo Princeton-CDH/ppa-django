@@ -178,8 +178,6 @@ class AddToCollection(ListView, FormMixin, ProcessFormView):
     View to bulk add a queryset of :class:`ppa.archive.models.DigitizedWork`
     to a set of :class:`ppa.archive.models.Collection instances`.
 
-    Expects a list of DigitizedWork ids to be set in the request session.
-
     Restricted to staff users via staff_member_required on url.
     '''
 
@@ -193,28 +191,29 @@ class AddToCollection(ListView, FormMixin, ProcessFormView):
         # get ids from session if there are any
         ids = self.request.session.get('collection-add-ids', [])
         # if somehow a problematic non-pk is pushed, will be ignored in filter
-        digworks = DigitizedWork.objects.filter(id__in=ids if ids else [])
+        digworks = DigitizedWork.objects.filter(id__in=ids
+                                                if ids else []).order_by('id')
         # revise the stored list in session to eliminate any pks
         # that don't exist
-        self.request.session.ids = list(digworks)
+        self.request.session['collection-add-ids'] = \
+            list(digworks.values_list('id', flat=True))
         return digworks
 
     def post(self, request, *args, **kwargs):
         '''
         Add :class:`ppa.archive.models.DigitizedWork` instances passed in form
-        data to selected instances of :class:ppa.archive.models.Collection,
+        data to selected instances of :class:`ppa.archive.models.Collection`,
         then return to change_list view.
+
+        Expects a list of DigitizedWork ids to be set in the request session.
+
         '''
         form = AddToCollectionForm(request.POST)
-        ids = []
-        if 'collection-add-ids' in request.session:
-            ids = request.session['collection-add-ids']
-        if form.is_valid() and ids:
+        if form.is_valid() and request.session['collection-add-ids']:
             data = form.cleaned_data
-            # clear the session variable to prevent repeat submission
-            del request.session['collection-add-ids']
             # get digitzed works from validated form
             digitized_works = self.get_queryset()
+            del request.session['collection-add-ids']
             for collection in data['collections']:
                 collection.digitizedwork_set.set(digitized_works)
             # reindex solr with the new collection data
