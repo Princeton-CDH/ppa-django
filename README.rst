@@ -43,7 +43,7 @@ Initial setup and installation:
 - Use pip to install required python dependencies::
 
     pip install -r requirements.txt
-     pip install -r dev-requirements.txt
+    pip install -r dev-requirements.txt
 
 - Copy sample local settings and configure for your environment::
 
