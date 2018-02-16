@@ -1,0 +1,285 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>ppa.archive.models &#8212; Princeton Prosody Archive 0.6-0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.6-0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for ppa.archive.models</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="k">import</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">django.urls</span> <span class="k">import</span> <span class="n">reverse</span>
+<span class="kn">from</span> <span class="nn">mezzanine.core.fields</span> <span class="k">import</span> <span class="n">RichTextField</span>
+
+<span class="kn">from</span> <span class="nn">ppa.archive.solr</span> <span class="k">import</span> <span class="n">get_solr_connection</span>
+
+
+<div class="viewcode-block" id="Collection"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.Collection">[docs]</a><span class="k">class</span> <span class="nc">Collection</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;A collection of :class:~ppa.archive.models.DigitizedWork instances.&#39;&#39;&#39;</span>
+    <span class="c1">#: the name of the collection</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+    <span class="c1">#: a RichText description of the collection</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="n">RichTextField</span><span class="p">(</span><span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+<div class="viewcode-block" id="Collection.full_index"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.Collection.full_index">[docs]</a>    <span class="k">def</span> <span class="nf">full_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Index or reindex a collection&#39;s associated works.&#39;&#39;&#39;</span>
+        <span class="c1"># guard against this being called on an unsaved instance</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;Collection instance needs to have a primary key value before &#39;</span>
+                <span class="s1">&#39;this method is called.&#39;</span>
+            <span class="p">)</span>
+        <span class="n">solr</span><span class="p">,</span> <span class="n">solr_collection</span> <span class="o">=</span> <span class="n">get_solr_connection</span><span class="p">()</span>
+        <span class="n">digworks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">digitizedwork_set</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="n">solr_docs</span> <span class="o">=</span> <span class="p">[</span><span class="n">work</span><span class="o">.</span><span class="n">index_data</span><span class="p">()</span> <span class="k">for</span> <span class="n">work</span> <span class="ow">in</span> <span class="n">digworks</span><span class="p">]</span>
+        <span class="c1"># adapted from hathi import logic</span>
+        <span class="n">solr</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">solr_collection</span><span class="p">,</span> <span class="n">solr_docs</span><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Collection.save"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.Collection.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Override method so that on save, any associated</span>
+<span class="sd">        works have their names updated if collection name has changed.&#39;&#39;&#39;</span>
+        <span class="c1"># first handle cases where this is a new save, just save and return</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">Collection</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="c1"># if it has been saved, get the original</span>
+        <span class="n">orig</span> <span class="o">=</span> <span class="n">Collection</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pk</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">orig</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="c1"># update object with new name</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">Collection</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="c1"># reindex its works and commit the result</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">full_index</span><span class="p">()</span>
+        <span class="c1"># saved but no name change, so just save</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">Collection</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="DigitizedWork"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.DigitizedWork">[docs]</a><span class="k">class</span> <span class="nc">DigitizedWork</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="c1"># stub record to manage digitized works included in PPA</span>
+    <span class="c1"># basic metadata</span>
+    <span class="c1"># - title, author, place of publication, date</span>
+    <span class="c1"># added, updated</span>
+    <span class="c1"># original id / url?</span>
+    <span class="c1">#: source identifier; hathi id for HathiTrust materials</span>
+    <span class="n">source_id</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1">#: source url where the original can be accessed</span>
+    <span class="n">source_url</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">URLField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+    <span class="c1">#: title of the work; using TextField to allow for long titles</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+    <span class="c1">#: enumeration/chronology (hathi-specific)</span>
+    <span class="n">enumcron</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="s1">&#39;Enumeration/Chronology&#39;</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span>
+        <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># TODO: what is the generic/non-hathi name for this? volume/version?</span>
+
+    <span class="c1"># NOTE: may eventually to convert to foreign key</span>
+    <span class="n">author</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1">#: place of publication</span>
+    <span class="n">pub_place</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="s1">&#39;Place of Publication&#39;</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span>
+        <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1">#: publisher</span>
+    <span class="n">publisher</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># using char for now in case not all numeric</span>
+    <span class="n">pub_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="s1">&#39;Publication Date&#39;</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1">#: number of pages in the work</span>
+    <span class="n">page_count</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">PositiveIntegerField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1">#: collections that this work is part of</span>
+    <span class="n">collections</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">Collection</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1">#: date added to the archive</span>
+    <span class="n">added</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1">#: date of last modification of the local record</span>
+    <span class="n">updated</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_absolute_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">reverse</span><span class="p">(</span><span class="s1">&#39;archive:detail&#39;</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;source_id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_id</span><span class="p">})</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Default string display. Uses :attr:`source_id`&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_id</span>
+
+<div class="viewcode-block" id="DigitizedWork.populate_from_bibdata"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.DigitizedWork.populate_from_bibdata">[docs]</a>    <span class="k">def</span> <span class="nf">populate_from_bibdata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bibdata</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Update record fields based on Hathi bibdata information.</span>
+<span class="sd">        Full record is required in order to set all fields</span>
+
+<span class="sd">        :param bibdata: bibliographic data returned from HathiTrust</span>
+<span class="sd">            as instance of :class:`ppa.archive.hathi.HathiBibliographicRecord`</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">title</span>
+        <span class="c1"># NOTE: might also want to store sort title</span>
+        <span class="c1"># pub date returned in api JSOn is list; use first for now (if available)</span>
+        <span class="k">if</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">pub_dates</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pub_date</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">pub_dates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">copy_details</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">copy_details</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_id</span><span class="p">)</span>
+        <span class="c1"># hathi version/volume information for this specific copy of a work</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enumcron</span> <span class="o">=</span> <span class="n">copy_details</span><span class="p">[</span><span class="s1">&#39;enumcron&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span>
+        <span class="c1"># hathi source url can currently be inferred from htid, but is</span>
+        <span class="c1"># included in the bibdata in case it changes - so let&#39;s just store it</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source_url</span> <span class="o">=</span> <span class="n">copy_details</span><span class="p">[</span><span class="s1">&#39;itemURL&#39;</span><span class="p">]</span>
+        <span class="c1"># set fields from marc if available</span>
+        <span class="k">if</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">marcxml</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">author</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">marcxml</span><span class="o">.</span><span class="n">author</span><span class="p">()</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span>
+            <span class="k">if</span> <span class="s1">&#39;260&#39;</span> <span class="ow">in</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">marcxml</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pub_place</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">marcxml</span><span class="p">[</span><span class="s1">&#39;260&#39;</span><span class="p">][</span><span class="s1">&#39;a&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">publisher</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">marcxml</span><span class="p">[</span><span class="s1">&#39;260&#39;</span><span class="p">][</span><span class="s1">&#39;b&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span></div>
+            <span class="c1"># maybe: consider getting volume &amp; series directly from</span>
+            <span class="c1"># marc rather than relying on hathi enumcron ()</span>
+
+        <span class="c1"># should also consider storing:</span>
+        <span class="c1"># - last update, rights code / rights string, item url</span>
+        <span class="c1"># (maybe solr only?)</span>
+
+<div class="viewcode-block" id="DigitizedWork.index"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.DigitizedWork.index">[docs]</a>    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Index a :class:~ppa.archive.models.DigitizedWork</span>
+<span class="sd">        and allow optional commit to ensure results are available.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">solr</span><span class="p">,</span> <span class="n">solr_collection</span> <span class="o">=</span> <span class="n">get_solr_connection</span><span class="p">()</span>
+        <span class="n">solr</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">solr_collection</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index_data</span><span class="p">()],</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DigitizedWork.index_data"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.DigitizedWork.index_data">[docs]</a>    <span class="k">def</span> <span class="nf">index_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;data for indexing in Solr&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_id</span><span class="p">,</span>
+            <span class="s1">&#39;srcid&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_id</span><span class="p">,</span>
+            <span class="s1">&#39;src_url&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_url</span><span class="p">,</span>
+            <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+            <span class="s1">&#39;pub_date&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pub_date</span><span class="p">,</span>
+            <span class="s1">&#39;pub_place&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pub_place</span><span class="p">,</span>
+            <span class="s1">&#39;publisher&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">publisher</span><span class="p">,</span>
+            <span class="s1">&#39;enumcron&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">enumcron</span><span class="p">,</span>
+            <span class="s1">&#39;author&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="p">,</span>
+            <span class="s1">&#39;collections&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">collection</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">collection</span>
+                            <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">collections</span><span class="o">.</span><span class="n">all</span><span class="p">()],</span>
+            <span class="c1"># hard-coded to distinguish from &amp; sort with pages</span>
+            <span class="s1">&#39;item_type&#39;</span><span class="p">:</span> <span class="s1">&#39;work&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;order&#39;</span><span class="p">:</span> <span class="s1">&#39;0&#39;</span><span class="p">,</span>
+        <span class="p">}</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Princeton Prosody Archive</a></h1>
+
+
+
+<p class="blurb">Django web application for "Princeton Prosody Archive" CDH project</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=Princeton-CDH&repo=ppa-django&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+    
+
+<p>
+<a href="https://travis-ci.org/Princeton-CDH/ppa-django">
+    <img
+        alt="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
+        src="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
+    />
+</a>
+</p>
+
+
+
+
+    
+
+<p>
+<a href="https://codecov.io/github/Princeton-CDH/ppa-django">
+    <img
+    alt="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
+    src="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
+    />
+</a>
+</p>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../codedocs.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deploynotes.html">Deploy Notes</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><div class="powered_by">
+<p>Powered by:</p>
+<a href="http://cdh.princeton.edu/">
+<img src="https://cdh.princeton.edu/static/img/CDH_logo.svg"
+    alt="Center for Digital Humanities @ Princeton" />
+</a>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, CDH @ Princeton University.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
