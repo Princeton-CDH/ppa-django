@@ -1,0 +1,77 @@
+[
+{
+  "model": "archive.collection",
+  "pk": 1,
+  "fields": {
+    "name": "Prosody"
+  }
+},
+{
+  "model": "archive.collection",
+  "pk": 2,
+  "fields": {
+    "name": "typographically unique"
+  }
+},
+{
+  "model": "archive.digitizedwork",
+  "pk": 1,
+  "fields": {
+    "source_id": "chi.13880510",
+    "source_url": "https://hdl.handle.net/2027/chi.13880510",
+    "title": "Now in wintry delights /",
+    "enumcron": "",
+    "author": "Bridges, Robert Seymour, 1844-1930.",
+    "pub_place": "Oxford :",
+    "publisher": "Daniel Press,",
+    "pub_date": "1903",
+    "page_count": 64,
+    "added": "2017-12-15T14:04:15.064Z",
+    "updated": "2018-02-06T16:33:49.008Z",
+    "collections": [
+      2
+    ]
+  }
+},
+{
+  "model": "archive.digitizedwork",
+  "pk": 2,
+  "fields": {
+    "source_id": "chi.78013704",
+    "source_url": "https://hdl.handle.net/2027/chi.78013704",
+    "title": "The Dial",
+    "enumcron": "v.65 Jul-Dec 1918",
+    "author": "",
+    "pub_place": "Chicago :",
+    "publisher": "Jansen, McClurg,",
+    "pub_date": "1880",
+    "page_count": 646,
+    "added": "2017-12-15T14:04:16.214Z",
+    "updated": "2018-02-06T16:33:44.642Z",
+    "collections": [
+      1,
+      2
+    ]
+  }
+},
+{
+  "model": "archive.digitizedwork",
+  "pk": 3,
+  "fields": {
+    "source_id": "chi.78013677",
+    "source_url": "https://hdl.handle.net/2027/chi.78013677",
+    "title": "The Dial",
+    "enumcron": "v.61 Jul-Dec 1916",
+    "author": "",
+    "pub_place": "Chicago :",
+    "publisher": "Jansen, McClurg,",
+    "pub_date": "1880",
+    "page_count": 620,
+    "added": "2017-12-15T14:04:17.661Z",
+    "updated": "2018-02-06T16:33:33.966Z",
+    "collections": [
+      1
+    ]
+  }
+}
+]

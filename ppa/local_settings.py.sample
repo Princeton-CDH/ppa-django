@@ -1,0 +1,100 @@
+# Sample local settings
+# Copy to derrida/local_settings.py and configure
+# includes sensitive configurations, should *not* be
+# checked into version control
+
+import os
+# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
+
+ALLOWED_HOSTS = []
+
+# SECURITY WARNING: keep the secret key used in production secret!
+# http://www.miniwebtool.com/django-secret-key-generator/
+SECRET_KEY = ''
+
+
+# Turn this on in test/QA site to show test banner
+#SHOW_TEST_WARNING = True
+
+# Database
+# https://docs.djangoproject.com/en/1.10/ref/settings/#databases
+DATABASES = {
+    # sqlite for development
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+    # mysql for qa/prod
+    # 'default': {
+    #     "ENGINE": "django.db.backends.mysql",
+    #     'NAME': '',
+    #     'USER': '',
+    #     'PASSWORD': '',
+    # }
+}
+
+SOLR_CONNECTIONS = {
+    'default': {
+        'COLLECTION': 'ppa',
+        'URL': 'http://127.0.0.1:8983/solr/',
+        'ADMIN_URL': 'http://127.0.0.1:8983/solr/admin/cores'
+    },
+   'test': {
+        'COLLECTION': 'ppa-test',
+        'URL': 'http://127.0.0.1:8983/solr/',
+        'ADMIN_URL': 'http://127.0.0.1:8983/solr/admin/cores'
+    }
+}
+
+# local path to hathi pairtree data provided via rsync
+HATHI_DATA = '/path/to/hathi_pairtree_root'
+
+# CAS login configuration
+CAS_SERVER_URL = ''
+
+PUCAS_LDAP.update({
+    'SERVERS': [],
+    'SEARCH_BASE': '',
+    'SEARCH_FILTER': "(uid=%(user)s)",
+})
+
+
+# Absolute path to the directory static files should be collected to.
+# Don't put anything in this directory yourself; store your static files
+# in apps' "static/" subdirectories and in STATICFILES_DIRS.
+# Example: "/home/media/media.lawrence.com/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, STATIC_URL.strip("/"))
+
+# Admin email configuration for error messages
+# ADMINS = [('name', 'email')]
+# SERVER_EMAIL = '
+
+# Email configuration for sending messages
+# EMAIL_SUBJECT_PREFIX = '[PPA] '
+
+# Solution following https://stackoverflow.com/a/9541647
+# Sends a logging email even when DEBUG is on
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+            'include_html': True
+        }
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+    }
+}
+

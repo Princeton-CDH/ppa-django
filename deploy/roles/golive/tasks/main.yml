@@ -1,0 +1,29 @@
+- name: Run database migrations
+  django_manage:
+    command: migrate
+    app_path: "{{ deploy }}"
+    virtualenv: "{{ deploy }}/env"
+- name: check for old symlink
+  stat:
+    path: "/var/www/{{ symlink }}"
+  register: sym
+- name: Copy old symlink path from /var/www to "{{ install_root }}/old"
+  file:
+    src: /var/www/{{ symlink }}
+    dest: "{{ install_root }}/old"
+    state: link
+  when: sym.stat.islnk is defined and sym.stat.islnk == True
+- name: New symlink path
+  file:
+    src: "{{ deploy }}"
+    dest: "/var/www/{{ symlink }}"
+    state: link
+- name: Create courtesy symlink in /srv/www
+  file:
+    src: "{{ deploy }}"
+    dest: "{{ install_root }}/current"
+    state: link
+- name: Call restorecon just in case
+  command: 'restorecon -R {{ deploy }}'
+- name: Restart Apache (scl-httpd24-httpd)
+  command: "sudo systemctl restart httpd24-httpd"

@@ -1,0 +1,123 @@
+[
+{
+  "model": "auth.group",
+  "fields": {
+    "name": "Archive Manager",
+    "permissions": [
+      [
+        "add_digitizedwork",
+        "archive",
+        "digitizedwork"
+      ],
+      [
+        "change_digitizedwork",
+        "archive",
+        "digitizedwork"
+      ],
+      [
+        "delete_digitizedwork",
+        "archive",
+        "digitizedwork"
+      ]
+    ]
+  }
+},
+{
+  "model": "auth.group",
+  "fields": {
+    "name": "Content Editor",
+    "permissions": [
+      [
+        "add_assignedkeyword",
+        "generic",
+        "assignedkeyword"
+      ],
+      [
+        "change_assignedkeyword",
+        "generic",
+        "assignedkeyword"
+      ],
+      [
+        "delete_assignedkeyword",
+        "generic",
+        "assignedkeyword"
+      ],
+      [
+        "add_keyword",
+        "generic",
+        "keyword"
+      ],
+      [
+        "change_keyword",
+        "generic",
+        "keyword"
+      ],
+      [
+        "delete_keyword",
+        "generic",
+        "keyword"
+      ],
+      [
+        "add_link",
+        "pages",
+        "link"
+      ],
+      [
+        "change_link",
+        "pages",
+        "link"
+      ],
+      [
+        "delete_link",
+        "pages",
+        "link"
+      ],
+      [
+        "add_page",
+        "pages",
+        "page"
+      ],
+      [
+        "change_page",
+        "pages",
+        "page"
+      ],
+      [
+        "delete_page",
+        "pages",
+        "page"
+      ],
+      [
+        "add_richtextpage",
+        "pages",
+        "richtextpage"
+      ],
+      [
+        "change_richtextpage",
+        "pages",
+        "richtextpage"
+      ],
+      [
+        "delete_richtextpage",
+        "pages",
+        "richtextpage"
+      ],
+      [
+        "add_redirect",
+        "redirects",
+        "redirect"
+      ],
+      [
+        "change_redirect",
+        "redirects",
+        "redirect"
+      ],
+      [
+        "delete_redirect",
+        "redirects",
+        "redirect"
+      ]
+    ]
+  }
+}
+]
