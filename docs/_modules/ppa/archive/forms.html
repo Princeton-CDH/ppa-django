@@ -5,13 +5,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>ppa.archive.forms &#8212; Princeton Prosody Archive 0.5.0-pre documentation</title>
+    <title>ppa.archive.forms &#8212; Princeton Prosody Archive 0.6-0 documentation</title>
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '0.5.0-pre',
+        VERSION:     '0.6-0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -40,11 +40,71 @@
             
   <h1>Source code for ppa.archive.forms</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">django</span> <span class="k">import</span> <span class="n">forms</span>
+<span class="kn">from</span> <span class="nn">django.utils.safestring</span> <span class="k">import</span> <span class="n">mark_safe</span>
+
+<span class="kn">from</span> <span class="nn">ppa.archive.models</span> <span class="k">import</span> <span class="n">Collection</span>
+
+<div class="viewcode-block" id="FacetChoiceField"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.FacetChoiceField">[docs]</a><span class="k">class</span> <span class="nc">FacetChoiceField</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">MultipleChoiceField</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Add CheckboxSelectMultiple field with facets taken from solr query&#39;&#39;&#39;</span>
+    <span class="c1"># Borrowed from https://github.com/Princeton-CDH/derrida-django/blob/develop/derrida/books/forms.py</span>
+    <span class="c1"># customize multiple choice field for use with facets.</span>
+    <span class="c1"># no other adaptations needed</span>
+    <span class="c1"># - turn of choice validation (shouldn&#39;t fail if facets don&#39;t get loaded)</span>
+    <span class="c1"># - default to not required</span>
+    <span class="c1"># - use checkbox select multiple as default widget</span>
+
+    <span class="n">widget</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">CheckboxSelectMultiple</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;required&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;required&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">FacetChoiceField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">valid_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
 
 
-<div class="viewcode-block" id="SearchForm"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.forms.SearchForm">[docs]</a><span class="k">class</span> <span class="nc">SearchForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+<div class="viewcode-block" id="SearchForm"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm">[docs]</a><span class="k">class</span> <span class="nc">SearchForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Simple search form for digitized works.&#39;&#39;&#39;</span>
-    <span class="n">query</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Search&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Search&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">collections</span> <span class="o">=</span> <span class="n">FacetChoiceField</span><span class="p">()</span>
+
+    <span class="c1"># fields to request a facet from solr</span>
+    <span class="n">facet_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;collections_exact&#39;</span><span class="p">]</span>
+
+    <span class="c1"># mapping of solr fields to form input</span>
+    <span class="n">solr_facet_fields</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;collections_exact&#39;</span><span class="p">:</span> <span class="s1">&#39;collections&#39;</span>
+    <span class="p">}</span>
+
+<div class="viewcode-block" id="SearchForm.set_choices_from_facets"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm.set_choices_from_facets">[docs]</a>    <span class="k">def</span> <span class="nf">set_choices_from_facets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">facets</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Set choices on field from a dictionary of facets&#39;&#39;&#39;</span>
+        <span class="c1"># Also borrowed from Derrida module referenced for FacetChoiceField</span>
+        <span class="c1"># Uses mapping of solr_facet_fields and facet_fields in class</span>
+        <span class="c1"># definition but does not yet import full functionality of</span>
+        <span class="c1"># derrida-django&#39;s ReferenceSearchForm</span>
+
+        <span class="c1"># The primary adaptation involves use of a dictionary of dictionaries</span>
+        <span class="c1"># for facets in SolrClient vs. the functionality of</span>
+        <span class="c1"># django-haystack/pysolr.</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">facet_dict</span> <span class="ow">in</span> <span class="n">facets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">formfield</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solr_facet_fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">formfield</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">formfield</span><span class="p">]</span><span class="o">.</span><span class="n">choices</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">mark_safe</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> &lt;span&gt;</span><span class="si">%d</span><span class="s1">&lt;/span&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">count</span><span class="p">)))</span>
+                    <span class="k">for</span> <span class="n">val</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">facet_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span></div></div>
+
+
+<div class="viewcode-block" id="AddToCollectionForm"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.AddToCollectionForm">[docs]</a><span class="k">class</span> <span class="nc">AddToCollectionForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Form to select a set of :class:ppa.archive.models.Collection to which</span>
+<span class="sd">    to bulk add a queryset of :class:ppa.archive.models.DigitizedWork</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">collections</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">ModelMultipleChoiceField</span><span class="p">(</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">queryset</span><span class="o">=</span><span class="n">Collection</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">),</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s1">&#39;Hold down ctrl or command key (on MacOS) to select &#39;</span>
+                  <span class="s1">&#39;multiple collections.&#39;</span><span class="p">)</span></div>
 </pre></div>
 
           </div>

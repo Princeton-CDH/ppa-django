@@ -3,6 +3,27 @@
 CHANGELOG
 =========
 
+0.6 Collections Management
+--------------------------
+
+Release adding collections creation and management, as well as CSV exports of all digitized works.
+
+CSV Export
+^^^^^^^^^^
+* As an admin, I want to generate a CSV report of materials on the site so that I can do analysis with other tools such as OpenRefine to analyze collection assignment.
+
+Collections
+^^^^^^^^^^^
+* As an admin, I want to create and update collections so that I can group digitized works into subcollections for site users.
+* As an admin, I want to add and edit collection descriptions so that I can help site users understand the collection and find related materials.
+* As an admin, I want to add individual digitized items to one or more collections so that I can manage which items are included in which collections.
+* As an admin, I want a way to search and select digitized items for bulk addition to a collection so that I can efficiently organize large groups of items.
+* As a user, I want to browse the list of collections so I can find out more about important groupings of items in the archive.
+*  As a user, I want to filter search results by collection so that I can include or exclude groups of materials based on my interests.
+
+
+
+
 0.5 Bulk Import and Simple Search
 ---------------------------------
 

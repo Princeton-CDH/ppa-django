@@ -5,13 +5,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>CHANGELOG &#8212; Princeton Prosody Archive 0.5.0-pre documentation</title>
+    <title>CHANGELOG &#8212; Princeton Prosody Archive 0.6-0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.5.0-pre',
+        VERSION:     '0.6-0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -42,6 +42,27 @@
             
   <div class="section" id="changelog">
 <span id="id1"></span><h1>CHANGELOG<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="collections-management">
+<h2>0.6 Collections Management<a class="headerlink" href="#collections-management" title="Permalink to this headline">¶</a></h2>
+<p>Release adding collections creation and management, as well as CSV exports of all digitized works.</p>
+<div class="section" id="csv-export">
+<h3>CSV Export<a class="headerlink" href="#csv-export" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>As an admin, I want to generate a CSV report of materials on the site so that I can do analysis with other tools such as OpenRefine to analyze collection assignment.</li>
+</ul>
+</div>
+<div class="section" id="collections">
+<h3>Collections<a class="headerlink" href="#collections" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>As an admin, I want to create and update collections so that I can group digitized works into subcollections for site users.</li>
+<li>As an admin, I want to add and edit collection descriptions so that I can help site users understand the collection and find related materials.</li>
+<li>As an admin, I want to add individual digitized items to one or more collections so that I can manage which items are included in which collections.</li>
+<li>As an admin, I want a way to search and select digitized items for bulk addition to a collection so that I can efficiently organize large groups of items.</li>
+<li>As a user, I want to browse the list of collections so I can find out more about important groupings of items in the archive.</li>
+<li>As a user, I want to filter search results by collection so that I can include or exclude groups of materials based on my interests.</li>
+</ul>
+</div>
+</div>
 <div class="section" id="bulk-import-and-simple-search">
 <h2>0.5 Bulk Import and Simple Search<a class="headerlink" href="#bulk-import-and-simple-search" title="Permalink to this headline">¶</a></h2>
 <p>Initial release with basic admin functionality, import/index Hathi materials, and a basic search to allow interacting and testing the Solr index.</p>
@@ -128,6 +149,11 @@
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">CHANGELOG</a><ul>
+<li><a class="reference internal" href="#collections-management">0.6 Collections Management</a><ul>
+<li><a class="reference internal" href="#csv-export">CSV Export</a></li>
+<li><a class="reference internal" href="#collections">Collections</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#bulk-import-and-simple-search">0.5 Bulk Import and Simple Search</a><ul>
 <li><a class="reference internal" href="#user-management">User Management</a></li>
 <li><a class="reference internal" href="#hathitrust-materials">HathiTrust Materials</a></li>
