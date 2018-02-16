@@ -9,7 +9,8 @@ env:
     - SOLR_CORE=test-ppa
 
 cache:
-    - downloads
+    directories:
+      - downloads
 
 install:
   - pip install -r requirements.txt

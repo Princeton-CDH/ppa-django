@@ -1,0 +1,9 @@
+{
+  "ppa/archive/tests/test_commands.py::TestHathiImportCommand::test_import_digitizedwork": true,
+  "ppa/archive/tests/test_commands.py::TestHathiImportCommand::test_index_pages": true,
+  "ppa/archive/tests/test_commands.py::TestSolrSchemaCommand::test_empty_solr": true,
+  "ppa/archive/tests/test_commands.py::TestSolrSchemaCommand::test_update_solr": true,
+  "ppa/archive/tests/test_models.py::TestCollection::test_full_index": true,
+  "ppa/archive/tests/test_models.py::TestDigitizedWork::test_index": true,
+  "ppa/archive/tests/test_views.py::TestArchiveViews::test_digitizedwork_listview": true
+}
