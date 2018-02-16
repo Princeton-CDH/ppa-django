@@ -22,6 +22,8 @@ install:
 before_script:
   - SOLR_VERSION=$SOLR_VERSION SOLR_CORE=$SOLR_CORE bash ci/config_solr.sh
 
+before_cache:
+  - rm -rf downloads/solr-${SOLR_VERSION}/
 
 script:
   - py.test --cov=ppa
