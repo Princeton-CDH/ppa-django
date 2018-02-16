@@ -5,13 +5,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>ppa.archive.models &#8212; Princeton Prosody Archive 0.5.0-pre documentation</title>
+    <title>ppa.archive.models &#8212; Princeton Prosody Archive 0.6-0 documentation</title>
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '0.5.0-pre',
+        VERSION:     '0.6-0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -41,6 +41,53 @@
   <h1>Source code for ppa.archive.models</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="k">import</span> <span class="n">models</span>
 <span class="kn">from</span> <span class="nn">django.urls</span> <span class="k">import</span> <span class="n">reverse</span>
+<span class="kn">from</span> <span class="nn">mezzanine.core.fields</span> <span class="k">import</span> <span class="n">RichTextField</span>
+
+<span class="kn">from</span> <span class="nn">ppa.archive.solr</span> <span class="k">import</span> <span class="n">get_solr_connection</span>
+
+
+<div class="viewcode-block" id="Collection"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.Collection">[docs]</a><span class="k">class</span> <span class="nc">Collection</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;A collection of :class:~ppa.archive.models.DigitizedWork instances.&#39;&#39;&#39;</span>
+    <span class="c1">#: the name of the collection</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+    <span class="c1">#: a RichText description of the collection</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="n">RichTextField</span><span class="p">(</span><span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+<div class="viewcode-block" id="Collection.full_index"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.Collection.full_index">[docs]</a>    <span class="k">def</span> <span class="nf">full_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Index or reindex a collection&#39;s associated works.&#39;&#39;&#39;</span>
+        <span class="c1"># guard against this being called on an unsaved instance</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;Collection instance needs to have a primary key value before &#39;</span>
+                <span class="s1">&#39;this method is called.&#39;</span>
+            <span class="p">)</span>
+        <span class="n">solr</span><span class="p">,</span> <span class="n">solr_collection</span> <span class="o">=</span> <span class="n">get_solr_connection</span><span class="p">()</span>
+        <span class="n">digworks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">digitizedwork_set</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="n">solr_docs</span> <span class="o">=</span> <span class="p">[</span><span class="n">work</span><span class="o">.</span><span class="n">index_data</span><span class="p">()</span> <span class="k">for</span> <span class="n">work</span> <span class="ow">in</span> <span class="n">digworks</span><span class="p">]</span>
+        <span class="c1"># adapted from hathi import logic</span>
+        <span class="n">solr</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">solr_collection</span><span class="p">,</span> <span class="n">solr_docs</span><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Collection.save"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.Collection.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Override method so that on save, any associated</span>
+<span class="sd">        works have their names updated if collection name has changed.&#39;&#39;&#39;</span>
+        <span class="c1"># first handle cases where this is a new save, just save and return</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">Collection</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="c1"># if it has been saved, get the original</span>
+        <span class="n">orig</span> <span class="o">=</span> <span class="n">Collection</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pk</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">orig</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="c1"># update object with new name</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">Collection</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="c1"># reindex its works and commit the result</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">full_index</span><span class="p">()</span>
+        <span class="c1"># saved but no name change, so just save</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">Collection</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="DigitizedWork"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.DigitizedWork">[docs]</a><span class="k">class</span> <span class="nc">DigitizedWork</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
@@ -71,6 +118,8 @@
     <span class="n">pub_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="s1">&#39;Publication Date&#39;</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="c1">#: number of pages in the work</span>
     <span class="n">page_count</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">PositiveIntegerField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1">#: collections that this work is part of</span>
+    <span class="n">collections</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">Collection</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="c1">#: date added to the archive</span>
     <span class="n">added</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="c1">#: date of last modification of the local record</span>
@@ -115,6 +164,14 @@
         <span class="c1"># - last update, rights code / rights string, item url</span>
         <span class="c1"># (maybe solr only?)</span>
 
+<div class="viewcode-block" id="DigitizedWork.index"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.DigitizedWork.index">[docs]</a>    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Index a :class:~ppa.archive.models.DigitizedWork</span>
+<span class="sd">        and allow optional commit to ensure results are available.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">solr</span><span class="p">,</span> <span class="n">solr_collection</span> <span class="o">=</span> <span class="n">get_solr_connection</span><span class="p">()</span>
+        <span class="n">solr</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">solr_collection</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index_data</span><span class="p">()],</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="DigitizedWork.index_data"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.DigitizedWork.index_data">[docs]</a>    <span class="k">def</span> <span class="nf">index_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;data for indexing in Solr&#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="p">{</span>
@@ -127,6 +184,8 @@
             <span class="s1">&#39;publisher&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">publisher</span><span class="p">,</span>
             <span class="s1">&#39;enumcron&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">enumcron</span><span class="p">,</span>
             <span class="s1">&#39;author&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="p">,</span>
+            <span class="s1">&#39;collections&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">collection</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">collection</span>
+                            <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">collections</span><span class="o">.</span><span class="n">all</span><span class="p">()],</span>
             <span class="c1"># hard-coded to distinguish from &amp; sort with pages</span>
             <span class="s1">&#39;item_type&#39;</span><span class="p">:</span> <span class="s1">&#39;work&#39;</span><span class="p">,</span>
             <span class="s1">&#39;order&#39;</span><span class="p">:</span> <span class="s1">&#39;0&#39;</span><span class="p">,</span>
