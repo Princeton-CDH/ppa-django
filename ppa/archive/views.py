@@ -221,7 +221,9 @@ class AddToCollection(ListView, FormMixin, ProcessFormView):
             digitized_works = self.get_queryset()
             del request.session['collection-add-ids']
             for collection in data['collections']:
-                collection.digitizedwork_set.set(digitized_works)
+                # add rather than set to ensure add does not replace
+                # previous digitized works in set.
+                collection.digitizedwork_set.add(*digitized_works)
             # reindex solr with the new collection data
             solr_docs = [work.index_data() for work in digitized_works]
             solr, solr_collection = get_solr_connection()
