@@ -1,13 +1,12 @@
 from unittest.mock import patch, Mock
 
-from django import forms
 from django.contrib.admin.sites import AdminSite
 from django.http import HttpResponseRedirect
 from django.test import TestCase, override_settings, RequestFactory
 from django.urls import reverse
 
 from ppa.archive.admin import DigitizedWorkAdmin
-from ppa.archive.models import DigitizedWork
+from ppa.archive.models import DigitizedWork, Collection
 
 TEST_SOLR_CONNECTIONS = {
     'default': {
@@ -24,6 +23,27 @@ class TestDigitizedWorkAdmin(TestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
+
+    def test_collections_list(self):
+        # set up preliminary objects needed to test an admin site object
+        site = AdminSite()
+        digadmin = DigitizedWorkAdmin(DigitizedWork, site)
+
+        # no collections should return an empty string
+        digwork = DigitizedWork.objects.create(source_id='njp.32101013082597')
+        coll_list = digadmin.list_collections(digwork)
+        assert coll_list == ''
+
+        # create two collections and set them on digwork
+        Z = Collection.objects.create(name='Z Collection')
+        A = Collection.objects.create(name='A Collection')
+        C = Collection.objects.create(name='C Collection')
+
+        digwork.collections.set([Z, A, C])
+
+        # should now return an alphabetized, comma separated list
+        coll_list = digadmin.list_collections(digwork)
+        assert coll_list == 'A Collection, C Collection, Z Collection'
 
     @override_settings(SOLR_CONNECTIONS=TEST_SOLR_CONNECTIONS)
     @patch('ppa.archive.solr.get_solr_connection')

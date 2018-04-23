@@ -6,8 +6,9 @@ from ppa.archive.models import DigitizedWork, Collection
 
 
 class DigitizedWorkAdmin(admin.ModelAdmin):
-    list_display = ('source_id', 'title', 'author', 'enumcron', 'pub_place',
-        'publisher', 'pub_date', 'page_count', 'added', 'updated')
+    list_display = ('source_id', 'title', 'author', 'list_collections',
+        'enumcron', 'pub_place', 'publisher', 'pub_date', 'page_count',
+        'added', 'updated')
     readonly_fields = ('source_id', 'source_url', 'page_count',
         'added', 'updated')
     search_fields = ('source_id', 'title', 'author', 'enumcron', 'pub_date',
@@ -16,6 +17,14 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
     # date_hierarchy = 'added'  # is this useful?
     list_filter = ['collections']
     actions = ['bulk_add_collection']
+
+    def list_collections(self, obj):
+        '''Return a list of :class:ppa.archive.models.Collection object names
+        as a comma separated list to populate a change_list column.
+        '''
+        return ', '.join([coll.name for coll in
+                          obj.collections.all().order_by('name')])
+    list_collections.short_description = 'Collections'
 
     def save_related(self, request, form, formsets, change):
         '''Ensure reindex is called when admin form is saved'''
