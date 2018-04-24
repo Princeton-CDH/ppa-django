@@ -6,13 +6,13 @@ from ppa.archive.models import DigitizedWork, Collection
 
 
 class DigitizedWorkAdmin(admin.ModelAdmin):
-    list_display = ('title', 'hathitrust_link', 'author', 'list_collections',
+    list_display = ('title', 'source_link', 'author', 'list_collections',
         'enumcron', 'pub_place', 'publisher', 'pub_date', 'page_count',
         'added', 'updated')
-    fields = ('hathitrust_link', 'title', 'enumcron', 'author',
+    fields = ('source_link', 'title', 'enumcron', 'author',
         'pub_place', 'publisher', 'pub_date', 'collections', 'added',
         'updated')
-    readonly_fields = ('hathitrust_link', 'page_count',
+    readonly_fields = ('source_link', 'page_count',
         'added', 'updated')
     search_fields = ('source_id', 'title', 'author', 'enumcron', 'pub_date',
         'publisher')
@@ -29,12 +29,12 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
                           obj.collections.all().order_by('name')])
     list_collections.short_description = 'Collections'
 
-    def hathitrust_link(self, obj):
+    def source_link(self, obj):
         return '<a href="%s" target="_blank">%s</a>' % (obj.source_url,
                                                         obj.source_id)
-    hathitrust_link.short_description = 'Source id'
-    hathitrust_link.admin_order_column = 'source_id'
-    hathitrust_link.allow_tags = True
+    source_link.short_description = 'Source id'
+    source_link.admin_order_column = 'source_id'
+    source_link.allow_tags = True
 
 
 

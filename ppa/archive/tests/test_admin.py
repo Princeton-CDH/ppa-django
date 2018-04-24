@@ -45,7 +45,7 @@ class TestDigitizedWorkAdmin(TestCase):
         coll_list = digadmin.list_collections(digwork)
         assert coll_list == 'A Collection, C Collection, Z Collection'
 
-    def test_hathitrust_id(self):
+    def test_source_link(self):
         # set up preliminary objects needed to test an admin site object
         site = AdminSite()
         digadmin = DigitizedWorkAdmin(DigitizedWork, site)
@@ -56,7 +56,7 @@ class TestDigitizedWorkAdmin(TestCase):
             source_id='njp.32101013082597',
             source_url=fake_url
         )
-        snippet = digadmin.hathitrust_link(digwork)
+        snippet = digadmin.source_link(digwork)
         assert snippet == \
             '<a href="%s" target="_blank">njp.32101013082597</a>' % fake_url
 
