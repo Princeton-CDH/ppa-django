@@ -152,9 +152,17 @@ class DigitizedWorkCSV(ListView):
         'Collection', 'Page Count', 'Date Added', 'Last Updated']
 
     def get_csv_filename(self):
+        '''Return the CSV file name based on the current datetime.
+        :returns: the filename for the CSV to be generated
+        :rtype: str
+        '''
         return 'ppa-digitizedworks-%s.csv' % now().strftime('%Y%m%dT%H:%M:%S')
 
     def get_data(self):
+        '''Get data for the CSV.
+        :returns: rows for CSV columns
+        :rtype: tuple
+        '''
         return ((dw.id, dw.source_id, dw.title, dw.author,
                  dw.pub_date, dw.pub_place, dw.publisher, dw.enumcron,
                  ';'.join([coll.name for coll in dw.collections.all()]),
@@ -165,6 +173,10 @@ class DigitizedWorkCSV(ListView):
         # all at once, rather than one at a time for each item
 
     def render_to_csv(self, data):
+        '''
+        Render the CSV as an HTTP response.
+        :rtype: :class:`django.http.HttpResponse`
+        '''
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="%s"' % \
             self.get_csv_filename()
@@ -176,6 +188,7 @@ class DigitizedWorkCSV(ListView):
         return response
 
     def get(self, *args, **kwargs):
+        '''Return CSV file on GET request.'''
         return self.render_to_csv(self.get_data())
 
 
