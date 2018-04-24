@@ -24,7 +24,7 @@ class TestDigitizedWorkAdmin(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
 
-    def test_collections_list(self):
+    def test_list_collections(self):
         # set up preliminary objects needed to test an admin site object
         site = AdminSite()
         digadmin = DigitizedWorkAdmin(DigitizedWork, site)
@@ -44,6 +44,22 @@ class TestDigitizedWorkAdmin(TestCase):
         # should now return an alphabetized, comma separated list
         coll_list = digadmin.list_collections(digwork)
         assert coll_list == 'A Collection, C Collection, Z Collection'
+
+    def test_hathitrust_id(self):
+        # set up preliminary objects needed to test an admin site object
+        site = AdminSite()
+        digadmin = DigitizedWorkAdmin(DigitizedWork, site)
+        # create digitalwork with a source_id and source_url
+        # test and method assume that we can always count on these
+        fake_url='http://obviouslywrongurl.org/njp.32101013082597'
+        digwork = DigitizedWork.objects.create(
+            source_id='njp.32101013082597',
+            source_url=fake_url
+        )
+        snippet = digadmin.hathitrust_link(digwork)
+        assert snippet == \
+            '<a href="%s" target="_blank">njp.32101013082597</a>' % fake_url
+
 
     @override_settings(SOLR_CONNECTIONS=TEST_SOLR_CONNECTIONS)
     @patch('ppa.archive.solr.get_solr_connection')

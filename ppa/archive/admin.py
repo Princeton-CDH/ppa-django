@@ -6,10 +6,13 @@ from ppa.archive.models import DigitizedWork, Collection
 
 
 class DigitizedWorkAdmin(admin.ModelAdmin):
-    list_display = ('source_id', 'title', 'author', 'list_collections',
+    list_display = ('title', 'hathitrust_link', 'author', 'list_collections',
         'enumcron', 'pub_place', 'publisher', 'pub_date', 'page_count',
         'added', 'updated')
-    readonly_fields = ('source_id', 'source_url', 'page_count',
+    fields = ('hathitrust_link', 'source_url', 'title', 'enumcron', 'author',
+        'pub_place', 'publisher', 'pub_date', 'collections', 'added',
+        'updated')
+    readonly_fields = ('hathitrust_link', 'page_count',
         'added', 'updated')
     search_fields = ('source_id', 'title', 'author', 'enumcron', 'pub_date',
         'publisher')
@@ -25,6 +28,15 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         return ', '.join([coll.name for coll in
                           obj.collections.all().order_by('name')])
     list_collections.short_description = 'Collections'
+
+    def hathitrust_link(self, obj):
+        return '<a href="%s" target="_blank">%s</a>' % (obj.source_url,
+                                                        obj.source_id)
+    hathitrust_link.short_description = 'Source id'
+    hathitrust_link.admin_order_column = 'source_id'
+    hathitrust_link.allow_tags = True
+
+
 
     def save_related(self, request, form, formsets, change):
         '''Ensure reindex is called when admin form is saved'''
