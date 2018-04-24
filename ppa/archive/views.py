@@ -134,7 +134,10 @@ class DigitizedWorkDetailView(DetailView):
 
 
 class CollectionListView(ListView):
-    '''Display list of public-facing :class:ppa.archive.models.Collection instances'''
+    '''
+    Display list of public-facing :class:`ppa.archive.models.Collection`
+    instances
+    '''
     model = Collection
     # NOTE: For consistency with DigitizedWork's list view
     template_name = 'archive/list_collections.html'
@@ -153,6 +156,7 @@ class DigitizedWorkCSV(ListView):
 
     def get_csv_filename(self):
         '''Return the CSV file name based on the current datetime.
+
         :returns: the filename for the CSV to be generated
         :rtype: str
         '''
@@ -160,6 +164,7 @@ class DigitizedWorkCSV(ListView):
 
     def get_data(self):
         '''Get data for the CSV.
+
         :returns: rows for CSV columns
         :rtype: tuple
         '''
@@ -175,6 +180,7 @@ class DigitizedWorkCSV(ListView):
     def render_to_csv(self, data):
         '''
         Render the CSV as an HTTP response.
+        
         :rtype: :class:`django.http.HttpResponse`
         '''
         response = HttpResponse(content_type='text/csv')

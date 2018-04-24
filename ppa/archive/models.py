@@ -6,7 +6,7 @@ from ppa.archive.solr import get_solr_connection
 
 
 class Collection(models.Model):
-    '''A collection of :class:~ppa.archive.models.DigitizedWork instances.'''
+    '''A collection of :class:`ppa.archive.models.DigitizedWork` instances.'''
     #: the name of the collection
     name = models.CharField(max_length=255)
     #: a RichText description of the collection
@@ -132,7 +132,7 @@ class DigitizedWork(models.Model):
         # (maybe solr only?)
 
     def index(self, params=None):
-        '''Index a :class:~ppa.archive.models.DigitizedWork
+        '''Index a :class:`ppa.archive.models.DigitizedWork`
         and allow optional commit to ensure results are available.
         '''
 

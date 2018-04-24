@@ -11,8 +11,8 @@ Minor improvements to collections management and bug fix.
 * As an admin, I want a "Collection" column viewable on the "Digitized works" page so that I can easily see what collection(s) an item belongs to.
 * As an admin, I want a link from the digitized work list view to HathiTrust so that I can check the contents as I curate the archive.
 * Bug fix: Bulk add to collections tool is clearing items that were previously added to collections individually.
-This release resolves this error which resulted from setting rather
-than adding digital works to collections.
+  This release resolves this error which resulted from setting rather
+  than adding digital works to collections.
 
 
 0.6 Collections Management
@@ -32,8 +32,6 @@ Collections
 * As an admin, I want a way to search and select digitized items for bulk addition to a collection so that I can efficiently organize large groups of items.
 * As a user, I want to browse the list of collections so I can find out more about important groupings of items in the archive.
 *  As a user, I want to filter search results by collection so that I can include or exclude groups of materials based on my interests.
-
-
 
 
 0.5 Bulk Import and Simple Search
