@@ -9,7 +9,7 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
     list_display = ('title', 'hathitrust_link', 'author', 'list_collections',
         'enumcron', 'pub_place', 'publisher', 'pub_date', 'page_count',
         'added', 'updated')
-    fields = ('hathitrust_link', 'source_url', 'title', 'enumcron', 'author',
+    fields = ('hathitrust_link', 'title', 'enumcron', 'author',
         'pub_place', 'publisher', 'pub_date', 'collections', 'added',
         'updated')
     readonly_fields = ('hathitrust_link', 'page_count',
