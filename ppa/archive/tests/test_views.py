@@ -375,12 +375,10 @@ class TestAddToCollection(TestCase):
         session.save()
 
         # post to the add to collection url
-        self.client.post(
-            bulk_add,
-            {'collections': coll1.pk}
-        )
+        self.client.post(bulk_add, {'collections': coll1.pk})
         # digitized works with pks 1,2 are added to the collection
-        digworks = DigitizedWork.objects.filter(collections__pk=coll1.pk)
+        digworks = DigitizedWork.objects\
+            .filter(collections__pk=coll1.pk).order_by('id')
         assert digworks.count() == 2
         assert list(digworks.values_list('id', flat=True)) == \
             session['collection-add-ids']
@@ -392,14 +390,29 @@ class TestAddToCollection(TestCase):
         mocksolr.index.assert_called_with(
             mockcollection, solr_docs, params={'commitWithin': 2000}
         )
+
+        # - bulk add should actually add and not reset collections, i.e.
+        # those individually added or added in a previous bulk add shouldn't
+        # be erased from the collection's digitizedwork_set
+
+        # only set pk 1 in the ids to add
+        session['collection-add-ids'] = [digworks[0].pk]
+        session.save()
+        # bulk adding first pk but not the second
+        self.client.post(bulk_add, {'collections': coll1.pk})
+        digworks2 = DigitizedWork.objects\
+            .filter(collections__pk=coll1.pk).order_by('id')
+        # this will fail if the bulk add removed the previously set two works
+        assert digworks2.count() == 2
+        # they should also be the same objects as before, i.e. this post request
+        # should result in a noop
+        assert digworks == digworks
+
+        # - test a dud post (i.e. without a Collection)
+        # should redirect with an error
         session['collection-add-ids'] = pks
         session.save()
-        # test a dud post (i.e. without a Collection)
-        # should redirect with an error
-        response = self.client.post(
-            bulk_add,
-            {'collections': None}
-        )
+        response = self.client.post(bulk_add, {'collections': None})
         assert response.status_code == 200
         # check that the error message rendered for a missing Collection
         self.assertContains(
@@ -410,10 +423,7 @@ class TestAddToCollection(TestCase):
         )
         session['collection-add-ids'] = None
         session.save()
-        response = self.client.post(
-            bulk_add,
-            {'collections': coll1.pk}
-        )
+        response = self.client.post(bulk_add, {'collections': coll1.pk})
         # Default message for an unset collection pk list
         self.assertContains(
             response,
