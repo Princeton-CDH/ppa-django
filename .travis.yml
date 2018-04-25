@@ -1,33 +1,29 @@
 language: python
-
 python:
-  - "3.6"
-
+- '3.6'
 env:
   global:
-    - SOLR_VERSION=6.6.2
-    - SOLR_CORE=test-ppa
-
+  - SOLR_VERSION=6.6.3
+  - SOLR_CORE=test-ppa
 cache:
-    directories:
-      - downloads
-
+  directories:
+  - downloads
 install:
-  - pip install -r requirements.txt
-  - pip install -r dev-requirements.txt
-  - pip install codecov
-  - cp ci/testsettings.py ppa/local_settings.py
-  - python -c "import uuid; print('SECRET_KEY = \'%s\'' % uuid.uuid4())" >> ppa/local_settings.py
-
+- pip install -r requirements.txt
+- pip install -r dev-requirements.txt
+- pip install codecov
+- cp ci/testsettings.py ppa/local_settings.py
+- python -c "import uuid; print('SECRET_KEY = \'%s\'' % uuid.uuid4())" >> ppa/local_settings.py
 before_script:
-  - SOLR_VERSION=$SOLR_VERSION SOLR_CORE=$SOLR_CORE bash ci/config_solr.sh
-
-
+- SOLR_VERSION=$SOLR_VERSION SOLR_CORE=$SOLR_CORE bash ci/config_solr.sh
+before_cache:
+- rm -rf downloads/solr-${SOLR_VERSION}/
 script:
-  - py.test --cov=ppa
-
+- py.test --cov=ppa
 services:
-  - mysql
-
+- mysql
 after_success:
-  - codecov
+- codecov
+notifications:
+  slack:
+    secure: Om7Tv9SUF9hXoRdG8P7mUOrtcoulqyzrOBI2yRXGkF3vEizquNAIm/0LJd5xy2PIPLGhq2OvOsaGpQ6zzDnyZpYDHDG+wlcmBQjjLqT++UMjiEdKvtx3X9QGS6JqMB9GgiARwYMGrzSVhZ1ij0P2joIZhbFS1VaQkSq5mVPa/7V6ffoYV7Yo5SDhJLdBWdGb4udapPyOu0vhgBXlwIXZmOFwotdtvcmd++nRZ+UMWf0yZLPcnrKGcN7oPtBYH2FoBWDZXiJuS0i/pgxTPk8MKOeRZkYNo5iP8sHFYgyxJvRvdzkQTEAUBfsNdukXGf0NI3w2uICKqWssZvd3A6m1EQNB1hctdbUzo500VAVcb4zXQG6AQvqhoBUnY+Uy2dHs2gMqUEU7/ykLlM/vddnAD7wlR/83pT0q6EJQm2JQ735hFx3+qlJRrYX0hlajhZWISz4B5RcNlDPjrGTu5n9ZrcE2Pu7rPkHRrYodpphhkOfyqCUpj2dIsWmj1s5QTLgY4wR1xuDTLo20Xj0zlEV/yiAdjTwUpBSu1FNd2E/xcrsuh1YlWgdWBXg9psLLVa8zb3QO0wRbjKyi4NKEo+Drg+6cMMkkksYqK9/mTwTSUJc1Ak84SPE1XB9PhaVvrFg6li1Q8ELPA3bwjhbvTecQFS8bQwcvantkvwmyEohS5Cc=

@@ -1,13 +1,12 @@
 from unittest.mock import patch, Mock
 
-from django import forms
 from django.contrib.admin.sites import AdminSite
 from django.http import HttpResponseRedirect
 from django.test import TestCase, override_settings, RequestFactory
 from django.urls import reverse
 
 from ppa.archive.admin import DigitizedWorkAdmin
-from ppa.archive.models import DigitizedWork
+from ppa.archive.models import DigitizedWork, Collection
 
 TEST_SOLR_CONNECTIONS = {
     'default': {
@@ -24,6 +23,43 @@ class TestDigitizedWorkAdmin(TestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
+
+    def test_list_collections(self):
+        # set up preliminary objects needed to test an admin site object
+        site = AdminSite()
+        digadmin = DigitizedWorkAdmin(DigitizedWork, site)
+
+        # no collections should return an empty string
+        digwork = DigitizedWork.objects.create(source_id='njp.32101013082597')
+        coll_list = digadmin.list_collections(digwork)
+        assert coll_list == ''
+
+        # create two collections and set them on digwork
+        Z = Collection.objects.create(name='Z Collection')
+        A = Collection.objects.create(name='A Collection')
+        C = Collection.objects.create(name='C Collection')
+
+        digwork.collections.set([Z, A, C])
+
+        # should now return an alphabetized, comma separated list
+        coll_list = digadmin.list_collections(digwork)
+        assert coll_list == 'A Collection, C Collection, Z Collection'
+
+    def test_source_link(self):
+        # set up preliminary objects needed to test an admin site object
+        site = AdminSite()
+        digadmin = DigitizedWorkAdmin(DigitizedWork, site)
+        # create digitalwork with a source_id and source_url
+        # test and method assume that we can always count on these
+        fake_url='http://obviouslywrongurl.org/njp.32101013082597'
+        digwork = DigitizedWork.objects.create(
+            source_id='njp.32101013082597',
+            source_url=fake_url
+        )
+        snippet = digadmin.source_link(digwork)
+        assert snippet == \
+            '<a href="%s" target="_blank">njp.32101013082597</a>' % fake_url
+
 
     @override_settings(SOLR_CONNECTIONS=TEST_SOLR_CONNECTIONS)
     @patch('ppa.archive.solr.get_solr_connection')
@@ -51,6 +87,8 @@ class TestDigitizedWorkAdmin(TestCase):
         digworkadmin = DigitizedWorkAdmin(DigitizedWork, AdminSite())
         fakerequest = Mock()
         fakerequest.session = {}
+        # set some arbitary querystring filters
+        fakerequest.GET = {'q': 1, 'foo': 'bar'}
         queryset = DigitizedWork.objects.all()
         redirect = digworkadmin.bulk_add_collection(fakerequest, queryset)
         # should return a redirect
@@ -62,6 +100,9 @@ class TestDigitizedWorkAdmin(TestCase):
         assert fakerequest.session['collection-add-ids']
         # the key should have the ids of the three fixtures
         assert fakerequest.session['collection-add-ids'] == [1, 2, 3]
+        # the querystring should have been faithfully copied to session as well
+        print(fakerequest.session['collection-add-filters'])
+        assert fakerequest.session['collection-add-filters'] == fakerequest.GET
         redirect = digworkadmin.bulk_add_collection(fakerequest, queryset)
         # test against an empty queryset just in case
         DigitizedWork.objects.all().delete()

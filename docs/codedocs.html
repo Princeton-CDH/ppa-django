@@ -4,20 +4,12 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Code Documentation &#8212; Princeton Prosody Archive 0.6-0 documentation</title>
+    <title>Code Documentation &#8212; Princeton Prosody Archive 0.7.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '0.6-0',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -31,8 +23,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
-  </head>
-  <body>
+  </head><body>
   
 
     <div class="document">
@@ -52,7 +43,17 @@
 <dl class="class">
 <dt id="ppa.archive.models.Collection">
 <em class="property">class </em><code class="descclassname">ppa.archive.models.</code><code class="descname">Collection</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#Collection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.Collection" title="Permalink to this definition">¶</a></dt>
-<dd><p>A collection of :class:~ppa.archive.models.DigitizedWork instances.</p>
+<dd><p>A collection of <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.models.DigitizedWork</span></code></a> instances.</p>
+<dl class="exception">
+<dt id="ppa.archive.models.Collection.DoesNotExist">
+<em class="property">exception </em><code class="descname">DoesNotExist</code><a class="headerlink" href="#ppa.archive.models.Collection.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="ppa.archive.models.Collection.MultipleObjectsReturned">
+<em class="property">exception </em><code class="descname">MultipleObjectsReturned</code><a class="headerlink" href="#ppa.archive.models.Collection.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="attribute">
 <dt id="ppa.archive.models.Collection.description">
 <code class="descname">description</code><a class="headerlink" href="#ppa.archive.models.Collection.description" title="Permalink to this definition">¶</a></dt>
@@ -82,8 +83,20 @@ works have their names updated if collection name has changed.</p>
 
 <dl class="class">
 <dt id="ppa.archive.models.DigitizedWork">
-<em class="property">class </em><code class="descclassname">ppa.archive.models.</code><code class="descname">DigitizedWork</code><span class="sig-paren">(</span><em>id</em>, <em>source_id</em>, <em>source_url</em>, <em>title</em>, <em>enumcron</em>, <em>author</em>, <em>pub_place</em>, <em>publisher</em>, <em>pub_date</em>, <em>page_count</em>, <em>added</em>, <em>updated</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#DigitizedWork"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.DigitizedWork" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
+<em class="property">class </em><code class="descclassname">ppa.archive.models.</code><code class="descname">DigitizedWork</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#DigitizedWork"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.DigitizedWork" title="Permalink to this definition">¶</a></dt>
+<dd><p>Record to manage digitized works included in PPA and store their basic
+metadata.</p>
+<dl class="exception">
+<dt id="ppa.archive.models.DigitizedWork.DoesNotExist">
+<em class="property">exception </em><code class="descname">DoesNotExist</code><a class="headerlink" href="#ppa.archive.models.DigitizedWork.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="ppa.archive.models.DigitizedWork.MultipleObjectsReturned">
+<em class="property">exception </em><code class="descname">MultipleObjectsReturned</code><a class="headerlink" href="#ppa.archive.models.DigitizedWork.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
 <dt id="ppa.archive.models.DigitizedWork.added">
 <code class="descname">added</code><a class="headerlink" href="#ppa.archive.models.DigitizedWork.added" title="Permalink to this definition">¶</a></dt>
 <dd><p>date added to the archive</p>
@@ -102,9 +115,16 @@ works have their names updated if collection name has changed.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="ppa.archive.models.DigitizedWork.get_absolute_url">
+<code class="descname">get_absolute_url</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#DigitizedWork.get_absolute_url"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.DigitizedWork.get_absolute_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return object’s url for
+<a class="reference internal" href="#ppa.archive.views.DigitizedWorkDetailView" title="ppa.archive.views.DigitizedWorkDetailView"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.views.DigitizedWorkDetailView</span></code></a></p>
+</dd></dl>
+
+<dl class="method">
 <dt id="ppa.archive.models.DigitizedWork.index">
 <code class="descname">index</code><span class="sig-paren">(</span><em>params=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#DigitizedWork.index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.DigitizedWork.index" title="Permalink to this definition">¶</a></dt>
-<dd><p>Index a :class:~ppa.archive.models.DigitizedWork
+<dd><p>Index a <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.models.DigitizedWork</span></code></a>
 and allow optional commit to ensure results are available.</p>
 </dd></dl>
 
@@ -130,7 +150,7 @@ Full record is required in order to set all fields</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>bibdata</strong> – bibliographic data returned from HathiTrust
-as instance of <code class="xref py py-class docutils literal"><span class="pre">ppa.archive.hathi.HathiBibliographicRecord</span></code></td>
+as instance of <a class="reference internal" href="#ppa.archive.hathi.HathiBibliographicRecord" title="ppa.archive.hathi.HathiBibliographicRecord"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.hathi.HathiBibliographicRecord</span></code></a></td>
 </tr>
 </tbody>
 </table>
@@ -180,13 +200,13 @@ as instance of <code class="xref py py-class docutils literal"><span class="pre"
 <dl class="class">
 <dt id="ppa.archive.views.AddToCollection">
 <em class="property">class </em><code class="descclassname">ppa.archive.views.</code><code class="descname">AddToCollection</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#AddToCollection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.AddToCollection" title="Permalink to this definition">¶</a></dt>
-<dd><p>View to bulk add a queryset of <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal"><span class="pre">ppa.archive.models.DigitizedWork</span></code></a>
-to a set of <code class="xref py py-class docutils literal"><span class="pre">ppa.archive.models.Collection</span> <span class="pre">instances</span></code>.</p>
+<dd><p>View to bulk add a queryset of <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.models.DigitizedWork</span></code></a>
+to a set of <code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.models.Collection</span> <span class="pre">instances</span></code>.</p>
 <p>Restricted to staff users via staff_member_required on url.</p>
 <dl class="attribute">
 <dt id="ppa.archive.views.AddToCollection.form_class">
 <code class="descname">form_class</code><a class="headerlink" href="#ppa.archive.views.AddToCollection.form_class" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">AddToCollectionForm</span></code></p>
+<dd><p>alias of <a class="reference internal" href="#ppa.archive.forms.AddToCollectionForm" title="ppa.archive.forms.AddToCollectionForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.forms.AddToCollectionForm</span></code></a></p>
 </dd></dl>
 
 <dl class="method">
@@ -195,17 +215,27 @@ to a set of <code class="xref py py-class docutils literal"><span class="pre">pp
 <dd><p>Return a queryset filtered by id, or empty list if no ids</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="ppa.archive.views.AddToCollection.get_success_url">
+<code class="descname">get_success_url</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#AddToCollection.get_success_url"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.AddToCollection.get_success_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Redirect to the <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.models.DigitizedWork</span></code></a>
+change_list in the Django admin with pagination and filters preserved.
+Expects <code class="xref py py-meth docutils literal notranslate"><span class="pre">ppa.archive.admin.bulk_add_collection()</span></code>
+to have set ‘collection-add-filters’ as a dict in the request’s
+session.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="ppa.archive.views.AddToCollection.model">
 <code class="descname">model</code><a class="headerlink" href="#ppa.archive.views.AddToCollection.model" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">DigitizedWork</span></code></p>
+<dd><p>alias of <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.models.DigitizedWork</span></code></a></p>
 </dd></dl>
 
 <dl class="method">
 <dt id="ppa.archive.views.AddToCollection.post">
 <code class="descname">post</code><span class="sig-paren">(</span><em>request</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#AddToCollection.post"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.AddToCollection.post" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal"><span class="pre">ppa.archive.models.DigitizedWork</span></code></a> instances passed in form
-data to selected instances of <a class="reference internal" href="#ppa.archive.models.Collection" title="ppa.archive.models.Collection"><code class="xref py py-class docutils literal"><span class="pre">ppa.archive.models.Collection</span></code></a>,
+<dd><p>Add <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.models.DigitizedWork</span></code></a> instances passed in form
+data to selected instances of <a class="reference internal" href="#ppa.archive.models.Collection" title="ppa.archive.models.Collection"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.models.Collection</span></code></a>,
 then return to change_list view.</p>
 <p>Expects a list of DigitizedWork ids to be set in the request session.</p>
 </dd></dl>
@@ -215,11 +245,12 @@ then return to change_list view.</p>
 <dl class="class">
 <dt id="ppa.archive.views.CollectionListView">
 <em class="property">class </em><code class="descclassname">ppa.archive.views.</code><code class="descname">CollectionListView</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#CollectionListView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.CollectionListView" title="Permalink to this definition">¶</a></dt>
-<dd><p>Display list of public-facing :class:ppa.archive.models.Collection instances</p>
+<dd><p>Display list of public-facing <a class="reference internal" href="#ppa.archive.models.Collection" title="ppa.archive.models.Collection"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.models.Collection</span></code></a>
+instances</p>
 <dl class="attribute">
 <dt id="ppa.archive.views.CollectionListView.model">
 <code class="descname">model</code><a class="headerlink" href="#ppa.archive.views.CollectionListView.model" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Collection</span></code></p>
+<dd><p>alias of <a class="reference internal" href="#ppa.archive.models.Collection" title="ppa.archive.models.Collection"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.models.Collection</span></code></a></p>
 </dd></dl>
 
 </dd></dl>
@@ -228,10 +259,62 @@ then return to change_list view.</p>
 <dt id="ppa.archive.views.DigitizedWorkCSV">
 <em class="property">class </em><code class="descclassname">ppa.archive.views.</code><code class="descname">DigitizedWorkCSV</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#DigitizedWorkCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.DigitizedWorkCSV" title="Permalink to this definition">¶</a></dt>
 <dd><p>Export of digitized work details as CSV download.</p>
+<dl class="method">
+<dt id="ppa.archive.views.DigitizedWorkCSV.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#DigitizedWorkCSV.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.DigitizedWorkCSV.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return CSV file on GET request.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.views.DigitizedWorkCSV.get_csv_filename">
+<code class="descname">get_csv_filename</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#DigitizedWorkCSV.get_csv_filename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.DigitizedWorkCSV.get_csv_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the CSV file name based on the current datetime.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the filename for the CSV to be generated</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.views.DigitizedWorkCSV.get_data">
+<code class="descname">get_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#DigitizedWorkCSV.get_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.DigitizedWorkCSV.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get data for the CSV.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">rows for CSV columns</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.6)">tuple</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="ppa.archive.views.DigitizedWorkCSV.model">
 <code class="descname">model</code><a class="headerlink" href="#ppa.archive.views.DigitizedWorkCSV.model" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">DigitizedWork</span></code></p>
+<dd><p>alias of <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.models.DigitizedWork</span></code></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.views.DigitizedWorkCSV.render_to_csv">
+<code class="descname">render_to_csv</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#DigitizedWorkCSV.render_to_csv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.DigitizedWorkCSV.render_to_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render the CSV as an HTTP response.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://django.readthedocs.io/en/latest/ref/request-response.html#django.http.HttpResponse" title="(in Django v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.http.HttpResponse</span></code></a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -243,7 +326,7 @@ then return to change_list view.</p>
 <dl class="attribute">
 <dt id="ppa.archive.views.DigitizedWorkDetailView.model">
 <code class="descname">model</code><a class="headerlink" href="#ppa.archive.views.DigitizedWorkDetailView.model" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">DigitizedWork</span></code></p>
+<dd><p>alias of <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.models.DigitizedWork</span></code></a></p>
 </dd></dl>
 
 </dd></dl>
@@ -253,6 +336,20 @@ then return to change_list view.</p>
 <em class="property">class </em><code class="descclassname">ppa.archive.views.</code><code class="descname">DigitizedWorkListView</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#DigitizedWorkListView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.DigitizedWorkListView" title="Permalink to this definition">¶</a></dt>
 <dd><p>Search and browse digitized works.  Based on Solr index
 of works and pages.</p>
+<dl class="method">
+<dt id="ppa.archive.views.DigitizedWorkListView.get_context_data">
+<code class="descname">get_context_data</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#DigitizedWorkListView.get_context_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.DigitizedWorkListView.get_context_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the context for this view.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.views.DigitizedWorkListView.get_queryset">
+<code class="descname">get_queryset</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#DigitizedWorkListView.get_queryset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.DigitizedWorkListView.get_queryset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the list of items for this view.</p>
+<p>The return value must be an iterable and may be an instance of
+<cite>QuerySet</cite> in which case <cite>QuerySet</cite> specific behavior will be enabled.</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -269,6 +366,12 @@ to bulk add a queryset of :class:ppa.archive.models.DigitizedWork</p>
 <dt id="ppa.archive.forms.FacetChoiceField">
 <em class="property">class </em><code class="descclassname">ppa.archive.forms.</code><code class="descname">FacetChoiceField</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#FacetChoiceField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.forms.FacetChoiceField" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add CheckboxSelectMultiple field with facets taken from solr query</p>
+<dl class="method">
+<dt id="ppa.archive.forms.FacetChoiceField.valid_value">
+<code class="descname">valid_value</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#FacetChoiceField.valid_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.forms.FacetChoiceField.valid_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check to see if the provided value is a valid choice</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -303,7 +406,7 @@ project collection/core.</p>
 <dl class="class">
 <dt id="ppa.archive.solr.PagedSolrQuery">
 <em class="property">class </em><code class="descclassname">ppa.archive.solr.</code><code class="descname">PagedSolrQuery</code><span class="sig-paren">(</span><em>query_opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/solr.html#PagedSolrQuery"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.solr.PagedSolrQuery" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Solr query object that wraps a <code class="xref py py-mod docutils literal"><span class="pre">SolrClient</span></code> query in a way
+<dd><p>A Solr query object that wraps a <code class="xref py py-mod docutils literal notranslate"><span class="pre">SolrClient</span></code> query in a way
 that allows search results to be paginated by django paginator.</p>
 <dl class="method">
 <dt id="ppa.archive.solr.PagedSolrQuery.count">
@@ -323,6 +426,20 @@ of dicts.</p>
 <code class="descname">get_json</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/solr.html#PagedSolrQuery.get_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.solr.PagedSolrQuery.get_json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return query response as JSON data, to allow full access to anything
 included in Solr data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.solr.PagedSolrQuery.get_results">
+<code class="descname">get_results</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/solr.html#PagedSolrQuery.get_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.solr.PagedSolrQuery.get_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return results of the Solr query.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">docs as a list of dictionaries.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -394,9 +511,9 @@ created and updated.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">HathiBibliographicRecord</span></code></td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><a class="reference internal" href="#ppa.archive.hathi.HathiBibliographicRecord" title="ppa.archive.hathi.HathiBibliographicRecord"><code class="xref py py-class docutils literal notranslate"><span class="pre">HathiBibliographicRecord</span></code></a></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#ppa.archive.hathi.HathiItemNotFound" title="ppa.archive.hathi.HathiItemNotFound"><code class="xref py py-class docutils literal"><span class="pre">HathiItemNotFound</span></code></a></td>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#ppa.archive.hathi.HathiItemNotFound" title="ppa.archive.hathi.HathiItemNotFound"><code class="xref py py-class docutils literal notranslate"><span class="pre">HathiItemNotFound</span></code></a></td>
 </tr>
 </tbody>
 </table>
@@ -410,12 +527,50 @@ created and updated.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">HathiBibliographicRecord</span></code></td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><a class="reference internal" href="#ppa.archive.hathi.HathiBibliographicRecord" title="ppa.archive.hathi.HathiBibliographicRecord"><code class="xref py py-class docutils literal notranslate"><span class="pre">HathiBibliographicRecord</span></code></a></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#ppa.archive.hathi.HathiItemNotFound" title="ppa.archive.hathi.HathiItemNotFound"><code class="xref py py-class docutils literal"><span class="pre">HathiItemNotFound</span></code></a></td>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#ppa.archive.hathi.HathiItemNotFound" title="ppa.archive.hathi.HathiItemNotFound"><code class="xref py py-class docutils literal notranslate"><span class="pre">HathiItemNotFound</span></code></a></td>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="ppa.archive.hathi.HathiBibliographicRecord">
+<em class="property">class </em><code class="descclassname">ppa.archive.hathi.</code><code class="descname">HathiBibliographicRecord</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/hathi.html#HathiBibliographicRecord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.hathi.HathiBibliographicRecord" title="Permalink to this definition">¶</a></dt>
+<dd><p>Representation of a HathiTrust bibliographic record.</p>
+<dl class="method">
+<dt id="ppa.archive.hathi.HathiBibliographicRecord.copy_details">
+<code class="descname">copy_details</code><span class="sig-paren">(</span><em>htid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/hathi.html#HathiBibliographicRecord.copy_details"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.hathi.HathiBibliographicRecord.copy_details" title="Permalink to this definition">¶</a></dt>
+<dd><p>Details for a specific copy identified by hathi id</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.hathi.HathiBibliographicRecord.copy_last_updated">
+<code class="descname">copy_last_updated</code><span class="sig-paren">(</span><em>htid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/hathi.html#HathiBibliographicRecord.copy_last_updated"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.hathi.HathiBibliographicRecord.copy_last_updated" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return last update date for a specificy copy identified by
+hathi id.  Returns as <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.date" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.date</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.archive.hathi.HathiBibliographicRecord.marcxml">
+<code class="descname">marcxml</code><a class="headerlink" href="#ppa.archive.hathi.HathiBibliographicRecord.marcxml" title="Permalink to this definition">¶</a></dt>
+<dd><p>Record marcxml if included (full records only), as an instance of
+<code class="xref py py-class docutils literal notranslate"><span class="pre">pymarc.Record</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.archive.hathi.HathiBibliographicRecord.pub_dates">
+<code class="descname">pub_dates</code><a class="headerlink" href="#ppa.archive.hathi.HathiBibliographicRecord.pub_dates" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of available publication dates</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.archive.hathi.HathiBibliographicRecord.title">
+<code class="descname">title</code><a class="headerlink" href="#ppa.archive.hathi.HathiBibliographicRecord.title" title="Permalink to this definition">¶</a></dt>
+<dd><p>First title (standard title)</p>
 </dd></dl>
 
 </dd></dl>
@@ -435,9 +590,9 @@ created and updated.</p>
 configured Solr instance.  Reports on the number of fields that are
 added or updated, and any that are out of date and were removed.</p>
 <p>Actual logic implemented in
-<a class="reference internal" href="#ppa.archive.solr.SolrSchema.update_solr_schema" title="ppa.archive.solr.SolrSchema.update_solr_schema"><code class="xref py py-meth docutils literal"><span class="pre">ppa.archive.solr.SolrSchema.update_solr_schema()</span></code></a></p>
-<p>Example use:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">solr_schema</span>
+<a class="reference internal" href="#ppa.archive.solr.SolrSchema.update_solr_schema" title="ppa.archive.solr.SolrSchema.update_solr_schema"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ppa.archive.solr.SolrSchema.update_solr_schema()</span></code></a></p>
+<p>Example usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">solr_schema</span>
 </pre></div>
 </div>
 </div>
@@ -449,7 +604,7 @@ browse.  Expects a local copy of dataset files in pairtree format
 retrieved by rsync.  (Note that pairtree data must include pairtree
 version file to be valid.)</p>
 <p>Contents are inspected from the configured <strong>HATHI_DATA</strong> path;
-<a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal"><span class="pre">DigitizedWork</span></code></a> records are created or updated
+<a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">DigitizedWork</span></code></a> records are created or updated
 based on identifiers found and metadata retrieved from the HathiTrust
 Bibliographic API.  Page content is indexed in Solr, but otherwise only
 reflected in the database via a total page count per work.  By default,
@@ -458,7 +613,7 @@ or if requested via update flag.</p>
 <p>Supports importing specific items by hathi id, but the pairtree content
 for the items still must exist at the configured path.</p>
 <p>Example usage:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># import everything with defaults</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># import everything with defaults</span>
 <span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">hathi_import</span>
 <span class="c1"># import specific items</span>
 <span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">hathi_import</span> <span class="n">htid1</span> <span class="n">htid2</span> <span class="n">htid3</span>
@@ -553,12 +708,14 @@ for the items still must exist at the configured path.</p>
 
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script><div class="powered_by">
 <p>Powered by:</p>
@@ -572,10 +729,10 @@ for the items still must exist at the configured path.</p>
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2017, CDH @ Princeton University.
+      &copy;2018, CDH @ Princeton University.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.3</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
       |

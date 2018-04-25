@@ -59,7 +59,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Princeton Prosody Archive'
-copyright = '2017, CDH @ Princeton University'
+copyright = '2018, CDH @ Princeton University'
 author = 'CDH @ Princeton University'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -186,4 +186,7 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {
+    'https://docs.python.org/': None,
+    'django': ('http://django.readthedocs.org/en/latest/', None),
+}
