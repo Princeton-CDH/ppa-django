@@ -6,7 +6,7 @@ added or updated, and any that are out of date and were removed.
 Actual logic implemented in
 :meth:`ppa.archive.solr.SolrSchema.update_solr_schema`
 
-Example use::
+Example usage::
 
     python manage.py solr_schema
 

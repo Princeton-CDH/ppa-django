@@ -156,6 +156,11 @@ class PagedSolrQuery(object):
         return self._result.get_facets()
 
     def get_results(self):
+        '''
+        Return results of the Solr query.
+
+        :returns: docs as a list of dictionaries. 
+        '''
         self._result = self.solr.query(self.solr_collection, self.query_opts)
         return self._result.docs
 

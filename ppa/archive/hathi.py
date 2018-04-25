@@ -56,7 +56,7 @@ class HathiBibliographicAPI(object):
 
 
 class HathiBibliographicRecord(object):
-
+    '''Representation of a HathiTrust bibliographic record.'''
     def __init__(self, data):
         self._data = data
         # for a single bib api json result, we only want the first item
@@ -96,7 +96,3 @@ class HathiBibliographicRecord(object):
         marcxml = self._data['records'][self.record_id].get('marc-xml', None)
         if marcxml:
             return pymarc.parse_xml_to_array(io.StringIO(marcxml))[0]
-
-
-
-
