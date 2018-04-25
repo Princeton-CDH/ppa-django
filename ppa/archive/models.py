@@ -6,7 +6,7 @@ from ppa.archive.solr import get_solr_connection
 
 
 class Collection(models.Model):
-    '''A collection of :class:~ppa.archive.models.DigitizedWork instances.'''
+    '''A collection of :class:`ppa.archive.models.DigitizedWork` instances.'''
     #: the name of the collection
     name = models.CharField(max_length=255)
     #: a RichText description of the collection
@@ -50,6 +50,10 @@ class Collection(models.Model):
 
 
 class DigitizedWork(models.Model):
+    '''
+    Record to manage digitized works included in PPA and store their basic
+    metadata.
+    '''
     # stub record to manage digitized works included in PPA
     # basic metadata
     # - title, author, place of publication, date
@@ -85,6 +89,10 @@ class DigitizedWork(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     def get_absolute_url(self):
+        '''
+        Return object's url for
+        :class:`ppa.archive.views.DigitizedWorkDetailView`
+        '''
         return reverse('archive:detail', kwargs={'source_id': self.source_id})
 
     def __str__(self):
@@ -124,7 +132,7 @@ class DigitizedWork(models.Model):
         # (maybe solr only?)
 
     def index(self, params=None):
-        '''Index a :class:~ppa.archive.models.DigitizedWork
+        '''Index a :class:`ppa.archive.models.DigitizedWork`
         and allow optional commit to ensure results are available.
         '''
 
