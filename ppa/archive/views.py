@@ -6,10 +6,11 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django.shortcuts import redirect
+from django.utils.http import urlencode
 from django.utils.timezone import now
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 from django.views.generic import ListView, DetailView
-from django.views.generic.edit import FormMixin, ProcessFormView
+from django.views.generic.edit import FormView
 from SolrClient.exceptions import SolrError
 
 from ppa.archive.forms import SearchForm, AddToCollectionForm
@@ -180,7 +181,7 @@ class DigitizedWorkCSV(ListView):
     def render_to_csv(self, data):
         '''
         Render the CSV as an HTTP response.
-        
+
         :rtype: :class:`django.http.HttpResponse`
         '''
         response = HttpResponse(content_type='text/csv')
@@ -198,7 +199,7 @@ class DigitizedWorkCSV(ListView):
         return self.render_to_csv(self.get_data())
 
 
-class AddToCollection(ListView, FormMixin, ProcessFormView):
+class AddToCollection(ListView, FormView):
     '''
     View to bulk add a queryset of :class:`ppa.archive.models.DigitizedWork`
     to a set of :class:`ppa.archive.models.Collection instances`.
@@ -209,7 +210,23 @@ class AddToCollection(ListView, FormMixin, ProcessFormView):
     model = DigitizedWork
     template_name = 'archive/add_to_collection.html'
     form_class = AddToCollectionForm
-    success_url = reverse_lazy('admin:archive_digitizedwork_changelist')
+
+    def get_success_url(self):
+        '''
+        Redirect to the :class:`ppa.archive.models.DigitizedWork`
+        change_list in the Django admin with pagination and filters preserved.
+        Expects :meth:`ppa.archive.admin.bulk_add_collection`
+        to have set 'collection-add-filters' as a dict in the request's
+        session.
+        '''
+        change_list = reverse('admin:archive_digitizedwork_changelist')
+        # get request.session's querystring filter, and if it exists
+        # use it to set the querystring
+        querystring = ''
+        filter_dict = self.request.session.get('collection-add-filters', None)
+        if filter_dict:
+            querystring = '?%s' % urlencode(filter_dict)
+        return '%s%s' % (change_list, querystring)
 
     def get_queryset(self, *args, **kwargs):
         '''Return a queryset filtered by id, or empty list if no ids'''
@@ -256,7 +273,7 @@ class AddToCollection(ListView, FormMixin, ProcessFormView):
             messages.success(request, 'Successfully added %d works to: %s.'
                              % (num_works, collections))
             # redirect to the change list with the message intact
-            return redirect(reverse('admin:archive_digitizedwork_changelist'))
+            return redirect(self.get_success_url())
         # make form error more descriptive, default to an error re: pks
         if 'collections' in form.errors:
             del form.errors['collections']
