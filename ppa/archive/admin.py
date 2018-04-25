@@ -36,8 +36,6 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
     source_link.admin_order_column = 'source_id'
     source_link.allow_tags = True
 
-
-
     def save_related(self, request, form, formsets, change):
         '''Ensure reindex is called when admin form is saved'''
         # m2m relations are handled separately by the admin form so the standard
@@ -59,6 +57,9 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         # Uses POST from admin rather than a database query to get the pks
         # per the suggested practices in Django documentation
         selected = list(queryset.order_by('id').values_list('id', flat=True))
+        # encode the filter querystring so that the bulk add view can return
+        # the user to the same admin list view upon completion.
+        request.session['collection-add-filters'] = request.GET
         request.session['collection-add-ids'] = selected
         return HttpResponseRedirect(reverse('archive:add-to-collection'))
 

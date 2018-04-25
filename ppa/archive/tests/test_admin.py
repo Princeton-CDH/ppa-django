@@ -87,6 +87,8 @@ class TestDigitizedWorkAdmin(TestCase):
         digworkadmin = DigitizedWorkAdmin(DigitizedWork, AdminSite())
         fakerequest = Mock()
         fakerequest.session = {}
+        # set some arbitary querystring filters
+        fakerequest.GET = {'q': 1, 'foo': 'bar'}
         queryset = DigitizedWork.objects.all()
         redirect = digworkadmin.bulk_add_collection(fakerequest, queryset)
         # should return a redirect
@@ -98,6 +100,9 @@ class TestDigitizedWorkAdmin(TestCase):
         assert fakerequest.session['collection-add-ids']
         # the key should have the ids of the three fixtures
         assert fakerequest.session['collection-add-ids'] == [1, 2, 3]
+        # the querystring should have been faithfully copied to session as well
+        print(fakerequest.session['collection-add-filters'])
+        assert fakerequest.session['collection-add-filters'] == fakerequest.GET
         redirect = digworkadmin.bulk_add_collection(fakerequest, queryset)
         # test against an empty queryset just in case
         DigitizedWork.objects.all().delete()

@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils.http import urlencode
 from django.utils.timezone import now
 import pytest
 
@@ -375,7 +376,12 @@ class TestAddToCollection(TestCase):
         session.save()
 
         # post to the add to collection url
-        self.client.post(bulk_add, {'collections': coll1.pk})
+        res = self.client.post(bulk_add, {'collections': coll1.pk})
+        # redirects to the admin archive change list by default without filters
+        # since none are set
+        assert res.status_code == 302
+        assert res.url == \
+            reverse('admin:archive_digitizedwork_changelist')
         # digitized works with pks 1,2 are added to the collection
         digworks = DigitizedWork.objects\
             .filter(collections__pk=coll1.pk).order_by('id')
@@ -394,12 +400,19 @@ class TestAddToCollection(TestCase):
         # - bulk add should actually add and not reset collections, i.e.
         # those individually added or added in a previous bulk add shouldn't
         # be erased from the collection's digitizedwork_set
-
         # only set pk 1 in the ids to add
         session['collection-add-ids'] = [digworks[0].pk]
+        # also check that filters are preserved
+        session['collection-add-filters'] = {'q': 1, 'foo': 'bar'}
         session.save()
+
         # bulk adding first pk but not the second
-        self.client.post(bulk_add, {'collections': coll1.pk})
+        res = self.client.post(bulk_add, {'collections': coll1.pk})
+        # redirect as expected and retain querystring
+        assert res.status_code == 302
+        assert res.url == '%s?%s' % \
+            (reverse('admin:archive_digitizedwork_changelist'),
+             urlencode(session['collection-add-filters'].items()))
         digworks2 = DigitizedWork.objects\
             .filter(collections__pk=coll1.pk).order_by('id')
         # this will fail if the bulk add removed the previously set two works
