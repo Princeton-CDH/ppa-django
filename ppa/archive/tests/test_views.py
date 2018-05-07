@@ -1,5 +1,6 @@
 import csv
 from io import StringIO
+import operator
 import re
 from time import sleep
 from unittest.mock import Mock, patch
@@ -11,6 +12,7 @@ from django.utils.http import urlencode
 from django.utils.timezone import now
 import pytest
 
+from ppa.archive.forms import SearchForm
 from ppa.archive.models import DigitizedWork, Collection
 from ppa.archive.solr import get_solr_connection
 from ppa.archive.views import DigitizedWorkCSV
@@ -178,9 +180,50 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url, {'query': '"incomplete phrase'})
         self.assertContains(response, 'Unable to parse search query')
 
+        # add a sort term - pub date
+        response = self.client.get(url, {'query': '', 'sort': 'pub_date_asc'})
+        # explicitly sort by pub_date manually
+        sorted_object_list = sorted(response.context['object_list'],
+                                    key=operator.itemgetter('pub_date'))
+        # the two context lists should match exactly
+        assert sorted_object_list == response.context['object_list']
+        # human readable value should be set in context using the value
+        # of SearchForm.SORT_CHOICES
+        assert response.context['sort'] == \
+            dict(SearchForm.SORT_CHOICES)['pub_date_asc']
+        # test sort date in reverse
+        response = self.client.get(url, {'query': '', 'sort': 'pub_date_desc'})
+        # explicitly sort by pub_date manually in descending order
+        sorted_object_list = sorted(response.context['object_list'],
+                                    key=operator.itemgetter('pub_date'),
+                                    reverse=True)
+        # the two context lists should match exactly
+        assert sorted_object_list == response.context['object_list']
+        # human readable value should be set in context using the value
+        # of SearchForm.SORT_CHOICES
+        assert response.context['sort'] == \
+            dict(SearchForm.SORT_CHOICES)['pub_date_desc']
+        # one last test using title
+        response = self.client.get(url, {'query': '', 'sort': 'title_asc'})
+        sorted_object_list = sorted(response.context['object_list'],
+                                    key=operator.itemgetter('title_exact'))
+        # the two context lists should match exactly
+        assert sorted_object_list == response.context['object_list']
+        # human readable value should be set in context using the value
+        # of SearchForm.SORT_CHOICES
+        assert response.context['sort'] == \
+            dict(SearchForm.SORT_CHOICES)['title_asc']
+
+        # - check that a query adds relevance as sort order toggle in form
+        response = self.client.get(url, {'query': 'foo', 'sort': 'title_asc'})
+        self.assertContains(response, dict(SearchForm.SORT_CHOICES)['relevance'])
+        # check that a query that does not have one a query does not have
+        # relevance as a sort order option
+        response = self.client.get(url, {'sort': 'title_asc'})
+        self.assertNotContains(response, dict(SearchForm.SORT_CHOICES)['relevance'])
+
         # collection search
         response = self.client.get(url, {'query': 'collections_exact:"Test Collection"'})
-        res = response.render()
         self.assertContains(response, '1 digitized work;')
         self.assertContains(response, wintry.source_id)
 
