@@ -27,13 +27,13 @@ class SearchForm(forms.Form):
     '''Simple search form for digitized works.'''
 
     SORT_CHOICES = [
-        ('relevance', 'relevance'),
-        ('pub_date_asc', 'chronology (earliest to latest)'),
-        ('pub_date_desc', 'chronology (latest to earliest)'),
-        ('title_asc', 'title (A to Z)'),
-        ('title_desc', 'title (Z to A)'),
-        ('author_asc', 'author (A to Z)'),
-        ('author_desc', 'author (Z to A)'),
+        ('relevance', 'Relevance'),
+        ('pub_date_asc', 'Year Newest-Oldest'),
+        ('pub_date_desc', 'Year Oldest-Newest'),
+        ('title_asc', 'Title A-Z'),
+        ('title_desc', 'Title Z-A'),
+        ('author_asc', 'Author A-Z'),
+        ('author_desc', 'Author Z-A'),
     ]
 
     def __init__(self, *args, **kwargs):

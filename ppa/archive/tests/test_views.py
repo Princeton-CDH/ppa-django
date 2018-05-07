@@ -122,8 +122,8 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url)
         assert response.status_code == 200
         self.assertContains(response, '%d digitized works' % len(digitized_works))
-        self.assertContains(response, 'results sorted by title')
-        assert response.context['sort'] == 'title'
+        self.assertContains(response, 'results sorted by Title A-Z')
+        assert response.context['sort'] == 'Title A-Z'
 
         for digwork in digitized_works:
             # basic metadata for each work
@@ -139,10 +139,10 @@ class TestArchiveViews(TestCase):
         # search term in title
         response = self.client.get(url, {'query': 'wintry'})
         # relevance sort for keyword search
-        assert response.context['sort'] == 'relevance'
+        assert response.context['sort'] == 'Relevance'
         wintry = self.wintry
         self.assertContains(response, '1 digitized work;')
-        self.assertContains(response, 'results sorted by relevance')
+        self.assertContains(response, 'results sorted by Relevance')
         self.assertContains(response, wintry.source_id)
 
         # match in page content but not in book metadata should pull back title

@@ -65,14 +65,14 @@ class DigitizedWorkListView(ListView):
             # to support exact phrase searches
             solr_q = 'text:(%s) OR {!join from=srcid to=id v=$join_query}' % query
             # sort by relevance, return score for display
-            self.sort = 'relevance'
+            self.sort = 'Relevance'
             solr_sort = 'score desc'
             fields = '*,score'
         else:
             # no search term - find everything
             solr_q = "*:*"
             # for now, use title for default sort
-            self.sort = 'title'
+            self.sort = 'Title A-Z'
             solr_sort = 'title_exact asc'
             fields = '*'
 
