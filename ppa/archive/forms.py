@@ -25,9 +25,31 @@ class FacetChoiceField(forms.MultipleChoiceField):
 
 class SearchForm(forms.Form):
     '''Simple search form for digitized works.'''
+
+    SORT_CHOICES = [
+        ('relevance', 'relevance'),
+        ('pub_date_asc', 'chronology (earliest to latest)'),
+        ('pub_date_desc', 'chronology (latest to earliest)'),
+        ('title_asc', 'title (A to Z)'),
+        ('title_desc', 'title (Z to A)'),
+        ('author_asc', 'author (A to Z)'),
+        ('author_desc', 'author (Z to A)'),
+    ]
+
+    def __init__(self, *args, **kwargs):
+        '''
+        Set choices dynamically based on form kwargs and presence of keywords.
+        '''
+        super(SearchForm, self).__init__(*args, **kwargs)
+        if 'query' not in args[0] or not args[0]['query']:
+            # if there aren't keywords to search for, this will remove
+            # relevance from the form choices
+            self.fields['sort'].choices = self.fields['sort'].choices[1:]
+
     query = forms.CharField(label='Search', required=False)
     collections = FacetChoiceField()
-
+    sort = forms.ChoiceField(widget=forms.RadioSelect, choices=SORT_CHOICES,
+        required=False)
     # fields to request a facet from solr
     facet_fields = ['collections_exact']
 

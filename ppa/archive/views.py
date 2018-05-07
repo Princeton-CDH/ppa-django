@@ -33,9 +33,10 @@ class DigitizedWorkListView(ListView):
 
     def get_queryset(self, **kwargs):
         self.form = SearchForm(self.request.GET)
-        query = join_q = collections = None
+        query = join_q = collections = sort = None
         if self.form.is_valid():
             query = self.form.cleaned_data.get("query", "")
+            sort = self.form.cleaned_data.get("sort", "")
             # NOTE: This allows us to get the name of collections for
             # collections_exact and set collections to a list of collection names
             collections = self.form.cleaned_data.get("collections", None)
@@ -74,6 +75,24 @@ class DigitizedWorkListView(ListView):
             self.sort = 'title'
             solr_sort = 'title_exact asc'
             fields = '*'
+
+        if sort:
+            # if the user has picked a sort option, override whatever default
+            # resulted. 'relevance' will not appear as a toggle option if a
+            # query has not already been made.
+            solr_mapping = {
+                'relevance': 'score desc',
+                'pub_date_asc': 'pub_date asc',
+                'pub_date_desc': 'pub_date desc',
+                'title_asc': 'title_exact asc',
+                'title_desc': 'title_exact desc',
+                'author_asc': 'author_exact asc',
+                'author_desc': 'author_exact desc',
+            }
+            template_mapping = dict(self.form.SORT_CHOICES)
+
+            self.sort = template_mapping[sort]
+            solr_sort = solr_mapping[sort]
 
         logger.debug("Solr search query: %s", solr_q)
 
