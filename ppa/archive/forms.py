@@ -41,7 +41,7 @@ class SearchForm(forms.Form):
         Set choices dynamically based on form kwargs and presence of keywords.
         '''
         super(SearchForm, self).__init__(*args, **kwargs)
-        if 'query' not in args[0] or not args[0]['query']:
+        if not args or 'query' not in args[0] or not args[0]['query']:
             # if there aren't keywords to search for, this will remove
             # relevance from the form choices
             self.fields['sort'].choices = self.fields['sort'].choices[1:]
