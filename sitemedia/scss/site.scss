@@ -1,0 +1,30 @@
+/* header */
+#header {
+    padding: 0;
+
+    .brand {
+        width: 100%;
+        display: flex;
+        position: absolute;
+        justify-content: center;
+
+    }
+    .menu .item {
+        z-index: 1;
+        text-transform: uppercase;
+    }
+}
+
+/* footer */
+#footer {
+    margin-bottom: 0;
+    
+    .placeholder {
+        background-color: grey;
+        width: 120px;
+        height: 80px;
+    }
+    .menu .item {
+        text-transform: uppercase;
+    }
+}

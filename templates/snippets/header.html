@@ -1,0 +1,17 @@
+<header class="ui basic inverted segment" id="header">
+    <nav class="ui inverted borderless menu">
+        <a class="item" href="#">History of the Archive</a>
+        <a class="item" href="#">What is Prosody</a>
+        <div class="brand">
+            <a class="item" href="/">PPA</a>
+        </div>
+        <div class="right menu">
+            <a class="item" href="{% url 'archive:list-collections'%}">About the Collections</a>
+            <a class="item">Editorial</a>
+            <a class="item" href="{% url 'archive:list' %}">
+                <i class="search icon"></i>
+                View the Archive
+            </a>
+        </div>
+    </nav>
+</header>
