@@ -8,6 +8,10 @@ env:
 cache:
   directories:
   - downloads
+before_install:
+- rvm install 2.0
+- gem install sass
+- npm install -g postcss-cli autoprefixer
 install:
 - pip install -r requirements.txt
 - pip install -r dev-requirements.txt
