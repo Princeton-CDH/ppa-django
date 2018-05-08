@@ -12,8 +12,8 @@ from django.utils.timezone import now
 import pytest
 
 from ppa.archive.models import DigitizedWork, Collection
-from ppa.archive.solr import get_solr_connection
-from ppa.archive.views import DigitizedWorkCSV
+from ppa.archive.solr import get_solr_connection, PagedSolrQuery
+from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView
 
 
 class TestArchiveViews(TestCase):
@@ -44,7 +44,6 @@ class TestArchiveViews(TestCase):
         # get a work and its detail page to test with
         # wintry = DigitizedWork.objects.get(source_id='chi.13880510')
         # url = reverse('archive:detail', kwargs={'source_id': wintry.source_id})
-
 
         # - check that the information we expect is displayed
         # TODO: Make these HTML when the page is styled
@@ -272,8 +271,8 @@ class TestCollectionListView(TestCase):
         self.assertTemplateUsed(response, 'archive/list_collections.html')
         # - detailed checks of template
         self.assertContains(
-        response, 'Random Grabbag',
-        msg_prefix='should list a collection called Random Grabbag'
+            response, 'Random Grabbag',
+            msg_prefix='should list a collection called Random Grabbag'
         )
         self.assertContains(
             response, 'Foo through Time',
@@ -333,7 +332,7 @@ class TestAddToCollection(TestCase):
         session.save()
         response = self.client.get(bulk_add)
         # check that the session var has been set to an empy list
-        session['collection-add-ids'] == []
+        assert session['collection-add-ids'] == []
         self.assertContains(
             response,
             'Please select digitized works from the admin interface.'
@@ -443,3 +442,56 @@ class TestAddToCollection(TestCase):
             '<p> Please select digitized works from the admin interface. </p>',
             html=True
         )
+
+
+class TestDigitizedWorkListView(TestCase):
+
+    def test_get_page_highlights(self):
+
+        digworkview = DigitizedWorkListView()
+
+        # no keyword or page groups, no highlights
+        assert digworkview.get_page_highlights({}) == {}
+
+        # search term but no page groups
+        digworkview.query = 'iambic'
+        assert digworkview.get_page_highlights({}) == {}
+
+        # mock PagedSolrQuery to inspect that query is generated properly
+        with patch('ppa.archive.views.PagedSolrQuery',
+                   spec=PagedSolrQuery) as mockpsq:
+            page_groups = {
+                'group1': {
+                    'docs': [
+                        {'id': 'p1a'},
+                        {'id': 'p1b'},
+                    ]},
+                'group2': {
+                    'docs': [
+                        {'id': 'p2a'},
+                        {'id': 'p2b'},
+                    ]},
+            }
+
+        # page_ids = [page['id'] for results in page_groups.values()
+                    # for page in results['docs']]
+
+            highlights = digworkview.get_page_highlights(page_groups)
+            # inspect the solr call; first arg is a dictionary, no kwargs
+            solr_args = mockpsq.call_args[0]
+            solr_opts = solr_args[0]
+            # highlighting turned on
+            assert solr_opts['hl']
+            assert solr_opts['hl.snippets'] == 3
+            assert solr_opts['hl.fl'] == 'content'
+            assert solr_opts['hl.method'] == 'unified'
+            # rows should match # of page ids
+            assert solr_opts['rows'] == 4
+            # query includes keyword search term
+            assert 'text:(%s) AND ' % digworkview.query in solr_opts['q']
+            # query also inlcudes page ids
+            assert ' AND id:("p1a" "p1b" "p2a" "p2b")' in solr_opts['q']
+
+            assert highlights == mockpsq.return_value.get_highlighting()
+
+
