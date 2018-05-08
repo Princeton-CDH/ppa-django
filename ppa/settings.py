@@ -29,6 +29,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'grappelli',
+    'compressor',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -72,6 +73,27 @@ AUTHENTICATION_BACKENDS = (
 )
 
 ROOT_URLCONF = 'ppa.urls'
+
+
+# Compressor
+# https://django-compressor.readthedocs.io/en/latest/
+
+COMPRESS_PRECOMPILERS = (
+    ('text/x-scss', 'sass --scss {infile} {outfile}'),
+)
+
+COMPRESS_CSS_FILTERS = (
+    'compressor.filters.css_default.CssAbsoluteFilter',
+    # NOTE: requires COMPRESS_ENABLED = True when DEBUG is True
+    'django_compressor_autoprefixer.AutoprefixerFilter',
+)
+
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    # other finders..
+    'compressor.finders.CompressorFinder',
+)
 
 
 TEMPLATES = [
@@ -194,7 +216,6 @@ SCRIPT_USERNAME = 'script'
 OPTIONAL_APPS = (
     "debug_toolbar",
     "django_extensions",
-    "compressor",
     PACKAGE_NAME_FILEBROWSER,
     PACKAGE_NAME_GRAPPELLI,
 )

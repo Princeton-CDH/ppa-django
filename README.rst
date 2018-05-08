@@ -71,6 +71,14 @@ Initial setup and installation:
 
     python manage.py hathi_import
 
+Frontend development setup:
+
+- django-compressor dependencies: install `sass <http://sass-lang.com/install>`_
+  for your operating system as appropriate. If you have Ruby gems installed,
+  `gem install sass`. Also install `Node.js <https://nodejs.org/en/>`_ and `npm`.
+  Globally install `postcss-cli` and `autoprefixer`, i.e.
+  `npm -g postcss-cli autoprefixer`. You may need `sudo` for these operations.
+
 
 Unit Tests
 ~~~~~~~~~~
