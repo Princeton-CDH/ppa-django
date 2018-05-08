@@ -332,7 +332,7 @@ class TestAddToCollection(TestCase):
         session.save()
         response = self.client.get(bulk_add)
         # check that the session var has been set to an empy list
-        assert session['collection-add-ids'] == []
+        assert self.client.session.get('collection-add-ids') == []
         self.assertContains(
             response,
             'Please select digitized works from the admin interface.'
