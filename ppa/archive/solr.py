@@ -30,7 +30,7 @@ class SolrSchema(object):
         {'name': 'title', 'type': 'text_en', 'required': False},
         {'name': 'enumcron', 'type': 'string', 'required': False},
         {'name': 'author', 'type': 'text_en', 'required': False},
-        {'name': 'pub_date', 'type': 'string', 'required': False},
+        {'name': 'pub_date', 'type': 'int', 'required': False},
         {'name': 'pub_place', 'type': 'text_en', 'required': False},
         {'name': 'publisher', 'type': 'text_en', 'required': False},
         {'name': 'src_url', 'type': 'string', 'required': False},
@@ -155,11 +155,18 @@ class PagedSolrQuery(object):
             self.get_results()
         return self._result.get_facets()
 
+    def get_facets_ranges(self):
+        '''Wrap SolrClient.SolrResponse.get_facets() to get query facets as a dict
+        of dicts.'''
+        if self._result is None:
+            self.get_results()
+        return self._result.get_facets_ranges()
+
     def get_results(self):
         '''
         Return results of the Solr query.
 
-        :returns: docs as a list of dictionaries. 
+        :returns: docs as a list of dictionaries.
         '''
         self._result = self.solr.query(self.solr_collection, self.query_opts)
         return self._result.docs

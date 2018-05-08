@@ -1,7 +1,12 @@
 from django import forms
+from django.core.cache import cache
+from django.core.validators import RegexValidator
+from django.db.models import Max, Min
 from django.utils.safestring import mark_safe
 
-from ppa.archive.models import Collection
+
+from ppa.archive.models import Collection, DigitizedWork
+
 
 class FacetChoiceField(forms.MultipleChoiceField):
     '''Add CheckboxSelectMultiple field with facets taken from solr query'''
@@ -23,13 +28,64 @@ class FacetChoiceField(forms.MultipleChoiceField):
         return True
 
 
+# RangeWidget and RangeField also borrowed from Derrida codebase
+
+class RangeWidget(forms.MultiWidget):
+    '''date range widget, for two numeric inputs'''
+    # widget separator
+    sep = '-'
+    def __init__(self, *args, **kwargs):
+        widgets = [
+            forms.NumberInput(),
+            forms.NumberInput()
+        ]
+        super(RangeWidget, self).__init__(widgets, *args, **kwargs)
+
+    def decompress(self, value):
+        if value:
+            return [int(val) for val in value.split(self.sep)]
+        return [None, None]
+
+
+class RangeField(forms.MultiValueField):
+    widget = RangeWidget
+
+    def __init__(self, *args, **kwargs):
+        fields = (
+            forms.IntegerField(
+                error_messages={'invalid': 'Enter a number'},
+                validators=[
+                    RegexValidator(r'^[0-9]*$', 'Enter a valid number.'),
+                ],
+                required=False
+            ),
+            forms.IntegerField(
+                error_messages={'invalid': 'Enter a number'},
+                validators=[
+                    RegexValidator(r'^[0-9]*$', 'Enter a valid number.'),
+                ],
+                required=False
+            ),
+        )
+        kwargs['fields'] = fields
+        super(RangeField, self).__init__(
+            require_all_fields=False, *args, **kwargs
+        )
+
+    def compress(self, data_list):
+        return self.widget.sep.join(['%d' % val if val else '' for val in data_list])
+
+
 class SearchForm(forms.Form):
     '''Simple search form for digitized works.'''
     query = forms.CharField(label='Search', required=False)
     collections = FacetChoiceField()
 
+    pub_date = RangeField(label='Publication Year', required=False)
+
     # fields to request a facet from solr
     facet_fields = ['collections_exact']
+    range_facets = ['pub_date']
 
     # mapping of solr fields to form input
     solr_facet_fields = {
@@ -52,6 +108,40 @@ class SearchForm(forms.Form):
                 self.fields[formfield].choices = [
                     (val, mark_safe('%s <span>%d</span>' % (val, count)))
                     for val, count in facet_dict.items()]
+
+    def __init__(self, *args, **kwargs):
+        super(SearchForm, self).__init__(*args, **kwargs)
+
+        pubdate_range = self.pub_date_minmax()
+        pubdate_widgets = self.fields['pub_date'].widget.widgets
+        for idx, val in enumerate(pubdate_range):
+            # don't set None as placeholder (only possible if db is empty)
+            if val:
+                pubdate_widgets[idx].attrs.update({'placeholder': val})
+
+    PUBDATE_CACHE_KEY = 'digitizedwork_pubdate_maxmin'
+
+    def pub_date_minmax(self):
+        '''Get minimum and maximum values for
+        :class:`~ppa.archive.models.DigitizedWork` publication dates
+        in the database.  Used to set placeholder values for the form
+        input and to generate the Solr facet range query.
+        Value is cached to avoid repeatedly calculating it.
+
+        :returns: tuple of min, max
+        '''
+        # maxmin = cache.get(self.PUBDATE_CACHE_KEY)
+        maxmin = None
+        if not maxmin:
+            maxmin = DigitizedWork.objects \
+                .aggregate(Max('pub_date'), Min('pub_date'))
+
+            # cache as returned from django; looks like this:
+            # {'pub_date__max': 1922, 'pub_date__min': 1559}
+            cache.set(self.PUBDATE_CACHE_KEY, maxmin)
+
+        # return just the min and max values
+        return maxmin['pub_date__min'], maxmin['pub_date__max']
 
 
 class AddToCollectionForm(forms.Form):
