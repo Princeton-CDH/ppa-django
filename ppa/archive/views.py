@@ -34,6 +34,11 @@ class DigitizedWorkListView(ListView):
     def get_queryset(self, **kwargs):
         self.form = SearchForm(self.request.GET)
         query = join_q = collections = None
+        # if the form is not valid, return an empty queryset and bail out
+        # (queryset needed for django paginator)
+        if not self.form.is_valid():
+            return DigitizedWork.objects.none()
+
         if self.form.is_valid():
             search_opts = self.form.cleaned_data
             query = search_opts.get("query", "")
@@ -146,6 +151,12 @@ class DigitizedWorkListView(ListView):
         return self.solrq
 
     def get_context_data(self, **kwargs):
+        # if the form is not valid, bail out
+        if not self.form.is_valid():
+            context = super(DigitizedWorkListView, self).get_context_data(**kwargs)
+            context['search_form'] = self.form
+            return context
+
         page_groups = facet_ranges = None
         try:
             # catch an error querying solr when the search terms cannot be parsed

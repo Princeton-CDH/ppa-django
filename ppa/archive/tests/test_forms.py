@@ -1,8 +1,10 @@
 from django import forms
+from django.core.cache import cache
 from django.test import TestCase
 
 from ppa.archive.forms import FacetChoiceField, SearchForm, RangeWidget, \
     RangeField
+from ppa.archive.models import DigitizedWork
 
 
 class TestFacetChoiceField(TestCase):
@@ -42,6 +44,21 @@ class TestSearchForm(TestCase):
             ('foo', 'foo <span>1</span>')
         assert searchform.fields['collections'].choices[1] == \
             ('bar', 'bar <span>2</span>')
+
+    def test_pub_date_minmax(self):
+        searchform = SearchForm()
+        # no values when no data in the db
+        assert searchform.pub_date_minmax() == (None, None)
+
+        oldest = DigitizedWork.objects.create(title='Old Dictionary',
+            source_id='testppa1', pub_date=1529)
+        newest = DigitizedWork.objects.create(title='New Prosody',
+            source_id='testppa2', pub_date=1922)
+
+        expected = (oldest.pub_date, newest.pub_date)
+        assert searchform.pub_date_minmax() == expected
+        # cache value should be populated
+        assert cache.get(searchform.PUBDATE_CACHE_KEY)
 
 
 # range widget and field tests copied from derrida, like the objects tested

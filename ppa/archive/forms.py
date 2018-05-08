@@ -1,5 +1,6 @@
 from django import forms
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db.models import Max, Min
 from django.utils.safestring import mark_safe
@@ -73,6 +74,10 @@ class RangeField(forms.MultiValueField):
         )
 
     def compress(self, data_list):
+        # if both values are set and the first is greater than the second,
+        # raise a validation error
+        if all(data_list) and len(data_list) == 2 and data_list[0] > data_list[1]:
+            raise ValidationError('Invalid range (%s - %s)' % (data_list[0], data_list[1]))
         return self.widget.sep.join(['%d' % val if val else '' for val in data_list])
 
 
@@ -113,12 +118,16 @@ class SearchForm(forms.Form):
         super(SearchForm, self).__init__(*args, **kwargs)
 
         pubdate_range = self.pub_date_minmax()
+        # because pubdate is a multifield/multiwidget, access the widgets
+        # under the multiwidgets
         pubdate_widgets = self.fields['pub_date'].widget.widgets
         for idx, val in enumerate(pubdate_range):
             # don't set None as placeholder (only possible if db is empty)
             if val:
-                pubdate_widgets[idx].attrs.update({'placeholder': val})
-            # TODO: add validation! max > min, vice versa, inside range
+                # set placeholder and max/min values
+                pubdate_widgets[idx].attrs.update({'placeholder': val,
+                    'min': pubdate_range[0], 'max': pubdate_range[1]})
+            # TODO: add validation! max >= min
 
     PUBDATE_CACHE_KEY = 'digitizedwork_pubdate_maxmin'
 
