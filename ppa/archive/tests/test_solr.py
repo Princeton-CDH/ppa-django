@@ -1,3 +1,4 @@
+import json
 from unittest.mock import patch, Mock
 
 from django.conf import settings
@@ -93,11 +94,11 @@ class TestSolrSchema(TestCase):
         # remove outdated fields
         mocksolr.schema.get_schema_fields.return_value = {'fields':
             schema.fields + [
-            {'name': '_root_'},
-            {'name': '_text_'},
-            {'name': '_version_'},
-            {'name': 'id'},
-            {'name': 'oldfield'},
+                {'name': '_root_'},
+                {'name': '_text_'},
+                {'name': '_version_'},
+                {'name': 'id'},
+                {'name': 'oldfield'},
         ]}
         mocksolr.schema.create_field.reset_mock()
         mocksolr.schema.replace_field.reset_mock()
@@ -137,6 +138,7 @@ class TestCoreAdmin(TestCase):
         # failure
         mockrequests.get.return_value.status_code = requests.codes.not_found
         assert not core_adm.reload('othercore')
+
 
 @patch('ppa.archive.solr.get_solr_connection')
 class TestPagedSolrQuery(TestCase):
@@ -192,6 +194,51 @@ class TestPagedSolrQuery(TestCase):
         mocksolr.query.return_value.get_num_found.return_value = 42
         psq = PagedSolrQuery()
         assert psq.get_json() == mocksolr.query.return_value.get_json.return_value
+
+    def test_raw_response(self, mock_get_solr_connection):
+        mocksolr = Mock()
+        coll = 'testcoll'
+        mock_get_solr_connection.return_value = (mocksolr, coll)
+        mockresult = {
+            'response': {
+                'numFound': 13,
+                'docs': [],
+            }
+        }
+        mocksolr.query.return_value.get_json.return_value = json.dumps(mockresult)
+        psq = PagedSolrQuery()
+        assert psq.raw_response == mockresult
+        mocksolr.query.assert_any_call(coll, {})
+        # should be cached after the first one and not query again
+        mocksolr.reset_mock()
+        assert psq.raw_response
+        mocksolr.query.assert_not_called()
+
+    def test_get_expanded(self, mock_get_solr_connection):
+        mock_get_solr_connection.return_value = (Mock(), 'testcoll')
+        psq = PagedSolrQuery()
+        # no expanded results, no error
+        with patch.object(PagedSolrQuery, 'raw_response', new={}):
+            assert psq.get_expanded() == {}
+
+        # return expanded results as is when present
+        exp = {'groupid': {'numFound': 1, 'start': 0, 'docs': [
+            {'id': 'foo', 'content': 'something something iambic pentameter'}
+        ]}}
+        with patch.object(PagedSolrQuery, 'raw_response', new={'expanded': exp}):
+            assert psq.get_expanded() == exp
+
+    def test_get_highlighting(self, mock_get_solr_connection):
+        mock_get_solr_connection.return_value = (Mock(), 'testcoll')
+        psq = PagedSolrQuery()
+        # no highlighting, no error
+        with patch.object(PagedSolrQuery, 'raw_response', new={}):
+            assert psq.get_highlighting() == {}
+
+        # return expanded results as is when present
+        highlights = {'id': {'content': ['snippet content']}}
+        with patch.object(PagedSolrQuery, 'raw_response', new={'highlighting': highlights}):
+            assert psq.get_highlighting() == highlights
 
     def test_set_limits(self, mock_get_solr_connection):
         mock_get_solr_connection.return_value = (Mock(), 'coll')
