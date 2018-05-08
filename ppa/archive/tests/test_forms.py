@@ -1,7 +1,8 @@
 from django import forms
 from django.test import TestCase
 
-from ppa.archive.forms import FacetChoiceField, SearchForm
+from ppa.archive.forms import FacetChoiceField, SearchForm, RangeWidget, \
+    RangeField
 
 
 class TestFacetChoiceField(TestCase):
@@ -41,3 +42,22 @@ class TestSearchForm(TestCase):
             ('foo', 'foo <span>1</span>')
         assert searchform.fields['collections'].choices[1] == \
             ('bar', 'bar <span>2</span>')
+
+
+# range widget and field tests copied from derrida, like the objects tested
+
+def test_range_widget():
+    # range widget decompress logic
+    assert RangeWidget().decompress('') == [None, None]
+    # not sure how it actually handles missing inputs...
+    # assert RangeWidget().decompress('100-') == [100, None]
+    # assert RangeWidget().decompress('-250') == [None, 250]
+    assert RangeWidget().decompress('100-250') == [100, 250]
+
+
+def test_range_field():
+    # range widget decompress logic
+    assert RangeField().compress([]) == ''
+    assert RangeField().compress([100, None]) == '100-'
+    assert RangeField().compress([None, 250]) == '-250'
+    assert RangeField().compress([100, 250]) == '100-250'

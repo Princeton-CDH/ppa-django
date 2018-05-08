@@ -118,6 +118,7 @@ class SearchForm(forms.Form):
             # don't set None as placeholder (only possible if db is empty)
             if val:
                 pubdate_widgets[idx].attrs.update({'placeholder': val})
+            # TODO: add validation! max > min, vice versa, inside range
 
     PUBDATE_CACHE_KEY = 'digitizedwork_pubdate_maxmin'
 
