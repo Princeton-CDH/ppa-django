@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load humanize %}
+{% load humanize ppa_tags %}
 {% block page-subtitle %}Archive | {% endblock %}
 
 {% block content %}
@@ -23,21 +23,29 @@
     <li>
         <h3><a href="{% url 'archive:detail' item.srcid %}">{{ item.title }}</a></h3>
         <p>sort title: {{ item.title_exact }}</p>
-        <p>{{ item.author }}</p>
+        <p>author: {{ item.author }}</p>
         {% if item.enumcron %}<p>{{ item.enumcron }}</p> {% endif %}
         <p>{{ item.publisher }} {{ item.pub_place }} {{ item.pub_date }}</p>
         <p><small><a href="{{ item.src_url }}">{{ item.srcid }}</a></small></p>
-        {% for id, results in page_groups.items %}
-            {% if id == item.id %}
+        {% with results=page_groups|dict_item:item.id %}
                 <p>{{ results.numFound|intcomma }} page{{ results.numFound|pluralize }};
-                {# {{ results }} #}
                 pages
                 {% for page in results.docs %}
                     {{ page.order }} {% if sort == 'relevance' %}<small> relevance: {{ page.score }}</small>{% endif %};
+                    {# coerce order to integer then format as number to drop leading zeroes #}
+                    {% if page_highlights %}
+                    <img src="https://babel.hathitrust.org/cgi/imgsrv/image?id={{ item.id }};seq={{ page.order|add:0|stringformat:'d' }};width=180"/>
+
+                    {% with page_highlights=page_highlights|dict_item:page.id %}
+                        {% for snippet in page_highlights.content %}
+                        <p style="white-space: pre-wrap">{{ snippet|safe }}</p>
+                        <hr/>
+                        {% endfor %}
+                    {% endwith %}
+                    {% endif %}
                 {% endfor %}
                 </p>
-            {% endif %}
-        {% endfor %}
+        {% endwith %}
         {% if item.collections %}
         <p><b>collections:</b> {{ item.collections|join:", " }}</p>
         {% endif %}
