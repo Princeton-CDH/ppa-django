@@ -114,11 +114,8 @@ class DigitizedWorkListView(ListView):
             'expand.rows': 2,   # number of items in the collapsed group, i.e pages to display
             'join_query': join_q,
             'coll_query': coll_query,
-            # enable highlighting
-            'hl': True,
-            'hl.fl': 'content',
             # override solr default of 10 results; display 50 at a time for now
-            # 'rows': 50
+            'rows': 50
         })
 
         return self.solrq
