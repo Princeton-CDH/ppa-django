@@ -63,7 +63,7 @@ by default; use page_rdf_type to override with a webpage subclass.
       crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.3.1/dist/semantic.js"></script>
     {% compress js %}
-    <script src="{% static 'js/local.js' %}"></script>
+    <script src="{% static 'js/site.js' %}"></script>
     {% block js %}{% endblock %} {# add any additional javascript here #}
     {% endcompress %}
 
@@ -72,15 +72,20 @@ by default; use page_rdf_type to override with a webpage subclass.
   </head>
   <body>
 		{% include 'snippets/test_banner.html' %}
-		{% block page_header %}
-				{% page_menu 'snippets/header.html' %}
-		{% endblock %}
-    <main id="{% block page-context-id %}{% endblock %}">
-      {% block content %}{% endblock %}
-    </main>
-    {% block page_footer %}
-        {% page_menu 'snippets/footer.html' %}
+		{% block page_nav %}
+				{% page_menu 'snippets/nav.html' %}
     {% endblock %}
+    <div class="pusher"> {# moves page content when mobile menu is clicked #}
+      {% block page_header %}
+          {% page_menu 'snippets/header.html' %}
+      {% endblock %}
+      <main id="{% block page-context-id %}{% endblock %}">
+        {% block content %}{% endblock %}
+      </main>
+      {% block page_footer %}
+          {% page_menu 'snippets/footer.html' %}
+      {% endblock %}
+    </div>
     {% block page-js %}{% endblock %}
   </body>
 </html>
