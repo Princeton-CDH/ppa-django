@@ -63,9 +63,7 @@ class SearchForm(forms.Form):
         Set choices dynamically based on form kwargs and presence of keywords.
         '''
         super().__init__(*args, **kwargs)
-        if not args or 'query' not in args[0] or not args[0]['query']:
-            # if there aren't keywords to search for, this will remove
-            # relevance from the form choices
+        if args and not args[0].get('query', None):
             self.fields['sort'].widget.choices[0] = \
                 ('relevance', {'label': 'Relevance', 'disabled': True})
 
@@ -80,6 +78,32 @@ class SearchForm(forms.Form):
     solr_facet_fields = {
         'collections_exact': 'collections'
     }
+
+    def get_solr_sort_field(self, query, sort):
+        '''
+        Set solr sort fields for the query based on sort and query strings.
+        '''
+        solr_mapping = {
+            'relevance': 'score desc',
+            'pub_date_asc': 'pub_date asc',
+            'pub_date_desc': 'pub_date desc',
+            'title_asc': 'title_exact asc',
+            'title_desc': 'title_exact desc',
+            'author_asc': 'author_exact asc',
+            'author_desc': 'author_exact desc',
+        }
+        template_mapping = dict(self.SORT_CHOICES)
+        fields = '*'
+
+        if sort == 'relevance':
+            # relevance requires we include score field
+            fields = '*,score'
+
+        # return the mappings for sort and solr_sort fields
+        solr_sort = solr_mapping[sort]
+        sort = template_mapping[sort]
+
+        return sort, solr_sort, fields
 
     def set_choices_from_facets(self, facets):
         '''Set choices on field from a dictionary of facets'''
@@ -97,6 +121,7 @@ class SearchForm(forms.Form):
                 self.fields[formfield].choices = [
                     (val, mark_safe('%s <span>%d</span>' % (val, count)))
                     for val, count in facet_dict.items()]
+
 
 
 class AddToCollectionForm(forms.Form):

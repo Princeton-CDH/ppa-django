@@ -32,15 +32,26 @@ class DigitizedWorkListView(ListView):
     paginate_by = 50
 
     def get_queryset(self, **kwargs):
-        self.form = SearchForm(self.request.GET)
-        query = join_q = collections = sort = None
+        # Check for a nonsensical search with 'relevance' and no query string
+        # and amend GET dictionary, first removing any blank query strings
+        # so we can just ask if the key exists
+        # testing for empty string specifically to avoid removing integers
+        # for any future query strings
+        GET = {k: v for k, v in self.request.GET.dict().items() if v != ''}
+        if not 'query' in GET and 'sort' in GET:
+            if GET['sort'] == 'relevance':
+                GET['sort'] = 'title_asc'
+        # also force default to 'title_asc'   
+        if not 'sort' in GET:
+            GET['sort'] = 'title_asc'
+        self.form = SearchForm(GET)
+        query = solr_q = join_q = collections = sort = None
         if self.form.is_valid():
             query = self.form.cleaned_data.get("query", "")
             sort = self.form.cleaned_data.get("sort", "")
             # NOTE: This allows us to get the name of collections for
             # collections_exact and set collections to a list of collection names
             collections = self.form.cleaned_data.get("collections", None)
-
         # solr supports multiple filter queries, and documents must
         # match all of them; collect them as a list to allow multiple
         filter_q = []
@@ -65,34 +76,10 @@ class DigitizedWorkListView(ListView):
             # to support exact phrase searches
             solr_q = 'text:(%s) OR {!join from=srcid to=id v=$join_query}' % query
             # sort by relevance, return score for display
-            self.sort = 'Relevance'
-            solr_sort = 'score desc'
-            fields = '*,score'
         else:
-            # no search term - find everything
-            solr_q = "*:*"
-            # for now, use title for default sort
-            self.sort = 'Title A-Z'
-            solr_sort = 'title_exact asc'
-            fields = '*'
+            solr_q = '*:*'
 
-        if sort:
-            # if the user has picked a sort option, override whatever default
-            # resulted. 'relevance' will not appear as a toggle option if a
-            # query has not already been made.
-            solr_mapping = {
-                'relevance': 'score desc',
-                'pub_date_asc': 'pub_date asc',
-                'pub_date_desc': 'pub_date desc',
-                'title_asc': 'title_exact asc',
-                'title_desc': 'title_exact desc',
-                'author_asc': 'author_exact asc',
-                'author_desc': 'author_exact desc',
-            }
-            template_mapping = dict(self.form.SORT_CHOICES)
-
-            self.sort = template_mapping[sort]
-            solr_sort = solr_mapping[sort]
+        self.sort, solr_sort, fields = self.form.get_solr_sort_field(query, sort)
 
         logger.debug("Solr search query: %s", solr_q)
 
