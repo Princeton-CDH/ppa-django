@@ -162,9 +162,7 @@ class DigitizedWorkListView(ListView):
             # catch an error querying solr when the search terms cannot be parsed
             # (e.g., incomplete exact phrase)
             context = super(DigitizedWorkListView, self).get_context_data(**kwargs)
-            print('solrq = %s' % self.solrq)
             page_groups = json.loads(self.solrq.get_json()).get('expanded', {})
-            print('got json')
             facet_dict = self.solrq.get_facets()
             self.form.set_choices_from_facets(facet_dict)
             # needs to be inside try/catch or it will re-trigger any error
