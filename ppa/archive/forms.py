@@ -82,6 +82,9 @@ class SearchForm(forms.Form):
     def get_solr_sort_field(self, sort):
         '''
         Set solr sort fields for the query based on sort and query strings.
+
+        :return: tuple of strings following the format (template string,
+            solr sort string, solr fields string)
         '''
         solr_mapping = {
             'relevance': 'score desc',
