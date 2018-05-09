@@ -133,6 +133,10 @@ class TestArchiveViews(TestCase):
             # link to detail page
             self.assertContains(response, digwork.get_absolute_url())
 
+        # no page images or highlights displayed without search term
+        self.assertNotContains(response, 'babel.hathitrust.org/cgi/imgsrv/image',
+            msg_prefix='no page images displayed without keyword search')
+
         # search term in title
         response = self.client.get(url, {'query': 'wintry'})
         # relevance sort for keyword search
@@ -141,6 +145,15 @@ class TestArchiveViews(TestCase):
         self.assertContains(response, '1 digitized work;')
         self.assertContains(response, 'results sorted by relevance')
         self.assertContains(response, wintry.source_id)
+
+        # page image & text highlight displayed for matching page
+        self.assertNotContains(
+            response,
+            'babel.hathitrust.org/cgi/imgsrv/image?id=%s;seq=%s.0' % (htid, htid),
+            msg_prefix='page image displayed for matching pages on keyword search')
+        self.assertContains(
+            response, 'winter and <em>wintry</em> and',
+            msg_prefix='highlight snippet from page content displayed')
 
         # match in page content but not in book metadata should pull back title
         response = self.client.get(url, {'query': 'blood'})
@@ -179,7 +192,6 @@ class TestArchiveViews(TestCase):
 
         # collection search
         response = self.client.get(url, {'query': 'collections_exact:"Test Collection"'})
-        res = response.render()
         self.assertContains(response, '1 digitized work;')
         self.assertContains(response, wintry.source_id)
 
