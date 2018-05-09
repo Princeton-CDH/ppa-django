@@ -146,7 +146,11 @@ class SearchForm(forms.Form):
 
             # cache as returned from django; looks like this:
             # {'pub_date__max': 1922, 'pub_date__min': 1559}
-            cache.set(self.PUBDATE_CACHE_KEY, maxmin)
+
+            # don't cache if values are None
+            # should only happen if no data is in the db
+            if all(maxmin.values()):
+                cache.set(self.PUBDATE_CACHE_KEY, maxmin)
 
         # return just the min and max values
         return maxmin['pub_date__min'], maxmin['pub_date__max']

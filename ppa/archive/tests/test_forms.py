@@ -51,16 +51,24 @@ class TestSearchForm(TestCase):
         searchform = SearchForm()
         # no values when no data in the db
         assert searchform.pub_date_minmax() == (None, None)
+        # no value should not be cached
+        assert not cache.get(searchform.PUBDATE_CACHE_KEY)
 
-        oldest = DigitizedWork.objects.create(title='Old Dictionary',
-            source_id='testppa1', pub_date=1529)
-        newest = DigitizedWork.objects.create(title='New Prosody',
-            source_id='testppa2', pub_date=1922)
+        oldest = DigitizedWork.objects.create(
+            title='Old Dictionary', source_id='testppa1', pub_date=1529)
+        newest = DigitizedWork.objects.create(
+            title='New Prosody', source_id='testppa2', pub_date=1922)
 
+        # clear the cache
         expected = (oldest.pub_date, newest.pub_date)
         assert searchform.pub_date_minmax() == expected
         # cache value should be populated
         assert cache.get(searchform.PUBDATE_CACHE_KEY)
+
+        # cache value should be used even if db changes
+        DigitizedWork.objects.create(
+            title='OldProsody', source_id='testppa3', pub_date=1523)
+        assert searchform.pub_date_minmax() == expected
 
 
 # range widget and field tests copied from derrida, like the objects tested
