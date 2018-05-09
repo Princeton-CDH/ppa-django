@@ -42,6 +42,21 @@ class TestSearchForm(TestCase):
         assert searchform.fields['collections'].choices[1] == \
             ('bar', 'bar <span>2</span>')
 
+    def test_get_solr_fields(self):
+        searchform = SearchForm()
+
+        # try relevance, should return values from dictionaries to set
+        # solr sort field and form/template field
+        sort, solr_sort, fields = searchform.get_solr_sort_field('relevance')
+        assert sort == dict(searchform.SORT_CHOICES)['relevance']
+        assert solr_sort == 'score desc'
+        assert fields == '*,score'
+        # try pub_date_asc, should return fields w/o score and set
+        # form template field correctly
+        sort, solr_sort, fields = searchform.get_solr_sort_field('pub_date_asc')
+        assert sort == dict(searchform.SORT_CHOICES)['pub_date_asc']
+        assert solr_sort == 'pub_date asc'
+        assert fields == '*'
 
 class TestRadioWithDisabled(TestCase):
 

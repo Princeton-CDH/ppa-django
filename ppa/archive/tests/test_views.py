@@ -122,7 +122,6 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url)
         assert response.status_code == 200
         self.assertContains(response, '%d digitized works' % len(digitized_works))
-        self.assertContains(response, 'results sorted by Title A-Z')
         assert response.context['sort'] == 'Title A-Z'
 
         for digwork in digitized_works:
@@ -142,7 +141,6 @@ class TestArchiveViews(TestCase):
         assert response.context['sort'] == 'Relevance'
         wintry = self.wintry
         self.assertContains(response, '1 digitized work;')
-        self.assertContains(response, 'results sorted by Relevance')
         self.assertContains(response, wintry.source_id)
 
         # match in page content but not in book metadata should pull back title
@@ -214,14 +212,21 @@ class TestArchiveViews(TestCase):
         assert response.context['sort'] == \
             dict(SearchForm.SORT_CHOICES)['title_asc']
 
-        # - check that a query adds relevance as sort order toggle in form
+        # - check that a query allows relevance as sort order toggle in form
         response = self.client.get(url, {'query': 'foo', 'sort': 'title_asc'})
-        self.assertContains(response, dict(SearchForm.SORT_CHOICES)['relevance'])
-        # check that a query that does not have one a query does not have
+        self.assertContains(
+            response,
+            '<input type="radio" name="sort" value="relevance" id="id_sort_0" />',
+            html=True
+        )
+        # check that a query that does not have a query disables
         # relevance as a sort order option
         response = self.client.get(url, {'sort': 'title_asc'})
-        self.assertNotContains(response, dict(SearchForm.SORT_CHOICES)['relevance'])
-
+        self.assertContains(
+            response,
+            '<input type="radio" name="sort" value="relevance" id="id_sort_0" disabled="disabled" />',
+            html=True
+        )
         # collection search
         response = self.client.get(url, {'query': 'collections_exact:"Test Collection"'})
         self.assertContains(response, '1 digitized work;')

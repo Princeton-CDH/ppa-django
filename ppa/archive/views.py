@@ -41,9 +41,13 @@ class DigitizedWorkListView(ListView):
         if not 'query' in GET and 'sort' in GET:
             if GET['sort'] == 'relevance':
                 GET['sort'] = 'title_asc'
-        # also force default to 'title_asc'   
+        # also force default to 'title_asc'
         if not 'sort' in GET:
-            GET['sort'] = 'title_asc'
+            if 'query' in GET:
+                GET['sort'] = 'relevance'
+            else:
+                GET['sort'] = 'title_asc'
+
         self.form = SearchForm(GET)
         query = solr_q = join_q = collections = sort = None
         if self.form.is_valid():
@@ -79,7 +83,7 @@ class DigitizedWorkListView(ListView):
         else:
             solr_q = '*:*'
 
-        self.sort, solr_sort, fields = self.form.get_solr_sort_field(query, sort)
+        self.sort, solr_sort, fields = self.form.get_solr_sort_field(sort)
 
         logger.debug("Solr search query: %s", solr_q)
 

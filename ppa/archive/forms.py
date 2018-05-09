@@ -50,8 +50,8 @@ class SearchForm(forms.Form):
 
     SORT_CHOICES = [
         ('relevance', 'Relevance'),
-        ('pub_date_asc', 'Year Newest-Oldest'),
-        ('pub_date_desc', 'Year Oldest-Newest'),
+        ('pub_date_asc', 'Year Oldest-Newest'),
+        ('pub_date_desc', 'Year Newest-Oldest'),
         ('title_asc', 'Title A-Z'),
         ('title_desc', 'Title Z-A'),
         ('author_asc', 'Author A-Z'),
@@ -79,7 +79,7 @@ class SearchForm(forms.Form):
         'collections_exact': 'collections'
     }
 
-    def get_solr_sort_field(self, query, sort):
+    def get_solr_sort_field(self, sort):
         '''
         Set solr sort fields for the query based on sort and query strings.
         '''
