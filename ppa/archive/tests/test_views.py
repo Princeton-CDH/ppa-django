@@ -138,7 +138,7 @@ class TestArchiveViews(TestCase):
         # search term in title
         response = self.client.get(url, {'query': 'wintry'})
         # relevance sort for keyword search
-        assert response.context['sort'] == 'Relevance'
+        assert response.context['sort'] == 'Title A-Z'
         wintry = self.wintry
         self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)

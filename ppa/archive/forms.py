@@ -58,6 +58,10 @@ class SearchForm(forms.Form):
         ('author_desc', 'Author Z-A'),
     ]
 
+    defaults = {
+        'sort': 'title_asc',
+    }
+
     def __init__(self, *args, **kwargs):
         '''
         Set choices dynamically based on form kwargs and presence of keywords.
@@ -96,17 +100,11 @@ class SearchForm(forms.Form):
             'author_desc': 'author_exact desc',
         }
         template_mapping = dict(self.SORT_CHOICES)
-        fields = '*'
-
-        if sort == 'relevance':
-            # relevance requires we include score field
-            fields = '*,score'
-
         # return the mappings for sort and solr_sort fields
         solr_sort = solr_mapping[sort]
         sort = template_mapping[sort]
 
-        return sort, solr_sort, fields
+        return sort, solr_sort
 
     def set_choices_from_facets(self, facets):
         '''Set choices on field from a dictionary of facets'''

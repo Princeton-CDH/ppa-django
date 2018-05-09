@@ -26,29 +26,32 @@ class DigitizedWorkListView(ListView):
     of works and pages.'''
 
     template_name = 'archive/list_digitizedworks.html'
+    form_class = SearchForm
     # NOTE: listview would be nice, but would have to figure out how to
     # make solrclient compatible with django pagination
 
     paginate_by = 50
 
     def get_queryset(self, **kwargs):
-        # Check for a nonsensical search with 'relevance' and no query string
-        # and amend GET dictionary, first removing any blank query strings
-        # so we can just ask if the key exists
-        # testing for empty string specifically to avoid removing integers
-        # for any future query strings
-        GET = {k: v for k, v in self.request.GET.dict().items() if v != ''}
-        if not 'query' in GET and 'sort' in GET:
-            if GET['sort'] == 'relevance':
-                GET['sort'] = 'title_asc'
-        # also force default to 'title_asc'
-        if not 'sort' in GET:
-            if 'query' in GET:
-                GET['sort'] = 'relevance'
-            else:
-                GET['sort'] = 'title_asc'
 
-        self.form = SearchForm(GET)
+        form_opts = self.request.GET.copy()
+        # Check for a nonsensical search with 'relevance' and no query string
+        if 'query' not in form_opts or not form_opts['query']:
+            if 'sort' in form_opts and form_opts['sort'] == 'relevance':
+                del form_opts['sort']
+
+        for key, val in self.form_class.defaults.items():
+            # set as list to avoid nested lists
+            # follows solution using in derrida-django for InstanceListView
+            if isinstance(val, list):
+                form_opts.setlistdefault(key, val)
+            else:
+                form_opts.setdefault(key, val)
+
+        # NOTE: Default sort for keyword search should be relevance but
+        # currently no way to distinguish default sort from user selected
+        self.form = self.form_class(form_opts)
+
         query = solr_q = join_q = collections = sort = None
         if self.form.is_valid():
             query = self.form.cleaned_data.get("query", "")
@@ -56,6 +59,7 @@ class DigitizedWorkListView(ListView):
             # NOTE: This allows us to get the name of collections for
             # collections_exact and set collections to a list of collection names
             collections = self.form.cleaned_data.get("collections", None)
+
         # solr supports multiple filter queries, and documents must
         # match all of them; collect them as a list to allow multiple
         filter_q = []
@@ -83,7 +87,10 @@ class DigitizedWorkListView(ListView):
         else:
             solr_q = '*:*'
 
-        self.sort, solr_sort, fields = self.form.get_solr_sort_field(sort)
+        self.sort, solr_sort = self.form.get_solr_sort_field(sort)
+
+        fields = '*,score'
+        # NOTE: For now, defaulting to always including score in fields
 
         logger.debug("Solr search query: %s", solr_q)
 
