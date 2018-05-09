@@ -10,7 +10,9 @@ from django.urls import reverse
 from django.utils.http import urlencode
 from django.utils.timezone import now
 import pytest
+from SolrClient.exceptions import SolrError
 
+from ppa.archive.forms import SearchForm
 from ppa.archive.models import DigitizedWork, Collection
 from ppa.archive.solr import get_solr_connection
 from ppa.archive.views import DigitizedWorkCSV
@@ -121,7 +123,15 @@ class TestArchiveViews(TestCase):
         assert response.status_code == 200
         self.assertContains(response, '%d digitized works' % len(digitized_works))
         self.assertContains(response, 'results sorted by title')
+
         assert response.context['sort'] == 'title'
+
+        # search form should be set in context for display
+        assert isinstance(response.context['search_form'], SearchForm)
+        # page group details from expanded part of collapsed query
+        assert 'page_groups' in response.context
+        # facet range information from publication date range facet
+        assert 'facet_ranges' in response.context
 
         for digwork in digitized_works:
             # basic metadata for each work
@@ -131,6 +141,7 @@ class TestArchiveViews(TestCase):
             self.assertContains(response, digwork.enumcron)
             self.assertContains(response, digwork.publisher)
             self.assertContains(response, digwork.pub_place)
+            self.assertContains(response, digwork.pub_date)
             # link to detail page
             self.assertContains(response, digwork.get_absolute_url())
 
@@ -180,9 +191,20 @@ class TestArchiveViews(TestCase):
 
         # collection search
         response = self.client.get(url, {'query': 'collections_exact:"Test Collection"'})
-        res = response.render()
+        assert len(response.context['object_list']) == 1
         self.assertContains(response, '1 digitized work;')
         self.assertContains(response, wintry.source_id)
+
+        # basic date range request
+        response = self.client.get(url, {'pub_date_0': 1900, 'pub_date_1': 1922})
+        # in fixture data, only wintry is after 1900
+        assert len(response.context['object_list']) == 1
+        self.assertContains(response, wintry.source_id)
+
+        # invalid date range request / invalid form - not an exception
+        response = self.client.get(url, {'pub_date_0': 1900, 'pub_date_1': 1800})
+        assert not response.context['object_list'].count()
+        self.assertContains(response, 'Invalid range')
 
         # nothing indexed - should not error
         solr.delete_doc_by_query(solr_collection, '*:*', params={"commitWithin": 100})
@@ -190,6 +212,15 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url)
         assert response.status_code == 200
         self.assertContains(response, 'No matching items')
+
+        # simulate solr exception (other than query syntax)
+        with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
+            mockpsq.return_value.get_json.side_effect = SolrError
+            # count needed for paginator
+            mockpsq.return_value.count = 0
+            response = self.client.get(url, {'query': 'something'})
+            self.assertContains(response, 'Something went wrong.')
+
 
     def test_digitizedwork_csv(self):
         # get the csv export and inspect the response

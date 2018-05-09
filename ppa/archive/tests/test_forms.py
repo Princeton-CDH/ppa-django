@@ -1,6 +1,8 @@
 from django import forms
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.test import TestCase
+import pytest
 
 from ppa.archive.forms import FacetChoiceField, SearchForm, RangeWidget, \
     RangeField
@@ -78,3 +80,7 @@ def test_range_field():
     assert RangeField().compress([100, None]) == '100-'
     assert RangeField().compress([None, 250]) == '-250'
     assert RangeField().compress([100, 250]) == '100-250'
+
+    # out of order should raise exception
+    with pytest.raises(ValidationError):
+        RangeField().compress([200, 100])
