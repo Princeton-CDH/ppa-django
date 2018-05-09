@@ -1,7 +1,7 @@
 from django import forms
 from django.test import TestCase
 
-from ppa.archive.forms import FacetChoiceField, SearchForm
+from ppa.archive.forms import FacetChoiceField, SearchForm, RadioSelectWithDisabled
 
 
 class TestFacetChoiceField(TestCase):
@@ -41,3 +41,31 @@ class TestSearchForm(TestCase):
             ('foo', 'foo <span>1</span>')
         assert searchform.fields['collections'].choices[1] == \
             ('bar', 'bar <span>2</span>')
+
+
+class TestRadioWithDisabled(TestCase):
+
+    def setUp(self):
+
+        class TestForm(forms.Form):
+            '''Build a test form use the widget'''
+            CHOICES = (
+                ('no', {'label': 'no select', 'disabled': True}),
+                ('yes', 'yes can select'),
+            )
+
+            yes_no = forms.ChoiceField(choices=CHOICES,
+                widget=RadioSelectWithDisabled)
+
+        self.form = TestForm()
+
+    def test_create_option(self):
+
+        rendered = self.form.as_p()
+        # no is disabled
+        self.assertInHTML('<input type="radio" name="yes_no" value="no" '
+                          'required id="id_yes_no_0" disabled="disabled" />',
+                          rendered)
+        # yes is not disabled
+        self.assertInHTML('<input type="radio" name="yes_no" value="yes" '
+                          'required id="id_yes_no_1" />', rendered)

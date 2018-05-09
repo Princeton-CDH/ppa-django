@@ -3,6 +3,28 @@ from django.utils.safestring import mark_safe
 
 from ppa.archive.models import Collection
 
+class RadioSelectWithDisabled(forms.RadioSelect):
+    '''
+    Subclass of :class:`django.forms.RadioSelect` that takes a label override
+    in the widget's choice label option in the form a dictionary:
+    {'label': 'option', 'disabled': True}.
+    '''
+
+    # Using a solution at https://djangosnippets.org/snippets/2453/
+    def create_option(self, name, value, label, selected, index, subindex=None,
+                      attrs=None):
+        disabled = None
+        if isinstance(label, dict):
+            label, disabled = label['label'], label['disabled']
+        option_dict = super().create_option(
+                name, value, label, selected, index,
+                subindex=subindex, attrs=attrs
+            )
+        if disabled:
+            option_dict['attrs'].update({'disabled': 'disabled'})
+        return option_dict
+
+
 class FacetChoiceField(forms.MultipleChoiceField):
     '''Add CheckboxSelectMultiple field with facets taken from solr query'''
     # Borrowed from https://github.com/Princeton-CDH/derrida-django/blob/develop/derrida/books/forms.py
@@ -40,15 +62,16 @@ class SearchForm(forms.Form):
         '''
         Set choices dynamically based on form kwargs and presence of keywords.
         '''
-        super(SearchForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if not args or 'query' not in args[0] or not args[0]['query']:
             # if there aren't keywords to search for, this will remove
             # relevance from the form choices
-            self.fields['sort'].choices = self.fields['sort'].choices[1:]
+            self.fields['sort'].widget.choices[0] = \
+                ('relevance', {'label': 'Relevance', 'disabled': True})
 
     query = forms.CharField(label='Search', required=False)
     collections = FacetChoiceField()
-    sort = forms.ChoiceField(widget=forms.RadioSelect, choices=SORT_CHOICES,
+    sort = forms.ChoiceField(widget=RadioSelectWithDisabled, choices=SORT_CHOICES,
         required=False)
     # fields to request a facet from solr
     facet_fields = ['collections_exact']
