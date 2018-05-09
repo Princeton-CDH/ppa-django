@@ -127,7 +127,6 @@ class SearchForm(forms.Form):
                 # set placeholder and max/min values
                 pubdate_widgets[idx].attrs.update({'placeholder': val,
                     'min': pubdate_range[0], 'max': pubdate_range[1]})
-            # TODO: add validation! max >= min
 
     PUBDATE_CACHE_KEY = 'digitizedwork_pubdate_maxmin'
 
@@ -140,8 +139,7 @@ class SearchForm(forms.Form):
 
         :returns: tuple of min, max
         '''
-        # maxmin = cache.get(self.PUBDATE_CACHE_KEY)
-        maxmin = None
+        maxmin = cache.get(self.PUBDATE_CACHE_KEY)
         if not maxmin:
             maxmin = DigitizedWork.objects \
                 .aggregate(Max('pub_date'), Min('pub_date'))
