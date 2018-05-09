@@ -17,7 +17,7 @@
 <p>{{ error }}</p>
 {% else %}
 
-<p>{{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}; results sorted by {{ sort }}.</p>
+<p>{{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}.</p>
 <hr/>
 
 <ul>
@@ -43,7 +43,7 @@
         {% if item.collections %}
         <p><b>collections:</b> {{ item.collections|join:", " }}</p>
         {% endif %}
-        {% if sort == 'relevance' %}
+        {% if sort == 'Relevance' %}
             <p><small>relevance: {{ item.score }}</small></p>
         {% endif %}
     </li>

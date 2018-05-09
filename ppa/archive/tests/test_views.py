@@ -1,5 +1,6 @@
 import csv
 from io import StringIO
+import operator
 import re
 from time import sleep
 from unittest.mock import Mock, patch
@@ -122,9 +123,7 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url)
         assert response.status_code == 200
         self.assertContains(response, '%d digitized works' % len(digitized_works))
-        self.assertContains(response, 'results sorted by title')
-
-        assert response.context['sort'] == 'title'
+        assert response.context['sort'] == 'Title A-Z'
 
         # search form should be set in context for display
         assert isinstance(response.context['search_form'], SearchForm)
@@ -148,15 +147,14 @@ class TestArchiveViews(TestCase):
         # search term in title
         response = self.client.get(url, {'query': 'wintry'})
         # relevance sort for keyword search
-        assert response.context['sort'] == 'relevance'
+        assert response.context['sort'] == 'Title A-Z'
         wintry = self.wintry
-        self.assertContains(response, '1 digitized work;')
-        self.assertContains(response, 'results sorted by relevance')
+        self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
 
         # match in page content but not in book metadata should pull back title
         response = self.client.get(url, {'query': 'blood'})
-        self.assertContains(response, '1 digitized work;')
+        self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
         self.assertContains(response, wintry.title)
 
@@ -175,12 +173,12 @@ class TestArchiveViews(TestCase):
 
         # exact phrase
         response = self.client.get(url, {'query': '"wintry delights"'})
-        self.assertContains(response, '1 digitized work;')
+        self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
 
         # boolean
         response = self.client.get(url, {'query': 'blood AND bone AND alternate'})
-        self.assertContains(response, '1 digitized work;')
+        self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
         response = self.client.get(url, {'query': 'blood NOT bone'})
         self.assertContains(response, 'No matching items')
@@ -189,10 +187,59 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url, {'query': '"incomplete phrase'})
         self.assertContains(response, 'Unable to parse search query')
 
+        # add a sort term - pub date
+        response = self.client.get(url, {'query': '', 'sort': 'pub_date_asc'})
+        # explicitly sort by pub_date manually
+        sorted_object_list = sorted(response.context['object_list'],
+                                    key=operator.itemgetter('pub_date'))
+        # the two context lists should match exactly
+        assert sorted_object_list == response.context['object_list']
+        # human readable value should be set in context using the value
+        # of SearchForm.SORT_CHOICES
+        assert response.context['sort'] == \
+            dict(SearchForm.SORT_CHOICES)['pub_date_asc']
+        # test sort date in reverse
+        response = self.client.get(url, {'query': '', 'sort': 'pub_date_desc'})
+        # explicitly sort by pub_date manually in descending order
+        sorted_object_list = sorted(response.context['object_list'],
+                                    key=operator.itemgetter('pub_date'),
+                                    reverse=True)
+        # the two context lists should match exactly
+        assert sorted_object_list == response.context['object_list']
+        # human readable value should be set in context using the value
+        # of SearchForm.SORT_CHOICES
+        assert response.context['sort'] == \
+            dict(SearchForm.SORT_CHOICES)['pub_date_desc']
+        # one last test using title
+        response = self.client.get(url, {'query': '', 'sort': 'title_asc'})
+        sorted_object_list = sorted(response.context['object_list'],
+                                    key=operator.itemgetter('title_exact'))
+        # the two context lists should match exactly
+        assert sorted_object_list == response.context['object_list']
+        # human readable value should be set in context using the value
+        # of SearchForm.SORT_CHOICES
+        assert response.context['sort'] == \
+            dict(SearchForm.SORT_CHOICES)['title_asc']
+
+        # - check that a query allows relevance as sort order toggle in form
+        response = self.client.get(url, {'query': 'foo', 'sort': 'title_asc'})
+        self.assertContains(
+            response,
+            '<input type="radio" name="sort" value="relevance" id="id_sort_0" />',
+            html=True
+        )
+        # check that a query that does not have a query disables
+        # relevance as a sort order option
+        response = self.client.get(url, {'sort': 'title_asc'})
+        print(response)
+        self.assertContains(
+            response,
+            '<input type="radio" name="sort" value="relevance" id="id_sort_0" disabled="disabled" />',
+            html=True
+        )
         # collection search
         response = self.client.get(url, {'query': 'collections_exact:"Test Collection"'})
         assert len(response.context['object_list']) == 1
-        self.assertContains(response, '1 digitized work;')
         self.assertContains(response, wintry.source_id)
 
         # basic date range request
@@ -303,8 +350,8 @@ class TestCollectionListView(TestCase):
         self.assertTemplateUsed(response, 'archive/list_collections.html')
         # - detailed checks of template
         self.assertContains(
-        response, 'Random Grabbag',
-        msg_prefix='should list a collection called Random Grabbag'
+            response, 'Random Grabbag',
+            msg_prefix='should list a collection called Random Grabbag'
         )
         self.assertContains(
             response, 'Foo through Time',
