@@ -26,6 +26,7 @@ class DigitizedWorkListView(ListView):
     of works and pages.'''
 
     template_name = 'archive/list_digitizedworks.html'
+    form_class = SearchForm
     # NOTE: listview would be nice, but would have to figure out how to
     # make solrclient compatible with django pagination
 
@@ -35,10 +36,29 @@ class DigitizedWorkListView(ListView):
     query = None
 
     def get_queryset(self, **kwargs):
-        self.form = SearchForm(self.request.GET)
-        join_q = collections = None
+
+        form_opts = self.request.GET.copy()
+        # Check for a nonsensical search with 'relevance' and no query string
+        if 'query' not in form_opts or not form_opts['query']:
+            if 'sort' in form_opts and form_opts['sort'] == 'relevance':
+                del form_opts['sort']
+
+        for key, val in self.form_class.defaults.items():
+            # set as list to avoid nested lists
+            # follows solution using in derrida-django for InstanceListView
+            if isinstance(val, list):
+                form_opts.setlistdefault(key, val)
+            else:
+                form_opts.setdefault(key, val)
+
+        # NOTE: Default sort for keyword search should be relevance but
+        # currently no way to distinguish default sort from user selected
+        self.form = self.form_class(form_opts)
+
+        solr_q = join_q = collections = sort = None
         if self.form.is_valid():
             self.query = self.form.cleaned_data.get("query", "")
+            sort = self.form.cleaned_data.get("sort", "")
             # NOTE: This allows us to get the name of collections for
             # collections_exact and set collections to a list of collection names
             collections = self.form.cleaned_data.get("collections", None)
@@ -67,16 +87,13 @@ class DigitizedWorkListView(ListView):
             # to support exact phrase searches
             solr_q = 'text:(%s) OR {!join from=srcid to=id v=$join_query}' % self.query
             # sort by relevance, return score for display
-            self.sort = 'relevance'
-            solr_sort = 'score desc'
-            fields = '*,score'
         else:
-            # no search term - find everything
-            solr_q = "*:*"
-            # for now, use title for default sort
-            self.sort = 'title'
-            solr_sort = 'title_exact asc'
-            fields = '*'
+            solr_q = '*:*'
+
+        self.sort, solr_sort = self.form.get_solr_sort_field(sort)
+
+        fields = '*,score'
+        # NOTE: For now, defaulting to always including score in fields
 
         logger.debug("Solr search query: %s", solr_q)
 
