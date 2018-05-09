@@ -242,28 +242,21 @@ class TestArchiveViews(TestCase):
         self.assertNotContains(response, reverse('archive:csv'),
             msg_prefix='CSV download link should only be on digitized work list')
 
-
-class TestCollectionListView(TestCase):
-
-    def setUp(self):
-        '''Create some collections'''
+    def test_collection_list(self):
+        # Create test collections to display
         self.coll1 = Collection.objects.create(name='Random Grabbag')
         self.coll2 = Collection.objects.create(
             name='Foo through Time',
             description="A <em>very</em> useful collection."
         )
-
-    def test_context(self):
-        '''Check that the context is as expected'''
+        # Check that the context is set as expected
         collection_list = reverse('archive:list-collections')
         response = self.client.get(collection_list)
-
         # it should have both collections that exist in it
         assert self.coll1 in response.context['object_list']
         assert self.coll2 in response.context['object_list']
 
-    def test_template(self):
-        '''Check that the template is rendering as expected'''
+        # Check that the template is rendering as expected
         collection_list = reverse('archive:list-collections')
         response = self.client.get(collection_list)
         # - basic checks right templates
@@ -472,9 +465,6 @@ class TestDigitizedWorkListView(TestCase):
                         {'id': 'p2b'},
                     ]},
             }
-
-        # page_ids = [page['id'] for results in page_groups.values()
-                    # for page in results['docs']]
 
             highlights = digworkview.get_page_highlights(page_groups)
             # inspect the solr call; first arg is a dictionary, no kwargs
