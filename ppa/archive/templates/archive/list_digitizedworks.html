@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load humanize %}
+{% load humanize ppa_tags %}
 {% block page-subtitle %}Archive | {% endblock %}
 
 {% block content %}
@@ -25,21 +25,35 @@
     <li>
         <h3><a href="{% url 'archive:detail' item.srcid %}">{{ item.title }}</a></h3>
         <p>sort title: {{ item.title_exact }}</p>
-        <p>{{ item.author }}</p>
+        <p>author: {{ item.author }}</p>
         {% if item.enumcron %}<p>{{ item.enumcron }}</p> {% endif %}
         <p>{{ item.publisher }} {{ item.pub_place }} {{ item.pub_date }}</p>
         <p><small><a href="{{ item.src_url }}">{{ item.srcid }}</a></small></p>
-        {% for id, results in page_groups.items %}
-            {% if id == item.id %}
-                <p>{{ results.numFound|intcomma }} page{{ results.numFound|pluralize }};
-                {# {{ results }} #}
-                pages
+        {% with results=page_groups|dict_item:item.id %}
+            {% if page_highlights %}
                 {% for page in results.docs %}
-                    {{ page.order }} {% if sort == 'relevance' %}<small> relevance: {{ page.score }}</small>{% endif %};
+                    <div style="float: left; max-width: 50%">
+                        {# thumbnail image from hathi #}
+                        {# coerce page order to integer, then format as number to drop leading zeroes #}
+                        <img src="https://babel.hathitrust.org/cgi/imgsrv/image?id={{ item.id }};seq={{ page.order|add:0|stringformat:'d' }};width=180"
+                            style="float:left"/>
+
+                        {% with page_highlights=page_highlights|dict_item:page.id %}
+                            {% for snippet in page_highlights.content %}
+                            <p style="white-space: pre-wrap">{{ snippet|safe }}</p>
+                            {% endfor %}
+                        {% endwith %}
+                    </div>
+
                 {% endfor %}
-                </p>
+
+                <div style="clear: both"/>
+                {# link to page with search if there are more than two pages #}
+                {% if results.numFound > 2 %}
+                <a href="{% url 'archive:detail' item.srcid %}?query={{ query }}">View all {{ results.numFound|intcomma }} page{{ results.numFound|pluralize }} →</a>
+                {% endif %}
             {% endif %}
-        {% endfor %}
+        {% endwith %}
         {% if item.collections %}
         <p><b>collections:</b> {{ item.collections|join:", " }}</p>
         {% endif %}
@@ -55,8 +69,8 @@
 <div class="pagination">
     <span class="step-links">
         {% if page_obj.has_previous %}
-            <a href="?page=1">&laquo; first</a>
-            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+            <a href="?{% querystring_replace page=1 %}">&laquo; first</a>
+            <a href="?{% querystring_replace page=page_obj.previous_page_number %}">previous</a>
         {% endif %}
 
         <span class="current">
@@ -64,8 +78,8 @@
         </span>
 
         {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">next</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+            <a href="?{% querystring_replace page=page_obj.next_page_number %}">next</a>
+            <a href="?{% querystring_replace page=page_obj.paginator.num_pages %}">last &raquo;</a>
         {% endif %}
     </span>
 </div>

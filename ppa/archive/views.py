@@ -32,6 +32,9 @@ class DigitizedWorkListView(ListView):
 
     paginate_by = 50
 
+    # keyword query; assume no search terms unless set
+    query = None
+
     def get_queryset(self, **kwargs):
         form_opts = self.request.GET.copy()
         # Check for a nonsensical search with 'relevance' and no query string
@@ -56,12 +59,11 @@ class DigitizedWorkListView(ListView):
         if not self.form.is_valid():
             return DigitizedWork.objects.none()
 
-        query = solr_q = join_q = collections = sort = None
+        solr_q = join_q = collections = sort = None
         if self.form.is_valid():
             search_opts = self.form.cleaned_data
-            query = search_opts.get("query", "")
+            self.query = search_opts.get("query", "")
             sort = search_opts.get("sort", "")
-
             # NOTE: This allows us to get the name of collections for
             # collections_exact and set collections to a list of collection names
             collections = search_opts.get("collections", None)
@@ -80,15 +82,15 @@ class DigitizedWorkListView(ListView):
             filter_q.append('(%(coll)s OR {!join from=id to=srcid v=$coll_query})' \
                 % {'coll': coll_query})
 
-        if query:
+        if self.query:
             # simple keyword search across all text content
-            solr_q = join_q = "text:(%s)" % query
+            solr_q = join_q = "text:(%s)" % self.query
 
             # use join to ensure we always get the work if any pages match
             # using query syntax as documented at
             # http://comments.gmane.org/gmane.comp.jakarta.lucene.solr.user/95646
             # to support exact phrase searches
-            solr_q = 'text:(%s) OR {!join from=srcid to=id v=$join_query}' % query
+            solr_q = 'text:(%s) OR {!join from=srcid to=id v=$join_query}' % self.query
             # sort by relevance, return score for display
         else:
             solr_q = '*:*'
@@ -150,7 +152,7 @@ class DigitizedWorkListView(ListView):
             'facet.field': [field for field in self.form.facet_fields],
             # default expand sort is score desc
             'expand': 'true',
-            'expand.rows': 10,   # number of items in the collapsed group, i.e pages to display
+            'expand.rows': 2,   # number of items in the collapsed group, i.e pages to display
             'join_query': join_q,
             'coll_query': coll_query,
             'rows': 50  # override solr default of 10 results; display 50 at a time for now
@@ -162,6 +164,45 @@ class DigitizedWorkListView(ListView):
         self.solrq = PagedSolrQuery(solr_opts)
 
         return self.solrq
+
+    def get_page_highlights(self, page_groups):
+         # If there is a keyword search, query Solr for matching pages
+        # with text highlighting.  Note that this has to be done as
+        # a separate query because Solr doesn't support highlighting on
+        # collapsed items.
+
+        page_highlights = {}
+        if not self.query or not page_groups:
+            # if there is no keyword query, bail out
+            return page_highlights
+
+        # generate a list of page ids from the grouped results
+        page_ids = [page['id'] for results in page_groups.values()
+                    for page in results['docs']]
+
+        if not page_ids:
+            # if no page ids were found, bail out
+            return page_highlights
+
+        # Query solr for the desired pages by id with the same
+        # keyword search.
+        # NOTE: This id query assumes OR is default; if  that changes,
+        # add an explicitly OR here between ids.
+        # NOTE 2: using quotes around ids to handle ids that include
+        # colons, e.g. ark:/foo/bar .
+        solr_pageq = PagedSolrQuery({
+            'q': 'text:(%s) AND id:(%s)' % \
+                (self.query, ' '.join('"%s"' % pid for pid in page_ids)),
+            # enable highlighting on content field with 3 snippets
+            'hl': True,
+            'hl.fl': 'content',
+            'hl.snippets': 3,
+            # use Unified Highlighter (not default but recommended)
+            'hl.method': 'unified',
+            # override solr default of 10 results to return all pages
+            'rows': len(page_ids)
+        })
+        return solr_pageq.get_highlighting()
 
     def get_context_data(self, **kwargs):
         # if the form is not valid, bail out
@@ -175,8 +216,9 @@ class DigitizedWorkListView(ListView):
             # catch an error querying solr when the search terms cannot be parsed
             # (e.g., incomplete exact phrase)
             context = super(DigitizedWorkListView, self).get_context_data(**kwargs)
-            page_groups = json.loads(self.solrq.get_json()).get('expanded', {})
+            page_groups = self.solrq.get_expanded()
             facet_dict = self.solrq.get_facets()
+
             self.form.set_choices_from_facets(facet_dict)
             # needs to be inside try/catch or it will re-trigger any error
             facet_ranges = self.solrq.get_facets_ranges()
@@ -195,7 +237,8 @@ class DigitizedWorkListView(ListView):
             'sort': self.sort,
             'page_groups': page_groups,
             # range facet data for publication date
-            'facet_ranges': facet_ranges
+            'facet_ranges': facet_ranges,
+            'page_highlights': self.get_page_highlights(page_groups),
         })
         return context
 
@@ -225,8 +268,9 @@ class DigitizedWorkCSV(ListView):
     # order by id for now, for simplicity
     ordering = 'id'
     header_row = ['Database ID', 'Source ID', 'Title', 'Author',
-        'Publication Date', 'Publication Place', 'Publisher', 'Enumcron',
-        'Collection', 'Page Count', 'Date Added', 'Last Updated']
+                  'Publication Date', 'Publication Place', 'Publisher',
+                  'Enumcron', 'Collection', 'Page Count', 'Date Added',
+                  'Last Updated']
 
     def get_csv_filename(self):
         '''Return the CSV file name based on the current datetime.

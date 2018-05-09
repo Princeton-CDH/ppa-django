@@ -1,5 +1,7 @@
+import json
 import logging
 
+from cached_property import cached_property
 from django.conf import settings
 import requests
 from SolrClient import SolrClient
@@ -166,7 +168,7 @@ class PagedSolrQuery(object):
         '''
         Return results of the Solr query.
 
-        :returns: docs as a list of dictionaries.
+        :return: docs as a list of dictionaries.
         '''
         self._result = self.solr.query(self.solr_collection, self.query_opts)
         return self._result.docs
@@ -186,6 +188,20 @@ class PagedSolrQuery(object):
         if self._result is None:
             self.get_results()
         return self._result.get_json()
+
+    @cached_property
+    def raw_response(self):
+        '''Return the raw Solr result to provide access to return sections
+        not exposed by SolrClient'''
+        return json.loads(self.get_json())
+
+    def get_expanded(self):
+        '''get the expanded results from a collapsed query'''
+        return self.raw_response.get('expanded', {})
+
+    def get_highlighting(self):
+        '''get highlighting results from the response'''
+        return self.raw_response.get('highlighting', {})
 
     def set_limits(self, start, stop):
         '''Return a subsection of the results, to support slicing.'''
