@@ -119,14 +119,10 @@ class DigitizedWorkListView(ListView):
             # get minimum and maximum pub date values from the db
             pubmin, pubmax = self.form.pub_date_minmax()
 
-            start = int(start) if start else pubmin
-            end = int(end) if end else pubmax
-
-            # fallback logic for when start and end are not set
-            # (should only happen when no content is in the database)
-            if not start or end:
-                start = start or 0
-                end = end or 1922
+            # NOTE: hard-coded values are fallback logic for when
+            # no contents are in the datbase and pubmin/pubmax are None
+            start = int(start) if start else pubmin or 0
+            end = int(end) if end else pubmax or 1922
 
             # Configure range facet options specific to current field, to
             # support more than one range facet (even though not currently needed)
