@@ -140,12 +140,12 @@ class TestArchiveViews(TestCase):
         # relevance sort for keyword search
         assert response.context['sort'] == 'Relevance'
         wintry = self.wintry
-        self.assertContains(response, '1 digitized work;')
+        self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
 
         # match in page content but not in book metadata should pull back title
         response = self.client.get(url, {'query': 'blood'})
-        self.assertContains(response, '1 digitized work;')
+        self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
         self.assertContains(response, wintry.title)
 
@@ -164,12 +164,12 @@ class TestArchiveViews(TestCase):
 
         # exact phrase
         response = self.client.get(url, {'query': '"wintry delights"'})
-        self.assertContains(response, '1 digitized work;')
+        self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
 
         # boolean
         response = self.client.get(url, {'query': 'blood AND bone AND alternate'})
-        self.assertContains(response, '1 digitized work;')
+        self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
         response = self.client.get(url, {'query': 'blood NOT bone'})
         self.assertContains(response, 'No matching items')
@@ -229,7 +229,7 @@ class TestArchiveViews(TestCase):
         )
         # collection search
         response = self.client.get(url, {'query': 'collections_exact:"Test Collection"'})
-        self.assertContains(response, '1 digitized work;')
+        self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
 
         # nothing indexed - should not error
