@@ -22,6 +22,7 @@
   file:
     src: "{{ install_root }}/current"
     dest: "{{ install_root }}/previous"
+    follow: yes
     state: link
   when: sym.stat.islnk is defined and sym.stat.islnk == True
 - name: Create courtesy "current" symlink in /srv/www
