@@ -29,7 +29,7 @@
         <p>{{ item.publisher }} | {{ item.pub_place }} | {{ item.pub_date }}</p>
         <p>
         {% for collection in item.collections %}
-            <span class="ui positive basic button">{{ collection }}</span>
+            <span class="ui green button">{{ collection }}</span>
         {% endfor %}
         </p>
         {% if sort == 'Relevance' %}
@@ -41,9 +41,9 @@
             {% if page_highlights %}
                 {% for page in results.docs %}
                     <div style="float:left; width: 50%">
-                        {# thumbnail image from hathi #}
-                        {# coerce page order to integer, then format as number to drop leading zeroes #}
-                        <img src="https://babel.hathitrust.org/cgi/imgsrv/image?id={{ item.id }};seq={{ page.order|add:0|stringformat:'d' }};width=180"
+
+                        <img src="{% page_image_url item.id page.order 180 %}"
+                            srcset="{% page_image_url item.id page.order 360 %} 2x"
                             style="float:left"/>
 
                         {% with page_highlights=page_highlights|dict_item:page.id %}

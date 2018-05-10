@@ -1,3 +1,5 @@
+import re
+
 from django.template.defaulttags import register
 
 
@@ -31,3 +33,17 @@ def querystring_replace(context, **kwargs):
         querystring[key] = val
     # return urlencoded query string
     return querystring.urlencode()
+
+
+#: regular expression to extract page sequence from page order
+#: (could contain other content, but should end with numbers)
+PAGE_REQUENCE_RE = re.compile(r'[^\d]*(\d+)$')
+
+
+@register.simple_tag
+def page_image_url(item_id, page, width):
+    '''Generate a page image url based on an item id, page sequence label,
+    and desired width. Currently HathiTrust specific.'''
+    page_sequence = int(PAGE_REQUENCE_RE.search(page).group(1))
+    return "https://babel.hathitrust.org/cgi/imgsrv/image?id={};seq={};width={}" \
+        .format(item_id, page_sequence, width)

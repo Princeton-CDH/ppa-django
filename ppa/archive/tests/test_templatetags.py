@@ -2,7 +2,8 @@ from unittest.mock import Mock
 
 from django.http import QueryDict
 
-from ppa.archive.templatetags.ppa_tags import dict_item, querystring_replace
+from ppa.archive.templatetags.ppa_tags import dict_item, querystring_replace, \
+    page_image_url
 
 
 def test_dict_item():
@@ -40,3 +41,22 @@ def test_querystring_replace():
     assert 'language=english' in args
     assert 'language=french' in args
     assert 'page=10' in args
+
+
+def test_page_image_url():
+    # simple page id
+    item_id = "mdp.39015031594768"
+    page_id = "00000029"
+    page_seq = 29
+    width = 180
+    img_url = page_image_url(item_id, page_id, width)
+    print(img_url)
+    assert img_url.startswith("https://babel.hathitrust.org/cgi/imgsrv/image?")
+    assert img_url.endswith('image?id=%s;seq=%s;width=%s' % (item_id, page_seq, width))
+
+    # page id with non-numeric characters
+    item_id = 'uc1.c2608792'
+    page_id = 'UCAL_C2608792_00000009'
+    page_seq = 9
+    img_url = page_image_url(item_id, page_id, width)
+    assert img_url.endswith('image?id=%s;seq=%s;width=%s' % (item_id, page_seq, width))
