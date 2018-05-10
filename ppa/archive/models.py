@@ -81,8 +81,8 @@ class DigitizedWork(models.Model):
         blank=True)
     #: publisher
     publisher = models.TextField(max_length=255, blank=True)
-    # using char for now in case not all numeric
-    pub_date = models.CharField('Publication Date', max_length=255, blank=True)
+    # Needs to be integer to allow aggregating max/min, filtering by date
+    pub_date = models.PositiveIntegerField('Publication Date', null=True, blank=True)
     #: number of pages in the work
     page_count = models.PositiveIntegerField(null=True, blank=True)
     #: collections that this work is part of

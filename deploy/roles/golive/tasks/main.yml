@@ -18,6 +18,18 @@
     src: "{{ deploy }}"
     dest: "/var/www/{{ symlink }}"
     state: link
+- name: Rename old courtesy "current" symlink in /srv/www to "previous"
+  file:
+    src: "{{ install_root }}/current"
+    dest: "{{ install_root }}/previous"
+    follow: yes
+    state: link
+  when: sym.stat.islnk is defined and sym.stat.islnk == True
+- name: Create courtesy "current" symlink in /srv/www
+  file:
+    src: "{{ deploy }}"
+    dest: "{{ install_root }}/current"
+    state: link
 - name: Call restorecon just in case
   command: 'restorecon -R {{ deploy }}'
 - name: Restart Apache (scl-httpd24-httpd)

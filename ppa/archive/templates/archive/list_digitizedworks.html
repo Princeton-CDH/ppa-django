@@ -12,8 +12,10 @@
 
 <form>
 {{ search_form }}
+
 <input type="submit"/>
 </form>
+
 
 {% if error %}
 {# if something went wrong (e.g., bad query), display error message and nothing else #}
@@ -27,20 +29,29 @@
     {% for item in object_list %}
     <li>
         <h3><a href="{% url 'archive:detail' item.srcid %}">{{ item.title }}</a></h3>
-        <p>sort title: {{ item.title_exact }}</p>
-        <p>author: {{ item.author }}</p>
+        <p>{{ item.author }}</p>
         {% if item.enumcron %}<p>{{ item.enumcron }}</p> {% endif %}
-        <p>{{ item.publisher }} {{ item.pub_place }} {{ item.pub_date }}</p>
-        <p><small><a href="{{ item.src_url }}">{{ item.srcid }}</a></small></p>
-
+        <p>{{ item.publisher }} | {{ item.pub_place }} | {{ item.pub_date }}</p>
+        <p>
+        {% for collection in item.collections %}
+            <span class="ui green button">{{ collection }}</span>
+        {% endfor %}
+        </p>
+        {% if sort == 'Relevance' %}
+            <p><small>relevance: {{ item.score }}</small></p>
+        {% endif %}
+        {# unapi id for zotero harvest #}
         <abbr class="unapi-id" title="{{ item.id }}"></abbr>
+
+        <p><a class="ui button" href="{{ item.src_url }}" title="View item on HathiTrust">HathiTrust →</a></p>
+
         {% with results=page_groups|dict_item:item.id %}
             {% if page_highlights %}
                 {% for page in results.docs %}
-                    <div style="float: left; max-width: 50%">
-                        {# thumbnail image from hathi #}
-                        {# coerce page order to integer, then format as number to drop leading zeroes #}
-                        <img src="https://babel.hathitrust.org/cgi/imgsrv/image?id={{ item.id }};seq={{ page.order|add:0|stringformat:'d' }};width=180"
+                    <div style="float:left; width: 50%">
+
+                        <img src="{% page_image_url item.id page.order 180 %}"
+                            srcset="{% page_image_url item.id page.order 360 %} 2x"
                             style="float:left"/>
 
                         {% with page_highlights=page_highlights|dict_item:page.id %}
@@ -59,12 +70,7 @@
                 {% endif %}
             {% endif %}
         {% endwith %}
-        {% if item.collections %}
-        <p><b>collections:</b> {{ item.collections|join:", " }}</p>
-        {% endif %}
-        {% if sort == 'Relevance' %}
-            <p><small>relevance: {{ item.score }}</small></p>
-        {% endif %}
+
     </li>
     {% empty %}
     <li>No matching items found</li>
