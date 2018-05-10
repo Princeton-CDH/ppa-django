@@ -2,13 +2,19 @@
 
 {% block page-subtitle %}Archive | {{ object.title }} {% endblock %}
 
+{% block head_extras %}
+    <link rel="unapi-server" type="application/xml" title="unAPI"
+          href="{% url 'unapi' %}" />
+{% endblock %}
+
 {% block content %}
 <h1>{{ object.title }}</h1>
+<abbr class="unapi-id" title="{{ object.source_id }}"></abbr>
 <hr/>
 <ul style="list-style: none;">
     <li><b>HathiTrust ID:</b> {{ object.source_id }}</li>
     <li><b>HathiTrust URL:</b> <a href="{{ object.source_url}}">{{ object.source_url }}</a></li>
-    <li><b>Volume/Chronology:</b> {{ object.enumcron }}</a></li>
+    <li><b>Volume/Chronology:</b> {{ object.enumcron }}</li>
     <li><b>Author:</b> {{ object.author }}</li>
     <li><b>Place of Publication:</b> {{ object.pub_place }}</li>
     <li><b>Publisher:</b> {{ object.publisher }}</li>

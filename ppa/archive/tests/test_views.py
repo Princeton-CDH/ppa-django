@@ -92,6 +92,18 @@ class TestArchiveViews(TestCase):
             msg_prefix='Missing updated or in wrong format (d M Y in filter)'
         )
 
+        # unapi server link present
+        self.assertContains(
+            response, '''<link rel="unapi-server" type="application/xml"
+            title="unAPI" href="%s" />''' % reverse('unapi'),
+            msg_prefix='unapi server link should be set', html=True)
+        # unapi id present
+        self.assertContains(
+            response,
+            '<abbr class="unapi-id" title="%s"></abbr>' % dial.source_id,
+            msg_prefix='unapi id should be embedded for each work')
+
+
     @pytest.mark.usefixtures("solr")
     def test_digitizedwork_listview(self):
         url = reverse('archive:list')
