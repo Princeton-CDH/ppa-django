@@ -18,7 +18,7 @@
 <p>{{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}.</p>
 <hr/>
 
-<ul>
+<ol start="{{ page_obj.start_index }}">
     {% for item in object_list %}
     <li>
         <h3><a href="{% url 'archive:detail' item.srcid %}">{{ item.title }}</a></h3>
@@ -62,7 +62,7 @@
     {% empty %}
     <li>No matching items found</li>
     {% endfor %}
-</ul>
+</ol>
 
 <div class="pagination">
     <span class="step-links">
