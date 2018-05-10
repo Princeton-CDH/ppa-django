@@ -104,6 +104,7 @@ INSTALLED_APPS = [
     'mezzanine.pages',
     'ppa.archive',
     'ppa.common',
+    'ppa.unapi',
 ]
 
 MIDDLEWARE = [
