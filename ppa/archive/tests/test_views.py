@@ -122,6 +122,8 @@ class TestArchiveViews(TestCase):
         assert response.status_code == 200
         self.assertContains(response, '%d digitized works' % len(digitized_works))
         assert response.context['sort'] == 'Title A-Z'
+        self.assertContains(response, '<ol start="1">',
+            msg_prefix='results are numbered')
 
         for digwork in digitized_works:
             # basic metadata for each work
