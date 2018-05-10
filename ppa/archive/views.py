@@ -36,7 +36,6 @@ class DigitizedWorkListView(ListView):
     query = None
 
     def get_queryset(self, **kwargs):
-
         form_opts = self.request.GET.copy()
         # Check for a nonsensical search with 'relevance' and no query string
         if 'query' not in form_opts or not form_opts['query']:
@@ -55,13 +54,19 @@ class DigitizedWorkListView(ListView):
         # currently no way to distinguish default sort from user selected
         self.form = self.form_class(form_opts)
 
-        query = solr_q = join_q = collections = sort = None
+        # if the form is not valid, return an empty queryset and bail out
+        # (queryset needed for django paginator)
+        if not self.form.is_valid():
+            return DigitizedWork.objects.none()
+
+        solr_q = join_q = collections = sort = None
         if self.form.is_valid():
-            query = self.form.cleaned_data.get("query", "")
-            sort = self.form.cleaned_data.get("sort", "")
+            search_opts = self.form.cleaned_data
+            self.query = search_opts.get("query", "")
+            sort = search_opts.get("sort", "")
             # NOTE: This allows us to get the name of collections for
             # collections_exact and set collections to a list of collection names
-            collections = self.form.cleaned_data.get("collections", None)
+            collections = search_opts.get("collections", None)
 
         # solr supports multiple filter queries, and documents must
         # match all of them; collect them as a list to allow multiple
@@ -101,7 +106,43 @@ class DigitizedWorkListView(ListView):
         # sort so work is first, then by page order
         filter_q.append('{!collapse field=srcid sort="order asc"}')
 
-        self.solrq = PagedSolrQuery({
+        range_opts = {
+            'facet.range': self.form.range_facets
+        }
+        for range_facet in self.form.range_facets:
+            # range filter requested in search options
+            start = end = None
+            # if start or end is specified on the form, add a filter query
+            if range_facet in search_opts and search_opts[range_facet]:
+                start, end = search_opts[range_facet].split('-')
+                range_filter = '[%s TO %s]' % (start or '*', end or '*')
+                filter_q.append('%s:%s' % (range_facet, range_filter))
+
+            # get minimum and maximum pub date values from the db
+            pubmin, pubmax = self.form.pub_date_minmax()
+
+            # NOTE: hard-coded values are fallback logic for when
+            # no contents are in the datbase and pubmin/pubmax are None
+            start = int(start) if start else pubmin or 0
+            end = int(end) if end else pubmax or 1922
+
+            # Configure range facet options specific to current field, to
+            # support more than one range facet (even though not currently needed)
+            range_opts.update({
+                # current range filter
+                'f.%s.facet.range.start' % range_facet: start,
+                # 'start': int(start) if start else ranges['%s_min' % range_facet],
+                # 'end': int(end) if end else ranges['%s_max' % range_facet],
+                'f.%s.facet.range.end' % range_facet: end,
+                # calculate gap based start and end & desired number of slices
+                # ideally, generate 24 slices; minimum gap size of 1
+                'f.%s.facet.range.gap' % range_facet: max(1, int((end - start) / 24)),
+                # restrict last range to *actual* maximum value
+                'f.%s.facet.range.hardend' % range_facet: True
+            })
+
+        # basic solr options, including filter query
+        solr_opts = {
             'q': solr_q,
             'sort': solr_sort,
             'fl': fields,
@@ -114,9 +155,13 @@ class DigitizedWorkListView(ListView):
             'expand.rows': 2,   # number of items in the collapsed group, i.e pages to display
             'join_query': join_q,
             'coll_query': coll_query,
-            # override solr default of 10 results; display 50 at a time for now
-            'rows': 50
-        })
+            'rows': 50  # override solr default of 10 results; display 50 at a time for now
+        }
+
+        # add facet range options to the solr options
+        solr_opts.update(range_opts)
+
+        self.solrq = PagedSolrQuery(solr_opts)
 
         return self.solrq
 
@@ -160,31 +205,39 @@ class DigitizedWorkListView(ListView):
         return solr_pageq.get_highlighting()
 
     def get_context_data(self, **kwargs):
-        page_groups = None
+        # if the form is not valid, bail out
+        if not self.form.is_valid():
+            context = super(DigitizedWorkListView, self).get_context_data(**kwargs)
+            context['search_form'] = self.form
+            return context
+
+        page_groups = facet_ranges = None
         try:
             # catch an error querying solr when the search terms cannot be parsed
             # (e.g., incomplete exact phrase)
             context = super(DigitizedWorkListView, self).get_context_data(**kwargs)
-            # raw_solr_response = json.loads(self.solrq.get_json())
-            # page_groups = raw_solr_response.get('expanded', {})
             page_groups = self.solrq.get_expanded()
             facet_dict = self.solrq.get_facets()
 
             self.form.set_choices_from_facets(facet_dict)
-
+            # needs to be inside try/catch or it will re-trigger any error
+            facet_ranges = self.solrq.get_facets_ranges()
         except SolrError as solr_err:
             context = {'object_list': []}
             if 'Cannot parse' in str(solr_err):
                 error_msg = 'Unable to parse search query; please revise and try again.'
             else:
+                # NOTE: this error should possibly be raised; 500 error?
                 error_msg = 'Something went wrong.'
-            context = {'object_list': [], 'error': error_msg}
+            context['error'] = error_msg
 
         context.update({
             'search_form': self.form,
             # total and object_list provided by paginator
             'sort': self.sort,
             'page_groups': page_groups,
+            # range facet data for publication date
+            'facet_ranges': facet_ranges,
             'page_highlights': self.get_page_highlights(page_groups),
         })
         return context
