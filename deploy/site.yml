@@ -5,6 +5,7 @@
   environment:
     PATH: '{{ remote_path }}'
     LD_LIBRARY_PATH: '{{ remote_ld }}'
+    PYTHONPATH: '{{ remote_python }}'
   roles:
       # Creates repo variable names and builds repo
       - projectrepo
