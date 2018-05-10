@@ -22,3 +22,5 @@ symlink: 'ppa-django'
 # library paths
 remote_path: '/opt/rh/rh-python35/root/usr/bin/:{{ ansible_env.PATH }}'
 remote_ld: '/opt/rh/rh-python35/root/usr/lib64'
+# project user to set the CACHE directory's permissions correctly
+project_user: ppa
