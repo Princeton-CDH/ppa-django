@@ -37,7 +37,7 @@
     state: directory
     owner: deploy
     group: apache
-    mode: 0770    
+    mode: 0771    
 # On QA server the actual owner for purposes of CACHE needs to be the
 # user associated with the WSGI Daemon, in this case a manual call to sudo
 - name: chgrp the CACHE folder to project user
