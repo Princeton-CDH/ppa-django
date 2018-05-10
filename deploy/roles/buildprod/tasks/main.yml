@@ -30,6 +30,14 @@
     command: collectstatic
     app_path: "{{ deploy }}"
     virtualenv: "{{ deploy }}/env"
+# Ownership needs to deploy/apache for production
+- name: Configure CACHE for django-compressor
+  file:
+    path: '{{ deploy }}/static/CACHE'
+    state: directory
+    owner: deploy
+    group: apache
+    mode: 0770    
 # On QA server the actual owner for purposes of CACHE needs to be the
 # user associated with the WSGI Daemon, in this case a manual call to sudo
 - name: chgrp the CACHE folder to project user
