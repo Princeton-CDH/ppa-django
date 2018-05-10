@@ -19,5 +19,6 @@ db_backup: '/tmp/pre-{{ version }}-{{ repo_info.after }}-{{ djangoapp }}.sql'
 # Symlink for /var/www
 symlink: 'ppa'
 # library paths
-remote_path: '/opt/rh/rh-python36/root/usr/bin/:{{ ansible_env.PATH }}'
-remote_ld: '{{ lookup("env", "LD_LIBRARY_PATH")}}:/opt/rh/rh-python36/root/usr/lib64'
+remote_path: '/opt/rh/rh-python36/root/usr/bin/:/opt/rh/rh-nodejs6/root/usr/bin:{{ ansible_env.PATH }}'
+remote_ld: '/opt/rh/rh-python36/root/usr/lib64:/opt/rh/rh-nodejs6/root/usr/lib64'
+remote_python: '/opt/rh/rh-nodejs6/root/usr/lib/python2.7/site-packages'
