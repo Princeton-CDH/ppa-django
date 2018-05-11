@@ -1,5 +1,7 @@
+import json
 import logging
 
+from cached_property import cached_property
 from django.conf import settings
 import requests
 from SolrClient import SolrClient
@@ -30,7 +32,7 @@ class SolrSchema(object):
         {'name': 'title', 'type': 'text_en', 'required': False},
         {'name': 'enumcron', 'type': 'string', 'required': False},
         {'name': 'author', 'type': 'text_en', 'required': False},
-        {'name': 'pub_date', 'type': 'string', 'required': False},
+        {'name': 'pub_date', 'type': 'int', 'required': False},
         {'name': 'pub_place', 'type': 'text_en', 'required': False},
         {'name': 'publisher', 'type': 'text_en', 'required': False},
         {'name': 'src_url', 'type': 'string', 'required': False},
@@ -69,10 +71,7 @@ class SolrSchema(object):
         '''Update the configured solr instance schema to match
         the configured fields.  Returns a tuple with the number of fields
         created and updated.'''
-        try:
-            current_fields = self.solr_schema_fields()
-        except ConnectionRefusedError:
-            raise
+        current_fields = self.solr_schema_fields()
 
         created = updated = removed = 0
         for field in self.fields:
@@ -155,11 +154,18 @@ class PagedSolrQuery(object):
             self.get_results()
         return self._result.get_facets()
 
+    def get_facets_ranges(self):
+        '''Wrap SolrClient.SolrResponse.get_facets() to get query facets as a dict
+        of dicts.'''
+        if self._result is None:
+            self.get_results()
+        return self._result.get_facets_ranges()
+
     def get_results(self):
         '''
         Return results of the Solr query.
 
-        :returns: docs as a list of dictionaries. 
+        :return: docs as a list of dictionaries.
         '''
         self._result = self.solr.query(self.solr_collection, self.query_opts)
         return self._result.docs
@@ -179,6 +185,20 @@ class PagedSolrQuery(object):
         if self._result is None:
             self.get_results()
         return self._result.get_json()
+
+    @cached_property
+    def raw_response(self):
+        '''Return the raw Solr result to provide access to return sections
+        not exposed by SolrClient'''
+        return json.loads(self.get_json())
+
+    def get_expanded(self):
+        '''get the expanded results from a collapsed query'''
+        return self.raw_response.get('expanded', {})
+
+    def get_highlighting(self):
+        '''get highlighting results from the response'''
+        return self.raw_response.get('highlighting', {})
 
     def set_limits(self, start, stop):
         '''Return a subsection of the results, to support slicing.'''
