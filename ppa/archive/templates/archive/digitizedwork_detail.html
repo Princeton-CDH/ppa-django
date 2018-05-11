@@ -1,17 +1,130 @@
 {% extends "base.html"  %}
+{% load static humanize %}
+
+{% block css %}
+<link rel="stylesheet" type="text/x-scss" href="{% static 'archive/scss/digitized-work.scss' %}">
+{% endblock %}
 
 {% block page-subtitle %}Archive | {{ object.title }} {% endblock %}
 
+{% block page-context-id %}digitized-work{% endblock %}
+
 {% block content %}
+<div class="ui container">
+    <form class="ui form">
+        <div class="ui field">
+            <label for="query">Search within the Volume</label>
+            <div class="ui left icon input">
+                <input id="query" name="query" type="text" placeholder="Search keyword or phrase" value="{{ query }}">
+                <i class="search icon"></i>
+            </div>
+        </div>
+    </form>
+    <h2 class="header">{{ object.title }}</h2>
+    <table class="metadata ui very basic table">
+        <thead>
+            <tr>
+                <th scope="col" class="four wide">attribute</th>
+                <th scope="col" class="twelve wide">value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th scope="row">Secondary Title</th>
+                <td><em>{{ object.title }}</em></td>
+            </tr>
+            <tr>
+                <th scope="row">Year of Publication</th>
+                <td>{{ object.pub_date }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Author(s)</th>
+                <td>{{ object.author }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Publisher</th>
+                <td>{{ object.publisher }}</td>
+            </tr>
+            <tr>
+                <th scope="row">City</th>
+                <td>{{ object.pub_place }}</td>
+            </tr>
+            <tr>
+                <th scope="row">PPA Collection(s)</th>
+                <td>
+                    <button class="ui tiny basic button">Grammar</button>
+                    <button class="ui tiny basic button">Typography</button>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">View HathiTrust Volumes</th>
+                <td>
+                    <a href="{{ object.source_url }}">
+                        <span>{{ object.source_id }}</span>
+                        <button class="ui right labeled tiny icon button">
+                            HathiTrust
+                            <i class="right arrow icon"></i>
+                        </button>
+                    </a>
+                </td>
+            </tr>
+            {% if user.is_authenticated %}
+            <tr>
+                <th scope="row">Added</th>
+                <td>{{ object.added|date:"d M Y" }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Last Updated</th>
+                <td>{{ object.updated|date:"d M Y" }}</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+    <!-- <dl class="metadata">
+        <dt>Secondary Title</dt>
+        <dd>containing what is necessary to the knowledge of the English tongue laid down in a plain and familiar way for the use of young gentlemen and ladys [sic]</dd>
+        <dt>Year of Publication</dt>
+        <dd>{{ object.pub_date }}</dd>
+        <dt>Author(s)</dt>
+        <dd>{{ object.author }}</dd>
+        <dt>Publisher</dt>
+        <dd>{{ object.publisher }}</dd>
+        <dt>City</dt>
+        <dd>{{ object.pub_place }}</dd>
+        <dt>Holding Institution</dt>
+        <dd>foo</dd>
+        <dt>PPA Collection</dt>
+        <dd class="ui tiny basic button">Grammar</dd>
+        <dd class="ui tiny basic button">Typography</dd>
+        <dt>View HathiTrust Volumes</dt>
+        <dd>{{ object.source_id }}</dd>
+        <dd class="ui right labeled tiny icon button">HathiTrust <i class="right arrow icon"></i></dd>
+        <dt>Library of Congress Tags</dt>
+        <dd>English language, Grammar,1500-1800, Annotations (Provenance)</dd>
+        <dt>Note on Edition</dt>
+        <dd>Lorem ipsum dolor sit amet, hinc esse senserit eos ad, postulant gubergren persequeris id duo. Dicat invenire eos ea. Vidit movet mea eu, soleat equidem voluptaria et duo.</dd>
+    </dl> -->
+</div>
 
-{# Using a simple HTML form since we need very little in the way of handling #}
-<form>
-  <label for="query">Search within the Volume</label>
-  <input type="text" name="query" id="query" value="{{ query }}" />
-  <input type="submit">
-</form>
+{% if error %}
+  {# if something went wrong (e.g., bad query), display error message and nothing else #}
+  <p>{{ error }}</p>
+{% else %}
+  {% if page_highlights %}
 
-<h1>{{ object.title }}</h1>
+    {% for item in page_highlights %}
+        {% include 'snippets/thumbnail_snippet.html' with id=item.srcid order=item.order item=item%}
+    {% endfor %}
+    <div style="clear: both"/>
+  {% else %}
+  {# This is a placeholder to indicate no results on search #}
+  <p>No keyword results.</p>
+  {% endif %}
+
+{% endif %}
+{% endblock %}
+
+{% comment %} <h1>{{ object.title }}</h1>
 <hr/>
 <ul style="list-style: none;">
     <li><b>HathiTrust ID:</b> {{ object.source_id }}</li>
@@ -26,21 +139,5 @@
     <li><b>Added:</b> {{ object.added|date:"d M Y" }}</li>
     <li><b>Last Updated:</b> {{ object.updated|date:"d M Y" }}</li>
 </ul>
-    {% if error %}
-      {# if something went wrong (e.g., bad query), display error message and nothing else #}
-      <p>{{ error }}</p>
-    {% else %}
-      {% if page_highlights %}
 
-        {% for item in page_highlights %}
-            {% include 'snippets/thumbnail_snippet.html' with id=item.srcid order=item.order item=item%}
-        {% endfor %}
-        <div style="clear: both"/>
-      {% else %}
-      {# This is a placeholder to indicate no results on search #}
-      <p>No keyword results.</p>
-      {% endif %}
-
-    {% endif %}
-
-{% endblock %}
+{% endcomment %}

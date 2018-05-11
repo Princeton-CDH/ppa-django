@@ -1,5 +1,4 @@
 import csv
-import json
 import logging
 
 from django.contrib import messages
@@ -200,7 +199,7 @@ class DigitizedWorkListView(ListView):
             # use Unified Highlighter (not default but recommended)
             'hl.method': 'unified',
             # override solr default of 10 results to return all pages
-            'rows': len(page_ids)
+            'rows': len(page_ids),
         })
         return solr_pageq.get_highlighting()
 
@@ -272,6 +271,8 @@ class DigitizedWorkDetailView(DetailView):
                 'hl': True,
                 'hl.fl': 'content',
                 # No way to set this to actual number in one search
+                # therefore using an arbitrarily high but not system breaking
+                # number.
                 'hl.snippets': 10000,
                 # not default but recommended
                 'hl.method': 'unified',
@@ -306,6 +307,38 @@ class CollectionListView(ListView):
     # NOTE: For consistency with DigitizedWork's list view
     template_name = 'archive/list_collections.html'
     ordering = ('name',)
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(CollectionListView, self).get_context_data(*args, **kwargs)
+
+        # NOTE: if we *only* want counts, could just do a regular facet
+
+        solr_stats = PagedSolrQuery({
+            'q': '*:*',
+            'facet': True,
+            'facet.pivot': '{!stats=piv1}collections_exact',
+            # NOTE: if we pivot on collection twice, like this, we should
+            # have the information needed to generate a venn diagram
+            # of the collections (based on number of overlap)
+            # 'facet.pivot': '{!stats=piv1}collections_exact,collections_exact'
+            'stats': True,
+            'stats.field': '{!tag=piv1 min=true max=true}pub_date',
+            'rows': 0
+        })
+        facet_pivot = solr_stats.raw_response['facet_counts']['facet_pivot']
+        # simplify the pivot stat data for display
+        stats = {}
+        for info in facet_pivot['collections_exact']:
+            pub_date_stats = info['stats']['stats_fields']['pub_date']
+            stats[info['value']] = {
+                'count': info['count'],
+                'dates': '%(min)d–%(max)d' % pub_date_stats \
+                    if pub_date_stats['max'] != pub_date_stats['min'] \
+                    else '%d' % pub_date_stats['min']
+            }
+        context['stats'] = stats
+
+        return context
 
 
 class DigitizedWorkCSV(ListView):
