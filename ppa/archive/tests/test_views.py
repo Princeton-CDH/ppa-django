@@ -398,11 +398,11 @@ class TestArchiveViews(TestCase):
         assert response.context['stats'][coll2.name]['count'] == 1
         assert response.context['stats'][coll2.name]['dates'] == '1903'
         # stats displayed on template
-        self.assertContains(response, '%d items' % digworks.count())
-        self.assertContains(response, '1 item')
-        self.assertNotContains(response, '1 items')
-        self.assertContains(response, '(1880–1903)')
-        self.assertContains(response, '(1903)')
+        self.assertContains(response, '%d digitized works' % digworks.count())
+        self.assertContains(response, '1 digitized work')
+        self.assertNotContains(response, '1 digitized works')
+        self.assertContains(response, '1880–1903')
+        self.assertContains(response, '1903')
 
 
 class TestAddToCollection(TestCase):
