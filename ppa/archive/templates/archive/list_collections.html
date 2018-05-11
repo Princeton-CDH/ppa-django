@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load humanize %}
+{% load humanize ppa_tags %}
 {% block page-subtitle %}Archive | Collections {% endblock %}
 
 {% block content %}
@@ -8,6 +8,12 @@
     <ul>
     {% for item in object_list %}
         <li><a href="{% url 'archive:list' %}?collections={{ item.name|urlencode }}"><strong>{{ item.name }}</strong></a></li>
+        {% with coll_stats=stats|dict_item:item.name %}
+            {% if coll_stats %}
+            <p>{{ coll_stats.count|intcomma }} item{{coll_stats.count|pluralize }}
+              ({{ coll_stats.dates }})</p>
+            {% endif %}
+        {% endwith %}
         {% if item.description %}
             <li>{{ item.description|safe }}</li>
         {% endif %}
