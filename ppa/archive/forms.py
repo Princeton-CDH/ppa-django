@@ -121,12 +121,58 @@ class SearchForm(forms.Form):
     }
 
 
-    query = forms.CharField(label='Search', required=False)
+    # text inputs
+    query = forms.CharField(label='Keyword or Phrase', required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Search the full text and metadata of the archive',
+            '_icon': 'search',
+            '_align': 'left'
+        }))
+    title_query = forms.CharField(label='Book Title', required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Search the archive by book title',
+            '_icon': 'search',
+            '_align': 'left'
+        }))
+    author_query = forms.CharField(label='Author', required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Search the archive by author',
+            '_icon': 'search',
+            '_align': 'left'
+        }))
+    # numeric inputs
+    pub_year_start = forms.DateField(label='Publication Year', required=False,
+        input_formats=['%Y'], widget=forms.TextInput(attrs={
+            'size': 4,
+            'maxlength': 4,
+            '_inline': True
+        }))
+    pub_year_end = forms.DateField(label='to', required=False,
+        input_formats=['%Y'], widget=forms.TextInput(attrs={
+            'size': 4,
+            'maxlength': 4,
+            '_inline': True
+        }))
+    # facets
     collections = FacetChoiceField()
 
     pub_date = RangeField(label='Publication Year', required=False)
 
     sort = forms.ChoiceField(widget=RadioSelectWithDisabled, choices=SORT_CHOICES,
+        required=False)
+
+    # booleans
+    earliest_only = forms.BooleanField(label='Earliest Edition in Hathi',
+        required=False, widget=forms.CheckboxInput(attrs={
+            '_icon': 'flag outline'
+        }))
+    ace_only = forms.BooleanField(label='Authorized Critical Edition',
+        required=False, widget=forms.CheckboxInput(attrs={
+            '_icon': 'flag'
+        }))
+    dict_exclude = forms.BooleanField(label='Dictionaries',
+        required=False)
+    pg_exclude = forms.BooleanField(label='Pronunciation Guides',
         required=False)
 
     # fields to request a facet from solr
