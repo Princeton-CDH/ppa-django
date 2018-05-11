@@ -52,8 +52,8 @@ class TestArchiveViews(TestCase):
         # TODO: Make these HTML when the page is styled
         # hathitrust ID
         self.assertContains(
-            response, dial.title, count=2,
-            msg_prefix='Missing two instance of object.title'
+            response, dial.title,
+            msg_prefix='Missing title'
         )
         self.assertContains(
             response, dial.source_id,
@@ -63,10 +63,10 @@ class TestArchiveViews(TestCase):
             response, dial.source_url,
             msg_prefix='Missing source_url'
         )
-        self.assertContains(
-            response, dial.enumcron,
-            msg_prefix='Missing volume/chronology (enumcron)'
-        )
+        # self.assertContains(  # disabled for now since it's not in design spec
+        #     response, dial.enumcron,
+        #     msg_prefix='Missing volume/chronology (enumcron)'
+        # )
         self.assertContains(
             response, dial.author,
             msg_prefix='Missing author'
@@ -83,14 +83,16 @@ class TestArchiveViews(TestCase):
             response, dial.pub_date,
             msg_prefix='Missing publication date (pub_date)'
         )
-        self.assertContains(
-            response, dial.added.strftime("%d %b %Y"),
-            msg_prefix='Missing added or in wrong format (d M Y in filter)'
-        )
-        self.assertContains(
-            response, dial.updated.strftime("%d %b %Y"),
-            msg_prefix='Missing updated or in wrong format (d M Y in filter)'
-        )
+        # only displaying these if logged in currently
+        #
+        # self.assertContains(
+        #     response, dial.added.strftime("%d %b %Y"),
+        #     msg_prefix='Missing added or in wrong format (d M Y in filter)'
+        # )
+        # self.assertContains(
+        #     response, dial.updated.strftime("%d %b %Y"),
+        #     msg_prefix='Missing updated or in wrong format (d M Y in filter)'
+        # )
 
     @pytest.mark.usefixtures("solr")
     def test_digitizedwork_listview(self):
