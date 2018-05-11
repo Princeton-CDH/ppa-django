@@ -27,6 +27,7 @@ class TestArchiveViews(TestCase):
         self.admin_user = get_user_model().objects.create_superuser(
             'admin', 'admin@example.com', self.admin_pass)
 
+    @pytest.mark.usefixtures("solr")
     def test_digitizedwork_detailview(self):
 
         # make some sample page content
