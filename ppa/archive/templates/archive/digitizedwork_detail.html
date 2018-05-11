@@ -68,6 +68,16 @@
                     </a>
                 </td>
             </tr>
+            {% if user.is_authenticated %}
+            <tr>
+                <th scope="row">Added</th>
+                <td>{{ object.added|date:"d M Y" }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Last Updated</th>
+                <td>{{ object.updated|date:"d M Y" }}</td>
+            </tr>
+            {% endif %}
         </tbody>
     </table>
     <!-- <dl class="metadata">
