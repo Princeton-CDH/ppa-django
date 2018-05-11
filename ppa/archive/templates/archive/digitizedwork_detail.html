@@ -1,4 +1,9 @@
 {% extends "base.html"  %}
+{% load static humanize %}
+
+{% block css %}
+<link rel="stylesheet" type="text/x-scss" href="{% static 'archive/scss/digitized-work.scss' %}">
+{% endblock %}
 
 {% block page-subtitle %}Archive | {{ object.title }} {% endblock %}
 
@@ -7,21 +12,80 @@
           href="{% url 'unapi' %}" />
 {% endblock %}
 
+{% block page-context-id %}digitized-work{% endblock %}
+
 {% block content %}
-<h1>{{ object.title }}</h1>
-<abbr class="unapi-id" title="{{ object.source_id }}"></abbr>
-<hr/>
-<ul style="list-style: none;">
-    <li><b>HathiTrust ID:</b> {{ object.source_id }}</li>
-    <li><b>HathiTrust URL:</b> <a href="{{ object.source_url}}">{{ object.source_url }}</a></li>
-    <li><b>Volume/Chronology:</b> {{ object.enumcron }}</li>
-    <li><b>Author:</b> {{ object.author }}</li>
-    <li><b>Place of Publication:</b> {{ object.pub_place }}</li>
-    <li><b>Publisher:</b> {{ object.publisher }}</li>
-    <li><b>Publication Date:</b> {{ object.pub_date }}</li>
-    <li><b>Pages:</b> {{ object.page_count }} pgs.</li>
-    <br />
-    <li><b>Added:</b> {{ object.added|date:"d M Y" }}</li>
-    <li><b>Last Updated:</b> {{ object.updated|date:"d M Y" }}</li>
-</ul>
+<div class="ui container">
+    <form class="ui form">
+        <div class="ui field">
+            <label for="query">Search within the Volume</label>
+            <div class="ui left icon input">
+                <input id="query" name="query" type="text" placeholder="Search keyword or phrase">
+                <i class="search icon"></i>
+            </div>
+        </div>
+    </form>
+    <h2 class="header">{{ object.title }}</h2>
+    <abbr class="unapi-id" title="{{ object.source_id }}"></abbr>
+    <table class="metadata ui very basic table">
+        <thead>
+            <tr>
+                <th scope="col" class="four wide">attribute</th>
+                <th scope="col" class="twelve wide">value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th scope="row">Secondary Title</th>
+                <td><em>{{ object.title }}</em></td>
+            </tr>
+            <tr>
+                <th scope="row">Year of Publication</th>
+                <td>{{ object.pub_date }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Author(s)</th>
+                <td>{{ object.author }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Publisher</th>
+                <td>{{ object.publisher }}</td>
+            </tr>
+            <tr>
+                <th scope="row">City</th>
+                <td>{{ object.pub_place }}</td>
+            </tr>
+            <tr>
+                <th scope="row">PPA Collection(s)</th>
+                <td>
+                    <button class="ui tiny basic button">Grammar</button>
+                    <button class="ui tiny basic button">Typography</button>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">View HathiTrust Volumes</th>
+                <td>
+                    <a href="{{ object.source_url }}">
+                        <span>{{ object.source_id }}</span>
+                        <button class="ui right labeled tiny icon button">
+                            HathiTrust
+                            <i class="right arrow icon"></i>
+                        </button>
+                    </a>
+                </td>
+            </tr>
+            {% if user.is_authenticated %}
+            <tr>
+                <th scope="row">Added</th>
+                <td>{{ object.added|date:"d M Y" }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Last Updated</th>
+                <td>{{ object.updated|date:"d M Y" }}</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+</div>
 {% endblock %}

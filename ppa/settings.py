@@ -102,6 +102,7 @@ INSTALLED_APPS = [
     'mezzanine.core',
     'mezzanine.generic',
     'mezzanine.pages',
+    'semanticuiforms',
     'ppa.archive',
     'ppa.common',
     'ppa.unapi',

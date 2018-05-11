@@ -52,8 +52,8 @@ class TestArchiveViews(TestCase):
         # TODO: Make these HTML when the page is styled
         # hathitrust ID
         self.assertContains(
-            response, dial.title, count=2,
-            msg_prefix='Missing two instance of object.title'
+            response, dial.title,
+            msg_prefix='Missing title'
         )
         self.assertContains(
             response, dial.source_id,
@@ -63,10 +63,10 @@ class TestArchiveViews(TestCase):
             response, dial.source_url,
             msg_prefix='Missing source_url'
         )
-        self.assertContains(
-            response, dial.enumcron,
-            msg_prefix='Missing volume/chronology (enumcron)'
-        )
+        # self.assertContains(  # disabled for now since it's not in design spec
+        #     response, dial.enumcron,
+        #     msg_prefix='Missing volume/chronology (enumcron)'
+        # )
         self.assertContains(
             response, dial.author,
             msg_prefix='Missing author'
@@ -83,14 +83,16 @@ class TestArchiveViews(TestCase):
             response, dial.pub_date,
             msg_prefix='Missing publication date (pub_date)'
         )
-        self.assertContains(
-            response, dial.added.strftime("%d %b %Y"),
-            msg_prefix='Missing added or in wrong format (d M Y in filter)'
-        )
-        self.assertContains(
-            response, dial.updated.strftime("%d %b %Y"),
-            msg_prefix='Missing updated or in wrong format (d M Y in filter)'
-        )
+        # only displaying these if logged in currently
+        #
+        # self.assertContains(
+        #     response, dial.added.strftime("%d %b %Y"),
+        #     msg_prefix='Missing added or in wrong format (d M Y in filter)'
+        # )
+        # self.assertContains(
+        #     response, dial.updated.strftime("%d %b %Y"),
+        #     msg_prefix='Missing updated or in wrong format (d M Y in filter)'
+        # )
 
         # unapi server link present
         self.assertContains(
@@ -359,19 +361,21 @@ class TestArchiveViews(TestCase):
         self.assertNotContains(response, reverse('archive:csv'),
             msg_prefix='CSV download link should only be on digitized work list')
 
+    @pytest.mark.usefixtures("solr")
     def test_collection_list(self):
         # Create test collections to display
-        self.coll1 = Collection.objects.create(name='Random Grabbag')
-        self.coll2 = Collection.objects.create(
+        coll1 = Collection.objects.create(name='Random Grabbag')
+        coll2 = Collection.objects.create(
             name='Foo through Time',
             description="A <em>very</em> useful collection."
         )
+
         # Check that the context is set as expected
         collection_list = reverse('archive:list-collections')
         response = self.client.get(collection_list)
         # it should have both collections that exist in it
-        assert self.coll1 in response.context['object_list']
-        assert self.coll2 in response.context['object_list']
+        assert coll1 in response.context['object_list']
+        assert coll2 in response.context['object_list']
 
         # Check that the template is rendering as expected
         collection_list = reverse('archive:list-collections')
@@ -392,6 +396,37 @@ class TestArchiveViews(TestCase):
             response, '<em>very</em>', html=True,
             msg_prefix='should render the description with HTML intact.'
         )
+
+        ## test collection stats from Solr
+
+        # add items to collections
+        # - put everything in collection 1
+        digworks = DigitizedWork.objects.all()
+        for digwork in digworks:
+            digwork.collections.add(coll1)
+        # just one item in collection 2
+        wintry = digworks.get(title__icontains='Wintry')
+        wintry.collections.add(coll2)
+
+        # reindex the digitized works so we can check stats
+        solr, solr_collection = get_solr_connection()
+        solr.index(solr_collection, [dw.index_data() for dw in digworks],
+                   params={"commitWithin": 100})
+        sleep(2)
+
+        response = self.client.get(collection_list)
+        # stats set properly in context
+        assert 'stats' in response.context
+        assert response.context['stats'][coll1.name]['count'] == digworks.count()
+        assert response.context['stats'][coll1.name]['dates'] == '1880–1903'
+        assert response.context['stats'][coll2.name]['count'] == 1
+        assert response.context['stats'][coll2.name]['dates'] == '1903'
+        # stats displayed on template
+        self.assertContains(response, '%d items' % digworks.count())
+        self.assertContains(response, '1 item')
+        self.assertNotContains(response, '1 items')
+        self.assertContains(response, '(1880–1903)')
+        self.assertContains(response, '(1903)')
 
 
 class TestAddToCollection(TestCase):

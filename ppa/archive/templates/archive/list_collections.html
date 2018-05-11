@@ -1,16 +1,45 @@
 {% extends "base.html" %}
-{% load humanize %}
+{% load static humanize ppa_tags %}
+
+{% block css %}
+<link rel="stylesheet" type="text/x-scss" href="{% static 'archive/scss/list-collections.scss' %}">
+{% endblock %}
+
 {% block page-subtitle %}Archive | Collections {% endblock %}
 
+{% block page-context-id %}collections{% endblock %}
+
 {% block content %}
-<h1>Collections</h1>
-<hr>
-    <ul>
-    {% for item in object_list %}
-        <li><a href="{% url 'archive:list' %}?collections={{ item.name|urlencode }}"><strong>{{ item.name }}</strong></a></li>
-        {% if item.description %}
-            <li>{{ item.description|safe }}</li>
-        {% endif %}
-    {% endfor %}
-    </ul>
+<div class="ui center aligned text container">
+    <h4 class="sub header">about the</h4>
+    <h1 class="header">Collections</h1>
+    <p class="page-description">The Archive builds on bibliographic data from several sources as well as library catalog data from the HathiTrust Research Center. It is divided into six collections. Users are able to search across collections or within any combination of collections.</p>
+    <section class="collection-cards">
+        <div class="ui two stackable cards">
+            {% for item in object_list %}
+            {# should we display collections for which no items are associated (i.e. no stats)? #}
+            <a class="ui card" href="{% url 'archive:list' %}?collections={{ item.name|urlencode }}">
+                <div class="center aligned content">
+                    <h3 class="header">{{ item.name }}</h3>
+                    {% with coll_stats=stats|dict_item:item.name %}
+                        <div class="meta">
+                            {% firstof coll_stats.count "0" as count %}
+                            <p class="count">{{ count|intcomma }} digitized work{{ count|pluralize }}</p>
+                            <!-- <p class="count">{{ coll_stats.count|intcomma }} digitized work{{coll_stats.count|pluralize }}</p> -->
+                            <p class="date">{{ coll_stats.dates }}</p>
+                        </div>
+                    {% endwith %}
+                    {% if item.description %}
+                    <div class="description">
+                        {{ item.description|safe }}
+                    </div>
+                    {% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    <a class="archive-link" href="/archive"><h2 class="ui header">✒ View the Archive</h2></a>
+</div>
 {% endblock %}
+

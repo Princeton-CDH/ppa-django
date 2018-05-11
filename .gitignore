@@ -1,5 +1,4 @@
 # Media ignores
-static
 static/media/
 static/CACHE
 sitemedia/fonts
