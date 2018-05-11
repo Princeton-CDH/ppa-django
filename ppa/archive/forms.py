@@ -160,7 +160,6 @@ class SearchForm(forms.Form):
 
     sort = forms.ChoiceField(widget=RadioSelectWithDisabled, choices=SORT_CHOICES,
         required=False)
-<<<<<<< HEAD
     # booleans
     earliest_only = forms.BooleanField(label='Earliest Edition in Hathi',
         required=False, widget=forms.CheckboxInput(attrs={
@@ -174,9 +173,6 @@ class SearchForm(forms.Form):
         required=False)
     pg_exclude = forms.BooleanField(label='Pronunciation Guides',
         required=False)
-=======
-
->>>>>>> 94f71597cb698f114846d7c3d5597343817d2fea
     # fields to request a facet from solr
     facet_fields = ['collections_exact']
     range_facets = ['pub_date']
