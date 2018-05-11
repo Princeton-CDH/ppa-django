@@ -52,6 +52,10 @@ class TestArchiveViews(TestCase):
         # get the detail view page and check that the response is 200
         response = self.client.get(url)
         assert response.status_code == 200
+        # no keyword search so no note about that
+        # no page_obj or search results reflected
+        assert 'page_obj' not in response.context
+        self.assertNotContains(response, 'No keyword results.')
 
         # now check that the right template is used
         assert 'archive/digitizedwork_detail.html' in \
@@ -125,13 +129,13 @@ class TestArchiveViews(TestCase):
         assert 'page_highlights' in response.context
         # should be an empty list
         assert response.context['page_highlights'] == []
-        self.assertContains(response, 'No keyword results.')
 
         # test with a word that will produce some snippets
         response = self.client.get(url, {'query': 'knobs'})
         assert response.status_code == 200
-        assert 'page_highlights' in response.context
-        assert isinstance(response.context['page_highlights'], list)
+        assert 'page_obj' in response.context
+        assert response.context['page_obj'].number == 1
+        assert len(response.context['page_obj'].object_list) == len(response.context['page_highlights'])
         highlights = response.context['page_highlights'][0]
         # result is as expected for page with all the needed fields
         assert highlights['srcid'] == dial.source_id

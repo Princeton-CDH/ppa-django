@@ -3,6 +3,7 @@ import logging
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.utils.http import urlencode
@@ -252,15 +253,16 @@ class DigitizedWorkDetailView(DetailView):
     model = DigitizedWork
     slug_field = 'source_id'
     slug_url_kwarg = 'source_id'
+    paginate_by = 50
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
         # pull in the query if it exists to use
         query = self.request.GET.get('query', '')
 
         solr_pageq = None
         if query:
+            context['query'] = query
             digwork = context['object']
             solr_q = 'text:(%s) AND srcid:("%s") AND item_type:(page)' \
                 % (query, digwork.source_id)
@@ -281,10 +283,14 @@ class DigitizedWorkDetailView(DetailView):
             }
 
             logger.info("Solr page keyword search query: %s" % solr_q)
-            solr_pageq = PagedSolrQuery(solr_opts)
 
-            context['query'] = query
             try:
+                # configure paginator and set in context
+                solr_pageq = PagedSolrQuery(solr_opts)
+                paginator = Paginator(solr_pageq, per_page=self.paginate_by)
+                page = self.request.GET.get('page', 1)
+                context['page_obj'] = paginator.page(page)
+                # get highlights and set in context
                 highlights = solr_pageq.get_results() if solr_pageq else []
                 context['page_highlights'] = highlights
             except SolrError as solr_err:

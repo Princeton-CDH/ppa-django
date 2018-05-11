@@ -113,14 +113,34 @@
   {% if page_highlights %}
 
     {% for item in page_highlights %}
-        {% include 'snippets/thumbnail_snippet.html' with id=item.srcid order=item.order item=item%}
+        {% include 'archive/snippets/thumbnail_snippet.html' with id=item.srcid order=item.order item=item%}
     {% endfor %}
     <div style="clear: both"/>
   {% else %}
-  {# This is a placeholder to indicate no results on search #}
-  <p>No keyword results.</p>
+    {# This is a placeholder to indicate no results on search #}
+    {% if query %}
+      <p>No keyword results.</p>
+    {% endif %}
   {% endif %}
+    {% if page_obj %}
+      <div class="pagination">
+          <span class="step-links">
+              {% if page_obj.has_previous %}
+                  <a href="?{% querystring_replace page=1 %}">&laquo; first</a>
+                  <a href="?{% querystring_replace page=page_obj.previous_page_number %}">previous</a>
+              {% endif %}
 
+              <span class="current">
+                  Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+              </span>
+
+              {% if page_obj.has_next %}
+                  <a href="?{% querystring_replace page=page_obj.next_page_number %}">next</a>
+                  <a href="?{% querystring_replace page=page_obj.paginator.num_pages %}">last &raquo;</a>
+              {% endif %}
+          </span>
+      </div>
+    {% endif %}
 {% endif %}
 {% endblock %}
 
