@@ -1,5 +1,91 @@
 {% extends "base.html" %}
-{% load static humanize %}
+{% load humanize ppa_tags %}
+{% block page-subtitle %}Archive | {% endblock %}
+
+{% block content %}
+<h1>Archive</h1>
+
+<form>
+{{ search_form }}
+
+<input type="submit"/>
+</form>
+
+
+{% if error %}
+{# if something went wrong (e.g., bad query), display error message and nothing else #}
+<p>{{ error }}</p>
+{% else %}
+
+<p>{{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}.</p>
+<hr/>
+
+<ol start="{{ page_obj.start_index }}">
+    {% for item in object_list %}
+    <li>
+        <h3><a href="{% url 'archive:detail' item.srcid %}">{{ item.title }}</a></h3>
+        <p>{{ item.author }}</p>
+        {% if item.enumcron %}<p>{{ item.enumcron }}</p> {% endif %}
+        <p>{{ item.publisher }} | {{ item.pub_place }} | {{ item.pub_date }}</p>
+        <p>
+        {% for collection in item.collections %}
+            <span class="ui green button">{{ collection }}</span>
+        {% endfor %}
+        </p>
+        {% if sort == 'Relevance' %}
+            <p><small>relevance: {{ item.score }}</small></p>
+        {% endif %}
+
+        <p><a class="ui button" href="{{ item.src_url }}" title="View item on HathiTrust">HathiTrust →</a></p>
+        {% with results=page_groups|dict_item:item.id %}
+            {% if page_highlights %}
+                {% for page in results.docs %}
+                    <div style="float:left; width: 50%">
+
+                        <img src="{% page_image_url item.id page.order 180 %}"
+                            srcset="{% page_image_url item.id page.order 360 %} 2x"
+                            style="float:left"/>
+
+                        {% with page_highlights=page_highlights|dict_item:page.id %}
+                            {% for snippet in page_highlights.content %}
+                            <p style="white-space: pre-wrap">{{ snippet|safe }}</p>
+                            {% endfor %}
+                        {% endwith %}
+                    </div>
+
+                {% endfor %}
+
+                <div style="clear: both"/>
+                {# link to page with search if there are more than two pages #}
+                {% if results.numFound > 2 %}
+                <a href="{% url 'archive:detail' item.srcid %}?query={{ query }}">View all {{ results.numFound|intcomma }} page{{ results.numFound|pluralize }} →</a>
+                {% endif %}
+            {% endif %}
+        {% endwith %}
+
+    </li>
+    {% empty %}
+    <li>No matching items found</li>
+    {% endfor %}
+</ol>
+
+<div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?{% querystring_replace page=1 %}">&laquo; first</a>
+            <a href="?{% querystring_replace page=page_obj.previous_page_number %}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?{% querystring_replace page=page_obj.next_page_number %}">next</a>
+            <a href="?{% querystring_replace page=page_obj.paginator.num_pages %}">last &raquo;</a>
+        {% endif %}
+    </span>
+<!-- {% load static humanize %}
 {% block css %}
 <link rel="stylesheet" type="text/css" href="{% static 'archive/search.css' %}">
 {% endblock %}
@@ -33,6 +119,6 @@
             {% endfor %}
         </div>
         {% include 'snippets/search_pagination.html' %}
-    </section>
+    </section> -->
 </div>
 {% endblock %}
