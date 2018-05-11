@@ -1,0 +1,16 @@
+<div style="float:left; width: 50%">
+
+    <img src="{% page_image_url id order 180 %}"
+        srcset="{% page_image_url id order 360 %} 2x"
+        style="float:left"/>
+          {# the listview use of this snippet passes in a a list of highlights#}
+          {% if highlights %}
+            {% for snippet in highlights.content %}
+              <p style="white-space: pre-wrap">{{ snippet|safe }}</p>
+            {% endfor %}
+          {% endif %}
+          {# the detail view version is only concerning itself with pages so has just one item #}
+          {% if item %}
+            <p style="white-space: pre-wrap">{{ item.content|safe }}</p>
+          {% endif %}
+</div>

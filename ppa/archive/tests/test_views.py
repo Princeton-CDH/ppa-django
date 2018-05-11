@@ -17,7 +17,7 @@ from ppa.archive.forms import SearchForm
 from ppa.archive.models import DigitizedWork, Collection
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView
-
+from ppa.archive.templatetags.ppa_tags import page_image_url
 
 class TestArchiveViews(TestCase):
     fixtures = ['sample_digitized_works']
@@ -28,8 +28,25 @@ class TestArchiveViews(TestCase):
             'admin', 'admin@example.com', self.admin_pass)
 
     def test_digitizedwork_detailview(self):
-        # get a work and its detail page to test with
+
+        # make some sample page content
+        # sample page content associated with one of the fixture works
+        sample_page_content = [
+            'something about dials and clocks',
+            'knobs and buttons',
+        ]
+        htid = 'chi.78013704'
+        solr_page_docs = [
+            {'content': content, 'order': i, 'item_type': 'page',
+             'srcid': htid, 'id': '%s.%s' % (htid, i)}
+             for i, content in enumerate(sample_page_content)]
         dial = DigitizedWork.objects.get(source_id='chi.78013704')
+        solr_work_docs = [dial.index_data()]
+        solr, solr_collection = get_solr_connection()
+        index_data = solr_work_docs + solr_page_docs
+        solr.index(solr_collection, index_data, params={"commitWithin": 100})
+        sleep(2)
+        # get a work and its detail page to test with
         url = reverse('archive:detail', kwargs={'source_id': dial.source_id})
 
         # get the detail view page and check that the response is 200
@@ -91,6 +108,60 @@ class TestArchiveViews(TestCase):
             response, dial.updated.strftime("%d %b %Y"),
             msg_prefix='Missing updated or in wrong format (d M Y in filter)'
         )
+
+        # - check a search with a query that should include query in the
+        # the context AND a the results of a PageSolrQuery
+
+        # use a word with absolutely not matches first to test the
+        # default behavior for an empty search query
+        response = self.client.get(url, {'query': 'thermodynamics'})
+        assert response.status_code == 200
+        # query string passsed into context for form
+        assert 'query' in response.context
+        assert response.context['query'] == 'thermodynamics'
+        # solr search results also in query
+        assert 'page_highlights' in response.context
+        # should be an empty list
+        assert response.context['page_highlights'] == []
+        self.assertContains(response, 'No keyword results.')
+
+        # test with a word that will produce some snippets
+        response = self.client.get(url, {'query': 'knobs'})
+        assert response.status_code == 200
+        assert 'page_highlights' in response.context
+        assert isinstance(response.context['page_highlights'], list)
+        highlights = response.context['page_highlights'][0]
+        # result is as expected for page with all the needed fields
+        assert highlights['srcid'] == dial.source_id
+        assert highlights['id'] == '%s.1' % dial.source_id
+        assert highlights['order'] == '1'
+        assert highlights['content'] == 'knobs and buttons'
+        assert highlights['item_type'] == 'page'
+        # template has the expected information rendered
+        self.assertContains(response, highlights['content'])
+        # image url should appear twice for src and srcset
+        self.assertContains(
+            response,
+            page_image_url(highlights['srcid'], highlights['order'], 180),
+            count=1
+        )
+        self.assertContains(
+            response,
+            page_image_url(highlights['srcid'], highlights['order'], 360),
+            count=1
+        )
+
+        # bad syntax
+        response = self.client.get(url, {'query': '"incomplete phrase'})
+        self.assertContains(response, 'Unable to parse search query')
+
+        # test raising a generic solr error
+        with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
+            mockpsq.return_value.get_results.side_effect = SolrError
+            # count needed for paginator
+            mockpsq.return_value.count = 0
+            response = self.client.get(url, {'query': 'knobs'})
+            self.assertContains(response, 'Something went wrong.')
 
     @pytest.mark.usefixtures("solr")
     def test_digitizedwork_listview(self):
@@ -576,5 +647,3 @@ class TestDigitizedWorkListView(TestCase):
             assert ' AND id:("p1a" "p1b" "p2a" "p2b")' in solr_opts['q']
 
             assert highlights == mockpsq.return_value.get_highlighting()
-
-

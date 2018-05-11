@@ -40,22 +40,11 @@
         {% with results=page_groups|dict_item:item.id %}
             {% if page_highlights %}
                 {% for page in results.docs %}
-                    <div style="float:left; width: 50%">
-
-                        <img src="{% page_image_url item.id page.order 180 %}"
-                            srcset="{% page_image_url item.id page.order 360 %} 2x"
-                            style="float:left"/>
-
-                        {% with page_highlights=page_highlights|dict_item:page.id %}
-                            {% for snippet in page_highlights.content %}
-                            <p style="white-space: pre-wrap">{{ snippet|safe }}</p>
-                            {% endfor %}
-                        {% endwith %}
-                    </div>
-
+                  {% with page_highlights=page_highlights|dict_item:page.id %}
+                    {% include 'snippets/thumbnail_snippet.html' with id=item.srcid order=page.order highlights=page_highlights %}
+                  {% endwith %}
                 {% endfor %}
-
-                <div style="clear: both"/>
+                 <div style="clear: both"/>
                 {# link to page with search if there are more than two pages #}
                 {% if results.numFound > 2 %}
                 <a href="{% url 'archive:detail' item.srcid %}?query={{ query }}">View all {{ results.numFound|intcomma }} page{{ results.numFound|pluralize }} →</a>
