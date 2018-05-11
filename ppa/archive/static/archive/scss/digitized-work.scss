@@ -1,0 +1,9 @@
+#digitized-work {
+    // use headers to control col spacing, but hide them
+    thead {
+        height: 0;
+    }
+    thead th {
+        visibility: hidden;
+    }
+}
