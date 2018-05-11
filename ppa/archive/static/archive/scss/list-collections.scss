@@ -1,0 +1,27 @@
+#collections {
+    .page-description {
+        margin: 6rem auto;
+        text-align: left;
+    }
+
+    .card {
+        max-height: 13rem;
+
+        .header,
+        p {
+            margin-bottom: 0;
+        }
+
+        p {
+            font-size: 1rem;
+        }
+
+        .description {
+            text-align: left;
+        }
+    }
+
+    .archive-link .header {
+        margin: 4rem 0 6rem;
+    }
+}
