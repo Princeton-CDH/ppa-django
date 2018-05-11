@@ -25,7 +25,6 @@
                         <div class="meta">
                             {% firstof coll_stats.count "0" as count %}
                             <p class="count">{{ count|intcomma }} digitized work{{ count|pluralize }}</p>
-                            <!-- <p class="count">{{ coll_stats.count|intcomma }} digitized work{{coll_stats.count|pluralize }}</p> -->
                             <p class="date">{{ coll_stats.dates }}</p>
                         </div>
                     {% endwith %}
