@@ -13,3 +13,4 @@ django-apptemplates
 progressbar2
 django-compressor
 django-compressor-autoprefixer
+django-semanticui-forms
