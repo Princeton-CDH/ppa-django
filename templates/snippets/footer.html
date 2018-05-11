@@ -2,14 +2,14 @@
     <nav class="ui inverted stackable borderless menu">
         <a class="item">History of the Archive</a>
         <a class="item">What is Prosody</a>
-        <a class="item">About the Collections</a>
+        <a class="item" href="{% url 'archive:list-collections'%}">About the Collections</a>
         <a class="item">Editorial</a>
-        <a class="item">View the Archive</a>
+        <a class="item" href="{% url 'archive:list' %}">View the Archive</a>
     </nav>
     <div class="ui inverted horizontal link list row">
         <a class="item">Contributors and Board Members</a>
         <a class="item">Contact</a>
-        <a class="item">How to Cite</a>   
+        <a class="item">How to Cite</a>
     </div>
     <div class="ui inverted horizontal list row">
         <a class="item">
@@ -21,9 +21,9 @@
     </div>
     <div class="ui container">
         <div class="contact ui inverted horizontal link list">
-            <a class="item">©2017 Trustees of Princeton University</a>
-            <a class="item">Accessibility</a>
-            <a class="item">Accessibility Assistance</a>
+            <a class="item">©2018 Trustees of Princeton University</a>
+            <a class="item" href="https://accessibility.princeton.edu/">Accessibility</a>
+            <a class="item" href="https://accessibility.princeton.edu/accessibility-assistance">Accessibility Assistance</a>
             <a class="item" id="sw_version">{{ SW_VERSION }}</a>
         </div>
     </div>
