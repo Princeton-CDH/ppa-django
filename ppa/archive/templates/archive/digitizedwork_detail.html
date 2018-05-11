@@ -3,6 +3,14 @@
 {% block page-subtitle %}Archive | {{ object.title }} {% endblock %}
 
 {% block content %}
+
+{# Using a simple HTML form since we need very little in the way of handling #}
+<form>
+  <label for="query">Search within the Volume</label>
+  <input type="text" name="query" id="query" value="{{ query }}" />
+  <input type="submit">
+</form>
+
 <h1>{{ object.title }}</h1>
 <hr/>
 <ul style="list-style: none;">
@@ -18,4 +26,24 @@
     <li><b>Added:</b> {{ object.added|date:"d M Y" }}</li>
     <li><b>Last Updated:</b> {{ object.updated|date:"d M Y" }}</li>
 </ul>
+    {% if error %}
+      {# if something went wrong (e.g., bad query), display error message and nothing else #}
+      <p>{{ error }}</p>
+    {% else %}
+    
+      {% for item in page_highlights %}
+          <div style="float:left; width: 50%">
+
+              <img src="{% page_image_url item.srcid item.order 180 %}"
+                  srcset="{% page_image_url item.srcid item.order 360 %} 2x"
+                  style="float:left"/>
+
+                    <p style="white-space: pre-wrap">{{ item.content|safe }}</p>
+          </div>
+          <div style="clear: both"/>
+
+      {% endfor %}
+
+    {% endif %}
+
 {% endblock %}

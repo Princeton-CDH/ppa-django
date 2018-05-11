@@ -254,6 +254,48 @@ class DigitizedWorkDetailView(DetailView):
     slug_field = 'source_id'
     slug_url_kwarg = 'source_id'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # pull in the query if it exists to use
+        query = self.request.GET.get('query', '')
+
+        solr_pageq = None
+        if query:
+            digwork = context['object']
+            solr_q = 'text:(%s) AND srcid:("%s") AND item_type:(page)' \
+                % (query, digwork.source_id)
+            solr_opts = {
+                'q': solr_q,
+                'sort': 'order asc',
+                'fl': '*',
+                'hl': True,
+                'hl.fl': 'content',
+                # No way to set this to actual number in one search
+                'hl.snippets': 10000,
+                # not default but recommended
+                'hl.method': 'unified',
+                # default to paginating by 50 rows
+                'rows': 50,
+            }
+
+            logger.info("Solr page keyword search query: %s" % solr_q)
+            solr_pageq = PagedSolrQuery(solr_opts)
+
+            context['query'] = query
+            try:
+                highlights = solr_pageq.get_results() if solr_pageq else []
+                context['page_highlights'] = highlights
+            except SolrError as solr_err:
+                if 'Cannot parse' in str(solr_err):
+                    error_msg = ('Unable to parse search query; '
+                                 'please revise and try again.')
+                else:
+                    # NOTE: this error should possibly be raised; 500 error?
+                    error_msg = 'Something went wrong.'
+                context['error'] = error_msg
+
+        return context
 
 class CollectionListView(ListView):
     '''
