@@ -137,8 +137,10 @@ class TestArchiveViews(TestCase):
         assert response.status_code == 200
         self.assertContains(response, '%d digitized works' % len(digitized_works))
         assert response.context['sort'] == 'Title A-Z'
-        self.assertContains(response, '<ol start="1">',
-            msg_prefix='results are numbered')
+        self.assertContains(response, '<p class="result-number">1</p>',
+            msg_prefix='results have numbers')
+        self.assertContains(response, '<p class="result-number">2</p>',
+            msg_prefix='results have multiple numbers')
 
         # unapi server link present
         self.assertContains(
@@ -235,7 +237,7 @@ class TestArchiveViews(TestCase):
         self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
         response = self.client.get(url, {'query': 'blood NOT bone'})
-        self.assertContains(response, 'No matching items')
+        self.assertContains(response, 'No matching works.')
 
         # bad syntax
         response = self.client.get(url, {'query': '"incomplete phrase'})
@@ -311,7 +313,7 @@ class TestArchiveViews(TestCase):
         sleep(2)
         response = self.client.get(url)
         assert response.status_code == 200
-        self.assertContains(response, 'No matching items')
+        self.assertContains(response, 'No matching works.')
 
         # simulate solr exception (other than query syntax)
         with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:

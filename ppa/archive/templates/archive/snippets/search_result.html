@@ -1,8 +1,9 @@
 {% load humanize %}
 <div class="item">
+    <abbr class="unapi-id" title="{{ item.srcid }}"></abbr>
     <div class="ui stackable grid container">
         <div class="labels one wide column">
-            <p>{{ page_obj.start_index }}</p>
+            <p class="result-number">{{ page_obj.start_index|add:forloop.counter0 }}</p>
             <i class="ui flag icon"></i>
         </div>
         <div class="title seven wide column">
@@ -47,6 +48,7 @@
                     {% endif %}
                 {% endif %}
             {% endwith %}
+            <!--<p>{{ item.enumcron }}</p>-->
         </div>
     </div>
 </div>
