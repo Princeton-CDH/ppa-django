@@ -198,7 +198,8 @@ class DigitizedWorkListView(ListView):
             # enable highlighting on content field with 3 snippets
             'hl': True,
             'hl.fl': 'content',
-            'hl.snippets': 3,
+            'hl.snippets': 1,
+            'hl.fragsize': 10,
             # use Unified Highlighter (not default but recommended)
             'hl.method': 'unified',
             # override solr default of 10 results to return all pages
