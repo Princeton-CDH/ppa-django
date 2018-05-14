@@ -32,7 +32,7 @@ href="{% url 'unapi' %}" />
     <div class="ui container">
         {% include 'archive/snippets/pagination.html' %}
     </div>
-    <div class="results-list ui items">
+    <div class="results-list">
         {% for item in object_list %}
             {% include 'archive/snippets/search_result.html' %}
         {% empty %}
