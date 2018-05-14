@@ -118,6 +118,24 @@ class TestDigitizedWork(TestCase):
         assert work.get_absolute_url() == \
             reverse('archive:detail', kwargs={'source_id': work.source_id})
 
+    @patch('ppa.archive.models.HathiBibliographicAPI')
+    def test_get_metadata(self, mock_hathibib):
+        work = DigitizedWork(source_id='ht:1234')
+
+        # unsupported metadata format should error
+        with pytest.raises(ValueError):
+            work.get_metadata('bogus')
+
+        # for marc, should call hathi bib api and return marc in binary form
+        mdata = work.get_metadata('marc')
+        mock_hathibib.assert_any_call()
+        mock_bibapi = mock_hathibib.return_value
+        mock_bibapi.record.assert_called_with('htid', work.source_id)
+        mock_bibdata = mock_bibapi.record.return_value
+        mock_bibdata.marcxml.as_marc.assert_any_call()
+        assert mdata == mock_bibdata.marcxml.as_marc.return_value
+
+
 
 class TestCollection(TestCase):
 
