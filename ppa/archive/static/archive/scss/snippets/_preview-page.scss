@@ -1,0 +1,32 @@
+.page {
+    flex: 1 1 auto;
+    display: flex;
+
+    &:nth-child(2) {
+        display: none;
+    }
+
+    @media only screen and (min-width: 1440px) {
+        &:nth-child(2) {
+            display: flex;
+        }
+    }
+
+    .preview {
+        width: 180px;
+    }
+
+    .snippets {
+        flex: 1 1 auto;
+        margin: 0 1rem;
+        font-size: 1.25rem;
+    }
+
+    .snippet {
+        white-space: pre-wrap;
+    }
+
+    em {
+        color: #07ae79;
+    }
+}

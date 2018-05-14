@@ -1,0 +1,13 @@
+<div class="page">
+    <div class="preview">
+        <img src="{% page_image_url item.id page.order 180 %}"
+            srcset="{% page_image_url item.id page.order 360 %} 2x"/>
+    </div>
+    {% with page_highlights=page_highlights|dict_item:page.id %}
+        <div class="snippets">
+            {% for snippet in page_highlights.content %}
+            <p class="snippet">{{ snippet|safe }}</p>
+            {% endfor %}
+        </div>
+    {% endwith %}
+</div>

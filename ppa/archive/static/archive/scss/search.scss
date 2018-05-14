@@ -1,0 +1,40 @@
+@import 'snippets/search-result';
+@import 'snippets/preview-page';
+
+/* search form */
+#histogram .placeholder {
+    width: 100%;
+    height: 60px;
+    background-color: grey;
+}
+
+#histogram .max-date {
+    float: right;
+}
+
+#booleans .field {
+    margin-bottom: 0;
+}
+
+#booleans .input {
+    width: 100%;
+}
+
+#collections .button {
+    margin-bottom: .5rem;
+    margin-right: .5rem;
+}
+
+/* sorting */
+.sort .menu {
+    justify-content: space-between;
+}
+
+.sort .menu span {
+    text-transform: uppercase !important;
+}
+
+/* pagination */
+.pagination .page-controls {
+    float: right;
+}

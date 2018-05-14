@@ -17,13 +17,13 @@
 </form>
 
 
-{% if error %}
-{# if something went wrong (e.g., bad query), display error message and nothing else #}
-<p>{{ error }}</p>
-{% else %}
+{% block css %}
+<link rel="stylesheet" type="text/x-scss" href="{% static 'archive/scss/search.scss' %}">
+{% endblock %}
 
-<p>{{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}.</p>
-<hr/>
+{% block page-subtitle %}Archive | {% endblock %}
+
+{% block page-context-id %}search{% endblock %}
 
 {% include 'archive/snippets/pagination.html' %}
 
