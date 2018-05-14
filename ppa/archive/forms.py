@@ -128,34 +128,22 @@ class SearchForm(forms.Form):
             '_icon': 'search',
             '_align': 'left'
         }))
-    title_query = forms.CharField(label='Book Title', required=False,
-        widget=forms.TextInput(attrs={
-            'placeholder': 'Search the archive by book title',
-            '_icon': 'search',
-            '_align': 'left'
-        }))
-    author_query = forms.CharField(label='Author', required=False,
-        widget=forms.TextInput(attrs={
-            'placeholder': 'Search the archive by author',
-            '_icon': 'search',
-            '_align': 'left'
-        }))
-    # numeric inputs
-    pub_year_start = forms.DateField(label='Publication Year', required=False,
-        input_formats=['%Y'], widget=forms.TextInput(attrs={
-            'size': 4,
-            'maxlength': 4,
-            '_inline': True
-        }))
-    pub_year_end = forms.DateField(label='to', required=False,
-        input_formats=['%Y'], widget=forms.TextInput(attrs={
-            'size': 4,
-            'maxlength': 4,
-            '_inline': True
-        }))
+    # title and author field search not implemented yet
+    # title_query = forms.CharField(label='Book Title', required=False,
+    #     widget=forms.TextInput(attrs={
+    #         'placeholder': 'Search the archive by book title',
+    #         '_icon': 'search',
+    #         '_align': 'left'
+    #     }))
+    # author_query = forms.CharField(label='Author', required=False,
+    #     widget=forms.TextInput(attrs={
+    #         'placeholder': 'Search the archive by author',
+    #         '_icon': 'search',
+    #         '_align': 'left'
+    #     }))
+
     # facets
     collections = FacetChoiceField()
-
     pub_date = RangeField(label='Publication Year', required=False)
 
     sort = forms.ChoiceField(widget=RadioSelectWithDisabled, choices=SORT_CHOICES,
@@ -164,17 +152,16 @@ class SearchForm(forms.Form):
     # booleans
     earliest_only = forms.BooleanField(label='Earliest Edition in Hathi',
         required=False, widget=forms.CheckboxInput(attrs={
-            '_icon': 'flag outline'
+            '_icon': 'flag outline', 'disabled': True
         }))
     ace_only = forms.BooleanField(label='Authorized Critical Edition',
         required=False, widget=forms.CheckboxInput(attrs={
-            '_icon': 'flag'
+            '_icon': 'flag', 'disabled': True
         }))
     dict_exclude = forms.BooleanField(label='Dictionaries',
-        required=False)
+        required=False, widget=forms.CheckboxInput(attrs={'disabled': True}))
     pg_exclude = forms.BooleanField(label='Pronunciation Guides',
-        required=False)
-
+        required=False, widget=forms.CheckboxInput(attrs={'disabled': True}))
     # fields to request a facet from solr
     facet_fields = ['collections_exact']
     range_facets = ['pub_date']
