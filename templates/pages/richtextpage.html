@@ -1,0 +1,12 @@
+{% extends "pages/page.html" %}
+{# Adapted from default Mezzanine "pages/richtextpage.html" #}
+{% load mezzanine_tags %}
+
+{# Use content rather than main to follow PPA base.html #}
+{% block content %}{{ block.super }}
+
+{% editable page.richtextpage.content %}
+{{ page.richtextpage.content|richtext_filters }}
+{% endeditable %}
+
+{% endblock %}
