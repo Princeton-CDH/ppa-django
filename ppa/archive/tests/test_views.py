@@ -94,6 +94,18 @@ class TestArchiveViews(TestCase):
         #     msg_prefix='Missing updated or in wrong format (d M Y in filter)'
         # )
 
+        # unapi server link present
+        self.assertContains(
+            response, '''<link rel="unapi-server" type="application/xml"
+            title="unAPI" href="%s" />''' % reverse('unapi'),
+            msg_prefix='unapi server link should be set', html=True)
+        # unapi id present
+        self.assertContains(
+            response,
+            '<abbr class="unapi-id" title="%s"></abbr>' % dial.source_id,
+            msg_prefix='unapi id should be embedded for each work')
+
+
     @pytest.mark.usefixtures("solr")
     def test_digitizedwork_listview(self):
         url = reverse('archive:list')
@@ -128,6 +140,12 @@ class TestArchiveViews(TestCase):
         self.assertContains(response, '<ol start="1">',
             msg_prefix='results are numbered')
 
+        # unapi server link present
+        self.assertContains(
+            response, '''<link rel="unapi-server" type="application/xml"
+            title="unAPI" href="%s" />''' % reverse('unapi'),
+            msg_prefix='unapi server link should be set', html=True)
+
         # search form should be set in context for display
         assert isinstance(response.context['search_form'], SearchForm)
         # page group details from expanded part of collapsed query
@@ -146,9 +164,15 @@ class TestArchiveViews(TestCase):
             self.assertContains(response, digwork.pub_date)
             # link to detail page
             self.assertContains(response, digwork.get_absolute_url())
+            # unapi identifier for each work
+            self.assertContains(
+                response,
+                '<abbr class="unapi-id" title="%s"></abbr>' % digwork.source_id,
+                msg_prefix='unapi id should be embedded for each work')
 
         # no page images or highlights displayed without search term
-        self.assertNotContains(response, 'babel.hathitrust.org/cgi/imgsrv/image',
+        self.assertNotContains(
+            response, 'babel.hathitrust.org/cgi/imgsrv/image',
             msg_prefix='no page images displayed without keyword search')
 
         # search term in title
