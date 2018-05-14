@@ -29,13 +29,13 @@ by default; use page_rdf_type to override with a webpage subclass.
     <meta property="og:type" content="website" />
     <meta property="og:url" content="{{ request.build_absolute_uri }}" />
     <meta property="og:image" content="{% static 'preview_image.png' %}" />
-    <meta property="og:description" content="{% block meta_description %}{% endblock %}"/>
+    {# <meta property="og:description" content="{% block meta_description %}{% endblock %}"/> #}
     <meta property="og:site_name" content="Princeton Prosody Archive"/>
     {# twitter card #}
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:domain" content="{{ request.get_host }}" />
-    <meta name="twitter:title" content="{% block.meta_title %}{% endblock %}"/>
-    <meta name="twitter:description" content="{% block meta_description %}{% endblock %}" />
+    <meta name="twitter:title" content="{% block meta_title %}{% endblock %}"/>
+    {# <meta name="twitter:description" content="{% block meta_description %}{% endblock %}" /> #}
     <meta name="twitter:image" content="{% static 'preview_image.png' %}" />
     <meta name="twitter:url" content="{{ request.build_absolute_uri }}" />
     {% block metadata %}{% endblock %}
