@@ -119,45 +119,49 @@ class TestArchiveViews(TestCase):
         # - check a search with a query that should include query in the
         # the context AND a the results of a PageSolrQuery
 
-        # use a word with absolutely not matches first to test the
+        # use a word with absolutely no matches first to test the
         # default behavior for an empty search query
         response = self.client.get(url, {'query': 'thermodynamics'})
         assert response.status_code == 200
         # query string passsed into context for form
         assert 'query' in response.context
         assert response.context['query'] == 'thermodynamics'
-        # solr search results also in query
+        # solr highlight results in query
         assert 'page_highlights' in response.context
+        # should be an empty dict
+        assert response.context['page_highlights'] == {}
+        # assert solr result in query
+        assert 'solr_results' in response.context
         # should be an empty list
-        assert response.context['page_highlights'] == []
+        assert response.context['solr_results'] == []
 
         # test with a word that will produce some snippets
         response = self.client.get(url, {'query': 'knobs'})
         assert response.status_code == 200
+        # paginator should be in context
         assert 'page_obj' in response.context
+        # it should be one (because we have one result)
         assert response.context['page_obj'].number == 1
-        assert len(response.context['page_obj'].object_list) == len(response.context['page_highlights'])
-        highlights = response.context['page_highlights'][0]
-        # result is as expected for page with all the needed fields
-        assert highlights['srcid'] == dial.source_id
-        assert highlights['id'] == '%s.1' % dial.source_id
-        assert highlights['order'] == '1'
-        assert highlights['content'] == 'knobs and buttons'
-        assert highlights['item_type'] == 'page'
+        # it should have an object list equal in length to the page solr query
+        assert len(response.context['page_obj'].object_list) == \
+            len(response.context['solr_results'])
+        # get the solr results (should be one)
+        result = response.context['solr_results'][0]
+        # grab the highlight object that's rendered with our one match
+        highlights = response.context['page_highlights'][result['id']]
         # template has the expected information rendered
-        self.assertContains(response, highlights['content'])
+        self.assertContains(response, highlights['content'][0])
         # image url should appear twice for src and srcset
         self.assertContains(
             response,
-            page_image_url(highlights['srcid'], highlights['order'], 180),
+            page_image_url(result['srcid'], result['order'], 180),
             count=1
         )
         self.assertContains(
             response,
-            page_image_url(highlights['srcid'], highlights['order'], 360),
+            page_image_url(result['srcid'], result['order'], 360),
             count=1
         )
-
         # bad syntax
         response = self.client.get(url, {'query': '"incomplete phrase'})
         self.assertContains(response, 'Unable to parse search query')

@@ -111,9 +111,10 @@
   <p>{{ error }}</p>
 {% else %}
   {% if page_highlights %}
-
-    {% for item in page_highlights %}
-        {% include 'archive/snippets/thumbnail_snippet.html' with id=item.srcid order=item.order item=item%}
+    {% for item in solr_results %}
+      {% with highlights=page_highlights|dict_item:item.id%}
+        {% include 'archive/snippets/thumbnail_snippet.html' with srcid=item.srcid order=item.order highlights=highlights%}
+      {% endwith %}
     {% endfor %}
     <div style="clear: both"/>
   {% else %}

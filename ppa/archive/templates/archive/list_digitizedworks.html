@@ -41,7 +41,7 @@
             {% if page_highlights %}
                 {% for page in results.docs %}
                   {% with page_highlights=page_highlights|dict_item:page.id %}
-                    {% include 'archive/snippets/thumbnail_snippet.html' with id=item.srcid order=page.order highlights=page_highlights %}
+                    {% include 'archive/snippets/thumbnail_snippet.html' with srcid=item.srcid order=page.order highlights=page_highlights %}
                   {% endwith %}
                 {% endfor %}
                  <div style="clear: both"/>

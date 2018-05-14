@@ -264,18 +264,15 @@ class DigitizedWorkDetailView(DetailView):
         if query:
             context['query'] = query
             digwork = context['object']
-            solr_q = 'text:(%s) AND srcid:("%s") AND item_type:(page)' \
-                % (query, digwork.source_id)
+            solr_q = 'text:(%s)' % query
             solr_opts = {
                 'q': solr_q,
                 'sort': 'order asc',
-                'fl': '*',
+                'fl': 'id, srcid, order',  # Limiting down to just id needed for now
+                'fq': 'srcid:("%s") AND item_type:page' % digwork.source_id,
                 'hl': True,
                 'hl.fl': 'content',
-                # No way to set this to actual number in one search
-                # therefore using an arbitrarily high but not system breaking
-                # number.
-                'hl.snippets': 10000,
+                'hl.snippets': 3,
                 # not default but recommended
                 'hl.method': 'unified',
                 # default to paginating by 50 rows
@@ -291,8 +288,11 @@ class DigitizedWorkDetailView(DetailView):
                 page = self.request.GET.get('page', 1)
                 context['page_obj'] = paginator.page(page)
                 # get highlights and set in context
-                highlights = solr_pageq.get_results() if solr_pageq else []
-                context['page_highlights'] = highlights
+                context['page_highlights'] = \
+                    solr_pageq.get_highlighting() if solr_pageq else {}
+                context['solr_results'] = \
+                    solr_pageq.get_results() if solr_pageq else []
+
             except SolrError as solr_err:
                 if 'Cannot parse' in str(solr_err):
                     error_msg = ('Unable to parse search query; '
@@ -301,7 +301,6 @@ class DigitizedWorkDetailView(DetailView):
                     # NOTE: this error should possibly be raised; 500 error?
                     error_msg = 'Something went wrong.'
                 context['error'] = error_msg
-
         return context
 
 class CollectionListView(ListView):

@@ -1,16 +1,29 @@
-<div style="float:left; width: 50%">
+{% comment %}
+This snippet displays thumbnails of book pages and any highlight snippets from
+a full text keyword search, used on the DigitizedWork listview and detailview
+pages.
 
-    <img src="{% page_image_url id order 180 %}"
-        srcset="{% page_image_url id order 360 %} 2x"
+It takes three context variables:
+  - srcid (the srcid of the result for thumbnail url)
+  - order (the page order value for the thumbnail url)
+  - highlights (a dictionary of highlight results
+    returned by PageSolrQuery.get_highlighting)
+
+  A sample call might look something like:
+    {% for item in solr_results %}
+      {% with highlights=page_highlights|dict_item:item.id%}
+        {% include 'archive/snippets/thumbnail_snippet.html' with srcid=item.srcid order=item.order highlights=highlights%}
+      {% endwith %}
+    {% endfor %}
+
+  where the solr results must include page's id, the srcid of the book, and
+  the order field of the page (latter two needed for page_image_url)
+{% endcomment %}
+<div style="float:left; width: 50%">
+    <img src="{% page_image_url srcid order 180 %}"
+        srcset="{% page_image_url srcid order 360 %} 2x"
         style="float:left"/>
-          {# the listview use of this snippet passes in a a list of highlights#}
-          {% if highlights %}
-            {% for snippet in highlights.content %}
-              <p style="white-space: pre-wrap">{{ snippet|safe }}</p>
-            {% endfor %}
-          {% endif %}
-          {# the detail view version is only concerning itself with pages so has just one item #}
-          {% if item %}
-            <p style="white-space: pre-wrap">{{ item.content|safe }}</p>
-          {% endif %}
+        {% for snippet in highlights.content %}
+          <p style="white-space: pre-wrap">{{ snippet|safe }}</p>
+        {% endfor %}
 </div>
