@@ -18,6 +18,8 @@ from django.contrib import admin
 from django.views.generic.base import TemplateView
 import mezzanine.urls
 
+from ppa.unapi.views import UnAPIView
+
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
@@ -28,6 +30,9 @@ urlpatterns = [
     # placeholder for home page
     url(r'^$', TemplateView.as_view(template_name='site_index.html'), name='home'),
     url(r'^archive/', include('ppa.archive.urls', namespace='archive')),
+
+    # unapi service endpoint for Zotero
+    url(r'^unapi/$', UnAPIView.as_view(), name='unapi'),
 
     # content pages managed by mezzanine
     url("^", include(mezzanine.urls))
