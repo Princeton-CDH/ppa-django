@@ -7,6 +7,11 @@
 
 {% block page-subtitle %}Archive | {{ object.title }} {% endblock %}
 
+{% block head_extras %}
+    <link rel="unapi-server" type="application/xml" title="unAPI"
+          href="{% url 'unapi' %}" />
+{% endblock %}
+
 {% block page-context-id %}digitized-work{% endblock %}
 
 {% block content %}
@@ -21,6 +26,7 @@
         </div>
     </form>
     <h2 class="header">{{ object.title }}</h2>
+    <abbr class="unapi-id" title="{{ object.source_id }}"></abbr>
     <table class="metadata ui very basic table">
         <thead>
             <tr>
@@ -80,44 +86,6 @@
             {% endif %}
         </tbody>
     </table>
-    <!-- <dl class="metadata">
-        <dt>Secondary Title</dt>
-        <dd>containing what is necessary to the knowledge of the English tongue laid down in a plain and familiar way for the use of young gentlemen and ladys [sic]</dd>
-        <dt>Year of Publication</dt>
-        <dd>{{ object.pub_date }}</dd>
-        <dt>Author(s)</dt>
-        <dd>{{ object.author }}</dd>
-        <dt>Publisher</dt>
-        <dd>{{ object.publisher }}</dd>
-        <dt>City</dt>
-        <dd>{{ object.pub_place }}</dd>
-        <dt>Holding Institution</dt>
-        <dd>foo</dd>
-        <dt>PPA Collection</dt>
-        <dd class="ui tiny basic button">Grammar</dd>
-        <dd class="ui tiny basic button">Typography</dd>
-        <dt>View HathiTrust Volumes</dt>
-        <dd>{{ object.source_id }}</dd>
-        <dd class="ui right labeled tiny icon button">HathiTrust <i class="right arrow icon"></i></dd>
-        <dt>Library of Congress Tags</dt>
-        <dd>English language, Grammar,1500-1800, Annotations (Provenance)</dd>
-        <dt>Note on Edition</dt>
-        <dd>Lorem ipsum dolor sit amet, hinc esse senserit eos ad, postulant gubergren persequeris id duo. Dicat invenire eos ea. Vidit movet mea eu, soleat equidem voluptaria et duo.</dd>
-    </dl> -->
+
 </div>
-{% comment %} <h1>{{ object.title }}</h1>
-<hr/>
-<ul style="list-style: none;">
-    <li><b>HathiTrust ID:</b> {{ object.source_id }}</li>
-    <li><b>HathiTrust URL:</b> <a href="{{ object.source_url}}">{{ object.source_url }}</a></li>
-    <li><b>Volume/Chronology:</b> {{ object.enumcron }}</a></li>
-    <li><b>Author:</b> {{ object.author }}</li>
-    <li><b>Place of Publication:</b> {{ object.pub_place }}</li>
-    <li><b>Publisher:</b> {{ object.publisher }}</li>
-    <li><b>Publication Date:</b> {{ object.pub_date }}</li>
-    <li><b>Pages:</b> {{ object.page_count }} pgs.</li>
-    <br />
-    <li><b>Added:</b> {{ object.added|date:"d M Y" }}</li>
-    <li><b>Last Updated:</b> {{ object.updated|date:"d M Y" }}</li>
-</ul> {% endcomment %}
 {% endblock %}

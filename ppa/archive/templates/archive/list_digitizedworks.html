@@ -2,6 +2,11 @@
 {% load humanize ppa_tags %}
 {% block page-subtitle %}Archive | {% endblock %}
 
+{% block head_extras %}
+    <link rel="unapi-server" type="application/xml" title="unAPI"
+          href="{% url 'unapi' %}" />
+{% endblock %}
+
 {% block content %}
 <h1>Archive</h1>
 
@@ -37,8 +42,11 @@
         {% if sort == 'Relevance' %}
             <p><small>relevance: {{ item.score }}</small></p>
         {% endif %}
+        {# unapi id for zotero harvest #}
+        <abbr class="unapi-id" title="{{ item.id }}"></abbr>
 
         <p><a class="ui button" href="{{ item.src_url }}" title="View item on HathiTrust">HathiTrust →</a></p>
+
         {% with results=page_groups|dict_item:item.id %}
             {% if page_highlights %}
                 {% for page in results.docs %}
