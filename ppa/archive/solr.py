@@ -202,12 +202,11 @@ class PagedSolrQuery(object):
 
     def set_limits(self, start, stop):
         '''Return a subsection of the results, to support slicing.'''
-        # FIXME: it probably matters here that solr start is 1-based ...
         if start is None:
             start = 0
         self.query_opts.update({
             'start': start,
-            'rows': stop - start + 1
+            'rows': stop - start
         })
 
     def __getitem__(self, k):
