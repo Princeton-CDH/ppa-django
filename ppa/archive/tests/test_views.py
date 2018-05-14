@@ -94,6 +94,18 @@ class TestArchiveViews(TestCase):
         #     msg_prefix='Missing updated or in wrong format (d M Y in filter)'
         # )
 
+        # unapi server link present
+        self.assertContains(
+            response, '''<link rel="unapi-server" type="application/xml"
+            title="unAPI" href="%s" />''' % reverse('unapi'),
+            msg_prefix='unapi server link should be set', html=True)
+        # unapi id present
+        self.assertContains(
+            response,
+            '<abbr class="unapi-id" title="%s"></abbr>' % dial.source_id,
+            msg_prefix='unapi id should be embedded for each work')
+
+
     @pytest.mark.usefixtures("solr")
     def test_digitizedwork_listview(self):
         url = reverse('archive:list')
@@ -128,6 +140,12 @@ class TestArchiveViews(TestCase):
         self.assertContains(response, '<ol start="1">',
             msg_prefix='results are numbered')
 
+        # unapi server link present
+        self.assertContains(
+            response, '''<link rel="unapi-server" type="application/xml"
+            title="unAPI" href="%s" />''' % reverse('unapi'),
+            msg_prefix='unapi server link should be set', html=True)
+
         # search form should be set in context for display
         assert isinstance(response.context['search_form'], SearchForm)
         # page group details from expanded part of collapsed query
@@ -146,9 +164,15 @@ class TestArchiveViews(TestCase):
             self.assertContains(response, digwork.pub_date)
             # link to detail page
             self.assertContains(response, digwork.get_absolute_url())
+            # unapi identifier for each work
+            self.assertContains(
+                response,
+                '<abbr class="unapi-id" title="%s"></abbr>' % digwork.source_id,
+                msg_prefix='unapi id should be embedded for each work')
 
         # no page images or highlights displayed without search term
-        self.assertNotContains(response, 'babel.hathitrust.org/cgi/imgsrv/image',
+        self.assertNotContains(
+            response, 'babel.hathitrust.org/cgi/imgsrv/image',
             msg_prefix='no page images displayed without keyword search')
 
         # search term in title
@@ -158,15 +182,29 @@ class TestArchiveViews(TestCase):
         assert len(response.context['object_list']) == 1
         self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
-
         # page image & text highlight displayed for matching page
-        self.assertNotContains(
+        self.assertContains(
             response,
-            'babel.hathitrust.org/cgi/imgsrv/image?id=%s;seq=%s.0' % (htid, htid),
+            'babel.hathitrust.org/cgi/imgsrv/image?id=%s;seq=0' % htid,
             msg_prefix='page image displayed for matching pages on keyword search')
         self.assertContains(
             response, 'winter and <em>wintry</em> and',
             msg_prefix='highlight snippet from page content displayed')
+
+        # page image and text highlight should still display with year filter
+        response = self.client.get(url, {'query': 'wintry', 'pub_date_0': 1800})
+        assert response.context['page_highlights']
+        self.assertContains(
+            response, 'winter and <em>wintry</em> and',
+            msg_prefix='highlight snippet from page content displayed')
+        self.assertContains(
+            response,
+            'babel.hathitrust.org/cgi/imgsrv/image?id=%s;seq=0' % htid,
+            msg_prefix='page image displayed for matching pages on keyword search')
+        self.assertContains(
+            response, 'winter and <em>wintry</em> and',
+            msg_prefix='highlight snippet from page content displayed')
+
 
         # match in page content but not in book metadata should pull back title
         response = self.client.get(url, {'query': 'blood'})
@@ -244,10 +282,9 @@ class TestArchiveViews(TestCase):
             '<input type="radio" name="sort" value="relevance" id="id_sort_0" />',
             html=True
         )
-        # check that a query that does not have a query disables
+        # check that a search that does not have a query disables
         # relevance as a sort order option
         response = self.client.get(url, {'sort': 'title_asc'})
-        print(response)
         self.assertContains(
             response,
             '<input type="radio" name="sort" value="relevance" id="id_sort_0" disabled="disabled" />',
@@ -283,7 +320,6 @@ class TestArchiveViews(TestCase):
             mockpsq.return_value.count = 0
             response = self.client.get(url, {'query': 'something'})
             self.assertContains(response, 'Something went wrong.')
-
 
     def test_digitizedwork_csv(self):
         # get the csv export and inspect the response

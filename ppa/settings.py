@@ -105,6 +105,7 @@ INSTALLED_APPS = [
     'semanticuiforms',
     'ppa.archive',
     'ppa.common',
+    'ppa.unapi',
 ]
 
 MIDDLEWARE = [

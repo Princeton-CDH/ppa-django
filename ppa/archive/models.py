@@ -2,7 +2,9 @@ from django.db import models
 from django.urls import reverse
 from mezzanine.core.fields import RichTextField
 
+from ppa.archive.hathi import HathiBibliographicAPI
 from ppa.archive.solr import get_solr_connection
+
 
 
 class Collection(models.Model):
@@ -157,3 +159,17 @@ class DigitizedWork(models.Model):
             'item_type': 'work',
             'order': '0',
         }
+
+    def get_metadata(self, metadata_format):
+        '''Get metadata for this item in the specified format.
+        Currently only supports marc.'''
+
+        if metadata_format == 'marc':
+            # get metadata from hathi bib api and serialize
+            # as binary marc
+            bib_api = HathiBibliographicAPI()
+            bibdata = bib_api.record('htid', self.source_id)
+            return bibdata.marcxml.as_marc()
+
+        # error for unknown
+        raise ValueError('Unsupported format %s' % metadata_format)

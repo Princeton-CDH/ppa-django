@@ -243,12 +243,12 @@ class TestPagedSolrQuery(TestCase):
     def test_set_limits(self, mock_get_solr_connection):
         mock_get_solr_connection.return_value = (Mock(), 'coll')
         psq = PagedSolrQuery()
-        psq.set_limits(1, 10)
-        assert psq.query_opts['start'] == 1
+        psq.set_limits(0, 10)
+        assert psq.query_opts['start'] == 0
         assert psq.query_opts['rows'] == 10
         psq.set_limits(100, 120)
         assert psq.query_opts['start'] == 100
-        assert psq.query_opts['rows'] == 21
+        assert psq.query_opts['rows'] == 20
 
     def test_slice(self, mock_get_solr_connection):
         mocksolr = Mock()

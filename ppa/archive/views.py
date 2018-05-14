@@ -115,13 +115,16 @@ class DigitizedWorkListView(ListView):
             if range_facet in search_opts and search_opts[range_facet]:
                 start, end = search_opts[range_facet].split('-')
                 range_filter = '[%s TO %s]' % (start or '*', end or '*')
-                filter_q.append('%s:%s' % (range_facet, range_filter))
+                # NOTE: because this is a filter query, it is applied before
+                # works and pages are grouped; we still want pages returned,
+                # so find all pages OR works restricted by range
+                filter_q.append('item_type:page OR %s:%s' % (range_facet, range_filter))
 
             # get minimum and maximum pub date values from the db
             pubmin, pubmax = self.form.pub_date_minmax()
 
             # NOTE: hard-coded values are fallback logic for when
-            # no contents are in the datbase and pubmin/pubmax are None
+            # no contents are in the database and pubmin/pubmax are None
             start = int(start) if start else pubmin or 0
             end = int(end) if end else pubmax or 1922
 
