@@ -1,5 +1,5 @@
 .page {
-    flex: 1 1 auto;
+    width: 100%;
     display: flex;
 
     &:nth-child(2) {
@@ -7,6 +7,8 @@
     }
 
     @media only screen and (min-width: 1440px) {
+        width: 50%;
+
         &:nth-child(2) {
             display: flex;
         }
@@ -23,10 +25,11 @@
     }
 
     .snippet {
-        white-space: pre-wrap;
+        // white-space: pre-wrap;
     }
 
     em {
+        font-style: normal;
         color: #07ae79;
     }
 }
