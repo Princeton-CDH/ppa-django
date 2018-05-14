@@ -1,0 +1,52 @@
+{% load humanize %}
+<div class="item">
+    <div class="ui stackable grid container">
+        <div class="labels one wide column">
+            <p>{{ forloop.counter }}</p>
+            <i class="ui flag icon"></i>
+        </div>
+        <div class="title seven wide column">
+            <a href="{% url 'archive:detail' item.srcid %}">
+                <p class="ui header">{{ item.title }}</p>
+            </a>
+        </div>
+        <div class="metadata eight wide column">
+            <p class="ui header">{{ item.author }}</p>
+            <div class="ui equal width stackable grid">
+                <div class="column">{{ item.publisher }}</div>
+                <div class="center aligned column">{{ item.pub_place }}</div>
+                <div class="right aligned column">{{ item.pub_date }}</div>
+            </div>
+            <div class="buttons">
+                {% if item.collections %}
+                    {% for collection in item.collections %}
+                        <button class="ui tiny basic button">{{ collection }}</button>
+                    {% endfor %}
+                {% endif %}
+                <a class="ui right floated right labeled secondary tiny icon button" href="{{ item.src_url }}">
+                    HathiTrust
+                    <i class="right arrow icon"></i>
+                </a>
+            </div>
+        </div>
+        <div class="pages sixteen wide column">
+            {% with results=page_groups|dict_item:item.id %}
+                {% if page_highlights %}
+                <div class="wrapper">
+                    {% for page in results.docs %}
+                        {% include 'archive/snippets/page_preview.html' %}
+                    {% endfor %}
+                </div>
+                {# link to page with search if there are more than two pages #}
+                    {% if results.numFound > 2 %}
+                    <a class="ui left floated right labeled secondary tiny icon button"
+                        href="{% url 'archive:detail' item.srcid %}?query={{ query }}">
+                        View all {{ results.numFound|intcomma }} page{{ results.numFound|pluralize }}
+                        <i class="right arrow icon"></i>
+                    </a>
+                    {% endif %}
+                {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+</div>
