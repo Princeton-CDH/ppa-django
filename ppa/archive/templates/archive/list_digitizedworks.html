@@ -36,7 +36,7 @@ href="{% url 'unapi' %}" />
             {% include 'archive/snippets/search_result.html' %}
         {% empty %}
         <div class="ui error message container">
-            <p>No matching works.</p>
+            <p>{% firstof error "No matching works." %}</p>
         </div>
         {% endfor %}
     </div>
