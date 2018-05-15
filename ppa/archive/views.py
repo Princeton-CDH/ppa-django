@@ -3,6 +3,7 @@ import logging
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.utils.http import urlencode
@@ -203,7 +204,7 @@ class DigitizedWorkListView(ListView):
             # use Unified Highlighter (not default but recommended)
             'hl.method': 'unified',
             # override solr default of 10 results to return all pages
-            'rows': len(page_ids)
+            'rows': len(page_ids),
         })
         return solr_pageq.get_highlighting()
 
@@ -234,6 +235,9 @@ class DigitizedWorkListView(ListView):
                 error_msg = 'Something went wrong.'
             context['error'] = error_msg
 
+        # pass in query to context so that it can be used in the template
+        query = self.request.GET.get('query', '')
+
         context.update({
             'search_form': self.form,
             # total and object_list provided by paginator
@@ -242,6 +246,8 @@ class DigitizedWorkListView(ListView):
             # range facet data for publication date
             'facet_ranges': facet_ranges,
             'page_highlights': self.get_page_highlights(page_groups),
+            # query for use template links to detail view with search
+            'query': query,
         })
         return context
 
@@ -251,12 +257,63 @@ class DigitizedWorkDetailView(DetailView):
     model = DigitizedWork
     slug_field = 'source_id'
     slug_url_kwarg = 'source_id'
+    paginate_by = 50
+
+    def get_context_data(self, **kwargs):
+        context = super(DigitizedWorkDetailView, self).get_context_data(**kwargs)
+        # pull in the query if it exists to use
+        query = self.request.GET.get('query', '')
+
+        solr_pageq = None
+        if query:
+            context['query'] = query
+            digwork = context['object']
+            solr_q = 'text:(%s)' % query
+            solr_opts = {
+                'q': solr_q,
+                # sort by page order by default
+                'sort': 'order asc',
+                'fl': 'id, srcid, order',  # Limiting down to just id needed for now
+                'fq': 'srcid:("%s") AND item_type:page' % digwork.source_id,
+                # configure highlighting on page text content
+                'hl': True,
+                'hl.fl': 'content',
+                'hl.snippets': 3,
+                # not default but recommended
+                'hl.method': 'unified',
+            }
+
+            logger.info("Solr page keyword search query: %s" % solr_q)
+
+            try:
+                # configure paginator and set in context
+                solr_pageq = PagedSolrQuery(solr_opts)
+                paginator = Paginator(solr_pageq, per_page=self.paginate_by)
+                page = self.request.GET.get('page', 1)
+                context.update({
+
+                    'page_obj': paginator.page(page),
+                    # get matching pages and highlights and set in context
+                    # 'page_highlights': solr_pageq.get_highlighting() if solr_pageq else {}
+                    'page_highlights': solr_pageq.get_highlighting() if solr_pageq else {},
+                    'solr_results': solr_pageq.get_results() if solr_pageq else []
+                })
+
+            except SolrError as solr_err:
+                if 'Cannot parse' in str(solr_err):
+                    error_msg = ('Unable to parse search query; '
+                                 'please revise and try again.')
+                else:
+                    # NOTE: this error should possibly be raised; 500 error?
+                    error_msg = 'Something went wrong.'
+                context['error'] = error_msg
+
+        return context
 
 
 class CollectionListView(ListView):
-    '''
-    Display list of public-facing :class:`ppa.archive.models.Collection`
-    instances
+    '''Display list of :class:`ppa.archive.models.Collection`
+    with description and summary statistics.
     '''
     model = Collection
     # NOTE: For consistency with DigitizedWork's list view
@@ -265,7 +322,6 @@ class CollectionListView(ListView):
 
     def get_context_data(self, *args, **kwargs):
         context = super(CollectionListView, self).get_context_data(*args, **kwargs)
-
         # NOTE: if we *only* want counts, could just do a regular facet
 
         solr_stats = PagedSolrQuery({
