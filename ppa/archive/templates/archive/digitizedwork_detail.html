@@ -89,9 +89,12 @@
 
   {# display matching pages with highlighted text if there is a search active #}
   {% if query or page_highlights %}
-    <div class="ui container">
+    {% if not error %}
+      <p>{{ page_obj.paginator.count }} occurrence{{ page_obj.paginator.count|pluralize }}</p>
+      <div class="ui container">
         {% include 'archive/snippets/pagination.html' %}
-    </div>
+      </div>
+    {% endif %}
     {% for page in solr_results %}
       {% with highlights=page_highlights|dict_item:page.id%}
           {% include 'archive/snippets/page_preview.html' with item_id=page.srcid  %}
@@ -103,9 +106,11 @@
         </div>
     {% endfor %}
 
+    {% if not error %}
     <div class="ui container">
         {% include 'archive/snippets/pagination.html' %}
     </div>
+    {% endif %}
 
   {% endif %}
 

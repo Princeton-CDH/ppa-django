@@ -113,6 +113,8 @@ class TestArchiveViews(TestCase):
 
     @pytest.mark.usefixtures("solr")
     def test_digitizedwork_detailview_query(self):
+        '''test digitized work detail page with search query'''
+
         # get a work and its detail page to test with
         dial = DigitizedWork.objects.get(source_id='chi.78013704')
         url = reverse('archive:detail', kwargs={'source_id': dial.source_id})
@@ -179,6 +181,8 @@ class TestArchiveViews(TestCase):
             page_image_url(result['srcid'], result['order'], 360),
             count=1
         )
+        self.assertContains(response, '1 occurrence')
+
         # bad syntax
         response = self.client.get(url, {'query': '"incomplete phrase'})
         self.assertContains(response, 'Unable to parse search query')

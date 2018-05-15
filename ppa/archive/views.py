@@ -271,16 +271,16 @@ class DigitizedWorkDetailView(DetailView):
             solr_q = 'text:(%s)' % query
             solr_opts = {
                 'q': solr_q,
+                # sort by page order by default
                 'sort': 'order asc',
                 'fl': 'id, srcid, order',  # Limiting down to just id needed for now
                 'fq': 'srcid:("%s") AND item_type:page' % digwork.source_id,
+                # configure highlighting on page text content
                 'hl': True,
                 'hl.fl': 'content',
                 'hl.snippets': 3,
                 # not default but recommended
                 'hl.method': 'unified',
-                # default to paginating by 50 rows
-                'rows': 50,
             }
 
             logger.info("Solr page keyword search query: %s" % solr_q)
@@ -290,12 +290,14 @@ class DigitizedWorkDetailView(DetailView):
                 solr_pageq = PagedSolrQuery(solr_opts)
                 paginator = Paginator(solr_pageq, per_page=self.paginate_by)
                 page = self.request.GET.get('page', 1)
-                context['page_obj'] = paginator.page(page)
-                # get highlights and set in context
-                context['page_highlights'] = \
-                    solr_pageq.get_highlighting() if solr_pageq else {}
-                context['solr_results'] = \
-                    solr_pageq.get_results() if solr_pageq else []
+                context.update({
+
+                    'page_obj': paginator.page(page),
+                    # get matching pages and highlights and set in context
+                    # 'page_highlights': solr_pageq.get_highlighting() if solr_pageq else {}
+                    'page_highlights': solr_pageq.get_highlighting() if solr_pageq else {},
+                    'solr_results': solr_pageq.get_results() if solr_pageq else []
+                })
 
             except SolrError as solr_err:
                 if 'Cannot parse' in str(solr_err):
@@ -305,6 +307,7 @@ class DigitizedWorkDetailView(DetailView):
                     # NOTE: this error should possibly be raised; 500 error?
                     error_msg = 'Something went wrong.'
                 context['error'] = error_msg
+
         return context
 
 

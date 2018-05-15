@@ -1,48 +1,6 @@
 {% extends "base.html" %}
 {% load static humanize ppa_tags %}
 
-{% comment %}
-<<<<<<< HEAD
-        <p><a class="ui button" href="{{ item.src_url }}" title="View item on HathiTrust">HathiTrust →</a></p>
-        {% with results=page_groups|dict_item:item.id %}
-            {% if page_highlights %}
-                {% for page in results.docs %}
-                  {% with page_highlights=page_highlights|dict_item:page.id %}
-                    {% include 'archive/snippets/thumbnail_snippet.html' with srcid=item.srcid order=page.order highlights=page_highlights %}
-                  {% endwith %}
-                {% endfor %}
-                 <div style="clear: both"/>
-                {# link to page with search if there are more than two pages #}
-                {% if results.numFound > 2 %}
-                <a href="{% url 'archive:detail' item.srcid %}?query={{ query }}">View all {{ results.numFound|intcomma }} page{{ results.numFound|pluralize }} →</a>
-                {% endif %}
-            {% endif %}
-        {% endwith %}
-
-    </li>
-    {% empty %}
-    <li>No matching items found</li>
-    {% endfor %}
-</ol>
-    <div class="pagination">
-        <span class="step-links">
-            {% if page_obj.has_previous %}
-                <a href="?{% querystring_replace page=1 %}">&laquo; first</a>
-                <a href="?{% querystring_replace page=page_obj.previous_page_number %}">previous</a>
-            {% endif %}
-
-            <span class="current">
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-            </span>
-
-            {% if page_obj.has_next %}
-                <a href="?{% querystring_replace page=page_obj.next_page_number %}">next</a>
-                <a href="?{% querystring_replace page=page_obj.paginator.num_pages %}">last &raquo;</a>
-            {% endif %}
-        </span>
-    </div>
-{% endif %}
-======={% endcomment %}
 {% block css %}
 <link rel="stylesheet" type="text/x-scss" href="{% static 'archive/scss/search.scss' %}">
 {% endblock %}
@@ -86,5 +44,4 @@ href="{% url 'unapi' %}" />
         {% include 'archive/snippets/pagination.html' %}
     </div>
 </section>
-{# >>>>>>> develop #}
 {% endblock %}
