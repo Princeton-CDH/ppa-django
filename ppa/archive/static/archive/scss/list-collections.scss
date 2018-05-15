@@ -4,18 +4,18 @@
         text-align: left;
     }
 
-    .card {
+    .collection.card { // these will get factored out into component styles
         max-height: 13rem;
-
+    
         .header,
         p {
             margin-bottom: 0;
         }
-
+    
         p {
             font-size: 1rem;
         }
-
+    
         .description {
             text-align: left;
         }
