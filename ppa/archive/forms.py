@@ -55,8 +55,13 @@ class FacetChoiceField(forms.MultipleChoiceField):
 
 class RangeWidget(forms.MultiWidget):
     '''date range widget, for two numeric inputs'''
-    # widget separator
+
+    #: separator string when splitting out values in decompress
     sep = '-'
+    #: template to use to render range multiwidget
+    # (based on multiwidget, but adds "to" between dates)
+    template_name = 'archive/widgets/rangewidget.html'
+
     def __init__(self, *args, **kwargs):
         widgets = [
             forms.NumberInput(),
