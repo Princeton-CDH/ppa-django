@@ -20,7 +20,7 @@
         <div class="ui field">
             <label for="query">Search within the Volume</label>
             <div class="ui left icon input">
-                <input id="query" name="query" type="text" placeholder="Search keyword or phrase">
+                <input id="query" name="query" type="text" placeholder="Search keyword or phrase" value="{{ query }}">
                 <i class="search icon"></i>
             </div>
         </div>
@@ -87,5 +87,31 @@
         </tbody>
     </table>
 
-</div>
+  {# display matching pages with highlighted text if there is a search active #}
+  {% if query or page_highlights %}
+    {% if not error %}
+      <p>{{ page_obj.paginator.count }} occurrence{{ page_obj.paginator.count|pluralize }}</p>
+      <div class="ui container">
+        {% include 'archive/snippets/pagination.html' %}
+      </div>
+    {% endif %}
+    {% for page in solr_results %}
+      {% with highlights=page_highlights|dict_item:page.id%}
+          {% include 'archive/snippets/page_preview.html' with item_id=page.srcid  %}
+      {% endwith %}
+    {% empty %}
+        <div class="ui error message container">
+            {# display error if something went wrong (bad query, etc.) #}
+            <p>{% firstof error "No matching pages." %}</p>
+        </div>
+    {% endfor %}
+
+    {% if not error %}
+    <div class="ui container">
+        {% include 'archive/snippets/pagination.html' %}
+    </div>
+    {% endif %}
+
+  {% endif %}
+
 {% endblock %}

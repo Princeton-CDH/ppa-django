@@ -17,7 +17,7 @@ from ppa.archive.forms import SearchForm
 from ppa.archive.models import DigitizedWork, Collection
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView
-
+from ppa.archive.templatetags.ppa_tags import page_image_url
 
 class TestArchiveViews(TestCase):
     fixtures = ['sample_digitized_works']
@@ -27,6 +27,7 @@ class TestArchiveViews(TestCase):
         self.admin_user = get_user_model().objects.create_superuser(
             'admin', 'admin@example.com', self.admin_pass)
 
+    @pytest.mark.usefixtures("solr")
     def test_digitizedwork_detailview(self):
         # get a work and its detail page to test with
         dial = DigitizedWork.objects.get(source_id='chi.78013704')
@@ -35,6 +36,10 @@ class TestArchiveViews(TestCase):
         # get the detail view page and check that the response is 200
         response = self.client.get(url)
         assert response.status_code == 200
+        # no keyword search so no note about that
+        # no page_obj or search results reflected
+        assert 'page_obj' not in response.context
+        self.assertNotContains(response, 'No keyword results.')
 
         # now check that the right template is used
         assert 'archive/digitizedwork_detail.html' in \
@@ -105,6 +110,90 @@ class TestArchiveViews(TestCase):
             '<abbr class="unapi-id" title="%s"></abbr>' % dial.source_id,
             msg_prefix='unapi id should be embedded for each work')
 
+
+    @pytest.mark.usefixtures("solr")
+    def test_digitizedwork_detailview_query(self):
+        '''test digitized work detail page with search query'''
+
+        # get a work and its detail page to test with
+        dial = DigitizedWork.objects.get(source_id='chi.78013704')
+        url = reverse('archive:detail', kwargs={'source_id': dial.source_id})
+
+        # make some sample page content
+        # sample page content associated with one of the fixture works
+        sample_page_content = [
+            'something about dials and clocks',
+            'knobs and buttons',
+        ]
+        htid = 'chi.78013704'
+        solr_page_docs = [
+            {'content': content, 'order': i, 'item_type': 'page',
+             'srcid': htid, 'id': '%s.%s' % (htid, i)}
+             for i, content in enumerate(sample_page_content)]
+        dial = DigitizedWork.objects.get(source_id='chi.78013704')
+        solr_work_docs = [dial.index_data()]
+        solr, solr_collection = get_solr_connection()
+        index_data = solr_work_docs + solr_page_docs
+        solr.index(solr_collection, index_data, params={"commitWithin": 100})
+        sleep(2)
+
+        # search should include query in the context and a PageSolrQuery
+
+        # search with no matches - test empty search result
+        response = self.client.get(url, {'query': 'thermodynamics'})
+        assert response.status_code == 200
+        # query string passsed into context for form
+        assert 'query' in response.context
+        assert response.context['query'] == 'thermodynamics'
+        # solr highlight results in query
+        assert 'page_highlights' in response.context
+        # should be an empty dict
+        assert response.context['page_highlights'] == {}
+        # assert solr result in query
+        assert 'solr_results' in response.context
+        # should be an empty list
+        assert response.context['solr_results'] == []
+
+        # test with a word that will produce some snippets
+        response = self.client.get(url, {'query': 'knobs'})
+        assert response.status_code == 200
+        # paginator should be in context
+        assert 'page_obj' in response.context
+        # it should be one (because we have one result)
+        assert response.context['page_obj'].number == 1
+        # it should have an object list equal in length to the page solr query
+        assert len(response.context['page_obj'].object_list) == \
+            len(response.context['solr_results'])
+        # get the solr results (should be one)
+        result = response.context['solr_results'][0]
+        # grab the highlight object that's rendered with our one match
+        highlights = response.context['page_highlights'][result['id']]
+        # template has the expected information rendered
+        self.assertContains(response, highlights['content'][0])
+        # image url should appear twice for src and srcset
+        self.assertContains(
+            response,
+            page_image_url(result['srcid'], result['order'], 180),
+            count=1
+        )
+        self.assertContains(
+            response,
+            page_image_url(result['srcid'], result['order'], 360),
+            count=1
+        )
+        self.assertContains(response, '1 occurrence')
+
+        # bad syntax
+        response = self.client.get(url, {'query': '"incomplete phrase'})
+        self.assertContains(response, 'Unable to parse search query')
+
+        # test raising a generic solr error
+        with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
+            mockpsq.return_value.get_results.side_effect = SolrError
+            # count needed for paginator
+            mockpsq.return_value.count = 0
+            response = self.client.get(url, {'query': 'knobs'})
+            self.assertContains(response, 'Something went wrong.')
 
     @pytest.mark.usefixtures("solr")
     def test_digitizedwork_listview(self):
@@ -650,5 +739,3 @@ class TestDigitizedWorkListView(TestCase):
             assert ' AND id:("p1a" "p1b" "p2a" "p2b")' in solr_opts['q']
 
             assert highlights == mockpsq.return_value.get_highlighting()
-
-
