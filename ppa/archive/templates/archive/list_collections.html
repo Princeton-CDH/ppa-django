@@ -18,7 +18,7 @@
         <div class="ui two stackable cards">
             {% for item in object_list %}
             {# should we display collections for which no items are associated (i.e. no stats)? #}
-            <a class="ui card" href="{% url 'archive:list' %}?collections={{ item.name|urlencode }}">
+            <a class="ui collection card" href="{% url 'archive:list' %}?collections={{ item.name|urlencode }}">
                 <div class="center aligned content">
                     <h3 class="header">{{ item.name }}</h3>
                     {% with coll_stats=stats|dict_item:item.name %}
@@ -38,7 +38,7 @@
             {% endfor %}
         </div>
     </section>
-    <a class="archive-link" href="/archive"><h2 class="ui header">✒ View the Archive</h2></a>
+    <a class="archive-link" href="{% url 'archive:list' %}"><h2 class="ui header">✒ View the Archive</h2></a>
 </div>
 {% endblock %}
 
