@@ -12,7 +12,7 @@ $(function(){
             let scroll = checkScroll.scroll || 0
             let scrolled = $(document).scrollTop()
             if (scrolled - scroll > 25 && scrolled > scroll && scrolled > 90) {
-                if (!$pitbar.hasClass('hidden')) {
+                if (!$pitbar.hasClass('hidden') && !$mobileNav.sidebar('is visible')) {
                     $pitbar.addClass('hidden')
                 }
             }
