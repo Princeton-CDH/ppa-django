@@ -9,9 +9,7 @@
     </div>
     <div class="ui vertical stackable grid segment">
         <div class="six wide column" id="publication">
-            <div class="ui inline fields">
-                {% render_field search_form.pub_date %}
-            </div>
+            {% render_field search_form.pub_date %}
             <a class="clear-selection" role="button" href="#">Clear Selection</a>
         </div>
         <div class="ten wide column" id="histogram">
@@ -21,15 +19,13 @@
         </div>
     </div>
     <div class="ui vertical stackable grid segment">
-        <div class="nine wide column field" id="collections">
+        <div class="column field" id="collections">
             <label for="collections">Collections</label>
-            <div id="collections" class="collections">
-                {% for collection in search_form.collections %}
-                <button class="ui tiny basic button">{{ collection }}</button>
-                {% endfor %}
-            </div>
+            {% for collection in search_form.collections %}
+            <button class="ui tiny basic button">{{ collection }}</button>
+            {% endfor %}
         </div>
-        <div class="ui seven wide column" id="booleans">
+        <div class="column" id="booleans">
             <div class="ui grid">
                 <div class="eight wide column field">
                     <label>Only display</label>
@@ -51,7 +47,7 @@
     </div>
     {% include 'archive/snippets/pagination.html' %}
     <div class="sort">
-        <div class="ui secondary pointing menu">
+        <div class="ui secondary pointing stackable menu">
             <span class="item">Sort By</span>
             {% for sort in search_form.sort %}
             <a class="item" for="{{ sort.id_for_label }}" role="radio">

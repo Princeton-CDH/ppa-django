@@ -18,17 +18,15 @@
         }
     }
 
-    #booleans {
-        .field {
-            margin-bottom: 0;
-        }
-
-        .input {
-            width: 100%;
-        }
-    }
-
     #collections {
+        @media only screen and (min-width: 768px) {
+            width: 45%;
+        }
+
+        @media only screen and (min-width: 1440px) {
+            width: 55%;
+        }
+
         .button {
             margin-bottom: .5rem;
             margin-right: .5rem;
@@ -37,6 +35,24 @@
         input[type=checkbox], // hide checkboxes
         label > span { // hide counts
             display: none;
+        }
+    }
+
+    #booleans {
+        @media only screen and (min-width: 768px) {
+            width: 55%;
+        }
+
+        @media only screen and (min-width: 1440px) {
+            width: 45%;
+        }
+
+        .field {
+            margin-bottom: 0;
+        }
+
+        .input {
+            width: 100%;
         }
     }
     
@@ -51,7 +67,8 @@
                 display: none; // hide checkboxes
             }
             
-            span.item {
+            span.item { // "SORT BY" text
+                padding-left: 0;
                 text-transform: uppercase;
             }
         }
