@@ -7,6 +7,11 @@
 
 {% block page-subtitle %}Archive | {{ object.title }} {% endblock %}
 
+{% block head_extras %}
+    <link rel="unapi-server" type="application/xml" title="unAPI"
+          href="{% url 'unapi' %}" />
+{% endblock %}
+
 {% block page-context-id %}digitized-work{% endblock %}
 
 {% block content %}
@@ -21,6 +26,7 @@
         </div>
     </form>
     <h2 class="header">{{ object.title }}</h2>
+    <abbr class="unapi-id" title="{{ object.source_id }}"></abbr>
     <table class="metadata ui very basic table">
         <thead>
             <tr>
@@ -80,85 +86,27 @@
             {% endif %}
         </tbody>
     </table>
-    <!-- <dl class="metadata">
-        <dt>Secondary Title</dt>
-        <dd>containing what is necessary to the knowledge of the English tongue laid down in a plain and familiar way for the use of young gentlemen and ladys [sic]</dd>
-        <dt>Year of Publication</dt>
-        <dd>{{ object.pub_date }}</dd>
-        <dt>Author(s)</dt>
-        <dd>{{ object.author }}</dd>
-        <dt>Publisher</dt>
-        <dd>{{ object.publisher }}</dd>
-        <dt>City</dt>
-        <dd>{{ object.pub_place }}</dd>
-        <dt>Holding Institution</dt>
-        <dd>foo</dd>
-        <dt>PPA Collection</dt>
-        <dd class="ui tiny basic button">Grammar</dd>
-        <dd class="ui tiny basic button">Typography</dd>
-        <dt>View HathiTrust Volumes</dt>
-        <dd>{{ object.source_id }}</dd>
-        <dd class="ui right labeled tiny icon button">HathiTrust <i class="right arrow icon"></i></dd>
-        <dt>Library of Congress Tags</dt>
-        <dd>English language, Grammar,1500-1800, Annotations (Provenance)</dd>
-        <dt>Note on Edition</dt>
-        <dd>Lorem ipsum dolor sit amet, hinc esse senserit eos ad, postulant gubergren persequeris id duo. Dicat invenire eos ea. Vidit movet mea eu, soleat equidem voluptaria et duo.</dd>
-    </dl> -->
-</div>
 
-{% if error %}
-  {# if something went wrong (e.g., bad query), display error message and nothing else #}
-  <p>{{ error }}</p>
-{% else %}
-  {% if page_highlights %}
-    {% for item in solr_results %}
-      {% with highlights=page_highlights|dict_item:item.id%}
-        {% include 'archive/snippets/thumbnail_snippet.html' with srcid=item.srcid order=item.order highlights=highlights%}
+  {# display matching pages with highlighted text if there is a search active #}
+  {% if query or page_highlights %}
+    <div class="ui container">
+        {% include 'archive/snippets/pagination.html' %}
+    </div>
+    {% for page in solr_results %}
+      {% with highlights=page_highlights|dict_item:page.id%}
+          {% include 'archive/snippets/page_preview.html' with item_id=page.srcid  %}
       {% endwith %}
+    {% empty %}
+        <div class="ui error message container">
+            {# display error if something went wrong (bad query, etc.) #}
+            <p>{% firstof error "No matching pages." %}</p>
+        </div>
     {% endfor %}
-    <div style="clear: both"/>
-  {% else %}
-    {# This is a placeholder to indicate no results on search #}
-    {% if query %}
-      <p>No keyword results.</p>
-    {% endif %}
+
+    <div class="ui container">
+        {% include 'archive/snippets/pagination.html' %}
+    </div>
+
   {% endif %}
-    {% if page_obj %}
-      <div class="pagination">
-          <span class="step-links">
-              {% if page_obj.has_previous %}
-                  <a href="?{% querystring_replace page=1 %}">&laquo; first</a>
-                  <a href="?{% querystring_replace page=page_obj.previous_page_number %}">previous</a>
-              {% endif %}
 
-              <span class="current">
-                  Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-              </span>
-
-              {% if page_obj.has_next %}
-                  <a href="?{% querystring_replace page=page_obj.next_page_number %}">next</a>
-                  <a href="?{% querystring_replace page=page_obj.paginator.num_pages %}">last &raquo;</a>
-              {% endif %}
-          </span>
-      </div>
-    {% endif %}
-{% endif %}
 {% endblock %}
-
-{% comment %} <h1>{{ object.title }}</h1>
-<hr/>
-<ul style="list-style: none;">
-    <li><b>HathiTrust ID:</b> {{ object.source_id }}</li>
-    <li><b>HathiTrust URL:</b> <a href="{{ object.source_url}}">{{ object.source_url }}</a></li>
-    <li><b>Volume/Chronology:</b> {{ object.enumcron }}</a></li>
-    <li><b>Author:</b> {{ object.author }}</li>
-    <li><b>Place of Publication:</b> {{ object.pub_place }}</li>
-    <li><b>Publisher:</b> {{ object.publisher }}</li>
-    <li><b>Publication Date:</b> {{ object.pub_date }}</li>
-    <li><b>Pages:</b> {{ object.page_count }} pgs.</li>
-    <br />
-    <li><b>Added:</b> {{ object.added|date:"d M Y" }}</li>
-    <li><b>Last Updated:</b> {{ object.updated|date:"d M Y" }}</li>
-</ul>
-
-{% endcomment %}

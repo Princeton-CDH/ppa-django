@@ -29,25 +29,8 @@ class TestArchiveViews(TestCase):
 
     @pytest.mark.usefixtures("solr")
     def test_digitizedwork_detailview(self):
-
-        # make some sample page content
-        # sample page content associated with one of the fixture works
-        sample_page_content = [
-            'something about dials and clocks',
-            'knobs and buttons',
-        ]
-        htid = 'chi.78013704'
-        solr_page_docs = [
-            {'content': content, 'order': i, 'item_type': 'page',
-             'srcid': htid, 'id': '%s.%s' % (htid, i)}
-             for i, content in enumerate(sample_page_content)]
-        dial = DigitizedWork.objects.get(source_id='chi.78013704')
-        solr_work_docs = [dial.index_data()]
-        solr, solr_collection = get_solr_connection()
-        index_data = solr_work_docs + solr_page_docs
-        solr.index(solr_collection, index_data, params={"commitWithin": 100})
-        sleep(2)
         # get a work and its detail page to test with
+        dial = DigitizedWork.objects.get(source_id='chi.78013704')
         url = reverse('archive:detail', kwargs={'source_id': dial.source_id})
 
         # get the detail view page and check that the response is 200
@@ -116,11 +99,45 @@ class TestArchiveViews(TestCase):
         #     msg_prefix='Missing updated or in wrong format (d M Y in filter)'
         # )
 
-        # - check a search with a query that should include query in the
-        # the context AND a the results of a PageSolrQuery
+        # unapi server link present
+        self.assertContains(
+            response, '''<link rel="unapi-server" type="application/xml"
+            title="unAPI" href="%s" />''' % reverse('unapi'),
+            msg_prefix='unapi server link should be set', html=True)
+        # unapi id present
+        self.assertContains(
+            response,
+            '<abbr class="unapi-id" title="%s"></abbr>' % dial.source_id,
+            msg_prefix='unapi id should be embedded for each work')
 
-        # use a word with absolutely no matches first to test the
-        # default behavior for an empty search query
+
+    @pytest.mark.usefixtures("solr")
+    def test_digitizedwork_detailview_query(self):
+        # get a work and its detail page to test with
+        dial = DigitizedWork.objects.get(source_id='chi.78013704')
+        url = reverse('archive:detail', kwargs={'source_id': dial.source_id})
+
+        # make some sample page content
+        # sample page content associated with one of the fixture works
+        sample_page_content = [
+            'something about dials and clocks',
+            'knobs and buttons',
+        ]
+        htid = 'chi.78013704'
+        solr_page_docs = [
+            {'content': content, 'order': i, 'item_type': 'page',
+             'srcid': htid, 'id': '%s.%s' % (htid, i)}
+             for i, content in enumerate(sample_page_content)]
+        dial = DigitizedWork.objects.get(source_id='chi.78013704')
+        solr_work_docs = [dial.index_data()]
+        solr, solr_collection = get_solr_connection()
+        index_data = solr_work_docs + solr_page_docs
+        solr.index(solr_collection, index_data, params={"commitWithin": 100})
+        sleep(2)
+
+        # search should include query in the context and a PageSolrQuery
+
+        # search with no matches - test empty search result
         response = self.client.get(url, {'query': 'thermodynamics'})
         assert response.status_code == 200
         # query string passsed into context for form
@@ -205,8 +222,16 @@ class TestArchiveViews(TestCase):
         assert response.status_code == 200
         self.assertContains(response, '%d digitized works' % len(digitized_works))
         assert response.context['sort'] == 'Title A-Z'
-        self.assertContains(response, '<ol start="1">',
-            msg_prefix='results are numbered')
+        self.assertContains(response, '<p class="result-number">1</p>',
+            msg_prefix='results have numbers')
+        self.assertContains(response, '<p class="result-number">2</p>',
+            msg_prefix='results have multiple numbers')
+
+        # unapi server link present
+        self.assertContains(
+            response, '''<link rel="unapi-server" type="application/xml"
+            title="unAPI" href="%s" />''' % reverse('unapi'),
+            msg_prefix='unapi server link should be set', html=True)
 
         # search form should be set in context for display
         assert isinstance(response.context['search_form'], SearchForm)
@@ -226,9 +251,15 @@ class TestArchiveViews(TestCase):
             self.assertContains(response, digwork.pub_date)
             # link to detail page
             self.assertContains(response, digwork.get_absolute_url())
+            # unapi identifier for each work
+            self.assertContains(
+                response,
+                '<abbr class="unapi-id" title="%s"></abbr>' % digwork.source_id,
+                msg_prefix='unapi id should be embedded for each work')
 
         # no page images or highlights displayed without search term
-        self.assertNotContains(response, 'babel.hathitrust.org/cgi/imgsrv/image',
+        self.assertNotContains(
+            response, 'babel.hathitrust.org/cgi/imgsrv/image',
             msg_prefix='no page images displayed without keyword search')
 
         # search term in title
@@ -238,15 +269,29 @@ class TestArchiveViews(TestCase):
         assert len(response.context['object_list']) == 1
         self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
-
         # page image & text highlight displayed for matching page
-        self.assertNotContains(
+        self.assertContains(
             response,
-            'babel.hathitrust.org/cgi/imgsrv/image?id=%s;seq=%s.0' % (htid, htid),
+            'babel.hathitrust.org/cgi/imgsrv/image?id=%s;seq=0' % htid,
             msg_prefix='page image displayed for matching pages on keyword search')
         self.assertContains(
             response, 'winter and <em>wintry</em> and',
             msg_prefix='highlight snippet from page content displayed')
+
+        # page image and text highlight should still display with year filter
+        response = self.client.get(url, {'query': 'wintry', 'pub_date_0': 1800})
+        assert response.context['page_highlights']
+        self.assertContains(
+            response, 'winter and <em>wintry</em> and',
+            msg_prefix='highlight snippet from page content displayed')
+        self.assertContains(
+            response,
+            'babel.hathitrust.org/cgi/imgsrv/image?id=%s;seq=0' % htid,
+            msg_prefix='page image displayed for matching pages on keyword search')
+        self.assertContains(
+            response, 'winter and <em>wintry</em> and',
+            msg_prefix='highlight snippet from page content displayed')
+
 
         # match in page content but not in book metadata should pull back title
         response = self.client.get(url, {'query': 'blood'})
@@ -277,7 +322,7 @@ class TestArchiveViews(TestCase):
         self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
         response = self.client.get(url, {'query': 'blood NOT bone'})
-        self.assertContains(response, 'No matching items')
+        self.assertContains(response, 'No matching works.')
 
         # bad syntax
         response = self.client.get(url, {'query': '"incomplete phrase'})
@@ -324,10 +369,9 @@ class TestArchiveViews(TestCase):
             '<input type="radio" name="sort" value="relevance" id="id_sort_0" />',
             html=True
         )
-        # check that a query that does not have a query disables
+        # check that a search that does not have a query disables
         # relevance as a sort order option
         response = self.client.get(url, {'sort': 'title_asc'})
-        print(response)
         self.assertContains(
             response,
             '<input type="radio" name="sort" value="relevance" id="id_sort_0" disabled="disabled" />',
@@ -354,7 +398,7 @@ class TestArchiveViews(TestCase):
         sleep(2)
         response = self.client.get(url)
         assert response.status_code == 200
-        self.assertContains(response, 'No matching items')
+        self.assertContains(response, 'No matching works.')
 
         # simulate solr exception (other than query syntax)
         with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
@@ -363,7 +407,6 @@ class TestArchiveViews(TestCase):
             mockpsq.return_value.count = 0
             response = self.client.get(url, {'query': 'something'})
             self.assertContains(response, 'Something went wrong.')
-
 
     def test_digitizedwork_csv(self):
         # get the csv export and inspect the response
@@ -478,11 +521,11 @@ class TestArchiveViews(TestCase):
         assert response.context['stats'][coll2.name]['count'] == 1
         assert response.context['stats'][coll2.name]['dates'] == '1903'
         # stats displayed on template
-        self.assertContains(response, '%d items' % digworks.count())
-        self.assertContains(response, '1 item')
-        self.assertNotContains(response, '1 items')
-        self.assertContains(response, '(1880–1903)')
-        self.assertContains(response, '(1903)')
+        self.assertContains(response, '%d digitized works' % digworks.count())
+        self.assertContains(response, '1 digitized work')
+        self.assertNotContains(response, '1 digitized works')
+        self.assertContains(response, '1880–1903')
+        self.assertContains(response, '1903')
 
 
 class TestAddToCollection(TestCase):
@@ -680,7 +723,8 @@ class TestDigitizedWorkListView(TestCase):
             solr_opts = solr_args[0]
             # highlighting turned on
             assert solr_opts['hl']
-            assert solr_opts['hl.snippets'] == 3
+            # not testing this as strictly while we play around with it
+            # assert solr_opts['hl.snippets'] == 1
             assert solr_opts['hl.fl'] == 'content'
             assert solr_opts['hl.method'] == 'unified'
             # rows should match # of page ids

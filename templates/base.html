@@ -21,29 +21,21 @@ by default; use page_rdf_type to override with a webpage subclass.
     <link rel="manifest" href="{% static 'manifest.json' %}" />
     <link rel="mask-icon" href="{% static 'safari-pinned-tab.svg' %}" color="#07ae79" />
     <meta name="theme-color" content="#07ae79" />
-    <meta name="keywords" content="{% block meta_keywords %}{% metablock %}
-      {% keywords_for page as keywords %}
-      {% for keyword in keywords %}
-          {% if not forloop.first %}, {% endif %}
-          {{ keyword }}
-      {% endfor %}
-      {% endmetablock %}{% endblock %}">
-    <meta name="description" content="{% block meta_description %}{% metablock %}
-      {{ page.description }}
-      {% endmetablock %}{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}{% endblock %}">
+    <meta name="description" content="{% block meta_description %}{% endblock %}">
     {% firstof page_meta_image 'mstile-150x150.png' as preview_image %}
     {# open graph metadata #}
     <meta property="og:title" content="{{ page.meta_title }}" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="{{ request.build_absolute_uri }}" />
     <meta property="og:image" content="{% static 'preview_image.png' %}" />
-    <meta property="og:description" content="{{ page.description }}"/>
+    {# <meta property="og:description" content="{% block meta_description %}{% endblock %}"/> #}
     <meta property="og:site_name" content="Princeton Prosody Archive"/>
     {# twitter card #}
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:domain" content="{{ request.get_host }}" />
-    <meta name="twitter:title" content="{{ page.meta_title }}"/>
-    <meta name="twitter:description" content="{{ page.description }}" />
+    <meta name="twitter:title" content="{% block meta_title %}{% endblock %}"/>
+    {# <meta name="twitter:description" content="{% block meta_description %}{% endblock %}" /> #}
     <meta name="twitter:image" content="{% static 'preview_image.png' %}" />
     <meta name="twitter:url" content="{{ request.build_absolute_uri }}" />
     {% block metadata %}{% endblock %}

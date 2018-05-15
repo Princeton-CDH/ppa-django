@@ -1,0 +1,34 @@
+.results-list .item {
+    margin: 1rem 0;
+
+    &:nth-child(odd) {
+        background-color: #ddd;
+    }
+
+    .unapi-id {
+        display: none;
+    }
+
+    .buttons {
+        margin: 2rem 0;
+    }
+
+    .pages .wrapper {
+        display: flex;
+        margin-bottom: 1rem;
+    }
+
+    .metadata .grid {
+        margin: 0;
+
+        > .column {
+            padding: 0;
+            margin: 1rem 0;
+            border-right: 1px solid grey;
+    
+            &:last-child {
+                border: 0;
+            }
+        }
+    }
+}

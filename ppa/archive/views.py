@@ -116,13 +116,16 @@ class DigitizedWorkListView(ListView):
             if range_facet in search_opts and search_opts[range_facet]:
                 start, end = search_opts[range_facet].split('-')
                 range_filter = '[%s TO %s]' % (start or '*', end or '*')
-                filter_q.append('%s:%s' % (range_facet, range_filter))
+                # NOTE: because this is a filter query, it is applied before
+                # works and pages are grouped; we still want pages returned,
+                # so find all pages OR works restricted by range
+                filter_q.append('item_type:page OR %s:%s' % (range_facet, range_filter))
 
             # get minimum and maximum pub date values from the db
             pubmin, pubmax = self.form.pub_date_minmax()
 
             # NOTE: hard-coded values are fallback logic for when
-            # no contents are in the datbase and pubmin/pubmax are None
+            # no contents are in the database and pubmin/pubmax are None
             start = int(start) if start else pubmin or 0
             end = int(end) if end else pubmax or 1922
 
@@ -196,7 +199,8 @@ class DigitizedWorkListView(ListView):
             # enable highlighting on content field with 3 snippets
             'hl': True,
             'hl.fl': 'content',
-            'hl.snippets': 3,
+            'hl.snippets': 1,
+            'hl.fragsize': 10,
             # use Unified Highlighter (not default but recommended)
             'hl.method': 'unified',
             # override solr default of 10 results to return all pages
@@ -256,7 +260,7 @@ class DigitizedWorkDetailView(DetailView):
     paginate_by = 50
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        context = super(DigitizedWorkDetailView, self).get_context_data(**kwargs)
         # pull in the query if it exists to use
         query = self.request.GET.get('query', '')
 
@@ -303,10 +307,10 @@ class DigitizedWorkDetailView(DetailView):
                 context['error'] = error_msg
         return context
 
+
 class CollectionListView(ListView):
-    '''
-    Display list of public-facing :class:`ppa.archive.models.Collection`
-    instances
+    '''Display list of :class:`ppa.archive.models.Collection`
+    with description and summary statistics.
     '''
     model = Collection
     # NOTE: For consistency with DigitizedWork's list view
@@ -315,7 +319,6 @@ class CollectionListView(ListView):
 
     def get_context_data(self, *args, **kwargs):
         context = super(CollectionListView, self).get_context_data(*args, **kwargs)
-
         # NOTE: if we *only* want counts, could just do a regular facet
 
         solr_stats = PagedSolrQuery({

@@ -1,41 +1,8 @@
 {% extends "base.html" %}
-{% load humanize ppa_tags %}
-{% block page-subtitle %}Archive | {% endblock %}
+{% load static humanize ppa_tags %}
 
-{% block content %}
-<h1>Archive</h1>
-
-<form>
-{{ search_form }}
-
-<input type="submit"/>
-</form>
-
-
-{% if error %}
-{# if something went wrong (e.g., bad query), display error message and nothing else #}
-<p>{{ error }}</p>
-{% else %}
-
-<p>{{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}.</p>
-<hr/>
-
-<ol start="{{ page_obj.start_index }}">
-    {% for item in object_list %}
-    <li>
-        <h3><a href="{% url 'archive:detail' item.srcid %}">{{ item.title }}</a></h3>
-        <p>{{ item.author }}</p>
-        {% if item.enumcron %}<p>{{ item.enumcron }}</p> {% endif %}
-        <p>{{ item.publisher }} | {{ item.pub_place }} | {{ item.pub_date }}</p>
-        <p>
-        {% for collection in item.collections %}
-            <span class="ui green button">{{ collection }}</span>
-        {% endfor %}
-        </p>
-        {% if sort == 'Relevance' %}
-            <p><small>relevance: {{ item.score }}</small></p>
-        {% endif %}
-
+{% comment %}
+<<<<<<< HEAD
         <p><a class="ui button" href="{{ item.src_url }}" title="View item on HathiTrust">HathiTrust →</a></p>
         {% with results=page_groups|dict_item:item.id %}
             {% if page_highlights %}
@@ -75,4 +42,49 @@
         </span>
     </div>
 {% endif %}
+======={% endcomment %}
+{% block css %}
+<link rel="stylesheet" type="text/x-scss" href="{% static 'archive/scss/search.scss' %}">
+{% endblock %}
+
+{% block head_extras %}
+<link rel="unapi-server" type="application/xml" title="unAPI"
+href="{% url 'unapi' %}" />
+{% endblock %}
+
+{% block page-subtitle %}Archive | {% endblock %}
+{% block page-context-id %}search{% endblock %}
+
+{% block content %}
+<div class="ui center aligned text container">
+    <h1 class="header">View the Archive</h1>
+</div>
+<section class="ui search basic vertical segment container">
+    <form>
+        {{ search_form }}
+        <input type="submit"/>
+    </form>
+</section>
+<section class="ui results basic vertical segment">
+    <div class="ui center aligned text container">
+        <p>Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}</p>
+        <p>Export all to <a>Zotero</a></p>
+    </div>
+    <div class="ui container">
+        {% include 'archive/snippets/pagination.html' %}
+    </div>
+    <div class="results-list">
+        {% for item in object_list %}
+            {% include 'archive/snippets/search_result.html' %}
+        {% empty %}
+        <div class="ui error message container">
+            <p>{% firstof error "No matching works." %}</p>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="ui container">
+        {% include 'archive/snippets/pagination.html' %}
+    </div>
+</section>
+{# >>>>>>> develop #}
 {% endblock %}

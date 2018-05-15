@@ -1,0 +1,21 @@
+{% comment %}
+Page preview snippet displays page thumbnail and highlight text from
+keyword search.  Used on both DigitizedWork list and detail views.
+
+Expected context variables:
+  - item_id: source id for the work the page belongs to
+  - page: page result with page.order attribute (page label/order, for determining thumbnail url)
+  - highlights: dictionary of Solr highlighting results
+{% endcomment %}
+<div class="page">
+    <div class="preview">
+        <img src="{% page_image_url item_id page.order 180 %}"
+            srcset="{% page_image_url item_id page.order 360 %} 2x"/>
+    </div>
+    <div class="snippets">
+        {% for snippet in highlights.content %}
+        <p class="snippet">{{ snippet|safe }}</p>
+        {% endfor %}
+    </div>
+</div>
+
