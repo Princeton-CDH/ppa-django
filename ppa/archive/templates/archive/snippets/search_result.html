@@ -35,7 +35,9 @@
                 {% if page_highlights %}
                 <div class="wrapper">
                     {% for page in results.docs %}
-                        {% include 'archive/snippets/page_preview.html' %}
+                      {% with highlights=page_highlights|dict_item:page.id %}
+                        {% include 'archive/snippets/page_preview.html' with item_id=item.srcid  %}
+                      {% endwith %}
                     {% endfor %}
                 </div>
                 {# link to page with search if there are more than two pages #}
