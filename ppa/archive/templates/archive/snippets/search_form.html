@@ -1,0 +1,64 @@
+{% load semanticui humanize %}
+<form class="ui form{% if error %} error{% endif %}">
+    <div class="ui vertical segment">
+        {% render_field search_form.query %}
+        <div class="ui two fields">
+            {% render_field search_form.title_query %}
+            {% render_field search_form.author_query %}
+        </div>
+    </div>
+    <div class="ui vertical stackable grid segment">
+        <div class="six wide column" id="publication">
+            <div class="ui inline fields">
+                {% render_field search_form.pub_date %}
+            </div>
+            <a class="clear-selection" role="button" href="#">Clear Selection</a>
+        </div>
+        <div class="ten wide column" id="histogram">
+            <div class="placeholder"></div>
+            <span class="min-date">1569</span>
+            <span class="max-date">1922</span>
+        </div>
+    </div>
+    <div class="ui vertical stackable grid segment">
+        <div class="nine wide column field" id="collections">
+            <label for="collections">Collections</label>
+            <div id="collections" class="collections">
+                {% for collection in search_form.collections %}
+                <button class="ui tiny basic button">{{ collection }}</button>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="ui seven wide column" id="booleans">
+            <div class="ui grid">
+                <div class="eight wide column field">
+                    <label>Only display</label>
+                    {% render_field search_form.earliest_only %}
+                    {% render_field search_form.ace_only %}
+                </div>
+                <div class="eight wide column field">
+                    <label>Exclude</label>
+                    {% render_field search_form.dict_exclude %}
+                    {% render_field search_form.pg_exclude %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <input type="submit"/>
+    <div class="ui center aligned text container">
+        <p>Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}</p>
+        <p>Export all to <a>Zotero</a></p>
+    </div>
+    {% include 'archive/snippets/pagination.html' %}
+    <div class="sort">
+        <div class="ui secondary pointing menu">
+            <span class="item">Sort By</span>
+            {% for sort in search_form.sort %}
+            <a class="item" for="{{ sort.id_for_label }}" role="radio">
+                {{ sort.choice_label }}
+                {{ sort.tag }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</form>

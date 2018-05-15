@@ -129,22 +129,27 @@ class SearchForm(forms.Form):
             '_align': 'left'
         }))
     # title and author field search not implemented yet
-    # title_query = forms.CharField(label='Book Title', required=False,
-    #     widget=forms.TextInput(attrs={
-    #         'placeholder': 'Search the archive by book title',
-    #         '_icon': 'search',
-    #         '_align': 'left'
-    #     }))
-    # author_query = forms.CharField(label='Author', required=False,
-    #     widget=forms.TextInput(attrs={
-    #         'placeholder': 'Search the archive by author',
-    #         '_icon': 'search',
-    #         '_align': 'left'
-    #     }))
+    title_query = forms.CharField(label='Book Title', required=False,
+        widget=forms.TextInput(attrs={
+            'disabled': True,
+            'placeholder': 'Search the archive by book title',
+            '_icon': 'search',
+            '_align': 'left'
+        }))
+    author_query = forms.CharField(label='Author', required=False,
+        widget=forms.TextInput(attrs={
+            'disabled': True,
+            'placeholder': 'Search the archive by author',
+            '_icon': 'search',
+            '_align': 'left'
+        }))
 
     # facets
-    collections = FacetChoiceField()
-    pub_date = RangeField(label='Publication Year', required=False)
+    collections = FacetChoiceField(label='Collection')
+    pub_date = RangeField(label='Publication Year', required=False,
+        widget=RangeWidget(attrs={
+            'size': 4
+        }))
 
     sort = forms.ChoiceField(widget=RadioSelectWithDisabled, choices=SORT_CHOICES,
         required=False)
