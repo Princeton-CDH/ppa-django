@@ -198,7 +198,7 @@ class DigitizedWorkListView(ListView):
             # enable highlighting on content field with 3 snippets
             'hl': True,
             'hl.fl': 'content',
-            'hl.snippets': 1,
+            'hl.snippets': 3,
             'hl.fragsize': 10,
             # use Unified Highlighter (not default but recommended)
             'hl.method': 'unified',
