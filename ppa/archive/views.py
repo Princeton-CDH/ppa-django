@@ -158,7 +158,6 @@ class DigitizedWorkListView(ListView):
             'expand.rows': 2,   # number of items in the collapsed group, i.e pages to display
             'join_query': join_q,
             'coll_query': coll_query,
-            'rows': 50  # override solr default of 10 results; display 50 at a time for now
         }
 
         # add facet range options to the solr options
@@ -334,6 +333,7 @@ class CollectionListView(ListView):
             # 'facet.pivot': '{!stats=piv1}collections_exact,collections_exact'
             'stats': True,
             'stats.field': '{!tag=piv1 min=true max=true}pub_date',
+            # don't return any actual items, just the facets
             'rows': 0
         })
         facet_pivot = solr_stats.raw_response['facet_counts']['facet_pivot']
