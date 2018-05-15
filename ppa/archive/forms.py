@@ -194,7 +194,7 @@ class SearchForm(forms.Form):
                     'min': pubdate_range[0], 'max': pubdate_range[1]})
 
         # relevance is disabled unless we have a keyword query present
-        if not data or self.has_keyword_query(data):
+        if not data or not self.has_keyword_query(data):
             self.fields['sort'].widget.choices[0] = \
                 ('relevance', {'label': 'Relevance', 'disabled': True})
 
@@ -207,8 +207,7 @@ class SearchForm(forms.Form):
         '''
         Set solr sort fields for the query based on sort and query strings.
 
-        :return: tuple of strings following the format (template string,
-            solr sort string, solr fields string)
+        :return: solr sort field
         '''
         solr_mapping = {
             'relevance': 'score desc',
@@ -219,12 +218,8 @@ class SearchForm(forms.Form):
             'author_asc': 'author_exact asc',
             'author_desc': 'author_exact desc',
         }
-        template_mapping = dict(self.SORT_CHOICES)
-        # return the mappings for sort and solr_sort fields
-        solr_sort = solr_mapping[sort]
-        sort = template_mapping[sort]
-
-        return sort, solr_sort
+        # return solr field for requested sort option
+        return solr_mapping[sort]
 
     def set_choices_from_facets(self, facets):
         '''Set choices on field from a dictionary of facets'''

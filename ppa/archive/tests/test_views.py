@@ -225,7 +225,6 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url)
         assert response.status_code == 200
         self.assertContains(response, '%d digitized works' % len(digitized_works))
-        assert response.context['sort'] == 'Title A-Z'
         self.assertContains(response, '<p class="result-number">1</p>',
             msg_prefix='results have numbers')
         self.assertContains(response, '<p class="result-number">2</p>',
@@ -269,7 +268,6 @@ class TestArchiveViews(TestCase):
         # search term in title
         response = self.client.get(url, {'query': 'wintry'})
         # relevance sort for keyword search
-        assert response.context['sort'] == 'Title A-Z'
         assert len(response.context['object_list']) == 1
         self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
@@ -339,11 +337,7 @@ class TestArchiveViews(TestCase):
                                     key=operator.itemgetter('pub_date'))
         # the two context lists should match exactly
         assert sorted_object_list == response.context['object_list']
-        # human readable value should be set in context using the value
-        # of SearchForm.SORT_CHOICES
-        assert response.context['sort'] == \
-            dict(SearchForm.SORT_CHOICES)['pub_date_asc']
-        # test sort date in reverse
+         # test sort date in reverse
         response = self.client.get(url, {'query': '', 'sort': 'pub_date_desc'})
         # explicitly sort by pub_date manually in descending order
         sorted_object_list = sorted(response.context['object_list'],
@@ -351,20 +345,12 @@ class TestArchiveViews(TestCase):
                                     reverse=True)
         # the two context lists should match exactly
         assert sorted_object_list == response.context['object_list']
-        # human readable value should be set in context using the value
-        # of SearchForm.SORT_CHOICES
-        assert response.context['sort'] == \
-            dict(SearchForm.SORT_CHOICES)['pub_date_desc']
         # one last test using title
         response = self.client.get(url, {'query': '', 'sort': 'title_asc'})
         sorted_object_list = sorted(response.context['object_list'],
                                     key=operator.itemgetter('title_exact'))
         # the two context lists should match exactly
         assert sorted_object_list == response.context['object_list']
-        # human readable value should be set in context using the value
-        # of SearchForm.SORT_CHOICES
-        assert response.context['sort'] == \
-            dict(SearchForm.SORT_CHOICES)['title_asc']
 
         # - check that a query allows relevance as sort order toggle in form
         response = self.client.get(url, {'query': 'foo', 'sort': 'title_asc'})
