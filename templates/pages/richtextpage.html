@@ -5,8 +5,6 @@
 {# Use content rather than main to follow PPA base.html #}
 {% block content %}{{ block.super }}
 
-{% editable page.richtextpage.content %}
-{{ page.richtextpage.content|richtext_filters }}
-{% endeditable %}
+{{ page.richtextpage.content|richtext_filters|safe }}
 
 {% endblock %}
