@@ -107,7 +107,7 @@
                     $(this).tinymce(configs[this.id]);
                 } else {
                     // otherwise, just use the default
-                    $(this).tinymce(tiny_mce)
+                    $(this).tinymce(tinymce_config);
                 }
             });
         }
