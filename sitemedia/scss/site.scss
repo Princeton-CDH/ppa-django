@@ -14,6 +14,11 @@ $nav-height: 40px;
 #main-nav {
     padding: 0;
     z-index: 103; // above mobile nav
+    transition: margin-top 0.25s;
+
+    &.hidden {
+        margin-top: -$nav-height;
+    }
 
     .brand {
         width: 100%;
