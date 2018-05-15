@@ -1,0 +1,1 @@
+{% spaceless %}{% for widget in widget.subwidgets %}{% include widget.template_name %}{% if forloop.first %}<label>to</label>{% endif %}{% endfor %}{% endspaceless %}
