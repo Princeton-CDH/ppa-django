@@ -133,17 +133,14 @@ class SearchForm(forms.Form):
             '_icon': 'search',
             '_align': 'left'
         }))
-    # title and author field search not implemented yet
-    title_query = forms.CharField(label='Book Title', required=False,
+    title = forms.CharField(label='Book Title', required=False,
         widget=forms.TextInput(attrs={
-            'disabled': True,
             'placeholder': 'Search the archive by book title',
             '_icon': 'search',
             '_align': 'left'
         }))
-    author_query = forms.CharField(label='Author', required=False,
+    author = forms.CharField(label='Author', required=False,
         widget=forms.TextInput(attrs={
-            'disabled': True,
             'placeholder': 'Search the archive by author',
             '_icon': 'search',
             '_align': 'left'
