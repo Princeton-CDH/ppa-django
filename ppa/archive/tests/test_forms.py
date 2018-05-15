@@ -71,6 +71,18 @@ class TestSearchForm(TestCase):
             title='OldProsody', source_id='testppa3', pub_date=1523)
         assert searchform.pub_date_minmax() == expected
 
+    def test_has_keyword_query(self):
+        # no data
+        assert not SearchForm().has_keyword_query({})
+        # non keyword fields
+        assert not SearchForm().has_keyword_query({'pub_date_0': 1800})
+        # any of query, title, author
+        assert SearchForm().has_keyword_query({'query': 'prometheus'})
+        assert SearchForm().has_keyword_query({'title': 'elocution'})
+        assert SearchForm().has_keyword_query({'author': 'bell'})
+        # multiple
+        assert SearchForm().has_keyword_query({'query': 'reading', 'title': 'elocution'})
+
 
 # range widget and field tests copied from derrida, like the objects tested
 

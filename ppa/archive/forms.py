@@ -125,7 +125,6 @@ class SearchForm(forms.Form):
         'sort': 'title_asc',
     }
 
-
     # text inputs
     query = forms.CharField(label='Keyword or Phrase', required=False,
         widget=forms.TextInput(attrs={
@@ -177,11 +176,11 @@ class SearchForm(forms.Form):
         'collections_exact': 'collections'
     }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, data=None, *args, **kwargs):
         '''
         Set choices dynamically based on form kwargs and presence of keywords.
         '''
-        super(SearchForm, self).__init__(*args, **kwargs)
+        super(SearchForm, self).__init__(data=data, *args, **kwargs)
 
         pubdate_range = self.pub_date_minmax()
         # because pubdate is a multifield/multiwidget, access the widgets
@@ -194,10 +193,15 @@ class SearchForm(forms.Form):
                 pubdate_widgets[idx].attrs.update({'placeholder': val,
                     'min': pubdate_range[0], 'max': pubdate_range[1]})
 
-        if args and not args[0].get('query', None):
+        # relevance is disabled unless we have a keyword query present
+        if not data or self.has_keyword_query(data):
             self.fields['sort'].widget.choices[0] = \
                 ('relevance', {'label': 'Relevance', 'disabled': True})
 
+    def has_keyword_query(self, data):
+        '''check if any of the keyword search fields have search terms'''
+        return any(data.get(query_field, None)
+                   for query_field in ['query', 'title', 'author'])
 
     def get_solr_sort_field(self, sort):
         '''
