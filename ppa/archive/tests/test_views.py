@@ -367,11 +367,13 @@ class TestArchiveViews(TestCase):
 
         # - check that a query allows relevance as sort order toggle in form
         response = self.client.get(url, {'query': 'foo', 'sort': 'title_asc'})
-        self.assertContains(
-            response,
-            '<input type="radio" name="sort" value="relevance" id="id_sort_0" />',
-            html=True
-        )
+        enabled_input = \
+            '<input type="radio" name="sort" value="relevance" id="id_sort_0" />'
+        self.assertContains(response, enabled_input, html=True)
+        response = self.client.get(url, {'title': 'foo', 'sort': 'title_asc'})
+        self.assertContains(response, enabled_input, html=True)
+        response = self.client.get(url, {'author': 'foo', 'sort': 'title_asc'})
+        self.assertContains(response, enabled_input, html=True )
         # check that a search that does not have a query disables
         # relevance as a sort order option
         response = self.client.get(url, {'sort': 'title_asc'})
