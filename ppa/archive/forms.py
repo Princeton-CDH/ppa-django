@@ -153,7 +153,8 @@ class SearchForm(forms.Form):
     collections = FacetChoiceField(label='Collection')
     pub_date = RangeField(label='Publication Year', required=False,
         widget=RangeWidget(attrs={
-            'size': 4
+            'size': 4,
+            '_inline': True
         }))
 
     sort = forms.ChoiceField(widget=RadioSelectWithDisabled, choices=SORT_CHOICES,
