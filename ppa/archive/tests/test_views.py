@@ -221,6 +221,9 @@ class TestArchiveViews(TestCase):
         solr.index(solr_collection, index_data, params={"commitWithin": 100})
         sleep(2)
 
+        # also get dial for use with author and title searching
+        dial = digitized_works.filter(title__icontains='Dial')[0]
+
         # no query - should find all
         response = self.client.get(url)
         assert response.status_code == 200
@@ -304,6 +307,16 @@ class TestArchiveViews(TestCase):
         # search text in author name
         response = self.client.get(url, {'query': 'Robert Bridges'})
         self.assertContains(response, wintry.source_id)
+
+        # search author as author field only
+        response = self.client.get(url, {'author': 'Robert'})
+        self.assertContains(response, wintry.source_id)
+        self.assertNotContains(response, dial.source_id)
+
+        # search title using the title field
+        response = self.client.get(url, {'title': 'The Dial'})
+        self.assertContains(response, dial.source_id)
+        self.assertNotContains(response, wintry.source_id)
 
         # search text in publisher name
         response = self.client.get(url, {'query': 'McClurg'})
