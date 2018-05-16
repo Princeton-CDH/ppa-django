@@ -1,0 +1,17 @@
+{
+  "name": "ppa-django",
+  "description": "Django web application for the Princeton Prosody Archive",
+  "repository": "https://github.com/Princeton-CDH/ppa-django.git",
+  "author": "The Center for Digital Humanities at Princeton <cdh@princeton.edu>",
+  "license": "Apache-2.0",
+  "main": "sitemedia/js/index.js",
+  "dependencies": {
+    "autoprefixer": "^8.5.0",
+    "babel-core": "^6.26.3",
+    "babel-preset-es2015": "^6.24.1",
+    "babelify": "^8.0.0",
+    "browserify": "^16.2.2",
+    "node-sass": "^4.9.0",
+    "postcss-cli": "^5.0.0"
+  }
+}
