@@ -6,6 +6,12 @@
         width: 6rem;
     }
 
+    #publication {
+        label:nth-child(3) { // "to" in between dates
+            margin: 0 1rem;
+        }
+    }
+
     #histogram {
         .placeholder {
             width: 100%;
