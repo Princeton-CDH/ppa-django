@@ -32,6 +32,12 @@
     owner: deploy
     group: apache
     mode: 0770
+- name: On QA server only, set the GID correctly for log access
+  shell: "sudo chgrp -R {{ project_user }} {{ install_root }}/ppa.log"
+  when: group == "qa"
+  args:
+    warn: False
+    executable: /bin/bash
 - name: Run ./manage.py collectstatic
   django_manage:
     command: collectstatic
