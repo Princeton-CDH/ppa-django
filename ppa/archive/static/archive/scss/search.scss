@@ -45,9 +45,13 @@
             margin-bottom: .5rem;
             margin-right: .5rem;
         }
+        label.button {
+            display: inline-block;
+            font-weight: normal;
+        }
 
         input[type=checkbox], // hide checkboxes
-        label > span { // hide counts
+        .button > span { // hide counts
             display: none;
         }
     }
@@ -69,7 +73,7 @@
             width: 100%;
         }
     }
-    
+
     /* sorting */
     .sort {
         margin-top: 2rem;
@@ -80,19 +84,19 @@
             .item > input {
                 display: none; // hide checkboxes
             }
-            
+
             span.item { // "SORT BY" text
                 padding-left: 0;
                 text-transform: uppercase;
             }
         }
     }
-    
+
     /* pagination */
     .pagination .page-controls {
         float: right;
     }
-    
+
     /* results */
     .results-list {
         padding: 1rem 0;

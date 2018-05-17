@@ -6,6 +6,7 @@ $(function(){
     const $$searchForm = $('.form')
     const $$sortLinks = $('.sort .item')
     const $$clearDatesLink = $('.clear-selection')
+    const $$collectionLabels = $('#collections label.button');
     const $$histogram = $('#histogram')
     const $$minDateInput = $('#id_pub_date_0')
     const $$maxDateInput = $('#id_pub_date_1')
@@ -14,7 +15,6 @@ $(function(){
     
     /* functions */
     function changeSort(event) {
-        console.log('currently: ', $(event.target).siblings().find('input[checked=""]'))
         $(event.target).siblings().find('input[checked=""]').removeAttr('checked')
         $(event.target).find('input').attr('checked', '')
     }
@@ -34,10 +34,11 @@ $(function(){
         $$minDate.text(minDate != '' ? minDate : $$minDateInput.attr('placeholder'))
         $$maxDate.text(maxDate != '' ? maxDate : $$maxDateInput.attr('placeholder'))
     }
-    
+
+
     /* bindings */
     $('.ui.checkbox').checkbox()
-    $$sortLinks.find('input[checked=""]').parent().addClass('active')
+
     $$sortLinks.find('input[disabled="disabled"]').parent().addClass('disabled')
     $$sortLinks.click((e) => {
         changeSort(e)
@@ -50,5 +51,10 @@ $(function(){
 
     // update min and max pub date on visualization
     updateDates()
+  
+    $$collectionLabels.click((e) => {
+        $(e.target).toggleClass('active')
+        $$searchForm.submit()
+    })
 
 })
