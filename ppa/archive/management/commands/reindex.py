@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from django.db.models import Sum
 import progressbar
 
 from ppa.archive.models import DigitizedWork
@@ -25,8 +26,11 @@ class Command(BaseCommand):
             'source_ids', nargs='*',
             help='Optional list of specific works to index by source (HathiTrust) id.')
         parser.add_argument(
-            '-p', '--progress', action='store_true',
-            help='Display a progress bar to track the status of the reindex.')
+            '--index', choices=['all', 'works', 'pages'],  default='all',
+            help='Index only works or pages (by default indexes all)')
+        parser.add_argument(
+            '--no-progress', action='store_true',
+            help='Do not display progress bar to track the status of the reindex.')
 
     def handle(self, *args, **kwargs):
         solr, solr_collection = get_solr_connection()
@@ -38,16 +42,40 @@ class Command(BaseCommand):
 
         if self.options['source_ids']:
             works = works.filter(source_id__in=self.options['source_ids'])
-            # self.stats['total'] = len(ids_to_index)
+
+        total_to_index = 0
+        # calculate total to index based on what we are indexing
+        if self.options['index'] in ['works', 'all']:
+            # total works to be indexed
+            total_to_index += works.count()
+        if self.options['index'] in ['pages', 'all']:
+            # total pages to be indexed
+            total_to_index += works.aggregate(total_pages=Sum('page_count'))['total_pages']
 
         # initialize progressbar if requested and indexing more than 5 items
-        if self.options['progress'] and works.count() > 5:
+        progbar = None
+        if not self.options['no_progress'] and total_to_index > 5:
             progbar = progressbar.ProgressBar(redirect_stdout=True,
-                                              max_value=works.count())
-        else:
-            progbar = None
+                                              max_value=total_to_index)
 
-        for i, work in enumerate(works):
-            solr.index(solr_collection, [work.index_data()])
-            if progbar:
-                progbar.update(i)
+        # index works
+        count = 0
+        if self.options['index'] in ['works', 'all']:
+            for work in works:
+                solr.index(solr_collection, [work.index_data()])
+
+                count += 1
+                if progbar:
+                    progbar.update(count)
+
+        # index pages for each work
+        if self.options['index'] in ['pages', 'all']:
+            for work in works:
+                # TODO: catch solr connection error here
+# SolrClient.exceptions.ConnectionError: ('N/A', "('Connection aborted.', BrokenPipeError(32, 'Broken pipe'))", ConnectionError(ProtocolError('Connection aborted.', BrokenPipeError(32, 'Broken pipe')),))
+                solr.index(solr_collection, work.page_index_data())
+
+                count += work.page_count
+                if progbar:
+                    progbar.update(count)
+

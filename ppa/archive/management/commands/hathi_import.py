@@ -155,6 +155,7 @@ class Command(BaseCommand):
             for ht_data_dir in hathi_dirs:
                 prefix = os.path.basename(ht_data_dir)
 
+                print('pairtree prefix, datadir %s %s' % (prefix, ht_data_dir))
                 hathi_ptree = pairtree_client.PairtreeStorageClient(prefix, ht_data_dir)
                 # store initialized pairtree client by prefix for later use
                 self.hathi_pairtree[prefix] = hathi_ptree
