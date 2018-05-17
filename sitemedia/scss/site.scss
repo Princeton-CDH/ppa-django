@@ -58,7 +58,7 @@
 
 /* header */
 #header {
-    margin-top: $nav-height;
+    margin-top: 2 * $nav-height;
 }
 
 /* main */
@@ -114,9 +114,4 @@ main {
             margin-left: auto;
         }
     }
-}
-
-/* main */
-.pusher {
-    margin-top: $nav-height;
 }
