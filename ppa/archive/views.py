@@ -239,7 +239,7 @@ class DigitizedWorkListView(ListView):
     def get_context_data(self, **kwargs):
         # if the form is not valid, bail out
         if not self.form.is_valid():
-            context = super(DigitizedWorkListView, self).get_context_data(**kwargs)
+            context = super().get_context_data(**kwargs)
             context['search_form'] = self.form
             return context
 
@@ -247,7 +247,7 @@ class DigitizedWorkListView(ListView):
         try:
             # catch an error querying solr when the search terms cannot be parsed
             # (e.g., incomplete exact phrase)
-            context = super(DigitizedWorkListView, self).get_context_data(**kwargs)
+            context = super().get_context_data(**kwargs)
             page_groups = self.solrq.get_expanded()
             facet_dict = self.solrq.get_facets()
 
@@ -287,7 +287,7 @@ class DigitizedWorkDetailView(DetailView):
     paginate_by = 50
 
     def get_context_data(self, **kwargs):
-        context = super(DigitizedWorkDetailView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         # pull in the query if it exists to use
         query = self.request.GET.get('query', '')
 
@@ -348,7 +348,7 @@ class CollectionListView(ListView):
     ordering = ('name',)
 
     def get_context_data(self, *args, **kwargs):
-        context = super(CollectionListView, self).get_context_data(*args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
         # NOTE: if we *only* want counts, could just do a regular facet
 
         solr_stats = PagedSolrQuery({

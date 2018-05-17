@@ -22,7 +22,7 @@ class RadioSelectWithDisabled(forms.RadioSelect):
         disabled = None
         if isinstance(label, dict):
             label, disabled = label['label'], label['disabled']
-        option_dict = super(RadioSelectWithDisabled, self).create_option(
+        option_dict = super().create_option(
                 name, value, label, selected, index,
                 subindex=subindex, attrs=attrs
             )
@@ -45,7 +45,7 @@ class FacetChoiceField(forms.MultipleChoiceField):
     def __init__(self, *args, **kwargs):
         if 'required' not in kwargs:
             kwargs['required'] = False
-        super(FacetChoiceField, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def valid_value(self, value):
         return True
@@ -67,7 +67,7 @@ class RangeWidget(forms.MultiWidget):
             forms.NumberInput(),
             forms.NumberInput()
         ]
-        super(RangeWidget, self).__init__(widgets, *args, **kwargs)
+        super().__init__(widgets, *args, **kwargs)
 
     def decompress(self, value):
         if value:
@@ -96,9 +96,8 @@ class RangeField(forms.MultiValueField):
             ),
         )
         kwargs['fields'] = fields
-        super(RangeField, self).__init__(
-            require_all_fields=False, *args, **kwargs
-        )
+        super().__init__(require_all_fields=False, *args, **kwargs)
+
 
     def compress(self, data_list):
         # if both values are set and the first is greater than the second,
@@ -181,7 +180,7 @@ class SearchForm(forms.Form):
         '''
         Set choices dynamically based on form kwargs and presence of keywords.
         '''
-        super(SearchForm, self).__init__(data=data, *args, **kwargs)
+        super().__init__(data=data, *args, **kwargs)
 
         pubdate_range = self.pub_date_minmax()
         # because pubdate is a multifield/multiwidget, access the widgets
