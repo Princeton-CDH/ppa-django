@@ -141,14 +141,19 @@ class DigitizedWorkListView(ListView):
                 # (input from different fields are combined via *AND*)
                 work_query = '(%s)' % ' AND '.join(work_q)
                 # NOTE: grouping required for work_query to work properly on the join
-
                 # search for works that match the filters OR for pages that belong
-                # to a work that matches
-                query_parts.append('(%s OR {!join from=id to=srcid v=$work_query})' % work_query)
+                # to a work that matches, but only if there is also a text_query.
+                # If there is not text_query, pages are not needed.
+                if text_query:
+                    query_parts.append(
+                        '(%s OR {!join from=id to=srcid v=$work_query})' % work_query
+                    )
+                else:
+                    query_parts.append(work_query)
 
             # general text query, if there is one
             if text_query:
-                # search for works that matche the filter OR for works
+                # search for works that match the filter OR for works
                 # associated with pages that match
                 query_parts.append(
                      '(%s OR {!join from=srcid to=id v=$text_query})' % text_query

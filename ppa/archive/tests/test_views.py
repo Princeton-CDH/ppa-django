@@ -286,6 +286,7 @@ class TestArchiveViews(TestCase):
         # page image and text highlight should still display with year filter
         response = self.client.get(url, {'query': 'wintry', 'pub_date_0': 1800})
         assert response.context['page_highlights']
+
         self.assertContains(
             response, 'winter and <em>wintry</em> and',
             msg_prefix='highlight snippet from page content displayed')
@@ -309,9 +310,19 @@ class TestArchiveViews(TestCase):
         self.assertContains(response, wintry.source_id)
 
         # search author as author field only
-        response = self.client.get(url, {'author': 'Robert'})
+        response = self.client.get(url, {'author': 'Robert Bridges'})
         self.assertContains(response, wintry.source_id)
         self.assertNotContains(response, dial.source_id)
+
+        # no text query, so solr query should not have page join present
+        with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
+            # needed for the pagniator
+            mockpsq.return_value.count = 0
+            response = self.client.get(url, {'author': 'Robert'})
+            # the call args are very long and not all relevant, cast as
+            # string and look for the offending join
+            assert 'OR {!join from=id to=srcid v=$work_query})' \
+                not in str(mockpsq.call_args)
 
         # search title using the title field
         response = self.client.get(url, {'title': 'The Dial'})
@@ -398,6 +409,7 @@ class TestArchiveViews(TestCase):
         assert not response.context['object_list'].count()
         self.assertContains(response, 'Invalid range')
 
+
         # nothing indexed - should not error
         solr.delete_doc_by_query(solr_collection, '*:*', params={"commitWithin": 100})
         sleep(2)
@@ -412,6 +424,7 @@ class TestArchiveViews(TestCase):
             mockpsq.return_value.count = 0
             response = self.client.get(url, {'query': 'something'})
             self.assertContains(response, 'Something went wrong.')
+
 
     def test_digitizedwork_csv(self):
         # get the csv export and inspect the response
