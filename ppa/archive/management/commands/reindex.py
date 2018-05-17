@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from django.core.paginator import Paginator
 from django.db.models import Sum
 import progressbar
 
@@ -61,10 +62,14 @@ class Command(BaseCommand):
         # index works
         count = 0
         if self.options['index'] in ['works', 'all']:
-            for work in works:
-                solr.index(solr_collection, [work.index_data()])
+            # use django paginator to index chunks of works at a time
+            paginator = Paginator(works, 100)
+            for page in range(1, paginator.num_pages + 1):
+                solr.index(
+                    solr_collection,
+                    [work.index_data() for work in paginator.page(page).object_list])
 
-                count += 1
+                count += paginator.page(page).object_list.count()
                 if progbar:
                     progbar.update(count)
 

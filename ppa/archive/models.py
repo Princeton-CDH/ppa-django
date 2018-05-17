@@ -95,6 +95,9 @@ class DigitizedWork(models.Model):
     #: date of last modification of the local record
     updated = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        ordering = ('title',)
+
     def get_absolute_url(self):
         '''
         Return object's url for
