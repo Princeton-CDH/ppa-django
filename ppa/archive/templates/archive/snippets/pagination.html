@@ -1,7 +1,8 @@
+{% spaceless %}
 <div class="page-controls">
         {# previous link at first (disabled if no previous)  #}
         {% if page_obj.has_previous %}
-        <a rel="prev"  class="ui small icon button" href="?{% querystring_replace page=page_obj.previous_page_number %}">
+        <a rel="prev" class="ui small button" href="?{% querystring_replace page=page_obj.previous_page_number %}">
             <i class="chevron left icon"></i>
         </a>
         {% else %}
@@ -30,7 +31,7 @@
 
             {# always display the first page (not current page) #}
             {% elif forloop.first %}
-              <a class="ui small button" href='?{% querystring_replace page=number %}'>{{ number }}</a>
+              <a class="ui small button" href="?{% querystring_replace page=number %}">{{ number }}</a>
               {# if there is a gap between 1 and group around current page #}
               {% if page_obj.number > 4 and page_obj.paginator.num_pages > 6 %}
               <span>...</span>
@@ -57,3 +58,4 @@
         </span>
         {% endif %}
 </div>
+{% endspaceless %}
