@@ -1,3 +1,6 @@
+# JS dependencies
+node_modules/
+
 # Media ignores
 static/media/
 static/CACHE
