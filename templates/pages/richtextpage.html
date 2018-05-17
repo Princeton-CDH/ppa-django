@@ -3,8 +3,11 @@
 {% load mezzanine_tags %}
 
 {# Use content rather than main to follow PPA base.html #}
-{% block content %}{{ block.super }}
-
-{{ page.richtextpage.content|richtext_filters|safe }}
-
+{% block content %}
+<div class="ui vertical basic segment">
+    {{ block.super }}
+    <div class="ui text container">
+        {{ page.richtextpage.content|richtext_filters|safe }}
+    </div>
+</div>
 {% endblock %}
