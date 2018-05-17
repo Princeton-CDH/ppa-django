@@ -221,11 +221,13 @@ class TestArchiveViews(TestCase):
         solr.index(solr_collection, index_data, params={"commitWithin": 100})
         sleep(2)
 
+        # also get dial for use with author and title searching
+        dial = digitized_works.filter(title__icontains='Dial')[0]
+
         # no query - should find all
         response = self.client.get(url)
         assert response.status_code == 200
         self.assertContains(response, '%d digitized works' % len(digitized_works))
-        assert response.context['sort'] == 'Title A-Z'
         self.assertContains(response, '<p class="result-number">1</p>',
             msg_prefix='results have numbers')
         self.assertContains(response, '<p class="result-number">2</p>',
@@ -269,7 +271,6 @@ class TestArchiveViews(TestCase):
         # search term in title
         response = self.client.get(url, {'query': 'wintry'})
         # relevance sort for keyword search
-        assert response.context['sort'] == 'Title A-Z'
         assert len(response.context['object_list']) == 1
         self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
@@ -285,6 +286,7 @@ class TestArchiveViews(TestCase):
         # page image and text highlight should still display with year filter
         response = self.client.get(url, {'query': 'wintry', 'pub_date_0': 1800})
         assert response.context['page_highlights']
+
         self.assertContains(
             response, 'winter and <em>wintry</em> and',
             msg_prefix='highlight snippet from page content displayed')
@@ -306,6 +308,26 @@ class TestArchiveViews(TestCase):
         # search text in author name
         response = self.client.get(url, {'query': 'Robert Bridges'})
         self.assertContains(response, wintry.source_id)
+
+        # search author as author field only
+        response = self.client.get(url, {'author': 'Robert Bridges'})
+        self.assertContains(response, wintry.source_id)
+        self.assertNotContains(response, dial.source_id)
+
+        # no text query, so solr query should not have page join present
+        with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
+            # needed for the pagniator
+            mockpsq.return_value.count = 0
+            response = self.client.get(url, {'author': 'Robert'})
+            # the call args are very long and not all relevant, cast as
+            # string and look for the offending join
+            assert 'OR {!join from=id to=srcid v=$work_query})' \
+                not in str(mockpsq.call_args)
+
+        # search title using the title field
+        response = self.client.get(url, {'title': 'The Dial'})
+        self.assertContains(response, dial.source_id)
+        self.assertNotContains(response, wintry.source_id)
 
         # search text in publisher name
         response = self.client.get(url, {'query': 'McClurg'})
@@ -339,11 +361,7 @@ class TestArchiveViews(TestCase):
                                     key=operator.itemgetter('pub_date'))
         # the two context lists should match exactly
         assert sorted_object_list == response.context['object_list']
-        # human readable value should be set in context using the value
-        # of SearchForm.SORT_CHOICES
-        assert response.context['sort'] == \
-            dict(SearchForm.SORT_CHOICES)['pub_date_asc']
-        # test sort date in reverse
+         # test sort date in reverse
         response = self.client.get(url, {'query': '', 'sort': 'pub_date_desc'})
         # explicitly sort by pub_date manually in descending order
         sorted_object_list = sorted(response.context['object_list'],
@@ -351,28 +369,22 @@ class TestArchiveViews(TestCase):
                                     reverse=True)
         # the two context lists should match exactly
         assert sorted_object_list == response.context['object_list']
-        # human readable value should be set in context using the value
-        # of SearchForm.SORT_CHOICES
-        assert response.context['sort'] == \
-            dict(SearchForm.SORT_CHOICES)['pub_date_desc']
         # one last test using title
         response = self.client.get(url, {'query': '', 'sort': 'title_asc'})
         sorted_object_list = sorted(response.context['object_list'],
                                     key=operator.itemgetter('title_exact'))
         # the two context lists should match exactly
         assert sorted_object_list == response.context['object_list']
-        # human readable value should be set in context using the value
-        # of SearchForm.SORT_CHOICES
-        assert response.context['sort'] == \
-            dict(SearchForm.SORT_CHOICES)['title_asc']
 
         # - check that a query allows relevance as sort order toggle in form
         response = self.client.get(url, {'query': 'foo', 'sort': 'title_asc'})
-        self.assertContains(
-            response,
-            '<input type="radio" name="sort" value="relevance" id="id_sort_0" />',
-            html=True
-        )
+        enabled_input = \
+            '<input type="radio" name="sort" value="relevance" id="id_sort_0" />'
+        self.assertContains(response, enabled_input, html=True)
+        response = self.client.get(url, {'title': 'foo', 'sort': 'title_asc'})
+        self.assertContains(response, enabled_input, html=True)
+        response = self.client.get(url, {'author': 'foo', 'sort': 'title_asc'})
+        self.assertContains(response, enabled_input, html=True)
         # check that a search that does not have a query disables
         # relevance as a sort order option
         response = self.client.get(url, {'sort': 'title_asc'})
@@ -381,8 +393,15 @@ class TestArchiveViews(TestCase):
             '<input type="radio" name="sort" value="relevance" id="id_sort_0" disabled="disabled" />',
             html=True
         )
+        # default sort should be title if no keyword search and no sort specified
+        response = self.client.get(url)
+        assert response.context['search_form'].cleaned_data['sort'] == 'title_asc'
+        # if relevance sort is requested but no keyword, switch to default sort
+        response = self.client.get(url, {'sort': 'relevance'})
+        assert response.context['search_form'].cleaned_data['sort'] == 'title_asc'
+
         # collection search
-        response = self.client.get(url, {'query': 'collections_exact:"Test Collection"'})
+        response = self.client.get(url, {'collections': 'Test Collection'})
         assert len(response.context['object_list']) == 1
         self.assertContains(response, wintry.source_id)
 
@@ -396,6 +415,7 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url, {'pub_date_0': 1900, 'pub_date_1': 1800})
         assert not response.context['object_list'].count()
         self.assertContains(response, 'Invalid range')
+
 
         # nothing indexed - should not error
         solr.delete_doc_by_query(solr_collection, '*:*', params={"commitWithin": 100})
@@ -411,6 +431,7 @@ class TestArchiveViews(TestCase):
             mockpsq.return_value.count = 0
             response = self.client.get(url, {'query': 'something'})
             self.assertContains(response, 'Something went wrong.')
+
 
     def test_digitizedwork_csv(self):
         # get the csv export and inspect the response

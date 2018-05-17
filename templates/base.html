@@ -55,7 +55,7 @@ by default; use page_rdf_type to override with a webpage subclass.
       crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.3.1/dist/semantic.js"></script>
     {% compress js %}
-    <script src="{% static 'js/site.js' %}"></script>
+    <script src="{% static 'js/index.js' %}" type="module"></script>
     {% block js %}{% endblock %} {# add any additional javascript here #}
     {% endcompress %}
 

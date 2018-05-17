@@ -45,7 +45,7 @@ class FacetChoiceField(forms.MultipleChoiceField):
     def __init__(self, *args, **kwargs):
         if 'required' not in kwargs:
             kwargs['required'] = False
-        super(FacetChoiceField, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def valid_value(self, value):
         return True
@@ -67,7 +67,7 @@ class RangeWidget(forms.MultiWidget):
             forms.NumberInput(),
             forms.NumberInput()
         ]
-        super(RangeWidget, self).__init__(widgets, *args, **kwargs)
+        super().__init__(widgets, *args, **kwargs)
 
     def decompress(self, value):
         if value:
@@ -96,9 +96,8 @@ class RangeField(forms.MultiValueField):
             ),
         )
         kwargs['fields'] = fields
-        super(RangeField, self).__init__(
-            require_all_fields=False, *args, **kwargs
-        )
+        super().__init__(require_all_fields=False, *args, **kwargs)
+
 
     def compress(self, data_list):
         # if both values are set and the first is greater than the second,
@@ -125,7 +124,6 @@ class SearchForm(forms.Form):
         'sort': 'title_asc',
     }
 
-
     # text inputs
     query = forms.CharField(label='Keyword or Phrase', required=False,
         widget=forms.TextInput(attrs={
@@ -133,17 +131,14 @@ class SearchForm(forms.Form):
             '_icon': 'search',
             '_align': 'left'
         }))
-    # title and author field search not implemented yet
-    title_query = forms.CharField(label='Book Title', required=False,
+    title = forms.CharField(label='Book Title', required=False,
         widget=forms.TextInput(attrs={
-            'disabled': True,
             'placeholder': 'Search the archive by book title',
             '_icon': 'search',
             '_align': 'left'
         }))
-    author_query = forms.CharField(label='Author', required=False,
+    author = forms.CharField(label='Author', required=False,
         widget=forms.TextInput(attrs={
-            'disabled': True,
             'placeholder': 'Search the archive by author',
             '_icon': 'search',
             '_align': 'left'
@@ -181,11 +176,11 @@ class SearchForm(forms.Form):
         'collections_exact': 'collections'
     }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, data=None, *args, **kwargs):
         '''
         Set choices dynamically based on form kwargs and presence of keywords.
         '''
-        super(SearchForm, self).__init__(*args, **kwargs)
+        super().__init__(data=data, *args, **kwargs)
 
         pubdate_range = self.pub_date_minmax()
         # because pubdate is a multifield/multiwidget, access the widgets
@@ -198,17 +193,21 @@ class SearchForm(forms.Form):
                 pubdate_widgets[idx].attrs.update({'placeholder': val,
                     'min': pubdate_range[0], 'max': pubdate_range[1]})
 
-        if args and not args[0].get('query', None):
+        # relevance is disabled unless we have a keyword query present
+        if not data or not self.has_keyword_query(data):
             self.fields['sort'].widget.choices[0] = \
                 ('relevance', {'label': 'Relevance', 'disabled': True})
 
+    def has_keyword_query(self, data):
+        '''check if any of the keyword search fields have search terms'''
+        return any(data.get(query_field, None)
+                   for query_field in ['query', 'title', 'author'])
 
     def get_solr_sort_field(self, sort):
         '''
         Set solr sort fields for the query based on sort and query strings.
 
-        :return: tuple of strings following the format (template string,
-            solr sort string, solr fields string)
+        :return: solr sort field
         '''
         solr_mapping = {
             'relevance': 'score desc',
@@ -219,12 +218,8 @@ class SearchForm(forms.Form):
             'author_asc': 'author_exact asc',
             'author_desc': 'author_exact desc',
         }
-        template_mapping = dict(self.SORT_CHOICES)
-        # return the mappings for sort and solr_sort fields
-        solr_sort = solr_mapping[sort]
-        sort = template_mapping[sort]
-
-        return sort, solr_sort
+        # return solr field for requested sort option
+        return solr_mapping[sort]
 
     def set_choices_from_facets(self, facets):
         '''Set choices on field from a dictionary of facets'''
