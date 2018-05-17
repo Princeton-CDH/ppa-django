@@ -3,12 +3,18 @@ $(function(){
     /* dom */
     const $searchForm = $('.form')
     const $sortLinks = $('.sort .item')
+    const $clearDatesLink = $('.clear-selection')
     
     /* functions */
     function changeSort(event) {
         console.log('currently: ', $(event.target).siblings().find('input[checked=""]'))
         $(event.target).siblings().find('input[checked=""]').removeAttr('checked')
         $(event.target).find('input').attr('checked', '')
+    }
+
+    function clearDates() {
+        $('#publication input').val('')
+        $searchForm.submit()
     }
     
     /* bindings */
@@ -19,4 +25,6 @@ $(function(){
         changeSort(e)
         $searchForm.submit()
     })
+    $clearDatesLink.click(clearDates)
+
 })
