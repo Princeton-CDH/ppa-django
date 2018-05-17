@@ -184,6 +184,8 @@ class DigitizedWorkListView(ListView):
             # turn on faceting and add any self.form facet_fields
             'facet': 'true',
             'facet.field': [field for field in self.form.facet_fields],
+            # sort by alpha on facet label rather than count
+            'facet.sort': 'index',
             # default expand sort is score desc
             'expand': 'true',
             'expand.rows': 2,   # number of items in the collapsed group, i.e pages to display
