@@ -4,7 +4,7 @@ $(function(){
     const $searchForm = $('.form')
     const $sortLinks = $('.sort .item')
     const $clearDatesLink = $('.clear-selection')
-    const $collectionLabels = $('#collections label.button');
+    const $collectionInputs = $('#collections input');
 
     /* functions */
     function changeSort(event) {
@@ -26,8 +26,8 @@ $(function(){
         changeSort(e)
         $searchForm.submit()
     })
-    $collectionLabels.click((e) => {
-        $(e.target).toggleClass('active')
+    $collectionInputs.change((e) => {
+        $(e.target).parent().toggleClass('active')
         $searchForm.submit()
     })
     $clearDatesLink.click(clearDates)
