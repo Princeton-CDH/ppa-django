@@ -263,9 +263,6 @@ class DigitizedWorkListView(ListView):
                 error_msg = 'Something went wrong.'
             context['error'] = error_msg
 
-        # pass in query to context so that it can be used in the template
-        query = self.request.GET.get('query', '')
-
         context.update({
             'search_form': self.form,
             # total and object_list provided by paginator
@@ -274,7 +271,7 @@ class DigitizedWorkListView(ListView):
             'facet_ranges': facet_ranges,
             'page_highlights': self.get_page_highlights(page_groups),
             # query for use template links to detail view with search
-            'query': query,
+            'query': self.query,
         })
         return context
 
