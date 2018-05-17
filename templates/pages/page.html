@@ -1,7 +1,13 @@
 {% extends "base.html" %}
-{% load mezzanine_tags keyword_tags %}
+{% load static mezzanine_tags keyword_tags %}
 {# based on the default Mezzanine "pages/page.html" #}
 {% block meta_title %}{{ page.meta_title }}{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" type="text/x-scss" href="{% static 'scss/page.scss' %}">
+{% endblock %}
+
+{% block page-context-id %}page{% endblock %}
 
 {% block meta_keywords %}{% metablock %}
 {% keywords_for page as keywords %}
