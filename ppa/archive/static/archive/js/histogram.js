@@ -21,7 +21,6 @@ export default class DateHistogram {
         let counts = this.$$values.children('dd').map((i, $el) => $($el).text()).get()
         // populate data property
         dates.map((date, i) => this.data.set(date, counts[i]))
-        console.log(this.data.size)
     }
 
     render() {
