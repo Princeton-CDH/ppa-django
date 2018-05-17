@@ -27,9 +27,6 @@ class DigitizedWorkListView(ListView):
 
     template_name = 'archive/list_digitizedworks.html'
     form_class = SearchForm
-    # NOTE: listview would be nice, but would have to figure out how to
-    # make solrclient compatible with django pagination
-
     paginate_by = 50
 
     # keyword query; assume no search terms unless set
@@ -37,8 +34,9 @@ class DigitizedWorkListView(ListView):
 
     def get_queryset(self, **kwargs):
         form_opts = self.request.GET.copy()
-        # Check for a nonsensical search with 'relevance' and no query string
-        if 'query' not in form_opts or not form_opts['query']:
+        # if relevance sort is requested but there is no keyword search
+        # term present, clear it out and fallback to default sort
+        if not self.form_class().has_keyword_query(form_opts):
             if 'sort' in form_opts and form_opts['sort'] == 'relevance':
                 del form_opts['sort']
 
@@ -59,52 +57,42 @@ class DigitizedWorkListView(ListView):
         if not self.form.is_valid():
             return DigitizedWork.objects.none()
 
-        solr_q = join_q = collections = sort = None
+        work_query = sort = text_query = None
+        # components of query to filter digitized works
         if self.form.is_valid():
             search_opts = self.form.cleaned_data
-            self.query = search_opts.get("query", "")
-            sort = search_opts.get("sort", "")
-            # NOTE: This allows us to get the name of collections for
-            # collections_exact and set collections to a list of collection names
+            self.query = search_opts.get("query", None)
+            sort = search_opts.get("sort", None)
             collections = search_opts.get("collections", None)
 
-        # solr supports multiple filter queries, and documents must
-        # match all of them; collect them as a list to allow multiple
-        filter_q = []
+            if self.query:
+                # simple keyword search across all text content
+                text_query = "text:(%s)" % self.query
+                # work_q.append(text_query)
 
-        coll_query = ''
-        # use filter query to restrict by collection if specified
-        if collections:
-            # OR to allow multiple; quotes to handle multiword collection names
-            coll_query = 'collections_exact:(%s)' % \
-                (' OR '.join(['"%s"' % coll for coll in collections]))
-            # work in collection or page associated with work in collection
-            filter_q.append('(%(coll)s OR {!join from=id to=srcid v=$coll_query})' \
-                % {'coll': coll_query})
+            work_q = []
+            # restrict by collection if specified
+            if collections:
+                work_q.append('collections_exact:(%s)' % \
+                    (' OR '.join(['"%s"' % coll for coll in collections])))
 
-        if self.query:
-            # simple keyword search across all text content
-            solr_q = join_q = "text:(%s)" % self.query
+            # filter books by title or author if there is a query
+            for field in ['title', 'author']:
+                if search_opts.get(field, None):
+                    # filter by title/author keyword or phrase
+                    work_q.append('%s:(%s)' % \
+                                  (field, search_opts[field]))
 
-            # use join to ensure we always get the work if any pages match
-            # using query syntax as documented at
-            # http://comments.gmane.org/gmane.comp.jakarta.lucene.solr.user/95646
-            # to support exact phrase searches
-            solr_q = 'text:(%s) OR {!join from=srcid to=id v=$join_query}' % self.query
-            # sort by relevance, return score for display
-        else:
-            solr_q = '*:*'
 
-        self.sort, solr_sort = self.form.get_solr_sort_field(sort)
+        # use join to ensure we always get the work if any pages match
+        # using query syntax as documented at
+        # http://comments.gmane.org/gmane.comp.jakarta.lucene.solr.user/95646
+        # to support exact phrase searches
+        # solr_q = 'text:(%s) OR {!join from=srcid to=id v=$join_query}' % self.query
+            # logger.debug("Solr search query: %s", solr_q)
+        # else:
+            # solr_q = '*:*'
 
-        fields = '*,score'
-        # NOTE: For now, defaulting to always including score in fields
-
-        logger.debug("Solr search query: %s", solr_q)
-
-        # use filter query to collapse works and pages into groups
-        # sort so work is first, then by page order
-        filter_q.append('{!collapse field=srcid sort="order asc"}')
 
         range_opts = {
             'facet.range': self.form.range_facets
@@ -116,10 +104,8 @@ class DigitizedWorkListView(ListView):
             if range_facet in search_opts and search_opts[range_facet]:
                 start, end = search_opts[range_facet].split('-')
                 range_filter = '[%s TO %s]' % (start or '*', end or '*')
-                # NOTE: because this is a filter query, it is applied before
-                # works and pages are grouped; we still want pages returned,
-                # so find all pages OR works restricted by range
-                filter_q.append('item_type:page OR %s:%s' % (range_facet, range_filter))
+                # find works restricted by range
+                work_q.append('%s:%s' % (range_facet, range_filter))
 
             # get minimum and maximum pub date values from the db
             pubmin, pubmax = self.form.pub_date_minmax()
@@ -144,25 +130,69 @@ class DigitizedWorkListView(ListView):
                 'f.%s.facet.range.hardend' % range_facet: True
             })
 
+        # if there are any queries to filter works  or search by text,
+        # combine the queries and construct solr query
+        if work_q or text_query:
+            query_parts = []
+
+            # work-level metadata queries and filters
+            if work_q:
+                # combine all work filters from search form input
+                # (input from different fields are combined via *AND*)
+                work_query = '(%s)' % ' AND '.join(work_q)
+                # NOTE: grouping required for work_query to work properly on the join
+                # search for works that match the filters OR for pages that belong
+                # to a work that matches, but only if there is also a text_query.
+                # If there is not text_query, pages are not needed.
+                if text_query:
+                    query_parts.append(
+                        '(%s OR {!join from=id to=srcid v=$work_query})' % work_query
+                    )
+                else:
+                    query_parts.append(work_query)
+
+            # general text query, if there is one
+            if text_query:
+                # search for works that match the filter OR for works
+                # associated with pages that match
+                query_parts.append(
+                     '(%s OR {!join from=srcid to=id v=$text_query})' % text_query
+                )
+
+            # combine work and text queries together with AND
+            solr_q = ' AND '.join(query_parts)
+            logger.debug("Solr search query: %s", solr_q)
+        else:
+            # if no work queries or filters are specified,
+            # return all works (no pages needed)
+            solr_q = 'item_type:work'
+
+        solr_sort = self.form.get_solr_sort_field(sort)
+        fields = '*,score'
+        # NOTE: For now, defaulting to always including score in fields
+
+        # use filter query to collapse works and pages into groups
+        # sort so work is first, then by page order
+        collapse_q = '{!collapse field=srcid sort="order asc"}'
+
         # basic solr options, including filter query
         solr_opts = {
             'q': solr_q,
             'sort': solr_sort,
             'fl': fields,
-            'fq': filter_q,
+            'fq': collapse_q,
             # turn on faceting and add any self.form facet_fields
             'facet': 'true',
             'facet.field': [field for field in self.form.facet_fields],
             # default expand sort is score desc
             'expand': 'true',
             'expand.rows': 2,   # number of items in the collapsed group, i.e pages to display
-            'join_query': join_q,
-            'coll_query': coll_query,
+            'text_query': text_query,
+            'work_query': work_query
         }
 
         # add facet range options to the solr options
         solr_opts.update(range_opts)
-
         self.solrq = PagedSolrQuery(solr_opts)
 
         return self.solrq
@@ -199,7 +229,6 @@ class DigitizedWorkListView(ListView):
             'hl': True,
             'hl.fl': 'content',
             'hl.snippets': 3,
-            'hl.fragsize': 10,
             # use Unified Highlighter (not default but recommended)
             'hl.method': 'unified',
             # override solr default of 10 results to return all pages
@@ -210,7 +239,7 @@ class DigitizedWorkListView(ListView):
     def get_context_data(self, **kwargs):
         # if the form is not valid, bail out
         if not self.form.is_valid():
-            context = super(DigitizedWorkListView, self).get_context_data(**kwargs)
+            context = super().get_context_data(**kwargs)
             context['search_form'] = self.form
             return context
 
@@ -218,7 +247,7 @@ class DigitizedWorkListView(ListView):
         try:
             # catch an error querying solr when the search terms cannot be parsed
             # (e.g., incomplete exact phrase)
-            context = super(DigitizedWorkListView, self).get_context_data(**kwargs)
+            context = super().get_context_data(**kwargs)
             page_groups = self.solrq.get_expanded()
             facet_dict = self.solrq.get_facets()
 
@@ -240,7 +269,6 @@ class DigitizedWorkListView(ListView):
         context.update({
             'search_form': self.form,
             # total and object_list provided by paginator
-            'sort': self.sort,
             'page_groups': page_groups,
             # range facet data for publication date
             'facet_ranges': facet_ranges,
@@ -259,7 +287,7 @@ class DigitizedWorkDetailView(DetailView):
     paginate_by = 50
 
     def get_context_data(self, **kwargs):
-        context = super(DigitizedWorkDetailView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         # pull in the query if it exists to use
         query = self.request.GET.get('query', '')
 
@@ -320,7 +348,7 @@ class CollectionListView(ListView):
     ordering = ('name',)
 
     def get_context_data(self, *args, **kwargs):
-        context = super(CollectionListView, self).get_context_data(*args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
         # NOTE: if we *only* want counts, could just do a regular facet
 
         solr_stats = PagedSolrQuery({
