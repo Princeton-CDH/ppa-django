@@ -7,6 +7,10 @@
         width: 6rem;
     }
 
+    .clear-selection {
+        cursor: pointer;
+    }
+
     #publication {
         label:nth-child(3) { // "to" in between dates
             margin: 0 1rem;
