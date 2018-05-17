@@ -22,7 +22,7 @@ class RadioSelectWithDisabled(forms.RadioSelect):
         disabled = None
         if isinstance(label, dict):
             label, disabled = label['label'], label['disabled']
-        option_dict = super().create_option(
+        option_dict = super(RadioSelectWithDisabled, self).create_option(
                 name, value, label, selected, index,
                 subindex=subindex, attrs=attrs
             )

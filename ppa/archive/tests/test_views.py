@@ -384,7 +384,7 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url, {'title': 'foo', 'sort': 'title_asc'})
         self.assertContains(response, enabled_input, html=True)
         response = self.client.get(url, {'author': 'foo', 'sort': 'title_asc'})
-        self.assertContains(response, enabled_input, html=True )
+        self.assertContains(response, enabled_input, html=True)
         # check that a search that does not have a query disables
         # relevance as a sort order option
         response = self.client.get(url, {'sort': 'title_asc'})
@@ -393,8 +393,15 @@ class TestArchiveViews(TestCase):
             '<input type="radio" name="sort" value="relevance" id="id_sort_0" disabled="disabled" />',
             html=True
         )
+        # default sort should be title if no keyword search and no sort specified
+        response = self.client.get(url)
+        assert response.context['search_form'].cleaned_data['sort'] == 'title_asc'
+        # if relevance sort is requested but no keyword, switch to default sort
+        response = self.client.get(url, {'sort': 'relevance'})
+        assert response.context['search_form'].cleaned_data['sort'] == 'title_asc'
+
         # collection search
-        response = self.client.get(url, {'query': 'collections_exact:"Test Collection"'})
+        response = self.client.get(url, {'collections': 'Test Collection'})
         assert len(response.context['object_list']) == 1
         self.assertContains(response, wintry.source_id)
 
