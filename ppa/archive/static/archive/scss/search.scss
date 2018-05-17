@@ -18,10 +18,13 @@
     }
 
     #histogram {
-        .placeholder {
+        .values {
+            display: none;
+        }
+
+        .visualization {
             width: 100%;
             height: 60px;
-            background-color: grey;
         }
 
         .max-date {
