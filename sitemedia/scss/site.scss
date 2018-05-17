@@ -1,5 +1,4 @@
-// this will go into component customization later
-$nav-height: 40px;
+@import 'variables';
 
 /* mobile nav */
 #mobile-nav {
@@ -57,8 +56,20 @@ $nav-height: 40px;
     }
 }
 
+/* header */
+#header {
+    margin-top: $nav-height;
+}
+
+/* main */
+main {
+    margin-bottom: $nav-height;
+}
+
 /* footer */
 #footer {
+    position: absolute;
+    bottom: 0;
     margin-bottom: 0;
     padding: 1rem 0;
     

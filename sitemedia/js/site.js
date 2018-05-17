@@ -4,6 +4,8 @@ $(function(){
     const $mainNav = $('#main-nav')
     const $mobileNav = $('#mobile-nav')
     const $menuButton = $('.toc.item')
+    const $footer = $('footer')
+    const $main = $('main')
 
     /* functions */
     $.fn.pitbar = function() {
@@ -25,6 +27,10 @@ $(function(){
         }
         $(window).scroll(checkScroll)   
     }
+    function pushMain($footer, $main) {
+        // push main up by footer amount
+        $main.css('margin-bottom', `+=${$footer.outerHeight()}`)
+    }
 
     /* bindings */
     $mainNav.pitbar()
@@ -37,4 +43,5 @@ $(function(){
                 $('.sidebar.icon').toggle()
             }
         })
+    window.onresize = pushMain($footer, $main)
 })
