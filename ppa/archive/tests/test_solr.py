@@ -3,6 +3,7 @@ from unittest.mock import patch, Mock
 
 from django.conf import settings
 from django.test import TestCase, override_settings
+import pytest
 import requests
 from SolrClient import SolrClient
 
@@ -249,6 +250,10 @@ class TestPagedSolrQuery(TestCase):
         psq.set_limits(100, 120)
         assert psq.query_opts['start'] == 100
         assert psq.query_opts['rows'] == 20
+        # default to 0 if start is None
+        psq.set_limits(None, 10)
+        assert psq.query_opts['start'] == 0
+        assert psq.query_opts['rows'] == 10
 
     def test_slice(self, mock_get_solr_connection):
         mocksolr = Mock()
@@ -268,3 +273,6 @@ class TestPagedSolrQuery(TestCase):
                 mock_get_results.return_value = [3,]
                 assert psq[0] == 3
                 mock_set_limits.assert_any_call(0, 1)
+
+        with pytest.raises(TypeError):
+            psq['foo']
