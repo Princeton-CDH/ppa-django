@@ -12,6 +12,57 @@
       "fields": {
         "content": "<p><span style=\"\">Prosody today means both the study of versification and the study of pronunciation. In literary studies, prosody is often interchanged for versification or meter, though in fact each of these terms have complicated and contested histories. Historically, Prosody was a subsection of Grammar, appearing at the end of the traditional grammar book after Orthometry, Etymology, and Syntax. Within Prosody, Versification appeared after punctuation, utterance, and pronunciation.<\/span><\/p>\n<p><span style=\"\">The Oxford English Dictionary defines prosody as such: 1. The theory and practice of versification; (in technical use) the branch of knowledge which deals with the forms of metrical composition, and formerly also with the pronunciation of words, esp. as this relates to versification; (more generally) the patterns of rhythm and sound used in poetry. As a count noun: a metrical form or scheme; &dagger;a treatise on metrical composition (obs.). Prosody was formerly regarded as a branch of grammar), and taken to include the study of phonology and phonetics.<\/span><\/p>"
       }
+    },
+    {
+      "model": "pages.page",
+      "pk": 1,
+      "fields": {
+        "keywords_string": "",
+        "site": 1,
+        "title": "What is Prosody",
+        "slug": "what-is-prosody",
+        "_meta_title": null,
+        "description": "Prosody today means both the study of versification and the study of pronunciation. In literary studies, prosody is often interchanged for versification or meter, though in fact each of these terms have complicated and contested histories. Historically, Prosody was a subsection of Grammar, appearing at the end of the traditional grammar book after Orthometry, Etymology, and Syntax. Within Prosody, Versification appeared after punctuation, utterance, and pronunciation.",
+        "gen_description": true,
+        "created": "2018-05-17T14:31:13.461Z",
+        "updated": "2018-05-17T16:50:03.459Z",
+        "status": 2,
+        "publish_date": "2018-05-17T14:31:13Z",
+        "expiry_date": null,
+        "short_url": null,
+        "in_sitemap": true,
+        "_order": 0,
+        "content_model": "richtextpage",
+        "parent": null,
+        "in_menus": "1,2,3",
+        "titles": "What is Prosody",
+        "login_required": false
+      }
+    },
+    {
+      "model": "pages.page",
+      "pk": 2,
+      "fields": {
+        "keywords_string": "",
+        "site": 1,
+        "title": "History of the Archive",
+        "slug": "history-of-the-archive",
+        "_meta_title": null,
+        "description": "Meredith Martin began assembling the Archive in 2007 as she was writing The Rise and Fall of Meter: Poetry and English National Culture, 1860 &ndash; 1930. Her research would not have been possible without the pioneering work of T.V. F. Brogan, whose 1981 bibliography English Versification, 1570&ndash;1980: A Reference Guide With a Global Appendix is the original source for this project. T.V.F. Brogan passed away in 2012, and the Princeton Prosody Archive is dedicated to his memory.",
+        "gen_description": true,
+        "created": "2018-05-17T14:32:45.978Z",
+        "updated": "2018-05-17T16:49:44.381Z",
+        "status": 2,
+        "publish_date": "2018-05-17T14:32:45Z",
+        "expiry_date": null,
+        "short_url": null,
+        "in_sitemap": true,
+        "_order": 1,
+        "content_model": "richtextpage",
+        "parent": null,
+        "in_menus": "1,2,3",
+        "titles": "History of the Archive",
+        "login_required": false
+      }
     }
-  ]
-  
+  ]  
