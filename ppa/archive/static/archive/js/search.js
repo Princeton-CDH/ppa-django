@@ -3,15 +3,14 @@ import DateHistogram from './histogram';
 $(function(){
 
     /* dom */
-    const $searchForm = $('.form')
-    const $sortLinks = $('.sort .item')
-    const $clearDatesLink = $('.clear-selection')
-    const $histogram = $('#histogram')
-    // dates
-    let $$minDateInput = $('#id_pub_date_0')
-    let $$maxDateInput = $('#id_pub_date_1')
-    let $$minDate = $('.min-date')
-    let $$maxDate = $('.max-date')
+    const $$searchForm = $('.form')
+    const $$sortLinks = $('.sort .item')
+    const $$clearDatesLink = $('.clear-selection')
+    const $$histogram = $('#histogram')
+    const $$minDateInput = $('#id_pub_date_0')
+    const $$maxDateInput = $('#id_pub_date_1')
+    const $$minDate = $('.min-date')
+    const $$maxDate = $('.max-date')
     
     /* functions */
     function changeSort(event) {
@@ -21,29 +20,33 @@ $(function(){
     }
 
     function clearDates() {
-        $('#publication input').val('')
-        $searchForm.submit()
+        // clear both date inputs
+        $$minDateInput.val('')
+        $$maxDateInput.val('')
+        // submit the form
+        $$searchForm.submit()
     }
 
     function updateDates() {
         let minDate = $$minDateInput.val()
         let maxDate = $$maxDateInput.val()
+        // if there's a date set, use it - otherwise use the placeholder
         $$minDate.text(minDate != '' ? minDate : $$minDateInput.attr('placeholder'))
         $$maxDate.text(maxDate != '' ? maxDate : $$maxDateInput.attr('placeholder'))
     }
     
     /* bindings */
     $('.ui.checkbox').checkbox()
-    $sortLinks.find('input[checked=""]').parent().addClass('active')
-    $sortLinks.find('input[disabled="disabled"]').parent().addClass('disabled')
-    $sortLinks.click((e) => {
+    $$sortLinks.find('input[checked=""]').parent().addClass('active')
+    $$sortLinks.find('input[disabled="disabled"]').parent().addClass('disabled')
+    $$sortLinks.click((e) => {
         changeSort(e)
-        $searchForm.submit()
+        $$searchForm.submit()
     })
 
-    $clearDatesLink.click(clearDates)
+    $$clearDatesLink.click(clearDates)
 
-    new DateHistogram($histogram)
+    new DateHistogram($$histogram)
 
     // update min and max pub date on visualization
     updateDates()
