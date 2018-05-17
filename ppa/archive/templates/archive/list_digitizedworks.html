@@ -17,10 +17,13 @@ href="{% url 'unapi' %}" />
 {% block page-subtitle %}Archive | {% endblock %}
 {% block page-context-id %}search{% endblock %}
 
-{% block content %}
-<div class="ui center aligned text container">
+{% block page_header %}
+<header id="header" class="ui center aligned text container">
     <h1 class="header">View the Archive</h1>
-</div>
+</header>
+{% endblock %}
+
+{% block content %}
 <section class="ui search basic vertical segment container">
     {% include 'archive/snippets/search_form.html' %}
 </section>
