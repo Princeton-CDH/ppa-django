@@ -20,7 +20,14 @@
     virtualenv: "{{ deploy }}/env"
     requirements: "{{ deploy }}/requirements.txt"
     virtualenv_site_packages: yes
-
+- name: Create a node_modules settings with generous permissions
+  file:
+    path: "{{ deploy }}/env"
+    state: directory
+    mode: "u+rwx,g+rwx,o-rw"
+- name: Install npm packages from packages.json
+  npm:
+    path: "{{ deploy }}" 
 - name: Install local_settings.py
   copy:
     src: "{{ lookup('env', 'HOME') }}/.deploy/{{ local_settings_path }}"
