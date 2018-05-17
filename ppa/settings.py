@@ -65,13 +65,8 @@ MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
 # https://django-compressor.readthedocs.io/en/latest/
 
 COMPRESS_PRECOMPILERS = (
-    ('text/x-scss', 'sass --scss {infile} {outfile}'),
-)
-
-COMPRESS_CSS_FILTERS = (
-    'compressor.filters.css_default.CssAbsoluteFilter',
-    # NOTE: requires COMPRESS_ENABLED = True when DEBUG is True
-    'django_compressor_autoprefixer.AutoprefixerFilter',
+    ('text/x-scss', 'compressor_toolkit.precompilers.SCSSCompiler'),
+    ('module', 'compressor_toolkit.precompilers.ES6Compiler')
 )
 
 STATICFILES_FINDERS = (
@@ -86,6 +81,7 @@ STATICFILES_FINDERS = (
 INSTALLED_APPS = [
     'grappelli',
     'compressor',
+    'compressor_toolkit',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

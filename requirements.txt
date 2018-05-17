@@ -11,6 +11,6 @@ cached_property
 git+https://github.com/stephenmcd/mezzanine.git@397409d#egg=mezzanine
 django-apptemplates
 progressbar2
-django-compressor
-django-compressor-autoprefixer
 django-semanticui-forms
+django-compressor
+django-compressor-toolkit
