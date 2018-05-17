@@ -27,7 +27,7 @@ $(function(){
         $searchForm.submit()
     })
     $collectionLabels.click((e) => {
-        $(event.target).toggleClass('active')
+        $(e.target).toggleClass('active')
         $searchForm.submit()
     })
     $clearDatesLink.click(clearDates)
