@@ -16,7 +16,7 @@ from SolrClient.exceptions import SolrError
 from ppa.archive.forms import SearchForm
 from ppa.archive.models import DigitizedWork, Collection
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
-from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView
+from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView, IndexView
 from ppa.archive.templatetags.ppa_tags import page_image_url
 
 class TestArchiveViews(TestCase):
@@ -760,3 +760,50 @@ class TestDigitizedWorkListView(TestCase):
             assert ' AND id:("p1a" "p1b" "p2a" "p2b")' in solr_opts['q']
 
             assert highlights == mockpsq.return_value.get_highlighting()
+
+
+class TestIndexView(TestCase):
+
+    @pytest.mark.usefixtures("solr")
+    def test_get_queryset(self):
+
+        # Create test collections to display
+        coll1 = Collection.objects.create(name='Random Grabbag')
+        coll2 = Collection.objects.create(
+            name='Foo through Time',
+            description="A <em>very</em> useful collection."
+        )
+
+        # Check that the context is set as expected
+        index = reverse('home')
+        response = self.client.get(index)
+        # it should have both collections that exist in it
+        assert coll1 in response.context['object_list']
+        assert coll2 in response.context['object_list']
+
+        # Check that the template is rendering as expected
+        # - basic checks right templates
+        self.assertTemplateUsed(response, 'base.html')
+        self.assertTemplateUsed(response, 'site_index.html')
+        # - detailed checks of template
+        self.assertContains(
+            response, 'Random Grabbag',
+            msg_prefix='should list a collection called Random Grabbag'
+        )
+        self.assertContains(
+            response, 'Foo through Time',
+            msg_prefix='should list a collection called Foo through Time'
+        )
+        self.assertContains(
+            response, '<em>very</em>', html=True,
+            msg_prefix='should render the description with HTML intact.'
+        )
+
+        # Add another collection
+        coll3 = Collection.objects.create(
+            name='Bar through Time',
+            description='A somewhat less useful collection.'
+        )
+        response = self.client.get(index)
+        # only two collections should be returned in the response
+        assert len(response.context['object_list']) == 2

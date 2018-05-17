@@ -25,6 +25,19 @@
   copy:
     src: "{{ lookup('env', 'HOME') }}/.deploy/{{ local_settings_path }}"
     dest: "{{ deploy }}/{{ djangoapp }}/local_settings.py"
+- name: Configure log file
+  file:
+    path: '{{ install_root }}/ppa.log'
+    state: touch
+    owner: deploy
+    group: apache
+    mode: 0770
+- name: On QA server only, set the GID correctly for log access
+  shell: "sudo chgrp -R {{ project_user }} {{ install_root }}/ppa.log"
+  when: group == "qa"
+  args:
+    warn: False
+    executable: /bin/bash
 - name: Run ./manage.py collectstatic
   django_manage:
     command: collectstatic
@@ -37,7 +50,7 @@
     state: directory
     owner: deploy
     group: apache
-    mode: 0771    
+    mode: 0771
 # On QA server the actual owner for purposes of CACHE needs to be the
 # user associated with the WSGI Daemon, in this case a manual call to sudo
 - name: chgrp the CACHE folder to project user
