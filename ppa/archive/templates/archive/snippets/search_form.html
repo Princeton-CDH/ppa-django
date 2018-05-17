@@ -22,7 +22,10 @@
         <div class="column field" id="collections">
             <label for="collections">Collections</label>
             {% for collection in search_form.collections %}
-            <button class="ui tiny basic button">{{ collection }}</button>
+            <label class="ui tiny basic button {% if collection.data.selected %}active{% endif %}" for="{{ collection.id_for_label }}" role="checkbox">
+                {{ collection.choice_label }}
+                {{ collection.tag }}
+            </label>
             {% endfor %}
         </div>
         <div class="column" id="booleans">
@@ -50,7 +53,7 @@
         <div class="ui secondary pointing stackable menu">
             <span class="item">Sort By</span>
             {% for sort in search_form.sort %}
-            <a class="item" for="{{ sort.id_for_label }}" role="radio">
+            <a class="item {% if sort.data.selected %}active{% endif %}" for="{{ sort.id_for_label }}" role="radio">
                 {{ sort.choice_label }}
                 {{ sort.tag }}
             </a>
