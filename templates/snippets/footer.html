@@ -1,7 +1,7 @@
 <footer class="ui basic inverted segment centered grid" id="footer">
     <nav class="ui inverted stackable borderless menu">
-        <a class="item">History of the Archive</a>
-        <a class="item">What is Prosody</a>
+        <a class="item" href="/history-of-the-archive/">History of the Archive</a>
+        <a class="item" href="/what-is-prosody/">What is Prosody</a>
         <a class="item" href="{% url 'archive:list-collections'%}">About the Collections</a>
         <a class="item">Editorial</a>
         <a class="item" href="{% url 'archive:list' %}">View the Archive</a>
@@ -21,10 +21,10 @@
     </div>
     <div class="ui container">
         <div class="contact ui inverted horizontal link list">
-            <a class="item">©2018 Trustees of Princeton University</a>
+            <span class="item">©2018 Trustees of Princeton University</span>
             <a class="item" href="https://accessibility.princeton.edu/">Accessibility</a>
             <a class="item" href="https://accessibility.princeton.edu/accessibility-assistance">Accessibility Assistance</a>
-            <a class="item" id="sw_version">{{ SW_VERSION }}</a>
+            <span class="item" id="sw_version">{{ SW_VERSION }}</span>
         </div>
     </div>
 </footer>
