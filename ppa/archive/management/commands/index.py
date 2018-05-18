@@ -1,3 +1,36 @@
+'''
+**index** is a custom manage command to index PPA digitized work and page
+content into Solr.  It should be run _after_ content has been imported
+to the project database via the **hathi_import** manage command.
+
+Page content will be indexed from a local copy of dataset files under the
+configured **HATHI_DATA** path in pairtree format retrieved by rsync.
+(Note that pairtree data must include pairtree version file to be valid.)
+
+By default, indexes all content, digitized works and pages both.  You
+can optionally specify works or pages only, or index specific items
+by hathi id, but the id must exist in the database and the pairtree content
+for the items still must exist at the configured path.
+
+A progress bar will be displayed by default if there are more than 5
+items to process.  This can be suppressed via script options
+
+Example usage::
+
+    # index everything
+    python manage.py index
+    # index specific items
+    python manage.py index htid1 htid2 htid3
+    # index works only (skip pages)
+    python manage.py index -i works
+    # index pages only (skip works)
+    python manage.py index -i pages
+    # suppress progressbar
+    python manage.py index --no-progress
+
+'''
+
+
 import itertools
 
 from django.core.management.base import BaseCommand
@@ -29,7 +62,7 @@ class Command(BaseCommand):
             'source_ids', nargs='*',
             help='Optional list of specific works to index by source (HathiTrust) id.')
         parser.add_argument(
-            '--index', choices=['all', 'works', 'pages'],  default='all',
+            '-i', '--index', choices=['all', 'works', 'pages'],  default='all',
             help='Index only works or pages (by default indexes all)')
         parser.add_argument(
             '--no-progress', action='store_true',
@@ -75,6 +108,8 @@ class Command(BaseCommand):
                 if progbar:
                     progbar.update(count)
 
+        solr.commit(solr_collection)
+
         # index pages for each work
         if self.options['index'] in ['pages', 'all']:
             for work in works:
@@ -94,3 +129,5 @@ class Command(BaseCommand):
                 count += work.page_count
                 if progbar:
                     progbar.update(count)
+
+        solr.commit(solr_collection)
