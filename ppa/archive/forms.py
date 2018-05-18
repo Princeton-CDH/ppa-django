@@ -124,6 +124,11 @@ class SearchForm(forms.Form):
         'sort': 'title_asc',
     }
 
+    # this appears when you hover over the question mark icon
+    QUESTION_POPUP_TEXT = mark_safe('''
+    Boolean search within a field is supported. Operators must be capitalized (AND, OR).
+    ''')
+
     # text inputs
     query = forms.CharField(label='Keyword or Phrase', required=False,
         widget=forms.TextInput(attrs={
