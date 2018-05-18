@@ -347,6 +347,13 @@ class CollectionListView(ListView):
     template_name = 'archive/list_collections.html'
     ordering = ('name',)
 
+    # temporary workaround to exclude collections that aren't
+    # meant to be featured on the homepage or collection list
+    exclude = ['Dictionary', 'Pronunciation Guide']
+
+    def get_queryset(self):
+        return super().get_queryset().exclude(name__in=self.exclude)
+
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         # NOTE: if we *only* want counts, could just do a regular facet
@@ -535,4 +542,4 @@ class IndexView(CollectionListView):
 
     def get_queryset(self):
         # get two random collections
-        return Collection.objects.order_by('?')[:2]
+        return super().get_queryset().order_by('?')[:2]
