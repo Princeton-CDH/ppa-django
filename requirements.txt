@@ -2,7 +2,9 @@ django>=1.11,<2.0
 mysqlclient
 pucas
 django-grappelli
-solrclient
+# use fork of SolrClient with ordered facets pending response on issue
+git+https://github.com/rlskoeser/SolrClient.git@ordered-facets#egg=SolrClient
+#solrclient
 pairtree
 pymarc
 cached_property
