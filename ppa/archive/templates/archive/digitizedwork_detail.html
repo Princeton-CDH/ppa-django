@@ -3,9 +3,6 @@
 
 {% block css %}
 <link rel="stylesheet" type="text/x-scss" href="{% static 'archive/scss/digitized-work.scss' %}">
-{% if query %} {# include search styles if there is a search term active #}
-<link rel="stylesheet" type="text/x-scss" href="{% static 'archive/scss/search.scss' %}">
-{% endif %}
 {% endblock %}
 
 {% block page-subtitle %}Archive | {{ object.title }} {% endblock %}
@@ -18,7 +15,7 @@
 {% block page-context-id %}digitized-work{% endblock %}
 
 {% block content %}
-<div class="ui container">
+<section class="ui basic vertical segment container">
     <form class="ui form">
         <div class="ui field">
             <label for="query">Search within the Volume</label>
@@ -28,12 +25,14 @@
             </div>
         </div>
     </form>
-    {% if query %} {# display search result view of record if there is a search term active #}
-    <div class="results-list">
-        {# suppress order and highlighting in search result snippet  #}
-        {% include 'archive/snippets/search_result.html' with item=object page_highlights=0 page_obj=0 %}
-    </div>
-    {% else %}
+</section>
+{% if query %} {# display search result view of record if there is a search term active #}
+<div class="results-list">
+    {# suppress order and highlighting in search result snippet  #}
+    {% include 'archive/snippets/search_result.html' with item=object page_highlights=0 page_obj=0 %}
+</div>
+{% else %}
+<section class="ui basic vertical segment container">
     <h2 class="header">{{ object.title }}</h2>
     <abbr class="unapi-id" title="{{ object.source_id }}"></abbr>
     <table class="metadata ui very basic table">
@@ -95,27 +94,37 @@
             {% endif %}
         </tbody>
     </table>
-    {% endif %}
+</section>
+{% endif %}
 
   {# display matching pages with highlighted text if there is a search active #}
   {% if query or page_highlights %}
     {% if not error %}
-      <p>{{ page_obj.paginator.count }} occurrence{{ page_obj.paginator.count|pluralize }}</p>
-      <div class="ui container">
+    <div class="occurrences ui center aligned text container">
+        <p>{{ page_obj.paginator.count }} occurrence{{ page_obj.paginator.count|pluralize }}</p>
+    </div>
+    <div class="ui container">
         {% include 'archive/snippets/pagination.html' %}
-      </div>
+    </div>
     {% endif %}
-    {% for page in solr_results %}
-      {% with highlights=page_highlights|dict_item:page.id%}
-          {% include 'archive/snippets/page_preview.html' with item_id=page.srcid  %}
-      {% endwith %}
-    {% empty %}
-        <div class="ui error message container">
-            {# display error if something went wrong (bad query, etc.) #}
-            <p>{% firstof error "No matching pages." %}</p>
-        </div>
-    {% endfor %}
-
+    <div class="results-list ui container">
+        {% for page in solr_results %}
+          {% with highlights=page_highlights|dict_item:page.id%}
+          <div class="ui page item">
+              <div class="pages ui sixteen wide column">
+                  <div class="wrapper">
+                      {% include 'archive/snippets/page_preview.html' with item_id=page.srcid  %}
+                  </div>
+              </div>
+          </div>
+          {% endwith %}
+        {% empty %}
+            <div class="ui error message container">
+                {# display error if something went wrong (bad query, etc.) #}
+                <p>{% firstof error "No matching pages." %}</p>
+            </div>
+        {% endfor %}
+    </div>
     {% if not error %}
     <div class="ui container">
         {% include 'archive/snippets/pagination.html' %}

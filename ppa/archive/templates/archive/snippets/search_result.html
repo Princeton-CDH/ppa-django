@@ -2,12 +2,12 @@
 <div class="item">
     <abbr class="unapi-id" title="{{ item.srcid }}"></abbr>
     <div class="ui stackable grid container">
-        {% if page_obj %}
         <div class="labels one wide column">
+            {% if page_obj %}
             <p class="result-number">{{ page_obj.start_index|add:forloop.counter0 }}</p>
             <!-- <i class="ui flag icon"></i> -->
+            {% endif %}
         </div>
-        {% endif %}
         <div class="title seven wide column">
             <a href="{% url 'archive:detail' item.srcid %}">
                 <p class="ui header">{{ item.title }}</p>
@@ -21,14 +21,16 @@
                 <div class="right aligned column">{{ item.pub_date }}</div>
             </div>
             <div class="buttons">
-                {% if item.collections.all %} {# database object with many-to-many #}
+                {% if item.pk %} {# database object with many-to-many #}
                     {% for collection in item.collections.all %}
                         <button class="ui tiny basic button">{{ collection }}</button>
                     {% endfor %}
                 {% else %} {# solr object with list of strings #}
-                    {% for collection in item.collections %}
-                        <button class="ui tiny basic button">{{ collection }}</button>
-                    {% endfor %}
+                    {% if item.collections.exists %}
+                        {% for collection in item.collections %}
+                            <button class="ui tiny basic button">{{ collection }}</button>
+                        {% endfor %}
+                    {% endif %}
                 {% endif %}
                 <a class="ui right floated right labeled secondary tiny icon button" href="{{ item.src_url }}">
                     HathiTrust
