@@ -1,13 +1,13 @@
 import json
 import os.path
 from time import sleep
-from unittest.mock import call, patch
+from unittest.mock import call, patch, Mock
 
-
-import pytest
 from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
+from pairtree import pairtree_client, pairtree_path
+import pytest
 
 from ppa.archive import hathi
 from ppa.archive.models import DigitizedWork, Collection
@@ -134,6 +134,45 @@ class TestDigitizedWork(TestCase):
         mock_bibdata = mock_bibapi.record.return_value
         mock_bibdata.marcxml.as_marc.assert_any_call()
         assert mdata == mock_bibdata.marcxml.as_marc.return_value
+
+    def test_hathi_prefix(self):
+        work = DigitizedWork(source_id='uva.1234')
+        assert work.hathi_prefix == 'uva'
+
+    def test_hathi_pairtree_id(self):
+        work = DigitizedWork(source_id='uva.1234')
+        assert work.hathi_pairtree_id == '1234'
+
+    def test_hathi_content_dir(self):
+        work = DigitizedWork(source_id='uva.1234')
+        assert work.hathi_content_dir == pairtree_path.id_encode(work.hathi_pairtree_id)
+
+    @patch('ppa.archive.models.pairtree_client')
+    def test_hathi_pairtree_object(self, mock_pairtree_client):
+        work = DigitizedWork(source_id='uva.1234')
+
+        ptree_obj = work.hathi_pairtree_object()
+        # client initialized
+        mock_pairtree_client.PairtreeStorageClient \
+            .assert_called_with(work.hathi_prefix,
+                                os.path.join(settings.HATHI_DATA, work.hathi_prefix))
+        # object retrieved
+        mock_pairtree_client.PairtreeStorageClient.return_value \
+            .get_object.assert_called_with(work.hathi_pairtree_id,
+                                           create_if_doesnt_exist=False)
+        # object returned
+        assert ptree_obj == mock_pairtree_client.PairtreeStorageClient  \
+                                                .return_value.get_object.return_value
+
+        # test passing in existing pairtree client
+        mock_pairtree_client.reset_mock()
+        my_ptree_client = Mock(spec=pairtree_client.PairtreeStorageClient)
+        ptree_obj = work.hathi_pairtree_object(my_ptree_client)
+        # should not initialize
+        mock_pairtree_client.PairtreeStorageClient.assert_not_called()
+        # should get object from my client
+        my_ptree_client.get_object.assert_called_with(work.hathi_pairtree_id,
+                                           create_if_doesnt_exist=False)
 
 
 

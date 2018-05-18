@@ -180,6 +180,14 @@ class DigitizedWork(models.Model):
         '''hathi pairtree identifier (second portion of source id)'''
         return self.source_id.split('.', 1)[1]
 
+    @cached_property
+    def hathi_content_dir(self):
+        '''hathi content directory for this work (within the corresponding
+        pairtree)'''
+        # contents are stored in a directory named based on a
+        # pairtree encoded version of the id
+        return pairtree_path.id_encode(self.hathi_pairtree_id)
+
     def hathi_pairtree_object(self, ptree_client=None):
         '''get a pairtree object for the current work'''
         if ptree_client is None:
@@ -190,15 +198,7 @@ class DigitizedWork(models.Model):
 
         # return the pairtree object for current work
         return ptree_client.get_object(self.hathi_pairtree_id,
-                                          create_if_doesnt_exist=False)
-
-    @cached_property
-    def hathi_content_dir(self):
-        '''hathi content directory for this work (within the corresponding
-        pairtree)'''
-        # contents are stored in a directory named based on a
-        # pairtree encoded version of the id
-        return pairtree_path.id_encode(self.hathi_pairtree_id)
+                                       create_if_doesnt_exist=False)
 
     def hathi_zipfile_path(self, ptree_client=None):
         '''path to zipfile within the hathi contents for this work'''
