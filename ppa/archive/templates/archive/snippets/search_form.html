@@ -13,7 +13,13 @@
             <a class="clear-selection" role="button">Clear Selection</a>
         </div>
         <div class="ten wide column" id="histogram">
-            <div class="placeholder"></div>
+            <canvas class="visualization"></canvas>
+            <dl class="values">
+                {% for date, count in facet_ranges.pub_date.items %}
+                <dt>{{ date }}</dt>
+                <dd>{{ count }}</dd>
+                {% endfor %}
+            </dl>
             <span class="min-date">1569</span>
             <span class="max-date">1922</span>
         </div>
