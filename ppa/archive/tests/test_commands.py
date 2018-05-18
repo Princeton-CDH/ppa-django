@@ -207,9 +207,8 @@ class TestHathiImportCommand(TestCase):
         assert ' (forced update)' in log_entry.change_message
         assert log_entry.action_flag == CHANGE
 
-    @pytest.mark.usefixtures('solr')
     @patch('ppa.archive.management.commands.hathi_import.ZipFile', spec=ZipFile)
-    def test_index_pages(self, mockzipfile):
+    def test_count_pages(self, mockzipfile):
         cmd = hathi_import.Command(stdout=StringIO())
         cmd.stats = defaultdict(int)
         prefix, pt_id = ('ab', '12345:6')
@@ -228,11 +227,11 @@ class TestHathiImportCommand(TestCase):
         page_files = ['0001.txt', '00002.txt']
         mockzip_obj.namelist.return_value = page_files
         # simulate reading zip file contents
-        mockzip_obj.open.return_value.__enter__.return_value \
-            .read.return_value.decode.return_value = 'page content'
+        # mockzip_obj.open.return_value.__enter__.return_value \
+            # .read.return_value.decode.return_value = 'page content'
 
-        # actually index the content
-        cmd.index_pages(digwork)
+        # count the pages
+        cmd.count_pages(digwork)
 
         # inspect pairtree logic
         mock_pairtree_client.get_object.assert_any_call(pt_id, create_if_doesnt_exist=False)
@@ -243,8 +242,6 @@ class TestHathiImportCommand(TestCase):
 
         # inspect zipfile logic
         mockzip_obj.namelist.assert_called_with()
-        for filename in mockzip_obj.namelist():
-            mockzip_obj.open.assert_any_call(filename)
 
         zipfile_path = os.path.join(pt_obj.id_to_dirpath(), content_dir, '12345.zip')
         mockzipfile.assert_called_with(zipfile_path)
@@ -254,47 +251,21 @@ class TestHathiImportCommand(TestCase):
         digwork = DigitizedWork.objects.get(source_id=digwork.source_id)
         assert digwork.page_count == 2
 
-        # inspect solr index data
-        solr_idx_args, solr_idx_kwargs = cmd.solr.index.call_args
-        assert solr_idx_args[0] == cmd.solr_collection
-        solr_docs = solr_idx_args[1]
-        # first solr doc is for the work
-        assert solr_docs[0] == digwork.index_data()
-        # subsequent solr docs for the pages
-        page_index_data = solr_docs[1]
-        assert page_index_data['srcid'] == digwork.source_id
-        assert page_index_data['item_type'] == 'page'
-        # page id based on source id + filename
-        page_label = page_files[0].replace('.txt', '')
-        assert page_index_data['id'] == '.'.join([digwork.source_id, page_label])
-        assert page_index_data['order'] == page_label
-        assert page_index_data['content'] == 'page content'
-
-        page_index_data = solr_docs[2]
-        page_label = page_files[1].replace('.txt', '')
-        assert page_index_data['srcid'] == digwork.source_id
-        assert page_index_data['id'] == '.'.join([digwork.source_id, page_label])
-        assert page_index_data['order'] == page_label
-
-        # exact value not important, just that it's present
-        assert 'commitWithin' in solr_idx_kwargs['params']
 
     @patch('ppa.archive.management.commands.hathi_import.HathiBibliographicAPI')
     @patch('ppa.archive.management.commands.hathi_import.progressbar')
-    @patch('ppa.archive.management.commands.hathi_import.get_solr_connection')
-    def test_call_command(self, mock_get_solr, mockprogbar, mockhathi_bibapi):
+    def test_call_command(self, mockprogbar, mockhathi_bibapi):
 
         # patch methods with actual logic to check handle method behavior
         with patch.object(hathi_import.Command, 'get_hathi_ids') as mock_get_htids, \
           patch.object(hathi_import.Command, 'initialize_pairtrees') as mock_init_ptree, \
           patch.object(hathi_import.Command, 'import_digitizedwork') as mock_import_digwork, \
-          patch.object(hathi_import.Command, 'index_pages') as mock_index_pages:
+          patch.object(hathi_import.Command, 'count_pages') as mock_count_pages:
 
             mock_htids = ['ab.1234', 'cd.5678']
             mock_get_htids.return_value = mock_htids
             digwork = DigitizedWork(source_id='test.123')
             mock_import_digwork.return_value = digwork
-            mock_get_solr.return_value = (Mock, 'testcoll')
 
             # default behavior = read ids from pairtree
             stdout = StringIO()
@@ -303,7 +274,7 @@ class TestHathiImportCommand(TestCase):
             mock_init_ptree.assert_any_call()
             for htid in mock_htids:
                 mock_import_digwork.assert_any_call(htid)
-            mock_index_pages.assert_called_with(digwork)
+            mock_count_pages.assert_called_with(digwork)
 
             output = stdout.getvalue()
             assert 'Processed 2 items for import.' in output
