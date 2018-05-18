@@ -8,7 +8,7 @@
     <div class="page-controls">
             {# previous link at first (disabled if no previous)  #}
             {% if page_obj.has_previous %}
-            <a rel="prev" class="ui tiny button" href="?{% querystring_replace page=page_obj.previous_page_number %}">
+            <a rel="prev" class="ui tiny icon button" href="?{% querystring_replace page=page_obj.previous_page_number %}">
                 <i class="chevron left icon"></i>
             </a>
             {% else %}
