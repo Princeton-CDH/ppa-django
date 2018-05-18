@@ -1,6 +1,9 @@
 import re
 
+from django.template.defaultfilters import stringfilter
 from django.template.defaulttags import register
+from django.utils.html import conditional_escape
+from django.utils.safestring import mark_safe
 
 
 @register.filter
@@ -47,3 +50,29 @@ def page_image_url(item_id, page, width):
     page_sequence = int(PAGE_REQUENCE_RE.search(page).group(1))
     return "https://babel.hathitrust.org/cgi/imgsrv/image?id={};seq={};width={}" \
         .format(item_id, page_sequence, width)
+
+
+#: regular expression to identify open and close <em> tags in solr
+#: highlighting snippets
+EM_TAG_RE = re.compile(r'(</?em>)')
+
+
+@register.filter(needs_autoescape=True)
+@stringfilter
+def solr_highlight(value, autoescape=True):
+    '''Filter to render solr highlighting snippets for display.  Marks
+    open and close <em> tags as safe and escapes all other text.'''
+
+    # use conditional escape per django documentation
+    # https://docs.djangoproject.com/en/1.11/howto/custom-template-tags/#filters-and-auto-escaping
+    if autoescape:
+        esc = conditional_escape
+    else:
+        esc = lambda x: x
+
+    # split the text on em tags; mark em tags as safe and
+    # escape everything else
+    return mark_safe(''.join([
+        mark_safe(part) if EM_TAG_RE.match(part) else esc(part)
+        for part in EM_TAG_RE.split(value)
+    ]))
