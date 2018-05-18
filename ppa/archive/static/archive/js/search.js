@@ -6,13 +6,13 @@ $(function(){
     const $$searchForm = $('.form')
     const $$sortLinks = $('.sort .item')
     const $$clearDatesLink = $('.clear-selection')
-    const $$collectionLabels = $('#collections label.button');
+    const $$collectionInputs = $('#collections input');
     const $$histogram = $('#histogram')
     const $$minDateInput = $('#id_pub_date_0')
     const $$maxDateInput = $('#id_pub_date_1')
     const $$minDate = $('.min-date')
     const $$maxDate = $('.max-date')
-    
+
     /* functions */
     function changeSort(event) {
         $(event.target).siblings().find('input[checked=""]').removeAttr('checked')
@@ -51,9 +51,9 @@ $(function(){
 
     // update min and max pub date on visualization
     updateDates()
-  
-    $$collectionLabels.click((e) => {
-        $(e.target).toggleClass('active')
+
+    $$collectionInputs.change((e) => {
+        $(e.target).parent().toggleClass('active')
         $$searchForm.submit()
     })
 
