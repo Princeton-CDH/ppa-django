@@ -57,6 +57,11 @@ class Command(BaseCommand):
     v_normal = 1
     verbosity = v_normal
 
+    #: solr params for index call; currently set to commit within 10 seconds
+    solr_index_opts = {"commitWithin": 10000}
+    # NOTE: not sure what is reasonable here, but without some kind of commit,
+    # Solr seems to quickly run out of memory
+
     def add_arguments(self, parser):
         parser.add_argument(
             'source_ids', nargs='*',
@@ -102,7 +107,8 @@ class Command(BaseCommand):
             for page in range(1, paginator.num_pages + 1):
                 solr.index(
                     solr_collection,
-                    [work.index_data() for work in paginator.page(page).object_list])
+                    [work.index_data() for work in paginator.page(page).object_list],
+                    params=self.solr_index_opts)
 
                 count += paginator.page(page).object_list.count()
                 if progbar:
@@ -113,7 +119,8 @@ class Command(BaseCommand):
         # index pages for each work
         if self.options['index'] in ['pages', 'all']:
             for work in works:
-                # TODO: catch solr connection error here
+                # TODO: should probably catch solr connection error here
+                # example
                 # SolrClient.exceptions.ConnectionError: ('N/A', "('Connection aborted.', BrokenPipeError(32, 'Broken pipe'))", ConnectionError(ProtocolError('Connection aborted.', BrokenPipeError(32, 'Broken pipe')),))
 
                 # page index data returns a generator
@@ -121,7 +128,8 @@ class Command(BaseCommand):
                 # iterate over the generator and index in chunks
                 page_chunk = list(itertools.islice(page_data, 150))
                 while page_chunk:
-                    solr.index(solr_collection, page_chunk)
+                    solr.index(solr_collection, page_chunk,
+                               params=self.solr_index_opts)
                     page_chunk = list(itertools.islice(page_data, 150))
 
                 # for simplicity, update progress bar for each work
