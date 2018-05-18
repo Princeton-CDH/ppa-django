@@ -2,6 +2,9 @@
 <form class="ui form{% if error %} error{% endif %}">
     <div class="ui vertical segment">
         {% render_field search_form.query %}
+        <span class="question-popup" data-html="{{ search_form.QUESTION_POPUP_TEXT }}" data-position="top center">
+            <i class="ui question circle icon"></i>
+        </span>
         <div class="ui two fields">
             {% render_field search_form.title %}
             {% render_field search_form.author %}
