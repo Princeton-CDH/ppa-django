@@ -15,10 +15,10 @@
         </div>
         <div class="metadata eight wide column">
             <p class="ui header">{{ item.author }}</p>
-            <div class="ui equal width stackable grid">
+            <div class="publication ui equal width grid">
                 <div class="column">{{ item.publisher }}</div>
-                <div class="center aligned column">{{ item.pub_place }}</div>
-                <div class="right aligned column">{{ item.pub_date }}</div>
+                <div class="column">{{ item.pub_place }}</div>
+                <div class="column">{{ item.pub_date }}</div>
             </div>
             <div class="buttons">
                 {% if item.pk %} {# database object with many-to-many #}
