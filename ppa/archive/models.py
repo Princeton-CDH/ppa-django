@@ -1,6 +1,11 @@
+import os.path
+from zipfile import ZipFile
+
+from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from mezzanine.core.fields import RichTextField
+from pairtree import pairtree_path, pairtree_client
 
 from ppa.archive.hathi import HathiBibliographicAPI
 from ppa.archive.solr import get_solr_connection
@@ -90,6 +95,9 @@ class DigitizedWork(models.Model):
     #: date of last modification of the local record
     updated = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        ordering = ('title',)
+
     def get_absolute_url(self):
         '''
         Return object's url for
@@ -149,7 +157,6 @@ class DigitizedWork(models.Model):
         '''Index a :class:`ppa.archive.models.DigitizedWork`
         and allow optional commit to ensure results are available.
         '''
-
         solr, solr_collection = get_solr_connection()
         solr.index(solr_collection, [self.index_data()], params=params)
 
@@ -171,6 +178,41 @@ class DigitizedWork(models.Model):
             'item_type': 'work',
             'order': '0',
         }
+
+    def page_index_data(self):
+        '''Generator for page content for this work from the Hathi
+        pairtree to be indexed in Solr.'''
+        prefix, ptree_id = self.source_id.split('.', 1)
+        # get pairtree client
+        pairtree = pairtree_client.PairtreeStorageClient(
+            prefix, os.path.join(settings.HATHI_DATA, prefix))
+        # get pairtree object for current work
+        ptobj = pairtree.get_object(ptree_id, create_if_doesnt_exist=False)
+        # contents are stored in a directory named based on a
+        # pairtree encoded version of the id
+        content_dir = pairtree_path.id_encode(ptree_id)
+        # - expect a mets file and a zip file
+        # - don't rely on them being returned in the same order on every machine
+        parts = ptobj.list_parts(content_dir)
+        # find the first zipfile in the list (should only be one)
+        ht_zipfile = [part for part in parts if part.endswith('zip')][0]
+        # NOTE: not yet making use of the metsfile
+
+        # yield a generator of index data for each page
+
+        # read zipfile contents in place, without unzipping
+        with ZipFile(os.path.join(ptobj.id_to_dirpath(), content_dir, ht_zipfile)) as ht_zip:
+            filenames = ht_zip.namelist()
+            for pagefilename in filenames:
+                with ht_zip.open(pagefilename) as pagefile:
+                    page_id = os.path.splitext(os.path.basename(pagefilename))[0]
+                    yield {
+                        'id': '%s.%s' % (self.source_id, page_id),
+                        'srcid': self.source_id,   # for grouping with work record
+                        'content': pagefile.read().decode('utf-8'),
+                        'order': page_id,
+                        'item_type': 'page'
+                    }
 
     def get_metadata(self, metadata_format):
         '''Get metadata for this item in the specified format.
