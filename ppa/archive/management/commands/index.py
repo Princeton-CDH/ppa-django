@@ -33,10 +33,13 @@ Example usage::
 
 import itertools
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.core.paginator import Paginator
 from django.db.models import Sum
 import progressbar
+# from urllib3.exceptions import HTTPError
+from SolrClient.exceptions import ConnectionError
+from requests.exceptions import RequestException
 
 from ppa.archive.models import DigitizedWork
 from ppa.archive.solr import get_solr_connection
@@ -57,8 +60,8 @@ class Command(BaseCommand):
     v_normal = 1
     verbosity = v_normal
 
-    #: solr params for index call; currently set to commit within 10 seconds
-    solr_index_opts = {"commitWithin": 10000}
+    #: solr params for index call; currently set to commit within 5 seconds
+    solr_index_opts = {"commitWithin": 5000}
     # NOTE: not sure what is reasonable here, but without some kind of commit,
     # Solr seems to quickly run out of memory
 
@@ -74,7 +77,7 @@ class Command(BaseCommand):
             help='Do not display progress bar to track the status of the reindex.')
 
     def handle(self, *args, **kwargs):
-        solr, solr_collection = get_solr_connection()
+        self.solr, self.solr_collection = get_solr_connection()
         self.verbosity = kwargs.get('verbosity', self.v_normal)
         self.options = kwargs
 
@@ -91,7 +94,8 @@ class Command(BaseCommand):
             total_to_index += works.count()
         if self.options['index'] in ['pages', 'all']:
             # total pages to be indexed
-            total_to_index += works.aggregate(total_pages=Sum('page_count'))['total_pages']
+            # NOTE: should always be a value if id is valid, but fallback to zero for None
+            total_to_index += works.aggregate(total_pages=Sum('page_count'))['total_pages'] or 0
 
         # initialize progressbar if requested and indexing more than 5 items
         progbar = None
@@ -105,31 +109,24 @@ class Command(BaseCommand):
             # use django paginator to index chunks of works at a time
             paginator = Paginator(works, 100)
             for page in range(1, paginator.num_pages + 1):
-                solr.index(
-                    solr_collection,
-                    [work.index_data() for work in paginator.page(page).object_list],
-                    params=self.solr_index_opts)
+                self.index([work.index_data() for work in paginator.page(page).object_list])
 
                 count += paginator.page(page).object_list.count()
                 if progbar:
                     progbar.update(count)
 
-        solr.commit(solr_collection)
+        self.solr.commit(self.solr_collection)
 
         # index pages for each work
         if self.options['index'] in ['pages', 'all']:
             for work in works:
-                # TODO: should probably catch solr connection error here
-                # example
-                # SolrClient.exceptions.ConnectionError: ('N/A', "('Connection aborted.', BrokenPipeError(32, 'Broken pipe'))", ConnectionError(ProtocolError('Connection aborted.', BrokenPipeError(32, 'Broken pipe')),))
-
                 # page index data returns a generator
                 page_data = work.page_index_data()
+
                 # iterate over the generator and index in chunks
                 page_chunk = list(itertools.islice(page_data, 150))
                 while page_chunk:
-                    solr.index(solr_collection, page_chunk,
-                               params=self.solr_index_opts)
+                    self.index(page_chunk)
                     page_chunk = list(itertools.islice(page_data, 150))
 
                 # for simplicity, update progress bar for each work
@@ -138,4 +135,20 @@ class Command(BaseCommand):
                 if progbar:
                     progbar.update(count)
 
-        solr.commit(solr_collection)
+        self.solr.commit(self.solr_collection)
+
+    def index(self, index_data):
+        '''index an iterable into the configured solr instance
+        and solr collection'''
+
+        # NOTE: currently no good way to catch a connection
+        # error when Solr is not running because we get multiple
+        # connections during handling of exceptions.
+        try:
+            self.solr.index(self.solr_collection, index_data,
+                            params=self.solr_index_opts)
+        except Exception as err:
+        # except (ConnectionError, RequestException) as err:
+            # NOTE: this is still pretty ugly; what part should we return?
+            raise CommandError(err)
+
