@@ -7,6 +7,7 @@ Expected context variables:
   - page: page result with page.order attribute (page label/order, for determining thumbnail url)
   - highlights: dictionary of Solr highlighting results
 {% endcomment %}
+{% load ppa_tags %}
 <div class="page">
     <div class="preview">
         <img src="{% page_image_url item_id page.order 180 %}"
@@ -14,7 +15,7 @@ Expected context variables:
     </div>
     <div class="snippets">
         {% for snippet in highlights.content %}
-        <p class="snippet">{{ snippet|safe }}</p>
+        <p class="snippet">{{ snippet|solr_highlight }}</p>
         {% endfor %}
     </div>
 </div>
