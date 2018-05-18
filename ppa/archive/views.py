@@ -120,9 +120,10 @@ class DigitizedWorkListView(ListView):
             range_opts.update({
                 # current range filter
                 'f.%s.facet.range.start' % range_facet: start,
-                # 'start': int(start) if start else ranges['%s_min' % range_facet],
-                # 'end': int(end) if end else ranges['%s_max' % range_facet],
-                'f.%s.facet.range.end' % range_facet: end,
+                # NOTE: per facet.range.include documentation, default behavior
+                # is to include lower bound and exclude upper bound.
+                # For simplicity, increase range end by one.
+                'f.%s.facet.range.end' % range_facet: end + 1,
                 # calculate gap based start and end & desired number of slices
                 # ideally, generate 24 slices; minimum gap size of 1
                 'f.%s.facet.range.gap' % range_facet: max(1, int((end - start) / 24)),
