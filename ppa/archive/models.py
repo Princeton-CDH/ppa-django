@@ -187,11 +187,7 @@ class DigitizedWork(models.Model):
         ht_zipfile = [part for part in parts if part.endswith('zip')][0]
         # NOTE: not yet making use of the metsfile
 
-        # create a list to gather solr information to index
-        # digitized work and pages all at once
-        index_data = []
-
-        # FIXME: could this be a generator?
+        # yield a generator of index data for each page
 
         # read zipfile contents in place, without unzipping
         with ZipFile(os.path.join(ptobj.id_to_dirpath(), content_dir, ht_zipfile)) as ht_zip:
@@ -200,15 +196,13 @@ class DigitizedWork(models.Model):
             for pagefilename in filenames:
                 with ht_zip.open(pagefilename) as pagefile:
                     page_id = os.path.splitext(os.path.basename(pagefilename))[0]
-                    index_data.append({
+                    yield {
                         'id': '%s.%s' % (self.source_id, page_id),
                         'srcid': self.source_id,   # for grouping with work record
                         'content': pagefile.read().decode('utf-8'),
                         'order': page_id,
                         'item_type': 'page'
-                    })
-        return index_data
-
+                    }
 
     def get_metadata(self, metadata_format):
         '''Get metadata for this item in the specified format.
