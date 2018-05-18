@@ -1,9 +1,10 @@
 from unittest.mock import Mock
 
 from django.http import QueryDict
+from django.utils.safestring import SafeString
 
 from ppa.archive.templatetags.ppa_tags import dict_item, querystring_replace, \
-    page_image_url
+    page_image_url, solr_highlight
 
 
 def test_dict_item():
@@ -60,3 +61,24 @@ def test_page_image_url():
     page_seq = 9
     img_url = page_image_url(item_id, page_id, width)
     assert img_url.endswith('image?id=%s;seq=%s;width=%s' % (item_id, page_seq, width))
+
+
+def test_solr_highlight():
+    # simple text snippet
+    val = '''Make the cold air fire EaFeF
+Sbelley, <em>Prometheus</em>, II. v.
+6. '''
+    highlighted = solr_highlight(val)
+    # should be marked as a safe string
+    assert isinstance(highlighted, SafeString)
+    # text should be equivalent, since nothing here needs escaping
+    assert val == highlighted
+
+    # value with ocr that looks like a bad tag
+    val = '''<s Shelley, <em>Prometheus</em>, II. v.'''
+    highlighted = solr_highlight(val)
+    assert isinstance(highlighted, SafeString)
+    # < should be escaped
+    assert highlighted.startswith('&lt;s Shelley')
+
+
