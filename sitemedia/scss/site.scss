@@ -37,7 +37,7 @@
         text-transform: uppercase;
         display: none;
 
-        @media only screen and (min-width: 1440px) {
+        @media only screen and (min-width: $nav-breakpoint) {
             display: flex;
         }
 
@@ -45,7 +45,7 @@
         &.search {
             display: flex;
 
-            @media only screen and (min-width: 1440px) {
+            @media only screen and (min-width: $nav-breakpoint) {
                 display: none;
             }
         }
