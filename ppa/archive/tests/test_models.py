@@ -4,7 +4,7 @@ from time import sleep
 from unittest.mock import call, patch, Mock
 
 from django.conf import settings
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from pairtree import pairtree_client, pairtree_path
 import pytest
@@ -148,6 +148,7 @@ class TestDigitizedWork(TestCase):
         assert work.hathi_content_dir == pairtree_path.id_encode(work.hathi_pairtree_id)
 
     @patch('ppa.archive.models.pairtree_client')
+    @override_settings(HATHI_DATA='/tmp/ht_text_pd')
     def test_hathi_pairtree_object(self, mock_pairtree_client):
         work = DigitizedWork(source_id='uva.1234')
 
