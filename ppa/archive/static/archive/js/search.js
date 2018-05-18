@@ -39,6 +39,8 @@ $(function(){
     /* bindings */
     $('.ui.checkbox').checkbox()
 
+    $('.question-popup').popup()
+
     $$sortLinks.find('input[disabled="disabled"]').parent().addClass('disabled')
     $$sortLinks.click((e) => {
         changeSort(e)

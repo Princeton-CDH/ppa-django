@@ -4,6 +4,20 @@
 
 #search {
 
+    /* form */
+    .question-popup {
+        position: absolute;
+        // next to "Keyword or Phrase" text
+        top: 1rem;
+        right: 0;
+
+        @media screen and (min-width: 800px) {
+            // move to the right of the main search box
+            top: 3.25rem;
+            right: -2rem;   
+        }
+    }
+
     input[type=number] { // publication date min/max
         width: 6rem;
     }
