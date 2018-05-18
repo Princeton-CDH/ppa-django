@@ -111,7 +111,7 @@ class Command(BaseCommand):
 
         if self.options['progress']:
             progbar = progressbar.ProgressBar(redirect_stdout=True,
-                max_value=self.stats['total'])
+                                              max_value=self.stats['total'])
         else:
             progbar = None
 
@@ -158,7 +158,6 @@ class Command(BaseCommand):
             for ht_data_dir in hathi_dirs:
                 prefix = os.path.basename(ht_data_dir)
 
-                print('pairtree prefix, datadir %s %s' % (prefix, ht_data_dir))
                 hathi_ptree = pairtree_client.PairtreeStorageClient(prefix, ht_data_dir)
                 # store initialized pairtree client by prefix for later use
                 self.hathi_pairtree[prefix] = hathi_ptree
@@ -271,25 +270,13 @@ class Command(BaseCommand):
         # indexing page content here, but should still be useful as
         # a sanity check
 
-        htid = digwork.source_id
-        prefix, pt_id = htid.split('.', 1)
-        # pairtree id to path for data files
-        ptobj = self.hathi_pairtree[prefix].get_object(pt_id,
-            create_if_doesnt_exist=False)
-        # contents are stored in a directory named based on a
-        # pairtree encoded version of the id
-        content_dir = pairtree_path.id_encode(pt_id)
-        # - expect a mets file and a zip file
-        # - don't rely on them being returned in the same order on every machine
-        parts = ptobj.list_parts(content_dir)
-        # find the first zipfile in the list (should only be one)
-        ht_zipfile = [part for part in parts if part.endswith('zip')][0]
-        # currently not making use of the metsfile
-        # (but probably could)
+        # use existing pairtree client since it is already initialized
+        ptree_client = self.hathi_pairtree[digwork.hathi_prefix]
 
-        # read zipfile contents in place, without unzipping
-        with ZipFile(os.path.join(ptobj.id_to_dirpath(), content_dir, ht_zipfile)) as ht_zip:
+        # count the files in the zipfile
+        with ZipFile(digwork.hathi_zipfile_path(ptree_client)) as ht_zip:
             page_count = len(ht_zip.namelist())
+
         self.stats['pages'] += page_count
 
         # store page count in the database, if changed
