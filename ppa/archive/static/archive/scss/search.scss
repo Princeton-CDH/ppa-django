@@ -97,8 +97,25 @@
     }
 
     /* pagination */
-    .pagination .page-controls {
-        float: right;
+    .pagination {
+        display: flex;
+        justify-content: center;
+
+        @media screen and (min-width: 768px) {
+            justify-content: space-between;
+        }
+
+        .display-label { // "Display"
+            margin-right: 1rem;
+        }
+
+        .results-label { // "Results"
+            margin-left: 1rem;
+        }
+
+        .page-controls span { // "..." indicator
+            margin: 0 1rem;
+        }
     }
 
     /* results */
