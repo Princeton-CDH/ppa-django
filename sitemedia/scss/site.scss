@@ -63,7 +63,11 @@
 
 /* main */
 main {
-    margin-bottom: $nav-height;
+    margin-bottom: 50px;
+
+    @media only screen and (min-width: 320px) {
+        margin-bottom: 100px;
+    }
 }
 
 /* footer */
