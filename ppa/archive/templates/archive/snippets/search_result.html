@@ -2,10 +2,12 @@
 <div class="item">
     <abbr class="unapi-id" title="{{ item.srcid }}"></abbr>
     <div class="ui stackable grid container">
+        {% if page_obj %}
         <div class="labels one wide column">
             <p class="result-number">{{ page_obj.start_index|add:forloop.counter0 }}</p>
             <!-- <i class="ui flag icon"></i> -->
         </div>
+        {% endif %}
         <div class="title seven wide column">
             <a href="{% url 'archive:detail' item.srcid %}">
                 <p class="ui header">{{ item.title }}</p>
@@ -19,7 +21,11 @@
                 <div class="right aligned column">{{ item.pub_date }}</div>
             </div>
             <div class="buttons">
-                {% if item.collections %}
+                {% if item.collections.all %} {# database object with many-to-many #}
+                    {% for collection in item.collections.all %}
+                        <button class="ui tiny basic button">{{ collection }}</button>
+                    {% endfor %}
+                {% else %} {# solr object with list of strings #}
                     {% for collection in item.collections %}
                         <button class="ui tiny basic button">{{ collection }}</button>
                     {% endfor %}
@@ -30,6 +36,7 @@
                 </a>
             </div>
         </div>
+        {% if page_groups and page_highlights %}
         <div class="pages sixteen wide column">
             {% with results=page_groups|dict_item:item.id %}
                 {% if page_highlights %}
@@ -52,5 +59,6 @@
             {% endwith %}
             <!--<p>{{ item.enumcron }}</p>-->
         </div>
+        {% endif %}
     </div>
 </div>

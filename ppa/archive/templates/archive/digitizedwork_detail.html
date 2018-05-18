@@ -3,6 +3,9 @@
 
 {% block css %}
 <link rel="stylesheet" type="text/x-scss" href="{% static 'archive/scss/digitized-work.scss' %}">
+{% if query %} {# include search styles if there is a search term active #}
+<link rel="stylesheet" type="text/x-scss" href="{% static 'archive/scss/search.scss' %}">
+{% endif %}
 {% endblock %}
 
 {% block page-subtitle %}Archive | {{ object.title }} {% endblock %}
@@ -25,6 +28,12 @@
             </div>
         </div>
     </form>
+    {% if query %} {# display search result view of record if there is a search term active #}
+    <div class="results-list">
+        {# suppress order and highlighting in search result snippet  #}
+        {% include 'archive/snippets/search_result.html' with item=object page_highlights=0 page_obj=0 %}
+    </div>
+    {% else %}
     <h2 class="header">{{ object.title }}</h2>
     <abbr class="unapi-id" title="{{ object.source_id }}"></abbr>
     <table class="metadata ui very basic table">
@@ -86,6 +95,7 @@
             {% endif %}
         </tbody>
     </table>
+    {% endif %}
 
   {# display matching pages with highlighted text if there is a search active #}
   {% if query or page_highlights %}
