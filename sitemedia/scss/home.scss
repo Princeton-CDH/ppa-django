@@ -6,6 +6,12 @@
     background-position: center;
     background-size: contain;
 
+    // 2x screen resolution
+    @media (-webkit-min-device-pixel-ratio: 2),
+         (min-resolution: 192dpi) {
+        background-image: url("/static/img/PPA_banner_006@2X.png");
+    }
+
     h1 {
         font-weight: bold;
     }
