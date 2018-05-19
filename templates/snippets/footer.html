@@ -1,3 +1,4 @@
+{% load static %}
 <footer class="ui basic inverted segment centered grid" id="footer">
     <nav class="ui inverted stackable borderless menu">
         <a class="item" href="/history-of-the-archive/">History of the Archive</a>
@@ -11,12 +12,12 @@
         <a class="item">Contact</a>
         <a class="item" href="/how-to-cite/">How to Cite</a>
     </div>
-    <div class="ui inverted horizontal list row">
-        <a class="item">
-            <div class="placeholder"></div>
+    <div class="ui horizontal list row">
+        <a class="item ui tiny image" href="https://cdh.princeton.edu/">
+            <img src="{% static 'img/CDH_logo_W.svg' %}" alt="The Center for Digital Humanities at Princeton" />
         </a>
-        <a class="item">
-            <div class="placeholder"></div>
+        <a class="item ui small image" href="https://www.princeton.edu/">
+            <img src="{% static 'img/PUsig2-ww-ws.svg' %}" alt="Princeton University" />
         </a>
     </div>
     <div class="ui container">
