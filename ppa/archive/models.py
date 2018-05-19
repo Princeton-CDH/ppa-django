@@ -272,8 +272,23 @@ class DigitizedWork(models.Model, Indexable):
         return ptree_client.get_object(self.hathi_pairtree_id,
                                        create_if_doesnt_exist=False)
 
+    def _hathi_content_path(self, ext, ptree_client=None):
+        '''path to zipfile within the hathi contents for this work'''
+        pairtree_obj = self.hathi_pairtree_object(ptree_client=ptree_client)
+        # - expect a mets file and a zip file
+        # NOTE: not yet making use of the metsfile
+        # - don't rely on them being returned in the same order on every machine
+        parts = pairtree_obj.list_parts(self.hathi_content_dir)
+        # find the first zipfile in the list (should only be one)
+        filepath = [part for part in parts if part.endswith(ext)][0]
+
+        return os.path.join(pairtree_obj.id_to_dirpath(),
+                            self.hathi_content_dir, filepath)
+
     def hathi_zipfile_path(self, ptree_client=None):
         '''path to zipfile within the hathi contents for this work'''
+        return self._hathi_content_path('zip', ptree_client=ptree_client)
+
         pairtree_obj = self.hathi_pairtree_object(ptree_client=ptree_client)
         # - expect a mets file and a zip file
         # NOTE: not yet making use of the metsfile
@@ -285,15 +300,54 @@ class DigitizedWork(models.Model, Indexable):
         return os.path.join(pairtree_obj.id_to_dirpath(),
                             self.hathi_content_dir, ht_zipfile)
 
+    def hathi_metsfile_path(self, ptree_client=None):
+        '''path to mets xml file within the hathi contents for this work'''
+        return self._hathi_content_path('.mets.xml', ptree_client=ptree_client)
+
+
     def page_index_data(self):
         '''Get page content for this work from Hathi pairtree and return
         data to be indexed in solr.'''
 
+        from eulxml.xmlmap import load_xmlobject_from_file
+        from ppa.archive.hathi import MinimalMETS
+        print(self.source_id)
+        print(self.hathi_metsfile_path())
+        mmets = load_xmlobject_from_file(self.hathi_metsfile_path(), MinimalMETS)
+
+
         # read zipfile contents in place, without unzipping
         with ZipFile(self.hathi_zipfile_path()) as ht_zip:
             filenames = ht_zip.namelist()
+            # print(filenames)
 
             # yield a generator of index data for each page
+            for page in mmets.structmap_pages:
+                pagefilename = os.path.join(self.hathi_pairtree_id, page.text_file_location)
+                with ht_zip.open(pagefilename) as pagefile:
+                    print('%s %s %s' % (page.order, page.display_label, page.label))
+                    # page_id = os.path.splitext(os.path.basename(pagefilename))[0]
+                    # print({
+                    #     'id': '%s.%s' % (self.source_id, page.text_file.id),
+                    #     'srcid': self.source_id,   # for grouping with work record
+                    #     'content': pagefile.read().decode('utf-8'),
+                    #     'order': page.order,
+                    #     'title': page.display_label,
+                    #     'tags': page.label.split(', ') if page.label else [],
+                    #     'item_type': 'page'
+                    # })
+                    yield {
+                        'id': '%s.%s' % (self.source_id, page.text_file.id),
+                        'srcid': self.source_id,   # for grouping with work record
+                        'content': pagefile.read().decode('utf-8'),
+                        'order': page.order,
+                        # rename insolr
+                        'title': page.display_label,
+                        # 'tags': page.label.split(', ') if page.label else [],
+                        'item_type': 'page'
+                    }
+
+
             for pagefilename in filenames:
                 with ht_zip.open(pagefilename) as pagefile:
                     page_id = os.path.splitext(os.path.basename(pagefilename))[0]

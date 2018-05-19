@@ -2,6 +2,7 @@
 from datetime import datetime
 import io
 
+from eulxml import xmlmap
 import pymarc
 import requests
 from cached_property import cached_property
@@ -96,3 +97,50 @@ class HathiBibliographicRecord(object):
         marcxml = self._data['records'][self.record_id].get('marc-xml', None)
         if marcxml:
             return pymarc.parse_xml_to_array(io.StringIO(marcxml))[0]
+
+
+class _METS(xmlmap.XmlObject):
+
+    ROOT_NAMESPACES = {
+        'm': 'http://www.loc.gov/METS/'
+    }
+
+class StructMapPage(_METS):
+    order = xmlmap.StringField('@ORDER')
+    label = xmlmap.StringField('@LABEL')
+    orderlabel = xmlmap.StringField('@ORDERLABEL')
+    text_file_id = xmlmap.StringField('m:fptr/@FILEID[contains(., "TXT")]')
+
+    @property
+    def display_label(self):
+        return self.orderlabel or self.label
+
+    @property
+    def text_file(self):
+        return METSFile(self.node.xpath('//m:file[@ID="%s"]' % self.text_file_id,
+                                        namespaces=self.ROOT_NAMESPACES)[0])
+    @property
+    def text_file_location(self):
+        return self.text_file.location
+
+      # <METS:div ORDER="1" LABEL="FRONT_COVER, IMAGE_ON_PAGE, IMPLICIT_PAGE_NUMBER" TYPE="page">
+      #   <METS:fptr FILEID="HTML00000001"/>
+      #   <METS:fptr FILEID="TXT00000001"/>
+      #   <METS:fptr FILEID="IMG00000001"/>
+      # <METS:file SIZE="1003" ID="HTML00000496" MIMETYPE="text/html" CREATED="2017-03-20T10:40:21Z" CHECKSUM="f0a326c10b2a6dc9ae5e3ede261c9897" SEQ="00000496" CHECKSUMTYPE="MD5">
+
+class METSFile(_METS):
+    id = xmlmap.StringField('@ID')
+    location = xmlmap.StringField('m:FLocat/@xlink:href')
+
+class MinimalMETS(_METS):
+    structmap_pages = xmlmap.NodeListField('m:structMap[@TYPE="physical"]//m:div[@TYPE="page"]',
+        StructMapPage)
+    ocr_files = xmlmap.NodeListField('m:fileGrp[@USE="ocr"]/m:file', METSFile)
+
+    def file_by_id(self, file_id):
+        return METSFile(self.node.xpath('//m:file[@ID="%s"]' % file_id,
+                                        namespaces=self.ROOT_NAMESPACES)[0])
+
+
+

@@ -48,10 +48,13 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from django.template.defaultfilters import pluralize
+from eulxml.xmlmap import load_xmlobject_from_file
+from lxml import etree
 from pairtree import pairtree_path, pairtree_client
 import progressbar
 
-from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound
+from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound, \
+    MinimalMETS
 from ppa.archive.models import DigitizedWork
 
 
@@ -274,8 +277,13 @@ class Command(BaseCommand):
         ptree_client = self.hathi_pairtree[digwork.hathi_prefix]
 
         # count the files in the zipfile
+        start = time.time()
         with ZipFile(digwork.hathi_zipfile_path(ptree_client)) as ht_zip:
             page_count = len(ht_zip.namelist())
+        logger.debug('Counted %d pages in zipfile in %f sec' % (page_count, time.time() - start))
+
+        # NOTE: could also count pages via mets file, but that's slower
+        # than counting via zipfile name list
 
         self.stats['pages'] += page_count
 

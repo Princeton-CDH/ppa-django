@@ -310,7 +310,8 @@ class DigitizedWorkDetailView(DetailView):
                 'q': solr_q,
                 # sort by page order by default
                 'sort': 'order asc',
-                'fl': 'id, srcid, order',  # Limiting down to just id needed for now
+                # 'fl': '*',
+                'fl': 'id,srcid,order,title',  # Limiting down to just id needed for now
                 'fq': 'srcid:("%s") AND item_type:page' % digwork.source_id,
                 # configure highlighting on page text content
                 'hl': True,
