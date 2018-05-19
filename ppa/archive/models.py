@@ -210,6 +210,7 @@ class DigitizedWork(models.Model):
         # find the first zipfile in the list (should only be one)
         ht_zipfile = [part for part in parts if part.endswith('zip')][0]
 
+        print(pairtree_obj.id_to_dirpath(), self.hathi_content_dir, ht_zipfile)
         return os.path.join(pairtree_obj.id_to_dirpath(),
                             self.hathi_content_dir, ht_zipfile)
 
