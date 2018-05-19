@@ -22,7 +22,7 @@ from SolrClient import SolrClient
 from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound, \
     HathiBibliographicRecord
 from ppa.archive.models import DigitizedWork
-from ppa.archive.management.commands import hathi_import
+from ppa.archive.management.commands import hathi_import, index
 
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
@@ -288,3 +288,100 @@ class TestHathiImportCommand(TestCase):
             call_command('hathi_import', progress=1, verbosity=0, stdout=stdout)
             mockprogbar.ProgressBar.assert_called_with(redirect_stdout=True,
                     max_value=len(mock_htids))
+
+
+class TestIndexCommand(TestCase):
+    fixtures = ['sample_digitized_works']
+
+    def test_index(self):
+        # index data into solr and catch  an error
+        cmd = index.Command()
+        cmd.solr = Mock()
+        cmd.solr_collection = 'test'
+
+        test_index_data = range(5)
+        cmd.index(test_index_data)
+        cmd.solr.index.assert_called_with(cmd.solr_collection, test_index_data,
+                                          params=cmd.solr_index_opts)
+
+        # solr connection exception should raise a command error
+        with pytest.raises(CommandError):
+            cmd.solr.index.side_effect = Exception
+            cmd.index(test_index_data)
+
+    @patch('ppa.archive.management.commands.index.get_solr_connection')
+    @patch('ppa.archive.management.commands.index.progressbar')
+    @patch.object(index.Command, 'index')
+    def test_call_command(self, mock_cmd_index_method, mockprogbar, mock_get_solr):
+        mocksolr = Mock()
+        test_coll = 'test'
+        mock_get_solr.return_value = (mocksolr, test_coll)
+        digworks = DigitizedWork.objects.all()
+
+        stdout = StringIO()
+        call_command('index', index='works', stdout=stdout)
+
+
+        # index all works
+        mock_cmd_index_method.assert_called_with(
+            [work.index_data() for work in digworks])
+        # not enought data to run progress bar
+        mockprogbar.ProgressBar.assert_not_called()
+        # commit called after works areindexed
+        mocksolr.commit.assert_called_with(test_coll)
+        # only called once (no pages)
+        assert mock_cmd_index_method.call_count == 1
+
+        with patch.object(DigitizedWork, 'page_index_data') as mock_page_index_data:
+            mock_cmd_index_method.reset_mock()
+            total_works = digworks.count()
+            total_pages = sum(work.page_count for work in digworks)
+
+            # simple number generator to test indexing in chunks
+            def test_generator():
+                for i in range(155):
+                    yield i
+
+            mock_page_index_data.side_effect = test_generator
+
+            call_command('index', index='pages', stdout=stdout)
+
+            # progressbar should be called
+            mockprogbar.ProgressBar.assert_called_with(
+                redirect_stdout=True, max_value=total_pages)
+            # page index data called once for each work
+            assert mock_page_index_data.call_count == total_works
+            # progress bar updated called once for each work
+            mockprogbar.ProgressBar.return_value.update.call_count = total_works
+            # mock index called twice for each work
+            assert mock_cmd_index_method.call_count == 2 * total_works
+
+            # request no progress bar
+            mockprogbar.reset_mock()
+            call_command('index', index='pages', no_progress=True, stdout=stdout)
+            mockprogbar.ProgressBar.assert_not_called()
+
+            # index both works and pages (default behavior)
+            mock_cmd_index_method.reset_mock()
+            mock_page_index_data.reset_mock()
+            call_command('index', stdout=stdout)
+            # progressbar should be called, total = works + pages
+            mockprogbar.ProgressBar.assert_called_with(
+                redirect_stdout=True, max_value=total_works + total_pages)
+            # called once for the works (all indexed in one batch) and
+            # twice for each set of pages in a work
+            assert mock_cmd_index_method.call_count == 2 * total_works + 1
+            # page index data called
+            assert mock_page_index_data.call_count == total_works
+
+            # index a single work by id
+            work = digworks.first()
+            mock_cmd_index_method.reset_mock()
+            mock_page_index_data.reset_mock()
+            call_command('index', work.source_id, stdout=stdout)
+            mockprogbar.ProgressBar.assert_called_with(
+                redirect_stdout=True, max_value=1 + work.page_count)
+            # called once for the work and twice for the pages
+            assert mock_cmd_index_method.call_count == 3
+            # page index data called once only
+            assert mock_page_index_data.call_count == 1
