@@ -275,6 +275,11 @@ class TestCollection(TestCase):
         assert self.dig1.source_id in srcids
         assert self.dig2.source_id in srcids
 
+        # should error if attempted on unsaved collection
+        unsaved = Collection(name='new')
+        with pytest.raises(ValueError):
+            unsaved.full_index()
+
 
     @patch('ppa.archive.models.Collection.full_index')
     def test_save(self, mockfullindex):
