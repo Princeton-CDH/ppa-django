@@ -52,10 +52,12 @@
                 <th scope="row">Year of Publication</th>
                 <td>{{ object.pub_date }}</td>
             </tr>
+            {% if object.author %}
             <tr>
-                <th scope="row">Author(s)</th>
+                <th scope="row">Author</th>
                 <td>{{ object.author }}</td>
             </tr>
+            {% endif %}
             <tr>
                 <th scope="row">Publisher</th>
                 <td>{{ object.publisher }}</td>
@@ -64,13 +66,16 @@
                 <th scope="row">City</th>
                 <td>{{ object.pub_place }}</td>
             </tr>
+            {% if object.collections.exists %}
             <tr>
-                <th scope="row">PPA Collection(s)</th>
+                <th scope="row">PPA Collection{{ object.collections.count|pluralize }}</th>
                 <td>
-                    <button class="ui tiny basic button">Grammar</button>
-                    <button class="ui tiny basic button">Typography</button>
+                    {% for collection in object.collections.all %}
+                    <a class="ui tiny basic button" href="{% url 'archive:list' %}?collections={{ collection|urlencode }}">{{ collection }}</a>
+                    {% endfor %}
                 </td>
             </tr>
+            {% endif %}
             <tr>
                 <th scope="row">View HathiTrust Volumes</th>
                 <td>
