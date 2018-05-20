@@ -26,11 +26,9 @@
                         <button class="ui tiny basic button">{{ collection }}</button>
                     {% endfor %}
                 {% else %} {# solr object with list of strings #}
-                    {% if item.collections.exists %}
-                        {% for collection in item.collections %}
-                            <button class="ui tiny basic button">{{ collection }}</button>
-                        {% endfor %}
-                    {% endif %}
+                    {% for collection in item.collections %}
+                        <button class="ui tiny basic button">{{ collection }}</button>
+                    {% endfor %}
                 {% endif %}
                 <a class="ui right floated right labeled secondary tiny icon button" href="{{ item.src_url }}">
                     HathiTrust
