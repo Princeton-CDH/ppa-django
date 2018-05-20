@@ -23,6 +23,7 @@ from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound, \
     HathiBibliographicRecord
 from ppa.archive.models import DigitizedWork
 from ppa.archive.management.commands import hathi_import, index
+from ppa.archive.solr import get_solr_connection
 
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
@@ -52,6 +53,14 @@ class TestSolrSchemaCommand(TestCase):
         output = stdout.getvalue()
         assert 'Updated ' in output
         assert 'Added ' not in output
+
+        # create field to be removed
+        solr, coll = get_solr_connection()
+        solr.schema.create_field(
+            coll, {'name': 'bogus', 'type': 'string', 'required': False})
+        call_command('solr_schema', stdout=stdout)
+        output = stdout.getvalue()
+        assert 'Removed 1 field' in output
 
 
 @pytest.fixture(scope='class')
