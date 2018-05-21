@@ -147,19 +147,21 @@ class PagedSolrQuery(object):
         self.query_opts = query_opts or {}
         # possibly should default to 'q': '*:*' ...
 
+    @property
+    def result(self):
+        if self._result is None:
+            self.get_results()
+        return self._result
+
     def get_facets(self):
         '''Wrap SolrClient.SolrResponse.get_facets() to get query facets as a dict
         of dicts.'''
-        if self._result is None:
-            self.get_results()
-        return self._result.get_facets()
+        return self.result.get_facets()
 
     def get_facets_ranges(self):
         '''Wrap SolrClient.SolrResponse.get_facets() to get query facets as a dict
         of dicts.'''
-        if self._result is None:
-            self.get_results()
-        return self._result.get_facets_ranges()
+        return self.result.get_facets_ranges()
 
     def get_results(self):
         '''
@@ -175,6 +177,7 @@ class PagedSolrQuery(object):
         if self._result is None:
             query_opts = self.query_opts.copy()
             query_opts['rows'] = 0
+            # FIXME: do we actually want to store the result with no rows?
             self._result = self.solr.query(self.solr_collection, query_opts)
 
         return self._result.get_num_found()
@@ -182,9 +185,7 @@ class PagedSolrQuery(object):
     def get_json(self):
         '''Return query response as JSON data, to allow full access to anything
         included in Solr data.'''
-        if self._result is None:
-            self.get_results()
-        return self._result.get_json()
+        return self.result.get_json()
 
     @cached_property
     def raw_response(self):

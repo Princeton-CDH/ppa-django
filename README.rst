@@ -73,9 +73,13 @@ Initial setup and installation:
 
     python manage.py hathi_import
 
+- Then index the imported content into Solr:
+
+    python manage.py index
+
 Frontend development setup:
 
-- django-compressor dependencies: you need `Node.js <https://nodejs.org/en/>`_ 
+- django-compressor dependencies: you need `Node.js <https://nodejs.org/en/>`_
   and a js package manager (`npm` or `yarn`). Install dependencies with the
   relevant install command for your package manager - for `npm`::
 
