@@ -23,7 +23,7 @@ Deploy and Upgrade notes
 
   The previous import and index script has been broken into two
   scripts. For a fresh install, run **hathi_import** as before to import
-  content into the Django database and then run **index* to index work
+  content into the Django database and then run **index** to index work
   and page content into Solr.
 
 
