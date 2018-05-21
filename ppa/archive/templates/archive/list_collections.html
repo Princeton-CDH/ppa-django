@@ -23,8 +23,9 @@
         <div class="ui two stackable cards">
             {% for item in object_list %}
             {% with coll_stats=stats|dict_item:item.name %}
+                {% with coll_stats.count|yesno:"a,span" as tag %}
             {# collections with no items are displayed but do not link to search #}
-            <a class="ui collection card" {% if coll_stats.count %}href="{% url 'archive:list' %}?collections={{ item.id }}"{% endif %}>
+            <{{ tag }} class="ui collection card" {% if coll_stats.count %}href="{% url 'archive:list' %}?collections={{ item.id }}"{% endif %}>
                 <div class="center aligned content">
                     <h3 class="header">{{ item.name }}</h3>
                         <div class="meta">
@@ -39,8 +40,8 @@
                     </div>
                     {% endif %}
                 </div>
-            </a>
-            {% endwith %}
+            </{{ tag }}>
+            {% endwith %} {% endwith %}
             {% endfor %}
         </div>
     </section>
