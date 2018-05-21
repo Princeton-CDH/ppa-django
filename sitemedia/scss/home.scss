@@ -1,0 +1,59 @@
+/* homepage */
+
+#header {
+    background-image: url("/static/img/PPA_banner_006@1X.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+
+    // 2x screen resolution
+    @media (-webkit-min-device-pixel-ratio: 2),
+         (min-resolution: 192dpi) {
+        background-image: url("/static/img/PPA_banner_006@2X.png");
+    }
+
+    h1 {
+        font-weight: bold;
+    }
+    h2 {
+        font-weight: normal;
+        font-style: italic;
+    }
+
+    @media only screen and (min-width: 768px) {
+        height: 35rem;
+
+        h1 {
+            margin-top: 15rem;
+            font-size: 3rem;
+        }
+        h2 {
+            font-size: 3rem;
+        }
+    }
+    @media only screen and (min-width: 1440px) {
+        height: 65rem;
+
+        h1 {
+            margin-top: 30rem;
+            font-size: 5rem;
+        }
+        h2 {
+            font-size: 5rem;
+        }
+    }
+}
+
+#homepage {
+    .intro {
+        margin: 3rem 0;
+    }
+
+    .collections-link {
+        text-align: center;
+    }
+
+    .updates {
+        margin-bottom: 2rem;
+    }
+}

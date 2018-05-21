@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" type="text/x-scss" href="{% static 'scss/page.scss' %}">
+{% endblock %}
+
+{% block page-context-id %}page{% endblock %}
+
+{% block title %}Server error{% endblock %}
+
+{% block page_header %}
+    {% with page_title="500 Error" %}
+    {{ block.super }}
+    {% endwith %}
+{% endblock %}
+
+{% block content %}
+<div class="ui vertical basic segment">
+    <div class="ui text container">
+        <p>This page doesn’t scan correctly. Try trochees.</p>
+    </div>
+</div>
+{% endblock %}

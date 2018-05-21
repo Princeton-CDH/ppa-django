@@ -1,21 +1,142 @@
 {% extends "base.html"  %}
+{% load static humanize %}
+
+{% block css %}
+<link rel="stylesheet" type="text/x-scss" href="{% static 'archive/scss/digitized-work.scss' %}">
+{% endblock %}
 
 {% block page-subtitle %}Archive | {{ object.title }} {% endblock %}
 
+{% block head_extras %}
+    <link rel="unapi-server" type="application/xml" title="unAPI"
+          href="{% url 'unapi' %}" />
+{% endblock %}
+
+{% block page-context-id %}digitized-work{% endblock %}
+
 {% block content %}
-<h1>{{ object.title }}</h1>
-<hr/>
-<ul style="list-style: none;">
-    <li><b>HathiTrust ID:</b> {{ object.source_id }}</li>
-    <li><b>HathiTrust URL:</b> <a href="{{ object.source_url}}">{{ object.source_url }}</a></li>
-    <li><b>Volume/Chronology:</b> {{ object.enumcron }}</a></li>
-    <li><b>Author:</b> {{ object.author }}</li>
-    <li><b>Place of Publication:</b> {{ object.pub_place }}</li>
-    <li><b>Publisher:</b> {{ object.publisher }}</li>
-    <li><b>Publication Date:</b> {{ object.pub_date }}</li>
-    <li><b>Pages:</b> {{ object.page_count }} pgs.</li>
-    <br />
-    <li><b>Added:</b> {{ object.added|date:"d M Y" }}</li>
-    <li><b>Last Updated:</b> {{ object.updated|date:"d M Y" }}</li>
-</ul>
+<section class="ui basic vertical segment container">
+    <form class="ui form">
+        <div class="ui field">
+            <label for="query">Search within the Volume</label>
+            <div class="ui left icon input">
+                <input id="query" name="query" type="text" placeholder="Search keyword or phrase" value="{{ query }}">
+                <i class="search icon"></i>
+            </div>
+        </div>
+        <input class="sr-only sr-only-focusable" type="submit">
+    </form>
+</section>
+{% if query %} {# display search result view of record if there is a search term active #}
+<div class="results-list">
+    {# suppress order and highlighting in search result snippet  #}
+    {% include 'archive/snippets/search_result.html' with item=object page_highlights=0 page_obj=0 %}
+</div>
+{% else %}
+<section class="ui basic vertical segment container">
+    <h2 class="header">{{ object.title }}</h2>
+    <abbr class="unapi-id" title="{{ object.source_id }}"></abbr>
+    <table class="metadata ui very basic table">
+        <thead>
+            <tr>
+                <th scope="col" class="four wide">attribute</th>
+                <th scope="col" class="twelve wide">value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th scope="row">Secondary Title</th>
+                <td><em>{{ object.title }}</em></td>
+            </tr>
+            <tr>
+                <th scope="row">Year of Publication</th>
+                <td>{{ object.pub_date }}</td>
+            </tr>
+            {% if object.author %}
+            <tr>
+                <th scope="row">Author</th>
+                <td>{{ object.author }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <th scope="row">Publisher</th>
+                <td>{{ object.publisher }}</td>
+            </tr>
+            <tr>
+                <th scope="row">City</th>
+                <td>{{ object.pub_place }}</td>
+            </tr>
+            {% if object.collections.exists %}
+            <tr>
+                <th scope="row">PPA Collection{{ object.collections.count|pluralize }}</th>
+                <td>
+                    {% for collection in object.collections.all %}
+                    <a class="ui tiny basic button" href="{% url 'archive:list' %}?collections={{ collection|urlencode }}">{{ collection }}</a>
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endif %}
+            <tr>
+                <th scope="row">View HathiTrust Volumes</th>
+                <td>
+                    <a href="{{ object.source_url }}">
+                        <span>{{ object.source_id }}</span>
+                        <button class="ui right labeled tiny icon button">
+                            HathiTrust
+                            <i class="right arrow icon"></i>
+                        </button>
+                    </a>
+                </td>
+            </tr>
+            {% if user.is_authenticated %}
+            <tr>
+                <th scope="row">Added</th>
+                <td>{{ object.added|date:"d M Y" }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Last Updated</th>
+                <td>{{ object.updated|date:"d M Y" }}</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
+
+  {# display matching pages with highlighted text if there is a search active #}
+  {% if query or page_highlights %}
+    {% if not error %}
+    <div class="occurrences ui center aligned text container">
+        <p>{{ page_obj.paginator.count }} occurrence{{ page_obj.paginator.count|pluralize }}</p>
+    </div>
+    <div class="ui container">
+        {% include 'archive/snippets/pagination.html' %}
+    </div>
+    {% endif %}
+    <div class="results-list ui container">
+        {% for page in solr_results %}
+          {% with highlights=page_highlights|dict_item:page.id%}
+          <div class="ui page item">
+              <div class="pages ui sixteen wide column">
+                  <div class="wrapper">
+                      {% include 'archive/snippets/page_preview.html' with item_id=page.srcid  %}
+                  </div>
+              </div>
+          </div>
+          {% endwith %}
+        {% empty %}
+            <div class="ui error message container">
+                {# display error if something went wrong (bad query, etc.) #}
+                <p>{% firstof error "No matching pages." %}</p>
+            </div>
+        {% endfor %}
+    </div>
+    {% if not error %}
+    <div class="ui container">
+        {% include 'archive/snippets/pagination.html' %}
+    </div>
+    {% endif %}
+
+  {% endif %}
+
 {% endblock %}

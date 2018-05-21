@@ -1,0 +1,30 @@
+/* pagination */
+.pagination.ui.grid {
+    display: flex;
+    justify-content: center;
+    margin: 0;
+
+    .items-per-page {
+        margin-bottom: 1rem; // when stacked above page-controls
+
+        @media screen and (min-width: 450px) {
+            margin-bottom: 0; // not stacked
+        }
+    }
+
+    @media screen and (min-width: 768px) {
+        justify-content: space-between;
+    }
+
+    .display-label { // "Display"
+        margin-right: .5rem;
+    }
+
+    .results-label { // "Results per page"
+        margin-left: .5rem;
+    }
+
+    .page-controls span { // "..." indicator
+        margin: 0 1rem;
+    }
+}

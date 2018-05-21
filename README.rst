@@ -9,8 +9,6 @@ Django web application for the new `Princeton Prosody Archive
 Code and architecture documentation for the current release available
 at `<https://princeton-cdh.github.io/ppa-django/>`_.
 
-https://princeton-cdh.github.io/ppa-django/
-
 .. image:: https://travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master
    :target: https://travis-ci.org/Princeton-CDH/ppa-django
    :alt: Build status
@@ -45,7 +43,7 @@ Initial setup and installation:
 - Use pip to install required python dependencies::
 
     pip install -r requirements.txt
-     pip install -r dev-requirements.txt
+    pip install -r dev-requirements.txt
 
 - Copy sample local settings and configure for your environment::
 
@@ -55,10 +53,12 @@ Initial setup and installation:
 
     python manage.py migrate
 
-- Create a new Solr core with a basic configuration and managed schema,
-  using the same core/collection name you configured in local settings::
+- Create two new Solr cores with a basic configuration and managed schema,
+  using the core/collection names for development and testing that you
+  configured in local settings::
 
     solr create -c SOLR_CORE -n basic_configs
+    solr create -c SOLR_TEST_CORE -n basic_configs
 
 - Run the manage command to configure the schema::
 
@@ -72,6 +72,25 @@ Initial setup and installation:
   and then run::
 
     python manage.py hathi_import
+
+- Then index the imported content into Solr:
+
+    python manage.py index
+
+Frontend development setup:
+
+- django-compressor dependencies: you need `Node.js <https://nodejs.org/en/>`_
+  and a js package manager (`npm` or `yarn`). Install dependencies with the
+  relevant install command for your package manager - for `npm`::
+
+    npm install
+
+  for `yarn`::
+
+    yarn
+
+  if you wish to install dependencies globally, take a look at the optional
+  settings for `django-compressor-toolkit <https://github.com/kottenator/django-compressor-toolkit>`_.
 
 
 Unit Tests

@@ -1,0 +1,72 @@
+{% load semanticui humanize %}
+<form class="ui form{% if error %} error{% endif %}">
+    <div class="ui vertical segment">
+        {% render_field search_form.query %}
+        <span class="question-popup" data-html="{{ search_form.QUESTION_POPUP_TEXT }}" data-position="top center">
+            <i class="ui question circle icon"></i>
+        </span>
+        <div class="ui two fields">
+            {% render_field search_form.title %}
+            {% render_field search_form.author %}
+        </div>
+    </div>
+    <div class="ui vertical stackable grid segment">
+        <div class="six wide column" id="publication">
+            {% render_field search_form.pub_date %}
+            <a class="clear-selection" role="button">Clear Selection</a>
+        </div>
+        <div class="ten wide column" id="histogram">
+            <canvas class="visualization"></canvas>
+            <dl class="values">
+                {% for date, count in facet_ranges.pub_date.items %}
+                <dt>{{ date }}</dt>
+                <dd>{{ count }}</dd>
+                {% endfor %}
+            </dl>
+            <span class="min-date">1569</span>
+            <span class="max-date">1922</span>
+        </div>
+    </div>
+    <div class="ui vertical stackable grid segment">
+        <div class="column field" id="collections">
+            <label for="collections">Collections</label>
+            {% for collection in search_form.collections %}
+            <label class="ui tiny basic button {% if collection.data.selected %}active{% endif %}" for="{{ collection.id_for_label }}" role="checkbox">
+                {{ collection.choice_label }}
+                {{ collection.tag }}
+            </label>
+            {% endfor %}
+        </div>
+        <div class="column" id="booleans">
+            <div class="ui stackable grid">
+                <div class="eight wide column field">
+                    <label>Only display</label>
+                    {% render_field search_form.earliest_only %}
+                    {% render_field search_form.ace_only %}
+                </div>
+                <div class="eight wide column field">
+                    <label>Exclude</label>
+                    {% render_field search_form.dict_exclude %}
+                    {% render_field search_form.pg_exclude %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <input class="sr-only sr-only-focusable" type="submit">
+    <div class="workscount ui center aligned text container">
+        <p>Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}</p>
+        <p>Digitized works can be exported to <a href="https://www.zotero.org/support/getting_stuff_into_your_library">Zotero.</a></p>
+    </div>
+    {% include 'archive/snippets/pagination.html' %}
+    <div class="sort">
+        <div class="ui secondary pointing stackable menu">
+            <span class="item">Sort By</span>
+            {% for sort in search_form.sort %}
+            <a class="item {% if sort.data.selected %}active{% endif %}" for="{{ sort.id_for_label }}" role="radio">
+                {{ sort.choice_label }}
+                {{ sort.tag }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</form>

@@ -20,20 +20,49 @@
     virtualenv: "{{ deploy }}/env"
     requirements: "{{ deploy }}/requirements.txt"
     virtualenv_site_packages: yes
-
+- name: Install npm packages from packages.json
+  npm:
+    path: "{{ deploy }}"
 - name: Install local_settings.py
   copy:
     src: "{{ lookup('env', 'HOME') }}/.deploy/{{ local_settings_path }}"
     dest: "{{ deploy }}/{{ djangoapp }}/local_settings.py"
+- name: Configure log file
+  file:
+    path: '{{ install_root }}/ppa.log'
+    state: touch
+    owner: deploy
+    group: apache
+    mode: 0770
+- name: On QA server only, set the GID correctly for log access
+  shell: "sudo chgrp -R {{ project_user }} {{ install_root }}/ppa.log"
+  when: group == "qa"
+  args:
+    warn: False
+    executable: /bin/bash
 - name: Run ./manage.py collectstatic
   django_manage:
     command: collectstatic
     app_path: "{{ deploy }}"
     virtualenv: "{{ deploy }}/env"
+# Ownership needs to deploy/apache for production
 - name: Configure CACHE for django-compressor
   file:
     path: '{{ deploy }}/static/CACHE'
     state: directory
     owner: deploy
     group: apache
-    mode: 0770
+    mode: 0771
+# On QA server the actual owner for purposes of CACHE needs to be the
+# user associated with the WSGI Daemon, in this case a manual call to sudo
+- name: chgrp the CACHE folder to project user
+  shell: "sudo chgrp -R {{ project_user }} {{ deploy }}/static/CACHE"
+  when: group == "qa"
+  args:
+    warn: False
+    executable: /bin/bash
+- name: run ./manage.py compress to build CSS
+  django_manage:
+    command: compress
+    app_path: "{{ deploy }}"
+    virtualenv: "{{ deploy }}/env"

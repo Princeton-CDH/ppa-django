@@ -1,3 +1,18 @@
+# JS dependencies
+node_modules/
+
+# Media ignores
+static/media/
+static/CACHE
+sitemedia/fonts
+**/.sass-cache/
+
+# Sphinx documentation
+docs/
+
+# Pytest cache files
+.pytest_cache
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -1,5 +1,7 @@
+import json
 import logging
 
+from cached_property import cached_property
 from django.conf import settings
 import requests
 from SolrClient import SolrClient
@@ -30,17 +32,21 @@ class SolrSchema(object):
         {'name': 'title', 'type': 'text_en', 'required': False},
         {'name': 'enumcron', 'type': 'string', 'required': False},
         {'name': 'author', 'type': 'text_en', 'required': False},
-        {'name': 'pub_date', 'type': 'string', 'required': False},
+        {'name': 'pub_date', 'type': 'int', 'required': False},
         {'name': 'pub_place', 'type': 'text_en', 'required': False},
         {'name': 'publisher', 'type': 'text_en', 'required': False},
         {'name': 'src_url', 'type': 'string', 'required': False},
         {'name': 'order', 'type': 'string', 'required': False},
+        {'name': 'collections', 'type': 'text_en', 'required': False,
+         'multiValued': True},
         {'name': 'text', 'type': 'text_en', 'required': False, 'stored': False,
          'multiValued': True},
 
          # sort/facet copy fields
         {'name': 'title_exact', 'type': 'string', 'required': False},
         {'name': 'author_exact', 'type': 'string', 'required': False},
+        {'name': 'collections_exact', 'type': 'string', 'required': False,
+         'multiValued': True}
     ]
     #: fields to be copied into general purpose text field for searching
     text_fields = ['srcid', 'content', 'title', 'author', 'pub_date', 'enumcron',
@@ -49,6 +55,7 @@ class SolrSchema(object):
     copy_fields = [
         ('title', 'title_exact'),
         ('author', 'author_exact'),
+        ('collections', 'collections_exact'),
     ]
 
     def __init__(self):
@@ -64,10 +71,7 @@ class SolrSchema(object):
         '''Update the configured solr instance schema to match
         the configured fields.  Returns a tuple with the number of fields
         created and updated.'''
-        try:
-            current_fields = self.solr_schema_fields()
-        except ConnectionRefusedError:
-            raise
+        current_fields = self.solr_schema_fields()
 
         created = updated = removed = 0
         for field in self.fields:
@@ -143,7 +147,28 @@ class PagedSolrQuery(object):
         self.query_opts = query_opts or {}
         # possibly should default to 'q': '*:*' ...
 
+    @property
+    def result(self):
+        if self._result is None:
+            self.get_results()
+        return self._result
+
+    def get_facets(self):
+        '''Wrap SolrClient.SolrResponse.get_facets() to get query facets as a dict
+        of dicts.'''
+        return self.result.get_facets()
+
+    def get_facets_ranges(self):
+        '''Wrap SolrClient.SolrResponse.get_facets() to get query facets as a dict
+        of dicts.'''
+        return self.result.get_facets_ranges()
+
     def get_results(self):
+        '''
+        Return results of the Solr query.
+
+        :return: docs as a list of dictionaries.
+        '''
         self._result = self.solr.query(self.solr_collection, self.query_opts)
         return self._result.docs
 
@@ -152,6 +177,7 @@ class PagedSolrQuery(object):
         if self._result is None:
             query_opts = self.query_opts.copy()
             query_opts['rows'] = 0
+            # FIXME: do we actually want to store the result with no rows?
             self._result = self.solr.query(self.solr_collection, query_opts)
 
         return self._result.get_num_found()
@@ -159,19 +185,29 @@ class PagedSolrQuery(object):
     def get_json(self):
         '''Return query response as JSON data, to allow full access to anything
         included in Solr data.'''
-        if self._result is None:
-            self.get_results()
-        return self._result.get_json()
+        return self.result.get_json()
 
+    @cached_property
+    def raw_response(self):
+        '''Return the raw Solr result to provide access to return sections
+        not exposed by SolrClient'''
+        return json.loads(self.get_json())
+
+    def get_expanded(self):
+        '''get the expanded results from a collapsed query'''
+        return self.raw_response.get('expanded', {})
+
+    def get_highlighting(self):
+        '''get highlighting results from the response'''
+        return self.raw_response.get('highlighting', {})
 
     def set_limits(self, start, stop):
         '''Return a subsection of the results, to support slicing.'''
-        # FIXME: it probably matters here that solr start is 1-based ...
         if start is None:
             start = 0
         self.query_opts.update({
             'start': start,
-            'rows': stop - start + 1
+            'rows': stop - start
         })
 
     def __getitem__(self, k):

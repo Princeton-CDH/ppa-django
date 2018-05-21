@@ -1,0 +1,64 @@
+{% load humanize %}
+<div class="item">
+    <abbr class="unapi-id" title="{{ item.srcid }}"></abbr>
+    <div class="ui stackable grid container">
+        <div class="labels one wide column">
+            {% if page_obj %}
+            <p class="result-number">{{ page_obj.start_index|add:forloop.counter0 }}</p>
+            <!-- <i class="ui flag icon"></i> -->
+            {% endif %}
+        </div>
+        <div class="title seven wide column">
+            <a href="{% url 'archive:detail' item.srcid %}">
+                <p class="ui header">{{ item.title }}</p>
+            </a>
+        </div>
+        <div class="metadata eight wide column">
+            <p class="ui header">{{ item.author }}</p>
+            <div class="publication ui equal width grid">
+                <div class="column">{{ item.publisher }}</div>
+                <div class="column">{{ item.pub_place }}</div>
+                <div class="column">{{ item.pub_date }}</div>
+            </div>
+            <div class="buttons">
+                {% if item.pk %} {# database object with many-to-many #}
+                    {% for collection in item.collections.all %}
+                        <button class="ui tiny basic button">{{ collection }}</button>
+                    {% endfor %}
+                {% else %} {# solr object with list of strings #}
+                    {% for collection in item.collections %}
+                        <button class="ui tiny basic button">{{ collection }}</button>
+                    {% endfor %}
+                {% endif %}
+                <a class="ui right floated right labeled secondary tiny icon button" href="{{ item.src_url }}">
+                    HathiTrust
+                    <i class="right arrow icon"></i>
+                </a>
+            </div>
+        </div>
+        {% if page_groups and page_highlights %}
+        <div class="pages sixteen wide column">
+            {% with results=page_groups|dict_item:item.id %}
+                {% if page_highlights %}
+                <div class="wrapper">
+                    {% for page in results.docs %}
+                      {% with highlights=page_highlights|dict_item:page.id %}
+                        {% include 'archive/snippets/page_preview.html' with item_id=item.srcid  %}
+                      {% endwith %}
+                    {% endfor %}
+                </div>
+                {# link to page with search if there are more than two pages #}
+                    {% if results.numFound > 2 %}
+                    <a class="ui left floated right labeled secondary tiny icon button"
+                        href="{% url 'archive:detail' item.srcid %}?query={{ query }}">
+                        View all {{ results.numFound|intcomma }} page{{ results.numFound|pluralize }}
+                        <i class="right arrow icon"></i>
+                    </a>
+                    {% endif %}
+                {% endif %}
+            {% endwith %}
+            <!--<p>{{ item.enumcron }}</p>-->
+        </div>
+        {% endif %}
+    </div>
+</div>

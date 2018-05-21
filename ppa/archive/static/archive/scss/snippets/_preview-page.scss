@@ -1,0 +1,38 @@
+.page {
+    width: 100%;
+    display: flex;
+
+    &:nth-child(2) {
+        display: none;
+    }
+
+    #search & { // on the search page, allow showing a second preview page
+        @media only screen and (min-width: 1440px) {
+            width: 50%;
+    
+            &:nth-child(2) {
+                display: flex;
+            }
+        }
+    }
+
+
+    .preview {
+        width: 180px;
+    }
+
+    .snippets {
+        flex: 1 1 auto;
+        margin: 0 1rem;
+        font-size: 1.25rem;
+    }
+
+    .snippet {
+        // white-space: pre-wrap;
+    }
+
+    em {
+        font-style: normal;
+        color: #07ae79;
+    }
+}

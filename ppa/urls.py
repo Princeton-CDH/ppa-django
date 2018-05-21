@@ -18,6 +18,8 @@ from django.contrib import admin
 from django.views.generic.base import TemplateView
 import mezzanine.urls
 
+from ppa.unapi.views import UnAPIView
+from ppa.archive.views import IndexView
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
@@ -26,9 +28,18 @@ urlpatterns = [
     # pucas urls for CAS login
     url(r'^accounts/', include('pucas.cas_urls')),
     # placeholder for home page
-    url(r'^$', TemplateView.as_view(template_name='site_index.html'), name='home'),
+    url(r'^$', IndexView.as_view(), name='home'),
     url(r'^archive/', include('ppa.archive.urls', namespace='archive')),
+
+    # unapi service endpoint for Zotero
+    url(r'^unapi/$', UnAPIView.as_view(), name='unapi'),
 
     # content pages managed by mezzanine
     url("^", include(mezzanine.urls))
 ]
+
+
+# Adds ``STATIC_URL`` to the context of error pages, so that error
+# pages can use JS, CSS and images.
+handler404 = "mezzanine.core.views.page_not_found"
+handler500 = "mezzanine.core.views.server_error"

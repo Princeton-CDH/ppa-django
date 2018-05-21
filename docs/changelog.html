@@ -4,20 +4,12 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>CHANGELOG &#8212; Princeton Prosody Archive 0.5.0-pre documentation</title>
+    <title>CHANGELOG &#8212; Princeton Prosody Archive 0.8.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '0.5.0-pre',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -31,8 +23,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
-  </head>
-  <body>
+  </head><body>
   
 
     <div class="document">
@@ -42,6 +33,76 @@
             
   <div class="section" id="changelog">
 <span id="id1"></span><h1>CHANGELOG<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="search-filtering-and-highlighting">
+<h2>0.8 Search filtering and highlighting<a class="headerlink" href="#search-filtering-and-highlighting" title="Permalink to this headline">¶</a></h2>
+<p>Includes nearly all public-facing functionality documented in the CDH project
+charter for minimum viable product (and some additional features), with the
+exception of blog/editorial content management functionality and a few other
+content management features.  Templates and styles are provisional, focusing
+on basic layout and interactions.</p>
+<div class="section" id="search-filters-and-highlighting">
+<h3>Search filters and highlighting<a class="headerlink" href="#search-filters-and-highlighting" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>As a user viewing keyword search results, I want to see a few text snippets from the full text of a work so that I can get an idea how my search terms are used in the work.</li>
+<li>As a user viewing an individual item from a keyword search, I want to see page image thumbnails and text snippets that match my search terms so I can see how many and what kind of pages match my search terms.</li>
+<li>As a user, I want to search digitized volumes by keyword in author names in a clearly marked author search field so that I can see what materials are in the archive by a certain author.</li>
+<li>As a user, I want to search digitized volumes by title keywords in a clearly marked title field so that I can see what materials are in the archive with a certain title.</li>
+<li>As a user, I want to change how my results are sorted so I can browse the results in multiple ways.</li>
+<li>As a user, I want to filter search results by publication year or range of years so that I focus on works from a particular time period.</li>
+<li>As a user, I want to see a simple timeline visualization of works by publication year so that I can get a sense of how the materials are distributed by time.</li>
+<li>As a user, I want to see numbered results so I can keep track of results as I’m scrolling and paging through.</li>
+<li>As a user browsing the list of collections, I want to see brief summary statistics so I can decide which collections of materials I want to browse.</li>
+<li>As a user, I want to add all or selected works from the search results list to my Zotero library, so that I can efficiently save them for later research or citation.</li>
+<li>As a user, I want to add a work to my Zotero library from the individual item page so that I can save it for research without having to go back to the list of results.</li>
+</ul>
+</div>
+<div class="section" id="basic-content-management">
+<h3>Basic content management<a class="headerlink" href="#basic-content-management" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>As a content editor, I want to create and edit content pages on the site so that I can update text on the site when information changes.</li>
+</ul>
+</div>
+<div class="section" id="other-improvements">
+<h3>Other improvements<a class="headerlink" href="#other-improvements" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>New, more efficient Solr index script</li>
+<li>Templates and basic styles for current site components</li>
+<li>SCSS/JS pipeline with compressor</li>
+</ul>
+</div>
+</div>
+<div class="section" id="collections-improvements">
+<h2>0.7 Collections Improvements<a class="headerlink" href="#collections-improvements" title="Permalink to this headline">¶</a></h2>
+<p>Minor improvements to collections management and bug fix.</p>
+<ul class="simple">
+<li>As an admin, I want a “Collection” column viewable on the “Digitized works” page so that I can easily see what collection(s) an item belongs to.</li>
+<li>As an admin, I want a link from the digitized work list view to HathiTrust so that I can check the contents as I curate the archive.</li>
+<li>Bug fix: Bulk add to collections tool is clearing items that were previously added to collections individually.
+This release resolves this error which resulted from setting rather
+than adding digital works to collections.</li>
+</ul>
+</div>
+<div class="section" id="collections-management">
+<h2>0.6 Collections Management<a class="headerlink" href="#collections-management" title="Permalink to this headline">¶</a></h2>
+<p>Release adding collections creation and management, as well as CSV exports of all digitized works.</p>
+<div class="section" id="csv-export">
+<h3>CSV Export<a class="headerlink" href="#csv-export" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>As an admin, I want to generate a CSV report of materials on the site so that I can do analysis with other tools such as OpenRefine to analyze collection assignment.</li>
+</ul>
+</div>
+<div class="section" id="collections">
+<h3>Collections<a class="headerlink" href="#collections" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>As an admin, I want to create and update collections so that I can group digitized works into subcollections for site users.</li>
+<li>As an admin, I want to add and edit collection descriptions so that I can help site users understand the collection and find related materials.</li>
+<li>As an admin, I want to add individual digitized items to one or more collections so that I can manage which items are included in which collections.</li>
+<li>As an admin, I want a way to search and select digitized items for bulk addition to a collection so that I can efficiently organize large groups of items.</li>
+<li>As a user, I want to browse the list of collections so I can find out more about important groupings of items in the archive.</li>
+<li>As a user, I want to filter search results by collection so that I can include or exclude groups of materials based on my interests.</li>
+</ul>
+</div>
+</div>
 <div class="section" id="bulk-import-and-simple-search">
 <h2>0.5 Bulk Import and Simple Search<a class="headerlink" href="#bulk-import-and-simple-search" title="Permalink to this headline">¶</a></h2>
 <p>Initial release with basic admin functionality, import/index Hathi materials, and a basic search to allow interacting and testing the Solr index.</p>
@@ -128,6 +189,18 @@
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">CHANGELOG</a><ul>
+<li><a class="reference internal" href="#search-filtering-and-highlighting">0.8 Search filtering and highlighting</a><ul>
+<li><a class="reference internal" href="#search-filters-and-highlighting">Search filters and highlighting</a></li>
+<li><a class="reference internal" href="#basic-content-management">Basic content management</a></li>
+<li><a class="reference internal" href="#other-improvements">Other improvements</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#collections-improvements">0.7 Collections Improvements</a></li>
+<li><a class="reference internal" href="#collections-management">0.6 Collections Management</a><ul>
+<li><a class="reference internal" href="#csv-export">CSV Export</a></li>
+<li><a class="reference internal" href="#collections">Collections</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#bulk-import-and-simple-search">0.5 Bulk Import and Simple Search</a><ul>
 <li><a class="reference internal" href="#user-management">User Management</a></li>
 <li><a class="reference internal" href="#hathitrust-materials">HathiTrust Materials</a></li>
@@ -139,12 +212,14 @@
 
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script><div class="powered_by">
 <p>Powered by:</p>
@@ -158,10 +233,10 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2017, CDH @ Princeton University.
+      &copy;2018, CDH @ Princeton University.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
       |

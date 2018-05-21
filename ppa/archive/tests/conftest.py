@@ -2,7 +2,7 @@ from django.conf import settings
 from django.test import override_settings
 import pytest
 
-from ppa.archive.solr import SolrSchema, CoreAdmin
+from ppa.archive.solr import SolrSchema, CoreAdmin, get_solr_connection
 
 
 @pytest.fixture
@@ -38,10 +38,9 @@ def solr():
         solr_schema.update_solr_schema()
         CoreAdmin().reload()
 
+
         # yield settings so tests run with overridden solr connection
         yield settings
 
         # clear out any data indexed in test collection
         solr_schema.solr.delete_doc_by_query(solr_schema.solr_collection, '*:*')
-
-
