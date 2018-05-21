@@ -3,6 +3,15 @@
 Deploy and Upgrade notes
 ========================
 
+0.8 (provisional)
+-----------------
+
+The previous import and index script has been broken into two
+scripts; run **hathi_import** as before to import content into the
+Django database and then run **index* to index work and page content
+into Solr.
+
+
 0.5 Bulk Import and Simple Search
 ---------------------------------
 
