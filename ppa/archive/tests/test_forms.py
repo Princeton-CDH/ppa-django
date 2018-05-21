@@ -5,9 +5,8 @@ from django.test import TestCase
 import pytest
 
 from ppa.archive.forms import FacetChoiceField, SearchForm, RangeWidget, \
-    RangeField
-from ppa.archive.models import DigitizedWork
-from ppa.archive.forms import FacetChoiceField, SearchForm, RadioSelectWithDisabled
+    RangeField, RadioSelectWithDisabled
+from ppa.archive.models import DigitizedWork, Collection
 
 
 class TestFacetChoiceField(TestCase):
@@ -31,22 +30,47 @@ class TestFacetChoiceField(TestCase):
 
 class TestSearchForm(TestCase):
 
+    def setUp(self):
+        # create db collections for collection choice field
+        Collection.objects.bulk_create([
+            Collection(name='foo'),
+            Collection(name='bar'),
+            Collection(name='baz'),
+            Collection(name='empty'),
+        ])
+
     def test_init(self):
-        fake_form = {'query': 'foo', 'collections': ['bar', 'baz']}
+        # requires collection ids because we are using model choice field
+        fake_form = {'query': 'foo', 'collections': [1, 2]}
         searchform = SearchForm(fake_form)
+        searchform.is_valid()
         assert searchform.is_valid()
 
-    def test_set_choices_from_facets(self):
+    def test_collection_choices(self):
+        # test collection set to disabled based on solr facets
+
+        fake_facets = {'collections_exact': {'foo': 1, 'bar': 2, 'baz': 3}}
+        searchform = SearchForm()
+        # call the method to configure choices based on facets
+        searchform.set_choices_from_facets(fake_facets)
+        for choice in searchform.fields['collections'].widget.choices:
+            # choice is index id, label
+            choice_name = choice[1]
+            if choice_name in ['foo', 'bar', 'baz']:
+                assert isinstance(choice_name, str)
+            # disabled uses override of dictionary with label and disabled flag
+            else:
+                assert choice_name['label'] == 'empty'
+                assert choice_name['disabled']
+
+        # old facet field behavior with facet counts, no longer
+        # used for collections (but possible used in future...)
 
         # test using a field that is configured to facet
-        fake_facets = {'collections_exact': {'foo': 1, 'bar': 2}}
-        searchform = SearchForm()
-        # call the method to add choices to faceted field
-        searchform.set_choices_from_facets(fake_facets)
-        assert searchform.fields['collections'].choices[0] == \
-            ('foo', 'foo <span>1</span>')
-        assert searchform.fields['collections'].choices[1] == \
-            ('bar', 'bar <span>2</span>')
+        # assert searchform.fields['collections'].choices[0] == \
+        #     ('foo', 'foo <span>1</span>')
+        # assert searchform.fields['collections'].choices[1] == \
+        #     ('bar', 'bar <span>2</span>')
 
     def test_pub_date_minmax(self):
         searchform = SearchForm()
