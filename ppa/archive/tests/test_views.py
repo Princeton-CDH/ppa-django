@@ -402,7 +402,8 @@ class TestArchiveViews(TestCase):
         assert response.context['search_form'].cleaned_data['sort'] == 'title_asc'
 
         # collection search
-        response = self.client.get(url, {'collections': 'Test Collection'})
+        # restrict to test collection by id
+        response = self.client.get(url, {'collections': collection.pk})
         assert len(response.context['object_list']) == 1
         self.assertContains(response, wintry.source_id)
 
@@ -494,6 +495,7 @@ class TestArchiveViews(TestCase):
             name='Foo through Time',
             description="A <em>very</em> useful collection."
         )
+        empty_coll = Collection.objects.create(name='Empty Box')
         # collections that should be skipped
         dictionary = Collection.objects.create(name='Dictionary')
         pronunc = Collection.objects.create(name='Pronunciation Guide')
@@ -557,6 +559,11 @@ class TestArchiveViews(TestCase):
         self.assertNotContains(response, '1 digitized works')
         self.assertContains(response, '1880–1903')
         self.assertContains(response, '1903')
+        # collections with items should link to search
+        archive_url = reverse('archive:list')
+        self.assertContains(response, 'href="%s?collections=%s"' % (archive_url, coll1.pk))
+        self.assertContains(response, 'href="%s?collections=%s"' % (archive_url, coll2.pk))
+        self.assertNotContains(response, 'href="%s?collections=%s"' % (archive_url, empty_coll.pk))
 
 
 class TestAddToCollection(TestCase):

@@ -201,10 +201,10 @@ class DigitizedWorkListView(ListView):
         return self.solrq
 
     def get_page_highlights(self, page_groups):
-         # If there is a keyword search, query Solr for matching pages
-        # with text highlighting.  Note that this has to be done as
-        # a separate query because Solr doesn't support highlighting on
-        # collapsed items.
+        '''If there is a keyword search, query Solr for matching pages
+        with text highlighting.  Note that this has to be done as
+        a separate query because Solr doesn't support highlighting on
+        collapsed items.'''
 
         page_highlights = {}
         if not self.query or not page_groups:
