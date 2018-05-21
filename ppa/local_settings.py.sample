@@ -54,6 +54,9 @@ SOLR_CONNECTIONS = {
 # local path to hathi pairtree data provided via rsync
 HATHI_DATA = '/path/to/hathi_pairtree_root'
 
+# Enable django-compressor compression
+COMPRESS = True
+
 # CAS login configuration
 CAS_SERVER_URL = ''
 
@@ -95,6 +98,11 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
+        'SolrClient':  {
+            'handlers': ['console'],
+            'level': 'WARN'
+        },
+
     }
 }
 
