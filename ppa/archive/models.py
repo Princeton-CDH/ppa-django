@@ -1,6 +1,7 @@
 import os.path
 from zipfile import ZipFile
 
+from cached_property import cached_property
 from django.conf import settings
 from django.db import models
 from django.urls import reverse
@@ -179,30 +180,60 @@ class DigitizedWork(models.Model):
             'order': '0',
         }
 
-    def page_index_data(self):
-        '''Generator for page content for this work from the Hathi
-        pairtree to be indexed in Solr.'''
-        prefix, ptree_id = self.source_id.split('.', 1)
-        # get pairtree client
-        pairtree = pairtree_client.PairtreeStorageClient(
-            prefix, os.path.join(settings.HATHI_DATA, prefix))
-        # get pairtree object for current work
-        ptobj = pairtree.get_object(ptree_id, create_if_doesnt_exist=False)
+    @cached_property
+    def hathi_prefix(self):
+        '''hathi pairtree prefix (first portion of the source id, short-form
+        identifier for owning institution)'''
+        return self.source_id.split('.', 1)[0]
+
+    @cached_property
+    def hathi_pairtree_id(self):
+        '''hathi pairtree identifier (second portion of source id)'''
+        return self.source_id.split('.', 1)[1]
+
+    @cached_property
+    def hathi_content_dir(self):
+        '''hathi content directory for this work (within the corresponding
+        pairtree)'''
         # contents are stored in a directory named based on a
         # pairtree encoded version of the id
-        content_dir = pairtree_path.id_encode(ptree_id)
+        return pairtree_path.id_encode(self.hathi_pairtree_id)
+
+    def hathi_pairtree_object(self, ptree_client=None):
+        '''get a pairtree object for the current work'''
+        if ptree_client is None:
+            # get pairtree client if not passed in
+            ptree_client = pairtree_client.PairtreeStorageClient(
+                self.hathi_prefix,
+                os.path.join(settings.HATHI_DATA, self.hathi_prefix))
+
+        # return the pairtree object for current work
+        return ptree_client.get_object(self.hathi_pairtree_id,
+                                       create_if_doesnt_exist=False)
+
+    def hathi_zipfile_path(self, ptree_client=None):
+        '''path to zipfile within the hathi contents for this work'''
+        pairtree_obj = self.hathi_pairtree_object(ptree_client=ptree_client)
         # - expect a mets file and a zip file
+        # NOTE: not yet making use of the metsfile
         # - don't rely on them being returned in the same order on every machine
-        parts = ptobj.list_parts(content_dir)
+        parts = pairtree_obj.list_parts(self.hathi_content_dir)
         # find the first zipfile in the list (should only be one)
         ht_zipfile = [part for part in parts if part.endswith('zip')][0]
-        # NOTE: not yet making use of the metsfile
 
-        # yield a generator of index data for each page
+        print(pairtree_obj.id_to_dirpath(), self.hathi_content_dir, ht_zipfile)
+        return os.path.join(pairtree_obj.id_to_dirpath(),
+                            self.hathi_content_dir, ht_zipfile)
+
+    def page_index_data(self):
+        '''Get page content for this work from Hathi pairtree and return
+        data to be indexed in solr.'''
 
         # read zipfile contents in place, without unzipping
-        with ZipFile(os.path.join(ptobj.id_to_dirpath(), content_dir, ht_zipfile)) as ht_zip:
+        with ZipFile(self.hathi_zipfile_path()) as ht_zip:
             filenames = ht_zip.namelist()
+
+            # yield a generator of index data for each page
             for pagefilename in filenames:
                 with ht_zip.open(pagefilename) as pagefile:
                     page_id = os.path.splitext(os.path.basename(pagefilename))[0]
