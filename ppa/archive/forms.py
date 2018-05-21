@@ -9,26 +9,44 @@ from django.utils.safestring import mark_safe
 from ppa.archive.models import Collection, DigitizedWork
 
 
-class RadioSelectWithDisabled(forms.RadioSelect):
+class SelectDisabledMixin(object):
     '''
-    Subclass of :class:`django.forms.RadioSelect` that takes a label override
-    in the widget's choice label option in the form a dictionary:
-    {'label': 'option', 'disabled': True}.
+    Mixin for :class:`django.forms.RadioSelect` or :class:`django.forms.CheckboxSelect`
+    classes to set an option as disabled. To disable, the widget's choice
+    label option should be passed in as a dictionary with `disabled` set
+    to True::
+
+        {'label': 'option', 'disabled': True}.
     '''
 
     # Using a solution at https://djangosnippets.org/snippets/2453/
     def create_option(self, name, value, label, selected, index, subindex=None,
                       attrs=None):
         disabled = None
+
         if isinstance(label, dict):
             label, disabled = label['label'], label['disabled']
         option_dict = super().create_option(
-                name, value, label, selected, index,
-                subindex=subindex, attrs=attrs
-            )
+            name, value, label, selected, index,
+            subindex=subindex, attrs=attrs
+        )
         if disabled:
             option_dict['attrs'].update({'disabled': 'disabled'})
         return option_dict
+
+
+class RadioSelectWithDisabled(SelectDisabledMixin, forms.RadioSelect):
+    '''
+    Subclass of :class:`django.forms.RadioSelect` with option to mark
+    a choice as disabled.
+    '''
+
+
+class CheckboxSelectMultipleWithDisabled(SelectDisabledMixin, forms.CheckboxSelectMultiple):
+    '''
+    Subclass of :class:`django.forms.CheckboxSelectMultiple` with option to mark
+    a choice as disabled.
+    '''
 
 
 class FacetChoiceField(forms.MultipleChoiceField):
@@ -150,7 +168,12 @@ class SearchForm(forms.Form):
         }))
 
     # facets
-    collections = FacetChoiceField(label='Collection')
+    # collections = FacetChoiceField(label='Collection')
+    # NOTE: using model choice field to list all collections in the database,
+    # even if they have no assocaited works in Solr
+    collections = forms.ModelMultipleChoiceField(
+        queryset=Collection.objects.order_by('name'), label='Collection',
+        widget=CheckboxSelectMultipleWithDisabled, required=False)
     pub_date = RangeField(label='Publication Year', required=False,
         widget=RangeWidget(attrs={
             'size': 4,
@@ -238,10 +261,29 @@ class SearchForm(forms.Form):
         # django-haystack/pysolr.
         for key, facet_dict in facets.items():
             formfield = self.solr_facet_fields.get(key, key)
-            if formfield in self.fields:
-                self.fields[formfield].choices = [
-                    (val, mark_safe('%s <span>%d</span>' % (val, count)))
-                    for val, count in facet_dict.items()]
+
+            # special case: collections is no longer a facet choice field,
+            # but options should be disabled if not present at all
+            # (i.e. no works are associated with that collection in Solr)
+            if formfield == 'collections':
+
+                new_choice = []
+                for choice in self.fields[formfield].widget.choices:
+                    # widget choice is tuple of id, name; check for name in facets
+                    if choice[1] not in facet_dict.keys():
+                        new_choice.append((choice[0], {'label': choice[1], 'disabled': True}))
+                    else:
+                        new_choice.append(choice)
+
+                # replace choices with new version
+                self.fields[formfield].widget.choices = new_choice
+
+            # normal facet field behavior: populate choices from facet
+            # disabling for now, not currently in use
+            # elif formfield in self.fields:
+            #     self.fields[formfield].choices = [
+            #         (val, mark_safe('%s <span>%d</span>' % (val, count)))
+            #         for val, count in facet_dict.items()]
 
 
     PUBDATE_CACHE_KEY = 'digitizedwork_pubdate_maxmin'
