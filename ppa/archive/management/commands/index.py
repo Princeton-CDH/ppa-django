@@ -1,19 +1,19 @@
 '''
 **index** is a custom manage command to index PPA digitized work and page
-content into Solr.  It should be run _after_ content has been imported
+content into Solr.  It should be run *after* content has been imported
 to the project database via the **hathi_import** manage command.
 
 Page content will be indexed from a local copy of dataset files under the
 configured **HATHI_DATA** path in pairtree format retrieved by rsync.
 (Note that pairtree data must include pairtree version file to be valid.)
 
-By default, indexes all content, digitized works and pages both.  You
+By default, indexes _all_ content, both digitized works and pages.  You
 can optionally specify works or pages only, or index specific items
-by hathi id, but the id must exist in the database and the pairtree content
-for the items still must exist at the configured path.
+by hathi id. If you request a specific id, it must exist in the database
+and the pairtree content for the items still must exist at the configured path.
 
 A progress bar will be displayed by default if there are more than 5
-items to process.  This can be suppressed via script options
+items to process.  This can be suppressed via script options.
 
 Example usage::
 
