@@ -6,13 +6,16 @@
         display: none;
     }
 
-    @media only screen and (min-width: 1440px) {
-        width: 50%;
-
-        &:nth-child(2) {
-            display: flex;
+    #search & { // on the search page, allow showing a second preview page
+        @media only screen and (min-width: 1440px) {
+            width: 50%;
+    
+            &:nth-child(2) {
+                display: flex;
+            }
         }
     }
+
 
     .preview {
         width: 180px;

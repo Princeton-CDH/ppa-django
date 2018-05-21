@@ -251,7 +251,8 @@ class TestArchiveViews(TestCase):
             self.assertContains(response, digwork.title)
             self.assertContains(response, digwork.source_id)
             self.assertContains(response, digwork.author)
-            self.assertContains(response, digwork.enumcron)
+            # NOTE: enumcron suppressed for now (possibly for good)
+            # self.assertContains(response, digwork.enumcron)
             self.assertContains(response, digwork.publisher)
             self.assertContains(response, digwork.pub_place)
             self.assertContains(response, digwork.pub_date)
@@ -493,6 +494,9 @@ class TestArchiveViews(TestCase):
             name='Foo through Time',
             description="A <em>very</em> useful collection."
         )
+        # collections that should be skipped
+        dictionary = Collection.objects.create(name='Dictionary')
+        pronunc = Collection.objects.create(name='Pronunciation Guide')
 
         # Check that the context is set as expected
         collection_list = reverse('archive:list-collections')
@@ -500,6 +504,8 @@ class TestArchiveViews(TestCase):
         # it should have both collections that exist in it
         assert coll1 in response.context['object_list']
         assert coll2 in response.context['object_list']
+        assert dictionary not in response.context['object_list']
+        assert pronunc not in response.context['object_list']
 
         # Check that the template is rendering as expected
         collection_list = reverse('archive:list-collections')

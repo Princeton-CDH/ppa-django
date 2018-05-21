@@ -110,6 +110,18 @@ class DigitizedWork(models.Model):
         '''Default string display. Uses :attr:`source_id`'''
         return self.source_id
 
+    @property
+    def srcid(self):
+        '''alias for :attr:`source_id` for consistency with solr attributes'''
+        # hopefully temporary workaround until solr fields made consistent
+        return self.source_id
+
+    @property
+    def src_url(self):
+        '''alias for :attr:`source_url` for consistency with solr attributes'''
+        # hopefully temporary workaround until solr fields made consistent
+        return self.source_url
+
     def populate_from_bibdata(self, bibdata):
         '''Update record fields based on Hathi bibdata information.
         Full record is required in order to set all fields
@@ -146,7 +158,6 @@ class DigitizedWork(models.Model):
         '''Index a :class:`ppa.archive.models.DigitizedWork`
         and allow optional commit to ensure results are available.
         '''
-
         solr, solr_collection = get_solr_connection()
         solr.index(solr_collection, [self.index_data()], params=params)
 

@@ -1,4 +1,5 @@
-@import 'variables';
+@import 'snippets/variables';
+@import 'snippets/a11y';
 
 /* mobile nav */
 #mobile-nav {
@@ -37,7 +38,7 @@
         text-transform: uppercase;
         display: none;
 
-        @media only screen and (min-width: 1440px) {
+        @media only screen and (min-width: $nav-breakpoint) {
             display: flex;
         }
 
@@ -45,7 +46,7 @@
         &.search {
             display: flex;
 
-            @media only screen and (min-width: 1440px) {
+            @media only screen and (min-width: $nav-breakpoint) {
                 display: none;
             }
         }
@@ -63,7 +64,11 @@
 
 /* main */
 main {
-    margin-bottom: $nav-height;
+    margin-bottom: 50px;
+
+    @media only screen and (min-width: 320px) {
+        margin-bottom: 100px;
+    }
 }
 
 /* footer */

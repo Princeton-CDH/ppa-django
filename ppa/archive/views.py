@@ -120,9 +120,10 @@ class DigitizedWorkListView(ListView):
             range_opts.update({
                 # current range filter
                 'f.%s.facet.range.start' % range_facet: start,
-                # 'start': int(start) if start else ranges['%s_min' % range_facet],
-                # 'end': int(end) if end else ranges['%s_max' % range_facet],
-                'f.%s.facet.range.end' % range_facet: end,
+                # NOTE: per facet.range.include documentation, default behavior
+                # is to include lower bound and exclude upper bound.
+                # For simplicity, increase range end by one.
+                'f.%s.facet.range.end' % range_facet: end + 1,
                 # calculate gap based start and end & desired number of slices
                 # ideally, generate 24 slices; minimum gap size of 1
                 'f.%s.facet.range.gap' % range_facet: max(1, int((end - start) / 24)),
@@ -346,6 +347,13 @@ class CollectionListView(ListView):
     template_name = 'archive/list_collections.html'
     ordering = ('name',)
 
+    # temporary workaround to exclude collections that aren't
+    # meant to be featured on the homepage or collection list
+    exclude = ['Dictionary', 'Pronunciation Guide']
+
+    def get_queryset(self):
+        return super().get_queryset().exclude(name__in=self.exclude)
+
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         # NOTE: if we *only* want counts, could just do a regular facet
@@ -534,4 +542,4 @@ class IndexView(CollectionListView):
 
     def get_queryset(self):
         # get two random collections
-        return Collection.objects.order_by('?')[:2]
+        return super().get_queryset().order_by('?')[:2]

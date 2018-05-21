@@ -2,6 +2,9 @@
 <form class="ui form{% if error %} error{% endif %}">
     <div class="ui vertical segment">
         {% render_field search_form.query %}
+        <span class="question-popup" data-html="{{ search_form.QUESTION_POPUP_TEXT }}" data-position="top center">
+            <i class="ui question circle icon"></i>
+        </span>
         <div class="ui two fields">
             {% render_field search_form.title %}
             {% render_field search_form.author %}
@@ -13,7 +16,13 @@
             <a class="clear-selection" role="button">Clear Selection</a>
         </div>
         <div class="ten wide column" id="histogram">
-            <div class="placeholder"></div>
+            <canvas class="visualization"></canvas>
+            <dl class="values">
+                {% for date, count in facet_ranges.pub_date.items %}
+                <dt>{{ date }}</dt>
+                <dd>{{ count }}</dd>
+                {% endfor %}
+            </dl>
             <span class="min-date">1569</span>
             <span class="max-date">1922</span>
         </div>
@@ -43,10 +52,10 @@
             </div>
         </div>
     </div>
-    <input type="submit"/>
-    <div class="ui center aligned text container">
+    <input class="sr-only sr-only-focusable" type="submit">
+    <div class="workscount ui center aligned text container">
         <p>Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}</p>
-        <p>Export all to <a>Zotero</a></p>
+        <p>Digitized works can be exported to <a href="https://www.zotero.org/support/getting_stuff_into_your_library">Zotero.</a></p>
     </div>
     {% include 'archive/snippets/pagination.html' %}
     <div class="sort">

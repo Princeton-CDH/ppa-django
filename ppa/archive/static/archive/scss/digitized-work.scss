@@ -1,3 +1,7 @@
+@import 'snippets/search-result';
+@import 'snippets/preview-page';
+@import 'snippets/pagination';
+
 #digitized-work {
     // use headers to control col spacing, but hide them
     thead {
@@ -5,5 +9,26 @@
     }
     thead th {
         visibility: hidden;
+    }
+    td {
+        border: 0;
+    }
+
+    .results-list .item {
+        &:nth-child(odd) {
+            background-color: initial; // don't "stripe" the results
+        }
+
+        &.page {
+            margin: 1rem 0;
+        }
+    }
+
+    .results-list.container { // container for actual page results
+        margin: 3rem 0;
+    }
+
+    .occurrences {
+        margin: 2rem 0;
     }
 }

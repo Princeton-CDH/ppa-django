@@ -1,7 +1,22 @@
 @import 'snippets/search-result';
 @import 'snippets/preview-page';
+@import 'snippets/pagination';
 
 #search {
+
+    /* form */
+    .question-popup {
+        position: absolute;
+        // next to "Keyword or Phrase" text
+        top: 1rem;
+        right: 0;
+
+        @media screen and (min-width: 800px) {
+            // move to the right of the main search box
+            top: 3.25rem;
+            right: -2rem;   
+        }
+    }
 
     input[type=number] { // publication date min/max
         width: 6rem;
@@ -18,10 +33,13 @@
     }
 
     #histogram {
-        .placeholder {
+        .values {
+            display: none;
+        }
+
+        .visualization {
             width: 100%;
             height: 60px;
-            background-color: grey;
         }
 
         .max-date {
@@ -89,9 +107,8 @@
         }
     }
 
-    /* pagination */
-    .pagination .page-controls {
-        float: right;
+    .workscount {
+        margin-bottom: 3rem;
     }
 
     /* results */
