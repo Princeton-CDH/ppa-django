@@ -3,6 +3,44 @@
 CHANGELOG
 =========
 
+0.8 Search filtering and highlighting
+-------------------------------------
+
+Includes nearly all public-facing functionality documented in the CDH project
+charter for minimum viable product (and some additional features), with the
+exception of blog/editorial content management functionality and a few other
+content management features.  Templates and styles are provisional, focusing
+on basic layout and interactions.
+
+
+Search filters and highlighting
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* As a user viewing keyword search results, I want to see a few text snippets from the full text of a work so that I can get an idea how my search terms are used in the work.
+*  As a user viewing an individual item from a keyword search, I want to see page image thumbnails and text snippets that match my search terms so I can see how many and what kind of pages match my search terms.
+* As a user, I want to search digitized volumes by keyword in author names in a clearly marked author search field so that I can see what materials are in the archive by a certain author.
+* As a user, I want to search digitized volumes by title keywords in a clearly marked title field so that I can see what materials are in the archive with a certain title.
+* As a user, I want to change how my results are sorted so I can browse the results in multiple ways.
+* As a user, I want to filter search results by publication year or range of years so that I focus on works from a particular time period.
+* As a user, I want to see a simple timeline visualization of works by publication year so that I can get a sense of how the materials are distributed by time.
+* As a user, I want to see numbered results so I can keep track of results as I’m scrolling and paging through.
+* As a user browsing the list of collections, I want to see brief summary statistics so I can decide which collections of materials I want to browse.
+* As a user, I want to add all or selected works from the search results list to my Zotero library, so that I can efficiently save them for later research or citation.
+* As a user, I want to add a work to my Zotero library from the individual item page so that I can save it for research without having to go back to the list of results.
+
+Basic content management
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+* As a content editor, I want to create and edit content pages on the site so that I can update text on the site when information changes.
+
+Other improvements
+^^^^^^^^^^^^^^^^^^
+
+* New, more efficient Solr index script
+* Templates and basic styles for current site components
+* SCSS/JS pipeline with compressor
+
+
 0.7 Collections Improvements
 ----------------------------
 
