@@ -39,11 +39,12 @@ class TestSearchForm(TestCase):
             Collection(name='empty'),
         ])
 
+
     def test_init(self):
         # requires collection ids because we are using model choice field
-        fake_form = {'query': 'foo', 'collections': [1, 2]}
+        collections = Collection.objects.all()
+        fake_form = {'query': 'foo', 'collections': [collections[0].pk, collections[1].pk]}
         searchform = SearchForm(fake_form)
-        searchform.is_valid()
         assert searchform.is_valid()
 
     def test_collection_choices(self):
