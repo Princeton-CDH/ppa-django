@@ -48,3 +48,8 @@ Hathi Import
 
 .. automodule:: ppa.archive.management.commands.hathi_import
 
+Index
+~~~~~
+
+.. automodule:: ppa.archive.management.commands.index
+
