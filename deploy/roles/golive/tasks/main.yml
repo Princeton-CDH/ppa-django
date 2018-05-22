@@ -39,7 +39,7 @@
     dest: "/var/www/{{ symlink }}"
     state: link
 - name: Call restorecon just in case
-  shell: 'restorecon -R {{ install_root }}'
+  shell: '/usr/sbin/restorecon -R {{ install_root }}'
   args:
     warn: False
     executable: /bin/bash
