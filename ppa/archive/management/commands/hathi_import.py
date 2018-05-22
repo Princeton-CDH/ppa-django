@@ -53,6 +53,7 @@ import progressbar
 
 from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound
 from ppa.archive.models import DigitizedWork
+from ppa.archive.management.commands.retry import Retry
 
 
 logger = logging.getLogger(__name__)
@@ -79,6 +80,7 @@ class Command(BaseCommand):
         parser.add_argument('--progress', action='store_true',
             help='Display a progress bar to track the status of the import.')
 
+    @Retry(ConnectionError)
     def handle(self, *args, **kwargs):
         self.bib_api = HathiBibliographicAPI()
         self.verbosity = kwargs.get('verbosity', self.v_normal)

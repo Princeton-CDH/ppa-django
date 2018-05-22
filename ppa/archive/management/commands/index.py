@@ -43,6 +43,7 @@ from requests.exceptions import RequestException
 
 from ppa.archive.models import DigitizedWork
 from ppa.archive.solr import get_solr_connection
+from ppa.archive.management.commands.retry import Retry
 
 
 class Command(BaseCommand):
@@ -76,6 +77,7 @@ class Command(BaseCommand):
             '--no-progress', action='store_true',
             help='Do not display progress bar to track the status of the reindex.')
 
+    @Retry(ConnectionError)
     def handle(self, *args, **kwargs):
         self.solr, self.solr_collection = get_solr_connection()
         self.verbosity = kwargs.get('verbosity', self.v_normal)
