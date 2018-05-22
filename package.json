@@ -11,7 +11,15 @@
     "babel-preset-es2015": "^6.24.1",
     "babelify": "^8.0.0",
     "browserify": "^16.2.2",
+    "gulp": "^3.9.1",
     "node-sass": "^4.9.0",
-    "postcss-cli": "^5.0.0"
+    "postcss-cli": "^5.0.0",
+    "semantic-ui": "^2.3.1"
+  },
+  "scripts": {
+    "watch": "gulp --gulpfile sitemedia/semantic/gulpfile.js",
+    "build": "gulp --gulpfile sitemedia/semantic/gulpfile.js build",
+    "postinstall": "npm run build",
+    "start": "npm run watch"
   }
 }

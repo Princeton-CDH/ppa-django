@@ -41,7 +41,7 @@ by default; use page_rdf_type to override with a webpage subclass.
     {% block metadata %}{% endblock %}
 
     <!-- styles -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.3.1/dist/semantic.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'semantic/dist/semantic.min.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/test-banner.css' %}">
     {% compress css %}
     <link rel="stylesheet" type="text/x-scss" href="{% static 'scss/site.scss' %}">
@@ -53,7 +53,7 @@ by default; use page_rdf_type to override with a webpage subclass.
       src="https://code.jquery.com/jquery-3.1.1.min.js"
       integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
       crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.3.1/dist/semantic.js"></script>
+    <script src="{% static 'semantic/dist/semantic.min.js' %}"></script>
     {% compress js %}
     <script src="{% static 'js/index.js' %}" type="module"></script>
     {% block js %}{% endblock %} {# add any additional javascript here #}
