@@ -3,6 +3,17 @@
 CHANGELOG
 =========
 
+0.8.1
+-----
+
+Minor updates, tweaks, and fixes:
+
+* Set HathiTrust links to open in new browser window or tab
+* Fix collection search link from individual work detail page
+* Style/template updates for pagination links and highlight text on mobile
+* Clean up print statements and documentation in hathi import and deploy notes
+* Tweak wording to clarify Zotero functionality
+
 0.8 Search filtering and highlighting
 -------------------------------------
 
