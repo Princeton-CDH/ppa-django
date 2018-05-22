@@ -71,7 +71,7 @@
                 <th scope="row">PPA Collection{{ object.collections.count|pluralize }}</th>
                 <td>
                     {% for collection in object.collections.all %}
-                    <a class="ui tiny basic button" href="{% url 'archive:list' %}?collections={{ collection|urlencode }}">{{ collection }}</a>
+                    <a class="ui tiny basic button" href="{% url 'archive:list' %}?collections={{ collection.pk }}">{{ collection }}</a>
                     {% endfor %}
                 </td>
             </tr>
@@ -79,7 +79,7 @@
             <tr>
                 <th scope="row">View HathiTrust Volumes</th>
                 <td>
-                    <a href="{{ object.source_url }}">
+                    <a href="{{ object.source_url }}" target="_blank">
                         <span>{{ object.source_id }}</span>
                         <button class="ui right labeled tiny icon button">
                             HathiTrust

@@ -17,7 +17,7 @@ Deploy and Upgrade notes
 
 * A fixture has been provided with site page content.  Load via::
 
-    python loaddata ppa/archive/fixtures/pages.json
+    python manage.py loaddata ppa/archive/fixtures/pages.json
 
 .. Note::
 
