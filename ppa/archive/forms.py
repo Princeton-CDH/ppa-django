@@ -182,6 +182,7 @@ class SearchForm(forms.Form):
 
     sort = forms.ChoiceField(widget=RadioSelectWithDisabled, choices=SORT_CHOICES,
         required=False)
+
     # booleans
     earliest_only = forms.BooleanField(label='Earliest Edition in Hathi',
         required=False, widget=forms.CheckboxInput(attrs={
