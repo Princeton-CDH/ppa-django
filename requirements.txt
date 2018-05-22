@@ -16,3 +16,4 @@ progressbar2
 django-semanticui-forms
 django-compressor
 django-compressor-toolkit
+lxml
