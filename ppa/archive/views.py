@@ -32,7 +32,7 @@ class DigitizedWorkListView(ListView):
     # keyword query; assume no search terms unless set
     query = None
 
-    def get_template_name(self):
+    def get_template_names(self):
         # allow querying just the results via ajax
         if self.request.is_ajax():
             return 'archive/snippets/results_list.html'

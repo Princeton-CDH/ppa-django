@@ -1,3 +1,5 @@
+import * as queryString from 'query-string'
+
 import { Observable, fromEvent, combineLatest } from 'rxjs'
 import 'rxjs/add/operator/pluck'
 import 'rxjs/add/operator/map'
@@ -22,10 +24,6 @@ function observableFromInput(selector) {
         .startWith($element.value) // makes combineLatest() pick it up immediately
         .debounceTime(500)
         .distinctUntilChanged()
-        .map(value => ({
-            'element': selector,
-            'value': value
-        }))
 }
 
 export default class ArchiveSearch {
@@ -45,18 +43,22 @@ export default class ArchiveSearch {
         this.$$histogram = $('#histogram')
         this.$$checkboxes = $('.ui.checkbox')
         this.$$popup = $('.question-popup')
+        this.$$results = $('.results-list')
 
+        this.inputSelectors = [
+            '#id_query', // keyword
+            '#id_title', // title
+            '#id_author', // author
+            '#id_pub_date_0', // min pub date
+            '#id_pub_date_1' // max pub date
+        ]
+        
         /* components */
         this.histogram = new DateHistogram(this.$$histogram)
-
+        
         /* observables */
-        this.inputStream = combineLatest(
-            observableFromInput('#id_query'), // keyword
-            observableFromInput('#id_title'), // title
-            observableFromInput('#id_author'), // author
-            observableFromInput('#id_pub_date_0'), // min pub date
-            observableFromInput('#id_pub_date_1') // max pub date
-        )
+        this.inputStream = combineLatest(this.inputSelectors.map(observableFromInput))
+            .map(values => this.toInputMap(this.inputSelectors, values))
 
         /* bindings */
         this.$$clearDatesLink.click(this.clearDates.bind(this))
@@ -81,6 +83,20 @@ export default class ArchiveSearch {
         this.submitForm()
     }
 
+    /**
+     * Converts an array of form input values to a Map whose keys are
+     * form field names and whose values are the corresponding field values.
+     * 
+     * @param {Array} selectors
+     * @param {Array} values
+     * @return {Map}
+     */
+    toInputMap(selectors, values) {
+        return values.reduce((map, val, i) => {
+            return map.set(document.querySelector(selectors[i]).name, val)
+        }, new Map([]))
+    }
+
     updateDates() {
         let minDate = this.$$minDateInput.val()
         let maxDate = this.$$maxDateInput.val()
@@ -96,13 +112,24 @@ export default class ArchiveSearch {
     }
 
     submitForm(formData) {
+        // clean unset / empty values
+        let cleanedData = {}
+        formData.forEach((val, key) => { if (val) cleanedData[key] = val })
         // serialize form data to append to GET ajax request
+        let qs = queryString.stringify(cleanedData, { encode: false })
         // make the request
-        // parse HTML to get data
-        this.render()
+        let req = fetch(`/archive/?${qs}`, {
+            headers: {
+                // this header is needed to signal ajax request to django
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        // pass the result to render()
+        req.then(res => res.text().then(this.render.bind(this)))
     }
 
-    render() {
+    render(html) {
+        this.$$results.html(html)
         this.$$sortLinks.find('input[disabled="disabled"]').parent().addClass('disabled')
         this.updateDates()
         this.histogram.render()
