@@ -22,24 +22,26 @@
     <section class="collection-cards">
         <div class="ui two stackable cards">
             {% for item in object_list %}
-            {# should we display collections for which no items are associated (i.e. no stats)? #}
-            <a class="ui collection card" href="{% url 'archive:list' %}?collections={{ item.name|urlencode }}">
+            {% with coll_stats=stats|dict_item:item.name %}
+                {% with coll_stats.count|yesno:"a,span" as tag %}
+            {# collections with no items are displayed but do not link to search #}
+            <{{ tag }} class="ui collection card" {% if coll_stats.count %}href="{% url 'archive:list' %}?collections={{ item.id }}"{% endif %}>
                 <div class="center aligned content">
                     <h3 class="header">{{ item.name }}</h3>
-                    {% with coll_stats=stats|dict_item:item.name %}
                         <div class="meta">
                             {% firstof coll_stats.count "0" as count %}
                             <p class="count">{{ count|intcomma }} digitized work{{ count|pluralize }}</p>
                             <p class="date">{{ coll_stats.dates }}</p>
                         </div>
-                    {% endwith %}
+
                     {% if item.description %}
                     <div class="description">
                         {{ item.description|safe }}
                     </div>
                     {% endif %}
                 </div>
-            </a>
+            </{{ tag }}>
+            {% endwith %} {% endwith %}
             {% endfor %}
         </div>
     </section>

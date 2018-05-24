@@ -74,7 +74,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('htids', nargs='*',
-            help='Optional list of specific volumes to index by HathiTrust id.')
+            help='Optional list of specific volumes to import by HathiTrust id.')
         parser.add_argument('-u', '--update', action='store_true',
             help='Update local content even if source record has not changed.')
         parser.add_argument('--progress', action='store_true',
@@ -104,11 +104,11 @@ class Command(BaseCommand):
         # index those items
         # (currently still requires rsync data to be present on the filesystem)
         if self.options['htids']:
-            ids_to_index = self.options['htids']
-            self.stats['total'] = len(ids_to_index)
+            ids_to_import = self.options['htids']
+            self.stats['total'] = len(ids_to_import)
         else:
-            # otherwise, find and index everything in the pairtree data
-            ids_to_index = self.get_hathi_ids()
+            # otherwise, find and import everything in the pairtree data
+            ids_to_import = self.get_hathi_ids()
             self.stats['total'] = self.count_hathi_ids()
 
         if self.options['progress']:
@@ -120,7 +120,7 @@ class Command(BaseCommand):
         # initialize access to rsync data as dict of pairtrees by prefix
         self.initialize_pairtrees()
 
-        for htid in ids_to_index:
+        for htid in ids_to_import:
             if self.verbosity >= self.v_normal:
                 self.stdout.write(htid)
             self.stats['count'] += 1
@@ -140,7 +140,7 @@ class Command(BaseCommand):
                 progbar.update(self.stats['count'])
 
         summary = '\nProcessed {:,d} item{} for import.' + \
-        '\nAdded {:,d}; updated {:,d}; skipped {:,d}; {:,d} error{}; indexed {:,d} page{}.'
+        '\nAdded {:,d}; updated {:,d}; skipped {:,d}; {:,d} error{}; imported {:,d} page{}.'
         summary = summary.format(
             self.stats['total'], pluralize(self.stats['total']),
             self.stats['created'], self.stats['updated'], self.stats['skipped'],

@@ -3,13 +3,28 @@
 Deploy and Upgrade notes
 ========================
 
-0.8 (provisional)
------------------
+0.8 Search filtering and highlighting
+-------------------------------------
 
-The previous import and index script has been broken into two
-scripts; run **hathi_import** as before to import content into the
-Django database and then run **index* to index work and page content
-into Solr.
+* The Solr schema has been modified and must be updated::
+
+    python manage.py solr_schema
+
+* The Solr schema change requires reindexing content.  It is
+  **recommended** to clear out your Solr index and reindex everything::
+
+    python manage.py index
+
+* A fixture has been provided with site page content.  Load via::
+
+    python manage.py loaddata ppa/archive/fixtures/pages.json
+
+.. Note::
+
+  The previous import and index script has been broken into two
+  scripts. For a fresh install, run **hathi_import** as before to import
+  content into the Django database and then run **index** to index work
+  and page content into Solr.
 
 
 0.5 Bulk Import and Simple Search

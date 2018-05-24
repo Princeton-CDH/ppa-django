@@ -54,6 +54,7 @@ $(function(){
     // update min and max pub date on visualization
     updateDates()
 
+    $$collectionInputs.filter('[disabled="disabled"]').parent().addClass('disabled')
     $$collectionInputs.change((e) => {
         $(e.target).parent().toggleClass('active')
         $$searchForm.submit()

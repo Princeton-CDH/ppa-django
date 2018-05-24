@@ -92,6 +92,14 @@ Frontend development setup:
   if you wish to install dependencies globally, take a look at the optional
   settings for `django-compressor-toolkit <https://github.com/kottenator/django-compressor-toolkit>`_.
 
+- To build the main `Semantic UI <https://semantic-ui.com/>`_ styles and js::
+
+    npm run build
+  
+  This should run once automatically after you `npm install`. To watch for changes
+  to the stylesheets and rebuild Semantic UI automatically::
+
+    npm start
 
 Unit Tests
 ~~~~~~~~~~

@@ -39,6 +39,9 @@
     dest: "/var/www/{{ symlink }}"
     state: link
 - name: Call restorecon just in case
-  command: 'restorecon -R {{ install_root }}'
+  shell: '/usr/sbin/restorecon -R {{ install_root }}'
+  args:
+    warn: False
+    executable: /bin/bash
 - name: Restart Apache (scl-httpd24-httpd)
   command: "sudo systemctl restart httpd24-httpd"
