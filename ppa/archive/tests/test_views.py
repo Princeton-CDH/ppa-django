@@ -418,13 +418,37 @@ class TestArchiveViews(TestCase):
         assert not response.context['object_list'].count()
         self.assertContains(response, 'Invalid range')
 
+        # ajax request for search results
+        response = self.client.get(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        assert response.status_code == 200
+        # should render the results list partial and single result partial
+        self.assertTemplateUsed('archive/snippets/results_list.html')
+        self.assertTemplateUsed('archive/snippest/search_result.html')
+        # shouldn't render the search form
+        self.assertNotContains(response, '<form class="ui form">', html=True)
+        # should have all the results
+        assert len(response.context['object_list']) == len(digitized_works)
+        # test some queries
+        response = self.client.get(url,
+            {'query': 'blood AND bone AND alternate'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertContains(response, '1 digitized work')
+        self.assertContains(response, wintry.source_id)
+        response = self.client.get(url,
+            {'query': 'blood NOT bone'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertContains(response, 'No matching works.')
+        response = self.client.get(url,
+            {'title': 'The Dial'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertContains(response, dial.source_id)
+        self.assertNotContains(response, wintry.source_id)
 
         # nothing indexed - should not error
         solr.delete_doc_by_query(solr_collection, '*:*', params={"commitWithin": 100})
         sleep(2)
         response = self.client.get(url)
         assert response.status_code == 200
-        self.assertContains(response, 'No matching works.')
 
         # simulate solr exception (other than query syntax)
         with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
