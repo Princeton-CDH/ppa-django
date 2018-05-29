@@ -12,7 +12,7 @@ export default class ReactiveForm {
      * using fromInput() and merges them into a single observable for the form,
      * then subscribes to form state changes and calls onStateChange.
      * 
-     * @param {String} selector 
+     * @param {String} selector CSS selector
      */
     constructor(selector) {
         let self = this
@@ -30,7 +30,7 @@ export default class ReactiveForm {
      * Generates a sequence of values depending on the input type.
      * 
      * @param {HTMLElement} $element <input> element
-     * @return {Observable}
+     * @return {Observable} sequence of values of the element
      */
     fromInput($element) {
         let observable = fromEvent($element, 'input') // create an observable from the input event
@@ -48,11 +48,9 @@ export default class ReactiveForm {
     }
 
     /**
-     * Allow the state to be requested on demand as an array.
+     * Allows the state to be requested on demand as an array.
      * 
-     * @readonly
-     * @memberof ReactiveForm
-     * @return {Array}
+     * @return {Array} form values as output by jQuery's serializeArray()
      */
     get state() {
         return this.$$element.serializeArray()
@@ -63,7 +61,7 @@ export default class ReactiveForm {
      * the form is updated. Can be extended to e.g. make an ajax request, or
      * update the queryString in the URL bar.
      * 
-     * @param {Array} state
+     * @param {Array} state form values as output by jQuery's serializeArray()
      */
     onStateChange(state) {
     }

@@ -5,6 +5,8 @@ from django.template.defaulttags import register
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 
+import json
+
 
 @register.filter
 def dict_item(dictionary, key):
@@ -76,3 +78,10 @@ def solr_highlight(value, autoescape=True):
         mark_safe(part) if EM_TAG_RE.match(part) else esc(part)
         for part in EM_TAG_RE.split(value)
     ]))
+
+
+@register.filter(name='json')
+def json_dumps(data):
+    return mark_safe(json.dumps(data))
+    
+

@@ -37,7 +37,7 @@ $(function(){
         })
         req.then(res => res.text()).then(html => { // submit the form and get html back
             $$paginationTop.html($(html).find('.pagination').html()) // update the top pagination
-            // dateHistogram.update($(html).find('.values')) // update the histogram
+            dateHistogram.data = JSON.parse($(html).find('pre').html()) // update the histogram
             $$resultsCount.html($(html).find('.data .results-count').html()) // update the results count
             $$results.html(html) // update the results
         })
@@ -59,6 +59,7 @@ $(function(){
     }
 
     function onPageLoad() {
+        dateHistogram.data = JSON.parse($('.ajax-container pre').html()) // render the histogram initially
         $$sortInputs.filter(':disabled').parent().addClass('disabled') // disable keyword sort if no query
         $$collectionInputs.filter(':disabled').parent().addClass('disabled') // disable empty collections
     }

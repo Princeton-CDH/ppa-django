@@ -4,12 +4,9 @@
         <p class="results-count">
             Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}
         </p>
-        <dl class="values">
-            {% for date, count in facet_ranges.pub_date.items %}
-            <dt>{{ date }}</dt>
-            <dd>{{ count }}</dd>
-            {% endfor %}
-        </dl>
+        <pre>
+            {{ facet_ranges.pub_date|json }}
+        </pre>
     </div>
     <div class="results-list">
         {% for item in object_list %}
