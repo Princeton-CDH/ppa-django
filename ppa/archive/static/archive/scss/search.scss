@@ -33,10 +33,6 @@
     }
 
     #histogram {
-        .values {
-            display: none;
-        }
-
         .visualization {
             width: 100%;
             height: 60px;
@@ -114,5 +110,9 @@
     /* results */
     .results-list {
         padding: 1rem 0;
+    }
+
+    .ajax-container .data {
+        display: none;
     }
 }

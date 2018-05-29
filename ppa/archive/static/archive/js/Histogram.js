@@ -1,8 +1,8 @@
-export default class DateHistogram {
-    constructor($$element) {
+export default class Histogram {
+    constructor(selector) {
         /* dom */
-        this.$canvas = $$element.find('canvas')[0]
-        this.$$values = $$element.find('.values')
+        this.$canvas = $(selector).find('canvas')[0]
+        this.$$values = $(selector).find('.values')
         
         /* properties */
         this.ctx = this.$canvas.getContext('2d')
@@ -17,10 +17,10 @@ export default class DateHistogram {
         // clear old data
         this.data.clear()
         // extract data from <dt> and <dd> elements
-        let dates = this.$$values.children('dt').map((i, $el) => $($el).text()).get()
-        let counts = this.$$values.children('dd').map((i, $el) => $($el).text()).get()
+        let xVals = this.$$values.children('dt').map((i, $el) => $($el).text()).get()
+        let yVals = this.$$values.children('dd').map((i, $el) => $($el).text()).get()
         // populate data property
-        dates.map((date, i) => this.data.set(date, counts[i]))
+        xVals.map((val, i) => this.data.set(val, yVals[i]))
     }
 
     render() {
@@ -31,13 +31,13 @@ export default class DateHistogram {
         this.ctx.fillRect(0, 0, this.$canvas.width, this.$canvas.height)
         // draw bars
         let i = 0
-        let maxCount = Math.max(...this.data.values())
+        let yMax = Math.max(...this.data.values())
         this.ctx.fillStyle = '#ccc'
-        this.data.forEach((count, date) => {
+        this.data.forEach((yVal, xVal) => {
             let x = Math.floor(i * (this.$canvas.width / this.data.size))
-            let y = this.$canvas.height - Math.floor((count / maxCount) * this.$canvas.height)
+            let y = this.$canvas.height - Math.floor((yVal / yMax) * this.$canvas.height)
             let dx = Math.floor(this.$canvas.width / this.data.size)
-            let dy = Math.floor((count / maxCount) * this.$canvas.height)
+            let dy = Math.floor((yVal / yMax) * this.$canvas.height)
             this.ctx.fillRect(x, y, dx, dy)
             i += 1
         })

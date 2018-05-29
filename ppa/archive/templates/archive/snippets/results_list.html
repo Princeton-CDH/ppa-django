@@ -1,7 +1,26 @@
-{% for item in object_list %}
-    {% include 'archive/snippets/search_result.html' %}
-{% empty %}
-    <div class="ui error message container">
-        <p>{% firstof error "No matching works." %}</p>
+{% load static humanize ppa_tags %}
+<div class="ajax-container">
+    <div class="data">
+        <p class="results-count">
+            Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}
+        </p>
+        <dl class="values">
+            {% for date, count in facet_ranges.pub_date.items %}
+            <dt>{{ date }}</dt>
+            <dd>{{ count }}</dd>
+            {% endfor %}
+        </dl>
     </div>
-{% endfor %}
+    <div class="results-list">
+        {% for item in object_list %}
+            {% include 'archive/snippets/search_result.html' %}
+        {% empty %}
+            <div class="ui error message container">
+                <p>{% firstof error "No matching works." %}</p>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="ui container">
+        {% include 'archive/snippets/pagination.html' %}
+    </div>
+</div>
