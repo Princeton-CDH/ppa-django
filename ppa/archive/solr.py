@@ -242,3 +242,32 @@ class PagedSolrQuery(object):
         # qs._fetch_all()
         return self.get_results()[0]
         # return qs._result_cache[0]
+
+
+class Indexable(object):
+    '''Mixin for objects that are indexed in Solr.  Subclasses must implement
+    `index_id` and `index` methods.'''
+
+    def index_data(self):
+        '''should return a dictionary of data for indexing in Solr'''
+        raise NotImplementedError
+
+    def index_id(self):
+        '''the value that is used for Solr id for this object'''
+        raise NotImplementedError
+
+    def index(self, params=None):
+        '''Index the current object in Solr.  Allows passing in
+        parameter, e.g. to set a `commitWithin` value.
+        '''
+        solr, solr_collection = get_solr_connection()
+        solr.index(solr_collection, [self.index_data()], params=params)
+
+    def remove_from_index(self, params=None):
+        '''Remove the current object from Solr by identifier using
+        :meth:`index_id`'''
+        solr, solr_collection = get_solr_connection()
+        # NOTE: using quotes on id to handle ids that include colons or other
+        # characters that have meaning in Solr/lucene queries
+        solr.delete_doc_by_id(solr_collection, '"%s"' % self.index_id(), params=params)
+

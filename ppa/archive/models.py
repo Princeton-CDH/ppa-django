@@ -9,7 +9,7 @@ from mezzanine.core.fields import RichTextField
 from pairtree import pairtree_path, pairtree_client
 
 from ppa.archive.hathi import HathiBibliographicAPI
-from ppa.archive.solr import get_solr_connection
+from ppa.archive.solr import get_solr_connection, Indexable
 
 
 
@@ -57,7 +57,7 @@ class Collection(models.Model):
             super(Collection, self).save(*args, **kwargs)
 
 
-class DigitizedWork(models.Model):
+class DigitizedWork(models.Model, Indexable):
     '''
     Record to manage digitized works included in PPA and store their basic
     metadata.
@@ -154,12 +154,9 @@ class DigitizedWork(models.Model):
         # - last update, rights code / rights string, item url
         # (maybe solr only?)
 
-    def index(self, params=None):
-        '''Index a :class:`ppa.archive.models.DigitizedWork`
-        and allow optional commit to ensure results are available.
-        '''
-        solr, solr_collection = get_solr_connection()
-        solr.index(solr_collection, [self.index_data()], params=params)
+    def index_id(self):
+        '''source id is used as solr identifier'''
+        return self.source_id
 
     def index_data(self):
         '''data for indexing in Solr'''
