@@ -14,7 +14,7 @@ def test_pagination_snippet():
     content = pagination_tpl.render(ctx)
 
     # current page should be present and marked active
-    assert '<a class="ui tiny compact active button" href="?page=1">1</a>' in content
+    assert '<a class="ui tiny compact active icon button" href="?page=1">1</a>' in content
     # no rel=previous link
     assert '<a rel="prev"' not in content
     # rel=next goes to page 2
@@ -60,7 +60,7 @@ def test_pagination_snippet():
     # includes two ellipses
     assert content.count('<span>...</span>') == 2
     # current page, marked active
-    assert '<a class="ui tiny compact active button" href="?page=50">50</a>' in content
+    assert '<a class="ui tiny compact active icon button" href="?page=50">50</a>' in content
     # two before and after
     assert ' href="?page=48">48' in content
     assert ' href="?page=49">49' in content
