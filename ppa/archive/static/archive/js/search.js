@@ -40,6 +40,10 @@ $(function(){
             dateHistogram.data = JSON.parse($(html).find('pre').html()) // update the histogram
             $$resultsCount.html($(html).find('.data .results-count').html()) // update the results count
             $$results.html(html) // update the results
+            document.dispatchEvent(new Event('ZoteroItemUpdated', { // notify Zotero of changed results
+                bubbles: true,
+                cancelable: true
+            }))
         })
     }
 
