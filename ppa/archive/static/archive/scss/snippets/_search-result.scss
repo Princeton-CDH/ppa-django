@@ -1,8 +1,8 @@
 .results-list .item {
     margin: 1rem 0;
 
-    &:nth-child(odd) {
-        background-color: #ddd;
+    &:nth-child(even) {
+        background-color: #fff;
     }
 
     .unapi-id {
