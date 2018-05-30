@@ -1,3 +1,4 @@
+import logging
 import os.path
 from zipfile import ZipFile
 
@@ -11,6 +12,8 @@ from pairtree import pairtree_path, pairtree_client
 from ppa.archive.hathi import HathiBibliographicAPI
 from ppa.archive.solr import get_solr_connection, Indexable
 
+
+logger = logging.getLogger(__name__)
 
 
 class Collection(models.Model):
@@ -38,23 +41,23 @@ class Collection(models.Model):
         solr.index(solr_collection, solr_docs,
             params=params)
 
-    def save(self, *args, **kwargs):
-        '''Override method so that on save, any associated
-        works have their names updated if collection name has changed.'''
-        # first handle cases where this is a new save, just save and return
-        if not self.pk:
-            super(Collection, self).save(*args, **kwargs)
-            return
-        # if it has been saved, get the original
-        orig = Collection.objects.get(pk=self.pk)
-        if orig.name != self.name:
-            # update object with new name
-            super(Collection, self).save(*args, **kwargs)
-            # reindex its works and commit the result
-            self.full_index()
-        # saved but no name change, so just save
-        else:
-            super(Collection, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     '''Override method so that on save, any associated
+    #     works have their names updated if collection name has changed.'''
+    #     # first handle cases where this is a new save, just save and return
+    #     if not self.pk:
+    #         super(Collection, self).save(*args, **kwargs)
+    #         return
+    #     # if it has been saved, get the original
+    #     orig = Collection.objects.get(pk=self.pk)
+    #     if orig.name != self.name:
+    #         # update object with new name
+    #         super(Collection, self).save(*args, **kwargs)
+    #         # reindex its works and commit the result
+    #         self.full_index()
+    #     # saved but no name change, so just save
+    #     else:
+    #         super(Collection, self).save(*args, **kwargs)
 
 
 class DigitizedWork(models.Model, Indexable):
@@ -153,6 +156,34 @@ class DigitizedWork(models.Model, Indexable):
         # should also consider storing:
         # - last update, rights code / rights string, item url
         # (maybe solr only?)
+
+    def handle_collection_save(sender, instance, **kwargs):
+        '''signal handler for collection save; reindex associated digitized works'''
+        logger.debug('collection save, reindexing related works %d', DigitizedWork.objects.filter(collections=instance).count())
+        Indexable.index_items(DigitizedWork.objects.filter(collections=instance), params={'commitWithin': 3000})
+
+    def handle_collection_delete(sender, instance, **kwargs):
+        logger.debug('collection delete')
+        # clear associated works: sends pre/post clear for the collection;
+        # how to handle?
+        digworks = instance.digitizedwork_set.values_list('id', flat=True)
+        print('%d digworks' % len(digworks))
+        print(digworks)
+        # sends pre/post clear, but not obvious how to take advantage of that
+        instance.digitizedwork_set.clear()
+        print('%d digworks' % len(digworks))
+        print(DigitizedWork.objects.filter(id__in=list(digworks)))
+        Indexable.index_items(DigitizedWork.objects.filter(id__in=list(digworks)),
+                              params={'commitWithin': 3000})
+
+    index_depends_on = {
+        'collections': {
+            'save': handle_collection_save,
+            'delete': handle_collection_delete,
+
+        }
+    }
+
 
     def index_id(self):
         '''source id is used as solr identifier'''

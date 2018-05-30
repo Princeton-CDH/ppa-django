@@ -1,8 +1,10 @@
+import itertools
 import json
 import logging
 
 from cached_property import cached_property
 from django.conf import settings
+from django.db.models.fields.related_descriptors import ManyToManyDescriptor
 import requests
 from SolrClient import SolrClient
 
@@ -263,6 +265,13 @@ class Indexable(object):
         solr, solr_collection = get_solr_connection()
         solr.index(solr_collection, [self.index_data()], params=params)
 
+    @classmethod
+    def index_items(cls, items, params=None):
+        solr, solr_collection = get_solr_connection()
+        # TODO: index in chunks like index script does?
+        solr.index(solr_collection, [i.index_data() for i in items],
+                   params=params)
+
     def remove_from_index(self, params=None):
         '''Remove the current object from Solr by identifier using
         :meth:`index_id`'''
@@ -270,4 +279,34 @@ class Indexable(object):
         # NOTE: using quotes on id to handle ids that include colons or other
         # characters that have meaning in Solr/lucene queries
         solr.delete_doc_by_id(solr_collection, '"%s"' % self.index_id(), params=params)
+
+    related = None
+    m2m = None
+
+    @classmethod
+    def identify_index_dependencies(cls):
+        # determine and document index dependencies
+        # for indexable models based on index_depends_on field
+
+        if cls.related is not None and cls.m2m is not None:
+            return
+
+        related = {}
+        m2m = []
+        for model in Indexable.__subclasses__():
+            for dep, opts in model.index_depends_on.items():
+                # if a string, assume attribute of model
+                if isinstance(dep, str):
+                    attr = getattr(model, dep)
+                    if isinstance(attr, ManyToManyDescriptor):
+                        # store related model and options with signal handlers
+                        related[attr.rel.model] = opts
+                        # add through model to many to many list
+                        m2m.append(attr.through)
+
+        cls.related = related
+        cls.m2m = m2m
+
+
+
 
