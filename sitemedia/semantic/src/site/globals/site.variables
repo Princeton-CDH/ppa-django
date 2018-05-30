@@ -1,3 +1,90 @@
 /*******************************
      User Global Variables
 *******************************/
+
+/*-------------------
+       Fonts
+--------------------*/
+
+@fontName              : 'Open Sans';
+@headerFontName        : 'Gentium Book Basic';
+
+@pageFont              : @fontName, Helvetica, sans-serif;
+@headerFont            : @headerFontName, Palatino, serif;
+
+@googleFontSizes       : '400,600,400i,600i';
+@googleFontSizesHeader : @googleFontSizes;
+@googleFont            : %('%s:@{googleFontSizes}', escape(@fontName));
+@googleFontHeader      : %('%s:@{googleFontSizesHeader}', escape(@headerFontName));
+@googleFontRequest     : '@{googleFont}|@{googleFontHeader}';
+
+/*-------------------
+      Base Sizes
+--------------------*/
+
+@emSize    : 16px;
+@fontSize  : 14px;
+
+/*-------------------
+    Border Radius
+--------------------*/
+
+@absoluteBorderRadius  : 0px;
+@relativeBorderRadius  : @absoluteBorderRadius;
+@defaultBorderRadius   : @absoluteBorderRadius;
+
+/*-------------------
+        Grid
+--------------------*/
+
+@columnCount: 12;
+
+/*-------------------
+     Breakpoints
+--------------------*/
+
+@mobileBreakpoint            : 320px;
+@tabletBreakpoint            : 735px;
+@computerBreakpoint          : 1068px;
+@largeMonitorBreakpoint      : 1440px;
+@widescreenMonitorBreakpoint : 1920px;
+
+/*-------------------
+    Brand Colors
+--------------------*/
+
+@primaryColor          : @gold;
+@secondaryColor        : @green;
+@backgroundColor       : @offWhite;
+
+@lightPrimaryColor     : @lightGold;
+@lightSecondaryColor   : @lightGreen;
+
+/*-------------------
+      Site Colors
+--------------------*/
+
+@green        : #254E2E;
+@gold         : #A98f5f;
+@lightGreen   : #07AE79;
+@lightGold    : #CDAD7E;
+@offWhite     : #F1F0EB;
+
+/*-------------------
+       Links
+--------------------*/
+
+@linkColor    : @lightPrimaryColor;
+
+/*-------------------
+        Page
+--------------------*/
+
+@pageBackground  : @backgroundColor;
+
+/*-------------------
+    Focused Input
+--------------------*/
+
+@focusedFormBorderColor: @lightSecondaryColor;
+@focusedFormMutedBorderColor: @lightSecondaryColor;

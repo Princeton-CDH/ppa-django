@@ -117,7 +117,7 @@
         {% for page in solr_results %}
           {% with highlights=page_highlights|dict_item:page.id%}
           <div class="ui page item">
-              <div class="pages ui sixteen wide column">
+              <div class="pages ui twelve wide column">
                   <div class="wrapper">
                       {% include 'archive/snippets/page_preview.html' with item_id=page.srcid  %}
                   </div>

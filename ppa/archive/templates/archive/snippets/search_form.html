@@ -11,11 +11,11 @@
         </div>
     </div>
     <div class="ui vertical stackable grid segment">
-        <div class="six wide column" id="publication">
+        <div class="four wide column" id="publication">
             {% render_field search_form.pub_date %}
             <a class="clear-selection" role="button">Clear Selection</a>
         </div>
-        <div class="ten wide column" id="histogram">
+        <div class="eight wide column" id="histogram">
             <canvas class="visualization"></canvas>
             <dl class="values">
                 {% for date, count in facet_ranges.pub_date.items %}
@@ -39,12 +39,12 @@
         </div>
         <div class="column" id="booleans">
             <div class="ui stackable grid">
-                <div class="eight wide column field">
+                <div class="six wide column field">
                     <label>Only display</label>
                     {% render_field search_form.earliest_only %}
                     {% render_field search_form.ace_only %}
                 </div>
-                <div class="eight wide column field">
+                <div class="six wide column field">
                     <label>Exclude</label>
                     {% render_field search_form.dict_exclude %}
                     {% render_field search_form.pg_exclude %}

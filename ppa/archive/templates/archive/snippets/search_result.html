@@ -8,12 +8,12 @@
             <!-- <i class="ui flag icon"></i> -->
             {% endif %}
         </div>
-        <div class="title seven wide column">
+        <div class="title five wide column">
             <a href="{% url 'archive:detail' item.srcid %}">
                 <p class="ui header">{{ item.title }}</p>
             </a>
         </div>
-        <div class="metadata eight wide column">
+        <div class="metadata six wide column">
             <p class="ui header">{{ item.author }}</p>
             <div class="publication ui equal width grid">
                 <div class="column">{{ item.publisher }}</div>
@@ -30,14 +30,14 @@
                         <button class="ui tiny basic button">{{ collection }}</button>
                     {% endfor %}
                 {% endif %}
-                <a class="ui right floated right labeled secondary tiny icon button" href="{{ item.src_url }}" target="_blank">
+                <a class="ui right floated right labeled primary tiny icon button" href="{{ item.src_url }}" target="_blank">
                     HathiTrust
                     <i class="right arrow icon"></i>
                 </a>
             </div>
         </div>
         {% if page_groups and page_highlights %}
-        <div class="pages sixteen wide column">
+        <div class="pages twelve wide column">
             {% with results=page_groups|dict_item:item.id %}
                 {% if page_highlights %}
                 <div class="wrapper">
@@ -49,7 +49,7 @@
                 </div>
                 {# link to page with search if there are more than two pages #}
                     {% if results.numFound > 2 %}
-                    <a class="ui left floated right labeled secondary tiny icon button"
+                    <a class="ui left floated right labeled primary tiny icon button"
                         href="{% url 'archive:detail' item.srcid %}?query={{ query }}">
                         View all {{ results.numFound|intcomma }} page{{ results.numFound|pluralize }}
                         <i class="right arrow icon"></i>
