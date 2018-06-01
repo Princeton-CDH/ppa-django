@@ -1,3 +1,18 @@
 /*******************************
          Site Overrides
 *******************************/
+
+.ui.button {
+    border: @borderWeight solid @borderColor;
+
+    &.basic {
+        border: 0;
+        padding: @relative7px @horizontalPadding;
+        min-width: @relative30px;
+    }
+
+    &.disabled {
+        color: @disabledTextColor;
+        border-color: @disabledTextColor;
+    }
+}
