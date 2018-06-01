@@ -7,19 +7,30 @@
     /* form */
     .question-popup {
         position: absolute;
-        // next to "Keyword or Phrase" text
         top: 1rem;
-        right: 0;
+        right: 1rem;
+        color: #07AE79;
+    }
 
-        @media screen and (min-width: 800px) {
-            // move to the right of the main search box
-            top: 3.25rem;
-            right: -2rem;   
+    .form > fieldset.vertical.segment { // stacked fieldsets
+        margin-bottom: 0;
+        margin-top: 0;
+
+        &:first-child {
+            margin-top: 1em;
+        }
+
+        &:last-child {
+            margin-bottom: 1em;
+        }
+
+        > .twelve.wide.column:not(:first-child) {
+            padding-top: 0;
         }
     }
 
     input[type=number] { // publication date min/max
-        width: 6rem;
+        width: 5rem;
     }
 
     .clear-selection {
@@ -48,46 +59,62 @@
     }
 
     #collections {
-        @media only screen and (min-width: 768px) {
-            width: 45%;
-        }
+        // @media only screen and (min-width: 768px) {
+        //     width: 45%;
+        // }
 
-        @media only screen and (min-width: 1440px) {
-            width: 55%;
+        // @media only screen and (min-width: 1440px) {
+        //     width: 55%;
+        // }
+
+        .field {
+            margin-bottom: -5px;
         }
 
         .button {
-            margin-bottom: .5rem;
-            margin-right: .5rem;
+            margin-bottom: 5px;
+            margin-right: 8px;
         }
         label.button {
             display: inline-block;
-            font-weight: normal;
         }
 
-        input[type=checkbox], // hide checkboxes
         .button > span { // hide counts
             display: none;
+        }
+
+        input[type=checkbox] { // hide checkboxes
+            width: 0;
+            height: 0;
+            opacity: 0;
+            margin-left: -.49rem; // don't affect button width
         }
     }
 
     #booleans {
-        @media only screen and (min-width: 768px) {
-            width: 55%;
-        }
-
-        @media only screen and (min-width: 1440px) {
-            width: 45%;
-        }
-
-        .field {
-            margin-bottom: 0;
-        }
-
-        .input {
-            width: 100%;
+        .inline.field:nth-child(2) .checkbox {
+            margin-top: .25rem;
+            margin-bottom: .75rem;
         }
     }
+
+    // #booleans {
+    //     @media only screen and (min-width: 768px) {
+    //         width: 55%;
+    //     }
+
+    //     @media only screen and (min-width: 1440px) {
+    //         width: 45%;
+    //     }
+
+    //     .field {
+    //         margin-bottom: 0;
+    //     }
+
+    //     .input {
+    //         width: 100%;
+    //     }
+    // }
 
     /* sorting */
     .sort {

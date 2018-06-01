@@ -1,3 +1,24 @@
 /*******************************
     User Variable Overrides
 *******************************/
+
+/*-------------------
+       Elements
+--------------------*/
+
+/* Form Label */
+@labelDistance: @10px;
+@labelColor: @secondaryColor;
+
+/* Field */
+@fieldMargin: 0;
+
+/* Fields */
+@fieldsMargin: 0em -(@gutterWidth / 2);
+
+/*-------------------
+        States
+--------------------*/
+
+/* Input Focus */
+@inputFocusBoxShadow: @inputFocusPointerSize 0em 4px 0em @focusedFormBorderColor;
