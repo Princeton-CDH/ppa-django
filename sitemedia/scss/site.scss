@@ -59,7 +59,8 @@
 
 /* header */
 #header {
-    margin-top: 2 * $nav-height;
+    margin-top: $nav-height;
+    padding-top: $nav-height;
 }
 
 /* main */
