@@ -186,11 +186,11 @@ class SearchForm(forms.Form):
     # booleans
     earliest_only = forms.BooleanField(label='Earliest Edition in Hathi',
         required=False, widget=forms.CheckboxInput(attrs={
-            '_icon': 'flag outline', 'disabled': True
+            'disabled': True
         }))
     ace_only = forms.BooleanField(label='Authorized Critical Edition',
         required=False, widget=forms.CheckboxInput(attrs={
-            '_icon': 'flag', 'disabled': True
+            'disabled': True
         }))
     dict_exclude = forms.BooleanField(label='Dictionaries',
         required=False, widget=forms.CheckboxInput(attrs={'disabled': True}))

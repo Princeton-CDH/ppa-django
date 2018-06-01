@@ -23,14 +23,14 @@
             <div class="buttons">
                 {% if item.pk %} {# database object with many-to-many #}
                     {% for collection in item.collections.all %}
-                        <button class="ui tiny basic button">{{ collection }}</button>
+                        <button class="ui button">{{ collection }}</button>
                     {% endfor %}
                 {% else %} {# solr object with list of strings #}
                     {% for collection in item.collections %}
-                        <button class="ui tiny basic button">{{ collection }}</button>
+                        <button class="ui button">{{ collection }}</button>
                     {% endfor %}
                 {% endif %}
-                <a class="ui right floated right labeled primary tiny icon button" href="{{ item.src_url }}" target="_blank">
+                <a class="ui right floated right labeled primary icon button" href="{{ item.src_url }}" target="_blank">
                     HathiTrust
                     <i class="right arrow icon"></i>
                 </a>
@@ -49,7 +49,7 @@
                 </div>
                 {# link to page with search if there are more than two pages #}
                     {% if results.numFound > 2 %}
-                    <a class="ui left floated right labeled primary tiny icon button"
+                    <a class="ui left floated right labeled primary icon button"
                         href="{% url 'archive:detail' item.srcid %}?query={{ query }}">
                         View all {{ results.numFound|intcomma }} page{{ results.numFound|pluralize }}
                         <i class="right arrow icon"></i>
