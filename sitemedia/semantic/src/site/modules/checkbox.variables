@@ -1,3 +1,22 @@
 /*******************************
     User Variable Overrides
 *******************************/
+
+/* Checkbox */
+@checkboxBorderRadius: 0;
+
+/*-------------------
+        States
+--------------------*/
+
+/* Focus */
+@checkboxFocusBorderColor: @focusedFormBorderColor;
+@checkboxFocusCheckColor: @focusedFormBorderColor;
+
+/* Active */
+@checkboxActiveBackground: @focusedFormBorderColor;
+@checkboxActiveBorderColor: @focusedFormBorderColor;
+@checkboxActiveCheckColor: @inputBackground;
+
+/* Disabled */
+@disabledCheckboxLabelColor: @disabledTextColor;
