@@ -1,3 +1,13 @@
 /*******************************
     User Variable Overrides
 *******************************/
+
+/*-------------------
+      Variations
+--------------------*/
+
+/* Inverted Link List */
+@invertedLinkListItemColor: @white;
+@invertedLinkListItemHoverColor: @white;
+@invertedLinkListItemDownColor: @white;
+@invertedLinkListItemActiveColor: @white;

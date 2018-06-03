@@ -4,10 +4,6 @@
 /* mobile nav */
 #mobile-nav {
     top: $nav-height !important; // have to override SUI's !important
-
-    .item {
-        text-transform: uppercase;
-    }
 }
 
 /* main nav */
@@ -22,20 +18,21 @@
 
     .brand {
         width: 100%;
+        height: $nav-height;
         display: flex;
         position: absolute;
         justify-content: center;
+        margin: 0;
 
         .item {
             display: flex;
-            font-size: 1.8rem;
+            font-size: 2rem;
             padding: .5rem;
         }
     }
     
     .item {
         z-index: 1;
-        text-transform: uppercase;
         display: none;
 
         @media only screen and (min-width: $nav-breakpoint) {
@@ -78,21 +75,17 @@ main {
     bottom: 0;
     margin-bottom: 0;
     padding: 1rem 0;
-    
-    .placeholder {
-        background-color: grey;
-        width: 120px;
-        height: 80px;
-    }
 
-    .menu {
+    nav.menu {
         justify-content: center;
         flex-wrap: wrap;
+
+        @media only screen and (min-width: 1069px) {
+            margin: 1em 0;
+        }
     }
 
     .menu .item {
-        text-transform: uppercase;
-
         @media only screen and (max-width: 768px) {
             justify-content: center;
         }
@@ -101,6 +94,10 @@ main {
     .link.list {
         @media only screen and (max-width: 320px) {
             flex-direction: column;
+        }
+
+        @media only screen and (min-width: 1069px) {
+            padding: 2rem 0;
         }
     }
 
