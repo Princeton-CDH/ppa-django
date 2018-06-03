@@ -1,3 +1,74 @@
 /*******************************
     User Variable Overrides
 *******************************/
+
+.ui.card,
+.ui.cards > .card
+{
+    font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+
+    .header {
+        margin-bottom: 0;
+    }
+
+    .meta {
+        font-weight: bold;
+    }
+
+    .header,
+    .meta {
+        text-align: center;
+    }
+
+    .description {
+        font-family: @headerFont;
+        font-size: @relativeLarge;
+        line-height: 1.1;
+
+        > * {
+            line-height: 1.1;
+        }
+    }
+
+    &.stack {
+        margin: @stackMargin;
+        box-shadow: @stackBoxShadow;
+    }
+
+    &.aside {
+        width: @asideWidth;
+        margin: @asideMargin;
+        box-shadow: @asideBoxShadow;
+
+        .header {
+            text-align: left;
+        }
+
+        .description {
+            margin-bottom: 3em;
+        }
+    }
+}
+
+a.ui.card,
+.ui.cards > a.card {
+    box-shadow: @linkBoxShadow;
+
+    &.stack {
+        box-shadow: @stackLinkBoxShadow;
+
+        &:hover {
+            box-shadow: @stackLinkHoverBoxShadow;
+        }
+    }
+
+    &.aside {
+        box-shadow: @asideLinkBoxShadow;
+
+        &:hover {
+            box-shadow: @asideLinkHoverBoxShadow;
+        }
+    }
+}
