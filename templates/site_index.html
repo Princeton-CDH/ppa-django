@@ -40,32 +40,30 @@
 </div>
 <div class="ui vertical basic segment">
     <div class="ui stackable two column text container grid">
-        <div class="column">
-            <div class="row">
-                <a class="ui card" href="/what-is-prosody/">
-                    <div class="content">
-                        <h3 class="ui header">What Is Prosody?</h3>
-                        <p class="description">Prosody today means both the
-                            study of versification and the study of pronunciation.
-                            In literary studies, prosody is often interchanged
-                            for versification or meter, though in fact each of
-                            these terms have complicated and contested histories.
-                        </p>
+        <div class="column ui cards">
+            <a class="aside card" href="/what-is-prosody/">
+                <div class="content">
+                    <h3 class="header">What Is Prosody?</h3>
+                    <div class="description">Prosody today means both the
+                        study of versification and the study of pronunciation.
+                        In literary studies, prosody is often interchanged
+                        for versification or meter, though in fact each of
+                        these terms have complicated and contested histories.
                     </div>
-                </a>
-                <a class="ui card" href="/history-of-the-archive/">
-                    <div class="content">
-                        <h3 class="ui header">History of the Archive</h3>
-                        <p class="description">Meredith Martin began assembling
-                            the Archive in 2007 as she was writing <i>The Rise and
-                            Fall of Meter: Poetry and English National Culture,
-                            1860 – 1930</i>. Brogan was the first to assemble
-                            bibliographic records for 1,743 works on
-                            versification and prosody.
-                        </p>
+                </div>
+            </a>
+            <a class="aside card" href="/history-of-the-archive/">
+                <div class="content">
+                    <h3 class="header">History of the Archive</h3>
+                    <div class="description">Meredith Martin began assembling
+                        the Archive in 2007 as she was writing <i>The Rise and
+                        Fall of Meter: Poetry and English National Culture,
+                        1860 – 1930</i>. Brogan was the first to assemble
+                        bibliographic records for 1,743 works on
+                        versification and prosody.
                     </div>
-                </a>
-            </div>
+                </div>
+            </a>
         </div>
         <div class="column">
             <h3 class="ui header">About the Collections</h3>
@@ -76,14 +74,15 @@
                 of collections.
             </p>
             {% for item in object_list %}
-            <a class="ui collection card" href="{% url 'archive:list' %}?collections={{ item.name|urlencode }}">
-                <div class="center aligned content">
+            <a class="ui card stack" href="{% url 'archive:list' %}?collections={{ item.name|urlencode }}">
+                <div class="content">
                     <h3 class="header">{{ item.name }}</h3>
                     {% with coll_stats=stats|dict_item:item.name %}
                         <div class="meta">
                             {% firstof coll_stats.count "0" as count %}
-                            <p class="count">{{ count|intcomma }} digitized work{{ count|pluralize }}</p>
-                            <p class="date">{{ coll_stats.dates }}</p>
+                            <p>{{ count|intcomma }} digitized work{{ count|pluralize }}
+                                {% if coll_stats.dates %} - {{ coll_stats.dates }}{% endif %}
+                            </p>
                         </div>
                     {% endwith %}
                     {% if item.description %}
