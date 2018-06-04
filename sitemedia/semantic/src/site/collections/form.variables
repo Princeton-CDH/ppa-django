@@ -9,12 +9,16 @@
 /* Form Label */
 @labelDistance: @10px;
 @labelColor: @secondaryColor;
+@labelFontSize: @relativeMedium;
 
 /* Field */
 @fieldMargin: 0;
 
 /* Fields */
 @fieldsMargin: 0em -(@gutterWidth / 2);
+
+/* Input */
+@inputBorder: 2px solid @borderColor;
 
 /*-------------------
         States

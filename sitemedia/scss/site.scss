@@ -1,5 +1,6 @@
 @import 'snippets/variables';
 @import 'snippets/a11y';
+@import 'snippets/mixins';
 
 /* mobile nav */
 #mobile-nav {
@@ -23,8 +24,9 @@
         position: absolute;
         justify-content: center;
         margin: 0;
-
+        
         .item {
+            font-weight: bold;
             display: flex;
             font-size: 2rem;
             padding: .5rem;
@@ -32,6 +34,7 @@
     }
     
     .item {
+        @include font-smooth();
         z-index: 1;
         display: none;
 
@@ -86,6 +89,8 @@ main {
     }
 
     .menu .item {
+        @include font-smooth();
+        
         @media only screen and (max-width: 768px) {
             justify-content: center;
         }
