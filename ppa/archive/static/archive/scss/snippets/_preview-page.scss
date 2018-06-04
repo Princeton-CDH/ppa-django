@@ -34,8 +34,8 @@
         .snippet {
             font-size: 18px;
             font-family: $headerFont;
-            color: $midGrey;
-            @include no-font-smooth();
+            color: $darkGrey;
+            line-height: normal;
         }
     }
 

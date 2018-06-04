@@ -1,0 +1,3 @@
+$(function(){
+    $('.question-popup').popup()
+})

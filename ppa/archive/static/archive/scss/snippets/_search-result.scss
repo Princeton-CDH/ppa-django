@@ -45,7 +45,6 @@
         font-size: 20px;
         font-family: $headerFont;
         color: $green;
-        @include no-font-smooth();
     }
 
     .author {
