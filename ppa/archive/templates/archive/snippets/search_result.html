@@ -16,11 +16,11 @@
             </div>
         </div>
         <div class="metadata six wide column">
-            <p class="author ui header">{{ item.author }}</p>
+            <p class="author ui header">{% firstof item.author '[unknown]' %}</p>
             <div class="publication ui grid">
-                <div class="five wide column">{{ item.publisher }}</div>
-                <div class="five wide column">{{ item.pub_place }}</div>
-                <div class="two wide column">{{ item.pub_date }}</div>
+                <div class="five wide column">{% firstof item.publisher '[unknown]' %}</div>
+                <div class="five wide column">{% firstof item.pub_place '[unknown]' %}</div>
+                <div class="two wide column">{% firstof item.pub_date '[unknown]' %}</div>
             </div>
             <div class="buttons">
                 {% if item.pk %} {# database object with many-to-many #}
