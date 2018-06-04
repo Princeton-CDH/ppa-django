@@ -3,16 +3,9 @@
 @import 'snippets/search-result';
 @import 'snippets/preview-page';
 @import 'snippets/pagination';
+@import 'snippets/popups';
 
 #search {
-
-    /* form */
-    .question-popup {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        color: $lightGreen;
-    }
 
     .form > fieldset.vertical.segment { // stacked fieldsets
         margin-bottom: 0;
