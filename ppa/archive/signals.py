@@ -56,10 +56,24 @@ class IndexableSignalHandler:
     def teardown():  # rename to disconnect?
         # disconnect signal handlers
         for model in Indexable.__subclasses__():
+            logger.debug('Disconnecting signal handlers for %s', model)
             models.signals.post_save.disconnect(IndexableSignalHandler.handle_save, sender=model)
             models.signals.post_delete.disconnect(IndexableSignalHandler.handle_delete, sender=model)
 
-        # TODO: should also disconnect m2m and related model signal handlers
+        for m2m_rel in Indexable.m2m:
+            logger.debug('Disconnecting m2m signal handler for %s', m2m_rel)
+            models.signals.m2m_changed.disconnect(IndexableSignalHandler.handle_relation_change,
+                                                  sender=m2m_rel)
+
+        for model, options in Indexable.related.items():
+            if 'save' in options:
+                logger.debug('Disconnecting save signal handler for %s', model)
+                models.signals.post_save.disconnect(options['save'], sender=model)
+            if 'delete' in options:
+                logger.debug('Disconnecting delete signal handler for %s', model)
+                models.signals.pre_delete.disconnect(options['delete'], sender=model)
+
+
 
 
 IndexableSignalHandler.setup()
