@@ -13,10 +13,6 @@
         margin-bottom: 0;
     }
 
-    .meta {
-        font-weight: bold;
-    }
-
     .header,
     .meta {
         text-align: center;

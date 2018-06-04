@@ -12,8 +12,8 @@
 @pageFont              : @fontName, Helvetica, sans-serif;
 @headerFont            : @headerFontName, Palatino, serif;
 
-@googleFontSizes       : '400,600,400i,600i';
-@googleFontSizesHeader : @googleFontSizes;
+@googleFontSizes       : '600,600i';
+@googleFontSizesHeader : '400,400i,700,700i';
 @googleFont            : %('%s:@{googleFontSizes}', escape(@fontName));
 @googleFontHeader      : %('%s:@{googleFontSizesHeader}', escape(@headerFontName));
 @googleFontRequest     : '@{googleFont}|@{googleFontHeader}';
@@ -65,7 +65,7 @@
 --------------------*/
 
 @green        : #254E2E;
-@gold         : #A98f5f;
+@gold         : #A98F5F;
 @lightGreen   : #07AE79;
 @lightGold    : #CDAD7E;
 @offWhite     : #F1F0EB;
@@ -84,6 +84,7 @@
 --------------------*/
 
 @pageBackground  : @backgroundColor;
+@textColor       : @darkGrey;
 
 /*-------------------
     Focused Input
