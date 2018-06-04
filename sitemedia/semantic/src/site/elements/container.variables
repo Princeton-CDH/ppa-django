@@ -3,6 +3,17 @@
 *******************************/
 
 /*-------------------
+       Element
+--------------------*/
+
+@mobileGutter: auto;
+@tabletWidth: auto;
+@tabletMinimumGutter: 0em;
+@computerWidth: 1020px;
+@largeMonitorWidth: @computerWidth;
+
+
+/*-------------------
        Types
 --------------------*/
 
