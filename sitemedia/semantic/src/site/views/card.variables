@@ -64,7 +64,7 @@
 @asideLinkHoverBoxShadow: -10px 0px 0px 0px @linkHoverShadowColor;
 
 /* Stack */
-@stackMargin: 3em 0;
+@stackMargin: 1em 0 3em;
 @stackBoxShadow:
     @shadowBoxShadow,
     @shadowDistance * 4 @shadowDistance * 4 0px 0px @background,

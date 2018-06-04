@@ -21,10 +21,10 @@
     .description {
         font-family: @headerFont;
         font-size: @relativeLarge;
-        line-height: 1.1;
+        line-height: normal;
 
         > * {
-            line-height: 1.1;
+            line-height: normal;
         }
     }
 

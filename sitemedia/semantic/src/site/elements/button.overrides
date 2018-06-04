@@ -4,6 +4,9 @@
 
 .ui.button {
     border: @borderWeight solid @borderColor;
+    font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
 
     &.basic {
         border: 0;

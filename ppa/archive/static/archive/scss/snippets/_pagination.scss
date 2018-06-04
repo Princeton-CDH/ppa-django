@@ -24,12 +24,10 @@
     }
 
     .results-label { // "Results per page"
-        @include font-smooth();
         margin-left: .5rem;
     }
 
     .page-controls span { // "..." indicator
-        @include font-smooth();
         margin: 0 1rem;
     }
 
