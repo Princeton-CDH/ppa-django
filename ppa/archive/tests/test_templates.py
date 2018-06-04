@@ -14,11 +14,11 @@ def test_pagination_snippet():
     content = pagination_tpl.render(ctx)
 
     # current page should be present and marked active
-    assert '<a class="ui tiny compact active button" href="?page=1">1</a>' in content
+    assert '<a class="ui active basic button" href="?page=1">1</a>' in content
     # no rel=previous link
     assert '<a rel="prev"' not in content
     # rel=next goes to page 2
-    assert '<a rel="next" class="ui tiny compact icon button" href="?page=2">' in content
+    assert '<a rel="next" class="ui icon basic button" href="?page=2">' in content
     # goes up to page 5
     assert 'href="?page=5">5</a>' in content
     # no ellpsis
@@ -28,8 +28,8 @@ def test_pagination_snippet():
     ctx['page_obj'] = paginator.page(3)
     content = pagination_tpl.render(ctx)
     # next and prev both present
-    assert '<a rel="prev" class="ui tiny compact icon button" href="?page=2">' in content
-    assert '<a rel="next" class="ui tiny compact icon button" href="?page=4">' in content
+    assert '<a rel="prev" class="ui icon basic button" href="?page=2">' in content
+    assert '<a rel="next" class="ui icon basic button" href="?page=4">' in content
     # no ellpsis
     assert '<span>...</span>' not in content
 
@@ -52,15 +52,15 @@ def test_pagination_snippet():
     ctx['page_obj'] = paginator.page(50)
     content = pagination_tpl.render(ctx)
     # next and prev both present
-    assert '<a rel="prev" class="ui tiny compact icon button" href="?page=49">' in content
-    assert '<a rel="next" class="ui tiny compact icon button" href="?page=51">' in content
+    assert '<a rel="prev" class="ui icon basic button" href="?page=49">' in content
+    assert '<a rel="next" class="ui icon basic button" href="?page=51">' in content
     # first and last
     assert ' href="?page=1">1' in content
     assert ' href="?page=100">100' in content
     # includes two ellipses
     assert content.count('<span>...</span>') == 2
     # current page, marked active
-    assert '<a class="ui tiny compact active button" href="?page=50">50</a>' in content
+    assert '<a class="ui active basic button" href="?page=50">50</a>' in content
     # two before and after
     assert ' href="?page=48">48' in content
     assert ' href="?page=49">49' in content
