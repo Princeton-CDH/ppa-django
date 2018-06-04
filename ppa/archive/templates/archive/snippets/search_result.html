@@ -2,23 +2,25 @@
 <div class="item">
     <abbr class="unapi-id" title="{{ item.srcid }}"></abbr>
     <div class="ui stackable grid container">
-        <div class="labels one wide column">
-            {% if page_obj %}
-            <p class="result-number">{{ page_obj.start_index|add:forloop.counter0 }}</p>
-            <!-- <i class="ui flag icon"></i> -->
-            {% endif %}
-        </div>
-        <div class="title five wide column">
-            <a href="{% url 'archive:detail' item.srcid %}">
-                <p class="ui header">{{ item.title }}</p>
-            </a>
+        <div class="six wide column">
+            <div class="labels">
+                {% if page_obj %}
+                <p class="result-number">{{ page_obj.start_index|add:forloop.counter0 }}</p>
+                <!-- <i class="ui flag icon"></i> -->
+                {% endif %}
+            </div>
+            <div class="title">
+                <a href="{% url 'archive:detail' item.srcid %}">
+                    <p class="ui header">{{ item.title }}</p>
+                </a>
+            </div>
         </div>
         <div class="metadata six wide column">
-            <p class="ui header">{{ item.author }}</p>
-            <div class="publication ui equal width grid">
-                <div class="column">{{ item.publisher }}</div>
-                <div class="column">{{ item.pub_place }}</div>
-                <div class="column">{{ item.pub_date }}</div>
+            <p class="author ui header">{{ item.author }}</p>
+            <div class="publication ui grid">
+                <div class="five wide column">{{ item.publisher }}</div>
+                <div class="five wide column">{{ item.pub_place }}</div>
+                <div class="two wide column">{{ item.pub_date }}</div>
             </div>
             <div class="buttons">
                 {% if item.pk %} {# database object with many-to-many #}

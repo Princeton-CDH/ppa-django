@@ -1,3 +1,9 @@
 /*******************************
     User Variable Overrides
 *******************************/
+
+/*-------------------
+       Element
+--------------------*/
+
+@boxShadow: 0em 0em 4px 0em @focusedFormBorderColor;

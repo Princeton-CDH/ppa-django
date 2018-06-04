@@ -34,7 +34,6 @@
     }
     
     .item {
-        @include font-smooth();
         z-index: 1;
         display: none;
 
@@ -78,6 +77,7 @@ main {
     bottom: 0;
     margin-bottom: 0;
     padding: 1rem 0;
+    width: 100%;
 
     nav.menu {
         justify-content: center;
@@ -89,8 +89,6 @@ main {
     }
 
     .menu .item {
-        @include font-smooth();
-        
         @media only screen and (max-width: 768px) {
             justify-content: center;
         }
@@ -122,4 +120,9 @@ main {
             margin-left: auto;
         }
     }
+}
+
+* {
+    // render fonts to match the spec
+    @include font-smooth();
 }

@@ -136,13 +136,12 @@
 
     /* sorting */
     .sort {
-        margin-top: 2rem;
+        margin: 2rem 1rem 0;
 
         .menu {
             justify-content: space-between;
 
             .item {
-                @include font-smooth();
                 text-transform: none;
             }
 
@@ -158,7 +157,6 @@
     }
 
     .workscount {
-        @include font-smooth();
         margin: 2rem auto;
         color: $midGrey;
         font-size: 1rem;

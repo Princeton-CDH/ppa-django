@@ -66,13 +66,13 @@
             </a>
         </div>
         <div class="column">
-            <h3 class="ui header">About the Collections</h3>
-            <p class="description">The Archive builds on bibliographic data from
+            <h3 class="ui header about-header">About the Collections</h3>
+            <div class="description">The Archive builds on bibliographic data from
                 several sources as well as library catalog data from the HathiTrust
                 Research Center. It is divided into four collections. Users are
                 able to search across collections or within any combination
                 of collections.
-            </p>
+            </div>
             {% for item in object_list %}
             <a class="ui card stack" href="{% url 'archive:list' %}?collections={{ item.name|urlencode }}">
                 <div class="content">
@@ -100,24 +100,24 @@
     </div>
 </div>
 <div class="ui vertical basic segment">
-    <div class="ui center aligned text container">
+    <div class="ui text container">
         <div class="updates ui two stackable cards">
-            <section class="ui card">
+            <div class="ui card">
                 <div class="content">
-                    <h3 class="ui header">{% lorem 4 w random %}</h3>
-                    <p class="description">
+                    <h3 class="header">{% lorem 3 w random %}</h3>
+                    <div class="description">
                         {% lorem 1 p %}
-                    </p>
+                    </div>
                 </div>
-            </section>
-            <section class="ui card">
+            </div>
+            <div class="ui card">
                 <div class="content">
-                    <h3 class="ui header">{% lorem 4 w random %}</h3>
-                    <p class="description">
+                    <h3 class="header">{% lorem 3 w random %}</h3>
+                    <div class="description">
                         {% lorem 1 p %}
-                    </p>
+                    </div>
                 </div>
-            </section>
+            </div>
         </div>
         <a class="archive-link" href="{% url 'archive:list' %}">
             <h3 class="ui header">✒ View the Archive</h3>

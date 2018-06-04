@@ -1,4 +1,6 @@
 @import 'snippets/variables';
+@import 'snippets/mixins';
+
 /* homepage */
 
 #header {
@@ -58,20 +60,46 @@
 }
 
 #homepage {
+
     
-    .intro {
+    .intro p,
+    .updates p {
         color: $green;
+        font-size: 20px;
         font-family: $headerFont;
+    }
+
+    .intro {
         margin: 3rem 0;
     }
 
-    .collections-link {
-        text-align: center;
+    .updates {
+        margin-bottom: 2rem;
     }
 
-    .updates {
+    .about-header {
+        font-size: 26px;
+        margin-top: -1rem;
+    }
+
+    .about-header ~ .description {
         color: $green;
+        font-size: 18px;
         font-family: $headerFont;
-        margin-bottom: 2rem;
+        line-height: normal;
+    }
+
+    .archive-link,
+    .about-header,
+    .collections-link {
+        text-align: center;
+
+        > .header {
+            font-size: 26px;
+        }
+    }
+
+    .collections-link > .header {
+        padding: 2rem 0;
     }
 }
