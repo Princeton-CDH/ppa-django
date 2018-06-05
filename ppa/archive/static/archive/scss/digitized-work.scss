@@ -45,9 +45,7 @@
     }
 
     .results-list .item {
-        &:nth-child(odd) {
-            background-color: initial; // don't "stripe" the results
-        }
+        background-color: initial; // don't "stripe" the results
 
         &.page {
             margin: 1rem 0;

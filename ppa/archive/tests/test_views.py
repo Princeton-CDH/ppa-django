@@ -139,9 +139,13 @@ class TestArchiveViews(TestCase):
 
         # search should include query in the context and a PageSolrQuery
 
+
         # search with no matches - test empty search result
         response = self.client.get(url, {'query': 'thermodynamics'})
         assert response.status_code == 200
+        # test that the search form is rendered
+        assert 'search_form' in response.context
+        assert 'query' in response.context['search_form'].fields
         # query string passsed into context for form
         assert 'query' in response.context
         assert response.context['query'] == 'thermodynamics'
