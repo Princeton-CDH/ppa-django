@@ -46,6 +46,52 @@
             margin-bottom: 3em;
         }
     }
+
+    &.post {
+        width: @postWidth;
+        height: @postHeight;
+        box-shadow: none;
+
+        .header,
+        .meta,
+        .description {
+            position: absolute;
+            margin-left: auto;
+            margin-right: auto;
+            left: 0;
+            right: 0;
+        }
+
+        .meta {
+            top: (@postHeight - @postPageHeight) / 2 + 20px;
+            z-index: 3;
+        }
+
+        .header {
+            top: (@postHeight - @postPageHeight) / 2;
+            z-index: 2;
+            width: @postPageWidth;
+            height: @postPageHeight;
+            padding: @postPagePadding;
+            background-color: @postPageColor;
+            color: @postPageTextColor;
+            box-shadow: @postPageBoxShadow;
+        }
+
+        .description {
+            top: 0;
+            margin: 0 !important;
+            padding: @postBackgroundPadding;
+            width: 100%;
+            height: 100%;
+            background-color: @postBackgroundColor;
+            color: @postBackgroundTextColor;
+        }
+
+        .stackable.cards & {
+            height: @postHeight !important;
+        }
+    }
 }
 
 a.ui.card,

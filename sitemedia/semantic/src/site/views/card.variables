@@ -88,3 +88,18 @@
     @shadowDistance * 8 @shadowDistance * 8 0px 0px @background,
     @shadowDistance * 9 @shadowDistance * 9 0px 0px @linkShadowColor
 ;
+
+/* Post */
+@postWidth: 360px;
+@postHeight: 360px;
+
+@postBackgroundColor: @primaryColor;
+@postBackgroundTextColor: @invertedTextColor;
+@postBackgroundPadding: 4em 2em 2em 2em;
+
+@postPageWidth: @postWidth - 160px;
+@postPageHeight: @postHeight - 100px;
+@postPageColor: @background;
+@postPageTextColor: @headerColor;
+@postPagePadding: 2em;
+@postPageBoxShadow: @shadowBoxShadow;
