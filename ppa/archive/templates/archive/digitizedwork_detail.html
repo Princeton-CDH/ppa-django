@@ -1,5 +1,5 @@
 {% extends "base.html"  %}
-{% load static humanize %}
+{% load static semanticui humanize %}
 
 {% block css %}
 <link rel="stylesheet" type="text/x-scss" href="{% static 'archive/scss/digitized-work.scss' %}">
@@ -23,13 +23,7 @@
     <form class="ui form">
         <fieldset class="ui vertical basic grid segment">
             <div class="twelve wide column">
-                <div class="ui field">
-                    <label for="query">Search within the Volume</label>
-                    <div class="ui left icon input">
-                        <input id="query" name="query" type="text" placeholder="Search keyword or phrase" value="{{ query }}">
-                        <i class="search icon"></i>
-                    </div>
-                </div>
+                {% render_field search_form.query %}
                 <span class="question-popup" data-html="{{ search_form.QUESTION_POPUP_TEXT }}" data-position="top center">
                     <i class="ui question circle icon"></i>
                 </span>

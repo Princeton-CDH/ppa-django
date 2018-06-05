@@ -315,6 +315,25 @@ class SearchForm(forms.Form):
         return maxmin['pub_date__min'], maxmin['pub_date__max']
 
 
+class SearchWithinWorkForm(forms.Form):
+    '''
+    Form to search for occurrences of a string within a particular instance
+    of a digitized work.
+    '''
+
+    # this appears when you hover over the question mark icon
+    QUESTION_POPUP_TEXT = mark_safe('''
+    Boolean search is supported. Operators must be capitalized (AND, OR).
+    ''')
+
+    # single text input
+    query = forms.CharField(label='Search within the Volume', required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Search keyword or phrase',
+            '_icon': 'search',
+            '_align': 'left'
+    }))
+
 
 class AddToCollectionForm(forms.Form):
     '''
