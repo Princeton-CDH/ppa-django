@@ -1,28 +1,21 @@
+@import 'scss/snippets/variables';
+@import 'scss/snippets/mixins';
+
 #collections {
 
-    // .page-description {
-    //     margin: 6rem auto;
-    //     text-align: left;
-    // }
+    .page-description {
+        color: $green;
+        font-family: $headerFont;
+        font-size: 20px;
+        margin-bottom: 4rem;
+    }
 
-    // .collection.card { // these will get factored out into component styles
-    //     max-height: 13rem;
-    
-    //     .header,
-    //     p {
-    //         margin-bottom: 0;
-    //     }
-    
-    //     p {
-    //         font-size: 1rem;
-    //     }
-    
-    //     .description {
-    //         text-align: left;
-    //     }
-    // }
-
-    // .archive-link .header {
-    //     margin: 4rem 0 6rem;
-    // }
+    .archive-link {
+        text-align: center;
+        
+        > .header {
+            font-size: 26px;
+            margin-top: 4rem;
+        }
+    }
 }

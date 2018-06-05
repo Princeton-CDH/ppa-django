@@ -60,6 +60,17 @@
 #header {
     margin-top: $nav-height;
     padding-top: $nav-height;
+
+    .sub.header {
+        font-size: 20px;
+    }
+
+    .header:not(.sub) {
+        font-size: 80px;
+        font-style: italic;
+        font-weight: normal;
+        margin-bottom: $nav-height;
+    }
 }
 
 /* main */
