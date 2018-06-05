@@ -22,6 +22,15 @@
     "watch": "gulp --gulpfile sitemedia/semantic/gulpfile.js",
     "build": "gulp --gulpfile sitemedia/semantic/gulpfile.js build",
     "postinstall": "npm run build",
-    "start": "npm run watch"
+    "start": "npm run watch",
+    "test": "karma start --single-run"
+  },
+  "devDependencies": {
+    "jasmine-core": "^3.1.0",
+    "karma": "^2.0.2",
+    "karma-browserify": "^5.2.0",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-jasmine": "^1.1.2",
+    "karma-spec-reporter": "0.0.32"
   }
 }

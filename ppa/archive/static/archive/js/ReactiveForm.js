@@ -7,8 +7,8 @@ import 'rxjs/add/operator/startWith'
 
 export default class ReactiveForm {
     /**
-     * Given a CSS selector, treats that element as a form and finds all matching
-     * inputs by id prefix that belong to that form. Builds a set of observables
+     * Given a CSS selector, treats that element as a form and finds all child
+     * input elements that belong to that form. Builds a set of observables
      * using fromInput() and merges them into a single observable for the form,
      * then subscribes to form state changes and calls onStateChange.
      * 
@@ -16,11 +16,10 @@ export default class ReactiveForm {
      */
     constructor(selector) {
         let self = this
-        self.inputIDPrefix = 'id_' // default for a django form
         self.$$element = $(selector)
-        self.$inputs = document.querySelectorAll(`[id^=${self.inputIDPrefix}]`)
-        self.stateStream = merge(...[...self.$inputs].map(self.fromInput)) // merge an array of input observables to a single observable
-        self.stateStream.subscribe(() => { // subscribe to state changes and call onStateChange() with the current form state
+        self.$inputs = self.$$element.find('input').get() // find child <input> elements
+        self.stateStream = merge(self.$inputs.map(self.fromInput)) // create and then merge an array of input observables
+        self.stateStream.subscribe(() => { // subscribe to state changes and pass them to onStateChange()
             self.onStateChange.call(self, self.$$element.serializeArray())
         })
     }
