@@ -1,4 +1,4 @@
-import { Observable, merge } from 'rxjs'
+import { Observable } from 'rxjs'
 
 import ReactiveForm from '../../static/archive/js/ReactiveForm'
 
@@ -74,7 +74,7 @@ describe('Reactive Form', () => {
             expect(this.radio1Spy).toHaveBeenCalledWith(true)
         })
         it('should observe state changes for text inputs', function() {
-            
+
         })
     })
 })

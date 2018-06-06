@@ -424,25 +424,23 @@ class TestArchiveViews(TestCase):
         # should render the results list partial and single result partial
         self.assertTemplateUsed('archive/snippets/results_list.html')
         self.assertTemplateUsed('archive/snippest/search_result.html')
-        # shouldn't render the search form
-        self.assertNotContains(response, '<form class="ui form">', html=True)
+        # shouldn't render the search form or whole list
+        self.assertTemplateNotUsed('archive/snippets/search_form.html')
+        self.assertTemplateNotUsed('archive/snippets/list_digitizedworks.html')
         # should have all the results
         assert len(response.context['object_list']) == len(digitized_works)
-        # test some queries
+        # should have the results count
+        self.assertContains(response, " digitized works")
+        # should have the histogram data
+        self.assertContains(response, "<pre>")
+        # should have pagination
+        self.assertContains(response, "<div class=\"pagination")
+        # test a query
         response = self.client.get(url,
             {'query': 'blood AND bone AND alternate'},
             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
-        response = self.client.get(url,
-            {'query': 'blood NOT bone'},
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        self.assertContains(response, 'No matching works.')
-        response = self.client.get(url,
-            {'title': 'The Dial'},
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        self.assertContains(response, dial.source_id)
-        self.assertNotContains(response, wintry.source_id)
 
         # nothing indexed - should not error
         solr.delete_doc_by_query(solr_collection, '*:*', params={"commitWithin": 100})

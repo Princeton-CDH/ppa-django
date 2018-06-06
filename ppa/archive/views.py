@@ -33,7 +33,8 @@ class DigitizedWorkListView(ListView):
     query = None
 
     def get_template_names(self):
-        # allow querying just the results via ajax
+        # when queried via ajax, return partial html for just the results section
+        # (don't render the form or base template)
         if self.request.is_ajax():
             return 'archive/snippets/results_list.html'
         return self.template_name

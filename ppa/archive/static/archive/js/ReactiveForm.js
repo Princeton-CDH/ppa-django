@@ -2,7 +2,6 @@ import { fromEvent, merge } from 'rxjs'
 import 'rxjs/add/operator/pluck'
 import 'rxjs/add/operator/distinctUntilChanged'
 import 'rxjs/add/operator/debounceTime'
-import 'rxjs/add/operator/startWith'
 
 
 export default class ReactiveForm {
