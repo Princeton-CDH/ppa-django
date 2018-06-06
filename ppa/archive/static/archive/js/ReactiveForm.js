@@ -7,31 +7,13 @@ import 'rxjs/add/operator/startWith'
 
 export default class ReactiveForm {
     /**
-     * Given a CSS selector, treats that element as a form and finds all child
-     * input elements that belong to that form. Builds a set of observables
-     * using fromInput() and merges them into a single observable for the form,
-     * then subscribes to form state changes and calls onStateChange.
-     * 
-     * @param {String} selector CSS selector
-     */
-    constructor(selector) {
-        let self = this
-        self.$$element = $(selector)
-        self.$inputs = self.$$element.find('input').get() // find child <input> elements
-        self.stateStream = merge(self.$inputs.map(self.fromInput)) // create and then merge an array of input observables
-        self.stateStream.subscribe(() => { // subscribe to state changes and pass them to onStateChange()
-            self.onStateChange.call(self, self.$$element.serializeArray())
-        })
-    }
-
-    /**
      * Utility function that creates an observable from an <input> tag.
      * Generates a sequence of values depending on the input type.
      * 
      * @param {HTMLElement} $element <input> element
      * @return {Observable} sequence of values of the element
      */
-    fromInput($element) {
+    static fromInput($element) {
         let observable = fromEvent($element, 'input') // create an observable from the input event
         switch($element.type) { // decide what we need to monitor to determine if there was a change
             case 'checkbox':
@@ -44,6 +26,24 @@ export default class ReactiveForm {
                     .debounceTime(500) // filter out fast repetitive events
                     .distinctUntilChanged() // filter out non-changes
         }
+    }
+
+    /**
+     * Given a CSS selector, treats that element as a form and finds all child
+     * input elements that belong to that form. Builds a set of observables
+     * using fromInput() and merges them into a single observable for the form,
+     * then subscribes to form state changes and calls onStateChange.
+     * 
+     * @param {String} selector CSS selector
+     */
+    constructor(selector) {
+        let self = this
+        self.$$element = $(selector)
+        self.$inputs = self.$$element.find('input').get() // find child <input> elements
+        self.stateStream = merge(...self.$inputs.map(ReactiveForm.fromInput)) // create and then merge an array of input observables
+        self.stateStream.subscribe(() => { // subscribe to state changes and pass them to onStateChange()
+            self.onStateChange.call(self, self.$$element.serializeArray())
+        })
     }
 
     /**
