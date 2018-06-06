@@ -27,7 +27,7 @@ $(function(){
     onPageLoad() // misc functions that run once on page load
     
     /* functions */
-    function submitForm(state) {        
+    function submitForm(state) {
         let url = `?${$.param(state)}` // serialize state using $.param to make querystring
         window.history.pushState(state, 'PPA Archive Search', url) // update the URL bar
         let req = fetch(`/archive/${url}`, { // create the submission request

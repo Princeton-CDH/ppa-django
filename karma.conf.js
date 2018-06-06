@@ -2,7 +2,10 @@ module.exports = (config) => {
     config.set({
       frameworks: ['browserify', 'jasmine'],
       reporters: ['spec'],
-      browsers: ['ChromeHeadless'],
+      browsers: [
+        'ChromeHeadless',
+        'FirefoxHeadless'
+      ],
       files: [
           'https://code.jquery.com/jquery-3.1.1.min.js',
           'sitemedia/semantic/dist/semantic.min.js',
