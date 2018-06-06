@@ -8,8 +8,10 @@ module.exports = (config) => {
       ],
       files: [
           'https://code.jquery.com/jquery-3.1.1.min.js',
+          'node_modules/jasmine-jquery/lib/jasmine-jquery.js',
           'sitemedia/semantic/dist/semantic.min.js',
-          'ppa/**/*.spec.js',
+          'ppa/**/tests/js/*.spec.js',
+          { pattern: 'ppa/**/fixtures/*', served: true, included: false }
       ],
       preprocessors: {
         'ppa/**/*.js': ['browserify'],

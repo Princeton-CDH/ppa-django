@@ -50,7 +50,8 @@ $(function(){
     function onClearDates() {
         $$minDateInput.val('') // clear the date inputs
         $$maxDateInput.val('')
-        submitForm(archiveSearchForm.state) // force re-submitting the form
+        $$minDateInput[0].dispatchEvent(new Event('input')) // fake input events
+        $$maxDateInput[0].dispatchEvent(new Event('input'))
     }
 
     function onCollectionChange(event) {
