@@ -248,7 +248,26 @@ class PagedSolrQuery(object):
 
 class Indexable(object):
     '''Mixin for objects that are indexed in Solr.  Subclasses must implement
-    `index_id` and `index` methods.'''
+    `index_id` and `index` methods.
+
+    Subclasses may include an `index_depends_on` property which is used
+    by :meth:`identify_index_dependencies` to determine index dependencies
+    on related objects, including many-to-many relationships.  This property
+    should be structured like this::
+
+        index_depends_on = {
+            'attr_name': {      # string name of the attribute on this model
+                'save': handle_attr_save,  # signal handler for post_save on this model
+                'delete': handle_attr_delete,   # signal handler for pre_delete on this model
+            }
+        }
+
+    If the attribute is a many-to-many field, indexing will be configured on
+    the model when the based on relationship changes (a signal handler will
+    listen for :class:`models.signals.m2m_changed` on the through model).
+    Signal handler methods for save and delete are optional.
+
+    '''
 
     # TODO: set default solr params / commit within here? maybe get value
     # from django settings?
