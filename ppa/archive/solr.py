@@ -292,24 +292,38 @@ class Indexable(object):
         solr.index(solr_collection, [self.index_data()], params=params)
 
     @classmethod
-    def index_items(cls, items, params=None):
+    def index_items(cls, items, params=None, progbar=None):
         '''Indexable class method to index multiple items at once.  Takes a
-        list or queryset of Indexable items.'''
+        list or queryset of Indexable items.  Items are indexed in chunks,
+        based on :attr:`Indexable.index_chunk_size`.  Takes an optional
+        progressbar object to update when indexing items in chunks.
+        Returns a count of the number of items indexed.'''
         solr, solr_collection = get_solr_connection()
 
-        # if this is a queryset, convert it to use iterator
+        # if this is a queryset, use iterator to get it in chunks
         if isinstance(items, QuerySet):
             items = items.iterator()
 
+        # if this is a normal list, convert it to an iterator
+        # so we don't iterate the same slice over and over
+        elif isinstance(items, list):
+            items = iter(items)
+
         # index in chunks to support efficiently indexing large numbers
         # of items (adapted from index script)
-        start = 0
         chunk = list(itertools.islice(items, cls.index_chunk_size))
+        count = 0
         while chunk:
             solr.index(solr_collection, [i.index_data() for i in chunk],
                        params=params)
-            start += cls.index_chunk_size
-            chunk = list(itertools.islice(items, start, start + cls.index_chunk_size))
+            count += len(chunk)
+            if progbar:
+                progbar.update(count)
+
+            # get the next chunk
+            chunk = list(itertools.islice(items, cls.index_chunk_size))
+
+        return count
 
     def remove_from_index(self, params=None):
         '''Remove the current object from Solr by identifier using

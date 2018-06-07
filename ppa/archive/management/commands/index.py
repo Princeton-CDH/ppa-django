@@ -42,7 +42,7 @@ from SolrClient.exceptions import ConnectionError
 from requests.exceptions import RequestException
 
 from ppa.archive.models import DigitizedWork
-from ppa.archive.solr import get_solr_connection
+from ppa.archive.solr import get_solr_connection, Indexable
 
 
 class Command(BaseCommand):
@@ -104,16 +104,9 @@ class Command(BaseCommand):
                                               max_value=total_to_index)
 
         # index works
-        count = 0
         if self.options['index'] in ['works', 'all']:
-            # use django paginator to index chunks of works at a time
-            paginator = Paginator(works, 100)
-            for page in range(1, paginator.num_pages + 1):
-                self.index([work.index_data() for work in paginator.page(page).object_list])
-
-                count += paginator.page(page).object_list.count()
-                if progbar:
-                    progbar.update(count)
+            # index in chunks and update progress bar
+            count = Indexable.index_items(works, progbar=progbar)
 
         self.solr.commit(self.solr_collection)
 

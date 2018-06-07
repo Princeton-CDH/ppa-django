@@ -329,21 +329,21 @@ class TestIndexable(TestCase):
         mock_get_solr_connection.return_value = (mocksolr, coll)
         items = [TestIndexable.SimpleIndexable(i) for i in range(10)]
 
-        Indexable.index_items(items)
+        indexed = Indexable.index_items(items)
+        assert indexed == len(items)
         mocksolr.index.assert_called_with(coll, [i.index_data() for i in items],
                                           params=None)
         # index in chunks
         Indexable.index_chunk_size = 6
         mocksolr.index.reset_mock()
-        Indexable.index_items(items)
-        print(mocksolr.index.call_args_list)
+        indexed = Indexable.index_items(items)
+        assert indexed == len(items)
         # first chunk
         mocksolr.index.assert_any_call(coll, [i.index_data() for i in items[:6]],
-                                          params=None)
+                                       params=None)
         # second chunk
         mocksolr.index.assert_any_call(coll, [i.index_data() for i in items[6:]],
-                                          params=None)
-
+                                       params=None)
 
     def test_identify_index_dependencies(self, mock_get_solr_connection):
         # currently testing based on DigitizedWork configuration
