@@ -23,18 +23,17 @@ Example usage::
     python manage.py index htid1 htid2 htid3
     # index works only (skip pages)
     python manage.py index -i works
+    python manage.py index --works
     # index pages only (skip works)
     python manage.py index -i pages
+    python manage.py index ---pages
     # suppress progressbar
     python manage.py index --no-progress
 
 '''
 
 
-import itertools
-
 from django.core.management.base import BaseCommand, CommandError
-from django.core.paginator import Paginator
 from django.db.models import Sum
 import progressbar
 # from urllib3.exceptions import HTTPError
@@ -72,6 +71,12 @@ class Command(BaseCommand):
         parser.add_argument(
             '-i', '--index', choices=['all', 'works', 'pages'], default='all',
             help='Index only works or pages (by default indexes all)')
+        parser.add_argument(
+            '-w', '--works', dest='index', const='works', action='store_const',
+            help='Index works only')
+        parser.add_argument(
+            '-p', '--pages', dest='index', const='pages', action='store_const',
+            help='Index pages only')
         parser.add_argument(
             '--no-progress', action='store_true',
             help='Do not display progress bar to track the status of the reindex.')
