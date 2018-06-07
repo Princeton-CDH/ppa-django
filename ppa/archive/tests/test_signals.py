@@ -1,7 +1,9 @@
 from unittest.mock import Mock, patch
 from weakref import ref
 
+from django.conf import settings
 from django.db import models
+from django.test import TestCase, override_settings
 import pytest
 
 from ppa.archive.models import Collection, DigitizedWork
@@ -19,7 +21,8 @@ def tearDownModule():
     IndexableSignalHandler.teardown()
 
 
-class TestIndexableSignalHandler:
+@override_settings(SOLR_CONNECTIONS={'default': settings.SOLR_CONNECTIONS['test']})
+class TestIndexableSignalHandler(TestCase):
 
     def test_setup(self):
         # check that signal handlers are bound as expected
