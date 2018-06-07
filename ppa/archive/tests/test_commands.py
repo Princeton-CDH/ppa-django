@@ -23,6 +23,7 @@ from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound, \
     HathiBibliographicRecord
 from ppa.archive.models import DigitizedWork
 from ppa.archive.management.commands import hathi_import, index
+from ppa.archive.management.commands.retry import Retry
 from ppa.archive.solr import get_solr_connection
 
 
@@ -394,3 +395,23 @@ class TestIndexCommand(TestCase):
             assert mock_cmd_index_method.call_count == 3
             # page index data called once only
             assert mock_page_index_data.call_count == 1
+
+
+class TestRetryDecorator(TestCase):
+
+    def test_decorator(self):
+        # create a fake function that can fail if told to
+        def fake_func(*args, **kwargs):
+            if 'fail' in kwargs:
+                raise Exception('fail!!!')
+            return (args, kwargs)
+        # test that it works normally unless told to fail
+        assert fake_func(1, 2, three=3) == ((1, 2), {'three': 3})
+        with self.assertRaises(Exception):
+            fake_func(fail=True)
+        # decorate the function
+        decorated_func = Retry(Exception)(fake_func)
+        # decorated function should return same arguments 
+        assert fake_func(1, 2, three=3) == decorated_func(1, 2, three=3)
+        # decorated function should retry 3 times by default
+
