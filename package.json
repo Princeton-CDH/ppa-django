@@ -23,7 +23,8 @@
     "build": "gulp --gulpfile sitemedia/semantic/gulpfile.js build",
     "postinstall": "npm run build",
     "start": "npm run watch",
-    "test": "karma start --single-run"
+    "test": "karma start --single-run",
+    "pa11y": "pa11y-ci -T 50 --sitemap http://localhost:8000/sitemap.xml"
   },
   "devDependencies": {
     "jasmine-core": "^3.1.0",
@@ -33,6 +34,10 @@
     "karma-chrome-launcher": "^2.2.0",
     "karma-firefox-launcher": "^1.1.0",
     "karma-jasmine": "^1.1.2",
-    "karma-spec-reporter": "0.0.32"
+    "karma-spec-reporter": "0.0.32",
+    "pa11y-ci": "^2.1.1"
+  },
+  "devDependencies": {
+    "pa11y-ci": "^2.1.1"
   }
 }

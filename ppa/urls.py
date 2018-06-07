@@ -15,11 +15,14 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
+from django.contrib.sitemaps.views import sitemap
 from django.views.generic.base import TemplateView
 import mezzanine.urls
+from mezzanine.core.sitemaps import DisplayableSitemap
 
 from ppa.unapi.views import UnAPIView
 from ppa.archive.views import IndexView
+
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
@@ -35,7 +38,11 @@ urlpatterns = [
     url(r'^unapi/$', UnAPIView.as_view(), name='unapi'),
 
     # content pages managed by mezzanine
-    url("^", include(mezzanine.urls))
+    url("^", include(mezzanine.urls)),
+    
+    # sitemaps
+    url(r'^sitemap\.xml$', sitemap, {'sitemaps': DisplayableSitemap},
+        name='django.contrib.sitemaps.views.sitemap')
 ]
 
 

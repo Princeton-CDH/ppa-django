@@ -31,6 +31,8 @@ script:
 - python -m pytest --cov=ppa
 - npm test
 - python manage.py compress -f -v0
+- python manage.py runserver
+- npm run pa11y
 services:
 - mysql
 after_success:
