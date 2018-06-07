@@ -91,6 +91,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.staticfiles',
     'django.contrib.redirects',
+    'django.contrib.sitemaps',
     'django_cas_ng',
     'pucas',
     'mezzanine.boot',
