@@ -266,3 +266,14 @@ class TestCollection(TestCase):
     def test_str(self):
         collection = Collection(name='Random Assortment')
         assert str(collection) == 'Random Assortment'
+
+    def test_name_changed(self):
+        collection = Collection(name='Random Assortment')
+        assert not collection.name_changed
+        # change the name
+        collection.name = 'Randomer'
+        assert collection.name_changed
+        # save changes; should no longer be marked as changed
+        collection.save()
+        assert not collection.name_changed
+

@@ -26,6 +26,25 @@ class Collection(models.Model):
     def __str__(self):
         return self.name
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # store a copy of model data to allow for checking if
+        # it has changed
+        self.__initial = self.__dict__.copy()
+
+    def save(self, *args, **kwargs):
+        """
+        Saves model and set initial state.
+        """
+        super().save(*args, **kwargs)
+        # update copy of initial data to reflect saved state
+        self.__initial = self.__dict__.copy()
+
+    @property
+    def name_changed(self):
+        '''check if name has been changed (only works on current instance)'''
+        return self.name != self.__initial['name']
+
 
 class DigitizedWork(models.Model, Indexable):
     '''
@@ -126,20 +145,22 @@ class DigitizedWork(models.Model, Indexable):
 
     def handle_collection_save(sender, instance, **kwargs):
         '''signal handler for collection save; reindex associated digitized works'''
-        logger.debug('collection save, reindexing related works %d', DigitizedWork.objects.filter(collections=instance).count())
-        Indexable.index_items(DigitizedWork.objects.filter(collections=instance), params={'commitWithin': 3000})
+        # only reindex if collection name has changed
+        if instance.name_changed:
+            # if the collection has any works associated
+            works = instance.digitizedwork_set.all()
+            if works.exists():
+                logger.debug('collection save, reindexing %d related works', works.count())
+                Indexable.index_items(works, params={'commitWithin': 3000})
 
     def handle_collection_delete(sender, instance, **kwargs):
         logger.debug('collection delete')
-        # clear associated works: sends pre/post clear for the collection;
-        # how to handle?
+        # get a list of ids for collected works before clearing them
         digworks = instance.digitizedwork_set.values_list('id', flat=True)
-        print('%d digworks' % len(digworks))
-        print(digworks)
-        # sends pre/post clear, but not obvious how to take advantage of that
+        # NOTE: this sends pre/post clear signal, but it's not obvious
+        # how to take advantage of that
         instance.digitizedwork_set.clear()
-        print('%d digworks' % len(digworks))
-        print(DigitizedWork.objects.filter(id__in=list(digworks)))
+        # find the items based on the list of ids and reinedx
         Indexable.index_items(DigitizedWork.objects.filter(id__in=list(digworks)),
                               params={'commitWithin': 3000})
 
