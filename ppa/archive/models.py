@@ -154,15 +154,18 @@ class DigitizedWork(models.Model, Indexable):
                 Indexable.index_items(works, params={'commitWithin': 3000})
 
     def handle_collection_delete(sender, instance, **kwargs):
+        '''signal handler for collection delete; cleare associated digitized
+        works and reindex'''
         logger.debug('collection delete')
         # get a list of ids for collected works before clearing them
-        digworks = instance.digitizedwork_set.values_list('id', flat=True)
+        digwork_ids = instance.digitizedwork_set.values_list('id', flat=True)
+        # find the items based on the list of ids to reindex
+        digworks = DigitizedWork.objects.filter(id__in=list(digwork_ids))
+
         # NOTE: this sends pre/post clear signal, but it's not obvious
         # how to take advantage of that
         instance.digitizedwork_set.clear()
-        # find the items based on the list of ids and reinedx
-        Indexable.index_items(DigitizedWork.objects.filter(id__in=list(digworks)),
-                              params={'commitWithin': 3000})
+        Indexable.index_items(digworks, params={'commitWithin': 3000})
 
     index_depends_on = {
         'collections': {

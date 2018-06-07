@@ -240,6 +240,12 @@ class TestDigitizedWork(TestCase):
         digwork.collections.add(coll1)
 
         DigitizedWork.handle_collection_save(Mock(), coll1)
+        # index not called because collection name has not changed
+        mock_index_items.assert_not_called()
+
+        # modify name to test indexing
+        coll1.name = 'Jetsam'
+        DigitizedWork.handle_collection_save(Mock(), coll1)
         # call must be inspected piecemeal because queryset equals comparison fails
         args, kwargs = mock_index_items.call_args
         assert isinstance(args[0], QuerySet)
