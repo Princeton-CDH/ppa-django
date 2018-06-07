@@ -1,3 +1,105 @@
 /*******************************
     User Variable Overrides
 *******************************/
+
+/*-------------------
+         View
+--------------------*/
+
+/* Shadow */
+@shadowDistance: 4px;
+@shadowColor: @lightGrey;
+@shadowBoxShadow: @shadowDistance @shadowDistance 0px 0px @shadowColor;
+
+/* Card */
+@fontFamily: @headerFont;
+@padding: 2em;
+@width: 395px;
+@borderWidth: 0px;
+
+/*-------------------
+       Content
+--------------------*/
+
+/* Content */
+@contentPadding: 0;
+
+/* Header */
+@headerColor: @secondaryColor;
+@headerFontSize: @relativeMassive;
+
+/* Metadata */
+@metaFontSize: @fontSize;
+@metaSpacing: 0;
+@metaColor: @midGrey;
+
+/* Description */
+@descriptionDistance: 1em;
+@descriptionColor: @secondaryColor;
+
+/*-------------------
+      Variations
+--------------------*/
+
+/* Link */
+@linkHoverBackground: @white;
+@linkHoverBorder: 0;
+@linkHoverZIndex: initial;
+@linkHoverRaiseDistance: 0px;
+@linkHoverTransform: none;
+@linkShadowColor: @lightPrimaryColor;
+@linkHoverShadowColor: @lightSecondaryColor;
+
+@linkBoxShadow: @shadowDistance @shadowDistance 0px 0px @lightPrimaryColor;
+@linkHoverBoxShadow: @shadowDistance @shadowDistance 0px 0px @linkHoverShadowColor;
+@shadowHoverBoxShadow: @linkHoverBoxShadow;
+
+/* Aside */
+@asideMargin: 0 0 3em;
+@asideWidth: 310px;
+@asideBoxShadow: -10px 0px 0px 0px @shadowColor;
+
+/* Aside Link */
+@asideLinkBoxShadow: -10px 0px 0px 0px @linkShadowColor;
+@asideLinkHoverBoxShadow: -10px 0px 0px 0px @linkHoverShadowColor;
+
+/* Stack */
+@stackMargin: 1em 0 3em;
+@stackBoxShadow:
+    @shadowBoxShadow,
+    @shadowDistance * 4 @shadowDistance * 4 0px 0px @background,
+    @shadowDistance * 5 @shadowDistance * 5 0px 0px @shadowColor,
+    @shadowDistance * 8 @shadowDistance * 8 0px 0px @background,
+    @shadowDistance * 9 @shadowDistance * 9 0px 0px @shadowColor
+;
+
+/* Stack Link */
+@stackLinkBoxShadow:
+    @linkBoxShadow,
+    @shadowDistance * 4 @shadowDistance * 4 0px 0px @background,
+    @shadowDistance * 5 @shadowDistance * 5 0px 0px @linkShadowColor,
+    @shadowDistance * 8 @shadowDistance * 8 0px 0px @background,
+    @shadowDistance * 9 @shadowDistance * 9 0px 0px @linkShadowColor
+;
+@stackLinkHoverBoxShadow:
+    @linkHoverBoxShadow,
+    @shadowDistance * 4 @shadowDistance * 4 0px 0px @background,
+    @shadowDistance * 5 @shadowDistance * 5 0px 0px @linkShadowColor,
+    @shadowDistance * 8 @shadowDistance * 8 0px 0px @background,
+    @shadowDistance * 9 @shadowDistance * 9 0px 0px @linkShadowColor
+;
+
+/* Post */
+@postWidth: 360px;
+@postHeight: 360px;
+
+@postBackgroundColor: @primaryColor;
+@postBackgroundTextColor: @invertedTextColor;
+@postBackgroundPadding: 4em 2em 2em 2em;
+
+@postPageWidth: @postWidth - 160px;
+@postPageHeight: @postHeight - 100px;
+@postPageColor: @background;
+@postPageTextColor: @headerColor;
+@postPagePadding: 2em;
+@postPageBoxShadow: @shadowBoxShadow;

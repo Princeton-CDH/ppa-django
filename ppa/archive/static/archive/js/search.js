@@ -81,4 +81,9 @@ $(function(){
         $$collectionInputs.filter(':disabled').parent().addClass('disabled') // disable empty collections
     }
 
+    $$collectionInputs
+        .focus(e => $(e.target).parent().addClass('focus')) // make collection buttons focusable
+        .blur(e => $(e.target).parent().removeClass('focus')) 
+        .keypress(e => { if (e.which == 13) $(e.target).click() }) // pressing enter "clicks" them
+
 })

@@ -1,3 +1,19 @@
 /*******************************
     User Variable Overrides
 *******************************/
+
+/*-------------------
+       Element
+--------------------*/
+
+@mobileGutter: auto;
+@computerWidth: 1020px;
+@largeMonitorWidth: @computerWidth;
+
+
+/*-------------------
+       Types
+--------------------*/
+
+/* Text */
+@textWidth: 820px;

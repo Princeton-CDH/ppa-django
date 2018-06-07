@@ -1,3 +1,30 @@
 /*******************************
     User Variable Overrides
 *******************************/
+
+/*-------------------
+      Collection
+--------------------*/
+
+/* Menu Item */
+@itemVerticalPadding: @relativeBig;
+@itemTextTransform: uppercase;
+
+/*--------------
+   Variations
+---------------*/
+
+/* Inverted */
+@invertedBackground: @secondaryColor;
+@invertedItemTextColor: @white;
+
+/*--------------
+     Types
+---------------*/
+
+/* Pointing */
+@secondaryPointingBorderColor: @primaryColor;
+@secondaryPointingActiveBorderColor: @primaryColor;
+@secondaryPointingActiveTextColor: @primaryColor;
+@secondaryPointingHoverTextColor: @primaryColor;
+@secondaryPointingItemVerticalPadding: @itemVerticalPadding;

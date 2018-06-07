@@ -2,42 +2,44 @@
 <div class="item">
     <abbr class="unapi-id" title="{{ item.srcid }}"></abbr>
     <div class="ui stackable grid container">
-        <div class="labels one wide column">
-            {% if page_obj %}
-            <p class="result-number">{{ page_obj.start_index|add:forloop.counter0 }}</p>
-            <!-- <i class="ui flag icon"></i> -->
-            {% endif %}
+        <div class="six wide column">
+            <div class="labels">
+                {% if page_obj %}
+                <p class="result-number">{{ page_obj.start_index|add:forloop.counter0 }}</p>
+                <!-- <i class="ui flag icon"></i> -->
+                {% endif %}
+            </div>
+            <div class="title">
+                <a href="{% url 'archive:detail' item.srcid %}">
+                    <p class="ui header">{{ item.title }}</p>
+                </a>
+            </div>
         </div>
-        <div class="title seven wide column">
-            <a href="{% url 'archive:detail' item.srcid %}">
-                <p class="ui header">{{ item.title }}</p>
-            </a>
-        </div>
-        <div class="metadata eight wide column">
-            <p class="ui header">{{ item.author }}</p>
-            <div class="publication ui equal width grid">
-                <div class="column">{{ item.publisher }}</div>
-                <div class="column">{{ item.pub_place }}</div>
-                <div class="column">{{ item.pub_date }}</div>
+        <div class="metadata six wide column">
+            <p class="author ui header">{% firstof item.author '[unknown]' %}</p>
+            <div class="publication ui grid">
+                <div class="five wide column">{% firstof item.publisher '[unknown]' %}</div>
+                <div class="five wide column">{% firstof item.pub_place '[unknown]' %}</div>
+                <div class="two wide column">{% firstof item.pub_date '[unknown]' %}</div>
             </div>
             <div class="buttons">
                 {% if item.pk %} {# database object with many-to-many #}
                     {% for collection in item.collections.all %}
-                        <button class="ui tiny basic button">{{ collection }}</button>
+                        <button class="ui button">{{ collection }}</button>
                     {% endfor %}
                 {% else %} {# solr object with list of strings #}
                     {% for collection in item.collections %}
-                        <button class="ui tiny basic button">{{ collection }}</button>
+                        <button class="ui button">{{ collection }}</button>
                     {% endfor %}
                 {% endif %}
-                <a class="ui right floated right labeled secondary tiny icon button" href="{{ item.src_url }}" target="_blank">
+                <a class="ui right floated right labeled primary icon button" href="{{ item.src_url }}" target="_blank">
                     HathiTrust
                     <i class="right arrow icon"></i>
                 </a>
             </div>
         </div>
         {% if page_groups and page_highlights %}
-        <div class="pages sixteen wide column">
+        <div class="pages twelve wide column">
             {% with results=page_groups|dict_item:item.id %}
                 {% if page_highlights %}
                 <div class="wrapper">
@@ -49,7 +51,7 @@
                 </div>
                 {# link to page with search if there are more than two pages #}
                     {% if results.numFound > 2 %}
-                    <a class="ui left floated right labeled secondary tiny icon button"
+                    <a class="ui left floated right labeled primary icon button"
                         href="{% url 'archive:detail' item.srcid %}?query={{ query }}">
                         View all {{ results.numFound|intcomma }} page{{ results.numFound|pluralize }}
                         <i class="right arrow icon"></i>

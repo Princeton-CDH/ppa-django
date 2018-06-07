@@ -1,0 +1,11 @@
+@mixin font-smooth() {
+    font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+}
+
+@mixin no-font-smooth() {
+    font-smoothing: never;
+    -moz-osx-font-smoothing: auto;
+    -webkit-font-smoothing: auto;
+}

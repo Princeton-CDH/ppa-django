@@ -1,8 +1,12 @@
 {% extends "base.html"  %}
-{% load static humanize %}
+{% load static semanticui humanize %}
 
 {% block css %}
 <link rel="stylesheet" type="text/x-scss" href="{% static 'archive/scss/digitized-work.scss' %}">
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'archive/js/searchWithin.js' %}" type="module"></script>
 {% endblock %}
 
 {% block page-subtitle %}Archive | {{ object.title }} {% endblock %}
@@ -17,36 +21,31 @@
 {% block content %}
 <section class="ui basic vertical segment container">
     <form class="ui form">
-        <div class="ui field">
-            <label for="query">Search within the Volume</label>
-            <div class="ui left icon input">
-                <input id="query" name="query" type="text" placeholder="Search keyword or phrase" value="{{ query }}">
-                <i class="search icon"></i>
+        <fieldset class="ui vertical basic grid segment">
+            <div class="twelve wide column">
+                {% render_field search_form.query %}
+                <span class="question-popup" data-html="{{ search_form.QUESTION_POPUP_TEXT }}" data-position="top center">
+                    <i class="ui question circle icon"></i>
+                </span>
             </div>
-        </div>
-        <input class="sr-only sr-only-focusable" type="submit">
+            <input class="sr-only sr-only-focusable" type="submit">
+        </fieldset>
     </form>
 </section>
 {% if query %} {# display search result view of record if there is a search term active #}
-<div class="results-list">
+<div class="results-list single">
     {# suppress order and highlighting in search result snippet  #}
     {% include 'archive/snippets/search_result.html' with item=object page_highlights=0 page_obj=0 %}
 </div>
 {% else %}
-<section class="ui basic vertical segment container">
-    <h2 class="header">{{ object.title }}</h2>
+<section class="meta ui basic vertical segment container">
+    <h3 class="header">{{ object.title }}</h3>
     <abbr class="unapi-id" title="{{ object.source_id }}"></abbr>
     <table class="metadata ui very basic table">
-        <thead>
-            <tr>
-                <th scope="col" class="four wide">attribute</th>
-                <th scope="col" class="twelve wide">value</th>
-            </tr>
-        </thead>
         <tbody>
-            <tr>
+            <tr class="secondary-title">
                 <th scope="row">Secondary Title</th>
-                <td><em>{{ object.title }}</em></td>
+                <td>{{ object.title }}</td>
             </tr>
             <tr>
                 <th scope="row">Year of Publication</th>
@@ -71,20 +70,18 @@
                 <th scope="row">PPA Collection{{ object.collections.count|pluralize }}</th>
                 <td>
                     {% for collection in object.collections.all %}
-                    <a class="ui tiny basic button" href="{% url 'archive:list' %}?collections={{ collection.pk }}">{{ collection }}</a>
+                    <a class="ui button" href="{% url 'archive:list' %}?collections={{ collection.pk }}">{{ collection }}</a>
                     {% endfor %}
                 </td>
             </tr>
             {% endif %}
-            <tr>
-                <th scope="row">View HathiTrust Volumes</th>
+            <tr class="hathi-link">
+                <th scope="row">HathiTrust Volumes</th>
                 <td>
-                    <a href="{{ object.source_url }}" target="_blank">
-                        <span>{{ object.source_id }}</span>
-                        <button class="ui right labeled tiny icon button">
-                            HathiTrust
-                            <i class="right arrow icon"></i>
-                        </button>
+                    <span>{{ object.source_id }}</span>
+                    <a href="{{ object.source_url }}" target="_blank" class="ui right labeled primary icon button">
+                        HathiTrust
+                        <i class="right arrow icon"></i>
                     </a>
                 </td>
             </tr>
@@ -117,7 +114,7 @@
         {% for page in solr_results %}
           {% with highlights=page_highlights|dict_item:page.id%}
           <div class="ui page item">
-              <div class="pages ui sixteen wide column">
+              <div class="pages ui twelve wide column">
                   <div class="wrapper">
                       {% include 'archive/snippets/page_preview.html' with item_id=page.srcid  %}
                   </div>

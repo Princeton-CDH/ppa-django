@@ -1,3 +1,21 @@
 /*******************************
          Site Overrides
 *******************************/
+
+.ui.button {
+    border: @borderWeight solid @borderColor;
+    font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+
+    &.basic {
+        border: 0;
+        padding: @relative7px @horizontalPadding;
+        min-width: @relative30px;
+    }
+
+    &.disabled {
+        color: @disabledTextColor;
+        border-color: @disabledTextColor;
+    }
+}

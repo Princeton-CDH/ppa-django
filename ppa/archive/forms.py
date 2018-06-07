@@ -186,11 +186,11 @@ class SearchForm(forms.Form):
     # booleans
     earliest_only = forms.BooleanField(label='Earliest Edition in Hathi',
         required=False, widget=forms.CheckboxInput(attrs={
-            '_icon': 'flag outline', 'disabled': True
+            'disabled': True
         }))
     ace_only = forms.BooleanField(label='Authorized Critical Edition',
         required=False, widget=forms.CheckboxInput(attrs={
-            '_icon': 'flag', 'disabled': True
+            'disabled': True
         }))
     dict_exclude = forms.BooleanField(label='Dictionaries',
         required=False, widget=forms.CheckboxInput(attrs={'disabled': True}))
@@ -314,6 +314,25 @@ class SearchForm(forms.Form):
         # return just the min and max values
         return maxmin['pub_date__min'], maxmin['pub_date__max']
 
+
+class SearchWithinWorkForm(forms.Form):
+    '''
+    Form to search for occurrences of a string within a particular instance
+    of a digitized work.
+    '''
+
+    # this appears when you hover over the question mark icon
+    QUESTION_POPUP_TEXT = mark_safe('''
+    Boolean search is supported. Operators must be capitalized (AND, OR).
+    ''')
+
+    # single text input
+    query = forms.CharField(label='Search within the Volume', required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Search keyword or phrase',
+            '_icon': 'search',
+            '_align': 'left'
+    }))
 
 
 class AddToCollectionForm(forms.Form):

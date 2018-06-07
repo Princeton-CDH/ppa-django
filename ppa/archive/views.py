@@ -13,7 +13,7 @@ from django.views.generic import ListView, DetailView
 from django.views.generic.edit import FormView
 from SolrClient.exceptions import SolrError
 
-from ppa.archive.forms import SearchForm, AddToCollectionForm
+from ppa.archive.forms import SearchForm, AddToCollectionForm, SearchWithinWorkForm
 from ppa.archive.models import DigitizedWork, Collection
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 
@@ -291,13 +291,16 @@ class DigitizedWorkDetailView(DetailView):
     model = DigitizedWork
     slug_field = 'source_id'
     slug_url_kwarg = 'source_id'
+    form_class = SearchWithinWorkForm
     paginate_by = 50
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # pull in the query if it exists to use
         query = self.request.GET.get('query', '')
-
+        form_opts = self.request.GET.copy()
+        form = self.form_class(form_opts)
+        context['search_form'] = form
         solr_pageq = None
         if query:
             context['query'] = query
@@ -316,7 +319,6 @@ class DigitizedWorkDetailView(DetailView):
                 # not default but recommended
                 'hl.method': 'unified',
             }
-
             logger.info("Solr page keyword search query: %s" % solr_q)
 
             try:
@@ -325,7 +327,7 @@ class DigitizedWorkDetailView(DetailView):
                 paginator = Paginator(solr_pageq, per_page=self.paginate_by)
                 page = self.request.GET.get('page', 1)
                 context.update({
-
+                    'search_form': form,
                     'page_obj': paginator.page(page),
                     # get matching pages and highlights and set in context
                     # 'page_highlights': solr_pageq.get_highlighting() if solr_pageq else {}

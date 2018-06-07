@@ -1,3 +1,5 @@
+@import 'scss/snippets/variables';
+
 .page {
     width: 100%;
     display: flex;
@@ -28,11 +30,13 @@
     .snippets {
         flex: 1 1 auto;
         margin: 0 1rem;
-        font-size: 1.25rem;
-    }
 
-    .snippet {
-        // white-space: pre-wrap;
+        .snippet {
+            font-size: 18px;
+            font-family: $headerFont;
+            color: $darkGrey;
+            line-height: normal;
+        }
     }
 
     em {
