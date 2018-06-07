@@ -70,7 +70,7 @@ class Command(BaseCommand):
             'source_ids', nargs='*',
             help='Optional list of specific works to index by source (HathiTrust) id.')
         parser.add_argument(
-            '-i', '--index', choices=['all', 'works', 'pages'],  default='all',
+            '-i', '--index', choices=['all', 'works', 'pages'], default='all',
             help='Index only works or pages (by default indexes all)')
         parser.add_argument(
             '--no-progress', action='store_true',
@@ -103,10 +103,12 @@ class Command(BaseCommand):
             progbar = progressbar.ProgressBar(redirect_stdout=True,
                                               max_value=total_to_index)
 
+        count = 0
+
         # index works
         if self.options['index'] in ['works', 'all']:
             # index in chunks and update progress bar
-            count = Indexable.index_items(works, progbar=progbar)
+            count = self.index(works, progbar=progbar)
 
         self.solr.commit(self.solr_collection)
 
@@ -114,7 +116,7 @@ class Command(BaseCommand):
         if self.options['index'] in ['pages', 'all']:
             for work in works:
                 # index page index data in chunks (returns a generator)
-                Indexable.index_items(work.page_index_data())
+                self.index(work.page_index_data())
 
                 # for simplicity, update progress bar for each work
                 # rather than each chunk of pages
@@ -124,7 +126,7 @@ class Command(BaseCommand):
 
         self.solr.commit(self.solr_collection)
 
-    def index(self, index_data):
+    def index(self, index_data, progbar=None):
         '''index an iterable into the configured solr instance
         and solr collection'''
 
@@ -132,10 +134,9 @@ class Command(BaseCommand):
         # error when Solr is not running because we get multiple
         # connections during handling of exceptions.
         try:
-            self.solr.index(self.solr_collection, index_data,
-                            params=self.solr_index_opts)
+            # index in chunks and update progress bar if there is one
+            return Indexable.index_items(index_data, progbar=progbar)
         except Exception as err:
         # except (ConnectionError, RequestException) as err:
             # NOTE: this is still pretty ugly; what part should we return?
             raise CommandError(err)
-

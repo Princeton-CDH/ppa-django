@@ -23,7 +23,7 @@ from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound, \
     HathiBibliographicRecord
 from ppa.archive.models import DigitizedWork
 from ppa.archive.management.commands import hathi_import, index
-from ppa.archive.solr import get_solr_connection
+from ppa.archive.solr import get_solr_connection, Indexable
 
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
@@ -302,7 +302,8 @@ class TestHathiImportCommand(TestCase):
 class TestIndexCommand(TestCase):
     fixtures = ['sample_digitized_works']
 
-    def test_index(self):
+    @patch('ppa.archive.management.commands.index.Indexable')
+    def test_index(self, mockindexable):
         # index data into solr and catch  an error
         cmd = index.Command()
         cmd.solr = Mock()
@@ -310,12 +311,11 @@ class TestIndexCommand(TestCase):
 
         test_index_data = range(5)
         cmd.index(test_index_data)
-        cmd.solr.index.assert_called_with(cmd.solr_collection, test_index_data,
-                                          params=cmd.solr_index_opts)
+        mockindexable.index_items.assert_called_with(test_index_data, progbar=None)
 
         # solr connection exception should raise a command error
         with pytest.raises(CommandError):
-            cmd.solr.index.side_effect = Exception
+            mockindexable.index_items.side_effect = Exception
             cmd.index(test_index_data)
 
     @patch('ppa.archive.management.commands.index.get_solr_connection')
@@ -330,13 +330,16 @@ class TestIndexCommand(TestCase):
         stdout = StringIO()
         call_command('index', index='works', stdout=stdout)
 
-
         # index all works
-        mock_cmd_index_method.assert_called_with(
-            [work.index_data() for work in digworks])
-        # not enought data to run progress bar
+        # (can't use assert_called_with because querysets doesn't evaluate equal)
+        # mock_cmd_index_method.assert_called_with(digworks)
+        args = mock_cmd_index_method.call_args[0]
+        # first arg is queryset; compare them as lists
+        assert list(digworks) == list(args[0])
+
+        # not enough data to run progress bar
         mockprogbar.ProgressBar.assert_not_called()
-        # commit called after works areindexed
+        # commit called after works are indexed
         mocksolr.commit.assert_called_with(test_coll)
         # only called once (no pages)
         assert mock_cmd_index_method.call_count == 1
@@ -362,8 +365,8 @@ class TestIndexCommand(TestCase):
             assert mock_page_index_data.call_count == total_works
             # progress bar updated called once for each work
             mockprogbar.ProgressBar.return_value.update.call_count = total_works
-            # mock index called twice for each work
-            assert mock_cmd_index_method.call_count == 2 * total_works
+            # mock index called once for each work (chunking handled in Indexable)
+            assert mock_cmd_index_method.call_count == total_works
 
             # request no progress bar
             mockprogbar.reset_mock()
@@ -378,8 +381,8 @@ class TestIndexCommand(TestCase):
             mockprogbar.ProgressBar.assert_called_with(
                 redirect_stdout=True, max_value=total_works + total_pages)
             # called once for the works (all indexed in one batch) and
-            # twice for each set of pages in a work
-            assert mock_cmd_index_method.call_count == 2 * total_works + 1
+            # once for each set of pages in a work
+            assert mock_cmd_index_method.call_count == total_works + 1
             # page index data called
             assert mock_page_index_data.call_count == total_works
 
@@ -390,7 +393,7 @@ class TestIndexCommand(TestCase):
             call_command('index', work.source_id, stdout=stdout)
             mockprogbar.ProgressBar.assert_called_with(
                 redirect_stdout=True, max_value=1 + work.page_count)
-            # called once for the work and twice for the pages
-            assert mock_cmd_index_method.call_count == 3
+            # called once for the work and once for the pages
+            assert mock_cmd_index_method.call_count == 2
             # page index data called once only
             assert mock_page_index_data.call_count == 1
