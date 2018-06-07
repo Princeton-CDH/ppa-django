@@ -20,15 +20,9 @@
             <a class="clear-selection" role="button">Clear Selection</a>
         </div>
         <div class="eight wide column" id="histogram">
-            <canvas class="visualization"></canvas>
-            <dl class="values">
-                {% for date, count in facet_ranges.pub_date.items %}
-                <dt>{{ date }}</dt>
-                <dd>{{ count }}</dd>
-                {% endfor %}
-            </dl>
-            <span class="min-date">1569</span>
-            <span class="max-date">1922</span>
+            <canvas class="visualization" height="60" width="600"></canvas>
+            <span class="min-date"></span>
+            <span class="max-date"></span>
         </div>
     </fieldset>
     <fieldset class="ui vertical stackable basic grid segment">
