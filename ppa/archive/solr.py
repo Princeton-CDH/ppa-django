@@ -255,7 +255,7 @@ class Indexable(object):
         raise NotImplementedError
 
     def index_id(self):
-        '''the value that is used for Solr id for this object'''
+        '''the value that is used as the Solr id for this object'''
         raise NotImplementedError
 
     def index(self, params=None):

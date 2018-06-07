@@ -6,6 +6,7 @@ from unittest.mock import call, patch, Mock
 from zipfile import ZipFile
 
 from django.conf import settings
+from django.db.models.query import QuerySet
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from pairtree import pairtree_client, pairtree_path
@@ -13,7 +14,8 @@ import pytest
 
 from ppa.archive import hathi
 from ppa.archive.models import DigitizedWork, Collection
-from ppa.archive.solr import get_solr_connection
+from ppa.archive.solr import get_solr_connection, Indexable
+
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
 
@@ -226,6 +228,37 @@ class TestDigitizedWork(TestCase):
                 assert data['content'] == contents[i]
                 assert data['order'] == page_order
                 assert data['item_type'] == 'page'
+
+    def test_index_id(self):
+        work = DigitizedWork(source_id='chi.79279237')
+        assert work.index_id() == work.source_id
+
+    @patch.object(Indexable, 'index_items')
+    def test_handle_collection_save(self, mock_index_items):
+        digwork = DigitizedWork.objects.create(source_id='njp.32101013082597')
+        coll1 = Collection.objects.create(name='Flotsam')
+        digwork.collections.add(coll1)
+
+        DigitizedWork.handle_collection_save(Mock(), coll1)
+        # call must be inspected piecemeal because queryset equals comparison fails
+        args, kwargs = mock_index_items.call_args
+        assert isinstance(args[0], QuerySet)
+        assert digwork in args[0]
+        assert kwargs['params'] == {'commitWithin': 3000}
+
+    @patch.object(Indexable, 'index_items')
+    def test_handle_collection_delete(self, mock_index_items):
+        digwork = DigitizedWork.objects.create(source_id='njp.32101013082597')
+        coll1 = Collection.objects.create(name='Flotsam')
+        digwork.collections.add(coll1)
+
+        DigitizedWork.handle_collection_delete(Mock(), coll1)
+
+        assert coll1.digitizedwork_set.count() == 0
+        args, kwargs = mock_index_items.call_args
+        assert isinstance(args[0], QuerySet)
+        assert digwork in args[0]
+        assert kwargs['params'] == {'commitWithin': 3000}
 
 
 class TestCollection(TestCase):
