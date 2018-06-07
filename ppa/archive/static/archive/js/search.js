@@ -17,6 +17,8 @@ $(function(){
     const $$maxDateInput = $('#id_pub_date_1')
     const $$sortInputs = $('.sort input')
     const $$collectionInputs = $('#collections input')
+    const $$textInputs = $('input[type="text"]')
+    const $$relevanceSort = $('input[value="relevance"]')
 
     /* bindings */
     archiveSearchForm.onStateChange(submitForm)
@@ -28,6 +30,16 @@ $(function(){
     
     /* functions */
     function submitForm(state) {
+        state = state.filter(field => field.value != '') // filter out empty fields
+        if (state.filter(field => $$textInputs.get().map(el => el.name).includes(field.name)).length == 0) {
+            $$relevanceSort.prop('disabled', true).parent().addClass('disabled') // if no text query, disable relevance
+            if (state.filter(field => field.name == 'sort')[0].value == 'relevance') { // and if relevance had been selected
+                $('input[value="title_asc"]').click() // switch to title instead
+            }
+        }
+        else {
+            $$relevanceSort.prop('disabled', false).parent().removeClass('disabled') // enable relevance sort
+        }
         let url = `?${$.param(state)}` // serialize state using $.param to make querystring
         window.history.pushState(state, 'PPA Archive Search', url) // update the URL bar
         let req = fetch(`/archive/${url}`, { // create the submission request
