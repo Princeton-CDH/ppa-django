@@ -21,14 +21,14 @@ class IndexableSignalHandler:
 
     def handle_delete(sender, instance, **kwargs):
         logger.debug('Deleting %r from index', instance)
-        instance.remove_from_index(params=IndexableSignalHandler.index_params)
+        if isinstance(instance, Indexable):
+            instance.remove_from_index(params=IndexableSignalHandler.index_params)
 
     def handle_relation_change(sender, instance, action, **kwargs):
-        # print('handle relation change %s -> %s - %s %s' % (sender, instance, action, kwargs))
-        # handle both add and remove;  do we need to handle clear?
-        if action in ['post_add', 'post_remove']:
+        # handle add, remove, and clear for indexable instances
+        if action in ['post_add', 'post_remove', 'post_clear']:
             if isinstance(instance, Indexable):
-                logger.debug('Indexing %r', instance)
+                logger.debug('Indexing %r (m2m change)', instance)
                 instance.index(params=IndexableSignalHandler.index_params)
 
     def setup():  # rename to bind?
@@ -72,7 +72,6 @@ class IndexableSignalHandler:
             if 'delete' in options:
                 logger.debug('Disconnecting delete signal handler for %s', model)
                 models.signals.pre_delete.disconnect(options['delete'], sender=model)
-
 
 
 
