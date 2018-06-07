@@ -154,7 +154,7 @@ class DigitizedWork(models.Model, Indexable):
                 Indexable.index_items(works, params={'commitWithin': 3000})
 
     def handle_collection_delete(sender, instance, **kwargs):
-        '''signal handler for collection delete; cleare associated digitized
+        '''signal handler for collection delete; clear associated digitized
         works and reindex'''
         logger.debug('collection delete')
         # get a list of ids for collected works before clearing them
