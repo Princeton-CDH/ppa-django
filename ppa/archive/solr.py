@@ -250,6 +250,9 @@ class Indexable(object):
     '''Mixin for objects that are indexed in Solr.  Subclasses must implement
     `index_id` and `index` methods.'''
 
+    # TODO: set default solr params / commit within here? maybe get value
+    # from django settings?
+
     def index_data(self):
         '''should return a dictionary of data for indexing in Solr'''
         raise NotImplementedError
