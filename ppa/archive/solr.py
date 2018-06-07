@@ -294,10 +294,10 @@ class Indexable(object):
     @classmethod
     def index_items(cls, items, params=None, progbar=None):
         '''Indexable class method to index multiple items at once.  Takes a
-        list or queryset of Indexable items.  Items are indexed in chunks,
-        based on :attr:`Indexable.index_chunk_size`.  Takes an optional
-        progressbar object to update when indexing items in chunks.
-        Returns a count of the number of items indexed.'''
+        list, queryset, or generator of Indexable items or dictionaries.
+        Items are indexed in chunks, based on :attr:`Indexable.index_chunk_size`.
+        Takes an optional progressbar object to update when indexing items
+        in chunks. Returns a count of the number of items indexed.'''
         solr, solr_collection = get_solr_connection()
 
         # if this is a queryset, use iterator to get it in chunks
@@ -314,9 +314,13 @@ class Indexable(object):
         chunk = list(itertools.islice(items, cls.index_chunk_size))
         count = 0
         while chunk:
-            solr.index(solr_collection, [i.index_data() for i in chunk],
+            # call index data method if present; otherwise assume item is dict
+            solr.index(solr_collection,
+                       [i.index_data() if hasattr(i, 'index_data') else i
+                        for i in chunk],
                        params=params)
             count += len(chunk)
+            # update progress bar if one was passed in
             if progbar:
                 progbar.update(count)
 

@@ -113,14 +113,8 @@ class Command(BaseCommand):
         # index pages for each work
         if self.options['index'] in ['pages', 'all']:
             for work in works:
-                # page index data returns a generator
-                page_data = work.page_index_data()
-
-                # iterate over the generator and index in chunks
-                page_chunk = list(itertools.islice(page_data, 150))
-                while page_chunk:
-                    self.index(page_chunk)
-                    page_chunk = list(itertools.islice(page_data, 150))
+                # index page index data in chunks (returns a generator)
+                Indexable.index_items(work.page_index_data())
 
                 # for simplicity, update progress bar for each work
                 # rather than each chunk of pages
