@@ -263,14 +263,6 @@ class TestDigitizedWork(TestCase):
 
 class TestCollection(TestCase):
 
-    fixtures = ['sample_digitized_works']
-
-    def setUp(self):
-        # arrange two digital works to use in testing
-        self.dig1 = DigitizedWork.objects.get(source_id='chi.78013704')
-        self.dig2 = DigitizedWork.objects.get(source_id='chi.13880510')
-
     def test_str(self):
         collection = Collection(name='Random Assortment')
         assert str(collection) == 'Random Assortment'
-

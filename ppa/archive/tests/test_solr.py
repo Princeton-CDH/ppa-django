@@ -7,8 +7,9 @@ import pytest
 import requests
 from SolrClient import SolrClient
 
+from ppa.archive.models import Collection, DigitizedWork
 from ppa.archive.solr import get_solr_connection, SolrSchema, CoreAdmin, \
-    PagedSolrQuery
+    PagedSolrQuery, Indexable
 
 
 TEST_SOLR_CONNECTIONS = {
@@ -276,3 +277,67 @@ class TestPagedSolrQuery(TestCase):
 
         with pytest.raises(TypeError):
             psq['foo']
+
+
+@patch('ppa.archive.solr.get_solr_connection')
+class TestIndexable(TestCase):
+
+    # subclass Indexable for testing
+
+    class SimpleIndexable(Indexable):
+        def index_id(self):
+            return 'idx:1'
+        def index_data(self):
+            return {'id': self.index_id()}
+
+    def test_index(self, mock_get_solr_connection):
+        # index method on a single object instance
+        mocksolr = Mock()
+        coll = 'coll'
+        mock_get_solr_connection.return_value = (mocksolr, coll)
+
+        sindex = TestIndexable.SimpleIndexable()
+        sindex.index()
+        mocksolr.index.assert_called_with(coll, [sindex.index_data()],
+                                          params=None)
+        # with params
+        params = {'foo': 'bar'}
+        sindex.index(params=params)
+        mocksolr.index.assert_called_with(coll, [sindex.index_data()],
+                                          params=params)
+    def test_remove_from_index(self, mock_get_solr_connection):
+        # remove from index method on a single object instance
+        mocksolr = Mock()
+        coll = 'coll'
+        mock_get_solr_connection.return_value = (mocksolr, coll)
+
+        sindex = TestIndexable.SimpleIndexable()
+        sindex.remove_from_index()
+        mocksolr.delete_doc_by_id.assert_called_with(
+            coll, '"%s"' % sindex.index_id(), params=None)
+        # with params
+        params = {'foo': 'bar'}
+        sindex.remove_from_index(params=params)
+        mocksolr.delete_doc_by_id.assert_called_with(
+            coll, '"%s"' % sindex.index_id(), params=params)
+
+    def test_index_items(self, mock_get_solr_connection):
+        mocksolr = Mock()
+        coll = 'coll'
+        mock_get_solr_connection.return_value = (mocksolr, coll)
+        items = [TestIndexable.SimpleIndexable() for i in range(10)]
+
+        Indexable.index_items(items)
+        mocksolr.index.assert_called_with(coll, [i.index_data() for i in items],
+                                          params=None)
+
+    def test_identify_index_dependencies(self, mock_get_solr_connection):
+        # currently testing based on DigitizedWork configuration
+        Indexable.identify_index_dependencies()
+
+        # collection model should be in related object config
+        assert Collection in Indexable.related
+        # save/delete handler config options saved
+        assert Indexable.related[Collection] == DigitizedWork.index_depends_on['collections']
+        # through model added to m2m list
+        assert DigitizedWork.collections.through in Indexable.m2m

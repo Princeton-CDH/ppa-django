@@ -267,6 +267,8 @@ class Indexable(object):
 
     @classmethod
     def index_items(cls, items, params=None):
+        '''Indexable class method to index multiple items at once.  Takes a
+        list or queryset of Indexable items.'''
         solr, solr_collection = get_solr_connection()
         # TODO: index in chunks like index script does?
         solr.index(solr_collection, [i.index_data() for i in items],
@@ -306,7 +308,4 @@ class Indexable(object):
 
         cls.related = related
         cls.m2m = m2m
-
-
-
 
