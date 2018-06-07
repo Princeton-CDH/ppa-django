@@ -19,7 +19,7 @@ $(function(){
     const $$collectionInputs = $('#collections input')
 
     /* bindings */
-    archiveSearchForm.onStateChange = submitForm
+    archiveSearchForm.onStateChange(submitForm)
     $$clearDatesLink.click(onClearDates)
     $$sortInputs.change(onSortChange)
     $$collectionInputs.change(onCollectionChange)
@@ -50,7 +50,7 @@ $(function(){
     function onClearDates() {
         $$minDateInput.val('') // clear the date inputs
         $$maxDateInput.val('')
-        $$minDateInput[0].dispatchEvent(new Event('input')) // fake input events
+        $$minDateInput[0].dispatchEvent(new Event('input')) // fake input events to trigger resubmit
         $$maxDateInput[0].dispatchEvent(new Event('input'))
     }
 

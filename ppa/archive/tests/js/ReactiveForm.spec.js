@@ -10,6 +10,7 @@ describe('Reactive Form', () => {
         beforeEach(function() {
             loadFixtures('form.html')
             this.rf = new ReactiveForm('#form')
+            this.inputs = $('#form').find('input').get()
         })
 
         it('should store the associated form element', function() {
@@ -17,22 +18,25 @@ describe('Reactive Form', () => {
         })
 
         it('should store all child input elements', function() {
-            expect(this.rf.$inputs).toEqual($('#form').find('input').get())
+            expect(this.rf.$inputs).toEqual(this.inputs)
         })
 
         it('should create observables from each child input', function() {
             spyOn(ReactiveForm, 'fromInput').and.callThrough() // spy on static method
-            new ReactiveForm('#form')
-            expect(ReactiveForm.fromInput).toHaveBeenCalledTimes(5)
-            // expect(ReactiveForm.fromInput).toHaveBeenCalledWith(...$('input').get())
-            // it gets called with '0' as the second arg for some reason...why??
+            new ReactiveForm('#form') // initialize a new one so constructor is called
+            for (let input of this.inputs) { // check that each input was passed as an arg
+                expect(ReactiveForm.fromInput.calls.mostRecent().args[2]).toContain(input)
+                // TODO why is the array of inputs the third arg...? why is arg two '0'? ¯\_(ツ)_/¯
+            }
+        })
+
+        it('should merge input and store as an observable', function() {
+            expect(this.rf.inputStream instanceof Observable).toBe(true)
         })
 
         it('should store state as an observable', function() {
             expect(this.rf.stateStream instanceof Observable).toBe(true)
         })
-
-        it('should subscribe to state changes')
     })
 
     describe('get state', () => {
@@ -44,19 +48,44 @@ describe('Reactive Form', () => {
         })
 
         it('should be available on demand', function() {
-            // console.log($('body').html())
             expect(this.rf.state).toEqual(this.initialState)
         })
 
         it('should update when the form updates', function() {
-            $('#checkbox').click()
+            $('#checkbox').click() // click it and request its state via the getter
             expect(this.rf.state.filter(el => el.name == 'checkbox')[0].value).toBe('on')
         })
     })
 
     describe('onStateChange()', () => {
-        it('should get called when state changes')
-        it('should receive the state as a parameter')
+
+        beforeEach(function() {
+            loadFixtures('form.html')
+            this.rf = new ReactiveForm('#form')
+            this.onStateChangeSpy = jasmine.createSpy().and.callThrough() // create a spy to subscribe to state changes
+            this.rf.onStateChange(this.onStateChangeSpy) // subscribe it
+            this.initialState = $('#form').serializeArray()
+        })
+
+
+        it('should get called when state changes', function(done) {
+            $('#checkbox').click() // make a change
+            expect(this.onStateChangeSpy).toHaveBeenCalledTimes(1)
+            $('#text').val('hello') // make another change
+            $('#text')[0].dispatchEvent(new Event('input')) // fake the input event
+            setTimeout(() => { // have to wait for the event to be picked up
+                expect(this.onStateChangeSpy).toHaveBeenCalledTimes(2)
+                done()
+            }, 500) // this comes from .debounceTime(500) on fromInput()
+        })
+
+        it('should receive the state as a parameter', function() {
+            $('#checkbox').click() // new state will create a new object in the state array
+            for (let field of this.initialState) { // all original fields should still be in state
+                expect(this.onStateChangeSpy.calls.mostRecent().args[0]).toContain(field) // ugly but necessary...
+            } // new checkbox state should also be in state
+            expect(this.onStateChangeSpy.calls.mostRecent().args[0]).toContain({ name: 'checkbox', value: 'on' })
+        })
     })
 
     describe('fromInput()', () => {
@@ -92,12 +121,12 @@ describe('Reactive Form', () => {
         })
 
         it('should observe state changes for text inputs', function(done) {
-            $('#text').val('hello') // change the text
-            $('#text')[0].dispatchEvent(new Event('input')) // fake an input event
-            setTimeout(() => { // have to wait for the event to be picked up
+            $('#text').val('hello')
+            $('#text')[0].dispatchEvent(new Event('input'))  // fake the input event
+            setTimeout(() => {  // have to wait for the event to be picked up
                 expect(this.textSpy).toHaveBeenCalledWith('hello')
                 done()
-            }, 500) // this comes from .debounceTime(500) on the method
+            }, 500)  // this comes from .debounceTime(500) on the method
         })
 
         it('should ignore repeated values for text inputs', function(done) {

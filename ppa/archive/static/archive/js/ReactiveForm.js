@@ -1,12 +1,13 @@
 import { fromEvent, merge } from 'rxjs'
 import 'rxjs/add/operator/pluck'
+import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/distinctUntilChanged'
 import 'rxjs/add/operator/debounceTime'
 
 
 export default class ReactiveForm {
     /**
-     * Utility function that creates an observable from an <input> tag.
+     * Utility function that creates an observable from an <input> element.
      * Generates a sequence of values depending on the input type.
      * 
      * @param {HTMLElement} $element <input> element
@@ -29,9 +30,8 @@ export default class ReactiveForm {
 
     /**
      * Given a CSS selector, treats that element as a form and finds all child
-     * input elements that belong to that form. Builds a set of observables
-     * using fromInput() and merges them into a single observable for the form,
-     * then subscribes to form state changes and calls onStateChange.
+     * input elements that belong to that form. Creates an observable for all
+     * input changes, and maps it to output a representation of form state.
      * 
      * @param {String} selector CSS selector
      */
@@ -39,14 +39,12 @@ export default class ReactiveForm {
         let self = this
         self.$$element = $(selector)
         self.$inputs = self.$$element.find('input').get() // find child <input> elements
-        self.stateStream = merge(...self.$inputs.map(ReactiveForm.fromInput)) // create and then merge an array of input observables
-        self.stateStream.subscribe(() => { // subscribe to state changes and pass them to onStateChange()
-            self.onStateChange.call(self, self.$$element.serializeArray())
-        })
+        self.inputStream = merge(...self.$inputs.map(ReactiveForm.fromInput)) // create and then merge an array of input observables
+        self.stateStream = self.inputStream.map(() => self.$$element.serializeArray()) // get the form state each time input state changes
     }
 
     /**
-     * Allows the state to be requested on demand as an array.
+     * Allows the state to be requested synchronously on demand.
      * 
      * @return {Array} form values as output by jQuery's serializeArray()
      */
@@ -55,12 +53,14 @@ export default class ReactiveForm {
     }
 
     /**
-     * Function that receives an array representation of form state every time
-     * the form is updated. Can be extended to e.g. make an ajax request, or
-     * update the queryString in the URL bar.
+     * Takes a function to subscribe to state changes. The passed function will
+     * receive an array representation of form state every time the form is
+     * updated.
      * 
-     * @param {Array} state form values as output by jQuery's serializeArray()
+     * @param {Function} fn function to subscribe
+     * @return {Subscription} handle for subscription
      */
-    onStateChange(state) {
+    onStateChange(fn) {
+        return this.stateStream.subscribe(fn)
     }
 }
