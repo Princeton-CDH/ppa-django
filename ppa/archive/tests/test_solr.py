@@ -313,7 +313,7 @@ class TestIndexable(TestCase):
         coll = 'coll'
         mock_get_solr_connection.return_value = (mocksolr, coll)
 
-        sindex = TestIndexable.SimpleIndexable()
+        sindex = TestIndexable.SimpleIndexable('foo')
         sindex.remove_from_index()
         mocksolr.delete_doc_by_id.assert_called_with(
             coll, '"%s"' % sindex.index_id(), params=None)
