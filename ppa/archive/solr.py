@@ -5,6 +5,7 @@ import logging
 from cached_property import cached_property
 from django.conf import settings
 from django.db.models.fields.related_descriptors import ManyToManyDescriptor
+from django.db.models.query import QuerySet
 import requests
 from SolrClient import SolrClient
 
@@ -272,6 +273,9 @@ class Indexable(object):
     # TODO: set default solr params / commit within here? maybe get value
     # from django settings?
 
+    #: number of items to index at once when indexing a large number of items
+    index_chunk_size = 150
+
     def index_data(self):
         '''should return a dictionary of data for indexing in Solr'''
         raise NotImplementedError
@@ -292,9 +296,20 @@ class Indexable(object):
         '''Indexable class method to index multiple items at once.  Takes a
         list or queryset of Indexable items.'''
         solr, solr_collection = get_solr_connection()
-        # TODO: index in chunks like index script does?
-        solr.index(solr_collection, [i.index_data() for i in items],
-                   params=params)
+
+        # if this is a queryset, convert it to use iterator
+        if isinstance(items, QuerySet):
+            items = items.iterator()
+
+        # index in chunks to support efficiently indexing large numbers
+        # of items (adapted from index script)
+        start = 0
+        chunk = list(itertools.islice(items, cls.index_chunk_size))
+        while chunk:
+            solr.index(solr_collection, [i.index_data() for i in chunk],
+                       params=params)
+            start += cls.index_chunk_size
+            chunk = list(itertools.islice(items, start, start + cls.index_chunk_size))
 
     def remove_from_index(self, params=None):
         '''Remove the current object from Solr by identifier using

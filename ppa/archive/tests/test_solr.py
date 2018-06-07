@@ -285,8 +285,10 @@ class TestIndexable(TestCase):
     # subclass Indexable for testing
 
     class SimpleIndexable(Indexable):
+        def __init__(self, id):
+            self.id = id
         def index_id(self):
-            return 'idx:1'
+            return 'idx:%s' % self.id
         def index_data(self):
             return {'id': self.index_id()}
 
@@ -296,7 +298,7 @@ class TestIndexable(TestCase):
         coll = 'coll'
         mock_get_solr_connection.return_value = (mocksolr, coll)
 
-        sindex = TestIndexable.SimpleIndexable()
+        sindex = TestIndexable.SimpleIndexable(1)
         sindex.index()
         mocksolr.index.assert_called_with(coll, [sindex.index_data()],
                                           params=None)
@@ -325,11 +327,23 @@ class TestIndexable(TestCase):
         mocksolr = Mock()
         coll = 'coll'
         mock_get_solr_connection.return_value = (mocksolr, coll)
-        items = [TestIndexable.SimpleIndexable() for i in range(10)]
+        items = [TestIndexable.SimpleIndexable(i) for i in range(10)]
 
         Indexable.index_items(items)
         mocksolr.index.assert_called_with(coll, [i.index_data() for i in items],
                                           params=None)
+        # index in chunks
+        Indexable.index_chunk_size = 6
+        mocksolr.index.reset_mock()
+        Indexable.index_items(items)
+        print(mocksolr.index.call_args_list)
+        # first chunk
+        mocksolr.index.assert_any_call(coll, [i.index_data() for i in items[:6]],
+                                          params=None)
+        # second chunk
+        mocksolr.index.assert_any_call(coll, [i.index_data() for i in items[6:]],
+                                          params=None)
+
 
     def test_identify_index_dependencies(self, mock_get_solr_connection):
         # currently testing based on DigitizedWork configuration
