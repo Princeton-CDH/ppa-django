@@ -8,12 +8,15 @@ export default class Histogram {
      * 
      * @param {any} selector CSS selector
      */
-    constructor(selector) {
+    constructor(selector, options) {
         let self = this
         self.$canvas = $(selector).find('canvas')[0]
         self.ctx = this.$canvas.getContext('2d')
         self.dataStream = new Subject()
         self.dataStream.subscribe((data) => self.render.call(self, data))
+        options = options || {}  // set default options
+        self.backgroundColor = options.backgroundColor || '#efefef'
+        self.barColor = options.barColor || '#ccc'
     }
 
     /**
@@ -22,7 +25,7 @@ export default class Histogram {
      * 
      * @param {Object} data key-value map of histogram data points
      */
-    set data(data) {
+    update(data) {
         let _data = Object.keys(data)
             .reduce((map, key) => map.set(key, data[key]), new Map())
         this.dataStream.next(_data)
@@ -30,8 +33,7 @@ export default class Histogram {
 
     /**
      * Receives an updated copy of the data every time data changes and uses
-     * it to render the histogram visualization. Can be extended to customize
-     * rendering behavior.
+     * it to render the histogram visualization.
      * 
      * @param {Map} data key-value map of histogram data points
      */
@@ -39,12 +41,12 @@ export default class Histogram {
         // clear canvas
         this.ctx.clearRect(0, 0, this.$canvas.width, this.$canvas.height)
         // draw background
-        this.ctx.fillStyle = '#efefef'
+        this.ctx.fillStyle = this.backgroundColor
         this.ctx.fillRect(0, 0, this.$canvas.width, this.$canvas.height)
         // draw bars
         let i = 0
         let yMax = Math.max(...data.values())
-        this.ctx.fillStyle = '#ccc'
+        this.ctx.fillStyle = this.barColor
         data.forEach((yVal, xVal) => {
             let x = Math.floor(i * (this.$canvas.width / data.size))
             let y = this.$canvas.height - Math.floor((yVal / yMax) * this.$canvas.height)
