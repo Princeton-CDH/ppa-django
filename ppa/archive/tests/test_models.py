@@ -6,6 +6,7 @@ from unittest.mock import call, patch, Mock
 from zipfile import ZipFile
 
 from django.conf import settings
+from django.db.models.query import QuerySet
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from pairtree import pairtree_client, pairtree_path
@@ -13,7 +14,8 @@ import pytest
 
 from ppa.archive import hathi
 from ppa.archive.models import DigitizedWork, Collection
-from ppa.archive.solr import get_solr_connection
+from ppa.archive.solr import get_solr_connection, Indexable
+
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
 
@@ -227,104 +229,57 @@ class TestDigitizedWork(TestCase):
                 assert data['order'] == page_order
                 assert data['item_type'] == 'page'
 
+    def test_index_id(self):
+        work = DigitizedWork(source_id='chi.79279237')
+        assert work.index_id() == work.source_id
+
+    @patch.object(Indexable, 'index_items')
+    def test_handle_collection_save(self, mock_index_items):
+        digwork = DigitizedWork.objects.create(source_id='njp.32101013082597')
+        coll1 = Collection.objects.create(name='Flotsam')
+        digwork.collections.add(coll1)
+
+        DigitizedWork.handle_collection_save(Mock(), coll1)
+        # index not called because collection name has not changed
+        mock_index_items.assert_not_called()
+
+        # modify name to test indexing
+        coll1.name = 'Jetsam'
+        DigitizedWork.handle_collection_save(Mock(), coll1)
+        # call must be inspected piecemeal because queryset equals comparison fails
+        args, kwargs = mock_index_items.call_args
+        assert isinstance(args[0], QuerySet)
+        assert digwork in args[0]
+        assert kwargs['params'] == {'commitWithin': 3000}
+
+    @patch.object(Indexable, 'index_items')
+    def test_handle_collection_delete(self, mock_index_items):
+        digwork = DigitizedWork.objects.create(source_id='njp.32101013082597')
+        coll1 = Collection.objects.create(name='Flotsam')
+        digwork.collections.add(coll1)
+
+        DigitizedWork.handle_collection_delete(Mock(), coll1)
+
+        assert coll1.digitizedwork_set.count() == 0
+        args, kwargs = mock_index_items.call_args
+        assert isinstance(args[0], QuerySet)
+        assert digwork in args[0]
+        assert kwargs['params'] == {'commitWithin': 3000}
+
 
 class TestCollection(TestCase):
-
-    fixtures = ['sample_digitized_works']
-
-    def setUp(self):
-        # arrange two digital works to use in testing
-        self.dig1 = DigitizedWork.objects.get(source_id='chi.78013704')
-        self.dig2 = DigitizedWork.objects.get(source_id='chi.13880510')
 
     def test_str(self):
         collection = Collection(name='Random Assortment')
         assert str(collection) == 'Random Assortment'
 
-    @pytest.mark.usefixtures('solr')
-    def test_full_index(self):
+    def test_name_changed(self):
+        collection = Collection(name='Random Assortment')
+        assert not collection.name_changed
+        # change the name
+        collection.name = 'Randomer'
+        assert collection.name_changed
+        # save changes; should no longer be marked as changed
+        collection.save()
+        assert not collection.name_changed
 
-        # create collection and associate with digitizedworks
-        coll1 = Collection.objects.create(name='Foo')
-        self.dig1.collections.add(coll1)
-        self.dig2.collections.add(coll1)
-        # change the name and reindex all works
-        coll1.name = 'Bar'
-        coll1.save()
-        coll1.full_index()  # should have the default 150 second and not be picked up
-        # search for new name should yield no results, no committed yet
-        solr, solr_collection = get_solr_connection()
-        res = solr.query(solr_collection, {'q': 'collections_exact:Bar'})
-        data = json.loads(res.get_json())
-        assert 'response' in data
-        assert data['response']['numFound'] == 0
-        coll1.full_index(params={'commitWithin': 1000})
-        sleep(2)
-        # - now collection change
-        # search for old name should yield no results
-        res = solr.query(solr_collection, {'q': 'collections_exact:Foo'})
-        data = json.loads(res.get_json())
-        assert 'response' in data
-        assert data['response']['numFound'] == 0
-        # search for new name should yield two results
-        res = solr.query(solr_collection, {'q': 'collections_exact:Bar'})
-        data = json.loads(res.get_json())
-        assert 'response' in data
-        assert data['response']['numFound'] == 2
-        srcids = [doc['srcid'] for doc in data['response']['docs']]
-        assert self.dig1.source_id in srcids
-        assert self.dig2.source_id in srcids
-
-        # should error if attempted on unsaved collection
-        unsaved = Collection(name='new')
-        with pytest.raises(ValueError):
-            unsaved.full_index()
-
-
-    @patch('ppa.archive.models.Collection.full_index')
-    def test_save(self, mockfullindex):
-        # - check flow control on full_index
-        # simple save, no previous pk, should simply save
-        # in all three cases, the super models.Model save method should be called
-        # implicit save in create
-        coll1 = Collection.objects.create(name='Foo')
-        assert not mockfullindex.called
-        # no change to name, mockfulldindex not called
-        coll1.save()
-        assert not mockfullindex.called
-        # change to name, full_index should have been called
-        coll1.name = 'Bar'
-        coll1.save()
-        assert mockfullindex.called
-
-        # set name back
-        coll1.name = 'Foo'
-        coll1.save()
-
-        # - now check flow control on calls to super method of models.Model
-        # have to manually modify pk to force flow control
-        with patch('ppa.archive.models.models.Model.save') as mocksuper:
-            # each iteration in each state of pk and name should call super
-            # one time
-            with patch('ppa.archive.models.Collection.objects.get') as mockget:
-            # Fully mock out get to avoid problems with travis-ci
-                # new save
-                coll1.pk = None
-                coll1.save()
-                # mock full index was called twice in the previous code
-                # with two name changes
-                assert mockfullindex.call_count == 2
-                assert mocksuper.call_count == 1
-                # previously saved, no name change
-                coll1.pk = 1
-                mockget.return_value = coll1
-                coll1.save()
-                # index call count does not increase
-                assert mockfullindex.call_count == 2
-                assert mocksuper.call_count == 2
-                # previously saved, name change
-                # call count should increase, as does full index
-                mockget.return_value = Collection(pk=1, name='Bar')
-                coll1.save()
-                assert mockfullindex.call_count == 3
-                assert mocksuper.call_count == 3

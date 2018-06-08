@@ -23,26 +23,25 @@ Example usage::
     python manage.py index htid1 htid2 htid3
     # index works only (skip pages)
     python manage.py index -i works
+    python manage.py index --works
     # index pages only (skip works)
     python manage.py index -i pages
+    python manage.py index ---pages
     # suppress progressbar
     python manage.py index --no-progress
 
 '''
 
 
-import itertools
-
 from django.core.management.base import BaseCommand, CommandError
-from django.core.paginator import Paginator
 from django.db.models import Sum
 import progressbar
 # from urllib3.exceptions import HTTPError
-from SolrClient.exceptions import ConnectionError
-from requests.exceptions import RequestException
+#from SolrClient.exceptions import ConnectionError
+#from requests.exceptions import RequestException
 
 from ppa.archive.models import DigitizedWork
-from ppa.archive.solr import get_solr_connection
+from ppa.archive.solr import get_solr_connection, Indexable
 
 
 class Command(BaseCommand):
@@ -70,8 +69,14 @@ class Command(BaseCommand):
             'source_ids', nargs='*',
             help='Optional list of specific works to index by source (HathiTrust) id.')
         parser.add_argument(
-            '-i', '--index', choices=['all', 'works', 'pages'],  default='all',
+            '-i', '--index', choices=['all', 'works', 'pages'], default='all',
             help='Index only works or pages (by default indexes all)')
+        parser.add_argument(
+            '-w', '--works', dest='index', const='works', action='store_const',
+            help='Index works only')
+        parser.add_argument(
+            '-p', '--pages', dest='index', const='pages', action='store_const',
+            help='Index pages only')
         parser.add_argument(
             '--no-progress', action='store_true',
             help='Do not display progress bar to track the status of the reindex.')
@@ -103,31 +108,20 @@ class Command(BaseCommand):
             progbar = progressbar.ProgressBar(redirect_stdout=True,
                                               max_value=total_to_index)
 
-        # index works
         count = 0
-        if self.options['index'] in ['works', 'all']:
-            # use django paginator to index chunks of works at a time
-            paginator = Paginator(works, 100)
-            for page in range(1, paginator.num_pages + 1):
-                self.index([work.index_data() for work in paginator.page(page).object_list])
 
-                count += paginator.page(page).object_list.count()
-                if progbar:
-                    progbar.update(count)
+        # index works
+        if self.options['index'] in ['works', 'all']:
+            # index in chunks and update progress bar
+            count = self.index(works, progbar=progbar)
 
         self.solr.commit(self.solr_collection)
 
         # index pages for each work
         if self.options['index'] in ['pages', 'all']:
             for work in works:
-                # page index data returns a generator
-                page_data = work.page_index_data()
-
-                # iterate over the generator and index in chunks
-                page_chunk = list(itertools.islice(page_data, 150))
-                while page_chunk:
-                    self.index(page_chunk)
-                    page_chunk = list(itertools.islice(page_data, 150))
+                # index page index data in chunks (returns a generator)
+                self.index(work.page_index_data())
 
                 # for simplicity, update progress bar for each work
                 # rather than each chunk of pages
@@ -137,7 +131,7 @@ class Command(BaseCommand):
 
         self.solr.commit(self.solr_collection)
 
-    def index(self, index_data):
+    def index(self, index_data, progbar=None):
         '''index an iterable into the configured solr instance
         and solr collection'''
 
@@ -145,10 +139,13 @@ class Command(BaseCommand):
         # error when Solr is not running because we get multiple
         # connections during handling of exceptions.
         try:
-            self.solr.index(self.solr_collection, index_data,
-                            params=self.solr_index_opts)
+            # index in chunks and update progress bar if there is one
+            return Indexable.index_items(index_data, progbar=progbar)
         except Exception as err:
         # except (ConnectionError, RequestException) as err:
-            # NOTE: this is still pretty ugly; what part should we return?
+            # NOTE: this is fairly ugly, and catching the more specific errors
+            # doesn't work because there are multiple exceptions
+            # thrown when a connection error occurs; however, this will
+            # at least stop the script instead of repeatedly throwing
+            # connection errors
             raise CommandError(err)
-
