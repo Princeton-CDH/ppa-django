@@ -422,13 +422,35 @@ class TestArchiveViews(TestCase):
         assert not response.context['object_list'].count()
         self.assertContains(response, 'Invalid range')
 
+        # ajax request for search results
+        response = self.client.get(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        assert response.status_code == 200
+        # should render the results list partial and single result partial
+        self.assertTemplateUsed('archive/snippets/results_list.html')
+        self.assertTemplateUsed('archive/snippest/search_result.html')
+        # shouldn't render the search form or whole list
+        self.assertTemplateNotUsed('archive/snippets/search_form.html')
+        self.assertTemplateNotUsed('archive/snippets/list_digitizedworks.html')
+        # should have all the results
+        assert len(response.context['object_list']) == len(digitized_works)
+        # should have the results count
+        self.assertContains(response, " digitized works")
+        # should have the histogram data
+        self.assertContains(response, "<pre>")
+        # should have pagination
+        self.assertContains(response, "<div class=\"pagination")
+        # test a query
+        response = self.client.get(url,
+            {'query': 'blood AND bone AND alternate'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertContains(response, '1 digitized work')
+        self.assertContains(response, wintry.source_id)
 
         # nothing indexed - should not error
         solr.delete_doc_by_query(solr_collection, '*:*', params={"commitWithin": 100})
         sleep(2)
         response = self.client.get(url)
         assert response.status_code == 200
-        self.assertContains(response, 'No matching works.')
 
         # simulate solr exception (other than query syntax)
         with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:

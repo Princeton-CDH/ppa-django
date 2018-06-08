@@ -1,64 +1,85 @@
-import DateHistogram from './histogram';
+import ReactiveForm from './ReactiveForm'
+import Histogram from './Histogram'
 
 $(function(){
 
+    /* components */
+    const archiveSearchForm = new ReactiveForm('.form')
+    const dateHistogram = new Histogram('#histogram')
+
     /* dom */
-    const $$searchForm = $('.form')
-    const $$sortLinks = $('.sort .item')
+    const $$results = $('.ajax-container')
+    const $$paginationTop = $('.pagination').first()
+    const $$resultsCount = $('.workscount .count')
     const $$clearDatesLink = $('.clear-selection')
-    const $$collectionInputs = $('#collections input');
-    const $$histogram = $('#histogram')
+    const $$checkboxes = $('.ui.checkbox')
     const $$minDateInput = $('#id_pub_date_0')
     const $$maxDateInput = $('#id_pub_date_1')
-    const $$minDate = $('.min-date')
-    const $$maxDate = $('.max-date')
-
-    /* functions */
-    function changeSort(event) {
-        $(event.target).siblings().find('input[checked=""]').removeAttr('checked')
-        $(event.target).find('input').attr('checked', '')
-    }
-
-    function clearDates() {
-        // clear both date inputs
-        $$minDateInput.val('')
-        $$maxDateInput.val('')
-        // submit the form
-        $$searchForm.submit()
-    }
-
-    function updateDates() {
-        let minDate = $$minDateInput.val()
-        let maxDate = $$maxDateInput.val()
-        // if there's a date set, use it - otherwise use the placeholder
-        $$minDate.text(minDate != '' ? minDate : $$minDateInput.attr('placeholder'))
-        $$maxDate.text(maxDate != '' ? maxDate : $$maxDateInput.attr('placeholder'))
-    }
-
+    const $$sortInputs = $('.sort input')
+    const $$collectionInputs = $('#collections input')
+    const $$textInputs = $('input[type="text"]')
+    const $$relevanceSort = $('input[value="relevance"]')
 
     /* bindings */
-    $('.ui.checkbox').checkbox()
+    archiveSearchForm.onStateChange(submitForm)
+    $$clearDatesLink.click(onClearDates)
+    $$sortInputs.change(onSortChange)
+    $$collectionInputs.change(onCollectionChange)
+    $$checkboxes.checkbox() // this is just a standard semantic UI behavior
+    onPageLoad() // misc functions that run once on page load
+    
+    /* functions */
+    function submitForm(state) {
+        state = state.filter(field => field.value != '') // filter out empty fields
+        if (state.filter(field => $$textInputs.get().map(el => el.name).includes(field.name)).length == 0) {
+            $$relevanceSort.prop('disabled', true).parent().addClass('disabled') // if no text query, disable relevance
+            if (state.filter(field => field.name == 'sort')[0].value == 'relevance') { // and if relevance had been selected
+                $('input[value="title_asc"]').click() // switch to title instead
+            }
+        }
+        else {
+            $$relevanceSort.prop('disabled', false).parent().removeClass('disabled') // enable relevance sort
+        }
+        let url = `?${$.param(state)}` // serialize state using $.param to make querystring
+        window.history.pushState(state, 'PPA Archive Search', url) // update the URL bar
+        let req = fetch(`/archive/${url}`, { // create the submission request
+            headers: { // this header is needed to signal ajax request to django
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        req.then(res => res.text()).then(html => { // submit the form and get html back
+            $$paginationTop.html($(html).find('.pagination').html()) // update the top pagination
+            dateHistogram.update(JSON.parse($(html).find('pre').html())) // update the histogram
+            $$resultsCount.html($(html).find('.data .results-count').html()) // update the results count
+            $$results.html(html) // update the results
+            document.dispatchEvent(new Event('ZoteroItemUpdated', { // notify Zotero of changed results
+                bubbles: true,
+                cancelable: true
+            }))
+        })
+    }
 
-    $('.question-popup').popup()
+    function onClearDates() {
+        $$minDateInput.val('') // clear the date inputs
+        $$maxDateInput.val('')
+        $$minDateInput[0].dispatchEvent(new Event('input')) // fake input events to trigger resubmit
+        $$maxDateInput[0].dispatchEvent(new Event('input'))
+    }
 
-    $$sortLinks.find('input[disabled="disabled"]').parent().addClass('disabled')
-    $$sortLinks.click((e) => {
-        changeSort(e)
-        $$searchForm.submit()
-    })
+    function onCollectionChange(event) {
+        $(event.currentTarget).parent().toggleClass('active')
+    }
 
-    $$clearDatesLink.click(clearDates)
+    function onSortChange(event) {
+        $(event.currentTarget).parent().siblings().removeClass('active')
+        $(event.currentTarget).parent().addClass('active')
+    }
 
-    new DateHistogram($$histogram)
-
-    // update min and max pub date on visualization
-    updateDates()
-
-    $$collectionInputs.filter('[disabled="disabled"]').parent().addClass('disabled')
-    $$collectionInputs.change((e) => {
-        $(e.target).parent().toggleClass('active')
-        $$searchForm.submit()
-    })
+    function onPageLoad() {
+        dateHistogram.update(JSON.parse($('.ajax-container pre').html())) // render the histogram initially
+        $$sortInputs.filter(':disabled').parent().addClass('disabled') // disable keyword sort if no query
+        $$collectionInputs.filter(':disabled').parent().addClass('disabled') // disable empty collections
+    }
 
     $$collectionInputs
         .focus(e => $(e.target).parent().addClass('focus')) // make collection buttons focusable

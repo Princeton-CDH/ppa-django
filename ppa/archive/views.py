@@ -32,6 +32,13 @@ class DigitizedWorkListView(ListView):
     # keyword query; assume no search terms unless set
     query = None
 
+    def get_template_names(self):
+        # when queried via ajax, return partial html for just the results section
+        # (don't render the form or base template)
+        if self.request.is_ajax():
+            return 'archive/snippets/results_list.html'
+        return self.template_name
+
     def get_queryset(self, **kwargs):
         form_opts = self.request.GET.copy()
         # if relevance sort is requested but there is no keyword search
