@@ -1,14 +1,16 @@
 import json
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
 
 from django.conf import settings
+from django.db.models.query import QuerySet
 from django.test import TestCase, override_settings
 import pytest
 import requests
 from SolrClient import SolrClient
 
+from ppa.archive.models import Collection, DigitizedWork
 from ppa.archive.solr import get_solr_connection, SolrSchema, CoreAdmin, \
-    PagedSolrQuery
+    PagedSolrQuery, Indexable
 
 
 TEST_SOLR_CONNECTIONS = {
@@ -93,14 +95,15 @@ class TestSolrSchema(TestCase):
         mocksolr.schema.delete_field.assert_not_called()
 
         # remove outdated fields
-        mocksolr.schema.get_schema_fields.return_value = {'fields':
-            schema.fields + [
+        mocksolr.schema.get_schema_fields.return_value = {
+            'fields': schema.fields + [
                 {'name': '_root_'},
                 {'name': '_text_'},
                 {'name': '_version_'},
                 {'name': 'id'},
                 {'name': 'oldfield'},
-        ]}
+            ]
+        }
         mocksolr.schema.create_field.reset_mock()
         mocksolr.schema.replace_field.reset_mock()
         created, updated, removed = schema.update_solr_schema()
@@ -276,3 +279,101 @@ class TestPagedSolrQuery(TestCase):
 
         with pytest.raises(TypeError):
             psq['foo']
+
+
+@patch('ppa.archive.solr.get_solr_connection')
+class TestIndexable(TestCase):
+
+    # subclass Indexable for testing
+
+    class SimpleIndexable(Indexable):
+        def __init__(self, id):
+            self.id = id
+        def index_id(self):
+            return 'idx:%s' % self.id
+        def index_data(self):
+            return {'id': self.index_id()}
+
+    def test_index(self, mock_get_solr_connection):
+        # index method on a single object instance
+        mocksolr = Mock()
+        coll = 'coll'
+        mock_get_solr_connection.return_value = (mocksolr, coll)
+
+        sindex = TestIndexable.SimpleIndexable(1)
+        sindex.index()
+        mocksolr.index.assert_called_with(coll, [sindex.index_data()],
+                                          params=None)
+        # with params
+        params = {'foo': 'bar'}
+        sindex.index(params=params)
+        mocksolr.index.assert_called_with(coll, [sindex.index_data()],
+                                          params=params)
+
+    def test_not_implemented(self, mock_get_solr_connection):
+        with pytest.raises(NotImplementedError):
+            Indexable().index_data()
+
+        with pytest.raises(NotImplementedError):
+            Indexable().index_id()
+
+    def test_remove_from_index(self, mock_get_solr_connection):
+        # remove from index method on a single object instance
+        mocksolr = Mock()
+        coll = 'coll'
+        mock_get_solr_connection.return_value = (mocksolr, coll)
+
+        sindex = TestIndexable.SimpleIndexable('foo')
+        sindex.remove_from_index()
+        mocksolr.delete_doc_by_id.assert_called_with(
+            coll, '"%s"' % sindex.index_id(), params=None)
+        # with params
+        params = {'foo': 'bar'}
+        sindex.remove_from_index(params=params)
+        mocksolr.delete_doc_by_id.assert_called_with(
+            coll, '"%s"' % sindex.index_id(), params=params)
+
+    def test_index_items(self, mock_get_solr_connection):
+        mocksolr = Mock()
+        coll = 'coll'
+        mock_get_solr_connection.return_value = (mocksolr, coll)
+        items = [TestIndexable.SimpleIndexable(i) for i in range(10)]
+
+        indexed = Indexable.index_items(items)
+        assert indexed == len(items)
+        mocksolr.index.assert_called_with(coll, [i.index_data() for i in items],
+                                          params=None)
+        # index in chunks
+        Indexable.index_chunk_size = 6
+        mocksolr.index.reset_mock()
+        indexed = Indexable.index_items(items)
+        assert indexed == len(items)
+        # first chunk
+        mocksolr.index.assert_any_call(coll, [i.index_data() for i in items[:6]],
+                                       params=None)
+        # second chunk
+        mocksolr.index.assert_any_call(coll, [i.index_data() for i in items[6:]],
+                                       params=None)
+
+        # pass in a progressbar object
+        mock_progbar = Mock()
+        Indexable.index_items(items, progbar=mock_progbar)
+        # progress bar update method should be called once for each chunk
+        assert mock_progbar.update.call_count == 2
+
+        # index a queryset
+        mockqueryset = MagicMock(spec=QuerySet)
+        # Indexable.index_items(DigitizedWork.objects.all())
+        Indexable.index_items(mockqueryset)
+        mockqueryset.iterator.assert_called_with()
+
+    def test_identify_index_dependencies(self, mock_get_solr_connection):
+        # currently testing based on DigitizedWork configuration
+        Indexable.identify_index_dependencies()
+
+        # collection model should be in related object config
+        assert Collection in Indexable.related
+        # save/delete handler config options saved
+        assert Indexable.related[Collection] == DigitizedWork.index_depends_on['collections']
+        # through model added to m2m list
+        assert DigitizedWork.collections.through in Indexable.m2m

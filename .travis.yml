@@ -21,7 +21,7 @@ before_script:
 before_cache:
 - rm -rf downloads/solr-${SOLR_VERSION}/
 script:
-- py.test --cov=ppa
+- python -m pytest --cov=ppa
 - python manage.py compress -f -v0
 services:
 - mysql
