@@ -14,7 +14,6 @@ class IndexableSignalHandler:
     index_params = {'commitWithin': index_within * 1000}
 
     def handle_save(sender, instance, **kwargs):
-        print('handle save, args %s', kwargs)
         if isinstance(instance, Indexable):
             logger.debug('Indexing %r', instance)
             instance.index(params=IndexableSignalHandler.index_params)
