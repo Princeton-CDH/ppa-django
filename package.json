@@ -34,10 +34,7 @@
     "karma-chrome-launcher": "^2.2.0",
     "karma-firefox-launcher": "^1.1.0",
     "karma-jasmine": "^1.1.2",
-    "karma-spec-reporter": "0.0.32",
-    "pa11y-ci": "^2.1.1"
-  },
-  "devDependencies": {
+    "karma-spec-reporter": "^0.0.32",
     "pa11y-ci": "^2.1.1"
   }
 }
