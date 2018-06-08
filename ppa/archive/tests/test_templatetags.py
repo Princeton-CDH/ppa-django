@@ -1,11 +1,12 @@
 from unittest.mock import Mock
 
 from django.http import QueryDict
-from django.utils.safestring import SafeString
+from django.utils.safestring import SafeString, mark_safe
+
+import json
 
 from ppa.archive.templatetags.ppa_tags import dict_item, querystring_replace, \
-    page_image_url, solr_highlight
-
+    page_image_url, solr_highlight, json_dumps
 
 def test_dict_item():
     # no error on not found
@@ -81,4 +82,12 @@ Sbelley, <em>Prometheus</em>, II. v.
     # < should be escaped
     assert highlighted.startswith('&lt;s Shelley')
 
-
+def test_json():
+    # should be the same as json_dumps()
+    val = {
+        'a': 'b',
+        'c': 'd',
+        'e': 3,
+        'f': ['g', 6, 'h']
+    }
+    assert json_dumps(val) == mark_safe(json.dumps(val))

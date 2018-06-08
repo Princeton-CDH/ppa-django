@@ -27,16 +27,5 @@ href="{% url 'unapi' %}" />
 <section class="ui search basic vertical segment container">
     {% include 'archive/snippets/search_form.html' %}
 </section>
-<div class="results-list">
-    {% for item in object_list %}
-        {% include 'archive/snippets/search_result.html' %}
-    {% empty %}
-    <div class="ui error message container">
-        <p>{% firstof error "No matching works." %}</p>
-    </div>
-    {% endfor %}
-</div>
-<div class="ui container">
-    {% include 'archive/snippets/pagination.html' %}
-</div>
+{% include 'archive/snippets/results_list.html' %}
 {% endblock %}

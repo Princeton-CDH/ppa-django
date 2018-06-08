@@ -1,8 +1,13 @@
+sudo: required
 language: python
+addons:
+  chrome: stable
+  firefox: latest
 python:
 - '3.6'
 env:
   global:
+  - MOZ_HEADLESS=1
   - SOLR_VERSION=6.6.3
   - SOLR_CORE=test-ppa
 cache:
@@ -17,11 +22,14 @@ install:
 - cp ci/testsettings.py ppa/local_settings.py
 - python -c "import uuid; print('SECRET_KEY = \'%s\'' % uuid.uuid4())" >> ppa/local_settings.py
 before_script:
+- sudo chown root /opt/google/chrome/chrome-sandbox
+- sudo chmod 4755 /opt/google/chrome/chrome-sandbox
 - SOLR_VERSION=$SOLR_VERSION SOLR_CORE=$SOLR_CORE bash ci/config_solr.sh
 before_cache:
 - rm -rf downloads/solr-${SOLR_VERSION}/
 script:
 - python -m pytest --cov=ppa
+- npm test
 - python manage.py compress -f -v0
 services:
 - mysql
