@@ -11,21 +11,19 @@ from ppa.archive.signals import IndexableSignalHandler
 
 
 def setUpModule():
-    print('module setup')
-    # rebind indexing signal handlers for this test module only
-    IndexableSignalHandler.setup()
+    # connect indexing signal handlers for this test module only
+    IndexableSignalHandler.connect()
 
 def tearDownModule():
-    print('module teardown')
     # disconnect indexing signal handlers
-    IndexableSignalHandler.teardown()
+    IndexableSignalHandler.disconnect()
 
 
 @override_settings(SOLR_CONNECTIONS={'default': settings.SOLR_CONNECTIONS['test']})
 class TestIndexableSignalHandler(TestCase):
 
-    def test_setup(self):
-        # check that signal handlers are bound as expected
+    def test_connect(self):
+        # check that signal handlers are connected as expected
         # - model save and delete
         post_save_handlers = [item[1] for item in models.signals.post_save.receivers]
         assert ref(IndexableSignalHandler.handle_save) in post_save_handlers

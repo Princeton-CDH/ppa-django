@@ -4,4 +4,4 @@ of the testing session'''
 
 def pytest_sessionstart(session):
     from ppa.archive.signals import IndexableSignalHandler
-    IndexableSignalHandler.teardown()
+    IndexableSignalHandler.disconnect()

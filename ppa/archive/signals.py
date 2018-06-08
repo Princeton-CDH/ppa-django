@@ -30,7 +30,10 @@ class IndexableSignalHandler:
                 logger.debug('Indexing %r (m2m change)', instance)
                 instance.index(params=IndexableSignalHandler.index_params)
 
-    def setup():  # rename to bind?
+    def connect():
+        '''bind indexing signal handlers to save and delete signals for
+        :class:`~ppa.archive.solr.Indexable` subclassess and any
+        indexing dependencies'''
 
         # bind to save and delete signals for indexable subclasses
         for model in Indexable.__subclasses__():
@@ -52,8 +55,8 @@ class IndexableSignalHandler:
                 logger.debug('Registering delete signal handler for %s', model)
                 models.signals.pre_delete.connect(options['delete'], sender=model)
 
-    def teardown():  # rename to disconnect?
-        # disconnect signal handlers
+    def disconnect():
+        '''disconnect indexing signal handlers'''
         for model in Indexable.__subclasses__():
             logger.debug('Disconnecting signal handlers for %s', model)
             models.signals.post_save.disconnect(IndexableSignalHandler.handle_save, sender=model)
@@ -74,4 +77,4 @@ class IndexableSignalHandler:
 
 
 
-IndexableSignalHandler.setup()
+IndexableSignalHandler.connect()
