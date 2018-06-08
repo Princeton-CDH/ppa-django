@@ -1,3 +1,4 @@
+import logging
 import os.path
 from zipfile import ZipFile
 
@@ -9,8 +10,10 @@ from mezzanine.core.fields import RichTextField
 from pairtree import pairtree_path, pairtree_client
 
 from ppa.archive.hathi import HathiBibliographicAPI
-from ppa.archive.solr import get_solr_connection
+from ppa.archive.solr import Indexable
 
+
+logger = logging.getLogger(__name__)
 
 
 class Collection(models.Model):
@@ -23,41 +26,27 @@ class Collection(models.Model):
     def __str__(self):
         return self.name
 
-    def full_index(self, params=None):
-        '''Index or reindex a collection's associated works.'''
-        # guard against this being called on an unsaved instance
-        if not self.pk:
-            raise ValueError(
-                'Collection instance needs to have a primary key value before '
-                'this method is called.'
-            )
-        solr, solr_collection = get_solr_connection()
-        digworks = self.digitizedwork_set.all()
-        solr_docs = [work.index_data() for work in digworks]
-        # adapted from hathi import logic
-        solr.index(solr_collection, solr_docs,
-            params=params)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # store a copy of model data to allow for checking if
+        # it has changed
+        self.__initial = self.__dict__.copy()
 
     def save(self, *args, **kwargs):
-        '''Override method so that on save, any associated
-        works have their names updated if collection name has changed.'''
-        # first handle cases where this is a new save, just save and return
-        if not self.pk:
-            super(Collection, self).save(*args, **kwargs)
-            return
-        # if it has been saved, get the original
-        orig = Collection.objects.get(pk=self.pk)
-        if orig.name != self.name:
-            # update object with new name
-            super(Collection, self).save(*args, **kwargs)
-            # reindex its works and commit the result
-            self.full_index()
-        # saved but no name change, so just save
-        else:
-            super(Collection, self).save(*args, **kwargs)
+        """
+        Saves model and set initial state.
+        """
+        super().save(*args, **kwargs)
+        # update copy of initial data to reflect saved state
+        self.__initial = self.__dict__.copy()
+
+    @property
+    def name_changed(self):
+        '''check if name has been changed (only works on current instance)'''
+        return self.name != self.__initial['name']
 
 
-class DigitizedWork(models.Model):
+class DigitizedWork(models.Model, Indexable):
     '''
     Record to manage digitized works included in PPA and store their basic
     metadata.
@@ -75,14 +64,14 @@ class DigitizedWork(models.Model):
     title = models.TextField()
     #: enumeration/chronology (hathi-specific)
     enumcron = models.CharField('Enumeration/Chronology', max_length=255,
-        blank=True)
+                                blank=True)
     # TODO: what is the generic/non-hathi name for this? volume/version?
 
     # NOTE: may eventually to convert to foreign key
     author = models.CharField(max_length=255, blank=True)
     #: place of publication
     pub_place = models.CharField('Place of Publication', max_length=255,
-        blank=True)
+                                 blank=True)
     #: publisher
     publisher = models.TextField(max_length=255, blank=True)
     # Needs to be integer to allow aggregating max/min, filtering by date
@@ -154,12 +143,41 @@ class DigitizedWork(models.Model):
         # - last update, rights code / rights string, item url
         # (maybe solr only?)
 
-    def index(self, params=None):
-        '''Index a :class:`ppa.archive.models.DigitizedWork`
-        and allow optional commit to ensure results are available.
-        '''
-        solr, solr_collection = get_solr_connection()
-        solr.index(solr_collection, [self.index_data()], params=params)
+    def handle_collection_save(sender, instance, **kwargs):
+        '''signal handler for collection save; reindex associated digitized works'''
+        # only reindex if collection name has changed
+        if instance.name_changed:
+            # if the collection has any works associated
+            works = instance.digitizedwork_set.all()
+            if works.exists():
+                logger.debug('collection save, reindexing %d related works', works.count())
+                Indexable.index_items(works, params={'commitWithin': 3000})
+
+    def handle_collection_delete(sender, instance, **kwargs):
+        '''signal handler for collection delete; clear associated digitized
+        works and reindex'''
+        logger.debug('collection delete')
+        # get a list of ids for collected works before clearing them
+        digwork_ids = instance.digitizedwork_set.values_list('id', flat=True)
+        # find the items based on the list of ids to reindex
+        digworks = DigitizedWork.objects.filter(id__in=list(digwork_ids))
+
+        # NOTE: this sends pre/post clear signal, but it's not obvious
+        # how to take advantage of that
+        instance.digitizedwork_set.clear()
+        Indexable.index_items(digworks, params={'commitWithin': 3000})
+
+    index_depends_on = {
+        'collections': {
+            'save': handle_collection_save,
+            'delete': handle_collection_delete,
+
+        }
+    }
+
+    def index_id(self):
+        '''source id is used as solr identifier'''
+        return self.source_id
 
     def index_data(self):
         '''data for indexing in Solr'''

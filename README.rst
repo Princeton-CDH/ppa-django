@@ -95,7 +95,7 @@ Frontend development setup:
 - To build the main `Semantic UI <https://semantic-ui.com/>`_ styles and js::
 
     npm run build
-  
+
   This should run once automatically after you `npm install`. To watch for changes
   to the stylesheets and rebuild Semantic UI automatically::
 
@@ -110,9 +110,17 @@ things easier. To run them, first install development requirements::
 
     pip install -r dev-requirements.txt
 
-Run tests using py.test::
+Run tests using py.test.  Note that this currently requires the
+top level project directory be included in your python path.  You can
+accomplish this either by calling pytest via python::
 
-    py.test
+    python -m pytest
+
+Or, if you wish to use the `pytest` command directly, simply add the
+top-level project directory to your python path environment variable::
+
+  setenv PYTHONPATH .  # csh
+  export PYTHONPATH=.  # bash
 
 Make sure you configure a test solr connection and set up an empty
 Solr core using the same instructions as for the development core.
