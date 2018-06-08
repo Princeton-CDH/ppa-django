@@ -110,12 +110,14 @@ things easier. To run them, first install development requirements::
 
     pip install -r dev-requirements.txt
 
-Run tests using py.test::
+Run tests using py.test.  Note that this currently requires the
+top level project directory be included in your python path.  You can
+accomplish this either by calling pytest via python::
 
     python -m pytest
 
-If you wish to use the `pytest` command directly, add the top-level
-package directory to your pythonpath::
+Or, if you wish to use the `pytest` command directly, simply add the
+top-level project directory to your python path environment variable::
 
   setenv PYTHONPATH .  # csh
   export PYTHONPATH=.  # bash
