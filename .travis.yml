@@ -34,7 +34,7 @@ script:
 - mysql -u root -e "create database test";
 - python manage.py migrate
 - python manage.py loaddata pages
-- python manage.py runserver & 
+- python manage.py runserver
 - sleep 20 && npm run pa11y
 services:
 - mysql
