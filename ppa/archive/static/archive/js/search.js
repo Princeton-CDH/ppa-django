@@ -79,6 +79,7 @@ $(function(){
         dateHistogram.update(JSON.parse($('.ajax-container pre').html())) // render the histogram initially
         $$sortInputs.filter(':disabled').parent().addClass('disabled') // disable keyword sort if no query
         $$collectionInputs.filter(':disabled').parent().addClass('disabled') // disable empty collections
+        $('.question-popup').popup() // initialize the question popup
     }
 
     $$collectionInputs
