@@ -1,7 +1,8 @@
 import json
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
 
 from django.conf import settings
+from django.db.models.query import QuerySet
 from django.test import TestCase, override_settings
 import pytest
 import requests
@@ -94,14 +95,15 @@ class TestSolrSchema(TestCase):
         mocksolr.schema.delete_field.assert_not_called()
 
         # remove outdated fields
-        mocksolr.schema.get_schema_fields.return_value = {'fields':
-            schema.fields + [
+        mocksolr.schema.get_schema_fields.return_value = {
+            'fields': schema.fields + [
                 {'name': '_root_'},
                 {'name': '_text_'},
                 {'name': '_version_'},
                 {'name': 'id'},
                 {'name': 'oldfield'},
-        ]}
+            ]
+        }
         mocksolr.schema.create_field.reset_mock()
         mocksolr.schema.replace_field.reset_mock()
         created, updated, removed = schema.update_solr_schema()
@@ -307,6 +309,14 @@ class TestIndexable(TestCase):
         sindex.index(params=params)
         mocksolr.index.assert_called_with(coll, [sindex.index_data()],
                                           params=params)
+
+    def test_not_implemented(self, mock_get_solr_connection):
+        with pytest.raises(NotImplementedError):
+            Indexable().index_data()
+
+        with pytest.raises(NotImplementedError):
+            Indexable().index_id()
+
     def test_remove_from_index(self, mock_get_solr_connection):
         # remove from index method on a single object instance
         mocksolr = Mock()
@@ -344,6 +354,18 @@ class TestIndexable(TestCase):
         # second chunk
         mocksolr.index.assert_any_call(coll, [i.index_data() for i in items[6:]],
                                        params=None)
+
+        # pass in a progressbar object
+        mock_progbar = Mock()
+        Indexable.index_items(items, progbar=mock_progbar)
+        # progress bar update method should be called once for each chunk
+        assert mock_progbar.update.call_count == 2
+
+        # index a queryset
+        mockqueryset = MagicMock(spec=QuerySet)
+        # Indexable.index_items(DigitizedWork.objects.all())
+        Indexable.index_items(mockqueryset)
+        mockqueryset.iterator.assert_called_with()
 
     def test_identify_index_dependencies(self, mock_get_solr_connection):
         # currently testing based on DigitizedWork configuration
