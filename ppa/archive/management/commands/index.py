@@ -37,8 +37,8 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Sum
 import progressbar
 # from urllib3.exceptions import HTTPError
-from SolrClient.exceptions import ConnectionError
-from requests.exceptions import RequestException
+#from SolrClient.exceptions import ConnectionError
+#from requests.exceptions import RequestException
 
 from ppa.archive.models import DigitizedWork
 from ppa.archive.solr import get_solr_connection, Indexable
@@ -143,5 +143,9 @@ class Command(BaseCommand):
             return Indexable.index_items(index_data, progbar=progbar)
         except Exception as err:
         # except (ConnectionError, RequestException) as err:
-            # NOTE: this is still pretty ugly; what part should we return?
+            # NOTE: this is fairly ugly, and catching the more specific errors
+            # doesn't work because there are multiple exceptions
+            # thrown when a connection error occurs; however, this will
+            # at least stop the script instead of repeatedly throwing
+            # connection errors
             raise CommandError(err)
