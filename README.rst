@@ -80,12 +80,12 @@ Initial setup and installation:
 Frontend development setup:
 
 - django-compressor dependencies: you need `Node.js <https://nodejs.org/en/>`_
-  and a js package manager (`npm` or `yarn`). Install dependencies with the
-  relevant install command for your package manager - for `npm`::
+  and a js package manager (``npm`` or ``yarn``). Install dependencies with the
+  relevant install command for your package manager - for ``npm``::
 
     npm install
 
-  for `yarn`::
+  for ``yarn``::
 
     yarn
 
@@ -96,7 +96,7 @@ Frontend development setup:
 
     npm run build
 
-  This should run once automatically after you `npm install`. To watch for changes
+  This should run once automatically after you ``npm install``. To watch for changes
   to the stylesheets and rebuild Semantic UI automatically::
 
     npm start
@@ -116,7 +116,7 @@ accomplish this either by calling pytest via python::
 
     python -m pytest
 
-Or, if you wish to use the `pytest` command directly, simply add the
+Or, if you wish to use the ``pytest`` command directly, simply add the
 top-level project directory to your python path environment variable::
 
   setenv PYTHONPATH .  # csh
@@ -127,20 +127,20 @@ Solr core using the same instructions as for the development core.
 
 Javascript unit tests are written with `Jasmine <https://jasmine.github.io/>`_
 and run using `Karma <https://karma-runner.github.io/2.0/index.html>`_. To run
-them, you can use an `npm` command::
+them, you can use an ``npm`` command::
 
     npm test
 
 Automated accessibility testing is also possible using `pa11y <https://github.com/pa11y/pa11y>`_
 and `pa11y-ci <https://github.com/pa11y/pa11y-ci>`_. To run accessibility tests,
-start the server with `python manage.py runserver` and then use `npm`::
+start the server with ``python manage.py runserver`` and then use ``npm``::
 
     npm run pa11y
 
-The accessibility tests are configured to read options from the `.pa11yci.json`
-file and look for a sitemap at `localhost:8000/sitemap.xml` to use to crawl the
+The accessibility tests are configured to read options from the ``.pa11yci.json``
+file and look for a sitemap at ``localhost:8000/sitemap.xml`` to use to crawl the
 site. Additional URLs to test can be added to the `urls` property of the
-`.pa11yci.json` file.
+``.pa11yci.json`` file.
 
 
 Documentation
@@ -151,7 +151,7 @@ To generate documentation them, first install development requirements::
 
     pip install -r dev-requirements.txt
 
-Then build documentation using the customized make file in the `docs`
+Then build documentation using the customized make file in the ``docs``
 directory::
 
     cd sphinx-docs
