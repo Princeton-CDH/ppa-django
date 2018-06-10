@@ -19,7 +19,7 @@
             margin-bottom: 1em;
         }
 
-        > .twelve.wide.column:not(:first-child) {
+        > .twelve.wide.column:not(:nth-of-type(1)) {
             padding-top: 0;
         }
     }
