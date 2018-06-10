@@ -35,7 +35,6 @@ before_cache:
 script:
 - python -m pytest --cov=ppa
 - npm test
-- npm run build
 - python manage.py compress -f -v0
 - npm run pa11y
 services:
