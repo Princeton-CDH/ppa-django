@@ -101,10 +101,10 @@ Frontend development setup:
 
     npm start
 
-Unit Tests
+Tests
 ~~~~~~~~~~
 
-Unit tests are written with `py.test <http://doc.pytest.org/>`_ but use
+Python unit tests are written with `py.test <http://doc.pytest.org/>`_ but use
 Django fixture loading and convenience testing methods when that makes
 things easier. To run them, first install development requirements::
 
@@ -124,6 +124,23 @@ top-level project directory to your python path environment variable::
 
 Make sure you configure a test solr connection and set up an empty
 Solr core using the same instructions as for the development core.
+
+Javascript unit tests are written with `Jasmine <https://jasmine.github.io/>`_
+and run using `Karma <https://karma-runner.github.io/2.0/index.html>`_. To run
+them, you can use an `npm` command::
+
+    npm test
+
+Automated accessibility testing is also possible using `pa11y <https://github.com/pa11y/pa11y>`_
+and `pa11y-ci <https://github.com/pa11y/pa11y-ci>`_. To run accessibility tests,
+start the server with `python manage.py runserver` and then use `npm`::
+
+    npm run pa11y
+
+The accessibility tests are configured to read options from the `.pa11yci.json`
+file and look for a sitemap at `localhost:8000/sitemap.xml` to use to crawl the
+site. Additional URLs to test can be added to the `urls` property of the
+`.pa11yci.json` file.
 
 
 Documentation
