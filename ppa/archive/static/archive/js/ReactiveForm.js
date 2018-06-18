@@ -7,8 +7,10 @@ import 'rxjs/add/operator/debounceTime'
 
 export default class ReactiveForm {
     /**
-     * Utility function that creates an observable from an <input> element.
-     * Generates a sequence of values depending on the input type.
+     * Utility function that creates an observable from elements that emit the
+     * "input" event type. (<input>, <select>).
+     * 
+     * Generates a sequence of values depending on the element type.
      * 
      * @param {HTMLElement} $element <input> element
      * @return {Observable} sequence of values of the element
@@ -18,7 +20,9 @@ export default class ReactiveForm {
         switch($element.type) { // decide what we need to monitor to determine if there was a change
             case 'checkbox':
             case 'radio':
-                return observable.pluck('target', 'checked') // returns boolean
+                return observable.pluck('target', 'checked') // returns boolean immediately
+            case 'select':
+                return observable.pluck('target', 'value') // return string immediately
             case 'text':
             case 'number':
             default:
@@ -39,6 +43,7 @@ export default class ReactiveForm {
         let self = this
         self.$$element = $(selector)
         self.$inputs = self.$$element.find('input').get() // find child <input> elements
+        self.$inputs.push(...self.$$element.find('select').get()) // also add any <select> elements
         self.inputStream = merge(...self.$inputs.map(ReactiveForm.fromInput)) // create and then merge an array of input observables
         self.stateStream = self.inputStream.map(() => self.$$element.serializeArray()) // get the form state each time input state changes
     }

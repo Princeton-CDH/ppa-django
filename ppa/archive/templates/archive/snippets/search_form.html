@@ -67,5 +67,15 @@
             </label>
             {% endfor %}
         </div>
+        <div class="mobile-sort">
+            <label>Sort By</label>
+            <select class="ui dropdown" name="sort">
+                {% for sort in search_form.sort %}
+                <option value="{{ sort.data.value }}">
+                    {{ sort.choice_label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
     </div>
 </form>
