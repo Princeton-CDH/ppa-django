@@ -131,7 +131,12 @@
         margin: 2rem 1rem 0;
 
         .menu {
+            display: none;
             justify-content: space-between;
+
+            @media only screen and (min-width: 1069px) {
+                display: flex;
+            }
 
             .item {
                 text-transform: none;
@@ -147,6 +152,35 @@
             }
         }
     }
+
+    .mobile-sort {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid $gold;
+        padding-bottom: .5rem;
+
+        @media only screen and (min-width: 1069px) {
+            display: none;
+        }
+
+        label { // "SORT BY" text
+            text-transform: uppercase;
+        }
+
+        .chevron.down.icon {
+            transition: all 0.2s ease;
+            position: absolute;
+            right: .5rem;
+            color: black;
+            opacity: 0.9;
+        }
+        
+        .active.dropdown .chevron.down.icon {
+            transform: rotate(180deg);
+        }
+    }
+
 
     .workscount {
         margin: 2rem auto;

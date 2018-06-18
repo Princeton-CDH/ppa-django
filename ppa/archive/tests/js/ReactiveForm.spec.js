@@ -10,7 +10,9 @@ describe('Reactive Form', () => {
         beforeEach(function() {
             loadFixtures('form.html')
             this.rf = new ReactiveForm('#form')
-            this.inputs = $('#form').find('input').get()
+            this.$inputs = $('#form').find('input').get()
+            this.$selects = $('#form').find('select').get()
+            this.$elements = this.$inputs.concat(this.$selects)
         })
 
         it('should store the associated form element', function() {
@@ -18,14 +20,18 @@ describe('Reactive Form', () => {
         })
 
         it('should store all child input elements', function() {
-            expect(this.rf.$inputs).toEqual(this.inputs)
+            expect(this.rf.$inputs).toContain(this.$inputs)
+        })
+
+        it('should store all child select elements', function() {
+            expect(this.rf.$inputs).toContain(this.$selects)
         })
 
         it('should create observables from each child input', function() {
             spyOn(ReactiveForm, 'fromInput').and.callThrough() // spy on static method
             new ReactiveForm('#form') // initialize a new one so constructor is called
-            for (let input of this.inputs) { // check that each input was passed as an arg
-                expect(ReactiveForm.fromInput.calls.mostRecent().args[2]).toContain(input)
+            for (let $element of this.$elements) { // check that each input was passed as an arg
+                expect(ReactiveForm.fromInput.calls.mostRecent().args[2]).toContain($element)
                 // TODO why is the array of inputs the third arg...? why is arg two '0'? ¯\_(ツ)_/¯
             }
         })
