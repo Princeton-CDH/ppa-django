@@ -1,4 +1,4 @@
-pytest
+pytest>=3.6
 pytest-django
 pytest-cov
 # note: pytest-sugar is optional but pretty
