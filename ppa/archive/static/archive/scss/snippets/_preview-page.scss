@@ -24,7 +24,19 @@
 
 
     .preview {
-        width: 180px;
+        margin-right: 1rem;
+        
+        img {
+            width: 180px;
+        }
+        
+        #digitized-work & { // larger size on digitized work page
+            margin-right: 2rem;
+    
+            img {
+                width: 225px;
+            }
+        }
     }
 
     .snippets {
