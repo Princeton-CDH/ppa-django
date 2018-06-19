@@ -177,12 +177,12 @@ class TestArchiveViews(TestCase):
         # image url should appear twice for src and srcset
         self.assertContains(
             response,
-            page_image_url(result['srcid'], result['order'], 180),
+            page_image_url(result['srcid'], result['order'], 225),
             count=1
         )
         self.assertContains(
             response,
-            page_image_url(result['srcid'], result['order'], 360),
+            page_image_url(result['srcid'], result['order'], 450),
             count=1
         )
         self.assertContains(response, '1 occurrence')
