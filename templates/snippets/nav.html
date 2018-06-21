@@ -8,7 +8,7 @@
 </nav>
 <!-- main navigation -->
 <nav class="ui top fixed inverted borderless menu" id="main-nav">
-    <a class="toc item">
+    <a class="toc item" id="toc">
         <i class="sidebar icon"></i>
         <i class="times icon" style="display:none;"></i>
     </a>
@@ -24,7 +24,7 @@
             View the Archive
             <i class="search icon"></i>
         </a>
-        <a class="search item" href="{% url 'archive:list' %}">
+        <a class="search item" href="{% url 'archive:list' %}" title="search">
             <i class="search icon"></i>
         </a>
     </div>
