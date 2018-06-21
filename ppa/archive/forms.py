@@ -177,6 +177,7 @@ class SearchForm(forms.Form):
     pub_date = RangeField(label='Publication Year', required=False,
         widget=RangeWidget(attrs={
             'size': 4,
+            'title': 'publication year',
             '_inline': True
         }))
 

@@ -77,7 +77,8 @@
        Links
 --------------------*/
 
-@linkColor    : @lightPrimaryColor;
+@linkColor           : @textColor;
+@linkUnderline       : underline;
 
 /*-------------------
         Page
