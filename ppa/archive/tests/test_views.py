@@ -430,7 +430,7 @@ class TestArchiveViews(TestCase):
         self.assertTemplateUsed('archive/snippest/search_result.html')
         # shouldn't render the search form or whole list
         self.assertTemplateNotUsed('archive/snippets/search_form.html')
-        self.assertTemplateNotUsed('archive/snippets/list_digitizedworks.html')
+        self.assertTemplateNotUsed('archive/list_digitizedworks.html')
         # should have all the results
         assert len(response.context['object_list']) == len(digitized_works)
         # should have the results count
