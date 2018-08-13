@@ -8,7 +8,7 @@ python:
 env:
   global:
   - MOZ_HEADLESS=1
-  - SOLR_VERSION=6.6.3
+  - SOLR_VERSION=6.6.5
   - SOLR_CORE=test-ppa
 cache:
   pip: true
