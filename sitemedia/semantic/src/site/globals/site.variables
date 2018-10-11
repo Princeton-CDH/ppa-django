@@ -78,7 +78,7 @@
 --------------------*/
 
 @linkColor           : @textColor;
-@linkUnderline       : underline;
+@linkUnderline       : none;
 
 /*-------------------
         Page
