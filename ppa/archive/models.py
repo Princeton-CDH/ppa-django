@@ -125,10 +125,54 @@ class DigitizedWork(models.Model, Indexable):
             as instance of :class:`ppa.archive.hathi.HathiBibliographicRecord`
 
         '''
-        self.title = bibdata.title
+
+        # set fields from marc if available, since it has more details
+        if bibdata.marcxml:
+            # set title and subtitle from marc if possible
+            print(bibdata.marcxml.title())
+            self.title = bibdata.marcxml['245']['a']
+
+            # according to PUL CAMS,
+            # 245 subfield contains the subtitle *if* the preceding field
+            # ends with a colon. (Otherwise could be a parallel title,
+            # e.g. title in another language).
+            # HOWEVER: metadata from Hathi doesn't seem to follow this
+            # pattern (possibly due to records being older?)
+
+            # subfields is a list of code, value, code, value
+            # iterate in paired steps of two starting with first and second
+            # for code, value in zip(bibdata.marcxml['245'].subfields[0::2],
+            #                        bibdata.marcxml['245'].subfields[1::2]):
+            #     if code == 'b':
+            #         break
+            #     preceding_character = value[-1:]
+
+            # if preceding_character == ':':
+            #     self.subtitle = bibdata.marcxml['245']['b'] or ''
+
+            # NOTE: skipping precebding character check for now
+            self.subtitle = bibdata.marcxml['245']['b'] or ''
+
+            # indicator 2 provides the number of characters to be skipped for
+            # sorting (could be 0)
+            non_sort = int(bibdata.marcxml['245'].indicators[1])
+            self.sort_title = bibdata.marcxml.title()[non_sort:]
+
+            self.author = bibdata.marcxml.author() or ''
+            if '260' in bibdata.marcxml:
+                self.pub_place = bibdata.marcxml['260']['a'] or ''
+                self.publisher = bibdata.marcxml['260']['b'] or ''
+            # maybe: consider getting volume & series directly from
+            # marc rather than relying on hathi enumcron ()
+
+        else:
+            # fallback behavior, if marc is not availiable
+            # use dublin core title
+            self.title = bibdata.title
+            # could guess at non-sort, but hopefully unnecessary
 
         # NOTE: might also want to store sort title
-        # pub date returned in api JSOn is list; use first for now (if available)
+        # pub date returned in api JSON is list; use first for now (if available)
         if bibdata.pub_dates:
             self.pub_date = bibdata.pub_dates[0]
         copy_details = bibdata.copy_details(self.source_id)
@@ -137,14 +181,6 @@ class DigitizedWork(models.Model, Indexable):
         # hathi source url can currently be inferred from htid, but is
         # included in the bibdata in case it changes - so let's just store it
         self.source_url = copy_details['itemURL']
-        # set fields from marc if available
-        if bibdata.marcxml:
-            self.author = bibdata.marcxml.author() or ''
-            if '260' in bibdata.marcxml:
-                self.pub_place = bibdata.marcxml['260']['a'] or ''
-                self.publisher = bibdata.marcxml['260']['b'] or ''
-            # maybe: consider getting volume & series directly from
-            # marc rather than relying on hathi enumcron ()
 
         # should also consider storing:
         # - last update, rights code / rights string, item url

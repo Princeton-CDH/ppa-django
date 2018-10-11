@@ -25,6 +25,8 @@ class TestDigitizedWork(TestCase):
 
     bibdata_full = os.path.join(FIXTURES_PATH,
         'bibdata_full_njp.32101013082597.json')
+    bibdata_full2 = os.path.join(FIXTURES_PATH,
+        'bibdata_full_aeu.ark_13960_t1pg22p71.json')
     bibdata_brief = os.path.join(FIXTURES_PATH,
         'bibdata_brief_njp.32101013082597.json')
 
@@ -84,9 +86,19 @@ class TestDigitizedWork(TestCase):
 
         # populate from full record
         digwork.populate_from_bibdata(full_bibdata)
+        # title and subtitle set from marc
+        assert digwork.title == full_bibdata.marcxml['245']['a']
+        assert digwork.subtitle == full_bibdata.marcxml['245']['b']
+        # fixture has indicator 0, no non-sort characters
+        assert digwork.sort_title == ' '.join([digwork.title, digwork.subtitle])
         assert digwork.author == full_bibdata.marcxml.author()
         assert digwork.pub_place == full_bibdata.marcxml['260']['a']
         assert digwork.publisher == full_bibdata.marcxml['260']['b']
+
+        # se
+                with open(self.bibdata_full) as bibdata:
+            full_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
+
 
         # TODO: test publication info unavailable?
 
