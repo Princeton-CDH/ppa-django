@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 {% load static humanize %}
 
+{% block js %}
+
+{% endblock %}
+
 {% block css %}
 <link rel="stylesheet" type="text/x-scss" href="{% static 'scss/home.scss' %}">
 {% endblock %}
@@ -8,19 +12,15 @@
 {% block page-context-id %}homepage{% endblock %}
 
 {% block page_header %}
-<header class="ui vertical basic center aligned masthead segment" id="header">
-    <h1 class="ui header">Princeton Prosody Archive</h1>
-    <h2 class="ui header">Rethinking the past</h2>
+<header class="ui vertical basic center aligned segment" id="header">
+    <img class="layer 1" data-depth="0.60" src="{% static 'img/ppa-logo-separated-shape/layer3.png' %}">
+    <img class="layer 2" data-depth="0.40" src="{% static 'img/ppa-logo-separated-shape/layer2.png' %}">
+    <img class="layer 3" data-depth="0.20" src="{% static 'img/ppa-logo-separated-shape/layer1.png' %}">
 </header>
 {% endblock %}
 
 {% block content %}
 <div class="ui vertical basic segment">
-    <div class="ui center aligned text container">
-        <a class="archive-link" href="{% url 'archive:list' %}">
-            <h3 class="ui header">✒ View the Archive</h3>
-        </a>
-    </div>
     <div class="intro ui text container">
         <p>Welcome to the Princeton Prosody Archive, a full-text searchable database of thousands of digitized books published between 1570 and 1923.
             The Archive collects historical documents and highlights discourses about the study of language,
@@ -37,6 +37,12 @@
             and future of organizing, navigating, conceptualizing, and historicizing large amounts of data – about a single
             poem or about evolving and contradictory thinking about the technology of poetic language.</p>
     </div>
+    <a class="archive-link" href="{% url 'archive:list' %}">
+        <h3 class="ui header">
+            {% include 'snippets/fermata.svg' %}
+            View and search the archive
+        </h3>
+    </a>
 </div>
 <div class="ui vertical basic segment">
     <div class="ui stackable two column text container grid">
@@ -94,7 +100,10 @@
             </a>
             {% endfor %}
             <a class="collections-link" href="{% url 'archive:list-collections' %}">
-                <h3 class="ui header">✒ View All Collections</h3>
+                <h3 class="ui header">
+                    {% include 'snippets/fermata.svg' %}
+                    View All Collections
+                </h3>
             </a>
         </div>
     </div>
@@ -122,7 +131,10 @@
             </div>
         </div>
         <a class="archive-link" href="{% url 'archive:list' %}">
-            <h3 class="ui header">✒ View the Archive</h3>
+            <h3 class="ui header">
+                {% include 'snippets/fermata.svg' %}
+                View and search the archive
+            </h3>
         </a>
     </div>
 </div>

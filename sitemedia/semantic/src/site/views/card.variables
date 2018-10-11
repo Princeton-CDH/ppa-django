@@ -48,7 +48,7 @@
 @linkHoverRaiseDistance: 0px;
 @linkHoverTransform: none;
 @linkShadowColor: @lightPrimaryColor;
-@linkHoverShadowColor: @lightSecondaryColor;
+@linkHoverShadowColor: @primaryColor;
 
 @linkBoxShadow: @shadowDistance @shadowDistance 0px 0px @lightPrimaryColor;
 @linkHoverBoxShadow: @shadowDistance @shadowDistance 0px 0px @linkHoverShadowColor;

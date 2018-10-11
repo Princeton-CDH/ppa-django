@@ -141,6 +141,14 @@ main {
     }
 }
 
+// misc
+.fermata {
+    fill: $primaryColor;
+    height: 1.5rem;
+    vertical-align: middle;
+    padding-right: .5rem;
+}
+
 * {
     // render fonts to match the spec
     @include font-smooth();
