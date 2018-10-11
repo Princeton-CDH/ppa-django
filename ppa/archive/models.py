@@ -61,7 +61,13 @@ class DigitizedWork(models.Model, Indexable):
     #: source url where the original can be accessed
     source_url = models.URLField(max_length=255)
     #: title of the work; using TextField to allow for long titles
-    title = models.TextField()
+    title = models.TextField(help_text='Main title')
+    #: subtitle of the work; using TextField to allow for long titles
+    subtitle = models.TextField(blank=True, default='',
+                                help_text='Subtitle, if any (optional)')
+    #: sort title: title without leading non-sort characters, from marc
+    sort_title = models.TextField(blank=True, default='',
+                                  help_text='Sort title from MARC record')
     #: enumeration/chronology (hathi-specific)
     enumcron = models.CharField('Enumeration/Chronology', max_length=255,
                                 blank=True)
@@ -120,6 +126,7 @@ class DigitizedWork(models.Model, Indexable):
 
         '''
         self.title = bibdata.title
+
         # NOTE: might also want to store sort title
         # pub date returned in api JSOn is list; use first for now (if available)
         if bibdata.pub_dates:
