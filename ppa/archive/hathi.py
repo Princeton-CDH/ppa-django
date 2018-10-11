@@ -109,7 +109,7 @@ class StructMapPage(_METS):
     order = xmlmap.StringField('@ORDER')
     label = xmlmap.StringField('@LABEL')
     orderlabel = xmlmap.StringField('@ORDERLABEL')
-    text_file_id = xmlmap.StringField('m:fptr/@FILEID[contains(., "TXT")]')
+    text_file_id = xmlmap.StringField('m:fptr/@FILEID[contains(., "TXT") or contains(. , "OCR")]')
 
     @property
     def display_label(self):
@@ -131,6 +131,7 @@ class StructMapPage(_METS):
 
 class METSFile(_METS):
     id = xmlmap.StringField('@ID')
+    sequence = xmlmap.StringField('@SEQ')
     location = xmlmap.StringField('m:FLocat/@xlink:href')
 
 class MinimalMETS(_METS):

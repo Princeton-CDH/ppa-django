@@ -6,10 +6,11 @@ from cached_property import cached_property
 from django.conf import settings
 from django.db import models
 from django.urls import reverse
+from eulxml.xmlmap import load_xmlobject_from_file
 from mezzanine.core.fields import RichTextField
 from pairtree import pairtree_path, pairtree_client
 
-from ppa.archive.hathi import HathiBibliographicAPI
+from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS
 from ppa.archive.solr import Indexable
 
 
@@ -129,7 +130,6 @@ class DigitizedWork(models.Model, Indexable):
         # set fields from marc if available, since it has more details
         if bibdata.marcxml:
             # set title and subtitle from marc if possible
-            print(bibdata.marcxml.title())
             self.title = bibdata.marcxml['245']['a']
 
             # according to PUL CAMS,
@@ -304,58 +304,31 @@ class DigitizedWork(models.Model, Indexable):
         '''path to mets xml file within the hathi contents for this work'''
         return self._hathi_content_path('.mets.xml', ptree_client=ptree_client)
 
-
     def page_index_data(self):
         '''Get page content for this work from Hathi pairtree and return
         data to be indexed in solr.'''
 
-        from eulxml.xmlmap import load_xmlobject_from_file
-        from ppa.archive.hathi import MinimalMETS
-        print(self.source_id)
-        print(self.hathi_metsfile_path())
-        mmets = load_xmlobject_from_file(self.hathi_metsfile_path(), MinimalMETS)
-
+        # load mets record to pull metadata about the images
+        mmets = load_xmlobject_from_file(self.hathi_metsfile_path(),
+                                         MinimalMETS)
 
         # read zipfile contents in place, without unzipping
         with ZipFile(self.hathi_zipfile_path()) as ht_zip:
-            filenames = ht_zip.namelist()
-            # print(filenames)
 
-            # yield a generator of index data for each page
+            # yield a generator of index data for each page; iterate
+            # over pages in METS structmap
             for page in mmets.structmap_pages:
-                pagefilename = os.path.join(self.hathi_pairtree_id, page.text_file_location)
+
+                pagefilename = os.path.join(self.hathi_content_dir, page.text_file_location)
                 with ht_zip.open(pagefilename) as pagefile:
-                    print('%s %s %s' % (page.order, page.display_label, page.label))
-                    # page_id = os.path.splitext(os.path.basename(pagefilename))[0]
-                    # print({
-                    #     'id': '%s.%s' % (self.source_id, page.text_file.id),
-                    #     'srcid': self.source_id,   # for grouping with work record
-                    #     'content': pagefile.read().decode('utf-8'),
-                    #     'order': page.order,
-                    #     'title': page.display_label,
-                    #     'tags': page.label.split(', ') if page.label else [],
-                    #     'item_type': 'page'
-                    # })
+
                     yield {
-                        'id': '%s.%s' % (self.source_id, page.text_file.id),
+                        'id': '%s.%s' % (self.source_id, page.text_file.sequence),
                         'srcid': self.source_id,   # for grouping with work record
                         'content': pagefile.read().decode('utf-8'),
                         'order': page.order,
-                        # rename insolr
-                        'title': page.display_label,
-                        # 'tags': page.label.split(', ') if page.label else [],
-                        'item_type': 'page'
-                    }
-
-
-            for pagefilename in filenames:
-                with ht_zip.open(pagefilename) as pagefile:
-                    page_id = os.path.splitext(os.path.basename(pagefilename))[0]
-                    yield {
-                        'id': '%s.%s' % (self.source_id, page_id),
-                        'srcid': self.source_id,   # for grouping with work record
-                        'content': pagefile.read().decode('utf-8'),
-                        'order': page_id,
+                        'label': page.display_label,
+                        'tags': page.label.split(', ') if page.label else [],
                         'item_type': 'page'
                     }
 

@@ -44,8 +44,11 @@ class SolrSchema(object):
          'multiValued': True},
         {'name': 'text', 'type': 'text_en', 'required': False, 'stored': False,
          'multiValued': True},
+        # page fields
+        {'name': 'label', 'type': 'text_en', 'required': False},
+        {'name': 'tags', 'type': 'string', 'required': False, 'multiValued': True},
 
-         # sort/facet copy fields
+        # sort/facet copy fields
         {'name': 'title_exact', 'type': 'string', 'required': False},
         {'name': 'author_exact', 'type': 'string', 'required': False},
         {'name': 'collections_exact', 'type': 'string', 'required': False,
@@ -53,7 +56,7 @@ class SolrSchema(object):
     ]
     #: fields to be copied into general purpose text field for searching
     text_fields = ['srcid', 'content', 'title', 'author', 'pub_date', 'enumcron',
-        'pub_place', 'publisher']
+                   'pub_place', 'publisher']
     #: copy fields, e.g. for facets
     copy_fields = [
         ('title', 'title_exact'),
