@@ -261,7 +261,7 @@ class TestDigitizedWork(TestCase):
                 assert data['content'] == contents[i]
                 assert data['order'] == mets_page.order
                 assert data['item_type'] == 'page'
-                assert data['title'] == mets_page.display_label
+                assert data['label'] == mets_page.display_label
                 assert 'tags' in data
                 assert data['tags'] == mets_page.label.split(', ')
 
