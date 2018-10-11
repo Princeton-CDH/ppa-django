@@ -95,9 +95,19 @@ class TestDigitizedWork(TestCase):
         assert digwork.pub_place == full_bibdata.marcxml['260']['a']
         assert digwork.publisher == full_bibdata.marcxml['260']['b']
 
-        # se
-                with open(self.bibdata_full) as bibdata:
+        # second bibdata record with sort title
+        with open(self.bibdata_full2) as bibdata:
             full_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
+
+        digwork = DigitizedWork(source_id='aeu.ark:/13960/t1pg22p71')
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.title == full_bibdata.marcxml['245']['a']
+        assert digwork.subtitle == full_bibdata.marcxml['245']['b']
+        # fixture has title with non-sort characters
+        assert digwork.sort_title == ' '.join([
+            digwork.title[int(full_bibdata.marcxml['245'].indicators[1]):],
+            digwork.subtitle
+        ])
 
 
         # TODO: test publication info unavailable?
