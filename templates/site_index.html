@@ -2,7 +2,7 @@
 {% load static humanize %}
 
 {% block js %}
-
+<script src="{% static 'js/home.js' %}" type="module"></script>
 {% endblock %}
 
 {% block css %}
@@ -13,9 +13,11 @@
 
 {% block page_header %}
 <header class="ui vertical basic center aligned segment" id="header">
-    <img class="layer 1" data-depth="0.60" src="{% static 'img/ppa-logo-separated-shape/layer3.png' %}">
-    <img class="layer 2" data-depth="0.40" src="{% static 'img/ppa-logo-separated-shape/layer2.png' %}">
-    <img class="layer 3" data-depth="0.20" src="{% static 'img/ppa-logo-separated-shape/layer1.png' %}">
+    <div id="scene">
+        <img class="layer one" data-depth="0.20" src="{% static 'img/ppa-logo-separated-shape/layer1.svg' %}">
+        <img class="layer two" data-depth="0.40" src="{% static 'img/ppa-logo-separated-shape/layer2.svg' %}">
+        <img class="layer three" data-depth="0.60" src="{% static 'img/ppa-logo-separated-shape/layer3.svg' %}">
+    </div>
 </header>
 {% endblock %}
 
