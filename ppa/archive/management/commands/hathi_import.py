@@ -48,14 +48,12 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from django.template.defaultfilters import pluralize
-from eulxml.xmlmap import load_xmlobject_from_file
-from lxml import etree
-from pairtree import pairtree_path, pairtree_client
+from pairtree import pairtree_client
 import progressbar
 
-from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound, \
-    MinimalMETS
+from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound
 from ppa.archive.models import DigitizedWork
+from ppa.archive.signals import IndexableSignalHandler
 
 
 logger = logging.getLogger(__name__)
@@ -75,14 +73,21 @@ class Command(BaseCommand):
     verbosity = v_normal
 
     def add_arguments(self, parser):
-        parser.add_argument('htids', nargs='*',
+        parser.add_argument(
+            'htids', nargs='*',
             help='Optional list of specific volumes to import by HathiTrust id.')
-        parser.add_argument('-u', '--update', action='store_true',
+        parser.add_argument(
+            '-u', '--update', action='store_true',
             help='Update local content even if source record has not changed.')
-        parser.add_argument('--progress', action='store_true',
+        parser.add_argument(
+            '--progress', action='store_true',
             help='Display a progress bar to track the status of the import.')
 
     def handle(self, *args, **kwargs):
+        # disconnect signal handler for on-demand indexing, for efficiency
+        # (index in bulk after an update, not one at a time)
+        IndexableSignalHandler.disconnect()
+
         self.bib_api = HathiBibliographicAPI()
         self.verbosity = kwargs.get('verbosity', self.v_normal)
         self.options = kwargs
@@ -280,7 +285,8 @@ class Command(BaseCommand):
         start = time.time()
         with ZipFile(digwork.hathi_zipfile_path(ptree_client)) as ht_zip:
             page_count = len(ht_zip.namelist())
-        logger.debug('Counted %d pages in zipfile in %f sec' % (page_count, time.time() - start))
+        logger.debug('Counted %d pages in zipfile in %f sec',
+                     page_count, time.time() - start)
 
         # NOTE: could also count pages via mets file, but that's slower
         # than counting via zipfile name list
