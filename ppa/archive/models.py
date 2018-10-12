@@ -80,10 +80,10 @@ class DigitizedWork(models.Model, Indexable):
     page_count = models.PositiveIntegerField(null=True, blank=True)
     #: public notes field for this work
     public_notes = models.TextField(blank=True, default='',
-        help_text='Public edition notes displayed on site.')
+        help_text='Notes on edition or other details to be displayed on the site.')
     #: internal team notes, not displayed on the public facing site
     notes = models.TextField(blank=True, default='',
-        help_text='Private notes not displayed on public site.')
+        help_text='Internal curation notes (not displayed on public site)')
     #: collections that this work is part of
     collections = models.ManyToManyField(Collection, blank=True)
     #: date added to the archive
@@ -202,7 +202,7 @@ class DigitizedWork(models.Model, Indexable):
                             in self.collections.all()],
             # general purpose multivalued field, currently only
             # includes public notes in this method, other fields
-            # copied in Solr schema.                
+            # copied in Solr schema.
             'text': [self.public_notes],
             # hard-coded to distinguish from & sort with pages
             'item_type': 'work',
