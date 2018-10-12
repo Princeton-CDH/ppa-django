@@ -495,6 +495,12 @@ class TestArchiveViews(TestCase):
 
 
     def test_digitizedwork_csv(self):
+        # add an arbitrary note to one digital work so that the field is
+        # populated in at least one case
+        first_dw = DigitizedWork.objects.first()
+        first_dw.notes = 'private notes'
+        first_dw.public_notes = 'public notes'
+        first_dw.save()
         # get the csv export and inspect the response
         response = self.client.get(reverse('archive:csv'))
         assert response.status_code == 200
@@ -526,6 +532,8 @@ class TestArchiveViews(TestCase):
             assert digwork.enumcron in digwork_data
             assert ';'.join([coll.name for coll in digwork.collections.all()]) \
                 in digwork_data
+            assert digwork.notes in digwork_data
+            assert digwork.public_notes in digwork_data
             assert '%d' % digwork.page_count in digwork_data
             assert '%s' % digwork.added in digwork_data
             assert '%s' % digwork.updated in digwork_data
