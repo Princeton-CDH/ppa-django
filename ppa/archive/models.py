@@ -193,6 +193,7 @@ class DigitizedWork(models.Model, Indexable):
             'publisher': self.publisher,
             'enumcron': self.enumcron,
             'author': self.author,
+            'notes': self.notes,
             'collections': [collection.name for collection
                             in self.collections.all()],
             # hard-coded to distinguish from & sort with pages
