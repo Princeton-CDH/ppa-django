@@ -7,7 +7,7 @@ from ppa.archive.models import DigitizedWork, Collection
 
 class DigitizedWorkAdmin(admin.ModelAdmin):
     list_display = (
-        'title', 'subtitle', 'source_link', 'author', 'list_collections',
+        'display_title', 'subtitle', 'source_link', 'author', 'list_collections',
         'enumcron', 'pub_place', 'publisher', 'pub_date', 'page_count',
         'added', 'updated'
     )
@@ -20,8 +20,8 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         'source_link', 'page_count', 'added', 'updated'
     )
     search_fields = (
-        'source_id', 'title', 'author', 'enumcron', 'pub_date',
-        'publisher'
+        'source_id', 'title', 'subtitle', 'author', 'enumcron', 'pub_date',
+        'publisher', 'notes'
     )
     filter_horizontal = ('collections',)
     # date_hierarchy = 'added'  # is this useful?
@@ -40,7 +40,7 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         return '<a href="%s" target="_blank">%s</a>' % (obj.source_url,
                                                         obj.source_id)
     source_link.short_description = 'Source id'
-    source_link.admin_order_column = 'source_id'
+    source_link.admin_order_field = 'source_id'
     source_link.allow_tags = True
 
     def save_related(self, request, form, formsets, change):

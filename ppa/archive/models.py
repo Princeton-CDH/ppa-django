@@ -93,7 +93,7 @@ class DigitizedWork(models.Model, Indexable):
     updated = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ('title',)
+        ordering = ('sort_title',)
 
     def get_absolute_url(self):
         '''
@@ -117,6 +117,13 @@ class DigitizedWork(models.Model, Indexable):
         '''alias for :attr:`source_url` for consistency with solr attributes'''
         # hopefully temporary workaround until solr fields made consistent
         return self.source_url
+
+    def display_title(self):
+        '''admin display title to allow displaying title but sorting on sort_title'''
+        return self.title
+    display_title.short_description = 'title'
+    display_title.admin_order_field = 'sort_title'
+    display_title.allow_tags = True
 
     def populate_from_bibdata(self, bibdata):
         '''Update record fields based on Hathi bibdata information.
@@ -153,9 +160,16 @@ class DigitizedWork(models.Model, Indexable):
             # NOTE: skipping precebding character check for now
             self.subtitle = bibdata.marcxml['245']['b'] or ''
 
-            # indicator 2 provides the number of characters to be skipped for
-            # sorting (could be 0)
-            non_sort = int(bibdata.marcxml['245'].indicators[1])
+            # indicator 2 provides the number of characters to be
+            # skipped when sorting (could be 0)
+            try:
+                non_sort = int(bibdata.marcxml['245'].indicators[1])
+            except ValueError:
+                # at least one record has a space here instead of a number
+                # probably a data error, but handle it
+                # - assuming no non-sort characters
+                non_sort = 0
+
             self.sort_title = bibdata.marcxml.title()[non_sort:]
 
             self.author = bibdata.marcxml.author() or ''

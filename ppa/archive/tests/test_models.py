@@ -2,7 +2,7 @@ import json
 import os.path
 from time import sleep
 import types
-from unittest.mock import call, patch, Mock, DEFAULT
+from unittest.mock import patch, Mock, DEFAULT
 from zipfile import ZipFile
 
 from django.conf import settings
@@ -35,6 +35,10 @@ class TestDigitizedWork(TestCase):
     def test_str(self):
         digwork = DigitizedWork(source_id='njp.32101013082597')
         assert str(digwork) == digwork.source_id
+
+    def test_display_title(self):
+        digwork = DigitizedWork(title='Elocutionary Language')
+        assert digwork.display_title() == digwork.title
 
     @pytest.mark.usefixtures('solr')
     def test_index(self):
