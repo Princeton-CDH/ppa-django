@@ -53,7 +53,7 @@
     Brand Colors
 --------------------*/
 
-@primaryColor          : @melon;
+@primaryColor          : @gold;
 @secondaryColor        : @dusk;
 @backgroundColor       : @offWhite;
 
