@@ -78,6 +78,8 @@ class DigitizedWork(models.Model, Indexable):
     pub_date = models.PositiveIntegerField('Publication Date', null=True, blank=True)
     #: number of pages in the work
     page_count = models.PositiveIntegerField(null=True, blank=True)
+    #: public notes field for this work
+    notes = models.TextField(blank=True)
     #: collections that this work is part of
     collections = models.ManyToManyField(Collection, blank=True)
     #: date added to the archive
