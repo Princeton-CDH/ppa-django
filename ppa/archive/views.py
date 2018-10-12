@@ -130,12 +130,14 @@ class DigitizedWorkListView(ListView):
                 # NOTE: per facet.range.include documentation, default behavior
                 # is to include lower bound and exclude upper bound.
                 # For simplicity, increase range end by one.
-                'f.%s.facet.range.end' % range_facet: end + 1,
+                'f.%s.facet.range.end' % range_facet: end,
                 # calculate gap based start and end & desired number of slices
                 # ideally, generate 24 slices; minimum gap size of 1
                 'f.%s.facet.range.gap' % range_facet: max(1, int((end - start) / 24)),
                 # restrict last range to *actual* maximum value
-                'f.%s.facet.range.hardend' % range_facet: True
+                'f.%s.facet.range.hardend' % range_facet: True,
+                # include start and end values in the bins
+                'f.%s.facet.range.include' % range_facet: 'edge'
             })
 
         # if there are any queries to filter works  or search by text,
