@@ -110,9 +110,10 @@ class TestDigitizedWork(TestCase):
         assert index_data['pub_place'] == digwork.pub_place
         assert index_data['pub_date'] == digwork.pub_date
         assert index_data['collections'] == ['Flotsam', 'Jetsam']
-        assert index_data['public_notes'] == digwork.public_notes
         assert index_data['publisher'] == digwork.publisher
         assert index_data['src_url'] == digwork.source_url
+        assert digwork.public_notes in index_data['text']
+        assert digwork.notes not in index_data['text']
         assert not index_data['enumcron']
 
         # with enumcron
