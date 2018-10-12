@@ -8,7 +8,7 @@
 
 /* Form Label */
 @labelDistance: @10px;
-@labelColor: @secondaryColor;
+@labelColor: @dusk;
 @labelFontSize: @relativeMedium;
 @labelFontWeight: @normal;
 
