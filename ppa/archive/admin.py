@@ -14,10 +14,10 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
     fields = (
         'source_link', 'title', 'subtitle', 'sort_title', 'enumcron',
         'author', 'pub_place', 'publisher', 'pub_date', 'page_count',
-        'collections', 'added', 'updated'
+        'record_id', 'collections', 'added', 'updated'
     )
     readonly_fields = (
-        'source_link', 'page_count', 'added', 'updated'
+        'source_link', 'page_count', 'added', 'updated', 'record_id',
     )
     search_fields = (
         'source_id', 'title', 'subtitle', 'author', 'enumcron', 'pub_date',

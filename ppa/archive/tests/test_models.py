@@ -73,6 +73,7 @@ class TestDigitizedWork(TestCase):
 
         digwork = DigitizedWork(source_id='njp.32101013082597')
         digwork.populate_from_bibdata(brief_bibdata)
+        assert digwork.record_id == brief_bibdata.record_id
         assert digwork.title == brief_bibdata.title
         assert digwork.pub_date == brief_bibdata.pub_dates[0]
         # no enumcron in this record

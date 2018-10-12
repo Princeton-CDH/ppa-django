@@ -61,6 +61,12 @@ class DigitizedWork(models.Model, Indexable):
     source_id = models.CharField(max_length=255, unique=True)
     #: source url where the original can be accessed
     source_url = models.URLField(max_length=255)
+    #: record id; for Hathi materials, used for different copies of
+    #: the same work or for different editions/volumes of a work
+    record_id = models.CharField(
+        max_length=255,
+        help_text='For HathiTrust materials, record id (use to aggregate ' + \
+                  'copies or volumes).')
     #: title of the work; using TextField to allow for long titles
     title = models.TextField(help_text='Main title')
     #: subtitle of the work; using TextField to allow for long titles
@@ -133,6 +139,8 @@ class DigitizedWork(models.Model, Indexable):
             as instance of :class:`ppa.archive.hathi.HathiBibliographicRecord`
 
         '''
+        # store hathi record id
+        self.record_id = bibdata.record_id
 
         # set fields from marc if available, since it has more details
         if bibdata.marcxml:
