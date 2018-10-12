@@ -4,17 +4,20 @@
 #collections {
 
     .page-description {
-        color: $green;
+        color: $dusk;
         font-family: $headerFont;
         font-size: 20px;
-        margin-bottom: 4rem;
+        margin: 6rem 0;
     }
 
     .archive-link {
         text-align: center;
         
         > .header {
-            font-size: 26px;
+            font-size: 16px;
+            font-weight: normal;
+            text-transform: uppercase;
+            font-family: $pageFont;
             margin-top: 4rem;
         }
     }

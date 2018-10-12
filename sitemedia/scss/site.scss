@@ -75,10 +75,9 @@
     }
 
     .header:not(.sub) {
-        font-size: 80px;
-        font-style: italic;
+        font-size: 60px;
         font-weight: normal;
-        margin-bottom: $nav-height;
+        text-transform: uppercase;
     }
 }
 
