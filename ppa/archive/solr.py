@@ -38,7 +38,7 @@ class SolrSchema(object):
         {'name': 'pub_date', 'type': 'int', 'required': False},
         {'name': 'pub_place', 'type': 'text_en', 'required': False},
         {'name': 'publisher', 'type': 'text_en', 'required': False},
-        {'name': 'notes', 'type': 'text_en', 'required': False},
+        {'name': 'public_notes', 'type': 'text_en', 'required': False},
         {'name': 'src_url', 'type': 'string', 'required': False},
         {'name': 'order', 'type': 'string', 'required': False},
         {'name': 'collections', 'type': 'text_en', 'required': False,

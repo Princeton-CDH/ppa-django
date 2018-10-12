@@ -106,7 +106,8 @@ class TestArchiveViews(TestCase):
         )
 
         # set a note and re-query to see if it now appears
-        dial.notes = 'Nota bene'
+        dial.public_notes = 'Nota bene'
+        dial.notes = 'Secret note'
         dial.save()
         response = self.client.get(url)
         self.assertContains(
@@ -114,8 +115,12 @@ class TestArchiveViews(TestCase):
             msg_prefix='Notes field should be visible if notes is set'
         )
         self.assertContains(
-            response, dial.notes,
+            response, dial.public_notes,
             msg_prefix='The acutal value of the notes field should be displayed'
+        )
+        self.assertNotContains(
+            response, dial.notes,
+            msg_prefix='The private notes field should not be displayed'
         )
 
         # unapi server link present

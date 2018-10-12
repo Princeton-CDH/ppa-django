@@ -7,15 +7,15 @@ from ppa.archive.models import DigitizedWork, Collection
 
 class DigitizedWorkAdmin(admin.ModelAdmin):
     list_display = ('title', 'source_link', 'author', 'list_collections',
-        'enumcron', 'pub_place', 'publisher', 'pub_date', 'page_count', 'notes',
-        'added', 'updated')
+        'enumcron', 'pub_place', 'publisher', 'pub_date', 'page_count',
+        'public_notes', 'notes', 'added', 'updated')
     fields = ('source_link', 'title', 'enumcron', 'author',
-        'pub_place', 'publisher', 'pub_date', 'page_count', 'notes',
-        'collections', 'added', 'updated')
+        'pub_place', 'publisher', 'pub_date', 'page_count', 'public_notes',
+        'notes', 'collections', 'added', 'updated')
     readonly_fields = ('source_link', 'page_count',
         'added', 'updated')
     search_fields = ('source_id', 'title', 'author', 'enumcron', 'pub_date',
-        'publisher', 'notes')
+        'publisher', 'public_notes', 'notes')
     filter_horizontal = ('collections',)
     # date_hierarchy = 'added'  # is this useful?
     list_filter = ['collections']

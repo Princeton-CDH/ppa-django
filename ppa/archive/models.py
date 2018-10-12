@@ -79,7 +79,10 @@ class DigitizedWork(models.Model, Indexable):
     #: number of pages in the work
     page_count = models.PositiveIntegerField(null=True, blank=True)
     #: public notes field for this work
-    notes = models.TextField(blank=True)
+    public_notes = models.TextField(blank=True,
+        help_text='Public edition notes displayed on site.')
+    #: internal team notes, not displayed on the public facing site
+    notes = models.TextField(blank=True, help_text='Private notes not displayed on public site.')        
     #: collections that this work is part of
     collections = models.ManyToManyField(Collection, blank=True)
     #: date added to the archive
@@ -193,7 +196,7 @@ class DigitizedWork(models.Model, Indexable):
             'publisher': self.publisher,
             'enumcron': self.enumcron,
             'author': self.author,
-            'notes': self.notes,
+            'public_notes': self.public_notes,
             'collections': [collection.name for collection
                             in self.collections.all()],
             # hard-coded to distinguish from & sort with pages
