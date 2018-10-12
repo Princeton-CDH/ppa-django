@@ -3,25 +3,23 @@
 this template can be rendered by list_digitizedworks.html or requested separately 
 via ajax, e.g. to update the search results.
 {% endcomment %}
-<div class="ajax-container">
-    <div class="data">
-        <p class="results-count">
-            Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}
-        </p>
-        <pre>
-            {{ facet_ranges.pub_date|json }}
-        </pre>
-    </div>
-    <div class="results-list">
-        {% for item in object_list %}
-            {% include 'archive/snippets/search_result.html' %}
-        {% empty %}
-            <div class="ui error message container">
-                <p>{% firstof error "No matching works." %}</p>
-            </div>
-        {% endfor %}
-    </div>
-    <div class="ui container">
-        {% include 'archive/snippets/pagination.html' %}
-    </div>
+<div class="data">
+    <p class="results-count">
+        Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}
+    </p>
+    <pre>
+        {{ facet_ranges.pub_date|json }}
+    </pre>
+</div>
+<div class="results-list">
+    {% for item in object_list %}
+        {% include 'archive/snippets/search_result.html' %}
+    {% empty %}
+        <div class="ui error message container">
+            <p>{% firstof error "No matching works." %}</p>
+        </div>
+    {% endfor %}
+</div>
+<div class="ui container">
+    {% include 'archive/snippets/pagination.html' %}
 </div>
