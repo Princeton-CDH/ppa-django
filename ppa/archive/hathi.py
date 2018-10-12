@@ -1,11 +1,18 @@
-# utilities for working with hathitrust materials and apis
+'''
+Utilities for working with HathiTrust materials and APIs.
+'''
 from datetime import datetime
+import logging
 import io
+import time
 
 from eulxml import xmlmap
 import pymarc
 import requests
 from cached_property import cached_property
+
+
+logger = logging.getLogger(__name__)
 
 
 class HathiItemNotFound(Exception):
@@ -23,12 +30,15 @@ class HathiBibliographicAPI(object):
 
     def _get_record(self, mode, id_type, id_value):
         url = '%(base)s/volumes/%(mode)s/%(id_type)s/%(id_value)s.json' % {
-             'base': self.api_root,
+            'base': self.api_root,
             'mode': mode,
             'id_type': id_type,
             'id_value': id_value # NOTE: / in ark ids is *not* escaped
         }
+        start = time.time()
         resp = requests.get(url)
+        logger.debug('get record %s/%s %s: %f sec', id_type, id_value,
+                     resp.status_code, time.time() - start)
         # TODO: handle errors
         if resp.status_code == requests.codes.ok:
             # for an invalid id, hathi seems to return a 200 ok
