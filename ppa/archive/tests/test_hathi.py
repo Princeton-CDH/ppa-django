@@ -4,12 +4,13 @@ from unittest.mock import patch
 import json
 
 from django.conf import settings
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from eulxml.xmlmap import load_xmlobject_from_file
 import pymarc
 import pytest
 import requests
 
+from ppa import __version__
 from ppa.archive import hathi
 
 
@@ -18,8 +19,29 @@ FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
 
 @patch('ppa.archive.hathi.requests')
 class TestHathiBibliographicAPI(TestCase):
+
     bibdata = os.path.join(FIXTURES_PATH,
         'bibdata_brief_njp.32101013082597.json')
+
+    def test_init(self, mockrequests):
+        # test session initialization
+
+        # no technical contact
+        with override_settings(TECHNICAL_CONTACT=None):
+            base_user_agent = 'requests/v123'
+            mockrequests.Session.return_value.headers = {'User-Agent': base_user_agent}
+            bib_api = hathi.HathiBibliographicAPI()
+            mockrequests.Session.assert_any_call()
+            assert bib_api.session == mockrequests.Session.return_value
+            assert 'ppa-django' in bib_api.session.headers['User-Agent']
+            assert __version__ in bib_api.session.headers['User-Agent']
+            assert '(%s)' % base_user_agent in bib_api.session.headers['User-Agent']
+            assert 'From' not in bib_api.session.headers
+
+        tech_contact = 'webmaster@example.com'
+        with override_settings(TECHNICAL_CONTACT=tech_contact):
+            bib_api = hathi.HathiBibliographicAPI()
+            assert bib_api.session.headers['From'] == tech_contact
 
     def test_brief_record(self, mockrequests):
         mockrequests.codes = requests.codes

@@ -6,6 +6,7 @@ import logging
 import io
 import time
 
+from django.conf import settings
 from eulxml import xmlmap
 import pymarc
 import requests
@@ -34,12 +35,15 @@ class HathiBibliographicAPI(object):
         # create a request session, for request pooling
         self.session = requests.Session()
         # set a user-agent header, but  preserve requests version information
-        self.session.headers.update({
+        headers = {
             'User-Agent': 'ppa-django/%s (%s)' % \
                 (ppa_version, self.session.headers['User-Agent'])
-        })
-        # NOTE: we should probably set a From header based on a
-        # technical contact email address configurable local settings...
+        }
+        # include technical contact as From header, if set
+        tech_contact = getattr(settings, 'TECHNICAL_CONTACT', None)
+        if tech_contact:
+            headers['From'] = tech_contact
+        self.session.headers.update(headers)
 
     def _get_record(self, mode, id_type, id_value):
         url = '%(base)s/volumes/%(mode)s/%(id_type)s/%(id_value)s.json' % {
