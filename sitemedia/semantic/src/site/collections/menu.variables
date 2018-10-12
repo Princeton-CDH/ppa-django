@@ -15,7 +15,7 @@
 ---------------*/
 
 /* Inverted */
-@invertedBackground: @secondaryColor;
+@invertedBackground: @dusk;
 @invertedItemTextColor: @white;
 
 /*--------------
