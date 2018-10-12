@@ -116,11 +116,19 @@ class TestArchiveViews(TestCase):
         )
         self.assertContains(
             response, dial.public_notes,
-            msg_prefix='The acutal value of the notes field should be displayed'
+            msg_prefix='The actual value of the notes field should be displayed'
         )
         self.assertNotContains(
             response, dial.notes,
             msg_prefix='The private notes field should not be displayed'
+        )
+
+        # a logged in user should see the private notes
+        self.client.force_login(get_user_model().objects.create(username='foo'))
+        response = self.client.get(url)
+        self.assertContains(
+            response, dial.notes,
+            msg_prefix='The private notes field should be displayed'
         )
 
         # unapi server link present

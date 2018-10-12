@@ -95,6 +95,14 @@
             </tr>
             {% endif %}
             {% if user.is_authenticated %}
+              {% if object.notes %}
+              <tr>
+                <th scope="row">Curation notes</th>
+                <td>
+                  {{ object.notes }}
+                </td>
+              </tr>
+              {% endif %}
             <tr>
                 <th scope="row">Added</th>
                 <td>{{ object.added|date:"d M Y" }}</td>
