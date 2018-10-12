@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import itertools
 import json
 import logging
@@ -160,6 +161,21 @@ class PagedSolrQuery(object):
         '''Wrap SolrClient.SolrResponse.get_facets() to get query facets as a dict
         of dicts.'''
         return self.result.get_facets()
+
+    @cached_property
+    def facet_ranges(self):
+        ''' Return Solr range facets, with counts converted from a list of
+        start date and count to an :class:`~collections.OrderedDict`.'''
+        # NOTE: the get_facets_ranges in SolrClient *only* returns the range
+        # and drops the start, end, and gap information, which are valuable.
+        facet_counts = self.result.data.get('facet_counts', None)
+        if not facet_counts:
+            return
+        facet_ranges = facet_counts.get('facet_ranges', None)
+        if facet_ranges:
+            for val in facet_ranges.values():
+                val['counts'] = OrderedDict(zip(val['counts'][::2], val['counts'][1::2]))
+            return facet_ranges
 
     def get_facets_ranges(self):
         '''Wrap SolrClient.SolrResponse.get_facets() to get query facets as a dict

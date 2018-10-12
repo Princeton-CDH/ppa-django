@@ -263,7 +263,7 @@ class DigitizedWorkListView(ListView):
 
             self.form.set_choices_from_facets(facet_dict)
             # needs to be inside try/catch or it will re-trigger any error
-            facet_ranges = self.solrq.get_facets_ranges()
+            facet_ranges = self.solrq.facet_ranges
         except SolrError as solr_err:
             context = {'object_list': []}
             if 'Cannot parse' in str(solr_err):
