@@ -22,55 +22,57 @@ class TestHathiBibliographicAPI(TestCase):
 
     def test_brief_record(self, mockrequests):
         mockrequests.codes = requests.codes
-        mockrequests.get.return_value.status_code = requests.codes.ok
+        mocksession = mockrequests.Session.return_value
+        mocksession.get.return_value.status_code = requests.codes.ok
 
         bib_api = hathi.HathiBibliographicAPI()
         htid = 'njp.32101013082597'
 
         # no result found
-        mockrequests.get.return_value.json.return_value = {}
+        mocksession.get.return_value.json.return_value = {}
         with pytest.raises(hathi.HathiItemNotFound):
             bib_api.brief_record('htid', htid)
 
         # use fixture to simulate result found
         with open(self.bibdata) as sample_bibdata:
-            mockrequests.get.return_value.json.return_value = json.load(sample_bibdata)
+            mocksession.get.return_value.json.return_value = json.load(sample_bibdata)
 
         record = bib_api.brief_record('htid', htid)
         assert isinstance(record, hathi.HathiBibliographicRecord)
 
         # check expected url was called
-        mockrequests.get.assert_any_call(
+        mocksession.get.assert_any_call(
             'http://catalog.hathitrust.org/api/volumes/brief/htid/%s.json' % htid)
 
         # ark ids are not escaped
         htid = 'aeu.ark:/13960/t1pg22p71'
         bib_api.brief_record('htid', htid)
-        mockrequests.get.assert_any_call(
+        mocksession.get.assert_any_call(
             'http://catalog.hathitrust.org/api/volumes/brief/htid/%s.json' % htid)
 
         # alternate id
         oclc_id = '424023'
         bib_api.brief_record('oclc', oclc_id)
-        mockrequests.get.assert_any_call(
+        mocksession.get.assert_any_call(
             'http://catalog.hathitrust.org/api/volumes/brief/oclc/%s.json' % oclc_id)
 
     def test_record(self, mockrequests):
         mockrequests.codes = requests.codes
-        mockrequests.get.return_value.status_code = requests.codes.ok
+        mocksession = mockrequests.Session.return_value
+        mocksession.get.return_value.status_code = requests.codes.ok
 
         bib_api = hathi.HathiBibliographicAPI()
         htid = 'njp.32101013082597'
 
         # use fixture to simulate result found
         with open(self.bibdata) as sample_bibdata:
-            mockrequests.get.return_value.json.return_value = json.load(sample_bibdata)
+            mocksession.get.return_value.json.return_value = json.load(sample_bibdata)
 
         record = bib_api.record('htid', htid)
         assert isinstance(record, hathi.HathiBibliographicRecord)
 
         # check expected url was called - full instead of brief
-        mockrequests.get.assert_any_call(
+        mocksession.get.assert_any_call(
             'http://catalog.hathitrust.org/api/volumes/full/htid/%s.json' % htid)
 
 

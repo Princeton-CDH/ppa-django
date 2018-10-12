@@ -11,6 +11,8 @@ import pymarc
 import requests
 from cached_property import cached_property
 
+from ppa import __version__ as ppa_version
+
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +30,17 @@ class HathiBibliographicAPI(object):
 
     api_root = 'http://catalog.hathitrust.org/api'
 
+    def __init__(self):
+        # create a request session, for request pooling
+        self.session = requests.Session()
+        # set a user-agent header, but  preserve requests version information
+        self.session.headers.update({
+            'User-Agent': 'ppa-django/%s (%s)' % \
+                (ppa_version, self.session.headers['User-Agent'])
+        })
+        # NOTE: we should probably set a From header based on a
+        # technical contact email address configurable local settings...
+
     def _get_record(self, mode, id_type, id_value):
         url = '%(base)s/volumes/%(mode)s/%(id_type)s/%(id_value)s.json' % {
             'base': self.api_root,
@@ -36,7 +49,7 @@ class HathiBibliographicAPI(object):
             'id_value': id_value # NOTE: / in ark ids is *not* escaped
         }
         start = time.time()
-        resp = requests.get(url)
+        resp = self.session.get(url)
         logger.debug('get record %s/%s %s: %f sec', id_type, id_value,
                      resp.status_code, time.time() - start)
         # TODO: handle errors
