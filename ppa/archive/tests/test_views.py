@@ -99,6 +99,25 @@ class TestArchiveViews(TestCase):
         #     msg_prefix='Missing updated or in wrong format (d M Y in filter)'
         # )
 
+        # notes not present since none set
+        self.assertNotContains(
+            response, 'Note on edition',
+            msg_prefix='Notes field should not be visible without notes'
+        )
+
+        # set a note and re-query to see if it now appears
+        dial.notes = 'Nota bene'
+        dial.save()
+        response = self.client.get(url)
+        self.assertContains(
+            response, 'Note on edition',
+            msg_prefix='Notes field should be visible if notes is set'
+        )
+        self.assertContains(
+            response, dial.notes,
+            msg_prefix='The acutal value of the notes field should be displayed'
+        )
+
         # unapi server link present
         self.assertContains(
             response, '''<link rel="unapi-server" type="application/xml"
@@ -109,6 +128,7 @@ class TestArchiveViews(TestCase):
             response,
             '<abbr class="unapi-id" title="%s"></abbr>' % dial.source_id,
             msg_prefix='unapi id should be embedded for each work')
+
 
 
     @pytest.mark.usefixtures("solr")

@@ -86,6 +86,14 @@
                     </a>
                 </td>
             </tr>
+            {% if object.notes %}
+            <tr>
+              <th scope="row">Note on edition</th>
+              <td>
+                {{ object.notes }}
+              </td>
+            </tr>
+            {% endif %}
             {% if user.is_authenticated %}
             <tr>
                 <th scope="row">Added</th>
