@@ -5,6 +5,7 @@ import json
 
 from django.conf import settings
 from django.test import TestCase
+from eulxml.xmlmap import load_xmlobject_from_file
 import pymarc
 import pytest
 import requests
@@ -127,3 +128,35 @@ class TestHathiBibliographicRecord(TestCase):
         assert self.brief_record.marcxml is None
 
 
+class TestMETS(TestCase):
+    metsfile = os.path.join(FIXTURES_PATH, '79279237.mets.xml')
+
+    def setUp(self):
+        self.mets = load_xmlobject_from_file(self.metsfile, hathi.MinimalMETS)
+
+    def test_init_minimal_mets(self):
+        assert isinstance(self.mets.structmap_pages[0], hathi.StructMapPage)
+        assert len(self.mets.structmap_pages) == 640
+
+    def test_structmap(self):
+        page = self.mets.structmap_pages[0]
+        assert page.order == 1
+        assert page.label == 'FRONT_COVER, IMAGE_ON_PAGE, IMPLICIT_PAGE_NUMBER'
+        assert not page.orderlabel
+        assert page.text_file_id == 'TXT00000001'
+        # page 1 has no order label
+        assert page.display_label == '1'
+        assert isinstance(page.text_file, hathi.METSFile)
+        assert page.text_file_location == '00000001.txt'
+
+        # pages with order label start at order 15
+        page = self.mets.structmap_pages[14]
+        assert page.orderlabel == '1'
+        assert page.display_label == page.orderlabel
+
+    def test_metsfile(self):
+        page = self.mets.structmap_pages[0]
+        textfile = page.text_file
+        assert textfile.id == page.text_file_id
+        assert textfile.sequence == '00000001'
+        assert textfile.location == '00000001.txt'

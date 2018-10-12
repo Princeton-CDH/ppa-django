@@ -131,7 +131,7 @@ class _METS(xmlmap.XmlObject):
 class StructMapPage(_METS):
     '''Single logical page within a METS StructMap'''
     #: page order
-    order = xmlmap.StringField('@ORDER')
+    order = xmlmap.IntegerField('@ORDER')
     #: page label
     label = xmlmap.StringField('@LABEL')
     #: order label
@@ -151,7 +151,7 @@ class StructMapPage(_METS):
     @property
     def display_label(self):
         '''page display labeel; use order label if present; otherwise use order'''
-        return self.orderlabel or self.order
+        return self.orderlabel or str(self.order)
 
     @property
     def text_file(self):
@@ -185,10 +185,3 @@ class MinimalMETS(_METS):
     #: list of struct map pages as :class:`StructMapPage`
     structmap_pages = xmlmap.NodeListField('m:structMap[@TYPE="physical"]//m:div[@TYPE="page"]',
                                            StructMapPage)
-    #: list of OCR files as :class:`METSFile`
-    ocr_files = xmlmap.NodeListField('m:fileGrp[@USE="ocr"]/m:file', METSFile)
-
-    def file_by_id(self, file_id):
-        '''Find a file by ID and return :class:`METSFile`.'''
-        return METSFile(self.node.xpath('//m:file[@ID="%s"]' % file_id,
-                                        namespaces=self.ROOT_NAMESPACES)[0])
