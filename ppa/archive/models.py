@@ -173,9 +173,13 @@ class DigitizedWork(models.Model, Indexable):
             self.sort_title = bibdata.marcxml.title()[non_sort:]
 
             self.author = bibdata.marcxml.author() or ''
+            # field 260 includes publication information
             if '260' in bibdata.marcxml:
+                # subfield $a is place of publication
                 self.pub_place = bibdata.marcxml['260']['a'] or ''
+                # subfield $b is name of publisher
                 self.publisher = bibdata.marcxml['260']['b'] or ''
+
             # maybe: consider getting volume & series directly from
             # marc rather than relying on hathi enumcron ()
 
