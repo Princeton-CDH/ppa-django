@@ -7,28 +7,57 @@
     display: flex;
     justify-content: center;
     margin-top: 3 * $nav-height;
+    background-size: 150%;
+
     @include responsive-banner("/static/img/ppa_pattern_home");
     
     @media (min-width: $tablet) {
+        background-size: 100%;
         margin-top: 2 * $nav-height;
     }
 
-    .layer {
-        height: 100%;
-        position: absolute;
+    @media (min-width: $largeMonitor) {
+        background-size: 150%;
     }
+
+    #scene {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        margin: auto;
+        width: 300px;
+
+        @media (min-width: $tablet) {
+            width: 600px;
+        }
+
+        .layer {
+            height: 100%;
+            // position: absolute;
+            // right: 0;
+            // margin: auto;
+        }
+    }
+
 }
 
 #homepage {
     
     .intro {
         color: $secondaryColor;
-        font-size: 20px;
+        font-size: 16px;
         font-family: $headerFont;
-    }
-    
-    .intro {
         margin: 3rem 0;
+        
+        @media (min-width: $tablet) {
+            font-size: 20px;
+            margin-top: 9rem;
+        }
+
+        @media (min-width: $computer) {
+            margin-top: 6rem;
+        }
     }
     
     .column {
