@@ -1,4 +1,4 @@
-{% load static compress pages_tags mezzanine_tags keyword_tags %}
+{% load static compress %}
 {% comment %}
 NOTE: This site uses RDFa and schema.org vocabulary.  Every page will be declared as schema:Webpage
 by default; use page_rdf_type to override with a webpage subclass.
@@ -65,17 +65,17 @@ by default; use page_rdf_type to override with a webpage subclass.
   <body>
 		{% include 'snippets/test_banner.html' %}
 		{% block page_nav %}
-				{% page_menu 'snippets/nav.html' %}
+				{% include 'snippets/nav.html' %}
     {% endblock %}
     <div class="pusher"> {# moves page content when mobile menu is clicked #}
       {% block page_header %}
-          {% page_menu 'snippets/header.html' %}
+          {% include 'snippets/header.html' %}
       {% endblock %}
       <main id="{% block page-context-id %}{% endblock %}">
         {% block content %}{% endblock %}
       </main>
       {% block page_footer %}
-          {% page_menu 'snippets/footer.html' %}
+          {% include 'snippets/footer.html' %}
       {% endblock %}
     </div>
     {% block page-js %}{% endblock %}

@@ -94,19 +94,26 @@ INSTALLED_APPS = [
     'django.contrib.sitemaps',
     'django_cas_ng',
     'pucas',
-    'mezzanine.boot',
-    'mezzanine.conf',
-    'mezzanine.core',
-    'mezzanine.generic',
-    'mezzanine.pages',
     'semanticuiforms',
+    # 'wagtail.contrib.forms',
+    'wagtail.contrib.redirects',
+    # 'wagtail.embeds',
+    'wagtail.sites',
+    'wagtail.users',
+    'wagtail.snippets',
+    'wagtail.documents',
+    'wagtail.images',
+    # 'wagtail.search',
+    'wagtail.admin',
+    'wagtail.core',
+    'modelcluster',
+    'taggit',
     'ppa.archive',
     'ppa.common',
     'ppa.unapi',
 ]
 
 MIDDLEWARE = [
-    'mezzanine.core.middleware.UpdateCacheMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -114,12 +121,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'mezzanine.core.request.CurrentRequestMiddleware',
-    'mezzanine.core.middleware.RedirectFallbackMiddleware',
-    'mezzanine.core.middleware.AdminLoginInterfaceSelectorMiddleware',
-    # 'mezzanine.core.middleware.SitePermissionMiddleware',
-    'mezzanine.pages.middleware.PageMiddleware',
-    'mezzanine.core.middleware.FetchFromCacheMiddleware',
 ]
 
 AUTHENTICATION_BACKENDS = (
@@ -142,17 +143,11 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'mezzanine.conf.context_processors.settings',
-                'mezzanine.pages.context_processors.page',
                 'ppa.context_extras',
                 'ppa.context_processors.template_globals',
             ],
-            'builtins': [
-                'mezzanine.template.loader_tags',
-            ],
-           'loaders': [
+            'loaders': [
                 'apptemplates.Loader',
-                # 'mezzanine.template.loaders.host_themes.Loader',
                 'django.template.loaders.filesystem.Loader',
                 'django.template.loaders.app_directories.Loader',
             ]
@@ -233,11 +228,6 @@ SITE_ID = 1
 
 GRAPPELLI_ADMIN_TITLE = 'Princeton Prosody Archive Admin'
 
-# anine integration package names (normally uses custom forks)
-PACKAGE_NAME_FILEBROWSER = "filebrowser_safe"
-PACKAGE_NAME_GRAPPELLI = "grappelli"
-
-
 # username for logging activity by local scripts
 SCRIPT_USERNAME = 'script'
 
@@ -247,16 +237,11 @@ SCRIPT_USERNAME = 'script'
 #########################
 
 # These will be added to ``INSTALLED_APPS``, only if available.
+# FIXME mezzanine only?
 OPTIONAL_APPS = (
     "debug_toolbar",
     "django_extensions",
-    PACKAGE_NAME_FILEBROWSER,
-    PACKAGE_NAME_GRAPPELLI,
 )
-
-# override mezzanine version of jquery-ui with a more up-to-date version
-JQUERY_UI_FILENAME = 'jquery-ui-1.12.1.min.js'
-
 
 # PUCAS configuration for CAS/LDAP login and user provisioning.
 # Only includes non-sensitive configurations that do not change
@@ -306,17 +291,3 @@ if DEBUG:
     except ImportError:
         pass
 
-## Mezzanine dynamic settings
-
-# set_dynamic_settings() will rewrite globals based on what has been
-# defined so far, in order to provide some better defaults where
-# applicable. We also allow this settings module to be imported
-# without Mezzanine installed, as the case may be when using the
-# fabfile, where setting the dynamic settings below isn't strictly
-# required.
-try:
-    from mezzanine.utils.conf import set_dynamic_settings
-except ImportError:
-    pass
-else:
-    set_dynamic_settings(globals())
