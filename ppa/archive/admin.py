@@ -10,12 +10,12 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         'enumcron', 'pub_place', 'publisher', 'pub_date', 'page_count',
         'added', 'updated')
     fields = ('source_link', 'title', 'enumcron', 'author',
-        'pub_place', 'publisher', 'pub_date', 'page_count', 'collections',
-        'added', 'updated')
+        'pub_place', 'publisher', 'pub_date', 'page_count', 'public_notes',
+        'notes', 'collections', 'added', 'updated')
     readonly_fields = ('source_link', 'page_count',
         'added', 'updated')
     search_fields = ('source_id', 'title', 'author', 'enumcron', 'pub_date',
-        'publisher')
+        'publisher', 'public_notes', 'notes')
     filter_horizontal = ('collections',)
     # date_hierarchy = 'added'  # is this useful?
     list_filter = ['collections']
