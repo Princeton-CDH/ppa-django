@@ -99,6 +99,38 @@ class TestArchiveViews(TestCase):
         #     msg_prefix='Missing updated or in wrong format (d M Y in filter)'
         # )
 
+        # notes not present since none set
+        self.assertNotContains(
+            response, 'Note on edition',
+            msg_prefix='Notes field should not be visible without notes'
+        )
+
+        # set a note and re-query to see if it now appears
+        dial.public_notes = 'Nota bene'
+        dial.notes = 'Secret note'
+        dial.save()
+        response = self.client.get(url)
+        self.assertContains(
+            response, 'Note on edition',
+            msg_prefix='Notes field should be visible if notes is set'
+        )
+        self.assertContains(
+            response, dial.public_notes,
+            msg_prefix='The actual value of the notes field should be displayed'
+        )
+        self.assertNotContains(
+            response, dial.notes,
+            msg_prefix='The private notes field should not be displayed'
+        )
+
+        # a logged in user should see the private notes
+        self.client.force_login(get_user_model().objects.create(username='foo'))
+        response = self.client.get(url)
+        self.assertContains(
+            response, dial.notes,
+            msg_prefix='The private notes field should be displayed'
+        )
+
         # unapi server link present
         self.assertContains(
             response, '''<link rel="unapi-server" type="application/xml"
@@ -109,6 +141,7 @@ class TestArchiveViews(TestCase):
             response,
             '<abbr class="unapi-id" title="%s"></abbr>' % dial.source_id,
             msg_prefix='unapi id should be embedded for each work')
+
 
 
     @pytest.mark.usefixtures("solr")
@@ -462,6 +495,12 @@ class TestArchiveViews(TestCase):
 
 
     def test_digitizedwork_csv(self):
+        # add an arbitrary note to one digital work so that the field is
+        # populated in at least one case
+        first_dw = DigitizedWork.objects.first()
+        first_dw.notes = 'private notes'
+        first_dw.public_notes = 'public notes'
+        first_dw.save()
         # get the csv export and inspect the response
         response = self.client.get(reverse('archive:csv'))
         assert response.status_code == 200
@@ -493,6 +532,8 @@ class TestArchiveViews(TestCase):
             assert digwork.enumcron in digwork_data
             assert ';'.join([coll.name for coll in digwork.collections.all()]) \
                 in digwork_data
+            assert digwork.notes in digwork_data
+            assert digwork.public_notes in digwork_data
             assert '%d' % digwork.page_count in digwork_data
             assert '%s' % digwork.added in digwork_data
             assert '%s' % digwork.updated in digwork_data

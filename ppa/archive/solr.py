@@ -379,4 +379,3 @@ class Indexable(object):
 
         cls.related = related
         cls.m2m = m2m
-
