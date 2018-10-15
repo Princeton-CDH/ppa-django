@@ -6,8 +6,8 @@
        Element
 --------------------*/
 
-@mobileGutter: auto;
-@computerWidth: 1020px;
+@tabletWidth: 714px;
+@computerWidth: 820px;
 @largeMonitorWidth: @computerWidth;
 
 
