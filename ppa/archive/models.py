@@ -93,7 +93,7 @@ class DigitizedWork(models.Model, Indexable):
     page_count = models.PositiveIntegerField(null=True, blank=True)
     #: public notes field for this work
     public_notes = models.TextField(blank=True, default='',
-        help_text='Notes on edition or other details to be displayed on the site.')
+        help_text='Notes on edition or other details (displayed on public site)')
     #: internal team notes, not displayed on the public facing site
     notes = models.TextField(blank=True, default='',
         help_text='Internal curation notes (not displayed on public site)')
