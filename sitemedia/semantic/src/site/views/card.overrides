@@ -5,9 +5,12 @@
 .ui.card,
 .ui.cards > .card
 {
-    font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-font-smoothing: antialiased;
+    padding: 20px;
+    margin: 2em 0;
+
+    @media (min-width: @tabletBreakpoint) {
+        padding: 20px 30px;
+    }
 
     .header {
         margin-bottom: 0;
@@ -20,11 +23,15 @@
 
     .description {
         font-family: @headerFont;
-        font-size: @relativeLarge;
+        font-size: 16px;
         line-height: normal;
 
         > * {
             line-height: normal;
+        }
+
+        @media (min-width: @tabletBreakpoint) {
+            font-size: 18px;
         }
     }
 
@@ -36,21 +43,36 @@
     &.aside {
         width: @asideWidth;
         margin: @asideMargin;
-        box-shadow: @asideBoxShadow;
+        box-shadow: none;
 
-        .header {
-            text-align: left;
+        &:hover {
+            box-shadow: none;
         }
 
         .description {
             margin-bottom: 3em;
+            font-size: 18px;
         }
     }
 
     &.post {
-        width: @postWidth;
-        height: @postHeight;
+        width: 294px;
+        height: 294px;
         box-shadow: none;
+
+        @media (min-width: @tabletBreakpoint) {
+            width: 345px;
+            height: 345px;
+        }
+
+        @media (min-width: @computerBreakpoint) {
+            width: 360px;
+            height: 360px;
+        }
+
+        &:hover {
+            box-shadow: none;
+        }
 
         .header,
         .meta,
@@ -63,12 +85,19 @@
         }
 
         .meta {
-            top: (@postHeight - @postPageHeight) / 2 + 20px;
             z-index: 3;
+            margin-top: 1em;
+
+            @media (min-width: @tabletBreakpoint) {
+                margin-top: 2.5em;
+            }
+
+            @media (min-width: @computerBreakpoint) {
+                margin-top: 3em;
+            }
         }
 
         .header {
-            top: (@postHeight - @postPageHeight) / 2;
             z-index: 2;
             width: @postPageWidth;
             height: @postPageHeight;
@@ -76,6 +105,14 @@
             background-color: @postPageColor;
             color: @postPageTextColor;
             box-shadow: @postPageBoxShadow;
+
+            @media (min-width: @tabletBreakpoint) {
+                top: 45px;
+            }
+
+            @media (min-width: @computerBreakpoint) {
+                top: 50px;
+            }
         }
 
         .description {
@@ -86,10 +123,6 @@
             height: 100%;
             background-color: @postBackgroundColor;
             color: @postBackgroundTextColor;
-        }
-
-        .stackable.cards & {
-            height: @postHeight !important;
         }
     }
 }
@@ -107,10 +140,14 @@ a.ui.card,
     }
 
     &.aside {
-        box-shadow: @asideLinkBoxShadow;
+        border-left: @asideLinkBorder;
 
         &:hover {
-            box-shadow: @asideLinkHoverBoxShadow;
+            border-left: @asideLinkHoverBorder;
         }
+    }
+
+    &.post:hover .header {
+        box-shadow: @postLinkHoverBoxShadow;
     }
 }
