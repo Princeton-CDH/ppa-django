@@ -3,6 +3,13 @@
 Deploy and Upgrade notes
 ========================
 
+0.9
+---
+
+* Configure a **TECHNICAL_CONTACT** email address in local settings
+  to set a **From** header on requests made against the HathiTrust API.
+
+
 0.8 Search filtering and highlighting
 -------------------------------------
 

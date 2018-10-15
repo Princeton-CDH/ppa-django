@@ -2,13 +2,14 @@ import json
 import os.path
 from time import sleep
 import types
-from unittest.mock import call, patch, Mock
+from unittest.mock import patch, Mock, DEFAULT
 from zipfile import ZipFile
 
 from django.conf import settings
 from django.db.models.query import QuerySet
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from eulxml.xmlmap import load_xmlobject_from_file
 from pairtree import pairtree_client, pairtree_path
 import pytest
 
@@ -23,14 +24,21 @@ FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
 class TestDigitizedWork(TestCase):
     fixtures = ['sample_digitized_works']
 
-    bibdata_full = os.path.join(FIXTURES_PATH,
-        'bibdata_full_njp.32101013082597.json')
-    bibdata_brief = os.path.join(FIXTURES_PATH,
-        'bibdata_brief_njp.32101013082597.json')
+    bibdata_full = os.path.join(
+        FIXTURES_PATH, 'bibdata_full_njp.32101013082597.json')
+    bibdata_full2 = os.path.join(
+        FIXTURES_PATH, 'bibdata_full_aeu.ark_13960_t1pg22p71.json')
+    bibdata_brief = os.path.join(
+        FIXTURES_PATH, 'bibdata_brief_njp.32101013082597.json')
+    metsfile = os.path.join(FIXTURES_PATH, '79279237.mets.xml')
 
     def test_str(self):
         digwork = DigitizedWork(source_id='njp.32101013082597')
         assert str(digwork) == digwork.source_id
+
+    def test_display_title(self):
+        digwork = DigitizedWork(title='Elocutionary Language')
+        assert digwork.display_title() == digwork.title
 
     @pytest.mark.usefixtures('solr')
     def test_index(self):
@@ -65,6 +73,7 @@ class TestDigitizedWork(TestCase):
 
         digwork = DigitizedWork(source_id='njp.32101013082597')
         digwork.populate_from_bibdata(brief_bibdata)
+        assert digwork.record_id == brief_bibdata.record_id
         assert digwork.title == brief_bibdata.title
         assert digwork.pub_date == brief_bibdata.pub_dates[0]
         # no enumcron in this record
@@ -84,9 +93,35 @@ class TestDigitizedWork(TestCase):
 
         # populate from full record
         digwork.populate_from_bibdata(full_bibdata)
+        # title and subtitle set from marc
+        assert digwork.title == full_bibdata.marcxml['245']['a']
+        assert digwork.subtitle == full_bibdata.marcxml['245']['b']
+        # fixture has indicator 0, no non-sort characters
+        assert digwork.sort_title == ' '.join([digwork.title, digwork.subtitle])
         assert digwork.author == full_bibdata.marcxml.author()
         assert digwork.pub_place == full_bibdata.marcxml['260']['a']
         assert digwork.publisher == full_bibdata.marcxml['260']['b']
+
+        # second bibdata record with sort title
+        with open(self.bibdata_full2) as bibdata:
+            full_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
+
+        digwork = DigitizedWork(source_id='aeu.ark:/13960/t1pg22p71')
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.title == full_bibdata.marcxml['245']['a']
+        assert digwork.subtitle == full_bibdata.marcxml['245']['b']
+        # fixture has title with non-sort characters
+        assert digwork.sort_title == ' '.join([
+            digwork.title[int(full_bibdata.marcxml['245'].indicators[1]):],
+            digwork.subtitle
+        ])
+
+        # test error in record (title non-sort character non-numeric
+        with open(self.bibdata_full2) as bibdata:
+            full_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
+            full_bibdata.marcxml['245'].indicators[1] = ' '
+            digwork.populate_from_bibdata(full_bibdata)
+            assert digwork.sort_title == ' '.join([digwork.title, digwork.subtitle])
 
         # TODO: test publication info unavailable?
 
@@ -188,9 +223,6 @@ class TestDigitizedWork(TestCase):
         contents = ['79279237.mets.xml', '79279237.zip']
 
         with patch.object(DigitizedWork, 'hathi_pairtree_object') as mock_ptree_obj_meth:
-            # mock_ptree_obj.return_value = Mock(spec=pairtree_client.PairtreeStorageClient)
-         # mock_pairtree_client.return_value =
-         # ptree_obj = mock_pairtree_client.return_value.get_object.return_value
             mock_ptree_obj = mock_ptree_obj_meth.return_value
             mock_ptree_obj.list_parts.return_value = contents
             mock_ptree_obj.id_to_dirpath.return_value = \
@@ -207,7 +239,30 @@ class TestDigitizedWork(TestCase):
             work.hathi_zipfile_path(my_ptree_client)
             mock_ptree_obj_meth.assert_called_with(ptree_client=my_ptree_client)
 
+    @override_settings(HATHI_DATA='/tmp/ht_text_pd')
+    def test_hathi_metsfile_path(self):
+        work = DigitizedWork(source_id='chi.79279237')
+        contents = ['79279237.mets.xml', '79279237.zip']
+
+        with patch.object(DigitizedWork, 'hathi_pairtree_object') as mock_ptree_obj_meth:
+            mock_ptree_obj = mock_ptree_obj_meth.return_value
+            mock_ptree_obj.list_parts.return_value = contents
+            mock_ptree_obj.id_to_dirpath.return_value = \
+                '/tmp/ht_text_pd/chi/pairtree_root/79/27/92/37'
+
+            metsfile_path = work.hathi_metsfile_path()
+            mock_ptree_obj_meth.assert_called_with(ptree_client=None)
+            assert metsfile_path == \
+                os.path.join(mock_ptree_obj.id_to_dirpath(), work.hathi_content_dir,
+                             contents[0])
+
+            # use pairtree client object if passed in
+            my_ptree_client = Mock(spec=pairtree_client.PairtreeStorageClient)
+            work.hathi_metsfile_path(my_ptree_client)
+            mock_ptree_obj_meth.assert_called_with(ptree_client=my_ptree_client)
+
     @patch('ppa.archive.models.ZipFile', spec=ZipFile)
+    @override_settings(HATHI_DATA='/tmp/ht_text_pd')
     def test_page_index_data(self, mockzipfile):
         mockzip_obj = mockzipfile.return_value.__enter__.return_value
         page_files = ['0001.txt', '00002.txt']
@@ -218,19 +273,30 @@ class TestDigitizedWork(TestCase):
             .read.return_value.decode.side_effect = contents
 
         work = DigitizedWork(source_id='chi.79279237')
-        with patch.object(DigitizedWork, 'hathi_zipfile_path') as mock_ht_zippath_meth:
-            mock_ht_zippath_meth.return_value = '/path/to/79279237.zip'
+
+        # page data comes from mets
+        mets = load_xmlobject_from_file(self.metsfile, hathi.MinimalMETS)
+
+        with patch.multiple(DigitizedWork, hathi_zipfile_path=DEFAULT,
+                            hathi_metsfile_path=DEFAULT) as \
+                            mock_methods:
+            mock_methods['hathi_zipfile_path'].return_value = '/path/to/79279237.zip'
+            mock_methods['hathi_metsfile_path'].return_value = self.metsfile
 
             page_data = work.page_index_data()
             assert isinstance(page_data, types.GeneratorType)
+
             for i, data in enumerate(page_data):
-                # page order currently generated by filename without extensin
-                page_order = page_files[i].split('.')[0]
-                assert data['id'] == '.'.join([work.source_id, page_order])
+                mets_page = mets.structmap_pages[i]
+
+                assert data['id'] == '.'.join([work.source_id, mets_page.text_file.sequence])
                 assert data['srcid'] == work.source_id
                 assert data['content'] == contents[i]
-                assert data['order'] == page_order
+                assert data['order'] == mets_page.order
                 assert data['item_type'] == 'page'
+                assert data['label'] == mets_page.display_label
+                assert 'tags' in data
+                assert data['tags'] == mets_page.label.split(', ')
 
     def test_index_id(self):
         work = DigitizedWork(source_id='chi.79279237')

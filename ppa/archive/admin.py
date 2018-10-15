@@ -6,16 +6,24 @@ from ppa.archive.models import DigitizedWork, Collection
 
 
 class DigitizedWorkAdmin(admin.ModelAdmin):
-    list_display = ('title', 'source_link', 'author', 'list_collections',
+    list_display = (
+        'display_title', 'subtitle', 'source_link', 'author', 'list_collections',
         'enumcron', 'pub_place', 'publisher', 'pub_date', 'page_count',
-        'added', 'updated')
-    fields = ('source_link', 'title', 'enumcron', 'author',
-        'pub_place', 'publisher', 'pub_date', 'page_count', 'public_notes',
-        'notes', 'collections', 'added', 'updated')
-    readonly_fields = ('source_link', 'page_count',
-        'added', 'updated')
-    search_fields = ('source_id', 'title', 'author', 'enumcron', 'pub_date',
-        'publisher', 'public_notes', 'notes')
+        'added', 'updated'
+    )
+    fields = (
+        'source_link', 'title', 'subtitle', 'sort_title', 'enumcron',
+        'author', 'pub_place', 'publisher', 'pub_date', 'page_count',
+        'public_notes', 'notes', 'record_id', 'collections',
+        'added', 'updated'
+    )
+    readonly_fields = (
+        'source_link', 'page_count', 'added', 'updated', 'record_id',
+    )
+    search_fields = (
+        'source_id', 'title', 'subtitle', 'author', 'enumcron', 'pub_date',
+        'publisher', 'public_notes', 'notes', 'record_id'
+    )
     filter_horizontal = ('collections',)
     # date_hierarchy = 'added'  # is this useful?
     list_filter = ['collections']
@@ -33,7 +41,7 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         return '<a href="%s" target="_blank">%s</a>' % (obj.source_url,
                                                         obj.source_id)
     source_link.short_description = 'Source id'
-    source_link.admin_order_column = 'source_id'
+    source_link.admin_order_field = 'source_id'
     source_link.allow_tags = True
 
     def save_related(self, request, form, formsets, change):
