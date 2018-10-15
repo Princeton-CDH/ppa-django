@@ -21,7 +21,7 @@ install:
 - pip install codecov
 - cp ci/testsettings.py ppa/local_settings.py
 - python -c "import uuid; print('SECRET_KEY = \'%s\'' % uuid.uuid4())" >> ppa/local_settings.py
-- npm install
+- npm ci
 before_script:
 - sudo chown root /opt/google/chrome/chrome-sandbox
 - sudo chmod 4755 /opt/google/chrome/chrome-sandbox
