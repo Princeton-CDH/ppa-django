@@ -116,6 +116,12 @@ class TestDigitizedWork(TestCase):
             digwork.subtitle
         ])
 
+        # test error in record (title non-sort character non-numeric
+        with open(self.bibdata_full2) as bibdata:
+            full_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
+            full_bibdata.marcxml['245'].indicators[1] = ' '
+            digwork.populate_from_bibdata(full_bibdata)
+            assert digwork.sort_title == ' '.join([digwork.title, digwork.subtitle])
 
         # TODO: test publication info unavailable?
 
