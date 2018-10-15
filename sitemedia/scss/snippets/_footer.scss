@@ -7,6 +7,12 @@
     flex: 1 0 auto; // needed for chrome to get correct height
     flex-direction: column;
 
+    .container {
+        @media (min-width: $computer) {
+            width: 960px; // slightly larger than default container
+        }
+    }
+
     // primary nav links
     nav.menu {
         margin-bottom: 1rem;
