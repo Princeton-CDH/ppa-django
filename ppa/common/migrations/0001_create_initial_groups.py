@@ -24,9 +24,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('auth', '0001_initial'),
         ('archive', '0001_initial'),
-        ('pages', '0004_auto_20170411_0504'),
         ('redirects', '0001_initial'),
-        ('generic', '0003_auto_20170411_0504'),
     ]
 
     operations = [
