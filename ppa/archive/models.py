@@ -7,7 +7,7 @@ from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
-from mezzanine.core.fields import RichTextField
+from wagtail.core.fields import RichTextField
 from pairtree import pairtree_path, pairtree_client
 
 from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS
