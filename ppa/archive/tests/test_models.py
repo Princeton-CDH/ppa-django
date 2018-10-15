@@ -220,9 +220,6 @@ class TestDigitizedWork(TestCase):
         contents = ['79279237.mets.xml', '79279237.zip']
 
         with patch.object(DigitizedWork, 'hathi_pairtree_object') as mock_ptree_obj_meth:
-            # mock_ptree_obj.return_value = Mock(spec=pairtree_client.PairtreeStorageClient)
-         # mock_pairtree_client.return_value =
-         # ptree_obj = mock_pairtree_client.return_value.get_object.return_value
             mock_ptree_obj = mock_ptree_obj_meth.return_value
             mock_ptree_obj.list_parts.return_value = contents
             mock_ptree_obj.id_to_dirpath.return_value = \
@@ -237,6 +234,28 @@ class TestDigitizedWork(TestCase):
             # use pairtree client object if passed in
             my_ptree_client = Mock(spec=pairtree_client.PairtreeStorageClient)
             work.hathi_zipfile_path(my_ptree_client)
+            mock_ptree_obj_meth.assert_called_with(ptree_client=my_ptree_client)
+
+    @override_settings(HATHI_DATA='/tmp/ht_text_pd')
+    def test_hathi_metsfile_path(self):
+        work = DigitizedWork(source_id='chi.79279237')
+        contents = ['79279237.mets.xml', '79279237.zip']
+
+        with patch.object(DigitizedWork, 'hathi_pairtree_object') as mock_ptree_obj_meth:
+            mock_ptree_obj = mock_ptree_obj_meth.return_value
+            mock_ptree_obj.list_parts.return_value = contents
+            mock_ptree_obj.id_to_dirpath.return_value = \
+                '/tmp/ht_text_pd/chi/pairtree_root/79/27/92/37'
+
+            metsfile_path = work.hathi_metsfile_path()
+            mock_ptree_obj_meth.assert_called_with(ptree_client=None)
+            assert metsfile_path == \
+                os.path.join(mock_ptree_obj.id_to_dirpath(), work.hathi_content_dir,
+                             contents[0])
+
+            # use pairtree client object if passed in
+            my_ptree_client = Mock(spec=pairtree_client.PairtreeStorageClient)
+            work.hathi_metsfile_path(my_ptree_client)
             mock_ptree_obj_meth.assert_called_with(ptree_client=my_ptree_client)
 
     @patch('ppa.archive.models.ZipFile', spec=ZipFile)

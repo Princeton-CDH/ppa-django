@@ -315,17 +315,6 @@ class DigitizedWork(models.Model, Indexable):
         '''path to zipfile within the hathi contents for this work'''
         return self._hathi_content_path('zip', ptree_client=ptree_client)
 
-        pairtree_obj = self.hathi_pairtree_object(ptree_client=ptree_client)
-        # - expect a mets file and a zip file
-        # NOTE: not yet making use of the metsfile
-        # - don't rely on them being returned in the same order on every machine
-        parts = pairtree_obj.list_parts(self.hathi_content_dir)
-        # find the first zipfile in the list (should only be one)
-        ht_zipfile = [part for part in parts if part.endswith('zip')][0]
-
-        return os.path.join(pairtree_obj.id_to_dirpath(),
-                            self.hathi_content_dir, ht_zipfile)
-
     def hathi_metsfile_path(self, ptree_client=None):
         '''path to mets xml file within the hathi contents for this work'''
         return self._hathi_content_path('.mets.xml', ptree_client=ptree_client)
