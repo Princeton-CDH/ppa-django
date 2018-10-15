@@ -18,6 +18,11 @@ ALLOWED_HOSTS = []
 SECRET_KEY = ''
 
 
+# Email address for a technical contact.
+# If set, will be used in From header for HathiTrust API requests
+# TECHNICAL_CONTACT = ''
+
+
 # Turn this on in test/QA site to show test banner
 #SHOW_TEST_WARNING = True
 
