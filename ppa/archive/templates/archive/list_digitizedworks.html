@@ -27,5 +27,7 @@ href="{% url 'unapi' %}" />
 <section class="ui search basic vertical segment container">
     {% include 'archive/snippets/search_form.html' %}
 </section>
-{% include 'archive/snippets/results_list.html' %}
+<div class="ajax-container">
+    {% include 'archive/snippets/results_list.html' %}
+</div>
 {% endblock %}

@@ -4,102 +4,125 @@
 /* homepage */
 
 #header {
-    background-image: url("/static/img/PPA_banner_006@1X.png");
-    background-repeat: no-repeat;
-    background-position: top;
-    background-size: contain;
-    padding-top: 0;
+    display: flex;
+    justify-content: center;
+    margin-top: 3 * $nav-height;
+    background-size: 150%;
 
-    // 2x screen resolution
-    @media (-webkit-min-device-pixel-ratio: 2),
-         (min-resolution: 192dpi) {
-        background-image: url("/static/img/PPA_banner_006@2X.png");
+    @include responsive-banner("/static/img/ppa_pattern_home");
+    
+    @media (min-width: $tablet) {
+        background-size: 100%;
+        margin-top: 2 * $nav-height;
     }
 
-    h1, h2 {
+    @media (min-width: $largeMonitor) {
+        background-size: 150%;
+    }
+
+    #scene {
         position: absolute;
-        margin-left: auto;
-        margin-right: auto;
         left: 0;
         right: 0;
-    }
+        top: 0;
+        margin: auto;
+        width: 300px;
 
-    h1 {
-        font-weight: bold;
-    }
-
-    h2 {
-        font-weight: normal;
-        font-style: italic;
-    }
-
-    @media only screen and (min-width: 768px) {
-        height: 35rem;
-
-        h1 {
-            top: 15rem;
-            font-size: 3rem;
+        @media (min-width: $tablet) {
+            width: 600px;
         }
-        h2 {
-            font-size: 3rem;
+
+        .layer {
+            height: 100%;
+            // position: absolute;
+            // right: 0;
+            // margin: auto;
         }
     }
-    
-    @media only screen and (min-width: 1440px) {
-        height: 60rem;
 
-        h1 {
-            top: 30.5rem;
-            font-size: 5rem;
-        }
-        h2 {
-            top: 33.5rem;
-            font-size: 5rem;
-        }
-    }
 }
 
 #homepage {
-
     
     .intro {
-        color: $green;
-        font-size: 20px;
+        color: $secondaryColor;
+        font-size: 16px;
         font-family: $headerFont;
-    }
-
-    .intro {
         margin: 3rem 0;
-    }
+        
+        @media (min-width: $tablet) {
+            font-size: 20px;
+            margin-top: 9rem;
+        }
 
+        @media (min-width: $computer) {
+            margin-top: 6rem;
+        }
+    }
+    
+    .column {
+        &.cards {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        &:not(.cards) {
+            padding-left: 0;
+            padding-right: 0;
+        }
+        
+        .card {
+            @media only screen and (max-width: 768px) {
+                margin-left: auto;
+                margin-right: auto;
+            }
+        }
+    }
+    
     .updates {
         margin-bottom: 2rem;
         justify-content: center;
+        
+        @media only screen and (min-width: 1069px) {
+            justify-content: space-between;
+        }
+        
+        ~ .archive-link > .header {
+            padding-top: 1rem;
+        }
     }
-
+    
     .about-header {
         font-size: 26px;
         margin-top: -1rem;
     }
-
+    
     .about-header ~ .description {
-        color: $green;
+        color: $secondaryColor;
         font-size: 18px;
         font-family: $headerFont;
         line-height: normal;
+        margin-bottom: 2rem;
     }
-
+    
     .archive-link,
     .about-header,
     .collections-link {
         text-align: center;
-
+        
         > .header {
-            font-size: 26px;
+            font-size: 16px;
+            font-weight: normal;
+            text-transform: uppercase;
+            font-family: $pageFont;
         }
     }
-
+    
     .collections-link > .header {
-        padding: 2rem 0;
+        padding: 2rem 0 1rem;
+    }
+    
+    .intro ~ .archive-link > .header {
+        padding: 2rem 0 4rem;
     }
 }

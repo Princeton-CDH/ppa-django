@@ -1,24 +1,31 @@
 {% load static %}
 <footer class="ui basic inverted segment centered grid" id="footer">
-    <nav class="ui inverted stackable borderless menu">
-        <a class="item" href="/history-of-the-archive/">History of the Archive</a>
-        <a class="item" href="/what-is-prosody/">What is Prosody</a>
-        <a class="item" href="{% url 'archive:list-collections'%}">About the Collections</a>
+    <nav class="ui inverted borderless menu">
+        <a class="item" href="{% url 'home' %}">Home</a>
         <a class="item">Editorial</a>
-        <a class="item" href="{% url 'archive:list' %}">View the Archive</a>
+        <a class="item" href="{% url 'archive:list-collections'%}">Collections</a>
+        <a class="item" href="{% url 'archive:list' %}">Archive</a>
     </nav>
-    <div class="ui inverted horizontal link list row">
-        <a class="item" href="/credits/">Contributors and Board Members</a>
-        <a class="item">Contact</a>
-        <a class="item" href="/how-to-cite/">How to Cite</a>
+    <div class="ui container">
+        <div class="ui inverted horizontal link list">
+            <a class="item" href="/history-of-the-archive">History of the Archive</a>
+            <a class="item" href="/what-is-prosody">What is Prosody</a>
+            <a class="item" href="/how-to-search">How to Search</a>
+            <a class="item" href="/how-to-cite">How to Cite</a>
+            <a class="item" href="/credits">Contributors and Board Members</a>
+            <a class="item">Contact Us</a>
+        </div>
     </div>
-    <div class="ui inverted horizontal list row">
-        <a class="item ui tiny image" href="https://cdh.princeton.edu/">
-            <img src="{% static 'img/CDH_logo_W.svg' %}" alt="The Center for Digital Humanities at Princeton" />
-        </a>
-        <a class="item ui small image" href="https://www.princeton.edu/">
-            <img src="{% static 'img/PUsig2-ww-ws.svg' %}" alt="Princeton University" />
-        </a>
+    <img class="ppa-logo" src="{% static 'img/ppa-logo-for-dark-wo-bg.svg' %}" alt="Princeton Prosody Archive" />
+    <div class="ui container">
+        <div class="ui inverted horizontal list">
+            <a class="item ui small image" href="https://www.princeton.edu/">
+                <img src="{% static 'img/PUsig2-ww-ws.svg' %}" alt="Princeton University" />
+            </a>
+            <a class="item ui tiny image" href="https://cdh.princeton.edu/">
+                <img src="{% static 'img/CDH_logo_W.svg' %}" alt="The Center for Digital Humanities at Princeton" />
+            </a>
+        </div>
     </div>
     <div class="ui container">
         <div class="contact ui inverted horizontal link list">

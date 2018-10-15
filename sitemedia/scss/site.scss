@@ -1,6 +1,7 @@
 @import 'snippets/variables';
 @import 'snippets/a11y';
 @import 'snippets/mixins';
+@import 'snippets/footer';
 
 /* container */
 .pushable > .pusher {
@@ -74,10 +75,9 @@
     }
 
     .header:not(.sub) {
-        font-size: 80px;
-        font-style: italic;
+        font-size: 60px;
         font-weight: normal;
-        margin-bottom: $nav-height;
+        text-transform: uppercase;
     }
 }
 
@@ -91,55 +91,12 @@ main {
     }
 }
 
-/* footer */
-#footer {
-    // bottom: 0;
-    // margin-top: auto;
-    padding: 1rem 0;
-    margin-bottom: 0;
-    width: 100%;
-
-    nav.menu {
-        justify-content: center;
-        flex-wrap: wrap;
-
-        @media only screen and (min-width: 1069px) {
-            margin: 1em 0;
-        }
-    }
-
-    .menu .item {
-        @media only screen and (max-width: 768px) {
-            justify-content: center;
-        }
-    }
-
-    .link.list {
-        @media only screen and (max-width: 320px) {
-            flex-direction: column;
-        }
-
-        @media only screen and (min-width: 1069px) {
-            padding: 2rem 0;
-        }
-    }
-
-    .contact {
-        display: flex;
-        justify-content: center;
-        flex-direction: column;
-
-        @media only screen and (min-width: 768px) {
-            flex-direction: row;
-            justify-content: flex-start;
-        }
-    }
-
-    #sw_version {
-        @media only screen and (min-width: 768px) {
-            margin-left: auto;
-        }
-    }
+// misc
+.fermata {
+    fill: $primaryColor;
+    height: 1.5rem;
+    vertical-align: middle;
+    padding-right: .5rem;
 }
 
 * {

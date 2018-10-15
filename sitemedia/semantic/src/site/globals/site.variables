@@ -54,7 +54,7 @@
 --------------------*/
 
 @primaryColor          : @gold;
-@secondaryColor        : @green;
+@secondaryColor        : @dusk;
 @backgroundColor       : @offWhite;
 
 @lightPrimaryColor     : @lightGold;
@@ -72,13 +72,15 @@
 @lightGrey    : #D8D8D8;
 @midGrey      : #737373;
 @darkGrey     : #4A4A4A;
+@melon        : #FF675D;
+@dusk         : #444867;
 
 /*-------------------
        Links
 --------------------*/
 
 @linkColor           : @textColor;
-@linkUnderline       : underline;
+@linkUnderline       : none;
 
 /*-------------------
         Page

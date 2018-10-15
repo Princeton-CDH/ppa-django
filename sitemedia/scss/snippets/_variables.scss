@@ -9,6 +9,24 @@ $offWhite     : #F1F0EB;
 $lightGrey    : #D8D8D8;
 $midGrey      : #737373;
 $darkGrey     : #4A4A4A;
+$melon        : #FF675D;
+$dusk         : #444867;
 
+$primaryColor: $melon;
+$secondaryColor: $dusk;
+
+// breakpoints
+$mobile: 320px;
+$tablet: 735px;
+$computer: 1068px;
+$largeMonitor: 1440px;
+$widescreenMonitor: 1920px;
+
+// banner
+$banner-height: 230px;
+$banner-height-m: 400px;
+$banner-height-l: 570px;
+
+// typography
 $pageFont              : 'Open Sans', Helvetica, sans-serif;
 $headerFont            : 'Gentium Book Basic', Palatino, serif;

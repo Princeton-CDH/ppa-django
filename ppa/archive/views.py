@@ -130,12 +130,14 @@ class DigitizedWorkListView(ListView):
                 # NOTE: per facet.range.include documentation, default behavior
                 # is to include lower bound and exclude upper bound.
                 # For simplicity, increase range end by one.
-                'f.%s.facet.range.end' % range_facet: end + 1,
+                'f.%s.facet.range.end' % range_facet: end,
                 # calculate gap based start and end & desired number of slices
                 # ideally, generate 24 slices; minimum gap size of 1
                 'f.%s.facet.range.gap' % range_facet: max(1, int((end - start) / 24)),
                 # restrict last range to *actual* maximum value
-                'f.%s.facet.range.hardend' % range_facet: True
+                'f.%s.facet.range.hardend' % range_facet: True,
+                # include start and end values in the bins
+                'f.%s.facet.range.include' % range_facet: 'edge'
             })
 
         # if there are any queries to filter works  or search by text,
@@ -263,7 +265,7 @@ class DigitizedWorkListView(ListView):
 
             self.form.set_choices_from_facets(facet_dict)
             # needs to be inside try/catch or it will re-trigger any error
-            facet_ranges = self.solrq.get_facets_ranges()
+            facet_ranges = self.solrq.facet_ranges
         except SolrError as solr_err:
             context = {'object_list': []}
             if 'Cannot parse' in str(solr_err):
@@ -405,8 +407,8 @@ class DigitizedWorkCSV(ListView):
     ordering = 'id'
     header_row = ['Database ID', 'Source ID', 'Title', 'Author',
                   'Publication Date', 'Publication Place', 'Publisher',
-                  'Enumcron', 'Collection', 'Page Count', 'Date Added',
-                  'Last Updated']
+                  'Enumcron', 'Collection', 'Public Notes', 'Notes',
+                  'Page Count', 'Date Added', 'Last Updated']
 
     def get_csv_filename(self):
         '''Return the CSV file name based on the current datetime.
@@ -425,7 +427,8 @@ class DigitizedWorkCSV(ListView):
         return ((dw.id, dw.source_id, dw.title, dw.author,
                  dw.pub_date, dw.pub_place, dw.publisher, dw.enumcron,
                  ';'.join([coll.name for coll in dw.collections.all()]),
-                 dw.page_count, dw.added, dw.updated
+                 dw.public_notes, dw.notes, dw.page_count, dw.added,
+                 dw.updated
                  )
                 for dw in self.get_queryset().prefetch_related('collections'))
         # NOTE: prefetch collections so they are retrieved more efficiently

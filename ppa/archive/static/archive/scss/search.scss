@@ -140,6 +140,7 @@
 
             .item {
                 text-transform: none;
+                cursor: pointer;
             }
 
             .item > input {
@@ -149,6 +150,7 @@
             span.item { // "SORT BY" text
                 padding-left: 0;
                 text-transform: uppercase;
+                cursor: initial;
             }
         }
     }
@@ -197,7 +199,7 @@
         padding: 1rem 0;
     }
 
-    .ajax-container .data {
+    .data {
         display: none;
     }
 }
