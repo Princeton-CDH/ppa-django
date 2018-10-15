@@ -13,7 +13,6 @@
 
 /* Card */
 @fontFamily: @headerFont;
-@padding: 2em;
 @width: 395px;
 @borderWidth: 0px;
 
@@ -48,20 +47,19 @@
 @linkHoverRaiseDistance: 0px;
 @linkHoverTransform: none;
 @linkShadowColor: @lightPrimaryColor;
-@linkHoverShadowColor: @primaryColor;
+@linkHoverShadowColor: @melon;
 
 @linkBoxShadow: @shadowDistance @shadowDistance 0px 0px @lightPrimaryColor;
 @linkHoverBoxShadow: @shadowDistance @shadowDistance 0px 0px @linkHoverShadowColor;
 @shadowHoverBoxShadow: @linkHoverBoxShadow;
 
 /* Aside */
-@asideMargin: 0 0 3em;
+@asideMargin: 0 0 2em;
 @asideWidth: 310px;
-@asideBoxShadow: -10px 0px 0px 0px @shadowColor;
 
 /* Aside Link */
-@asideLinkBoxShadow: -10px 0px 0px 0px @linkShadowColor;
-@asideLinkHoverBoxShadow: -10px 0px 0px 0px @linkHoverShadowColor;
+@asideLinkBorder: 10px solid @linkShadowColor;
+@asideLinkHoverBorder: 10px solid @linkHoverShadowColor;
 
 /* Stack */
 @stackMargin: 1em 0 3em;
@@ -90,16 +88,16 @@
 ;
 
 /* Post */
-@postWidth: 360px;
-@postHeight: 360px;
-
 @postBackgroundColor: @primaryColor;
 @postBackgroundTextColor: @invertedTextColor;
 @postBackgroundPadding: 4em 2em 2em 2em;
 
-@postPageWidth: @postWidth - 160px;
-@postPageHeight: @postHeight - 100px;
+@postPageWidth: 200px;
+@postPageHeight: 260px;
 @postPageColor: @background;
 @postPageTextColor: @headerColor;
 @postPagePadding: 2em;
 @postPageBoxShadow: @shadowBoxShadow;
+
+/* Post Link */
+@postLinkHoverBoxShadow: @linkHoverBoxShadow;
