@@ -232,17 +232,6 @@ GRAPPELLI_ADMIN_TITLE = 'Princeton Prosody Archive Admin'
 SCRIPT_USERNAME = 'script'
 
 
-#########################
-# OPTIONAL APPLICATIONS #
-#########################
-
-# These will be added to ``INSTALLED_APPS``, only if available.
-# FIXME mezzanine only?
-OPTIONAL_APPS = (
-    "debug_toolbar",
-    "django_extensions",
-)
-
 # PUCAS configuration for CAS/LDAP login and user provisioning.
 # Only includes non-sensitive configurations that do not change
 PUCAS_LDAP = {
