@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static humanize ppa_tags %}
+{% load static humanize ppa_tags humanize %}
 
 {% block css %}
 <link rel="stylesheet" type="text/x-scss" href="{% static 'archive/scss/list-collections.scss' %}">
@@ -17,7 +17,7 @@
 
 {% block content %}
 <div class="ui text container">
-    <p class="page-description">The Archive builds on bibliographic data from several sources as well as library catalog data from the HathiTrust Research Center. It is divided into six collections. Users are able to search across collections or within any combination of collections.</p>
+    <p class="page-description">The Archive builds on bibliographic data from several sources as well as library catalog data from the HathiTrust Research Center. It is divided into {{ object_list.count|apnumber }} collections. Users are able to search across collections or within any combination of collections.</p>
     <section class="collection-cards ui cards">
         {% for item in object_list %}
         {% with coll_stats=stats|dict_item:item.name %}
