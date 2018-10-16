@@ -7,9 +7,9 @@ from ppa.archive.models import DigitizedWork, Collection
 
 class DigitizedWorkAdmin(admin.ModelAdmin):
     list_display = (
-        'display_title', 'subtitle', 'source_link', 'author', 'list_collections',
-        'enumcron', 'pub_place', 'publisher', 'pub_date', 'page_count',
-        'added', 'updated'
+        'display_title', 'subtitle', 'source_link', 'record_id', 'author',
+        'list_collections', 'enumcron', 'pub_place', 'publisher', 'pub_date',
+        'page_count', 'added', 'updated'
     )
     fields = (
         'source_link', 'title', 'subtitle', 'sort_title', 'enumcron',
