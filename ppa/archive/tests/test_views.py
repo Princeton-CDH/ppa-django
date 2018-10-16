@@ -523,6 +523,7 @@ class TestArchiveViews(TestCase):
         # check expected data in CSV output
         for digwork, digwork_data in zip(digworks, rows[1:]):
             assert digwork.source_id in digwork_data
+            assert digwork.record_id in digwork_data
             assert digwork.title in digwork_data
             assert digwork.author in digwork_data
             assert str(digwork.pub_date) in digwork_data
