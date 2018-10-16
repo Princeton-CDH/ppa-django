@@ -6,6 +6,7 @@
 @import 'snippets/popups';
 
 #search {
+    @include wide-container();
 
     .form > fieldset.vertical.segment { // stacked fieldsets
         margin-bottom: 0;

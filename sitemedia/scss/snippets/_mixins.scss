@@ -33,6 +33,18 @@
     }
 }
 
+@mixin wide-container() {
+    .container {
+        width: 100%;
+        margin-left: auto !important;
+        margin-right: auto !important;
+
+        @media (min-width: $computer) {
+            width: 1020px;
+        }
+    }
+}
+
 @mixin font-smooth() {
     font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

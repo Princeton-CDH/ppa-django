@@ -44,10 +44,12 @@
     <abbr class="unapi-id" title="{{ object.source_id }}"></abbr>
     <table class="metadata ui very basic table">
         <tbody>
+            {% if object.subtitle %}
             <tr class="secondary-title">
                 <th scope="row">Secondary Title</th>
-                <td>{{ object.title }}</td>
+                <td>{{ object.subtitle }}</td>
             </tr>
+            {% endif %}
             <tr>
                 <th scope="row">Year of Publication</th>
                 <td>{{ object.pub_date }}</td>
