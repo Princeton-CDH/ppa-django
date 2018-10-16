@@ -266,7 +266,6 @@ class DigitizedWork(models.Model, Indexable):
             'publisher': self.publisher,
             'enumcron': self.enumcron,
             'author': self.author,
-            'public_notes': self.public_notes,
             'collections': [collection.name for collection
                             in self.collections.all()],
             # general purpose multivalued field, currently only
