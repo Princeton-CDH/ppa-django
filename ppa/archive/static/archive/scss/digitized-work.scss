@@ -14,7 +14,9 @@
 }
 
 #digitized-work {
-    @include wide-container();
+    .container {
+        @include wide-container();
+    }
 
     .meta {
         padding: 0 1rem;

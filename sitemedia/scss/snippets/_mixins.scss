@@ -34,14 +34,12 @@
 }
 
 @mixin wide-container() {
-    .container {
-        width: 100%;
-        margin-left: auto !important;
-        margin-right: auto !important;
+    width: 100%;
+    margin-left: auto !important;
+    margin-right: auto !important;
 
-        @media (min-width: $computer) {
-            width: 1020px;
-        }
+    @media (min-width: $computer) {
+        width: 1020px;
     }
 }
 
