@@ -75,9 +75,13 @@
     }
 
     .header:not(.sub) {
-        font-size: 60px;
+        font-size: 40px;
         font-weight: normal;
         text-transform: uppercase;
+
+        @media (min-width: $tablet) {
+            font-size: 60px;
+        }
     }
 }
 

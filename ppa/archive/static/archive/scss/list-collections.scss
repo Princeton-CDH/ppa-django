@@ -2,12 +2,22 @@
 @import 'scss/snippets/mixins';
 
 #collections {
+    margin-bottom: 2rem;
+
+    @media (min-width: $tablet) {
+        margin-bottom: 100px;
+    }
 
     .page-description {
         color: $dusk;
         font-family: $headerFont;
-        font-size: 20px;
-        margin: 6rem 0;
+        font-size: 16px;
+        margin: 2rem 0;
+
+        @media (min-width: $tablet) {
+            margin: 4rem 0;
+            font-size: 20px;
+        }
     }
 
     .archive-link {
@@ -18,7 +28,23 @@
             font-weight: normal;
             text-transform: uppercase;
             font-family: $pageFont;
-            margin-top: 4rem;
+            margin-top: 2rem;
+        }
+    }
+
+    .collection-cards {
+        margin: 0;
+        flex-flow: column nowrap;
+        align-items: center;
+
+        @media (min-width: $tablet) {
+            flex-flow: row wrap;
+            justify-content: space-between;
+            align-items: initial;
+
+            .card:last-child {
+                margin-left: auto;
+            }
         }
     }
 }
