@@ -5,13 +5,23 @@
 @import 'snippets/pagination';
 @import 'snippets/popups';
 
-#header > * {
-    display: none;
+#header {
+    padding: 0;
+
+    > * {
+        display: none;
+    }
 }
 
 #digitized-work {
+    @include wide-container();
+
     .meta {
-        padding: 0 2rem;
+        padding: 0 1rem;
+
+        @media (min-width: $tablet) {
+            padding: 0 2rem;
+        }
 
         .header {
             color: $secondaryColor;
@@ -29,6 +39,21 @@
         th {
             color: $secondaryColor;
             width: 25%;
+        }
+
+        th,
+        td {
+            padding-left: 0 !important;
+        }
+
+        tr {
+            padding: .5em;
+            border: 0;
+            box-shadow: none !important;
+
+            @media (min-width: $tablet) {
+                padding: 1em;
+            }
         }
 
         .secondary-title td {
