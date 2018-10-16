@@ -4,7 +4,8 @@
 .results-list .item {
     margin: 1rem 0;
 
-    .grid.container {
+    > .grid {
+        @include wide-container();
         padding: 1rem;
     }
 
