@@ -33,16 +33,22 @@
     // secondary links, e.g. "contact us"
     .link.list {
         display: flex;
-        flex-direction: column;
+        flex-flow: column nowrap;
         justify-content: space-evenly;
 
         a {
             font-weight: bold;
         }
 
+        @media (min-width: $tablet) {
+            flex-flow: row wrap;
+            justify-content: center;
+        }
+
         @media (min-width: $computer) {
-            flex-direction: row;
-            padding: 2rem 0;
+            flex-flow: row nowrap;
+            justify-content: space-evenly;
+            padding-bottom: 2rem;
         }
     }
 
@@ -60,8 +66,10 @@
     .list:not(.link) {
         display: flex;
         justify-content: center;
+        margin: 1rem 0;
 
         @media (min-width: $computer) {
+            margin: 0;
             justify-content: space-between;
         }
     }
