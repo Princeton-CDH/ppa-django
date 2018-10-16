@@ -6,21 +6,16 @@
 #header {
     display: flex;
     justify-content: center;
-    margin-top: 3 * $nav-height;
-    background-size: 150%;
+    margin-top: 2 * $nav-height;
+    background-size: 250%;
 
     @include responsive-banner("/static/img/ppa_pattern_home");
     
     @media (min-width: $tablet) {
-        background-size: 100%;
-        margin-top: 2 * $nav-height;
-    }
-
-    @media (min-width: $largeMonitor) {
         background-size: 150%;
     }
 
-    #scene {
+    #scene { // parallax items
         position: absolute;
         left: 0;
         right: 0;
@@ -34,15 +29,17 @@
 
         .layer {
             height: 100%;
-            // position: absolute;
-            // right: 0;
-            // margin: auto;
         }
     }
 
 }
 
 #homepage {
+    margin-bottom: 1rem;
+
+    @media (min-width: $tablet) {
+        margin-bottom: 100px;
+    }
     
     .intro {
         color: $secondaryColor;
@@ -58,37 +55,62 @@
         @media (min-width: $computer) {
             margin-top: 6rem;
         }
-    }
+
+        ~ .archive-link > .header {
+            padding: 0 0 2rem;
     
-    .column {
-        &.cards {
+            @media (min-width: $tablet) {
+                padding: 2rem 0 4rem;
+            }
+        }
+    }
+
+    .asides-collections {
+        display: flex;
+        flex-direction: column;
+
+        @media (min-width: $computer) {
+            flex-direction: row;
+            padding: 0;
+        }
+    }
+
+    .collections {
+        @media (min-width: $computer) {
             display: flex;
-            justify-content: space-between;
-        }
-        
-        &:not(.cards) {
-            padding-left: 0;
-            padding-right: 0;
-        }
-        
-        .card {
-            @media only screen and (max-width: 768px) {
-                margin-left: auto;
-                margin-right: auto;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 1rem;
+
+            .cards .card {
+                margin: 1rem auto;
             }
         }
     }
     
-    .updates {
-        margin-bottom: 2rem;
+    .asides,
+    .updates,
+    .collections .cards {
+        margin: 0 0 2rem 0;
         justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        flex-direction: column;
         
-        @media only screen and (min-width: 1069px) {
+        @media (min-width: $tablet) {
+            flex-direction: row;
             justify-content: space-between;
+            align-items: initial;
+
+            .card:not(.aside):last-child {
+                margin-left: auto;
+            }
         }
-        
-        ~ .archive-link > .header {
-            padding-top: 1rem;
+    }
+
+    .asides {
+        @media (min-width: $computer) {
+            margin-bottom: 0;
         }
     }
     
@@ -102,7 +124,20 @@
         font-size: 18px;
         font-family: $headerFont;
         line-height: normal;
+        margin-left: auto;
+        margin-right: auto;
         margin-bottom: 2rem;
+        max-width: 100%;
+
+        @media (min-width: $tablet) {
+            margin-bottom: 0;
+            max-width: 470px;
+        }
+
+        @media (min-width: $computer) {
+            max-width: 420px;
+            padding: 1rem 0;
+        }
     }
     
     .archive-link,
@@ -119,10 +154,14 @@
     }
     
     .collections-link > .header {
-        padding: 2rem 0 1rem;
+        padding: 1rem 0 2rem;
+
+        @media (min-width: $tablet) {
+            padding: 0 0 1rem;
+        }
     }
-    
-    .intro ~ .archive-link > .header {
-        padding: 2rem 0 4rem;
+
+    .updates ~ .archive-link > .header {
+        padding-top: 1rem;
     }
 }

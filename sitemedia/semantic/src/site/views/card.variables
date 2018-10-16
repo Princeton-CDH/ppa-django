@@ -56,6 +56,7 @@
 /* Aside */
 @asideMargin: 0 0 2em;
 @asideWidth: 310px;
+@asidePadding: 30px;
 
 /* Aside Link */
 @asideLinkBorder: 10px solid @linkShadowColor;

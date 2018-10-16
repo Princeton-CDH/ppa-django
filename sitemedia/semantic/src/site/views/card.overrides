@@ -6,10 +6,18 @@
 .ui.cards > .card
 {
     padding: 20px;
-    margin: 2em 0;
+    margin: 1em 0;
+    width: 290px;
 
     @media (min-width: @tabletBreakpoint) {
+        margin: 2em 0;
+        width: 345px;
         padding: 20px 30px;
+    }
+
+    @media (min-width: @computerBreakpoint) {
+        padding: 30px;
+        width: 400px;
     }
 
     .header {
@@ -43,14 +51,19 @@
     &.aside {
         width: @asideWidth;
         margin: @asideMargin;
+        padding: @asidePadding;
         box-shadow: none;
 
         &:hover {
             box-shadow: none;
         }
 
+        .header:not(.ui) {
+            font-size: 26px;
+        }
+
         .description {
-            margin-bottom: 3em;
+            margin-bottom: 1em;
             font-size: 18px;
         }
     }
@@ -59,6 +72,7 @@
         width: 294px;
         height: 294px;
         box-shadow: none;
+        margin: 1em 0;
 
         @media (min-width: @tabletBreakpoint) {
             width: 345px;
