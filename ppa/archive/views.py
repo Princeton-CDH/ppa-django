@@ -405,7 +405,7 @@ class DigitizedWorkCSV(ListView):
     model = DigitizedWork
     # order by id for now, for simplicity
     ordering = 'id'
-    header_row = ['Database ID', 'Source ID', 'Title', 'Author',
+    header_row = ['Database ID', 'Source ID', 'Record ID', 'Title', 'Author',
                   'Publication Date', 'Publication Place', 'Publisher',
                   'Enumcron', 'Collection', 'Public Notes', 'Notes',
                   'Page Count', 'Date Added', 'Last Updated']
@@ -424,7 +424,7 @@ class DigitizedWorkCSV(ListView):
         :returns: rows for CSV columns
         :rtype: tuple
         '''
-        return ((dw.id, dw.source_id, dw.title, dw.author,
+        return ((dw.id, dw.source_id, dw.record_id, dw.title, dw.author,
                  dw.pub_date, dw.pub_place, dw.publisher, dw.enumcron,
                  ';'.join([coll.name for coll in dw.collections.all()]),
                  dw.public_notes, dw.notes, dw.page_count, dw.added,
