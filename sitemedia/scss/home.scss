@@ -35,11 +35,6 @@
 }
 
 #homepage {
-    margin-bottom: 1rem;
-
-    @media (min-width: $tablet) {
-        margin-bottom: 100px;
-    }
     
     .intro {
         color: $secondaryColor;

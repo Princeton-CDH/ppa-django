@@ -2,12 +2,6 @@
 @import 'scss/snippets/mixins';
 
 #collections {
-    margin-bottom: 2rem;
-
-    @media (min-width: $tablet) {
-        margin-bottom: 100px;
-    }
-
     .page-description {
         color: $dusk;
         font-family: $headerFont;
