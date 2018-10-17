@@ -6,7 +6,7 @@
 
     > .grid {
         @include wide-container();
-        padding: 1rem;
+        padding: .5rem 0;
     }
 
     &:nth-child(even) {
@@ -57,8 +57,7 @@
 
         > .column {
             padding: 0 1rem;
-            margin: 1rem 0;
-            border-right: 1px solid $midGrey;
+            // border-right: 1px solid $midGrey;
             text-align: center;
             
             &:first-child {
@@ -71,6 +70,11 @@
                 padding-right: 0;
                 text-align: right;
             }
+        }
+
+        .pub_place,
+        .enumcron {
+            font-style: italic;
         }
     }
 }

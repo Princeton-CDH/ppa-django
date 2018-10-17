@@ -23,10 +23,11 @@
         cursor: default;
         color: @midGrey;
         border: @borderWeight solid @midGrey;
+        background: transparent;
 
         &:hover,
         &:active {
-            background: @inputBackground;
+            background: transparent;
             color: @midGrey;
         }
     }
