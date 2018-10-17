@@ -18,8 +18,9 @@
         <div class="metadata six wide column">
             <p class="author ui header">{% firstof item.author '[unknown]' %}</p>
             <div class="publication ui grid">
-                <div class="five wide column">{% firstof item.publisher '[unknown]' %}</div>
-                <div class="five wide column">{% firstof item.pub_place '[unknown]' %}</div>
+                <div class="four wide column">{% firstof item.publisher '[unknown]' %}</div>
+                <div class="four wide column">{% firstof item.pub_place '[unknown]' %}</div>
+                <div class="two wide column">{% if item.enumcron %}{{ item.enumcron }}{% endif %}</div>
                 <div class="two wide column">{% firstof item.pub_date '[unknown]' %}</div>
             </div>
             <div class="buttons">
