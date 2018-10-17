@@ -10,6 +10,10 @@
         @include wide-container();
     }
 
+    .search {
+        padding-bottom: 0;
+    }
+
     .form > fieldset.vertical.segment { // stacked fieldsets
         margin-bottom: 0;
         margin-top: 0;
@@ -240,7 +244,7 @@
 
     /* results */
     .results-list {
-        padding: 1rem 0;
+        padding-bottom: 2rem;
     }
 
     .data {
