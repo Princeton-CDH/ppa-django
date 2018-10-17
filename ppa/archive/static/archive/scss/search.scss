@@ -72,6 +72,18 @@
 
     
     #publication {
+        label[for=id_pub_date] { // "Publication Year" text
+            @media (min-width: $tablet) {
+                display: block;
+                margin-bottom: .25rem;
+            }
+
+            @media (min-width: $computer) {
+                display: inline-block;
+                margin-bottom: 0;
+            }
+        }
+
         label:nth-child(3) { // "to" in between dates
             margin: 0 .5rem;
             
