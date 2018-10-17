@@ -22,7 +22,7 @@ def dict_item(dictionary, key):
 def querystring_replace(context, **kwargs):
     '''Template tag to simplify retaining querystring parameters
     when paging through search results with active filters.
-    Example use:
+    Example use::
 
         <a href="?{% querystring_replace page=paginator.next_page_number %}">
     '''
@@ -43,17 +43,23 @@ def querystring_replace(context, **kwargs):
 HATHI_BASE_URL = 'https://babel.hathitrust.org/cgi'
 
 @register.simple_tag
+def page_image_url(item_id, order, width):
+    '''Generate a page image url based on an item id, page sequence label,
+    and desired width. Currently HathiTrust specific.
+    Example use::
+
+        {% page_image_url item_id page.order 220 %}
+    '''
+    return '{}/imgsrv/image?id={};seq={};width={}' \
+        .format(HATHI_BASE_URL, item_id, order, width)
+@register.simple_tag
 def page_url(item_id, order):
     '''Generate a link to HathiTrust for an individual page
+    Example use::
+
+        {% page_url item_id page.order %}
     '''
     return '{}/pt?id={};view=1up;seq={}'.format(HATHI_BASE_URL, item_id, order)
-
-@register.simple_tag
-def page_image_url(item_id, page, width):
-    '''Generate a page image url based on an item id, page sequence label,
-    and desired width. Currently HathiTrust specific.'''
-    return '{}/imgsrv/image?id={};seq={};width={}' \
-        .format(HATHI_BASE_URL, item_id, page, width)
 
 
 #: regular expression to identify open and close <em> tags in solr
