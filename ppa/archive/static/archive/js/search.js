@@ -32,44 +32,38 @@ $(function(){
     
     /* functions */
     function submitForm(state) {
-        $('.ui.form').form('validate form') // validate the form
-        if (!$('.ui.form').form('is valid')) { // if invalid
-            
-        }
-        else { // it's valid, submit the form
-            let sort = state.filter(field => field.name == 'sort')[0] // save one of the sort values (mobile or desktop); should be identical
-            state = state.filter(field => field.value != '').filter(field => field.name != 'sort') // filter out empty fields and the sorts
-            state.push(sort) // re-add the sort so there's only one (otherwise would be two values for mobile/desktop)
-            if (state.filter(field => $$textInputs.get().map(el => el.name).includes(field.name)).length == 0) { // if no text query,
-                $$relevanceSort.prop('disabled', true).parent().addClass('disabled') // disable relevance
-                $$relevanceOption.prop('disabled', true) // also disable it on mobile
-                if (state.filter(field => field.name == 'sort')[0].value == 'relevance') { // and if relevance had been selected,
-                    $('input[value="title_asc"]').click() // switch to title instead
-                    $$sortSelect.val('title_asc').click() // also on mobile
-                }
+        let sort = state.filter(field => field.name == 'sort')[0] // save one of the sort values (mobile or desktop); should be identical
+        state = state.filter(field => field.value != '').filter(field => field.name != 'sort') // filter out empty fields and the sorts
+        state.push(sort) // re-add the sort so there's only one (otherwise would be two values for mobile/desktop)
+        if (state.filter(field => $$textInputs.get().map(el => el.name).includes(field.name)).length == 0) { // if no text query,
+            $$relevanceSort.prop('disabled', true).parent().addClass('disabled') // disable relevance
+            $$relevanceOption.prop('disabled', true) // also disable it on mobile
+            if (state.filter(field => field.name == 'sort')[0].value == 'relevance') { // and if relevance had been selected,
+                $('input[value="title_asc"]').click() // switch to title instead
+                $$sortSelect.val('title_asc').click() // also on mobile
             }
-            else {
-                $$relevanceSort.prop('disabled', false).parent().removeClass('disabled') // enable relevance sort
-                $$relevanceOption.prop('disabled', false) // also enable it on mobile
-            }
-            let url = `?${$.param(state)}` // serialize state using $.param to make querystring
-            window.history.pushState(state, 'PPA Archive Search', url) // update the URL bar
-            let req = fetch(`/archive/${url}`, { // create the submission request
-                headers: { // this header is needed to signal ajax request to django
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            req.then(res => res.text()).then(html => { // submit the form and get html back
-                $$paginationTop.html($(html).find('.pagination').html()) // update the top pagination
-                dateHistogram.update(JSON.parse($(html).find('pre').html())) // update the histogram
-                $$resultsCount.html($(html).find('.data .results-count').html()) // update the results count
-                $$results.html(html) // update the results
-                document.dispatchEvent(new Event('ZoteroItemUpdated', { // notify Zotero of changed results
-                    bubbles: true,
-                    cancelable: true
-                }))
-            })
         }
+        else {
+            $$relevanceSort.prop('disabled', false).parent().removeClass('disabled') // enable relevance sort
+            $$relevanceOption.prop('disabled', false) // also enable it on mobile
+        }
+        let url = `?${$.param(state)}` // serialize state using $.param to make querystring
+        window.history.pushState(state, 'PPA Archive Search', url) // update the URL bar
+        let req = fetch(`/archive/${url}`, { // create the submission request
+            headers: { // this header is needed to signal ajax request to django
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        req.then(res => res.text()).then(html => { // submit the form and get html back
+            $$paginationTop.html($(html).find('.pagination').html()) // update the top pagination
+            dateHistogram.update(JSON.parse($(html).find('pre').html())) // update the histogram
+            $$resultsCount.html($(html).find('.data .results-count').html()) // update the results count
+            $$results.html(html) // update the results
+            document.dispatchEvent(new Event('ZoteroItemUpdated', { // notify Zotero of changed results
+                bubbles: true,
+                cancelable: true
+            }))
+        })
     }
 
     function onClearDates() {
@@ -103,12 +97,6 @@ $(function(){
         $('.ui.dropdown .dropdown.icon').removeClass('dropdown').addClass('chevron down') // change the icon
         $$checkboxes.checkbox() // this is just a standard semantic UI behavior
         $('.ui.dropdown').dropdown() // same here
-        $('.ui.form').form({ // enable validation for publication date range fields
-            fields: {
-                pub_date_0: 'integer[1559...1922]', // min
-                pub_date_1: 'integer[1559...1922]' // max
-            },
-        })
     }
 
     $$collectionInputs
