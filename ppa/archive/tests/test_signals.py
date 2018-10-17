@@ -34,8 +34,8 @@ class TestIndexableSignalHandler(TestCase):
         assert ref(IndexableSignalHandler.handle_relation_change) in m2m_handlers
 
         # testing related handlers based on DigitizedWork config
-        pre_save_handlers = [item[1] for item in models.signals.pre_save.receivers]
-        assert ref(DigitizedWork.handle_collection_save) in pre_save_handlers
+        post_save_handlers = [item[1] for item in models.signals.post_save.receivers]
+        assert ref(DigitizedWork.handle_collection_save) in post_save_handlers
         pre_del_handlers = [item[1] for item in models.signals.pre_delete.receivers]
         assert ref(DigitizedWork.handle_collection_delete) in pre_del_handlers
 

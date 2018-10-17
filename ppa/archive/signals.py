@@ -50,7 +50,7 @@ class IndexableSignalHandler:
         for model, options in Indexable.related.items():
             if 'save' in options:
                 logger.debug('Registering save signal handler for %s', model)
-                models.signals.pre_save.connect(options['save'], sender=model)
+                models.signals.post_save.connect(options['save'], sender=model)
             if 'delete' in options:
                 logger.debug('Registering delete signal handler for %s', model)
                 models.signals.pre_delete.connect(options['delete'], sender=model)
