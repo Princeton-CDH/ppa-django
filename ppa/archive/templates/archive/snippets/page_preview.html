@@ -10,7 +10,7 @@ Expected context variables:
 {% load ppa_tags %}
 <div class="page">
     <div class="preview">
-        <a href="http://babel.hathitrust.org/cgi/pt?id={{ item_id }};view=1up;seq={{ page.order }}"
+        <a href="{% page_url item_id page.order %}"
           target=_blank>
           <img src="{% page_image_url item_id page.order 225 %}"
               srcset="{% page_image_url item_id page.order 450 %} 2x"

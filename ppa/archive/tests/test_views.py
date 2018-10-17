@@ -219,6 +219,7 @@ class TestArchiveViews(TestCase):
             count=1
         )
         self.assertContains(response, '1 occurrence')
+        # image should have a link to hathi
 
         # bad syntax
         response = self.client.get(url, {'query': '"incomplete phrase'})

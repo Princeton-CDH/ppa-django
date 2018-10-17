@@ -39,13 +39,21 @@ def querystring_replace(context, **kwargs):
     # return urlencoded query string
     return querystring.urlencode()
 
+#: Base url for HathiTrust assets
+HATHI_BASE_URL = 'https://babel.hathitrust.org/cgi'
+
+@register.simple_tag
+def page_url(item_id, order):
+    '''Generate a link to HathiTrust for an individual page
+    '''
+    return '{}/pt?id={};view=1up;seq={}'.format(HATHI_BASE_URL, item_id, order)
 
 @register.simple_tag
 def page_image_url(item_id, page, width):
     '''Generate a page image url based on an item id, page sequence label,
     and desired width. Currently HathiTrust specific.'''
-    return "https://babel.hathitrust.org/cgi/imgsrv/image?id={};seq={};width={}" \
-        .format(item_id, page, width)
+    return '{}/imgsrv/image?id={};seq={};width={}' \
+        .format(HATHI_BASE_URL, item_id, page, width)
 
 
 #: regular expression to identify open and close <em> tags in solr
