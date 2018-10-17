@@ -39,6 +39,8 @@ def querystring_replace(context, **kwargs):
     # return urlencoded query string
     return querystring.urlencode()
 
+# NOTE: Use urllib.parse? Not sure it gets us much given the semi-colon
+# delimited query strings.
 #: Base url for HathiTrust assets
 HATHI_BASE_URL = 'https://babel.hathitrust.org/cgi'
 
@@ -52,6 +54,8 @@ def page_image_url(item_id, order, width):
     '''
     return '{}/imgsrv/image?id={};seq={};width={}' \
         .format(HATHI_BASE_URL, item_id, order, width)
+
+        
 @register.simple_tag
 def page_url(item_id, order):
     '''Generate a link to HathiTrust for an individual page
