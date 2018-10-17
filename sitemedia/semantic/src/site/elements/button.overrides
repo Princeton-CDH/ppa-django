@@ -18,4 +18,16 @@
         color: @disabledTextColor;
         border-color: @disabledTextColor;
     }
+
+    label& {
+        cursor: default;
+        color: @midGrey;
+        border: @borderWeight solid @midGrey;
+
+        &:hover,
+        &:active {
+            background: @inputBackground;
+            color: @midGrey;
+        }
+    }
 }

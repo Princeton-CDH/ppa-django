@@ -25,11 +25,11 @@
             <div class="buttons">
                 {% if item.pk %} {# database object with many-to-many #}
                     {% for collection in item.collections.all %}
-                        <button class="ui button">{{ collection }}</button>
+                        <label class="ui button">{{ collection }}</label>
                     {% endfor %}
                 {% else %} {# solr object with list of strings #}
                     {% for collection in item.collections %}
-                        <button class="ui button">{{ collection }}</button>
+                        <label class="ui button">{{ collection }}</label>
                     {% endfor %}
                 {% endif %}
                 <a class="ui right floated right labeled primary icon button" href="{{ item.src_url }}" target="_blank">
