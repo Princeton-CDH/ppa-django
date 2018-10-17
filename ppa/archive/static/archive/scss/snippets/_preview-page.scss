@@ -25,14 +25,14 @@
 
     .preview {
         margin-right: 1rem;
-        
+
         img {
             width: 180px;
         }
-        
+
         #digitized-work & { // larger size on digitized work page
             margin-right: 2rem;
-    
+
             img {
                 width: 225px;
             }
@@ -43,6 +43,13 @@
         flex: 1 1 auto;
         margin: 0 1rem;
 
+        .page-number {
+          font-size: 14px;
+          font-family: $pageFont;
+          color: $gold;
+
+        }
+        
         .snippet {
             font-size: 18px;
             font-family: $headerFont;
@@ -50,6 +57,8 @@
             line-height: normal;
         }
     }
+
+
 
     em {
         font-style: normal;

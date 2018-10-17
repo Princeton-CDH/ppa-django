@@ -10,15 +10,18 @@ Expected context variables:
 {% load ppa_tags %}
 <div class="page">
     <div class="preview">
-        <img src="{% page_image_url item_id page.order 225 %}"
-            srcset="{% page_image_url item_id page.order 450 %} 2x"
-            alt="page preview {{ forloop.counter }}"/>
+        <a href="http://babel.hathitrust.org/cgi/pt?id={{ item_id }};view=1up;seq={{ page.order }}"
+          target=_blank>
+          <img src="{% page_image_url item_id page.order 225 %}"
+              srcset="{% page_image_url item_id page.order 450 %} 2x"
+              alt="page preview {{ forloop.counter }}"/>
+        </a>
     </div>
     {% if page.title %}<a>p. {{ page.title }}</a>{% endif %}
     <div class="snippets">
+        <p class="page-number">p. {{ page.label }}</p>
         {% for snippet in highlights.content %}
         <p class="snippet">{{ snippet|solr_highlight }}</p>
         {% endfor %}
     </div>
 </div>
-
