@@ -12,23 +12,25 @@
         border: 0;
         padding: @relative7px @horizontalPadding;
         min-width: @relative30px;
+
+        label& {
+            padding: @verticalPadding @horizontalPadding;
+            box-shadow: none;
+            cursor: default;
+            color: @midGrey !important;
+            border: @borderWeight solid @midGrey;
+            background: transparent !important;
+
+            &:hover,
+            &:active {
+                background: transparent !important;
+                color: @midGrey !important;
+            }
+        }
     }
 
     &.disabled {
         color: @disabledTextColor;
         border-color: @disabledTextColor;
-    }
-
-    label& {
-        cursor: default;
-        color: @midGrey;
-        border: @borderWeight solid @midGrey;
-        background: transparent;
-
-        &:hover,
-        &:active {
-            background: transparent;
-            color: @midGrey;
-        }
     }
 }
