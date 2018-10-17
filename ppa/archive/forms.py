@@ -150,7 +150,7 @@ class SearchForm(forms.Form):
     # text inputs
     query = forms.CharField(label='Keyword or Phrase', required=False,
         widget=forms.TextInput(attrs={
-            'placeholder': 'Search the full text and metadata of the archive',
+            'placeholder': 'Search full text and metadata',
             '_icon': 'search',
             '_align': 'left'
         }))

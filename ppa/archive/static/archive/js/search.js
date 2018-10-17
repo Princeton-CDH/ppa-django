@@ -21,6 +21,7 @@ $(function(){
     const $$textInputs = $('input[type="text"]')
     const $$relevanceSort = $('input[value="relevance"]')
     const $$relevanceOption = $('.sort .dropdown option[value="relevance"]')
+    const $$advancedSearchButton = $('.show-advanced')
 
     /* bindings */
     archiveSearchForm.onStateChange(submitForm)
@@ -28,6 +29,7 @@ $(function(){
     $$sortInputs.change(onSortChange)
     $$sortSelect.change(onMobileSortChange)
     $$collectionInputs.change(onCollectionChange)
+    $$advancedSearchButton.click(toggleAdvancedSearch)
     onPageLoad() // misc functions that run once on page load
     
     /* functions */
@@ -97,6 +99,10 @@ $(function(){
         $('.ui.dropdown .dropdown.icon').removeClass('dropdown').addClass('chevron down') // change the icon
         $$checkboxes.checkbox() // this is just a standard semantic UI behavior
         $('.ui.dropdown').dropdown() // same here
+    }
+
+    function toggleAdvancedSearch() {
+        $('.advanced').slideToggle()
     }
 
     $$collectionInputs
