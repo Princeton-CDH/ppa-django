@@ -28,18 +28,24 @@
         }
 
         > .twelve.wide.column:not(:nth-of-type(1)) {
-            padding-top: 0;
+            padding-top: 0 !important;
         }
     }
 
     .show-advanced {
-        color: $secondaryColor;
-        margin: auto;
-        margin-bottom: 1rem;
-        cursor: pointer;
+        background: #fff;
+        text-align: center;
+        padding-top: 0;
 
-        &:hover {
-            color: $gold;
+        a {
+            color: $secondaryColor;
+            margin: auto;
+            margin-bottom: 1rem;
+            cursor: pointer;
+    
+            &:hover {
+                color: $gold;
+            }
         }
 
         @media (min-width: $tablet) {
@@ -64,26 +70,34 @@
         padding: 0.5rem;
     }
 
+    
+    #publication {
+        label:nth-child(3) { // "to" in between dates
+            margin: 0 .5rem;
+            
+            @media (min-width: $tablet) {
+                margin: 0 1rem;
+            }
+        }
+    }
+
     .clear-selection {
         cursor: pointer;
+        color: $secondaryColor;
         position: absolute;
-        bottom: -9rem;
+        bottom: -.5rem;
 
-        @media only screen and (min-width: 768px) {
+        &:hover {
+            color: $gold;
+        }
+
+        @media (min-width: $tablet) {
             bottom: 1rem;
         }
     }
 
-    #publication {
-        label:nth-child(3) { // "to" in between dates
-            margin: 0 1rem;
-        }
-    }
-
     #histogram {
-        @media only screen and (max-width: 768px) {
-            padding-bottom: 3rem !important;
-        }
+        height: 8rem;
 
         .values {
             display: none;
@@ -91,6 +105,7 @@
 
         .visualization {
             width: 100%;
+            height: 4rem;
         }
 
         .min-date,
