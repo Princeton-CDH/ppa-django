@@ -287,9 +287,7 @@ class TestDigitizedWork(TestCase):
             assert isinstance(page_data, types.GeneratorType)
 
             for i, data in enumerate(page_data):
-
                 mets_page = mets.structmap_pages[i]
-
                 assert data['id'] == '.'.join([work.source_id, mets_page.text_file.sequence])
                 assert data['srcid'] == work.source_id
                 assert data['content'] == contents[i]
@@ -298,9 +296,7 @@ class TestDigitizedWork(TestCase):
                 assert data['label'] == mets_page.display_label
                 assert 'tags' in data
                 assert data['tags'] == mets_page.label.split(', ')
-                # fix behavior for upcoming PEP 479
-                # https://www.python.org/dev/peps/pep-0479/
-                yield
+
 
     def test_index_id(self):
         work = DigitizedWork(source_id='chi.79279237')
