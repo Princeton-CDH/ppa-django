@@ -19,7 +19,11 @@ Expected context variables:
     </div>
     {% if page.title %}<a>p. {{ page.title }}</a>{% endif %}
     <div class="snippets">
-        <p class="page-number">p. {{ page.label }}</p>
+          <p class="page-number">
+            <a href="{% page_url item_id page.order %}" target=_blank>
+              p. {{ page.label }}
+            </a>
+          </p>
         {% for snippet in highlights.content %}
         <p class="snippet">{{ snippet|solr_highlight }}</p>
         {% endfor %}

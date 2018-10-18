@@ -44,12 +44,14 @@
         margin: 0 1rem;
 
         .page-number {
-          font-size: 14px;
-          font-family: $pageFont;
-          color: $gold;
 
+          a {
+            font-size: 14px;
+            font-family: $pageFont;
+            color: $gold;
+          }
         }
-        
+
         .snippet {
             font-size: 18px;
             font-family: $headerFont;
