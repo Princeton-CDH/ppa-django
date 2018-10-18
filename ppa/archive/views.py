@@ -313,7 +313,7 @@ class DigitizedWorkDetailView(DetailView):
                 # sort by page order by default
                 'sort': 'order asc',
                 # 'fl': '*',
-                'fl': 'id,srcid,order,title',  # Limiting down to just id needed for now
+                'fl': 'id,srcid,order,title,label',  # Limiting only to needed fields
                 'fq': 'srcid:("%s") AND item_type:page' % digwork.source_id,
                 # configure highlighting on page text content
                 'hl': True,

@@ -17,7 +17,7 @@ from ppa.archive.forms import SearchForm
 from ppa.archive.models import DigitizedWork, Collection
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView, IndexView
-from ppa.archive.templatetags.ppa_tags import page_image_url
+from ppa.archive.templatetags.ppa_tags import page_image_url, page_url
 
 class TestArchiveViews(TestCase):
     fixtures = ['sample_digitized_works']
@@ -160,8 +160,8 @@ class TestArchiveViews(TestCase):
         ]
         htid = 'chi.78013704'
         solr_page_docs = [
-            {'content': content, 'order': i, 'item_type': 'page',
-             'srcid': htid, 'id': '%s.%s' % (htid, i)}
+            {'content': content, 'order': i+1, 'item_type': 'page',
+             'srcid': htid, 'id': '%s.%s' % (htid, i), 'label': i}
              for i, content in enumerate(sample_page_content)]
         dial = DigitizedWork.objects.get(source_id='chi.78013704')
         solr_work_docs = [dial.index_data()]
@@ -207,18 +207,35 @@ class TestArchiveViews(TestCase):
         highlights = response.context['page_highlights'][result['id']]
         # template has the expected information rendered
         self.assertContains(response, highlights['content'][0])
+        # page number that correspondeds to label field should be present
+        self.assertContains(
+            response,
+            'p. %s' % result['label'],
+            count=1,
+            msg_prefix='has page label for the print page numb.'
+        )
         # image url should appear twice for src and srcset
         self.assertContains(
             response,
             page_image_url(result['srcid'], result['order'], 225),
-            count=1
+            count=1,
+            msg_prefix='has img src url'
         )
         self.assertContains(
             response,
             page_image_url(result['srcid'], result['order'], 450),
-            count=1
+            count=1,
+            msg_prefix='has imgset src url'
         )
         self.assertContains(response, '1 occurrence')
+        # image should have a link to hathitrust as should the page number
+        self.assertContains(
+            response,
+            page_url(result['srcid'], result['order']),
+            count=2,
+            msg_prefix='should include a link to HathiTrust'
+        )
+
 
         # bad syntax
         response = self.client.get(url, {'query': '"incomplete phrase'})

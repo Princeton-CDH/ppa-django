@@ -346,16 +346,18 @@ class DigitizedWork(models.Model, Indexable):
 
                 pagefilename = os.path.join(self.hathi_content_dir, page.text_file_location)
                 with ht_zip.open(pagefilename) as pagefile:
-
-                    yield {
-                        'id': '%s.%s' % (self.source_id, page.text_file.sequence),
-                        'srcid': self.source_id,   # for grouping with work record
-                        'content': pagefile.read().decode('utf-8'),
-                        'order': page.order,
-                        'label': page.display_label,
-                        'tags': page.label.split(', ') if page.label else [],
-                        'item_type': 'page'
-                    }
+                    try:
+                        yield {
+                            'id': '%s.%s' % (self.source_id, page.text_file.sequence),
+                            'srcid': self.source_id,   # for grouping with work record
+                            'content': pagefile.read().decode('utf-8'),
+                            'order': page.order,
+                            'label': page.display_label,
+                            'tags': page.label.split(', ') if page.label else [],
+                            'item_type': 'page'
+                        }
+                    except StopIteration:
+                        return    
 
     def get_metadata(self, metadata_format):
         '''Get metadata for this item in the specified format.

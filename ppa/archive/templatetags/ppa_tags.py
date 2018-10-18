@@ -22,7 +22,7 @@ def dict_item(dictionary, key):
 def querystring_replace(context, **kwargs):
     '''Template tag to simplify retaining querystring parameters
     when paging through search results with active filters.
-    Example use:
+    Example use::
 
         <a href="?{% querystring_replace page=paginator.next_page_number %}">
     '''
@@ -39,19 +39,31 @@ def querystring_replace(context, **kwargs):
     # return urlencoded query string
     return querystring.urlencode()
 
-
-#: regular expression to extract page sequence from page order
-#: (could contain other content, but should end with numbers)
-PAGE_REQUENCE_RE = re.compile(r'[^\d]*(\d+)$')
-
+# NOTE: Use urllib.parse? Not sure it gets us much given the semi-colon
+# delimited query strings.
+#: Base url for HathiTrust assets
+HATHI_BASE_URL = 'https://babel.hathitrust.org/cgi'
 
 @register.simple_tag
-def page_image_url(item_id, page, width):
+def page_image_url(item_id, order, width):
     '''Generate a page image url based on an item id, page sequence label,
-    and desired width. Currently HathiTrust specific.'''
-    page_sequence = int(PAGE_REQUENCE_RE.search(page).group(1))
-    return "https://babel.hathitrust.org/cgi/imgsrv/image?id={};seq={};width={}" \
-        .format(item_id, page_sequence, width)
+    and desired width. Currently HathiTrust specific.
+    Example use::
+
+        {% page_image_url item_id page.order 220 %}
+    '''
+    return '{}/imgsrv/image?id={};seq={};width={}' \
+        .format(HATHI_BASE_URL, item_id, order, width)
+
+        
+@register.simple_tag
+def page_url(item_id, order):
+    '''Generate a link to HathiTrust for an individual page
+    Example use::
+
+        {% page_url item_id page.order %}
+    '''
+    return '{}/pt?id={};view=1up;seq={}'.format(HATHI_BASE_URL, item_id, order)
 
 
 #: regular expression to identify open and close <em> tags in solr
@@ -83,5 +95,3 @@ def solr_highlight(value, autoescape=True):
 @register.filter(name='json')
 def json_dumps(data):
     return mark_safe(json.dumps(data))
-    
-

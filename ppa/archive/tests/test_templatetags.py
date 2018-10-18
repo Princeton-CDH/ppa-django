@@ -6,7 +6,7 @@ from django.utils.safestring import SafeString, mark_safe
 import json
 
 from ppa.archive.templatetags.ppa_tags import dict_item, querystring_replace, \
-    page_image_url, solr_highlight, json_dumps
+    page_image_url, page_url, solr_highlight, json_dumps, HATHI_BASE_URL
 
 def test_dict_item():
     # no error on not found
@@ -46,23 +46,22 @@ def test_querystring_replace():
 
 
 def test_page_image_url():
-    # simple page id
+    # basic test with order, width, and item id
     item_id = "mdp.39015031594768"
-    page_id = "00000029"
-    page_seq = 29
+    order = 29
     width = 180
-    img_url = page_image_url(item_id, page_id, width)
-    print(img_url)
-    assert img_url.startswith("https://babel.hathitrust.org/cgi/imgsrv/image?")
-    assert img_url.endswith('image?id=%s;seq=%s;width=%s' % (item_id, page_seq, width))
+    img_url = page_image_url(item_id, order, width)
+    # points to the appropriate url
+    assert img_url.startswith("%s/imgsrv/image?" % HATHI_BASE_URL)
+    # renders the correct query string
+    assert img_url.endswith('image?id=%s;seq=%s;width=%s' % (item_id, order, width))
 
-    # page id with non-numeric characters
-    item_id = 'uc1.c2608792'
-    page_id = 'UCAL_C2608792_00000009'
-    page_seq = 9
-    img_url = page_image_url(item_id, page_id, width)
-    assert img_url.endswith('image?id=%s;seq=%s;width=%s' % (item_id, page_seq, width))
-
+def test_page_url():
+    item_id = "mdp.39015031594768"
+    order = 50
+    hathi_url = page_url(item_id, order)
+    assert hathi_url.startswith('%s/pt' % HATHI_BASE_URL)
+    assert hathi_url.endswith('?id=%s;view=1up;seq=%s' % (item_id, order))
 
 def test_solr_highlight():
     # simple text snippet
