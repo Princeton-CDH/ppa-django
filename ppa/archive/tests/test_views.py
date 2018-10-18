@@ -228,11 +228,11 @@ class TestArchiveViews(TestCase):
             msg_prefix='has imgset src url'
         )
         self.assertContains(response, '1 occurrence')
-        # image should have a link to hathitrust
+        # image should have a link to hathitrust as should the page number
         self.assertContains(
             response,
             page_url(result['srcid'], result['order']),
-            count=1,
+            count=2,
             msg_prefix='should include a link to HathiTrust'
         )
 
