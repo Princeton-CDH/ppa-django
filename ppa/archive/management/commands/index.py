@@ -15,6 +15,10 @@ and the pairtree content for the items still must exist at the configured path.
 A progress bar will be displayed by default if there are more than 5
 items to process.  This can be suppressed via script options.
 
+You may optionally request the index or part of the index to be cleared
+before indexing, for use when index data has changed sufficiently that
+previous versions need to be removed.
+
 Example usage::
 
     # index everything
@@ -29,6 +33,10 @@ Example usage::
     python manage.py index ---pages
     # suppress progressbar
     python manage.py index --no-progress
+    # clear everything, then index everything
+    python manage.py index --clear all
+    # clear works only, then index works
+    python manage.py index --clear works --index works
 
 '''
 
@@ -80,11 +88,19 @@ class Command(BaseCommand):
         parser.add_argument(
             '--no-progress', action='store_true',
             help='Do not display progress bar to track the status of the reindex.')
+        parser.add_argument(
+            '-c', '--clear', choices=['all', 'works', 'pages'], required=False,
+            help='Clear some or all indexed data before reindexing')
 
     def handle(self, *args, **kwargs):
         self.solr, self.solr_collection = get_solr_connection()
         self.verbosity = kwargs.get('verbosity', self.v_normal)
         self.options = kwargs
+        print(self.options)
+
+        # clear index if requested
+        if self.options['clear']:
+            self.clear(self.options['clear'])
 
         # self.stats = defaultdict(int)
         works = DigitizedWork.objects.all()
@@ -149,3 +165,18 @@ class Command(BaseCommand):
             # at least stop the script instead of repeatedly throwing
             # connection errors
             raise CommandError(err)
+
+    delete_query = {
+        'all': '*:*',
+        'works': 'item_type:work',
+        'pages': 'item_type:page'
+    }
+
+    def clear(self, mode):
+        '''Remove items from the Solr index.  Mode should be one of
+        'all', 'works', or 'pages'.'''
+        del_query = self.delete_query.get(mode, None)
+        if del_query:
+            # return value doesn't tell us anything useful, so nothing
+            # to return here
+            self.solr.delete_doc_by_query(self.solr_collection, del_query)
