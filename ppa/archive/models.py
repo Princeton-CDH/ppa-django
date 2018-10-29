@@ -73,7 +73,7 @@ class DigitizedWork(models.Model, Indexable):
     subtitle = models.TextField(blank=True, default='',
                                 help_text='Subtitle, if any (optional)')
     #: sort title: title without leading non-sort characters, from marc
-    sort_title = models.TextField(blank=True, default='',
+    sort_title = models.TextField(default='',
                                   help_text='Sort title from MARC record')
     #: enumeration/chronology (hathi-specific)
     enumcron = models.CharField('Enumeration/Chronology', max_length=255,
@@ -184,7 +184,10 @@ class DigitizedWork(models.Model, Indexable):
                 # - assuming no non-sort characters
                 non_sort = 0
 
-            self.sort_title = bibdata.marcxml.title()[non_sort:]
+            # strip whitespace, since a small number of records have a
+            # nonsort value that doesn't include a space after a
+            # definite article
+            self.sort_title = bibdata.marcxml.title()[non_sort:].strip()
 
             self.author = bibdata.marcxml.author() or ''
             # field 260 includes publication information
@@ -357,7 +360,7 @@ class DigitizedWork(models.Model, Indexable):
                             'item_type': 'page'
                         }
                     except StopIteration:
-                        return    
+                        return
 
     def get_metadata(self, metadata_format):
         '''Get metadata for this item in the specified format.
