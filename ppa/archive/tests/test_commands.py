@@ -318,6 +318,27 @@ class TestIndexCommand(TestCase):
             mockindexable.index_items.side_effect = Exception
             cmd.index(test_index_data)
 
+    def test_clear(self):
+        # index data into solr and catch  an error
+        cmd = index.Command()
+        cmd.solr = Mock()
+        cmd.solr_collection = 'test'
+
+        cmd.clear('all')
+        cmd.solr.delete_doc_by_query.assert_called_with(cmd.solr_collection, '*:*')
+
+        cmd.solr.reset_mock()
+        cmd.clear('works')
+        cmd.solr.delete_doc_by_query.assert_called_with(cmd.solr_collection, 'item_type:work')
+
+        cmd.solr.reset_mock()
+        cmd.clear('pages')
+        cmd.solr.delete_doc_by_query.assert_called_with(cmd.solr_collection, 'item_type:page')
+
+        cmd.solr.reset_mock()
+        cmd.clear('foo')
+        cmd.solr.delete_doc_by_query.assert_not_called()
+
     @patch('ppa.archive.management.commands.index.get_solr_connection')
     @patch('ppa.archive.management.commands.index.progressbar')
     @patch.object(index.Command, 'index')
