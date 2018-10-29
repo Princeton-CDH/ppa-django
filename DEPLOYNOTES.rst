@@ -8,6 +8,15 @@ Deploy and Upgrade notes
 
 * Configure a **TECHNICAL_CONTACT** email address in local settings
   to set a **From** header on requests made against the HathiTrust API.
+* Logic for populating local records from HathiTrust has changed; records
+  need to be updated::
+
+    python manage.py hathi_import -v 0 --progress --update
+
+* This update requires a full reindex; due to changes in page indexing, pages
+  must be cleared from the Solr index::
+
+     python manage.py index --clear pages
 
 
 0.8 Search filtering and highlighting
