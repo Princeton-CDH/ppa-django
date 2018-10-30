@@ -353,7 +353,6 @@ class TestArchiveViews(TestCase):
             response, 'winter and <em>wintry</em> and',
             msg_prefix='highlight snippet from page content displayed')
 
-
         # match in page content but not in book metadata should pull back title
         response = self.client.get(url, {'query': 'blood'})
         self.assertContains(response, '1 digitized work')
@@ -426,10 +425,11 @@ class TestArchiveViews(TestCase):
         assert sorted_object_list == response.context['object_list']
         # one last test using title
         response = self.client.get(url, {'query': '', 'sort': 'title_asc'})
-        sorted_object_list = sorted(response.context['object_list'],
-                                    key=operator.itemgetter('title_exact'))
-        # the two context lists should match exactly
-        assert sorted_object_list == response.context['object_list']
+        sorted_work_ids = DigitizedWork.objects.order_by('sort_title') \
+                                       .values_list('source_id', flat=True)
+        # the list of ids should match exactly
+        assert list(sorted_work_ids) == \
+            [work['srcid'] for work in response.context['object_list']]
 
         # - check that a query allows relevance as sort order toggle in form
         response = self.client.get(url, {'query': 'foo', 'sort': 'title_asc'})
@@ -490,8 +490,8 @@ class TestArchiveViews(TestCase):
         # should have pagination
         self.assertContains(response, "<div class=\"pagination")
         # test a query
-        response = self.client.get(url,
-            {'query': 'blood AND bone AND alternate'},
+        response = self.client.get(
+            url, {'query': 'blood AND bone AND alternate'},
             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
@@ -509,7 +509,6 @@ class TestArchiveViews(TestCase):
             mockpsq.return_value.count = 0
             response = self.client.get(url, {'query': 'something'})
             self.assertContains(response, 'Something went wrong.')
-
 
     def test_digitizedwork_csv(self):
         # add an arbitrary note to one digital work so that the field is
