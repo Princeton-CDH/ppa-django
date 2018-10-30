@@ -99,6 +99,7 @@ $(function(){
         $('.ui.dropdown .dropdown.icon').removeClass('dropdown').addClass('chevron down') // change the icon
         $$checkboxes.checkbox() // this is just a standard semantic UI behavior
         $('.ui.dropdown').dropdown() // same here
+        $('.form').keydown(e => { if (e.which === 13) e.preventDefault() }) // don't allow enter key to submit the search
     }
 
     function toggleAdvancedSearch() {
