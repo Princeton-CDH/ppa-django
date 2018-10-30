@@ -58,8 +58,8 @@ $(function(){
         })
         req.then(res => res.text()).then(html => { // submit the form and get html back
             $$paginationTop.html($(html).find('.pagination').html()) // update the top pagination
-            dateHistogram.update(JSON.parse($(html).find('pre').html())) // update the histogram
-            $$resultsCount.html($(html).find('.data .results-count').html()) // update the results count
+            dateHistogram.update(JSON.parse($(html).find('pre.facets').html())) // update the histogram
+            $$resultsCount.html($(html).find('pre.count').html()) // update the results count
             $$results.html(html) // update the results
             document.dispatchEvent(new Event('ZoteroItemUpdated', { // notify Zotero of changed results
                 bubbles: true,
@@ -90,7 +90,7 @@ $(function(){
     }
 
     function onPageLoad() {
-        dateHistogram.update(JSON.parse($('.ajax-container pre').html())) // render the histogram initially
+        dateHistogram.update(JSON.parse($('.ajax-container pre.facets').html())) // render the histogram initially
         $$sortInputs.filter(':disabled').parent().addClass('disabled') // disable keyword sort if no query
         $$relevanceOption.prop('disabled', true) // also disable it on mobile
         $$sortSelect.val($$sortInputs.filter(':checked').val()) // set the mobile sort to the same default as the other sort
