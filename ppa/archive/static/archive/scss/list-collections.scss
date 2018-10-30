@@ -6,10 +6,12 @@
         color: $dusk;
         font-family: $headerFont;
         font-size: 16px;
-        margin: 2rem 0;
+        margin: 2rem auto;
+        width: 290px;
 
         @media (min-width: $tablet) {
             margin: 4rem 0;
+            width: 100%;
             font-size: 20px;
         }
     }
