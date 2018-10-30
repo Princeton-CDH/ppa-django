@@ -221,7 +221,8 @@ class DigitizedWork(models.Model, Indexable):
     def handle_collection_save(sender, instance, **kwargs):
         '''signal handler for collection save; reindex associated digitized works'''
         # only reindex if collection name has changed
-        if instance.name_changed:
+        # and if collection has already been saved
+        if instance.pk and instance.name_changed:
             # if the collection has any works associated
             works = instance.digitizedwork_set.all()
             if works.exists():
