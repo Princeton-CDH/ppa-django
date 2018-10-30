@@ -100,10 +100,29 @@ $(function(){
         $$checkboxes.checkbox() // this is just a standard semantic UI behavior
         $('.ui.dropdown').dropdown() // same here
         $('.form').keydown(e => { if (e.which === 13) e.preventDefault() }) // don't allow enter key to submit the search
+        $$textInputs.each(addClearButton)
+        $$textInputs.on('input', onTextInput)
     }
 
     function toggleAdvancedSearch() {
         $('.advanced').slideToggle()
+    }
+
+    function addClearButton(_, el) {
+        let clearButton = $('<i/>', { class: 'clear times icon' })
+        let clearField = () => { // called when the icon is clicked
+            $(el).val('') // empty the field
+            el.dispatchEvent(new Event('input')) // fake input to trigger resubmit
+        }
+        $(el).val() == '' ? clearButton.hide() : clearButton.show() // if the field is pre-populated, show it
+        clearButton.click(clearField) // clicking it clears the field
+        clearButton.insertAfter(el)
+    }
+
+    function onTextInput(event) {
+        // if the input was cleared out, hide the clear button, otherwise show it
+        let clearButton = $(event.target).parent().find('.clear.icon')
+        $(event.target).val() == '' ? clearButton.hide() : clearButton.show()
     }
 
     $$collectionInputs
