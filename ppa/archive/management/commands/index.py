@@ -96,7 +96,6 @@ class Command(BaseCommand):
         self.solr, self.solr_collection = get_solr_connection()
         self.verbosity = kwargs.get('verbosity', self.v_normal)
         self.options = kwargs
-        print(self.options)
 
         # clear index if requested
         if self.options['clear']:
