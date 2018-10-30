@@ -13,7 +13,8 @@
 
 /* Card */
 @fontFamily: @headerFont;
-@width: 395px;
+@width: 290px;
+@height: 230px;
 @borderWidth: 0px;
 
 /*-------------------
@@ -56,6 +57,7 @@
 /* Aside */
 @asideMargin: 0 0 2em;
 @asideWidth: 310px;
+@asideHeight: 360px;
 @asidePadding: 30px;
 
 /* Aside Link */
