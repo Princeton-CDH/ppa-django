@@ -16,7 +16,7 @@ from SolrClient.exceptions import SolrError
 from ppa.archive.forms import SearchForm
 from ppa.archive.models import DigitizedWork, Collection
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
-from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView, IndexView
+from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView
 from ppa.archive.templatetags.ppa_tags import page_image_url
 
 class TestArchiveViews(TestCase):
@@ -842,6 +842,7 @@ class TestDigitizedWorkListView(TestCase):
             assert highlights == mockpsq.return_value.get_highlighting()
 
 
+@pytest.mark.skip
 class TestIndexView(TestCase):
 
     @pytest.mark.usefixtures("solr")

@@ -543,16 +543,3 @@ class AddToCollection(ListView, FormView):
         self.object_list = self.get_queryset()
         return self.render_to_response(self.get_context_data(form=form))
 
-
-class IndexView(CollectionListView):
-    '''
-    A homepage view that uses collection data, but renders it in a template
-    with additional information.
-    '''
-
-    model = Collection
-    template_name = 'site_index.html'
-
-    def get_queryset(self):
-        # get two random collections
-        return super().get_queryset().order_by('?')[:2]

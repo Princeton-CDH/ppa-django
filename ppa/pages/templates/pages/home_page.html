@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static humanize %}
+{% load static humanize wagtailcore_tags %}
 
 {% block js %}
 <script src="{% static 'js/home.js' %}" type="module"></script>
@@ -24,20 +24,7 @@
 {% block content %}
 <div class="ui vertical basic segment">
     <div class="intro ui text container">
-        <p>Welcome to the Princeton Prosody Archive, a full-text searchable database of thousands of digitized books published between 1570 and 1923.
-            The Archive collects historical documents and highlights discourses about the study of language,
-            the study of poetry, and where and how these intersect and diverge.</p>
-        <p>The PPA began as a collection of texts about versification. Now it covers the study of poetry, grammar, literary history, and speech.
-            We understand the PPA collections to be necessarily incomplete – a starting point for new scholarship in historical poetics and historical linguistics.
-            As such, we intend the words “prosody” and “archive” in their broadest possible senses.</p>
-        <p>The PPA makes several arguments, poses several questions, and welcomes new scholarship based on the work gathered here.
-            Some of our initial questions include: What if we began to understand poetics in all of its
-            historical, linguistic, and educational valences?</p>
-        <p>What if literary concepts such as meter and rhythm are historically contingent and fundamentally unstable?
-            What might scholars of distant reading the novel learn from a collection of materials pertaining to poetry?</p>
-        <p>Rather than a static repository of historical data, the PPA would like to compel users to rethink the past
-            and future of organizing, navigating, conceptualizing, and historicizing large amounts of data – about a single
-            poem or about evolving and contradictory thinking about the technology of poetic language.</p>
+        {{ page.body|richtext }}
     </div>
     <a class="archive-link" href="{% url 'archive:list' %}">
         <h3 class="ui header">
@@ -49,6 +36,7 @@
 <div class="ui vertical basic segment">
     <div class="ui stackable two column text container grid">
         <div class="column ui cards">
+            {# TODO: pull in page content and blurbs from wagtail #}
             <a class="aside card" href="/what-is-prosody/">
                 <div class="content">
                     <h3 class="header">What Is Prosody?</h3>
@@ -74,6 +62,7 @@
             </a>
         </div>
         <div class="column">
+            {# TODO: pull in page content/blurb from wagtail #}
             <h3 class="ui header about-header">About the Collections</h3>
             <div class="description">The Archive builds on bibliographic data from
                 several sources as well as library catalog data from the HathiTrust
@@ -81,10 +70,11 @@
                 able to search across collections or within any combination
                 of collections.
             </div>
-            {% for item in object_list %}
+            {% for item in collections %}
             <a class="ui card stack" href="{% url 'archive:list' %}?collections={{ item.name|urlencode }}">
                 <div class="content">
                     <h3 class="header">{{ item.name }}</h3>
+                    {% comment %}. TODO: needs collection stats logic from collection list view
                     {% with coll_stats=stats|dict_item:item.name %}
                         <div class="meta">
                             {% firstof coll_stats.count "0" as count %}
@@ -93,6 +83,7 @@
                             </p>
                         </div>
                     {% endwith %}
+                    {% endcomment %}
                     {% if item.description %}
                     <div class="description">
                         {{ item.description|safe }}
@@ -110,6 +101,7 @@
         </div>
     </div>
 </div>
+{# TODO: pull in recent editorial posts dynamically #}
 <div class="ui vertical basic segment">
     <div class="ui text container">
         <div class="updates ui two stackable cards">

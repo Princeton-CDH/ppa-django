@@ -111,6 +111,7 @@ INSTALLED_APPS = [
     'ppa.archive',
     'ppa.common',
     'ppa.unapi',
+    'ppa.pages',
 ]
 
 MIDDLEWARE = [
@@ -121,6 +122,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'wagtail.core.middleware.SiteMiddleware',
+    'wagtail.contrib.redirects.middleware.RedirectMiddleware',
 ]
 
 AUTHENTICATION_BACKENDS = (
@@ -225,6 +228,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, *MEDIA_URL.strip("/").split("/"))
 
 
 SITE_ID = 1
+
+WAGTAIL_SITE_NAME = 'Princeton Prosody Archive'
 
 GRAPPELLI_ADMIN_TITLE = 'Princeton Prosody Archive Admin'
 

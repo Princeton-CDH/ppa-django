@@ -15,4 +15,4 @@ django-compressor
 django-compressor-toolkit
 lxml
 eulxml
-wagtail
+wagtail>=2.3

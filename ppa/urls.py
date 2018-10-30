@@ -17,9 +17,11 @@ from django.conf.urls import url, include
 from django.contrib import admin
 from django.contrib.sitemaps.views import sitemap
 from django.views.generic.base import TemplateView
+from wagtail.admin import urls as wagtailadmin_urls
+from wagtail.core import urls as wagtail_urls
+from wagtail.documents import urls as wagtaildocs_urls
 
 from ppa.unapi.views import UnAPIView
-from ppa.archive.views import IndexView
 
 
 urlpatterns = [
@@ -28,8 +30,6 @@ urlpatterns = [
     url(r'^grappelli/', include('grappelli.urls')),
     # pucas urls for CAS login
     url(r'^accounts/', include('pucas.cas_urls')),
-    # placeholder for home page
-    url(r'^$', IndexView.as_view(), name='home'),
     url(r'^archive/', include('ppa.archive.urls', namespace='archive')),
 
     # unapi service endpoint for Zotero
@@ -38,6 +38,9 @@ urlpatterns = [
     # sitemaps
     # url(r'^sitemap\.xml$', sitemap, {'sitemaps': DisplayableSitemap},
         # name='django.contrib.sitemaps.views.sitemap')
+    url(r'^cms/', include(wagtailadmin_urls)),
+    url(r'^documents/', include(wagtaildocs_urls)),
+    url(r'', include(wagtail_urls)),
 ]
 
 
