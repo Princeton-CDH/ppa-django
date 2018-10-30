@@ -6,6 +6,7 @@ from time import sleep
 from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
+from django.template.defaultfilters import escape
 from django.test import TestCase
 from django.urls import reverse
 from django.utils.http import urlencode
@@ -16,8 +17,9 @@ from SolrClient.exceptions import SolrError
 from ppa.archive.forms import SearchForm
 from ppa.archive.models import DigitizedWork, Collection
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
-from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView, IndexView
+from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView
 from ppa.archive.templatetags.ppa_tags import page_image_url, page_url
+
 
 class TestArchiveViews(TestCase):
     fixtures = ['sample_digitized_works']
@@ -141,8 +143,6 @@ class TestArchiveViews(TestCase):
             response,
             '<abbr class="unapi-id" title="%s"></abbr>' % dial.source_id,
             msg_prefix='unapi id should be embedded for each work')
-
-
 
     @pytest.mark.usefixtures("solr")
     def test_digitizedwork_detailview_query(self):
@@ -303,11 +303,13 @@ class TestArchiveViews(TestCase):
         for digwork in digitized_works:
             # basic metadata for each work
             self.assertContains(response, digwork.title)
+            self.assertContains(response, digwork.subtitle)
             self.assertContains(response, digwork.source_id)
             self.assertContains(response, digwork.author)
             # NOTE: enumcron suppressed for now (possibly for good)
             # self.assertContains(response, digwork.enumcron)
-            self.assertContains(response, digwork.publisher)
+            # at least one publisher includes an ampersand, so escape text
+            self.assertContains(response, escape(digwork.publisher))
             self.assertContains(response, digwork.pub_place)
             self.assertContains(response, digwork.pub_date)
             # link to detail page
@@ -463,8 +465,8 @@ class TestArchiveViews(TestCase):
 
         # basic date range request
         response = self.client.get(url, {'pub_date_0': 1900, 'pub_date_1': 1922})
-        # in fixture data, only wintry is after 1900
-        assert len(response.context['object_list']) == 1
+        # in fixture data, only wintry and 135000 words are after 1900
+        assert len(response.context['object_list']) == 2
         self.assertContains(response, wintry.source_id)
 
         # invalid date range request / invalid form - not an exception
@@ -634,14 +636,14 @@ class TestArchiveViews(TestCase):
         # stats set properly in context
         assert 'stats' in response.context
         assert response.context['stats'][coll1.name]['count'] == digworks.count()
-        assert response.context['stats'][coll1.name]['dates'] == '1880–1903'
+        assert response.context['stats'][coll1.name]['dates'] == '1880–1904'
         assert response.context['stats'][coll2.name]['count'] == 1
         assert response.context['stats'][coll2.name]['dates'] == '1903'
         # stats displayed on template
         self.assertContains(response, '%d digitized works' % digworks.count())
         self.assertContains(response, '1 digitized work')
         self.assertNotContains(response, '1 digitized works')
-        self.assertContains(response, '1880–1903')
+        self.assertContains(response, '1880–1904')
         self.assertContains(response, '1903')
         # collections with items should link to search
         archive_url = reverse('archive:list')
