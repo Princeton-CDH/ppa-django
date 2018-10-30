@@ -243,8 +243,8 @@ class SearchForm(forms.Form):
             'relevance': 'score desc',
             'pub_date_asc': 'pub_date asc',
             'pub_date_desc': 'pub_date desc',
-            'title_asc': 'title_exact asc',
-            'title_desc': 'title_exact desc',
+            'title_asc': 'sort_title asc',
+            'title_desc': 'sort_title desc',
             'author_asc': 'author_exact asc',
             'author_desc': 'author_exact desc',
         }
