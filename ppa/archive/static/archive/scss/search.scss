@@ -187,7 +187,10 @@
             }
 
             .item {
+                padding: 0;
+                margin: 1rem;
                 text-transform: none;
+                border: none;
                 cursor: pointer;
             }
 
@@ -196,7 +199,7 @@
             }
 
             span.item { // "SORT BY" text
-                padding-left: 0;
+                margin-left: 0;
                 text-transform: uppercase;
                 cursor: initial;
             }
