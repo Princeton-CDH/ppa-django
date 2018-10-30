@@ -36,6 +36,13 @@
         }
     }
 
+    .clear.times.icon {
+        left: auto;
+        right: 0;
+        cursor: pointer;
+        pointer-events: all;
+    }
+
     .show-advanced {
         background: #fff;
         text-align: center;
