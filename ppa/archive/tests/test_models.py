@@ -131,8 +131,11 @@ class TestDigitizedWork(TestCase):
         # TODO: test publication info unavailable?
 
     def test_index_data(self):
-        digwork = DigitizedWork.objects.create(source_id='njp.32101013082597',
-            title='Structure of English Verse', pub_date=1884,
+        digwork = DigitizedWork.objects.create(
+            source_id='njp.32101013082597',
+            title='The Structure of English Verse', pub_date=1884,
+            subtitle='An essay',
+            sort_title='Structure of English Verse',
             author='Charles Witcomb', pub_place='Paris',
             publisher='Mesnil-Dramard',
             source_url='https://hdl.handle.net/2027/njp.32101013082597',
@@ -146,6 +149,8 @@ class TestDigitizedWork(TestCase):
         assert index_data['srcid'] == digwork.source_id
         assert index_data['item_type'] == 'work'
         assert index_data['title'] == digwork.title
+        assert index_data['subtitle'] == digwork.subtitle
+        assert index_data['sort_title'] == digwork.sort_title
         assert index_data['author'] == digwork.author
         assert index_data['pub_place'] == digwork.pub_place
         assert index_data['pub_date'] == digwork.pub_date

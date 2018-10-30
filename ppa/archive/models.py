@@ -264,6 +264,8 @@ class DigitizedWork(models.Model, Indexable):
             'srcid': self.source_id,
             'src_url': self.source_url,
             'title': self.title,
+            'subtitle': self.subtitle,
+            'sort_title': self.sort_title,
             'pub_date': self.pub_date,
             'pub_place': self.pub_place,
             'publisher': self.publisher,
