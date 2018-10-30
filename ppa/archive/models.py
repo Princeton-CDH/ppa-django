@@ -171,7 +171,7 @@ class DigitizedWork(models.Model, Indexable):
             # if preceding_character == ':':
             #     self.subtitle = bibdata.marcxml['245']['b'] or ''
 
-            # NOTE: skipping precebding character check for now
+            # NOTE: skipping preceding character check for now
             self.subtitle = bibdata.marcxml['245']['b'] or ''
 
             # indicator 2 provides the number of characters to be
