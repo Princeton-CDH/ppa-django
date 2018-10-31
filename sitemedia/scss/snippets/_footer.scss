@@ -4,7 +4,7 @@
     padding: 1rem 0;
     margin-bottom: 0;
     width: 100%;
-    flex: 1 0 auto; // needed for chrome to get correct height
+    flex: 1; // needed for chrome to get correct height
     flex-direction: column;
 
     .container {
