@@ -8,6 +8,13 @@
     -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
 
+    @media (hover: none) {
+        &:hover {
+            background: @background;
+            color: @textColor;
+        }
+    }
+
     &.basic {
         border: 0;
         padding: @relative7px @horizontalPadding;

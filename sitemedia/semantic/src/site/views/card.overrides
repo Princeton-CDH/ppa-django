@@ -171,4 +171,16 @@ a.ui.card,
     &.post:hover .header {
         box-shadow: @postLinkHoverBoxShadow;
     }
+
+    @media (hover: none) {
+        &.stack:hover {
+            box-shadow: @stackLinkBoxShadow;
+        }
+        &:aside:hover {
+            border-left: @asideLinkBorder;
+        }
+        &.post:hover .header {
+            box-shadow: @shadowBoxShadow;
+        }
+    }
 }
