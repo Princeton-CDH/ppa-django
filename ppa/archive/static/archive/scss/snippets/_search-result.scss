@@ -36,7 +36,7 @@
         margin-left: 3rem;
     }
 
-    .title a:hover > .header {
+    .title a:hover .header {
         color: $gold;
     }
 
@@ -46,6 +46,12 @@
         font-size: 20px;
         font-family: $headerFont;
         color: $secondaryColor;
+    }
+
+    .title .sub.header {
+        font-weight: normal;
+        font-style: italic;
+        text-transform: none;
     }
 
     .author {

@@ -11,8 +11,9 @@
             </div>
             <div class="title">
                 <a href="{% url 'archive:detail' item.srcid %}">
-                    <p><span class="ui header">{{ item.title }}</span>
-                    {{ item.subtitle}}
+                    <p>
+                        <span class="ui header">{{ item.title }}</span>
+                        <span class="ui sub header">{{ item.subtitle}}</span>
                     </p>
                 </a>
             </div>
