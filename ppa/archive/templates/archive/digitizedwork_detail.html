@@ -73,7 +73,7 @@
                 <th scope="row">PPA Collection{{ object.collections.count|pluralize }}</th>
                 <td>
                     {% for collection in object.collections.all %}
-                    <a class="ui button" href="{% url 'archive:list' %}?collections={{ collection.pk }}">{{ collection }}</a>
+                    <label class="ui basic button" href="{% url 'archive:list' %}?collections={{ collection.pk }}">{{ collection }}</label>
                     {% endfor %}
                 </td>
             </tr>
