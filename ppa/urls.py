@@ -37,6 +37,9 @@ urlpatterns = [
     # unapi service endpoint for Zotero
     url(r'^unapi/$', UnAPIView.as_view(), name='unapi'),
 
+    # for testing 500 errors
+    url(r'^500/$', lambda _: 1/0),
+
     # content pages managed by mezzanine
     url("^", include(mezzanine.urls)),
     
