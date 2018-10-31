@@ -488,7 +488,7 @@ class TestArchiveViews(TestCase):
         # should have the results count
         self.assertContains(response, " digitized works")
         # should have the histogram data
-        self.assertContains(response, "<pre>")
+        self.assertContains(response, "<pre class=\"count\">")
         # should have pagination
         self.assertContains(response, "<div class=\"pagination")
         # test a query
