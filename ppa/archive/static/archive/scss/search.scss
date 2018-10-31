@@ -57,6 +57,16 @@
             &:hover {
                 color: $gold;
             }
+
+            @media (hover: none) {
+                &:hover {
+                    color: $secondaryColor;
+                }
+                &:active {
+                    color: $gold;
+                }
+            }
+
         }
 
         @media (min-width: $tablet) {
