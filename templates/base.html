@@ -5,14 +5,14 @@ by default; use page_rdf_type to override with a webpage subclass.
 {% endcomment %}
 <!DOCTYPE html>
 <html lang="en" xmlns:schema="http://schema.org/" xmlns:og="http://ogp.me/ns#">
-  <head>
+<head>
     <!-- metadata -->
     {# html metadata #}
     <title>
-      {% block page-title %}
-          {% block page-subtitle %}{{ page.meta_title }}{% endblock %}
-          Princeton Prosody Archive
-      {% endblock %}
+        {% block page-title %}
+        {% block page-subtitle %}{{ page.meta_title }}{% endblock %}
+        Princeton Prosody Archive
+        {% endblock %}
     </title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}" />
@@ -39,45 +39,44 @@ by default; use page_rdf_type to override with a webpage subclass.
     <meta name="twitter:image" content="{% static 'preview_image.png' %}" />
     <meta name="twitter:url" content="{{ request.build_absolute_uri }}" />
     {% block metadata %}{% endblock %}
-
+    
     <!-- styles -->
     <link rel="stylesheet" type="text/css" href="{% static 'semantic/dist/semantic.min.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/test-banner.css' %}">
     {% compress css %}
-    <link rel="stylesheet" type="text/x-scss" href="{% static 'scss/site.scss' %}">
-    {% block css %}{% endblock %} {# add any additional scss here #}
+        <link rel="stylesheet" type="text/x-scss" href="{% static 'scss/site.scss' %}">
+        {% block css %}{% endblock %} {# add any additional scss here #}
     {% endcompress %}
-
+    
     <!-- scripts -->
     <script
-      src="https://code.jquery.com/jquery-3.1.1.min.js"
-      integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
-      crossorigin="anonymous"></script>
+    src="https://code.jquery.com/jquery-3.1.1.min.js"
+    integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+    crossorigin="anonymous"></script>
     <script src="{% static 'semantic/dist/semantic.min.js' %}"></script>
     {% compress js %}
-    <script src="{% static 'js/index.js' %}" type="module"></script>
-    {% block js %}{% endblock %} {# add any additional javascript here #}
+        <script src="{% static 'js/index.js' %}" type="module"></script>
+        {% block js %}{% endblock %} {# add any additional javascript here #}
     {% endcompress %}
-
+    
     <!-- extra metadata -->
     {% block head_extras %}{% endblock %}
-  </head>
-  <body>
-		{% include 'snippets/test_banner.html' %}
-		{% block page_nav %}
-				{% page_menu 'snippets/nav.html' %}
+</head>
+<body>
+    {% include 'snippets/test_banner.html' %}
+    {% block page_nav %}
+        {% page_menu 'snippets/nav.html' %}
     {% endblock %}
     <div class="pusher"> {# moves page content when mobile menu is clicked #}
-      {% block page_header %}
-          {% page_menu 'snippets/header.html' %}
-      {% endblock %}
-      <main id="{% block page-context-id %}{% endblock %}">
-        {% block content %}{% endblock %}
-      </main>
-      {% block page_footer %}
-          {% page_menu 'snippets/footer.html' %}
-      {% endblock %}
+        {% block page_header %}
+        {% endblock %}
+        <main id="{% block page-context-id %}{% endblock %}">
+            {% block content %}{% endblock %}
+        </main>
+        {% block page_footer %}
+            {% page_menu 'snippets/footer.html' %}
+        {% endblock %}
     </div>
     {% block page-js %}{% endblock %}
-  </body>
+</body>
 </html>
