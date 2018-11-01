@@ -6,6 +6,8 @@
 @import 'snippets/popups';
 
 #search {
+    margin-top: 0;
+    
     .container {
         @include wide-container();
     }
