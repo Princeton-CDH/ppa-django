@@ -13,9 +13,10 @@ Deploy and Upgrade notes
 
     python manage.py hathi_import -v 0 --progress --update
 
-* This update requires a full reindex; due to changes in page indexing, pages
-  must be cleared from the Solr index::
+* This update requires a Solr schema update and a full reindex; due to changes
+  in page indexing, pages must also be cleared from the Solr index::
 
+     python manage.py solr_schema
      python manage.py index --clear pages
 
 
