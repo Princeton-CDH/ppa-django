@@ -51,12 +51,12 @@
         }
 
         tr {
-            padding: .5em;
+            padding: .5rem 0;
             border: 0;
             box-shadow: none !important;
 
             @media (min-width: $tablet) {
-                padding: 1em;
+                padding: 1rem;
             }
         }
 
