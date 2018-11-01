@@ -7,7 +7,7 @@
 
 #search {
     margin-top: 0;
-    
+
     .container {
         @include wide-container();
     }
@@ -277,5 +277,45 @@
 
     .data {
         display: none;
+    }
+
+    // "jump to top" button
+    .jump-top {
+        position: fixed;
+        right: 2rem;
+        top: 50%;
+        width: 30px;
+        box-shadow: 0 0 6px 0 $gold;
+        z-index: 10;
+        display: none;
+
+        @media (min-width: $computer) {
+            display: block;
+        }
+
+        @media (min-width: $largeMonitor) {
+            left: calc(50% + #{$largeMonitor} / 2 - 4rem);
+            right: 0;
+        }
+
+        .icon {
+            color: $gold;
+
+            &::before {
+                margin-left: -0.5rem;
+            }
+        }
+
+        &:hover .icon,
+        &:active .icon {
+            color: white;
+
+        }
+
+        @media (hover: none) {
+            &:hover .icon {
+                color: $gold;
+            }
+        }
     }
 }
