@@ -112,6 +112,7 @@ INSTALLED_APPS = [
     'ppa.common',
     'ppa.unapi',
     'ppa.pages',
+    'ppa.editorial',
 ]
 
 MIDDLEWARE = [
