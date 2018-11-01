@@ -13,13 +13,16 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
+from django.conf import settings
 from django.conf.urls import url, include
+from django.conf.urls.static import serve
 from django.contrib import admin
 from django.contrib.sitemaps.views import sitemap
 from django.views.generic.base import TemplateView
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.core import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
+
 
 from ppa.unapi.views import UnAPIView
 
@@ -40,7 +43,14 @@ urlpatterns = [
         # name='django.contrib.sitemaps.views.sitemap')
     url(r'^cms/', include(wagtailadmin_urls)),
     url(r'^documents/', include(wagtaildocs_urls)),
+
     url(r'', include(wagtail_urls)),
 ]
 
-
+# serve media content for development
+if settings.DEBUG:
+    urlpatterns += [
+        url(r'^media/(?P<path>.*)$', serve, {
+            'document_root': settings.MEDIA_ROOT,
+        }),
+    ]
