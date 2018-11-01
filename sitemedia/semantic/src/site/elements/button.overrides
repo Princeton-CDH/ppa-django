@@ -32,6 +32,7 @@
             &:active {
                 background: transparent !important;
                 color: @midGrey !important;
+                box-shadow: none !important;
             }
         }
     }
