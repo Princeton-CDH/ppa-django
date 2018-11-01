@@ -1,5 +1,141 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block js %}
+<script src="{% static 'js/home.js' %}" type="module"></script>
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" type="text/x-scss" href="{% static 'scss/home.scss' %}">
+{% endblock %}
+
+{% block page-context-id %}homepage{% endblock %}
+
+{% block page_header %}
+<header class="ui vertical basic center aligned segment" id="header">
+    <div id="scene">
+        <img class="layer one" data-depth="0.20" src="{% static 'img/ppa-logo-separated-shape/layer1.svg' %}">
+        <img class="layer two" data-depth="0.40" src="{% static 'img/ppa-logo-separated-shape/layer2.svg' %}">
+        <img class="layer three" data-depth="0.60" src="{% static 'img/ppa-logo-separated-shape/layer3.svg' %}">
+    </div>
+</header>
+{% endblock %}
 
 {% block content %}
-<h1>Princeton Prosody Archive</h1>
+<div class="ui vertical basic segment text container">
+    <div class="intro">
+        <p>Welcome to the Princeton Prosody Archive, a full-text searchable database of thousands of digitized books published between 1570 and 1923.
+            The Archive collects historical documents and highlights discourses about the study of language,
+            the study of poetry, and where and how these intersect and diverge.</p>
+        <p>The PPA began as a collection of texts about versification. Now it covers the study of poetry, grammar, literary history, and speech.
+            We understand the PPA collections to be necessarily incomplete – a starting point for new scholarship in historical poetics and historical linguistics.
+            As such, we intend the words “prosody” and “archive” in their broadest possible senses.</p>
+        <p>The PPA makes several arguments, poses several questions, and welcomes new scholarship based on the work gathered here.
+            Some of our initial questions include: What if we began to understand poetics in all of its
+            historical, linguistic, and educational valences?</p>
+        <p>What if literary concepts such as meter and rhythm are historically contingent and fundamentally unstable?
+            What might scholars of distant reading the novel learn from a collection of materials pertaining to poetry?</p>
+        <p>Rather than a static repository of historical data, the PPA would like to compel users to rethink the past
+            and future of organizing, navigating, conceptualizing, and historicizing large amounts of data – about a single
+            poem or about evolving and contradictory thinking about the technology of poetic language.</p>
+    </div>
+    <a class="archive-link" href="{% url 'archive:list' %}">
+        <h3 class="ui header">
+            {% include 'snippets/fermata.svg' %}
+            View and search the archive
+        </h3>
+    </a>
+</div>
+<div class="asides-collections ui vertical basic segment container">
+    <div class="asides ui two cards">
+        <a class="aside card" href="/what-is-prosody/">
+            <div class="content">
+                <h3 class="header">What Is Prosody?</h3>
+                <div class="description">Prosody today means both the
+                    study of versification and the study of pronunciation.
+                    In literary studies, prosody is often interchanged
+                    for versification or meter, though in fact each of
+                    these terms have complicated and contested histories.
+                </div>
+            </div>
+        </a>
+        <a class="aside card" href="/history-of-the-archive/">
+            <div class="content">
+                <h3 class="header">History of the Archive</h3>
+                <div class="description">Meredith Martin began assembling
+                    the Archive in 2007 as she was writing <i>The Rise and
+                    Fall of Meter: Poetry and English National Culture,
+                    1860 – 1930</i>. Brogan was the first to assemble
+                    bibliographic records for 1,743 works on
+                    versification and prosody.
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="collections">
+        <h3 class="ui header about-header">About the Collections</h3>
+        <div class="description">The Archive builds on bibliographic data from
+            several sources as well as library catalog data from the HathiTrust
+            Research Center. It is divided into four collections. Users are
+            able to search across collections or within any combination
+            of collections.
+        </div>
+        <div class="ui cards">
+            {% for item in object_list %}
+            <a class="ui card" href="{% url 'archive:list' %}?collections={{ item.name|urlencode }}">
+                <div class="content">
+                    <h3 class="header">{{ item.name }}</h3>
+                    {% with coll_stats=stats|dict_item:item.name %}
+                        <div class="meta">
+                            {% firstof coll_stats.count "0" as count %}
+                            <p>{{ count|intcomma }} digitized work{{ count|pluralize }}
+                                {% if coll_stats.dates %} - {{ coll_stats.dates }}{% endif %}
+                            </p>
+                        </div>
+                    {% endwith %}
+                    {% if item.description %}
+                    <div class="description">
+                        {{ item.description|safe }}
+                    </div>
+                    {% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        <a class="collections-link" href="{% url 'archive:list-collections' %}">
+            <h3 class="ui header">
+                {% include 'snippets/fermata.svg' %}
+                View All Collections
+            </h3>
+        </a>
+    </div>
+</div>
+<div class="ui vertical basic segment container">
+    <div class="updates ui two cards">
+        <a class="ui post card">
+            <div class="content">
+                <div class="header">Updates Post Title</div>
+                <div class="meta">Oct 10 2017</div>
+                <div class="description">
+                    {% lorem 30 w random %}
+                </div>
+            </div>
+        </a>
+        <a class="ui post card">
+            <div class="content">
+                <div class="header">Updates Post Title</div>
+                <div class="meta">Oct 10 2017</div>
+                <div class="description">
+                    {% lorem 30 w random %}
+                </div>
+            </div>
+        </a>
+    </div>
+    <a class="archive-link" href="{% url 'archive:list' %}">
+        <h3 class="ui header">
+            {% include 'snippets/fermata.svg' %}
+            View and search the archive
+        </h3>
+    </a>
+</div>
 {% endblock %}

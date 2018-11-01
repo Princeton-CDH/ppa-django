@@ -1,5 +1,5 @@
 # Config variables local to the script
-version=${SOLR_VERSION:-6.6.2}
+version=${SOLR_VERSION:-6.6.3}
 file="solr-${version}.tgz"
 url="http://mirror.reverse.net/pub/apache/lucene/solr/${version}/${file}"
 

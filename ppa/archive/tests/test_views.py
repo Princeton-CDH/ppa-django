@@ -1,18 +1,24 @@
 import csv
 from io import StringIO
+import operator
 import re
 from time import sleep
 from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
+from django.template.defaultfilters import escape
 from django.test import TestCase
 from django.urls import reverse
+from django.utils.http import urlencode
 from django.utils.timezone import now
 import pytest
+from SolrClient.exceptions import SolrError
 
+from ppa.archive.forms import SearchForm
 from ppa.archive.models import DigitizedWork, Collection
-from ppa.archive.solr import get_solr_connection
-from ppa.archive.views import DigitizedWorkCSV
+from ppa.archive.solr import get_solr_connection, PagedSolrQuery
+from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView
+from ppa.archive.templatetags.ppa_tags import page_image_url, page_url
 
 
 class TestArchiveViews(TestCase):
@@ -23,6 +29,7 @@ class TestArchiveViews(TestCase):
         self.admin_user = get_user_model().objects.create_superuser(
             'admin', 'admin@example.com', self.admin_pass)
 
+    @pytest.mark.usefixtures("solr")
     def test_digitizedwork_detailview(self):
         # get a work and its detail page to test with
         dial = DigitizedWork.objects.get(source_id='chi.78013704')
@@ -31,6 +38,10 @@ class TestArchiveViews(TestCase):
         # get the detail view page and check that the response is 200
         response = self.client.get(url)
         assert response.status_code == 200
+        # no keyword search so no note about that
+        # no page_obj or search results reflected
+        assert 'page_obj' not in response.context
+        self.assertNotContains(response, 'No keyword results.')
 
         # now check that the right template is used
         assert 'archive/digitizedwork_detail.html' in \
@@ -44,13 +55,12 @@ class TestArchiveViews(TestCase):
         # wintry = DigitizedWork.objects.get(source_id='chi.13880510')
         # url = reverse('archive:detail', kwargs={'source_id': wintry.source_id})
 
-
         # - check that the information we expect is displayed
         # TODO: Make these HTML when the page is styled
         # hathitrust ID
         self.assertContains(
-            response, dial.title, count=2,
-            msg_prefix='Missing two instance of object.title'
+            response, dial.title,
+            msg_prefix='Missing title'
         )
         self.assertContains(
             response, dial.source_id,
@@ -60,10 +70,10 @@ class TestArchiveViews(TestCase):
             response, dial.source_url,
             msg_prefix='Missing source_url'
         )
-        self.assertContains(
-            response, dial.enumcron,
-            msg_prefix='Missing volume/chronology (enumcron)'
-        )
+        # self.assertContains(  # disabled for now since it's not in design spec
+        #     response, dial.enumcron,
+        #     msg_prefix='Missing volume/chronology (enumcron)'
+        # )
         self.assertContains(
             response, dial.author,
             msg_prefix='Missing author'
@@ -80,14 +90,164 @@ class TestArchiveViews(TestCase):
             response, dial.pub_date,
             msg_prefix='Missing publication date (pub_date)'
         )
+        # only displaying these if logged in currently
+        #
+        # self.assertContains(
+        #     response, dial.added.strftime("%d %b %Y"),
+        #     msg_prefix='Missing added or in wrong format (d M Y in filter)'
+        # )
+        # self.assertContains(
+        #     response, dial.updated.strftime("%d %b %Y"),
+        #     msg_prefix='Missing updated or in wrong format (d M Y in filter)'
+        # )
+
+        # notes not present since none set
+        self.assertNotContains(
+            response, 'Note on edition',
+            msg_prefix='Notes field should not be visible without notes'
+        )
+
+        # set a note and re-query to see if it now appears
+        dial.public_notes = 'Nota bene'
+        dial.notes = 'Secret note'
+        dial.save()
+        response = self.client.get(url)
         self.assertContains(
-            response, dial.added.strftime("%d %b %Y"),
-            msg_prefix='Missing added or in wrong format (d M Y in filter)'
+            response, 'Note on edition',
+            msg_prefix='Notes field should be visible if notes is set'
         )
         self.assertContains(
-            response, dial.updated.strftime("%d %b %Y"),
-            msg_prefix='Missing updated or in wrong format (d M Y in filter)'
+            response, dial.public_notes,
+            msg_prefix='The actual value of the notes field should be displayed'
         )
+        self.assertNotContains(
+            response, dial.notes,
+            msg_prefix='The private notes field should not be displayed'
+        )
+
+        # a logged in user should see the private notes
+        self.client.force_login(get_user_model().objects.create(username='foo'))
+        response = self.client.get(url)
+        self.assertContains(
+            response, dial.notes,
+            msg_prefix='The private notes field should be displayed'
+        )
+
+        # unapi server link present
+        self.assertContains(
+            response, '''<link rel="unapi-server" type="application/xml"
+            title="unAPI" href="%s" />''' % reverse('unapi'),
+            msg_prefix='unapi server link should be set', html=True)
+        # unapi id present
+        self.assertContains(
+            response,
+            '<abbr class="unapi-id" title="%s"></abbr>' % dial.source_id,
+            msg_prefix='unapi id should be embedded for each work')
+
+    @pytest.mark.usefixtures("solr")
+    def test_digitizedwork_detailview_query(self):
+        '''test digitized work detail page with search query'''
+
+        # get a work and its detail page to test with
+        dial = DigitizedWork.objects.get(source_id='chi.78013704')
+        url = reverse('archive:detail', kwargs={'source_id': dial.source_id})
+
+        # make some sample page content
+        # sample page content associated with one of the fixture works
+        sample_page_content = [
+            'something about dials and clocks',
+            'knobs and buttons',
+        ]
+        htid = 'chi.78013704'
+        solr_page_docs = [
+            {'content': content, 'order': i+1, 'item_type': 'page',
+             'srcid': htid, 'id': '%s.%s' % (htid, i), 'label': i}
+             for i, content in enumerate(sample_page_content)]
+        dial = DigitizedWork.objects.get(source_id='chi.78013704')
+        solr_work_docs = [dial.index_data()]
+        solr, solr_collection = get_solr_connection()
+        index_data = solr_work_docs + solr_page_docs
+        solr.index(solr_collection, index_data, params={"commitWithin": 100})
+        sleep(2)
+
+        # search should include query in the context and a PageSolrQuery
+
+
+        # search with no matches - test empty search result
+        response = self.client.get(url, {'query': 'thermodynamics'})
+        assert response.status_code == 200
+        # test that the search form is rendered
+        assert 'search_form' in response.context
+        assert 'query' in response.context['search_form'].fields
+        # query string passsed into context for form
+        assert 'query' in response.context
+        assert response.context['query'] == 'thermodynamics'
+        # solr highlight results in query
+        assert 'page_highlights' in response.context
+        # should be an empty dict
+        assert response.context['page_highlights'] == {}
+        # assert solr result in query
+        assert 'solr_results' in response.context
+        # should be an empty list
+        assert response.context['solr_results'] == []
+
+        # test with a word that will produce some snippets
+        response = self.client.get(url, {'query': 'knobs'})
+        assert response.status_code == 200
+        # paginator should be in context
+        assert 'page_obj' in response.context
+        # it should be one (because we have one result)
+        assert response.context['page_obj'].number == 1
+        # it should have an object list equal in length to the page solr query
+        assert len(response.context['page_obj'].object_list) == \
+            len(response.context['solr_results'])
+        # get the solr results (should be one)
+        result = response.context['solr_results'][0]
+        # grab the highlight object that's rendered with our one match
+        highlights = response.context['page_highlights'][result['id']]
+        # template has the expected information rendered
+        self.assertContains(response, highlights['content'][0])
+        # page number that correspondeds to label field should be present
+        self.assertContains(
+            response,
+            'p. %s' % result['label'],
+            count=1,
+            msg_prefix='has page label for the print page numb.'
+        )
+        # image url should appear twice for src and srcset
+        self.assertContains(
+            response,
+            page_image_url(result['srcid'], result['order'], 225),
+            count=1,
+            msg_prefix='has img src url'
+        )
+        self.assertContains(
+            response,
+            page_image_url(result['srcid'], result['order'], 450),
+            count=1,
+            msg_prefix='has imgset src url'
+        )
+        self.assertContains(response, '1 occurrence')
+        # image should have a link to hathitrust as should the page number
+        self.assertContains(
+            response,
+            page_url(result['srcid'], result['order']),
+            count=2,
+            msg_prefix='should include a link to HathiTrust'
+        )
+
+
+        # bad syntax
+        response = self.client.get(url, {'query': '"incomplete phrase'})
+        self.assertContains(response, 'Unable to parse search query')
+
+        # test raising a generic solr error
+        with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
+            mockpsq.return_value.get_results.side_effect = SolrError
+            # count needed for paginator
+            mockpsq.return_value.count = 0
+            response = self.client.get(url, {'query': 'knobs'})
+            self.assertContains(response, 'Something went wrong.')
 
     @pytest.mark.usefixtures("solr")
     def test_digitizedwork_listview(self):
@@ -107,50 +267,123 @@ class TestArchiveViews(TestCase):
         # add a collection to use in testing the view
         collection = Collection.objects.create(name='Test Collection')
         digitized_works = DigitizedWork.objects.all()
-        self.wintry = digitized_works.filter(title__icontains='Wintry')[0]
-        self.wintry.collections.add(collection)
+        wintry = digitized_works.filter(title__icontains='Wintry')[0]
+        wintry.collections.add(collection)
         solr_work_docs = [digwork.index_data() for digwork in digitized_works]
         solr, solr_collection = get_solr_connection()
         index_data = solr_work_docs + solr_page_docs
         solr.index(solr_collection, index_data, params={"commitWithin": 100})
         sleep(2)
 
+        # also get dial for use with author and title searching
+        dial = digitized_works.filter(title__icontains='Dial')[0]
+
         # no query - should find all
         response = self.client.get(url)
         assert response.status_code == 200
         self.assertContains(response, '%d digitized works' % len(digitized_works))
-        self.assertContains(response, 'results sorted by title')
-        assert response.context['sort'] == 'title'
+        self.assertContains(response, '<p class="result-number">1</p>',
+            msg_prefix='results have numbers')
+        self.assertContains(response, '<p class="result-number">2</p>',
+            msg_prefix='results have multiple numbers')
+
+        # unapi server link present
+        self.assertContains(
+            response, '''<link rel="unapi-server" type="application/xml"
+            title="unAPI" href="%s" />''' % reverse('unapi'),
+            msg_prefix='unapi server link should be set', html=True)
+
+        # search form should be set in context for display
+        assert isinstance(response.context['search_form'], SearchForm)
+        # page group details from expanded part of collapsed query
+        assert 'page_groups' in response.context
+        # facet range information from publication date range facet
+        assert 'facet_ranges' in response.context
 
         for digwork in digitized_works:
             # basic metadata for each work
             self.assertContains(response, digwork.title)
+            self.assertContains(response, digwork.subtitle)
             self.assertContains(response, digwork.source_id)
             self.assertContains(response, digwork.author)
-            self.assertContains(response, digwork.enumcron)
-            self.assertContains(response, digwork.publisher)
+            # NOTE: enumcron suppressed for now (possibly for good)
+            # self.assertContains(response, digwork.enumcron)
+            # at least one publisher includes an ampersand, so escape text
+            self.assertContains(response, escape(digwork.publisher))
             self.assertContains(response, digwork.pub_place)
+            self.assertContains(response, digwork.pub_date)
             # link to detail page
             self.assertContains(response, digwork.get_absolute_url())
+            # unapi identifier for each work
+            self.assertContains(
+                response,
+                '<abbr class="unapi-id" title="%s"></abbr>' % digwork.source_id,
+                msg_prefix='unapi id should be embedded for each work')
+
+        # no page images or highlights displayed without search term
+        self.assertNotContains(
+            response, 'babel.hathitrust.org/cgi/imgsrv/image',
+            msg_prefix='no page images displayed without keyword search')
 
         # search term in title
         response = self.client.get(url, {'query': 'wintry'})
         # relevance sort for keyword search
-        assert response.context['sort'] == 'relevance'
-        wintry = self.wintry
-        self.assertContains(response, '1 digitized work;')
-        self.assertContains(response, 'results sorted by relevance')
+        assert len(response.context['object_list']) == 1
+        self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
+        # page image & text highlight displayed for matching page
+        self.assertContains(
+            response,
+            'babel.hathitrust.org/cgi/imgsrv/image?id=%s;seq=0' % htid,
+            msg_prefix='page image displayed for matching pages on keyword search')
+        self.assertContains(
+            response, 'winter and <em>wintry</em> and',
+            msg_prefix='highlight snippet from page content displayed')
+
+        # page image and text highlight should still display with year filter
+        response = self.client.get(url, {'query': 'wintry', 'pub_date_0': 1800})
+        assert response.context['page_highlights']
+
+        self.assertContains(
+            response, 'winter and <em>wintry</em> and',
+            msg_prefix='highlight snippet from page content displayed')
+        self.assertContains(
+            response,
+            'babel.hathitrust.org/cgi/imgsrv/image?id=%s;seq=0' % htid,
+            msg_prefix='page image displayed for matching pages on keyword search')
+        self.assertContains(
+            response, 'winter and <em>wintry</em> and',
+            msg_prefix='highlight snippet from page content displayed')
 
         # match in page content but not in book metadata should pull back title
         response = self.client.get(url, {'query': 'blood'})
-        self.assertContains(response, '1 digitized work;')
+        self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
         self.assertContains(response, wintry.title)
 
         # search text in author name
         response = self.client.get(url, {'query': 'Robert Bridges'})
         self.assertContains(response, wintry.source_id)
+
+        # search author as author field only
+        response = self.client.get(url, {'author': 'Robert Bridges'})
+        self.assertContains(response, wintry.source_id)
+        self.assertNotContains(response, dial.source_id)
+
+        # no text query, so solr query should not have page join present
+        with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
+            # needed for the pagniator
+            mockpsq.return_value.count = 0
+            response = self.client.get(url, {'author': 'Robert'})
+            # the call args are very long and not all relevant, cast as
+            # string and look for the offending join
+            assert 'OR {!join from=id to=srcid v=$work_query})' \
+                not in str(mockpsq.call_args)
+
+        # search title using the title field
+        response = self.client.get(url, {'title': 'The Dial'})
+        self.assertContains(response, dial.source_id)
+        self.assertNotContains(response, wintry.source_id)
 
         # search text in publisher name
         response = self.client.get(url, {'query': 'McClurg'})
@@ -163,24 +396,106 @@ class TestArchiveViews(TestCase):
 
         # exact phrase
         response = self.client.get(url, {'query': '"wintry delights"'})
-        self.assertContains(response, '1 digitized work;')
+        self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
 
         # boolean
         response = self.client.get(url, {'query': 'blood AND bone AND alternate'})
-        self.assertContains(response, '1 digitized work;')
+        self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
         response = self.client.get(url, {'query': 'blood NOT bone'})
-        self.assertContains(response, 'No matching items')
+        self.assertContains(response, 'No matching works.')
 
         # bad syntax
         response = self.client.get(url, {'query': '"incomplete phrase'})
         self.assertContains(response, 'Unable to parse search query')
 
+        # add a sort term - pub date
+        response = self.client.get(url, {'query': '', 'sort': 'pub_date_asc'})
+        # explicitly sort by pub_date manually
+        sorted_object_list = sorted(response.context['object_list'],
+                                    key=operator.itemgetter('pub_date'))
+        # the two context lists should match exactly
+        assert sorted_object_list == response.context['object_list']
+         # test sort date in reverse
+        response = self.client.get(url, {'query': '', 'sort': 'pub_date_desc'})
+        # explicitly sort by pub_date manually in descending order
+        sorted_object_list = sorted(response.context['object_list'],
+                                    key=operator.itemgetter('pub_date'),
+                                    reverse=True)
+        # the two context lists should match exactly
+        assert sorted_object_list == response.context['object_list']
+        # one last test using title
+        response = self.client.get(url, {'query': '', 'sort': 'title_asc'})
+        sorted_work_ids = DigitizedWork.objects.order_by('sort_title') \
+                                       .values_list('source_id', flat=True)
+        # the list of ids should match exactly
+        assert list(sorted_work_ids) == \
+            [work['srcid'] for work in response.context['object_list']]
+
+        # - check that a query allows relevance as sort order toggle in form
+        response = self.client.get(url, {'query': 'foo', 'sort': 'title_asc'})
+        enabled_input = \
+            '<input type="radio" name="sort" value="relevance" id="id_sort_0" />'
+        self.assertContains(response, enabled_input, html=True)
+        response = self.client.get(url, {'title': 'foo', 'sort': 'title_asc'})
+        self.assertContains(response, enabled_input, html=True)
+        response = self.client.get(url, {'author': 'foo', 'sort': 'title_asc'})
+        self.assertContains(response, enabled_input, html=True)
+        # check that a search that does not have a query disables
+        # relevance as a sort order option
+        response = self.client.get(url, {'sort': 'title_asc'})
+        self.assertContains(
+            response,
+            '<input type="radio" name="sort" value="relevance" id="id_sort_0" disabled="disabled" />',
+            html=True
+        )
+        # default sort should be title if no keyword search and no sort specified
+        response = self.client.get(url)
+        assert response.context['search_form'].cleaned_data['sort'] == 'title_asc'
+        # if relevance sort is requested but no keyword, switch to default sort
+        response = self.client.get(url, {'sort': 'relevance'})
+        assert response.context['search_form'].cleaned_data['sort'] == 'title_asc'
+
         # collection search
-        response = self.client.get(url, {'query': 'collections_exact:"Test Collection"'})
-        res = response.render()
-        self.assertContains(response, '1 digitized work;')
+        # restrict to test collection by id
+        response = self.client.get(url, {'collections': collection.pk})
+        assert len(response.context['object_list']) == 1
+        self.assertContains(response, wintry.source_id)
+
+        # basic date range request
+        response = self.client.get(url, {'pub_date_0': 1900, 'pub_date_1': 1922})
+        # in fixture data, only wintry and 135000 words are after 1900
+        assert len(response.context['object_list']) == 2
+        self.assertContains(response, wintry.source_id)
+
+        # invalid date range request / invalid form - not an exception
+        response = self.client.get(url, {'pub_date_0': 1900, 'pub_date_1': 1800})
+        assert not response.context['object_list'].count()
+        self.assertContains(response, 'Invalid range')
+
+        # ajax request for search results
+        response = self.client.get(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        assert response.status_code == 200
+        # should render the results list partial and single result partial
+        self.assertTemplateUsed('archive/snippets/results_list.html')
+        self.assertTemplateUsed('archive/snippest/search_result.html')
+        # shouldn't render the search form or whole list
+        self.assertTemplateNotUsed('archive/snippets/search_form.html')
+        self.assertTemplateNotUsed('archive/list_digitizedworks.html')
+        # should have all the results
+        assert len(response.context['object_list']) == len(digitized_works)
+        # should have the results count
+        self.assertContains(response, " digitized works")
+        # should have the histogram data
+        self.assertContains(response, "<pre class=\"count\">")
+        # should have pagination
+        self.assertContains(response, "<div class=\"pagination")
+        # test a query
+        response = self.client.get(
+            url, {'query': 'blood AND bone AND alternate'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
 
         # nothing indexed - should not error
@@ -188,9 +503,22 @@ class TestArchiveViews(TestCase):
         sleep(2)
         response = self.client.get(url)
         assert response.status_code == 200
-        self.assertContains(response, 'No matching items')
+
+        # simulate solr exception (other than query syntax)
+        with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
+            mockpsq.return_value.get_expanded.side_effect = SolrError
+            # count needed for paginator
+            mockpsq.return_value.count = 0
+            response = self.client.get(url, {'query': 'something'})
+            self.assertContains(response, 'Something went wrong.')
 
     def test_digitizedwork_csv(self):
+        # add an arbitrary note to one digital work so that the field is
+        # populated in at least one case
+        first_dw = DigitizedWork.objects.first()
+        first_dw.notes = 'private notes'
+        first_dw.public_notes = 'public notes'
+        first_dw.save()
         # get the csv export and inspect the response
         response = self.client.get(reverse('archive:csv'))
         assert response.status_code == 200
@@ -213,15 +541,18 @@ class TestArchiveViews(TestCase):
         # check expected data in CSV output
         for digwork, digwork_data in zip(digworks, rows[1:]):
             assert digwork.source_id in digwork_data
+            assert digwork.record_id in digwork_data
             assert digwork.title in digwork_data
             assert digwork.author in digwork_data
-            assert digwork.pub_date in digwork_data
+            assert str(digwork.pub_date) in digwork_data
             assert digwork.pub_place in digwork_data
             assert digwork.publisher in digwork_data
             assert digwork.publisher in digwork_data
             assert digwork.enumcron in digwork_data
             assert ';'.join([coll.name for coll in digwork.collections.all()]) \
                 in digwork_data
+            assert digwork.notes in digwork_data
+            assert digwork.public_notes in digwork_data
             assert '%d' % digwork.page_count in digwork_data
             assert '%s' % digwork.added in digwork_data
             assert '%s' % digwork.updated in digwork_data
@@ -242,28 +573,29 @@ class TestArchiveViews(TestCase):
         self.assertNotContains(response, reverse('archive:csv'),
             msg_prefix='CSV download link should only be on digitized work list')
 
-
-class TestCollectionListView(TestCase):
-
-    def setUp(self):
-        '''Create some collections'''
-        self.coll1 = Collection.objects.create(name='Random Grabbag')
-        self.coll2 = Collection.objects.create(
+    @pytest.mark.usefixtures("solr")
+    def test_collection_list(self):
+        # Create test collections to display
+        coll1 = Collection.objects.create(name='Random Grabbag')
+        coll2 = Collection.objects.create(
             name='Foo through Time',
             description="A <em>very</em> useful collection."
         )
+        empty_coll = Collection.objects.create(name='Empty Box')
+        # collections that should be skipped
+        dictionary = Collection.objects.create(name='Dictionary')
+        pronunc = Collection.objects.create(name='Pronunciation Guide')
 
-    def test_context(self):
-        '''Check that the context is as expected'''
+        # Check that the context is set as expected
         collection_list = reverse('archive:list-collections')
         response = self.client.get(collection_list)
-
         # it should have both collections that exist in it
-        assert self.coll1 in response.context['object_list']
-        assert self.coll2 in response.context['object_list']
+        assert coll1 in response.context['object_list']
+        assert coll2 in response.context['object_list']
+        assert dictionary not in response.context['object_list']
+        assert pronunc not in response.context['object_list']
 
-    def test_template(self):
-        '''Check that the template is rendering as expected'''
+        # Check that the template is rendering as expected
         collection_list = reverse('archive:list-collections')
         response = self.client.get(collection_list)
         # - basic checks right templates
@@ -271,8 +603,8 @@ class TestCollectionListView(TestCase):
         self.assertTemplateUsed(response, 'archive/list_collections.html')
         # - detailed checks of template
         self.assertContains(
-        response, 'Random Grabbag',
-        msg_prefix='should list a collection called Random Grabbag'
+            response, 'Random Grabbag',
+            msg_prefix='should list a collection called Random Grabbag'
         )
         self.assertContains(
             response, 'Foo through Time',
@@ -282,6 +614,42 @@ class TestCollectionListView(TestCase):
             response, '<em>very</em>', html=True,
             msg_prefix='should render the description with HTML intact.'
         )
+
+        ## test collection stats from Solr
+
+        # add items to collections
+        # - put everything in collection 1
+        digworks = DigitizedWork.objects.all()
+        for digwork in digworks:
+            digwork.collections.add(coll1)
+        # just one item in collection 2
+        wintry = digworks.get(title__icontains='Wintry')
+        wintry.collections.add(coll2)
+
+        # reindex the digitized works so we can check stats
+        solr, solr_collection = get_solr_connection()
+        solr.index(solr_collection, [dw.index_data() for dw in digworks],
+                   params={"commitWithin": 100})
+        sleep(2)
+
+        response = self.client.get(collection_list)
+        # stats set properly in context
+        assert 'stats' in response.context
+        assert response.context['stats'][coll1.name]['count'] == digworks.count()
+        assert response.context['stats'][coll1.name]['dates'] == '1880–1904'
+        assert response.context['stats'][coll2.name]['count'] == 1
+        assert response.context['stats'][coll2.name]['dates'] == '1903'
+        # stats displayed on template
+        self.assertContains(response, '%d digitized works' % digworks.count())
+        self.assertContains(response, '1 digitized work')
+        self.assertNotContains(response, '1 digitized works')
+        self.assertContains(response, '1880–1904')
+        self.assertContains(response, '1903')
+        # collections with items should link to search
+        archive_url = reverse('archive:list')
+        self.assertContains(response, 'href="%s?collections=%s"' % (archive_url, coll1.pk))
+        self.assertContains(response, 'href="%s?collections=%s"' % (archive_url, coll2.pk))
+        self.assertNotContains(response, 'href="%s?collections=%s"' % (archive_url, empty_coll.pk))
 
 
 class TestAddToCollection(TestCase):
@@ -332,7 +700,7 @@ class TestAddToCollection(TestCase):
         session.save()
         response = self.client.get(bulk_add)
         # check that the session var has been set to an empy list
-        session['collection-add-ids'] == []
+        assert self.client.session.get('collection-add-ids') == []
         self.assertContains(
             response,
             'Please select digitized works from the admin interface.'
@@ -375,12 +743,15 @@ class TestAddToCollection(TestCase):
         session.save()
 
         # post to the add to collection url
-        self.client.post(
-            bulk_add,
-            {'collections': coll1.pk}
-        )
+        res = self.client.post(bulk_add, {'collections': coll1.pk})
+        # redirects to the admin archive change list by default without filters
+        # since none are set
+        assert res.status_code == 302
+        assert res.url == \
+            reverse('admin:archive_digitizedwork_changelist')
         # digitized works with pks 1,2 are added to the collection
-        digworks = DigitizedWork.objects.filter(collections__pk=coll1.pk)
+        digworks = DigitizedWork.objects\
+            .filter(collections__pk=coll1.pk).order_by('id')
         assert digworks.count() == 2
         assert list(digworks.values_list('id', flat=True)) == \
             session['collection-add-ids']
@@ -392,14 +763,36 @@ class TestAddToCollection(TestCase):
         mocksolr.index.assert_called_with(
             mockcollection, solr_docs, params={'commitWithin': 2000}
         )
+
+        # - bulk add should actually add and not reset collections, i.e.
+        # those individually added or added in a previous bulk add shouldn't
+        # be erased from the collection's digitizedwork_set
+        # only set pk 1 in the ids to add
+        session['collection-add-ids'] = [digworks[0].pk]
+        # also check that filters are preserved
+        session['collection-add-filters'] = {'q': 1, 'foo': 'bar'}
+        session.save()
+
+        # bulk adding first pk but not the second
+        res = self.client.post(bulk_add, {'collections': coll1.pk})
+        # redirect as expected and retain querystring
+        assert res.status_code == 302
+        assert res.url == '%s?%s' % \
+            (reverse('admin:archive_digitizedwork_changelist'),
+             urlencode(session['collection-add-filters'].items()))
+        digworks2 = DigitizedWork.objects\
+            .filter(collections__pk=coll1.pk).order_by('id')
+        # this will fail if the bulk add removed the previously set two works
+        assert digworks2.count() == 2
+        # they should also be the same objects as before, i.e. this post request
+        # should result in a noop
+        assert digworks == digworks
+
+        # - test a dud post (i.e. without a Collection)
+        # should redirect with an error
         session['collection-add-ids'] = pks
         session.save()
-        # test a dud post (i.e. without a Collection)
-        # should redirect with an error
-        response = self.client.post(
-            bulk_add,
-            {'collections': None}
-        )
+        response = self.client.post(bulk_add, {'collections': None})
         assert response.status_code == 200
         # check that the error message rendered for a missing Collection
         self.assertContains(
@@ -410,13 +803,106 @@ class TestAddToCollection(TestCase):
         )
         session['collection-add-ids'] = None
         session.save()
-        response = self.client.post(
-            bulk_add,
-            {'collections': coll1.pk}
-        )
+        response = self.client.post(bulk_add, {'collections': coll1.pk})
         # Default message for an unset collection pk list
         self.assertContains(
             response,
             '<p> Please select digitized works from the admin interface. </p>',
             html=True
         )
+
+
+class TestDigitizedWorkListView(TestCase):
+
+    def test_get_page_highlights(self):
+
+        digworkview = DigitizedWorkListView()
+
+        # no keyword or page groups, no highlights
+        assert digworkview.get_page_highlights({}) == {}
+
+        # search term but no page groups
+        digworkview.query = 'iambic'
+        assert digworkview.get_page_highlights({}) == {}
+
+        # mock PagedSolrQuery to inspect that query is generated properly
+        with patch('ppa.archive.views.PagedSolrQuery',
+                   spec=PagedSolrQuery) as mockpsq:
+            page_groups = {
+                'group1': {
+                    'docs': [
+                        {'id': 'p1a'},
+                        {'id': 'p1b'},
+                    ]},
+                'group2': {
+                    'docs': [
+                        {'id': 'p2a'},
+                        {'id': 'p2b'},
+                    ]},
+            }
+
+            highlights = digworkview.get_page_highlights(page_groups)
+            # inspect the solr call; first arg is a dictionary, no kwargs
+            solr_args = mockpsq.call_args[0]
+            solr_opts = solr_args[0]
+            # highlighting turned on
+            assert solr_opts['hl']
+            # not testing this as strictly while we play around with it
+            # assert solr_opts['hl.snippets'] == 1
+            assert solr_opts['hl.fl'] == 'content'
+            assert solr_opts['hl.method'] == 'unified'
+            # rows should match # of page ids
+            assert solr_opts['rows'] == 4
+            # query includes keyword search term
+            assert 'text:(%s) AND ' % digworkview.query in solr_opts['q']
+            # query also inlcudes page ids
+            assert ' AND id:("p1a" "p1b" "p2a" "p2b")' in solr_opts['q']
+
+            assert highlights == mockpsq.return_value.get_highlighting()
+
+
+class TestIndexView(TestCase):
+
+    @pytest.mark.usefixtures("solr")
+    def test_get_queryset(self):
+
+        # Create test collections to display
+        coll1 = Collection.objects.create(name='Random Grabbag')
+        coll2 = Collection.objects.create(
+            name='Foo through Time',
+            description="A <em>very</em> useful collection."
+        )
+
+        # Check that the context is set as expected
+        index = reverse('home')
+        response = self.client.get(index)
+        # it should have both collections that exist in it
+        assert coll1 in response.context['object_list']
+        assert coll2 in response.context['object_list']
+
+        # Check that the template is rendering as expected
+        # - basic checks right templates
+        self.assertTemplateUsed(response, 'base.html')
+        self.assertTemplateUsed(response, 'site_index.html')
+        # - detailed checks of template
+        self.assertContains(
+            response, 'Random Grabbag',
+            msg_prefix='should list a collection called Random Grabbag'
+        )
+        self.assertContains(
+            response, 'Foo through Time',
+            msg_prefix='should list a collection called Foo through Time'
+        )
+        self.assertContains(
+            response, '<em>very</em>', html=True,
+            msg_prefix='should render the description with HTML intact.'
+        )
+
+        # Add another collection
+        coll3 = Collection.objects.create(
+            name='Bar through Time',
+            description='A somewhat less useful collection.'
+        )
+        response = self.client.get(index)
+        # only two collections should be returned in the response
+        assert len(response.context['object_list']) == 2

@@ -1,0 +1,103 @@
+/*******************************
+     User Global Variables
+*******************************/
+
+/*-------------------
+       Fonts
+--------------------*/
+
+@fontName              : 'Open Sans';
+@headerFontName        : 'Gentium Book Basic';
+
+@pageFont              : @fontName, Helvetica, sans-serif;
+@headerFont            : @headerFontName, Palatino, serif;
+
+@googleFontSizes       : '600,600i,700,700i';
+@googleFontSizesHeader : '400,400i,700,700i';
+@googleFont            : %('%s:@{googleFontSizes}', escape(@fontName));
+@googleFontHeader      : %('%s:@{googleFontSizesHeader}', escape(@headerFontName));
+@googleFontRequest     : '@{googleFont}|@{googleFontHeader}';
+
+/*-------------------
+      Base Sizes
+--------------------*/
+
+@emSize    : 14px;
+@fontSize  : 14px;
+
+/*-------------------
+    Border Radius
+--------------------*/
+
+@absoluteBorderRadius  : 0px;
+@relativeBorderRadius  : @absoluteBorderRadius;
+@defaultBorderRadius   : @absoluteBorderRadius;
+
+/*-------------------
+        Grid
+--------------------*/
+
+@columnCount: 12;
+
+/*-------------------
+     Breakpoints
+--------------------*/
+
+@mobileBreakpoint            : 320px;
+@tabletBreakpoint            : 735px;
+@computerBreakpoint          : 1068px;
+@largeMonitorBreakpoint      : 1440px;
+@widescreenMonitorBreakpoint : 1920px;
+
+/*-------------------
+    Brand Colors
+--------------------*/
+
+@primaryColor          : @gold;
+@secondaryColor        : @dusk;
+@backgroundColor       : @offWhite;
+
+@lightPrimaryColor     : @lightGold;
+@lightSecondaryColor   : @lightGreen;
+
+/*-------------------
+      Site Colors
+--------------------*/
+
+@green        : #254E2E;
+@gold         : #A98F5F;
+@lightGreen   : #07AE79;
+@lightGold    : #CDAD7E;
+@offWhite     : #F1F0EB;
+@lightGrey    : #D8D8D8;
+@midGrey      : #737373;
+@darkGrey     : #4A4A4A;
+@melon        : #FF675D;
+@dusk         : #444867;
+
+/*-------------------
+       Links
+--------------------*/
+
+@linkColor           : @textColor;
+@linkUnderline       : none;
+
+/*-------------------
+        Page
+--------------------*/
+
+@pageBackground  : @backgroundColor;
+@textColor       : @darkGrey;
+
+/*--------------
+   Form Input
+---------------*/
+
+@inputPlaceholderColor: @midGrey;
+
+/*-------------------
+    Focused Input
+--------------------*/
+
+@focusedFormBorderColor: @lightSecondaryColor;
+@focusedFormMutedBorderColor: @lightSecondaryColor;

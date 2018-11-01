@@ -1,18 +1,19 @@
 import csv
-import json
 import logging
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.shortcuts import redirect
+from django.utils.http import urlencode
 from django.utils.timezone import now
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 from django.views.generic import ListView, DetailView
-from django.views.generic.edit import FormMixin, ProcessFormView
+from django.views.generic.edit import FormView
 from SolrClient.exceptions import SolrError
 
-from ppa.archive.forms import SearchForm, AddToCollectionForm
+from ppa.archive.forms import SearchForm, AddToCollectionForm, SearchWithinWorkForm
 from ppa.archive.models import DigitizedWork, Collection
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 
@@ -25,103 +26,264 @@ class DigitizedWorkListView(ListView):
     of works and pages.'''
 
     template_name = 'archive/list_digitizedworks.html'
-    # NOTE: listview would be nice, but would have to figure out how to
-    # make solrclient compatible with django pagination
-
+    form_class = SearchForm
     paginate_by = 50
 
+    # keyword query; assume no search terms unless set
+    query = None
+
+    def get_template_names(self):
+        # when queried via ajax, return partial html for just the results section
+        # (don't render the form or base template)
+        if self.request.is_ajax():
+            return 'archive/snippets/results_list.html'
+        return self.template_name
+
     def get_queryset(self, **kwargs):
-        self.form = SearchForm(self.request.GET)
-        query = join_q = collections = None
+        form_opts = self.request.GET.copy()
+        # if relevance sort is requested but there is no keyword search
+        # term present, clear it out and fallback to default sort
+        if not self.form_class().has_keyword_query(form_opts):
+            if 'sort' in form_opts and form_opts['sort'] == 'relevance':
+                del form_opts['sort']
+
+        for key, val in self.form_class.defaults.items():
+            # set as list to avoid nested lists
+            # follows solution using in derrida-django for InstanceListView
+            if isinstance(val, list):
+                form_opts.setlistdefault(key, val)
+            else:
+                form_opts.setdefault(key, val)
+
+        # NOTE: Default sort for keyword search should be relevance but
+        # currently no way to distinguish default sort from user selected
+        self.form = self.form_class(form_opts)
+
+        # if the form is not valid, return an empty queryset and bail out
+        # (queryset needed for django paginator)
+        if not self.form.is_valid():
+            return DigitizedWork.objects.none()
+
+        work_query = sort = text_query = None
+        # components of query to filter digitized works
         if self.form.is_valid():
-            query = self.form.cleaned_data.get("query", "")
-            # NOTE: This allows us to get the name of collections for
-            # collections_exact and set collections to a list of collection names
-            collections = self.form.cleaned_data.get("collections", None)
+            search_opts = self.form.cleaned_data
+            self.query = search_opts.get("query", None)
+            sort = search_opts.get("sort", None)
+            collections = search_opts.get("collections", None)
 
-        # solr supports multiple filter queries, and documents must
-        # match all of them; collect them as a list to allow multiple
-        filter_q = []
+            if self.query:
+                # simple keyword search across all text content
+                text_query = "text:(%s)" % self.query
+                # work_q.append(text_query)
 
-        coll_query = ''
-        # use filter query to restrict by collection if specified
-        if collections:
-            # OR to allow multiple; quotes to handle multiword collection names
-            coll_query = 'collections_exact:(%s)' % \
-                (' OR '.join(['"%s"' % coll for coll in collections]))
-            # work in collection or page associated with work in collection
-            filter_q.append('(%(coll)s OR {!join from=id to=srcid v=$coll_query})' \
-                % {'coll': coll_query})
+            work_q = []
+            # restrict by collection if specified
+            if collections:
+                work_q.append('collections_exact:(%s)' % \
+                    (' OR '.join(['"%s"' % coll for coll in collections])))
 
-        if query:
-            # simple keyword search across all text content
-            solr_q = join_q = "text:(%s)" % query
+            # filter books by title or author if there is a query
+            for field in ['title', 'author']:
+                if search_opts.get(field, None):
+                    # filter by title/author keyword or phrase
+                    work_q.append('%s:(%s)' % \
+                                  (field, search_opts[field]))
 
-            # use join to ensure we always get the work if any pages match
-            # using query syntax as documented at
-            # http://comments.gmane.org/gmane.comp.jakarta.lucene.solr.user/95646
-            # to support exact phrase searches
-            solr_q = 'text:(%s) OR {!join from=srcid to=id v=$join_query}' % query
-            # sort by relevance, return score for display
-            self.sort = 'relevance'
-            solr_sort = 'score desc'
-            fields = '*,score'
+
+        # use join to ensure we always get the work if any pages match
+        # using query syntax as documented at
+        # http://comments.gmane.org/gmane.comp.jakarta.lucene.solr.user/95646
+        # to support exact phrase searches
+        # solr_q = 'text:(%s) OR {!join from=srcid to=id v=$join_query}' % self.query
+            # logger.debug("Solr search query: %s", solr_q)
+        # else:
+            # solr_q = '*:*'
+
+
+        range_opts = {
+            'facet.range': self.form.range_facets
+        }
+        for range_facet in self.form.range_facets:
+            # range filter requested in search options
+            start = end = None
+            # if start or end is specified on the form, add a filter query
+            if range_facet in search_opts and search_opts[range_facet]:
+                start, end = search_opts[range_facet].split('-')
+                range_filter = '[%s TO %s]' % (start or '*', end or '*')
+                # find works restricted by range
+                work_q.append('%s:%s' % (range_facet, range_filter))
+
+            # get minimum and maximum pub date values from the db
+            pubmin, pubmax = self.form.pub_date_minmax()
+
+            # NOTE: hard-coded values are fallback logic for when
+            # no contents are in the database and pubmin/pubmax are None
+            start = int(start) if start else pubmin or 0
+            end = int(end) if end else pubmax or 1922
+
+            # Configure range facet options specific to current field, to
+            # support more than one range facet (even though not currently needed)
+            range_opts.update({
+                # current range filter
+                'f.%s.facet.range.start' % range_facet: start,
+                # NOTE: per facet.range.include documentation, default behavior
+                # is to include lower bound and exclude upper bound.
+                # For simplicity, increase range end by one.
+                'f.%s.facet.range.end' % range_facet: end,
+                # calculate gap based start and end & desired number of slices
+                # ideally, generate 24 slices; minimum gap size of 1
+                'f.%s.facet.range.gap' % range_facet: max(1, int((end - start) / 24)),
+                # restrict last range to *actual* maximum value
+                'f.%s.facet.range.hardend' % range_facet: True,
+                # include start and end values in the bins
+                'f.%s.facet.range.include' % range_facet: 'edge'
+            })
+
+        # if there are any queries to filter works  or search by text,
+        # combine the queries and construct solr query
+        if work_q or text_query:
+            query_parts = []
+
+            # work-level metadata queries and filters
+            if work_q:
+                # combine all work filters from search form input
+                # (input from different fields are combined via *AND*)
+                work_query = '(%s)' % ' AND '.join(work_q)
+                # NOTE: grouping required for work_query to work properly on the join
+                # search for works that match the filters OR for pages that belong
+                # to a work that matches, but only if there is also a text_query.
+                # If there is not text_query, pages are not needed.
+                if text_query:
+                    query_parts.append(
+                        '(%s OR {!join from=id to=srcid v=$work_query})' % work_query
+                    )
+                else:
+                    query_parts.append(work_query)
+
+            # general text query, if there is one
+            if text_query:
+                # search for works that match the filter OR for works
+                # associated with pages that match
+                query_parts.append(
+                     '(%s OR {!join from=srcid to=id v=$text_query})' % text_query
+                )
+
+            # combine work and text queries together with AND
+            solr_q = ' AND '.join(query_parts)
+            logger.debug("Solr search query: %s", solr_q)
         else:
-            # no search term - find everything
-            solr_q = "*:*"
-            # for now, use title for default sort
-            self.sort = 'title'
-            solr_sort = 'title_exact asc'
-            fields = '*'
+            # if no work queries or filters are specified,
+            # return all works (no pages needed)
+            solr_q = 'item_type:work'
 
-        logger.debug("Solr search query: %s", solr_q)
+        solr_sort = self.form.get_solr_sort_field(sort)
+        fields = '*,score'
+        # NOTE: For now, defaulting to always including score in fields
 
         # use filter query to collapse works and pages into groups
         # sort so work is first, then by page order
-        filter_q.append('{!collapse field=srcid sort="order asc"}')
+        collapse_q = '{!collapse field=srcid sort="order asc"}'
 
-        self.solrq = PagedSolrQuery({
+        # basic solr options, including filter query
+        solr_opts = {
             'q': solr_q,
             'sort': solr_sort,
             'fl': fields,
-            'fq': filter_q,
+            'fq': collapse_q,
             # turn on faceting and add any self.form facet_fields
             'facet': 'true',
             'facet.field': [field for field in self.form.facet_fields],
+            # sort by alpha on facet label rather than count
+            'facet.sort': 'index',
             # default expand sort is score desc
             'expand': 'true',
-            'expand.rows': 10,   # number of items in the collapsed group, i.e pages to display
-            'join_query': join_q,
-            'coll_query': coll_query
-            # 'rows': 50  # override solr default of 10 results; display 50 at a time for now
-        })
+            'expand.rows': 2,   # number of items in the collapsed group, i.e pages to display
+            'text_query': text_query,
+            'work_query': work_query
+        }
+
+        # add facet range options to the solr options
+        solr_opts.update(range_opts)
+        self.solrq = PagedSolrQuery(solr_opts)
 
         return self.solrq
 
+    def get_page_highlights(self, page_groups):
+        '''If there is a keyword search, query Solr for matching pages
+        with text highlighting.  Note that this has to be done as
+        a separate query because Solr doesn't support highlighting on
+        collapsed items.'''
+
+        page_highlights = {}
+        if not self.query or not page_groups:
+            # if there is no keyword query, bail out
+            return page_highlights
+
+        # generate a list of page ids from the grouped results
+        page_ids = [page['id'] for results in page_groups.values()
+                    for page in results['docs']]
+
+        if not page_ids:
+            # if no page ids were found, bail out
+            return page_highlights
+
+        # Query solr for the desired pages by id with the same
+        # keyword search.
+        # NOTE: This id query assumes OR is default; if  that changes,
+        # add an explicitly OR here between ids.
+        # NOTE 2: using quotes around ids to handle ids that include
+        # colons, e.g. ark:/foo/bar .
+        solr_pageq = PagedSolrQuery({
+            'q': 'text:(%s) AND id:(%s)' % \
+                (self.query, ' '.join('"%s"' % pid for pid in page_ids)),
+            # enable highlighting on content field with 3 snippets
+            'hl': True,
+            'hl.fl': 'content',
+            'hl.snippets': 3,
+            # use Unified Highlighter (not default but recommended)
+            'hl.method': 'unified',
+            # override solr default of 10 results to return all pages
+            'rows': len(page_ids),
+        })
+        return solr_pageq.get_highlighting()
+
     def get_context_data(self, **kwargs):
-        page_groups = None
+        # if the form is not valid, bail out
+        if not self.form.is_valid():
+            context = super().get_context_data(**kwargs)
+            context['search_form'] = self.form
+            return context
+
+        page_groups = facet_ranges = None
         try:
             # catch an error querying solr when the search terms cannot be parsed
             # (e.g., incomplete exact phrase)
-            context = super(DigitizedWorkListView, self).get_context_data(**kwargs)
-            page_groups = json.loads(self.solrq.get_json()).get('expanded', {})
+            context = super().get_context_data(**kwargs)
+            page_groups = self.solrq.get_expanded()
             facet_dict = self.solrq.get_facets()
-            self.form.set_choices_from_facets(facet_dict)
 
+            self.form.set_choices_from_facets(facet_dict)
+            # needs to be inside try/catch or it will re-trigger any error
+            facet_ranges = self.solrq.facet_ranges
         except SolrError as solr_err:
             context = {'object_list': []}
             if 'Cannot parse' in str(solr_err):
                 error_msg = 'Unable to parse search query; please revise and try again.'
             else:
+                # NOTE: this error should possibly be raised; 500 error?
                 error_msg = 'Something went wrong.'
-            context = {'object_list': [], 'error': error_msg}
+            context['error'] = error_msg
 
         context.update({
             'search_form': self.form,
             # total and object_list provided by paginator
-            'sort': self.sort,
-            'page_groups': page_groups
-
+            'page_groups': page_groups,
+            # range facet data for publication date
+            'facet_ranges': facet_ranges,
+            'page_highlights': self.get_page_highlights(page_groups),
+            # query for use template links to detail view with search
+            'query': self.query,
         })
         return context
 
@@ -131,14 +293,110 @@ class DigitizedWorkDetailView(DetailView):
     model = DigitizedWork
     slug_field = 'source_id'
     slug_url_kwarg = 'source_id'
+    form_class = SearchWithinWorkForm
+    paginate_by = 50
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # pull in the query if it exists to use
+        query = self.request.GET.get('query', '')
+        form_opts = self.request.GET.copy()
+        form = self.form_class(form_opts)
+        context['search_form'] = form
+        solr_pageq = None
+        if query:
+            context['query'] = query
+            digwork = context['object']
+            solr_q = 'text:(%s)' % query
+            solr_opts = {
+                'q': solr_q,
+                # sort by page order by default
+                'sort': 'order asc',
+                # 'fl': '*',
+                'fl': 'id,srcid,order,title,label',  # Limiting only to needed fields
+                'fq': 'srcid:("%s") AND item_type:page' % digwork.source_id,
+                # configure highlighting on page text content
+                'hl': True,
+                'hl.fl': 'content',
+                'hl.snippets': 3,
+                # not default but recommended
+                'hl.method': 'unified',
+            }
+            logger.info("Solr page keyword search query: %s" % solr_q)
+
+            try:
+                # configure paginator and set in context
+                solr_pageq = PagedSolrQuery(solr_opts)
+                paginator = Paginator(solr_pageq, per_page=self.paginate_by)
+                page = self.request.GET.get('page', 1)
+                context.update({
+                    'search_form': form,
+                    'page_obj': paginator.page(page),
+                    # get matching pages and highlights and set in context
+                    # 'page_highlights': solr_pageq.get_highlighting() if solr_pageq else {}
+                    'page_highlights': solr_pageq.get_highlighting() if solr_pageq else {},
+                    'solr_results': solr_pageq.get_results() if solr_pageq else []
+                })
+
+            except SolrError as solr_err:
+                if 'Cannot parse' in str(solr_err):
+                    error_msg = ('Unable to parse search query; '
+                                 'please revise and try again.')
+                else:
+                    # NOTE: this error should possibly be raised; 500 error?
+                    error_msg = 'Something went wrong.'
+                context['error'] = error_msg
+
+        return context
 
 
 class CollectionListView(ListView):
-    '''Display list of public-facing :class:ppa.archive.models.Collection instances'''
+    '''Display list of :class:`ppa.archive.models.Collection`
+    with description and summary statistics.
+    '''
     model = Collection
     # NOTE: For consistency with DigitizedWork's list view
     template_name = 'archive/list_collections.html'
     ordering = ('name',)
+
+    # temporary workaround to exclude collections that aren't
+    # meant to be featured on the homepage or collection list
+    exclude = ['Dictionary', 'Pronunciation Guide']
+
+    def get_queryset(self):
+        return super().get_queryset().exclude(name__in=self.exclude)
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        # NOTE: if we *only* want counts, could just do a regular facet
+
+        solr_stats = PagedSolrQuery({
+            'q': '*:*',
+            'facet': True,
+            'facet.pivot': '{!stats=piv1}collections_exact',
+            # NOTE: if we pivot on collection twice, like this, we should
+            # have the information needed to generate a venn diagram
+            # of the collections (based on number of overlap)
+            # 'facet.pivot': '{!stats=piv1}collections_exact,collections_exact'
+            'stats': True,
+            'stats.field': '{!tag=piv1 min=true max=true}pub_date',
+            # don't return any actual items, just the facets
+            'rows': 0
+        })
+        facet_pivot = solr_stats.raw_response['facet_counts']['facet_pivot']
+        # simplify the pivot stat data for display
+        stats = {}
+        for info in facet_pivot['collections_exact']:
+            pub_date_stats = info['stats']['stats_fields']['pub_date']
+            stats[info['value']] = {
+                'count': info['count'],
+                'dates': '%(min)d–%(max)d' % pub_date_stats \
+                    if pub_date_stats['max'] != pub_date_stats['min'] \
+                    else '%d' % pub_date_stats['min']
+            }
+        context['stats'] = stats
+
+        return context
 
 
 class DigitizedWorkCSV(ListView):
@@ -147,24 +405,41 @@ class DigitizedWorkCSV(ListView):
     model = DigitizedWork
     # order by id for now, for simplicity
     ordering = 'id'
-    header_row = ['Database ID', 'Source ID', 'Title', 'Author',
-        'Publication Date', 'Publication Place', 'Publisher', 'Enumcron',
-        'Collection', 'Page Count', 'Date Added', 'Last Updated']
+    header_row = ['Database ID', 'Source ID', 'Record ID', 'Title', 'Author',
+                  'Publication Date', 'Publication Place', 'Publisher',
+                  'Enumcron', 'Collection', 'Public Notes', 'Notes',
+                  'Page Count', 'Date Added', 'Last Updated']
 
     def get_csv_filename(self):
+        '''Return the CSV file name based on the current datetime.
+
+        :returns: the filename for the CSV to be generated
+        :rtype: str
+        '''
         return 'ppa-digitizedworks-%s.csv' % now().strftime('%Y%m%dT%H:%M:%S')
 
     def get_data(self):
-        return ((dw.id, dw.source_id, dw.title, dw.author,
+        '''Get data for the CSV.
+
+        :returns: rows for CSV columns
+        :rtype: tuple
+        '''
+        return ((dw.id, dw.source_id, dw.record_id, dw.title, dw.author,
                  dw.pub_date, dw.pub_place, dw.publisher, dw.enumcron,
                  ';'.join([coll.name for coll in dw.collections.all()]),
-                 dw.page_count, dw.added, dw.updated
+                 dw.public_notes, dw.notes, dw.page_count, dw.added,
+                 dw.updated
                  )
                 for dw in self.get_queryset().prefetch_related('collections'))
         # NOTE: prefetch collections so they are retrieved more efficiently
         # all at once, rather than one at a time for each item
 
     def render_to_csv(self, data):
+        '''
+        Render the CSV as an HTTP response.
+
+        :rtype: :class:`django.http.HttpResponse`
+        '''
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="%s"' % \
             self.get_csv_filename()
@@ -176,10 +451,11 @@ class DigitizedWorkCSV(ListView):
         return response
 
     def get(self, *args, **kwargs):
+        '''Return CSV file on GET request.'''
         return self.render_to_csv(self.get_data())
 
 
-class AddToCollection(ListView, FormMixin, ProcessFormView):
+class AddToCollection(ListView, FormView):
     '''
     View to bulk add a queryset of :class:`ppa.archive.models.DigitizedWork`
     to a set of :class:`ppa.archive.models.Collection instances`.
@@ -190,7 +466,23 @@ class AddToCollection(ListView, FormMixin, ProcessFormView):
     model = DigitizedWork
     template_name = 'archive/add_to_collection.html'
     form_class = AddToCollectionForm
-    success_url = reverse_lazy('admin:archive_digitizedwork_changelist')
+
+    def get_success_url(self):
+        '''
+        Redirect to the :class:`ppa.archive.models.DigitizedWork`
+        change_list in the Django admin with pagination and filters preserved.
+        Expects :meth:`ppa.archive.admin.bulk_add_collection`
+        to have set 'collection-add-filters' as a dict in the request's
+        session.
+        '''
+        change_list = reverse('admin:archive_digitizedwork_changelist')
+        # get request.session's querystring filter, and if it exists
+        # use it to set the querystring
+        querystring = ''
+        filter_dict = self.request.session.get('collection-add-filters', None)
+        if filter_dict:
+            querystring = '?%s' % urlencode(filter_dict)
+        return '%s%s' % (change_list, querystring)
 
     def get_queryset(self, *args, **kwargs):
         '''Return a queryset filtered by id, or empty list if no ids'''
@@ -221,7 +513,9 @@ class AddToCollection(ListView, FormMixin, ProcessFormView):
             digitized_works = self.get_queryset()
             del request.session['collection-add-ids']
             for collection in data['collections']:
-                collection.digitizedwork_set.set(digitized_works)
+                # add rather than set to ensure add does not replace
+                # previous digitized works in set.
+                collection.digitizedwork_set.add(*digitized_works)
             # reindex solr with the new collection data
             solr_docs = [work.index_data() for work in digitized_works]
             solr, solr_collection = get_solr_connection()
@@ -235,7 +529,7 @@ class AddToCollection(ListView, FormMixin, ProcessFormView):
             messages.success(request, 'Successfully added %d works to: %s.'
                              % (num_works, collections))
             # redirect to the change list with the message intact
-            return redirect(reverse('admin:archive_digitizedwork_changelist'))
+            return redirect(self.get_success_url())
         # make form error more descriptive, default to an error re: pks
         if 'collections' in form.errors:
             del form.errors['collections']
@@ -248,3 +542,17 @@ class AddToCollection(ListView, FormMixin, ProcessFormView):
         # doesn't pass the form with error set
         self.object_list = self.get_queryset()
         return self.render_to_response(self.get_context_data(form=form))
+
+
+class IndexView(CollectionListView):
+    '''
+    A homepage view that uses collection data, but renders it in a template
+    with additional information.
+    '''
+
+    model = Collection
+    template_name = 'site_index.html'
+
+    def get_queryset(self):
+        # get two random collections
+        return super().get_queryset().order_by('?')[:2]

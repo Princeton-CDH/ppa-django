@@ -3,6 +3,46 @@
 Deploy and Upgrade notes
 ========================
 
+0.9
+---
+
+* Configure a **TECHNICAL_CONTACT** email address in local settings
+  to set a **From** header on requests made against the HathiTrust API.
+* Logic for populating local records from HathiTrust has changed; records
+  need to be updated::
+
+    python manage.py hathi_import -v 0 --progress --update
+
+* This update requires a full reindex; due to changes in page indexing, pages
+  must be cleared from the Solr index::
+
+     python manage.py index --clear pages
+
+
+0.8 Search filtering and highlighting
+-------------------------------------
+
+* The Solr schema has been modified and must be updated::
+
+    python manage.py solr_schema
+
+* The Solr schema change requires reindexing content.  It is
+  **recommended** to clear out your Solr index and reindex everything::
+
+    python manage.py index
+
+* A fixture has been provided with site page content.  Load via::
+
+    python manage.py loaddata ppa/archive/fixtures/pages.json
+
+.. Note::
+
+  The previous import and index script has been broken into two
+  scripts. For a fresh install, run **hathi_import** as before to import
+  content into the Django database and then run **index** to index work
+  and page content into Solr.
+
+
 0.5 Bulk Import and Simple Search
 ---------------------------------
 

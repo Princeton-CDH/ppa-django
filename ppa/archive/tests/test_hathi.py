@@ -4,11 +4,13 @@ from unittest.mock import patch
 import json
 
 from django.conf import settings
-from django.test import TestCase
+from django.test import TestCase, override_settings
+from eulxml.xmlmap import load_xmlobject_from_file
 import pymarc
 import pytest
 import requests
 
+from ppa import __version__
 from ppa.archive import hathi
 
 
@@ -17,60 +19,83 @@ FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
 
 @patch('ppa.archive.hathi.requests')
 class TestHathiBibliographicAPI(TestCase):
+
     bibdata = os.path.join(FIXTURES_PATH,
         'bibdata_brief_njp.32101013082597.json')
 
+    def test_init(self, mockrequests):
+        # test session initialization
+
+        # no technical contact
+        with override_settings(TECHNICAL_CONTACT=None):
+            base_user_agent = 'requests/v123'
+            mockrequests.Session.return_value.headers = {'User-Agent': base_user_agent}
+            bib_api = hathi.HathiBibliographicAPI()
+            mockrequests.Session.assert_any_call()
+            assert bib_api.session == mockrequests.Session.return_value
+            assert 'ppa-django' in bib_api.session.headers['User-Agent']
+            assert __version__ in bib_api.session.headers['User-Agent']
+            assert '(%s)' % base_user_agent in bib_api.session.headers['User-Agent']
+            assert 'From' not in bib_api.session.headers
+
+        tech_contact = 'webmaster@example.com'
+        with override_settings(TECHNICAL_CONTACT=tech_contact):
+            bib_api = hathi.HathiBibliographicAPI()
+            assert bib_api.session.headers['From'] == tech_contact
+
     def test_brief_record(self, mockrequests):
         mockrequests.codes = requests.codes
-        mockrequests.get.return_value.status_code = requests.codes.ok
+        mocksession = mockrequests.Session.return_value
+        mocksession.get.return_value.status_code = requests.codes.ok
 
         bib_api = hathi.HathiBibliographicAPI()
         htid = 'njp.32101013082597'
 
         # no result found
-        mockrequests.get.return_value.json.return_value = {}
+        mocksession.get.return_value.json.return_value = {}
         with pytest.raises(hathi.HathiItemNotFound):
             bib_api.brief_record('htid', htid)
 
         # use fixture to simulate result found
         with open(self.bibdata) as sample_bibdata:
-            mockrequests.get.return_value.json.return_value = json.load(sample_bibdata)
+            mocksession.get.return_value.json.return_value = json.load(sample_bibdata)
 
         record = bib_api.brief_record('htid', htid)
         assert isinstance(record, hathi.HathiBibliographicRecord)
 
         # check expected url was called
-        mockrequests.get.assert_any_call(
+        mocksession.get.assert_any_call(
             'http://catalog.hathitrust.org/api/volumes/brief/htid/%s.json' % htid)
 
         # ark ids are not escaped
         htid = 'aeu.ark:/13960/t1pg22p71'
         bib_api.brief_record('htid', htid)
-        mockrequests.get.assert_any_call(
+        mocksession.get.assert_any_call(
             'http://catalog.hathitrust.org/api/volumes/brief/htid/%s.json' % htid)
 
         # alternate id
         oclc_id = '424023'
         bib_api.brief_record('oclc', oclc_id)
-        mockrequests.get.assert_any_call(
+        mocksession.get.assert_any_call(
             'http://catalog.hathitrust.org/api/volumes/brief/oclc/%s.json' % oclc_id)
 
     def test_record(self, mockrequests):
         mockrequests.codes = requests.codes
-        mockrequests.get.return_value.status_code = requests.codes.ok
+        mocksession = mockrequests.Session.return_value
+        mocksession.get.return_value.status_code = requests.codes.ok
 
         bib_api = hathi.HathiBibliographicAPI()
         htid = 'njp.32101013082597'
 
         # use fixture to simulate result found
         with open(self.bibdata) as sample_bibdata:
-            mockrequests.get.return_value.json.return_value = json.load(sample_bibdata)
+            mocksession.get.return_value.json.return_value = json.load(sample_bibdata)
 
         record = bib_api.record('htid', htid)
         assert isinstance(record, hathi.HathiBibliographicRecord)
 
         # check expected url was called - full instead of brief
-        mockrequests.get.assert_any_call(
+        mocksession.get.assert_any_call(
             'http://catalog.hathitrust.org/api/volumes/full/htid/%s.json' % htid)
 
 
@@ -125,3 +150,35 @@ class TestHathiBibliographicRecord(TestCase):
         assert self.brief_record.marcxml is None
 
 
+class TestMETS(TestCase):
+    metsfile = os.path.join(FIXTURES_PATH, '79279237.mets.xml')
+
+    def setUp(self):
+        self.mets = load_xmlobject_from_file(self.metsfile, hathi.MinimalMETS)
+
+    def test_init_minimal_mets(self):
+        assert isinstance(self.mets.structmap_pages[0], hathi.StructMapPage)
+        assert len(self.mets.structmap_pages) == 640
+
+    def test_structmap(self):
+        page = self.mets.structmap_pages[0]
+        assert page.order == 1
+        assert page.label == 'FRONT_COVER, IMAGE_ON_PAGE, IMPLICIT_PAGE_NUMBER'
+        assert not page.orderlabel
+        assert page.text_file_id == 'TXT00000001'
+        # page 1 has no order label
+        assert page.display_label == '1'
+        assert isinstance(page.text_file, hathi.METSFile)
+        assert page.text_file_location == '00000001.txt'
+
+        # pages with order label start at order 15
+        page = self.mets.structmap_pages[14]
+        assert page.orderlabel == '1'
+        assert page.display_label == page.orderlabel
+
+    def test_metsfile(self):
+        page = self.mets.structmap_pages[0]
+        textfile = page.text_file
+        assert textfile.id == page.text_file_id
+        assert textfile.sequence == '00000001'
+        assert textfile.location == '00000001.txt'

@@ -53,10 +53,12 @@ Initial setup and installation:
 
     python manage.py migrate
 
-- Create a new Solr core with a basic configuration and managed schema,
-  using the same core/collection name you configured in local settings::
+- Create two new Solr cores with a basic configuration and managed schema,
+  using the core/collection names for development and testing that you
+  configured in local settings::
 
     solr create -c SOLR_CORE -n basic_configs
+    solr create -c SOLR_TEST_CORE -n basic_configs
 
 - Run the manage command to configure the schema::
 
@@ -71,22 +73,74 @@ Initial setup and installation:
 
     python manage.py hathi_import
 
+- Then index the imported content into Solr:
 
-Unit Tests
+    python manage.py index
+
+Frontend development setup:
+
+- django-compressor dependencies: you need `Node.js <https://nodejs.org/en/>`_
+  and a js package manager (``npm`` or ``yarn``). Install dependencies with the
+  relevant install command for your package manager - for ``npm``::
+
+    npm install
+
+  for ``yarn``::
+
+    yarn
+
+  if you wish to install dependencies globally, take a look at the optional
+  settings for `django-compressor-toolkit <https://github.com/kottenator/django-compressor-toolkit>`_.
+
+- To build the main `Semantic UI <https://semantic-ui.com/>`_ styles and js::
+
+    npm run build
+
+  This should run once automatically after you ``npm install``. To watch for changes
+  to the stylesheets and rebuild Semantic UI automatically::
+
+    npm start
+
+Tests
 ~~~~~~~~~~
 
-Unit tests are written with `py.test <http://doc.pytest.org/>`_ but use
+Python unit tests are written with `py.test <http://doc.pytest.org/>`_ but use
 Django fixture loading and convenience testing methods when that makes
 things easier. To run them, first install development requirements::
 
     pip install -r dev-requirements.txt
 
-Run tests using py.test::
+Run tests using py.test.  Note that this currently requires the
+top level project directory be included in your python path.  You can
+accomplish this either by calling pytest via python::
 
-    py.test
+    python -m pytest
+
+Or, if you wish to use the ``pytest`` command directly, simply add the
+top-level project directory to your python path environment variable::
+
+  setenv PYTHONPATH .  # csh
+  export PYTHONPATH=.  # bash
 
 Make sure you configure a test solr connection and set up an empty
 Solr core using the same instructions as for the development core.
+
+Javascript unit tests are written with `Jasmine <https://jasmine.github.io/>`_
+and run using `Karma <https://karma-runner.github.io/2.0/index.html>`_. To run
+them, you can use an ``npm`` command::
+
+    npm test
+
+Automated accessibility testing is also possible using `pa11y <https://github.com/pa11y/pa11y>`_
+and `pa11y-ci <https://github.com/pa11y/pa11y-ci>`_. To run accessibility tests,
+start the server with ``python manage.py runserver`` and then use ``npm``::
+
+    npm run pa11y
+
+The accessibility tests are configured to read options from the ``.pa11yci.json``
+file and look for a sitemap at ``localhost:8000/sitemap.xml`` to use to crawl the
+site. Additional URLs to test can be added to the `urls` property of the
+``.pa11yci.json`` file.
 
 
 Documentation
@@ -97,7 +151,7 @@ To generate documentation them, first install development requirements::
 
     pip install -r dev-requirements.txt
 
-Then build documentation using the customized make file in the `docs`
+Then build documentation using the customized make file in the ``docs``
 directory::
 
     cd sphinx-docs

@@ -1,0 +1,41 @@
+/*******************************
+         Site Overrides
+*******************************/
+
+.ui.form {
+
+    .field > label.button {
+        color: @primaryColor;
+        font-weight: @bold;
+
+        &.disabled {
+            color: @disabledTextColor;
+        }
+
+        &.active,
+        &:hover
+        {
+            color: @invertedTextColor;
+        }
+
+        @media (hover: none) {
+            &:hover:not(.active) {
+                color: @primaryColor;
+            }
+        }
+
+        &.focus,
+        &:focus {
+            border-color: @focusedFormBorderColor;
+            box-shadow: @inputFocusBoxShadow;
+        }
+    }
+
+    .field > .checkbox input:focus ~ label::before {
+        box-shadow: @inputFocusBoxShadow;
+    }
+
+    > fieldset.vertical.segment {
+        background-color: @inputBackground;
+    }
+}

@@ -1,6 +1,12 @@
+from collections import OrderedDict
+import itertools
+import json
 import logging
 
+from cached_property import cached_property
 from django.conf import settings
+from django.db.models.fields.related_descriptors import ManyToManyDescriptor
+from django.db.models.query import QuerySet
 import requests
 from SolrClient import SolrClient
 
@@ -28,9 +34,11 @@ class SolrSchema(object):
         {'name': 'content', 'type': 'text_en', 'required': False},
         {'name': 'item_type', 'type': 'string', 'required': False},
         {'name': 'title', 'type': 'text_en', 'required': False},
+        {'name': 'subtitle', 'type': 'text_en', 'required': False},
+        {'name': 'sort_title', 'type': 'string', 'required': False},
         {'name': 'enumcron', 'type': 'string', 'required': False},
         {'name': 'author', 'type': 'text_en', 'required': False},
-        {'name': 'pub_date', 'type': 'string', 'required': False},
+        {'name': 'pub_date', 'type': 'int', 'required': False},
         {'name': 'pub_place', 'type': 'text_en', 'required': False},
         {'name': 'publisher', 'type': 'text_en', 'required': False},
         {'name': 'src_url', 'type': 'string', 'required': False},
@@ -39,19 +47,20 @@ class SolrSchema(object):
          'multiValued': True},
         {'name': 'text', 'type': 'text_en', 'required': False, 'stored': False,
          'multiValued': True},
+        # page fields
+        {'name': 'label', 'type': 'text_en', 'required': False},
+        {'name': 'tags', 'type': 'string', 'required': False, 'multiValued': True},
 
-         # sort/facet copy fields
-        {'name': 'title_exact', 'type': 'string', 'required': False},
+        # sort/facet copy fields
         {'name': 'author_exact', 'type': 'string', 'required': False},
         {'name': 'collections_exact', 'type': 'string', 'required': False,
          'multiValued': True}
     ]
     #: fields to be copied into general purpose text field for searching
     text_fields = ['srcid', 'content', 'title', 'author', 'pub_date', 'enumcron',
-        'pub_place', 'publisher']
+                   'pub_place', 'publisher']
     #: copy fields, e.g. for facets
     copy_fields = [
-        ('title', 'title_exact'),
         ('author', 'author_exact'),
         ('collections', 'collections_exact'),
     ]
@@ -69,10 +78,7 @@ class SolrSchema(object):
         '''Update the configured solr instance schema to match
         the configured fields.  Returns a tuple with the number of fields
         created and updated.'''
-        try:
-            current_fields = self.solr_schema_fields()
-        except ConnectionRefusedError:
-            raise
+        current_fields = self.solr_schema_fields()
 
         created = updated = removed = 0
         for field in self.fields:
@@ -148,14 +154,43 @@ class PagedSolrQuery(object):
         self.query_opts = query_opts or {}
         # possibly should default to 'q': '*:*' ...
 
+    @property
+    def result(self):
+        if self._result is None:
+            self.get_results()
+        return self._result
+
     def get_facets(self):
         '''Wrap SolrClient.SolrResponse.get_facets() to get query facets as a dict
         of dicts.'''
-        if self._result is None:
-            self.get_results()
-        return self._result.get_facets()
+        return self.result.get_facets()
+
+    @cached_property
+    def facet_ranges(self):
+        ''' Return Solr range facets, with counts converted from a list of
+        start date and count to an :class:`~collections.OrderedDict`.'''
+        # NOTE: the get_facets_ranges in SolrClient *only* returns the range
+        # and drops the start, end, and gap information, which are valuable.
+        facet_counts = self.result.data.get('facet_counts', None)
+        if not facet_counts:
+            return
+        facet_ranges = facet_counts.get('facet_ranges', None)
+        if facet_ranges:
+            for val in facet_ranges.values():
+                val['counts'] = OrderedDict(zip(val['counts'][::2], val['counts'][1::2]))
+            return facet_ranges
+
+    def get_facets_ranges(self):
+        '''Wrap SolrClient.SolrResponse.get_facets() to get query facets as a dict
+        of dicts.'''
+        return self.result.get_facets_ranges()
 
     def get_results(self):
+        '''
+        Return results of the Solr query.
+
+        :return: docs as a list of dictionaries.
+        '''
         self._result = self.solr.query(self.solr_collection, self.query_opts)
         return self._result.docs
 
@@ -164,6 +199,7 @@ class PagedSolrQuery(object):
         if self._result is None:
             query_opts = self.query_opts.copy()
             query_opts['rows'] = 0
+            # FIXME: do we actually want to store the result with no rows?
             self._result = self.solr.query(self.solr_collection, query_opts)
 
         return self._result.get_num_found()
@@ -171,18 +207,29 @@ class PagedSolrQuery(object):
     def get_json(self):
         '''Return query response as JSON data, to allow full access to anything
         included in Solr data.'''
-        if self._result is None:
-            self.get_results()
-        return self._result.get_json()
+        return self.result.get_json()
+
+    @cached_property
+    def raw_response(self):
+        '''Return the raw Solr result to provide access to return sections
+        not exposed by SolrClient'''
+        return json.loads(self.get_json())
+
+    def get_expanded(self):
+        '''get the expanded results from a collapsed query'''
+        return self.raw_response.get('expanded', {})
+
+    def get_highlighting(self):
+        '''get highlighting results from the response'''
+        return self.raw_response.get('highlighting', {})
 
     def set_limits(self, start, stop):
         '''Return a subsection of the results, to support slicing.'''
-        # FIXME: it probably matters here that solr start is 1-based ...
         if start is None:
             start = 0
         self.query_opts.update({
             'start': start,
-            'rows': stop - start + 1
+            'rows': stop - start
         })
 
     def __getitem__(self, k):
@@ -217,3 +264,121 @@ class PagedSolrQuery(object):
         # qs._fetch_all()
         return self.get_results()[0]
         # return qs._result_cache[0]
+
+
+class Indexable(object):
+    '''Mixin for objects that are indexed in Solr.  Subclasses must implement
+    `index_id` and `index` methods.
+
+    Subclasses may include an `index_depends_on` property which is used
+    by :meth:`identify_index_dependencies` to determine index dependencies
+    on related objects, including many-to-many relationships.  This property
+    should be structured like this::
+
+        index_depends_on = {
+            'attr_name': {      # string name of the attribute on this model
+                'save': handle_attr_save,  # signal handler for post_save on this model
+                'delete': handle_attr_delete,   # signal handler for pre_delete on this model
+            }
+        }
+
+    If the attribute is a many-to-many field, indexing will be configured on
+    the model when the based on relationship changes (a signal handler will
+    listen for :class:`models.signals.m2m_changed` on the through model).
+    Signal handler methods for save and delete are optional.
+
+    '''
+
+    # TODO: set default solr params / commit within here? maybe get value
+    # from django settings?
+
+    #: number of items to index at once when indexing a large number of items
+    index_chunk_size = 150
+
+    def index_data(self):
+        '''should return a dictionary of data for indexing in Solr'''
+        raise NotImplementedError
+
+    def index_id(self):
+        '''the value that is used as the Solr id for this object'''
+        raise NotImplementedError
+
+    def index(self, params=None):
+        '''Index the current object in Solr.  Allows passing in
+        parameter, e.g. to set a `commitWithin` value.
+        '''
+        solr, solr_collection = get_solr_connection()
+        solr.index(solr_collection, [self.index_data()], params=params)
+
+    @classmethod
+    def index_items(cls, items, params=None, progbar=None):
+        '''Indexable class method to index multiple items at once.  Takes a
+        list, queryset, or generator of Indexable items or dictionaries.
+        Items are indexed in chunks, based on :attr:`Indexable.index_chunk_size`.
+        Takes an optional progressbar object to update when indexing items
+        in chunks. Returns a count of the number of items indexed.'''
+        solr, solr_collection = get_solr_connection()
+
+        # if this is a queryset, use iterator to get it in chunks
+        if isinstance(items, QuerySet):
+            items = items.iterator()
+
+        # if this is a normal list, convert it to an iterator
+        # so we don't iterate the same slice over and over
+        elif isinstance(items, list):
+            items = iter(items)
+
+        # index in chunks to support efficiently indexing large numbers
+        # of items (adapted from index script)
+        chunk = list(itertools.islice(items, cls.index_chunk_size))
+        count = 0
+        while chunk:
+            # call index data method if present; otherwise assume item is dict
+            solr.index(solr_collection,
+                       [i.index_data() if hasattr(i, 'index_data') else i
+                        for i in chunk],
+                       params=params)
+            count += len(chunk)
+            # update progress bar if one was passed in
+            if progbar:
+                progbar.update(count)
+
+            # get the next chunk
+            chunk = list(itertools.islice(items, cls.index_chunk_size))
+
+        return count
+
+    def remove_from_index(self, params=None):
+        '''Remove the current object from Solr by identifier using
+        :meth:`index_id`'''
+        solr, solr_collection = get_solr_connection()
+        # NOTE: using quotes on id to handle ids that include colons or other
+        # characters that have meaning in Solr/lucene queries
+        solr.delete_doc_by_id(solr_collection, '"%s"' % self.index_id(), params=params)
+
+    related = None
+    m2m = None
+
+    @classmethod
+    def identify_index_dependencies(cls):
+        # determine and document index dependencies
+        # for indexable models based on index_depends_on field
+
+        if cls.related is not None and cls.m2m is not None:
+            return
+
+        related = {}
+        m2m = []
+        for model in Indexable.__subclasses__():
+            for dep, opts in model.index_depends_on.items():
+                # if a string, assume attribute of model
+                if isinstance(dep, str):
+                    attr = getattr(model, dep)
+                    if isinstance(attr, ManyToManyDescriptor):
+                        # store related model and options with signal handlers
+                        related[attr.rel.model] = opts
+                        # add through model to many to many list
+                        m2m.append(attr.through)
+
+        cls.related = related
+        cls.m2m = m2m

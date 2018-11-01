@@ -18,6 +18,11 @@ ALLOWED_HOSTS = []
 SECRET_KEY = ''
 
 
+# Email address for a technical contact.
+# If set, will be used in From header for HathiTrust API requests
+# TECHNICAL_CONTACT = ''
+
+
 # Turn this on in test/QA site to show test banner
 #SHOW_TEST_WARNING = True
 
@@ -53,6 +58,9 @@ SOLR_CONNECTIONS = {
 
 # local path to hathi pairtree data provided via rsync
 HATHI_DATA = '/path/to/hathi_pairtree_root'
+
+# Enable django-compressor compression
+COMPRESS = True
 
 # CAS login configuration
 CAS_SERVER_URL = ''
@@ -95,6 +103,11 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
+        'SolrClient':  {
+            'handlers': ['console'],
+            'level': 'WARN'
+        },
+
     }
 }
 

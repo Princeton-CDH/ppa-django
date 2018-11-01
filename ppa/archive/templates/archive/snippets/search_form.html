@@ -1,0 +1,90 @@
+{% load semanticui humanize %}
+<form class="ui form{% if error %} error{% endif %}">
+    <fieldset class="ui vertical stackable grid segment">
+        <legend class="sr-only">text search fields</legend>
+        <div class="twelve wide column">
+            {% render_field search_form.query %}
+            <span class="question-popup" data-html="{{ search_form.QUESTION_POPUP_TEXT }}" data-position="top center">
+                <i class="ui question circle icon"></i>
+            </span>
+        </div>
+        <div class="twelve wide column advanced">
+            <div class="two fields">
+                {% render_field search_form.title %}
+                {% render_field search_form.author %}
+            </div>
+        </div>
+    </fieldset>
+    <fieldset class="ui vertical stackable grid segment advanced">
+        <legend class="sr-only">publication date fields</legend>
+        <div class="four wide column" id="publication">
+            {% render_field search_form.pub_date %}
+            <a class="clear-selection" role="button">Clear Selection</a>
+        </div>
+        <div class="eight wide column" id="histogram">
+            <canvas class="visualization" height="60" width="600"></canvas>
+            <span class="min-date"></span>
+            <span class="max-date"></span>
+        </div>
+    </fieldset>
+    <fieldset class="ui vertical stackable basic grid segment advanced">
+        <legend class="sr-only">search filters</legend>
+        <div class="twelve wide column" id="collections">
+            <div class="field">
+                <label for="collections">Collections</label>
+                {% for collection in search_form.collections %}
+                <label class="ui button{% if collection.data.selected %} active{% endif %}" for="{{ collection.id_for_label }}" role="checkbox">
+                    {{ collection.choice_label }}
+                    {{ collection.tag }}
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        <!--
+        <div class="six wide column" id="booleans">
+            <div class="two fields">
+                <div class="field">
+                    <label>Only display</label>
+                    {% render_field search_form.earliest_only %}
+                    {% render_field search_form.ace_only %}
+                </div>
+                <div class="field">
+                    <label>Exclude</label>
+                    {% render_field search_form.dict_exclude %}
+                    {% render_field search_form.pg_exclude %}
+                </div>
+            </div>
+        </div>
+        -->
+    </fieldset>
+    <div class="ui vertical basic segment show-advanced">
+        <a>Advanced Search</a>
+    </div>
+    <input type="submit" class="sr-only sr-only-focusable" aria-label="submit search">
+    <div class="workscount ui center aligned text container">
+        <p class="count">Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}</p>
+        <p class="zotero">Work citations can be exported to <a href="https://www.zotero.org/support/getting_stuff_into_your_library">Zotero</a></p>
+    </div>
+    {% include 'archive/snippets/pagination.html' %}
+    <div class="sort">
+        <div class="ui secondary pointing stackable menu">
+            <span class="item">Sort By</span>
+            {% for sort in search_form.sort %}
+            <label class="item {% if sort.data.selected %}active{% endif %}" for="{{ sort.id_for_label }}" role="radio">
+                {{ sort.choice_label }}
+                {{ sort.tag }}
+            </label>
+            {% endfor %}
+        </div>
+        <div class="mobile-sort">
+            <label>Sort By</label>
+            <select class="ui dropdown" name="sort">
+                {% for sort in search_form.sort %}
+                <option value="{{ sort.data.value }}">
+                    {{ sort.choice_label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+</form>

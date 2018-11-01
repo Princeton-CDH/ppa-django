@@ -1,0 +1,58 @@
+/*******************************
+    User Variable Overrides
+*******************************/
+
+/*-------------------
+       Element
+--------------------*/
+
+/* Button */
+@verticalPadding: @relative5px;
+@horizontalPadding: @relative10px;
+@backgroundColor: transparent;
+@borderColor: @primaryColor;
+@borderWeight: @relative2px;
+
+/* Text */
+@textColor: @primaryColor;
+@fontWeight: @bold;
+
+/*-------------------
+        States
+--------------------*/
+
+/* Active */
+@activeBackgroundColor: @primaryColor;
+@activeColor: @invertedTextColor;
+
+/* Hovered */
+@hoverBackgroundColor: @primaryColor;
+@hoverColor: @invertedTextColor;
+
+/* Focused */
+@focusBackgroundColor: @primaryColor;
+@focusColor: @invertedTextColor;
+
+/* Pressed Down */
+@downBackgroundColor: @primaryColor;
+@downColor: @invertedTextColor;
+
+/*-------------------
+        Types
+--------------------*/
+
+/* Basic */
+@basicBorder: 0;
+@basicBorderSize: 0;
+@basicColoredBorderSize: 0;
+@basicTextColor: @black;
+@basicBackground: @inputBackground;
+
+/* Basic Hover */
+@basicHoverBackground: @primaryColor;
+@basicHoverTextColor: @invertedTextColor;
+
+/* Basic Active */
+@basicActiveBackground: @primaryColor;
+@basicActiveTextColor: @invertedTextColor;
+

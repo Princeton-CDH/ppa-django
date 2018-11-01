@@ -1,0 +1,69 @@
+@import 'scss/snippets/variables';
+
+.page {
+    width: 100%;
+    display: flex;
+    // on small screen, wrap text below image
+    @media only screen and (max-width: 768px) {
+        flex-wrap: wrap;
+    }
+
+    &:nth-child(2) {
+        display: none;
+    }
+
+    #search & { // on the search page, allow showing a second preview page
+        @media only screen and (min-width: 1440px) {
+            width: 50%;
+
+            &:nth-child(2) {
+                display: flex;
+            }
+        }
+    }
+
+
+    .preview {
+        margin-right: 1rem;
+
+        img {
+            width: 180px;
+        }
+
+        #digitized-work & { // larger size on digitized work page
+            margin-right: 2rem;
+
+            img {
+                width: 225px;
+            }
+        }
+    }
+
+    .snippets {
+        flex: 1 1 auto;
+        margin: 0 1rem;
+
+        .page-number {
+
+          a {
+            font-size: 14px;
+            font-family: $pageFont;
+            color: $gold;
+          }
+        }
+
+        .snippet {
+            font-size: 18px;
+            font-family: $headerFont;
+            color: $darkGrey;
+            line-height: normal;
+        }
+    }
+
+
+
+    em {
+        font-style: normal;
+        color: $melon;
+    }
+}

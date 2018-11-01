@@ -1,8 +1,10 @@
-django>=1.11,<2.0
+django>=1.11.16,<2.0
 mysqlclient
 pucas
 django-grappelli
-solrclient
+# unreleased version of SolrClient with ordered facets and facet ranges
+git+https://github.com/moonlitesolutions/SolrClient.git@19c5280c9f8e97#egg=SolrClient
+#solrclient
 pairtree
 pymarc
 cached_property
@@ -11,3 +13,8 @@ cached_property
 git+https://github.com/stephenmcd/mezzanine.git@397409d#egg=mezzanine
 django-apptemplates
 progressbar2
+django-semanticui-forms
+django-compressor
+django-compressor-toolkit
+lxml
+eulxml
