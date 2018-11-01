@@ -22,7 +22,8 @@ from SolrClient import SolrClient
 from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound, \
     HathiBibliographicRecord
 from ppa.archive.models import DigitizedWork
-from ppa.archive.management.commands import hathi_import
+from ppa.archive.management.commands import hathi_import, index
+from ppa.archive.solr import get_solr_connection, Indexable
 
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
@@ -52,6 +53,14 @@ class TestSolrSchemaCommand(TestCase):
         output = stdout.getvalue()
         assert 'Updated ' in output
         assert 'Added ' not in output
+
+        # create field to be removed
+        solr, coll = get_solr_connection()
+        solr.schema.create_field(
+            coll, {'name': 'bogus', 'type': 'string', 'required': False})
+        call_command('solr_schema', stdout=stdout)
+        output = stdout.getvalue()
+        assert 'Removed 1 field' in output
 
 
 @pytest.fixture(scope='class')
@@ -207,9 +216,8 @@ class TestHathiImportCommand(TestCase):
         assert ' (forced update)' in log_entry.change_message
         assert log_entry.action_flag == CHANGE
 
-    @pytest.mark.usefixtures('solr')
     @patch('ppa.archive.management.commands.hathi_import.ZipFile', spec=ZipFile)
-    def test_index_pages(self, mockzipfile):
+    def test_count_pages(self, mockzipfile):
         cmd = hathi_import.Command(stdout=StringIO())
         cmd.stats = defaultdict(int)
         prefix, pt_id = ('ab', '12345:6')
@@ -228,11 +236,11 @@ class TestHathiImportCommand(TestCase):
         page_files = ['0001.txt', '00002.txt']
         mockzip_obj.namelist.return_value = page_files
         # simulate reading zip file contents
-        mockzip_obj.open.return_value.__enter__.return_value \
-            .read.return_value.decode.return_value = 'page content'
+        # mockzip_obj.open.return_value.__enter__.return_value \
+            # .read.return_value.decode.return_value = 'page content'
 
-        # actually index the content
-        cmd.index_pages(digwork)
+        # count the pages
+        cmd.count_pages(digwork)
 
         # inspect pairtree logic
         mock_pairtree_client.get_object.assert_any_call(pt_id, create_if_doesnt_exist=False)
@@ -243,8 +251,6 @@ class TestHathiImportCommand(TestCase):
 
         # inspect zipfile logic
         mockzip_obj.namelist.assert_called_with()
-        for filename in mockzip_obj.namelist():
-            mockzip_obj.open.assert_any_call(filename)
 
         zipfile_path = os.path.join(pt_obj.id_to_dirpath(), content_dir, '12345.zip')
         mockzipfile.assert_called_with(zipfile_path)
@@ -254,47 +260,21 @@ class TestHathiImportCommand(TestCase):
         digwork = DigitizedWork.objects.get(source_id=digwork.source_id)
         assert digwork.page_count == 2
 
-        # inspect solr index data
-        solr_idx_args, solr_idx_kwargs = cmd.solr.index.call_args
-        assert solr_idx_args[0] == cmd.solr_collection
-        solr_docs = solr_idx_args[1]
-        # first solr doc is for the work
-        assert solr_docs[0] == digwork.index_data()
-        # subsequent solr docs for the pages
-        page_index_data = solr_docs[1]
-        assert page_index_data['srcid'] == digwork.source_id
-        assert page_index_data['item_type'] == 'page'
-        # page id based on source id + filename
-        page_label = page_files[0].replace('.txt', '')
-        assert page_index_data['id'] == '.'.join([digwork.source_id, page_label])
-        assert page_index_data['order'] == page_label
-        assert page_index_data['content'] == 'page content'
-
-        page_index_data = solr_docs[2]
-        page_label = page_files[1].replace('.txt', '')
-        assert page_index_data['srcid'] == digwork.source_id
-        assert page_index_data['id'] == '.'.join([digwork.source_id, page_label])
-        assert page_index_data['order'] == page_label
-
-        # exact value not important, just that it's present
-        assert 'commitWithin' in solr_idx_kwargs['params']
 
     @patch('ppa.archive.management.commands.hathi_import.HathiBibliographicAPI')
     @patch('ppa.archive.management.commands.hathi_import.progressbar')
-    @patch('ppa.archive.management.commands.hathi_import.get_solr_connection')
-    def test_call_command(self, mock_get_solr, mockprogbar, mockhathi_bibapi):
+    def test_call_command(self, mockprogbar, mockhathi_bibapi):
 
         # patch methods with actual logic to check handle method behavior
         with patch.object(hathi_import.Command, 'get_hathi_ids') as mock_get_htids, \
           patch.object(hathi_import.Command, 'initialize_pairtrees') as mock_init_ptree, \
           patch.object(hathi_import.Command, 'import_digitizedwork') as mock_import_digwork, \
-          patch.object(hathi_import.Command, 'index_pages') as mock_index_pages:
+          patch.object(hathi_import.Command, 'count_pages') as mock_count_pages:
 
             mock_htids = ['ab.1234', 'cd.5678']
             mock_get_htids.return_value = mock_htids
             digwork = DigitizedWork(source_id='test.123')
             mock_import_digwork.return_value = digwork
-            mock_get_solr.return_value = (Mock, 'testcoll')
 
             # default behavior = read ids from pairtree
             stdout = StringIO()
@@ -303,7 +283,7 @@ class TestHathiImportCommand(TestCase):
             mock_init_ptree.assert_any_call()
             for htid in mock_htids:
                 mock_import_digwork.assert_any_call(htid)
-            mock_index_pages.assert_called_with(digwork)
+            mock_count_pages.assert_called_with(digwork)
 
             output = stdout.getvalue()
             assert 'Processed 2 items for import.' in output
@@ -317,3 +297,124 @@ class TestHathiImportCommand(TestCase):
             call_command('hathi_import', progress=1, verbosity=0, stdout=stdout)
             mockprogbar.ProgressBar.assert_called_with(redirect_stdout=True,
                     max_value=len(mock_htids))
+
+
+class TestIndexCommand(TestCase):
+    fixtures = ['sample_digitized_works']
+
+    @patch('ppa.archive.management.commands.index.Indexable')
+    def test_index(self, mockindexable):
+        # index data into solr and catch  an error
+        cmd = index.Command()
+        cmd.solr = Mock()
+        cmd.solr_collection = 'test'
+
+        test_index_data = range(5)
+        cmd.index(test_index_data)
+        mockindexable.index_items.assert_called_with(test_index_data, progbar=None)
+
+        # solr connection exception should raise a command error
+        with pytest.raises(CommandError):
+            mockindexable.index_items.side_effect = Exception
+            cmd.index(test_index_data)
+
+    def test_clear(self):
+        # index data into solr and catch  an error
+        cmd = index.Command()
+        cmd.solr = Mock()
+        cmd.solr_collection = 'test'
+
+        cmd.clear('all')
+        cmd.solr.delete_doc_by_query.assert_called_with(cmd.solr_collection, '*:*')
+
+        cmd.solr.reset_mock()
+        cmd.clear('works')
+        cmd.solr.delete_doc_by_query.assert_called_with(cmd.solr_collection, 'item_type:work')
+
+        cmd.solr.reset_mock()
+        cmd.clear('pages')
+        cmd.solr.delete_doc_by_query.assert_called_with(cmd.solr_collection, 'item_type:page')
+
+        cmd.solr.reset_mock()
+        cmd.clear('foo')
+        cmd.solr.delete_doc_by_query.assert_not_called()
+
+    @patch('ppa.archive.management.commands.index.get_solr_connection')
+    @patch('ppa.archive.management.commands.index.progressbar')
+    @patch.object(index.Command, 'index')
+    def test_call_command(self, mock_cmd_index_method, mockprogbar, mock_get_solr):
+        mocksolr = Mock()
+        test_coll = 'test'
+        mock_get_solr.return_value = (mocksolr, test_coll)
+        digworks = DigitizedWork.objects.all()
+
+        stdout = StringIO()
+        call_command('index', index='works', stdout=stdout)
+
+        # index all works
+        # (can't use assert_called_with because querysets doesn't evaluate equal)
+        # mock_cmd_index_method.assert_called_with(digworks)
+        args = mock_cmd_index_method.call_args[0]
+        # first arg is queryset; compare them as lists
+        assert list(digworks) == list(args[0])
+
+        # not enough data to run progress bar
+        mockprogbar.ProgressBar.assert_not_called()
+        # commit called after works are indexed
+        mocksolr.commit.assert_called_with(test_coll)
+        # only called once (no pages)
+        assert mock_cmd_index_method.call_count == 1
+
+        with patch.object(DigitizedWork, 'page_index_data') as mock_page_index_data:
+            mock_cmd_index_method.reset_mock()
+            total_works = digworks.count()
+            total_pages = sum(work.page_count for work in digworks)
+
+            # simple number generator to test indexing in chunks
+            def test_generator():
+                for i in range(155):
+                    yield i
+
+            mock_page_index_data.side_effect = test_generator
+
+            call_command('index', index='pages', stdout=stdout)
+
+            # progressbar should be called
+            mockprogbar.ProgressBar.assert_called_with(
+                redirect_stdout=True, max_value=total_pages)
+            # page index data called once for each work
+            assert mock_page_index_data.call_count == total_works
+            # progress bar updated called once for each work
+            mockprogbar.ProgressBar.return_value.update.call_count = total_works
+            # mock index called once for each work (chunking handled in Indexable)
+            assert mock_cmd_index_method.call_count == total_works
+
+            # request no progress bar
+            mockprogbar.reset_mock()
+            call_command('index', index='pages', no_progress=True, stdout=stdout)
+            mockprogbar.ProgressBar.assert_not_called()
+
+            # index both works and pages (default behavior)
+            mock_cmd_index_method.reset_mock()
+            mock_page_index_data.reset_mock()
+            call_command('index', stdout=stdout)
+            # progressbar should be called, total = works + pages
+            mockprogbar.ProgressBar.assert_called_with(
+                redirect_stdout=True, max_value=total_works + total_pages)
+            # called once for the works (all indexed in one batch) and
+            # once for each set of pages in a work
+            assert mock_cmd_index_method.call_count == total_works + 1
+            # page index data called
+            assert mock_page_index_data.call_count == total_works
+
+            # index a single work by id
+            work = digworks.first()
+            mock_cmd_index_method.reset_mock()
+            mock_page_index_data.reset_mock()
+            call_command('index', work.source_id, stdout=stdout)
+            mockprogbar.ProgressBar.assert_called_with(
+                redirect_stdout=True, max_value=1 + work.page_count)
+            # called once for the work and once for the pages
+            assert mock_cmd_index_method.call_count == 2
+            # page index data called once only
+            assert mock_page_index_data.call_count == 1

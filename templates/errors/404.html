@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" type="text/x-scss" href="{% static 'scss/page.scss' %}">
+{% endblock %}
+
+{% block page-context-id %}page{% endblock %}
+
+{% block title %}Page not Found{% endblock %}
+
+{% block content %}
+<div class="ui container">
+    <div class="paper">
+        <h1 class="ui header">404 Error</h1>
+        <p>Page not found. Return to <a href="{% url 'home' %}">homepage</a>.</p>
+    </div>
+</div>
+{% endblock %}

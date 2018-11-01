@@ -1,0 +1,31 @@
+/*******************************
+    User Variable Overrides
+*******************************/
+
+/*-------------------
+       Content
+--------------------*/
+
+/* Menu Item */
+@itemColor: @primaryColor;
+
+/*-------------------
+        Types
+--------------------*/
+
+/*------------
+   Selection
+--------------*/
+
+/* <select> */
+@selectionBorderColor: @backgroundColor;
+@selectionTextColor: @primaryColor;
+
+/* Focus */
+@selectionFocusMenuBoxShadow: none;
+
+/* Visible */
+@selectionVisibleBorderColor: 
+@selectionVisibleBoxShadow: none;
+@selectionVisibleMenuBoxShadow: none;
+@selectionVisibleTextColor: @primaryColor;

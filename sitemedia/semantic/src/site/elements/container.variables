@@ -1,0 +1,19 @@
+/*******************************
+    User Variable Overrides
+*******************************/
+
+/*-------------------
+       Element
+--------------------*/
+
+@tabletWidth: 714px;
+@computerWidth: 820px;
+@largeMonitorWidth: @computerWidth;
+
+
+/*-------------------
+       Types
+--------------------*/
+
+/* Text */
+@textWidth: 820px;

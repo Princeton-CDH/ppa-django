@@ -15,8 +15,13 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
+from django.contrib.sitemaps.views import sitemap
 from django.views.generic.base import TemplateView
 import mezzanine.urls
+from mezzanine.core.sitemaps import DisplayableSitemap
+
+from ppa.unapi.views import UnAPIView
+from ppa.archive.views import IndexView
 
 
 urlpatterns = [
@@ -26,9 +31,25 @@ urlpatterns = [
     # pucas urls for CAS login
     url(r'^accounts/', include('pucas.cas_urls')),
     # placeholder for home page
-    url(r'^$', TemplateView.as_view(template_name='site_index.html'), name='home'),
+    url(r'^$', IndexView.as_view(), name='home'),
     url(r'^archive/', include('ppa.archive.urls', namespace='archive')),
 
+    # unapi service endpoint for Zotero
+    url(r'^unapi/$', UnAPIView.as_view(), name='unapi'),
+
+    # for testing 500 errors
+    url(r'^500/$', lambda _: 1/0),
+
     # content pages managed by mezzanine
-    url("^", include(mezzanine.urls))
+    url("^", include(mezzanine.urls)),
+    
+    # sitemaps
+    url(r'^sitemap\.xml$', sitemap, {'sitemaps': DisplayableSitemap},
+        name='django.contrib.sitemaps.views.sitemap')
 ]
+
+
+# Adds ``STATIC_URL`` to the context of error pages, so that error
+# pages can use JS, CSS and images.
+handler404 = "mezzanine.core.views.page_not_found"
+handler500 = "mezzanine.core.views.server_error"

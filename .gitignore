@@ -1,3 +1,15 @@
+# JS dependencies
+node_modules/
+
+# Media ignores
+static/media/
+static/CACHE
+sitemedia/fonts
+**/.sass-cache/
+
+# Sphinx documentation
+docs/
+
 # Pytest cache files
 .pytest_cache
 
@@ -104,3 +116,7 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# semantic ui
+!sitemedia/semantic/tasks/build
+!sitemedia/semantic/tasks/docs
