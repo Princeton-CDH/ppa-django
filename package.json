@@ -17,7 +17,7 @@
     "postcss-cli": "^5.0.0",
     "rxjs": "^6.1.0",
     "rxjs-compat": "^6.1.0",
-    "semantic-ui": "^2.4.0"
+    "semantic-ui": "2.3.3"
   },
   "scripts": {
     "watch": "gulp --gulpfile sitemedia/semantic/gulpfile.js",

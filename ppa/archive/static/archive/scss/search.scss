@@ -6,6 +6,15 @@
 @import 'snippets/popups';
 
 #search {
+    margin-top: 0;
+    
+    .container {
+        @include wide-container();
+    }
+
+    .search {
+        padding-bottom: 0;
+    }
 
     .form > fieldset.vertical.segment { // stacked fieldsets
         margin-bottom: 0;
@@ -13,6 +22,11 @@
 
         &:first-child {
             margin-top: 1em;
+            border-bottom: none;
+        }
+
+        &:nth-child(2) {
+            border-top: 1px solid $lightGrey;
         }
 
         &:last-child {
@@ -20,7 +34,57 @@
         }
 
         > .twelve.wide.column:not(:nth-of-type(1)) {
-            padding-top: 0;
+            padding-top: 0 !important;
+        }
+    }
+
+    .clear.times.icon {
+        left: auto;
+        right: 0;
+        cursor: pointer;
+        pointer-events: all;
+    }
+
+    .show-advanced {
+        background: #fff;
+        text-align: center;
+        padding-top: 0;
+
+        a {
+            color: $secondaryColor;
+            margin: auto;
+            margin-bottom: 1rem;
+            cursor: pointer;
+    
+            &:hover {
+                color: $gold;
+            }
+
+            @media (hover: none) {
+                &:hover {
+                    color: $secondaryColor;
+                }
+                &:active {
+                    color: $gold;
+                }
+            }
+
+        }
+
+        @media (min-width: $tablet) {
+            display: none;
+        }
+    }
+
+    .advanced {
+        display: none;
+
+        @media (min-width: $tablet) {
+            display: flex;
+
+            &.column {
+                display: inline-block;
+            }
         }
     }
 
@@ -29,26 +93,46 @@
         padding: 0.5rem;
     }
 
+    
+    #publication {
+        label[for=id_pub_date] { // "Publication Year" text
+            @media (min-width: $tablet) {
+                display: block;
+                margin-bottom: .25rem;
+            }
+
+            @media (min-width: $computer) {
+                display: inline-block;
+                margin-bottom: 0;
+            }
+        }
+
+        label:nth-child(3) { // "to" in between dates
+            margin: 0 .5rem;
+            
+            @media (min-width: $tablet) {
+                margin: 0 1rem;
+            }
+        }
+    }
+
     .clear-selection {
         cursor: pointer;
+        color: $secondaryColor;
         position: absolute;
-        bottom: -9rem;
+        bottom: -.5rem;
 
-        @media only screen and (min-width: 768px) {
+        &:hover {
+            color: $gold;
+        }
+
+        @media (min-width: $tablet) {
             bottom: 1rem;
         }
     }
 
-    #publication {
-        label:nth-child(3) { // "to" in between dates
-            margin: 0 1rem;
-        }
-    }
-
     #histogram {
-        @media only screen and (max-width: 768px) {
-            padding-bottom: 3rem !important;
-        }
+        height: 8rem;
 
         .values {
             display: none;
@@ -56,6 +140,7 @@
 
         .visualization {
             width: 100%;
+            height: 4rem;
         }
 
         .min-date,
@@ -69,14 +154,6 @@
     }
 
     #collections {
-        // @media only screen and (min-width: 768px) {
-        //     width: 45%;
-        // }
-
-        // @media only screen and (min-width: 1440px) {
-        //     width: 55%;
-        // }
-
         .field {
             margin-bottom: -5px;
         }
@@ -85,7 +162,7 @@
             margin-bottom: 5px;
             margin-right: 8px;
         }
-        label.button {
+        .ui.button {
             display: inline-block;
         }
 
@@ -101,30 +178,20 @@
         }
     }
 
+    .zotero a {
+        color: $secondaryColor;
+
+        &:hover {
+            color: $gold;
+        }
+    }
+
     #booleans {
         .inline.field:nth-child(2) .checkbox {
             margin-top: .25rem;
             margin-bottom: .75rem;
         }
     }
-
-    // #booleans {
-    //     @media only screen and (min-width: 768px) {
-    //         width: 55%;
-    //     }
-
-    //     @media only screen and (min-width: 1440px) {
-    //         width: 45%;
-    //     }
-
-    //     .field {
-    //         margin-bottom: 0;
-    //     }
-
-    //     .input {
-    //         width: 100%;
-    //     }
-    // }
 
     /* sorting */
     .sort {
@@ -133,14 +200,23 @@
         .menu {
             display: none;
             justify-content: space-between;
+            flex-direction: column;
 
-            @media only screen and (min-width: 1069px) {
+            @media (min-width: $computer) {
                 display: flex;
+                flex-direction: row;
             }
 
             .item {
+                padding: 0;
+                margin: 0;
                 text-transform: none;
+                border: none;
                 cursor: pointer;
+
+                @media (min-width: $computer) {
+                    margin: 1rem;
+                }
             }
 
             .item > input {
@@ -148,7 +224,7 @@
             }
 
             span.item { // "SORT BY" text
-                padding-left: 0;
+                margin-left: 0;
                 text-transform: uppercase;
                 cursor: initial;
             }
@@ -196,7 +272,7 @@
 
     /* results */
     .results-list {
-        padding: 1rem 0;
+        padding-bottom: 2rem;
     }
 
     .data {

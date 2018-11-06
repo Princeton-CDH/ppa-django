@@ -8,14 +8,14 @@
                 <i class="ui question circle icon"></i>
             </span>
         </div>
-        <div class="twelve wide column">
+        <div class="twelve wide column advanced">
             <div class="two fields">
                 {% render_field search_form.title %}
                 {% render_field search_form.author %}
             </div>
         </div>
     </fieldset>
-    <fieldset class="ui vertical stackable grid segment">
+    <fieldset class="ui vertical stackable grid segment advanced">
         <legend class="sr-only">publication date fields</legend>
         <div class="four wide column" id="publication">
             {% render_field search_form.pub_date %}
@@ -27,9 +27,9 @@
             <span class="max-date"></span>
         </div>
     </fieldset>
-    <fieldset class="ui vertical stackable basic grid segment">
+    <fieldset class="ui vertical stackable basic grid segment advanced">
         <legend class="sr-only">search filters</legend>
-        <div class="six wide column" id="collections">
+        <div class="twelve wide column" id="collections">
             <div class="field">
                 <label for="collections">Collections</label>
                 {% for collection in search_form.collections %}
@@ -40,6 +40,7 @@
                 {% endfor %}
             </div>
         </div>
+        <!--
         <div class="six wide column" id="booleans">
             <div class="two fields">
                 <div class="field">
@@ -54,11 +55,15 @@
                 </div>
             </div>
         </div>
+        -->
     </fieldset>
+    <div class="ui vertical basic segment show-advanced">
+        <a>Advanced Search</a>
+    </div>
     <input type="submit" class="sr-only sr-only-focusable" aria-label="submit search">
     <div class="workscount ui center aligned text container">
         <p class="count">Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}</p>
-        <p>Digitized work citations can be exported to <a href="https://www.zotero.org/support/getting_stuff_into_your_library">Zotero</a></p>
+        <p class="zotero">Work citations can be exported to <a href="https://www.zotero.org/support/getting_stuff_into_your_library">Zotero</a></p>
     </div>
     {% include 'archive/snippets/pagination.html' %}
     <div class="sort">

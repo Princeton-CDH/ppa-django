@@ -99,7 +99,8 @@ class TestDigitizedWorkAdmin(TestCase):
         # that is not empty
         assert fakerequest.session['collection-add-ids']
         # the key should have the ids of the three fixtures
-        assert fakerequest.session['collection-add-ids'] == [1, 2, 3]
+        assert set(fakerequest.session['collection-add-ids']) == \
+            set(queryset.values_list('id', flat=True))
         # the querystring should have been faithfully copied to session as well
         assert fakerequest.session['collection-add-filters'] == fakerequest.GET
         redirect = digworkadmin.bulk_add_collection(fakerequest, queryset)

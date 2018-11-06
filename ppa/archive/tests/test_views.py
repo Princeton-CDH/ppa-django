@@ -6,6 +6,7 @@ from time import sleep
 from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
+from django.template.defaultfilters import escape
 from django.test import TestCase
 from django.urls import reverse
 from django.utils.http import urlencode
@@ -17,7 +18,8 @@ from ppa.archive.forms import SearchForm
 from ppa.archive.models import DigitizedWork, Collection
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView
-from ppa.archive.templatetags.ppa_tags import page_image_url
+from ppa.archive.templatetags.ppa_tags import page_image_url, page_url
+
 
 class TestArchiveViews(TestCase):
     fixtures = ['sample_digitized_works']
@@ -142,8 +144,6 @@ class TestArchiveViews(TestCase):
             '<abbr class="unapi-id" title="%s"></abbr>' % dial.source_id,
             msg_prefix='unapi id should be embedded for each work')
 
-
-
     @pytest.mark.usefixtures("solr")
     def test_digitizedwork_detailview_query(self):
         '''test digitized work detail page with search query'''
@@ -160,8 +160,8 @@ class TestArchiveViews(TestCase):
         ]
         htid = 'chi.78013704'
         solr_page_docs = [
-            {'content': content, 'order': i, 'item_type': 'page',
-             'srcid': htid, 'id': '%s.%s' % (htid, i)}
+            {'content': content, 'order': i+1, 'item_type': 'page',
+             'srcid': htid, 'id': '%s.%s' % (htid, i), 'label': i}
              for i, content in enumerate(sample_page_content)]
         dial = DigitizedWork.objects.get(source_id='chi.78013704')
         solr_work_docs = [dial.index_data()]
@@ -207,18 +207,35 @@ class TestArchiveViews(TestCase):
         highlights = response.context['page_highlights'][result['id']]
         # template has the expected information rendered
         self.assertContains(response, highlights['content'][0])
+        # page number that correspondeds to label field should be present
+        self.assertContains(
+            response,
+            'p. %s' % result['label'],
+            count=1,
+            msg_prefix='has page label for the print page numb.'
+        )
         # image url should appear twice for src and srcset
         self.assertContains(
             response,
             page_image_url(result['srcid'], result['order'], 225),
-            count=1
+            count=1,
+            msg_prefix='has img src url'
         )
         self.assertContains(
             response,
             page_image_url(result['srcid'], result['order'], 450),
-            count=1
+            count=1,
+            msg_prefix='has imgset src url'
         )
         self.assertContains(response, '1 occurrence')
+        # image should have a link to hathitrust as should the page number
+        self.assertContains(
+            response,
+            page_url(result['srcid'], result['order']),
+            count=2,
+            msg_prefix='should include a link to HathiTrust'
+        )
+
 
         # bad syntax
         response = self.client.get(url, {'query': '"incomplete phrase'})
@@ -286,11 +303,13 @@ class TestArchiveViews(TestCase):
         for digwork in digitized_works:
             # basic metadata for each work
             self.assertContains(response, digwork.title)
+            self.assertContains(response, digwork.subtitle)
             self.assertContains(response, digwork.source_id)
             self.assertContains(response, digwork.author)
             # NOTE: enumcron suppressed for now (possibly for good)
             # self.assertContains(response, digwork.enumcron)
-            self.assertContains(response, digwork.publisher)
+            # at least one publisher includes an ampersand, so escape text
+            self.assertContains(response, escape(digwork.publisher))
             self.assertContains(response, digwork.pub_place)
             self.assertContains(response, digwork.pub_date)
             # link to detail page
@@ -335,7 +354,6 @@ class TestArchiveViews(TestCase):
         self.assertContains(
             response, 'winter and <em>wintry</em> and',
             msg_prefix='highlight snippet from page content displayed')
-
 
         # match in page content but not in book metadata should pull back title
         response = self.client.get(url, {'query': 'blood'})
@@ -409,10 +427,11 @@ class TestArchiveViews(TestCase):
         assert sorted_object_list == response.context['object_list']
         # one last test using title
         response = self.client.get(url, {'query': '', 'sort': 'title_asc'})
-        sorted_object_list = sorted(response.context['object_list'],
-                                    key=operator.itemgetter('title_exact'))
-        # the two context lists should match exactly
-        assert sorted_object_list == response.context['object_list']
+        sorted_work_ids = DigitizedWork.objects.order_by('sort_title') \
+                                       .values_list('source_id', flat=True)
+        # the list of ids should match exactly
+        assert list(sorted_work_ids) == \
+            [work['srcid'] for work in response.context['object_list']]
 
         # - check that a query allows relevance as sort order toggle in form
         response = self.client.get(url, {'query': 'foo', 'sort': 'title_asc'})
@@ -446,8 +465,8 @@ class TestArchiveViews(TestCase):
 
         # basic date range request
         response = self.client.get(url, {'pub_date_0': 1900, 'pub_date_1': 1922})
-        # in fixture data, only wintry is after 1900
-        assert len(response.context['object_list']) == 1
+        # in fixture data, only wintry and 135000 words are after 1900
+        assert len(response.context['object_list']) == 2
         self.assertContains(response, wintry.source_id)
 
         # invalid date range request / invalid form - not an exception
@@ -469,12 +488,12 @@ class TestArchiveViews(TestCase):
         # should have the results count
         self.assertContains(response, " digitized works")
         # should have the histogram data
-        self.assertContains(response, "<pre>")
+        self.assertContains(response, "<pre class=\"count\">")
         # should have pagination
         self.assertContains(response, "<div class=\"pagination")
         # test a query
-        response = self.client.get(url,
-            {'query': 'blood AND bone AND alternate'},
+        response = self.client.get(
+            url, {'query': 'blood AND bone AND alternate'},
             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         self.assertContains(response, '1 digitized work')
         self.assertContains(response, wintry.source_id)
@@ -492,7 +511,6 @@ class TestArchiveViews(TestCase):
             mockpsq.return_value.count = 0
             response = self.client.get(url, {'query': 'something'})
             self.assertContains(response, 'Something went wrong.')
-
 
     def test_digitizedwork_csv(self):
         # add an arbitrary note to one digital work so that the field is
@@ -523,6 +541,7 @@ class TestArchiveViews(TestCase):
         # check expected data in CSV output
         for digwork, digwork_data in zip(digworks, rows[1:]):
             assert digwork.source_id in digwork_data
+            assert digwork.record_id in digwork_data
             assert digwork.title in digwork_data
             assert digwork.author in digwork_data
             assert str(digwork.pub_date) in digwork_data
@@ -617,14 +636,14 @@ class TestArchiveViews(TestCase):
         # stats set properly in context
         assert 'stats' in response.context
         assert response.context['stats'][coll1.name]['count'] == digworks.count()
-        assert response.context['stats'][coll1.name]['dates'] == '1880–1903'
+        assert response.context['stats'][coll1.name]['dates'] == '1880–1904'
         assert response.context['stats'][coll2.name]['count'] == 1
         assert response.context['stats'][coll2.name]['dates'] == '1903'
         # stats displayed on template
         self.assertContains(response, '%d digitized works' % digworks.count())
         self.assertContains(response, '1 digitized work')
         self.assertNotContains(response, '1 digitized works')
-        self.assertContains(response, '1880–1903')
+        self.assertContains(response, '1880–1904')
         self.assertContains(response, '1903')
         # collections with items should link to search
         archive_url = reverse('archive:list')

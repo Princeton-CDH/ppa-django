@@ -4,10 +4,10 @@ this template can be rendered by list_digitizedworks.html or requested separatel
 via ajax, e.g. to update the search results.
 {% endcomment %}
 <div class="data">
-    <p class="results-count">
+    <pre class="count">
         Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}
-    </p>
-    <pre>
+    </pre>
+    <pre class="facets">
         {{ facet_ranges.pub_date|json }}
     </pre>
 </div>

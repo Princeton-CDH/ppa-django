@@ -4,8 +4,9 @@
 .results-list .item {
     margin: 1rem 0;
 
-    .grid.container {
-        padding: 1rem;
+    > .grid {
+        @include wide-container();
+        padding: .5rem 0;
     }
 
     &:nth-child(even) {
@@ -35,7 +36,7 @@
         margin-left: 3rem;
     }
 
-    .title a:hover > .header {
+    .title a:hover .header {
         color: $gold;
     }
 
@@ -47,6 +48,12 @@
         color: $secondaryColor;
     }
 
+    .title .sub.header {
+        font-weight: normal;
+        font-style: italic;
+        text-transform: none;
+    }
+
     .author {
         font-weight: 400;
     }
@@ -56,8 +63,7 @@
 
         > .column {
             padding: 0 1rem;
-            margin: 1rem 0;
-            border-right: 1px solid $midGrey;
+            // border-right: 1px solid $midGrey;
             text-align: center;
             
             &:first-child {
@@ -70,6 +76,11 @@
                 padding-right: 0;
                 text-align: right;
             }
+        }
+
+        .pub_place,
+        .enumcron {
+            font-style: italic;
         }
     }
 }

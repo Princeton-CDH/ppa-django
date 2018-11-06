@@ -8,10 +8,33 @@
     -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
 
+    @media (hover: none) {
+        &:hover {
+            background: @background;
+            color: @textColor;
+        }
+    }
+
     &.basic {
         border: 0;
         padding: @relative7px @horizontalPadding;
         min-width: @relative30px;
+
+        label& {
+            padding: @verticalPadding @horizontalPadding;
+            box-shadow: none;
+            cursor: default;
+            color: @midGrey !important;
+            border: @borderWeight solid @midGrey;
+            background: transparent !important;
+
+            &:hover,
+            &:active {
+                background: transparent !important;
+                color: @midGrey !important;
+                box-shadow: none !important;
+            }
+        }
     }
 
     &.disabled {

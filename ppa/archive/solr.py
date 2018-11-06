@@ -34,6 +34,8 @@ class SolrSchema(object):
         {'name': 'content', 'type': 'text_en', 'required': False},
         {'name': 'item_type', 'type': 'string', 'required': False},
         {'name': 'title', 'type': 'text_en', 'required': False},
+        {'name': 'subtitle', 'type': 'text_en', 'required': False},
+        {'name': 'sort_title', 'type': 'string', 'required': False},
         {'name': 'enumcron', 'type': 'string', 'required': False},
         {'name': 'author', 'type': 'text_en', 'required': False},
         {'name': 'pub_date', 'type': 'int', 'required': False},
@@ -50,7 +52,6 @@ class SolrSchema(object):
         {'name': 'tags', 'type': 'string', 'required': False, 'multiValued': True},
 
         # sort/facet copy fields
-        {'name': 'title_exact', 'type': 'string', 'required': False},
         {'name': 'author_exact', 'type': 'string', 'required': False},
         {'name': 'collections_exact', 'type': 'string', 'required': False,
          'multiValued': True}
@@ -60,7 +61,6 @@ class SolrSchema(object):
                    'pub_place', 'publisher']
     #: copy fields, e.g. for facets
     copy_fields = [
-        ('title', 'title_exact'),
         ('author', 'author_exact'),
         ('collections', 'collections_exact'),
     ]

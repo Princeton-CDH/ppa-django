@@ -8,6 +8,7 @@
     margin: 0;
 
     .items-per-page {
+        padding: 0;
         margin-bottom: 1rem; // when stacked above page-controls
 
         @media screen and (min-width: 450px) {
@@ -15,8 +16,9 @@
         }
     }
 
-    @media screen and (min-width: 768px) {
+    @media (min-width: $tablet) {
         justify-content: space-between;
+        margin: 0 1rem;
     }
 
     .display-label { // "Display"
@@ -27,19 +29,32 @@
         margin-left: .5rem;
     }
 
-    .page-controls span { // "..." indicator
-        margin: 0 1rem;
-    }
+    .page-controls {
+        padding: 0;
 
-    .page-controls .button {
-        margin: 0 5px;
+        span { // "..." indicator
+            display: none;
+            margin: 0 .5rem;
 
-        &:first-child {
-            margin-left: 0;
+            @media (min-width: $tablet) {
+                display: inline-block;
+            }
         }
 
-        &:last-child {
-            margin-right: 0;
+        .button {
+            margin: 0 2px;
+
+            @media (min-width: $tablet) {
+                margin: 0 5px;
+            }
+    
+            &:first-child {
+                margin-left: 0;
+            }
+    
+            &:last-child {
+                margin-right: 0;
+            }
         }
     }
 

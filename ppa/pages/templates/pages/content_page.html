@@ -14,8 +14,11 @@
 {# page title displayed in page header snippet #}
 
 {% block content %}
-<div class="ui vertical basic segment">
-    <div class="ui text container">
+<div class="ui container">
+    <div class="paper">
+        <h1 class="ui header">
+            {% firstof page.title page_title object.title %}
+        </h1>
          {{ page.body|richtext }}
     </div>
 </div>

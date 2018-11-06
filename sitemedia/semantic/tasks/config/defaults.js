@@ -59,7 +59,6 @@ module.exports = {
     'label',
     'list',
     'loader',
-    'placeholder',
     'rail',
     'reveal',
     'segment',

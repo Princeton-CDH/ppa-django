@@ -3,6 +3,28 @@
 CHANGELOG
 =========
 
+0.9.0
+-----
+
+* As an admin, I would like to be able to see the Hathi Catalog IDs for a volume so that I can see how individual volumes are grouped together within the HathiTrust.
+* As an admin, I want the CSV report of materials on the site to include items' Hathi catalog ID so that I can identify duplicates and multi-volume works.
+* As an admin, I want changes made to digitized works and collections in the admin interface to automatically update the public search, so that content in the search and admin interface stay in sync.
+* As an admin, I want subtitle and sort title populated from HathiTrust MARCXML so that the records can be displayed and sorted better.
+* As a content editor, I want to add edition notes so that I can document the copy of an item that's in the archive.
+* As a user, I want to see notes on a digitized work's edition so that I'm aware of the specifics of the copy in PPA.
+* As a user, I want to be able to view a page in Hathitrust by clicking its thumbnail or page number in a search result so that I can quickly and easily see my search result in its full context.
+* As a user, I want different styles for the main title and subtitle on search results so that I can visually distinguish titles.
+* As a user, I want item titles to ignore definite articles and punctuation when sorting, so that I can find the most relevant content first.
+
+Design updates
+^^^^^^^^^^^^^^
+
+* Updates styles site-wide to match new designs for most pages
+* Fixes some issues with min/max date display on publication date histogram
+* Mutes the look of collection "badges" on search results
+* Adjusts the interactive area and cursor used for search sorting
+* Fixes an issue with sizing of the footer in WebKit browsers
+
 0.8.1
 -----
 
@@ -28,7 +50,7 @@ Search filters and highlighting
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * As a user viewing keyword search results, I want to see a few text snippets from the full text of a work so that I can get an idea how my search terms are used in the work.
-*  As a user viewing an individual item from a keyword search, I want to see page image thumbnails and text snippets that match my search terms so I can see how many and what kind of pages match my search terms.
+* As a user viewing an individual item from a keyword search, I want to see page image thumbnails and text snippets that match my search terms so I can see how many and what kind of pages match my search terms.
 * As a user, I want to search digitized volumes by keyword in author names in a clearly marked author search field so that I can see what materials are in the archive by a certain author.
 * As a user, I want to search digitized volumes by title keywords in a clearly marked title field so that I can see what materials are in the archive with a certain title.
 * As a user, I want to change how my results are sorted so I can browse the results in multiple ways.

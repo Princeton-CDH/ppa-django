@@ -44,10 +44,12 @@
     <abbr class="unapi-id" title="{{ object.source_id }}"></abbr>
     <table class="metadata ui very basic table">
         <tbody>
+            {% if object.subtitle %}
             <tr class="secondary-title">
                 <th scope="row">Secondary Title</th>
-                <td>{{ object.title }}</td>
+                <td>{{ object.subtitle }}</td>
             </tr>
+            {% endif %}
             <tr>
                 <th scope="row">Year of Publication</th>
                 <td>{{ object.pub_date }}</td>
@@ -71,7 +73,7 @@
                 <th scope="row">PPA Collection{{ object.collections.count|pluralize }}</th>
                 <td>
                     {% for collection in object.collections.all %}
-                    <a class="ui button" href="{% url 'archive:list' %}?collections={{ collection.pk }}">{{ collection }}</a>
+                    <label class="ui basic button" href="{% url 'archive:list' %}?collections={{ collection.pk }}">{{ collection }}</label>
                     {% endfor %}
                 </td>
             </tr>

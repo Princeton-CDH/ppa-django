@@ -116,18 +116,26 @@ class TestDigitizedWork(TestCase):
             digwork.subtitle
         ])
 
-        # test error in record (title non-sort character non-numeric
+        # test error in record (title non-sort character non-numeric)
         with open(self.bibdata_full2) as bibdata:
             full_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
             full_bibdata.marcxml['245'].indicators[1] = ' '
             digwork.populate_from_bibdata(full_bibdata)
             assert digwork.sort_title == ' '.join([digwork.title, digwork.subtitle])
 
+            # test error in title sort (doesn't include space after definite article)
+            full_bibdata.marcxml['245'].indicators[1] = 3
+            digwork.populate_from_bibdata(full_bibdata)
+            assert not digwork.sort_title.startswith(' ')
+
         # TODO: test publication info unavailable?
 
     def test_index_data(self):
-        digwork = DigitizedWork.objects.create(source_id='njp.32101013082597',
-            title='Structure of English Verse', pub_date=1884,
+        digwork = DigitizedWork.objects.create(
+            source_id='njp.32101013082597',
+            title='The Structure of English Verse', pub_date=1884,
+            subtitle='An essay',
+            sort_title='Structure of English Verse',
             author='Charles Witcomb', pub_place='Paris',
             publisher='Mesnil-Dramard',
             source_url='https://hdl.handle.net/2027/njp.32101013082597',
@@ -141,6 +149,8 @@ class TestDigitizedWork(TestCase):
         assert index_data['srcid'] == digwork.source_id
         assert index_data['item_type'] == 'work'
         assert index_data['title'] == digwork.title
+        assert index_data['subtitle'] == digwork.subtitle
+        assert index_data['sort_title'] == digwork.sort_title
         assert index_data['author'] == digwork.author
         assert index_data['pub_place'] == digwork.pub_place
         assert index_data['pub_date'] == digwork.pub_date
@@ -288,7 +298,6 @@ class TestDigitizedWork(TestCase):
 
             for i, data in enumerate(page_data):
                 mets_page = mets.structmap_pages[i]
-
                 assert data['id'] == '.'.join([work.source_id, mets_page.text_file.sequence])
                 assert data['srcid'] == work.source_id
                 assert data['content'] == contents[i]
@@ -297,6 +306,7 @@ class TestDigitizedWork(TestCase):
                 assert data['label'] == mets_page.display_label
                 assert 'tags' in data
                 assert data['tags'] == mets_page.label.split(', ')
+
 
     def test_index_id(self):
         work = DigitizedWork(source_id='chi.79279237')

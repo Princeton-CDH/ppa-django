@@ -13,10 +13,15 @@
         }
 
         &.active,
-        &:active,
         &:hover
         {
             color: @invertedTextColor;
+        }
+
+        @media (hover: none) {
+            &:hover:not(.active) {
+                color: @primaryColor;
+            }
         }
 
         &.focus,

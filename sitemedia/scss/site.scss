@@ -66,7 +66,7 @@
 }
 
 /* header */
-#header {
+#header { // currently only used for "archive" text on search page
     margin-top: $nav-height;
     padding-top: $nav-height;
 
@@ -75,18 +75,23 @@
     }
 
     .header:not(.sub) {
-        font-size: 60px;
+        font-size: 40px;
         font-weight: normal;
         text-transform: uppercase;
+
+        @media (min-width: $tablet) {
+            font-size: 60px;
+        }
     }
 }
 
 /* main */
 main {
-    flex: 1 0 auto;
-    margin-bottom: 50px;
+    flex: 1;
+    margin-top: $nav-height;
+    margin-bottom: 2rem;
 
-    @media only screen and (min-width: 320px) {
+    @media (min-width: $tablet) {
         margin-bottom: 100px;
     }
 }

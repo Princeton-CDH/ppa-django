@@ -73,7 +73,7 @@ class DigitizedWork(models.Model, Indexable):
     subtitle = models.TextField(blank=True, default='',
                                 help_text='Subtitle, if any (optional)')
     #: sort title: title without leading non-sort characters, from marc
-    sort_title = models.TextField(blank=True, default='',
+    sort_title = models.TextField(default='',
                                   help_text='Sort title from MARC record')
     #: enumeration/chronology (hathi-specific)
     enumcron = models.CharField('Enumeration/Chronology', max_length=255,
@@ -171,7 +171,7 @@ class DigitizedWork(models.Model, Indexable):
             # if preceding_character == ':':
             #     self.subtitle = bibdata.marcxml['245']['b'] or ''
 
-            # NOTE: skipping precebding character check for now
+            # NOTE: skipping preceding character check for now
             self.subtitle = bibdata.marcxml['245']['b'] or ''
 
             # indicator 2 provides the number of characters to be
@@ -184,7 +184,10 @@ class DigitizedWork(models.Model, Indexable):
                 # - assuming no non-sort characters
                 non_sort = 0
 
-            self.sort_title = bibdata.marcxml.title()[non_sort:]
+            # strip whitespace, since a small number of records have a
+            # nonsort value that doesn't include a space after a
+            # definite article
+            self.sort_title = bibdata.marcxml.title()[non_sort:].strip()
 
             self.author = bibdata.marcxml.author() or ''
             # field 260 includes publication information
@@ -262,12 +265,13 @@ class DigitizedWork(models.Model, Indexable):
             'srcid': self.source_id,
             'src_url': self.source_url,
             'title': self.title,
+            'subtitle': self.subtitle,
+            'sort_title': self.sort_title,
             'pub_date': self.pub_date,
             'pub_place': self.pub_place,
             'publisher': self.publisher,
             'enumcron': self.enumcron,
             'author': self.author,
-            'public_notes': self.public_notes,
             'collections': [collection.name for collection
                             in self.collections.all()],
             # general purpose multivalued field, currently only
@@ -348,16 +352,18 @@ class DigitizedWork(models.Model, Indexable):
 
                 pagefilename = os.path.join(self.hathi_content_dir, page.text_file_location)
                 with ht_zip.open(pagefilename) as pagefile:
-
-                    yield {
-                        'id': '%s.%s' % (self.source_id, page.text_file.sequence),
-                        'srcid': self.source_id,   # for grouping with work record
-                        'content': pagefile.read().decode('utf-8'),
-                        'order': page.order,
-                        'label': page.display_label,
-                        'tags': page.label.split(', ') if page.label else [],
-                        'item_type': 'page'
-                    }
+                    try:
+                        yield {
+                            'id': '%s.%s' % (self.source_id, page.text_file.sequence),
+                            'srcid': self.source_id,   # for grouping with work record
+                            'content': pagefile.read().decode('utf-8'),
+                            'order': page.order,
+                            'label': page.display_label,
+                            'tags': page.label.split(', ') if page.label else [],
+                            'item_type': 'page'
+                        }
+                    except StopIteration:
+                        return
 
     def get_metadata(self, metadata_format):
         '''Get metadata for this item in the specified format.

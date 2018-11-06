@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
 
-
 {% block css %}
 <link rel="stylesheet" type="text/x-scss" href="{% static 'scss/page.scss' %}">
 {% endblock %}
@@ -10,15 +9,10 @@
 
 {% block title %}Page not Found{% endblock %}
 
-{% block page_header %}
-    {% with page_title="404 Error" %}
-    {{ block.super }}
-    {% endwith %}
-{% endblock %}
-
 {% block content %}
-<div class="ui vertical basic segment">
-    <div class="ui text container">
+<div class="ui container">
+    <div class="paper">
+        <h1 class="ui header">404 Error</h1>
         <p>Page not found. Return to <a href="{% url 'home' %}">homepage</a>.</p>
     </div>
 </div>
