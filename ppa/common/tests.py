@@ -33,7 +33,7 @@ class TestVaryOnHeadersMixin(TestCase):
         # stub a View that will always return 405 since no methods are defined
         vary_on_view = \
             VaryOnHeadersMixin(vary_headers=['X-Foobar', 'X-Bazbar'])
-        # mock a request because we don't need it's functionality
+        # mock a request because we don't need its functionality
         request = Mock()
         response = vary_on_view.dispatch(request)
         # check for the set header with the values supplied
