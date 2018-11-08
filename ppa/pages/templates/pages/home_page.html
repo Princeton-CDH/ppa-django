@@ -70,11 +70,10 @@
             of collections.
         </div>
         <div class="ui cards">
-            {% for item in object_list %}
+            {% for item in collections %}
             <a class="ui card" href="{% url 'archive:list' %}?collections={{ item.name|urlencode }}">
                 <div class="content">
                     <h3 class="header">{{ item.name }}</h3>
-                    {% comment %}. TODO: needs collection stats logic from collection list view
                     {% with coll_stats=stats|dict_item:item.name %}
                         <div class="meta">
                             {% firstof coll_stats.count "0" as count %}
@@ -83,7 +82,6 @@
                             </p>
                         </div>
                     {% endwith %}
-                    {% endcomment %}
                     {% if item.description %}
                     <div class="description">
                         {{ item.description|safe }}

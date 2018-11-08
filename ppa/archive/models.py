@@ -12,7 +12,7 @@ from pairtree import pairtree_path, pairtree_client
 
 from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS
 from ppa.archive.solr import Indexable
-
+from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +59,41 @@ class Collection(models.Model):
     def name_changed(self):
         '''check if name has been changed (only works on current instance)'''
         return self.name != self.__initial['name']
+
+    @staticmethod
+    def stats():
+        '''Collection counts and date ranges, based on what is in Solr.
+        Returns a dictionary where they keys are collection names and
+        values are a dictionary with count and dates.
+        '''
+
+        # NOTE: if we *only* want counts, could just do a regular facet
+        solr_stats = PagedSolrQuery({
+            'q': '*:*',
+            'facet': True,
+            'facet.pivot': '{!stats=piv1}collections_exact',
+            # NOTE: if we pivot on collection twice, like this, we should
+            # have the information needed to generate a venn diagram
+            # of the collections (based on number of overlap)
+            # 'facet.pivot': '{!stats=piv1}collections_exact,collections_exact'
+            'stats': True,
+            'stats.field': '{!tag=piv1 min=true max=true}pub_date',
+            # don't return any actual items, just the facets
+            'rows': 0
+        })
+        facet_pivot = solr_stats.raw_response['facet_counts']['facet_pivot']
+        # simplify the pivot stat data for display
+        stats = {}
+        for info in facet_pivot['collections_exact']:
+            pub_date_stats = info['stats']['stats_fields']['pub_date']
+            stats[info['value']] = {
+                'count': info['count'],
+                'dates': '%(min)d–%(max)d' % pub_date_stats \
+                    if pub_date_stats['max'] != pub_date_stats['min'] \
+                    else '%d' % pub_date_stats['min']
+            }
+
+        return stats
 
 
 class DigitizedWork(models.Model, Indexable):

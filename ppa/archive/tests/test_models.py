@@ -347,6 +347,7 @@ class TestDigitizedWork(TestCase):
 
 
 class TestCollection(TestCase):
+    fixtures = ['sample_digitized_works']
 
     def test_str(self):
         collection = Collection(name='Random Assortment')
@@ -361,6 +362,37 @@ class TestCollection(TestCase):
         # save changes; should no longer be marked as changed
         collection.save()
         assert not collection.name_changed
+
+    @pytest.mark.usefixtures("solr")
+    def test_stats(self):
+        # test collection stats from Solr
+
+        coll1 = Collection.objects.create(name='Random Grabbag')
+        coll2 = Collection.objects.create(
+            name='Foo through Time',
+            description="A <em>very</em> useful collection."
+        )
+
+        # add items to collections
+        # - put everything in collection 1
+        digworks = DigitizedWork.objects.all()
+        for digwork in digworks:
+            digwork.collections.add(coll1)
+        # just one item in collection 2
+        wintry = digworks.get(title__icontains='Wintry')
+        wintry.collections.add(coll2)
+
+        # reindex the digitized works so we can check stats
+        solr, solr_collection = get_solr_connection()
+        solr.index(solr_collection, [dw.index_data() for dw in digworks],
+                   params={"commitWithin": 100})
+        sleep(2)
+
+        stats = Collection.stats()
+        assert stats[coll1.name]['count'] == digworks.count()
+        assert stats[coll1.name]['dates'] == '1880–1904'
+        assert stats[coll2.name]['count'] == 1
+        assert stats[coll2.name]['dates'] == '1903'
 
 
 class TestCollectionQuerySet(TestCase):

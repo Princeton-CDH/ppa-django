@@ -22,7 +22,11 @@ class HomePage(Page):
     def get_context(self, request):
         context = super().get_context(request)
         # include 2 random collections from those that are public
-        context['collections'] = Collection.objects.public().order_by('?')[:2]
+        # along withstats for all collections
+        context.update({
+            'collections': Collection.objects.public().order_by('?')[:2],
+            'stats': Collection.stats()
+        })
         return context
 
 

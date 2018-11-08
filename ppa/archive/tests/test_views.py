@@ -635,10 +635,6 @@ class TestArchiveViews(TestCase):
         response = self.client.get(collection_list)
         # stats set properly in context
         assert 'stats' in response.context
-        assert response.context['stats'][coll1.name]['count'] == digworks.count()
-        assert response.context['stats'][coll1.name]['dates'] == '1880–1904'
-        assert response.context['stats'][coll2.name]['count'] == 1
-        assert response.context['stats'][coll2.name]['dates'] == '1903'
         # stats displayed on template
         self.assertContains(response, '%d digitized works' % digworks.count())
         self.assertContains(response, '1 digitized work')
