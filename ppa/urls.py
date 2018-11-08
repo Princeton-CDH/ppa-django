@@ -53,7 +53,8 @@ urlpatterns = [
     url(r'^documents/', include(wagtaildocs_urls)),
 
     # sitemaps
-    url(r'^sitemap\.xml$', sitemap_views.index, {'sitemaps': sitemaps}),
+    url(r'^sitemap\.xml$', sitemap_views.index, {'sitemaps': sitemaps},
+        name='sitemap-index'),
     url(r'^sitemap-(?P<section>.+)\.xml$', sitemap_views.sitemap, {'sitemaps': sitemaps},
         name='django.contrib.sitemaps.views.sitemap'),
 
