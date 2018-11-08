@@ -17,14 +17,22 @@ from django.conf import settings
 from django.conf.urls import url, include
 from django.conf.urls.static import serve
 from django.contrib import admin
-from django.contrib.sitemaps.views import sitemap
 from django.views.generic.base import TemplateView
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.core import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
-
+from wagtail.contrib.sitemaps import views as sitemap_views, Sitemap
 
 from ppa.unapi.views import UnAPIView
+from ppa.archive.sitemaps import DigitizedWorkSitemap, ArchiveViewsSitemap
+
+
+# sitemap configuration for sections of the site
+sitemaps = {
+    'pages': Sitemap,  # wagtail content pages
+    'archive': ArchiveViewsSitemap,
+    'digitizedworks': DigitizedWorkSitemap,
+}
 
 
 urlpatterns = [
@@ -41,11 +49,13 @@ urlpatterns = [
     # for testing 500 errors
     url(r'^500/$', lambda _: 1/0),
 
-    # sitemaps
-    # url(r'^sitemap\.xml$', sitemap, {'sitemaps': DisplayableSitemap},
-        # name='django.contrib.sitemaps.views.sitemap')
     url(r'^cms/', include(wagtailadmin_urls)),
     url(r'^documents/', include(wagtaildocs_urls)),
+
+    # sitemaps
+    url(r'^sitemap\.xml$', sitemap_views.index, {'sitemaps': sitemaps}),
+    url(r'^sitemap-(?P<section>.+)\.xml$', sitemap_views.sitemap, {'sitemaps': sitemaps},
+        name='django.contrib.sitemaps.views.sitemap'),
 
     url(r'', include(wagtail_urls)),
 ]
