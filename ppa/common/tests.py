@@ -1,7 +1,10 @@
+from unittest.mock import Mock
+
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
 
 from ppa.common.admin import LocalUserAdmin
+from ppa.common.views import VaryOnHeadersMixin
 
 
 class TestLocalUserAdmin(TestCase):
@@ -22,3 +25,16 @@ class TestLocalUserAdmin(TestCase):
         assert grp2.name in group_names
         assert grp3.name not in group_names
 
+
+class TestVaryOnHeadersMixin(TestCase):
+
+    def test_vary_on_headers_mixing(self):
+
+        # stub a View that will always return 405 since no methods are defined
+        vary_on_view = \
+            VaryOnHeadersMixin(vary_headers=['X-Foobar', 'X-Bazbar'])
+        # mock a request because we don't need its functionality
+        request = Mock()
+        response = vary_on_view.dispatch(request)
+        # check for the set header with the values supplied
+        assert response['Vary'] == 'X-Foobar, X-Bazbar'
