@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class EditorialConfig(AppConfig):
-    name = 'editorial'
+    name = 'ppa.editorial'
