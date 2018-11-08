@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from django.urls import reverse
+from wagtail.core.models import Site, Page
 from wagtail.core.templatetags.wagtailcore_tags import slugurl
 
 from ppa.common.admin import LocalUserAdmin
@@ -36,6 +37,10 @@ class TestSitemaps(TestCase):
             self.assertContains(response, 'sitemap-{}'.format(subsitemap))
 
     def test_sitemap_pages(self):
+        site = Site.objects.first()
         response = self.client.get('/sitemap-pages.xml')
-        for slug in ['home', 'history', 'editorial']:
-            self.assertContains(response, slugurl({}, slug))
+        for slug in ['history', 'editorial', 'home']:
+            # somehow slug=home is returning more than one?
+            page = Page.objects.filter(slug=slug).first()
+            self.assertContains(
+                response, '{}</loc>'.format(page.relative_url(site)))
