@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from django.urls import reverse
@@ -5,6 +7,7 @@ from wagtail.core.models import Site, Page
 from wagtail.core.templatetags.wagtailcore_tags import slugurl
 
 from ppa.common.admin import LocalUserAdmin
+from ppa.common.views import VaryOnHeadersMixin
 
 
 class TestLocalUserAdmin(TestCase):
@@ -26,6 +29,7 @@ class TestLocalUserAdmin(TestCase):
         assert grp3.name not in group_names
 
 
+
 class TestSitemaps(TestCase):
     # basic sanity checks that sitemaps are configured correctly
     fixtures = ['wagtail_pages']
@@ -44,3 +48,17 @@ class TestSitemaps(TestCase):
             page = Page.objects.filter(slug=slug).first()
             self.assertContains(
                 response, '{}</loc>'.format(page.relative_url(site)))
+
+
+class TestVaryOnHeadersMixin(TestCase):
+
+    def test_vary_on_headers_mixing(self):
+
+        # stub a View that will always return 405 since no methods are defined
+        vary_on_view = \
+            VaryOnHeadersMixin(vary_headers=['X-Foobar', 'X-Bazbar'])
+        # mock a request because we don't need its functionality
+        request = Mock()
+        response = vary_on_view.dispatch(request)
+        # check for the set header with the values supplied
+        assert response['Vary'] == 'X-Foobar, X-Bazbar'
