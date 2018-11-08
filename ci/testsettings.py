@@ -35,7 +35,5 @@ SOLR_CONNECTIONS = {
     },
 }
 
-# Use test solr for pa11y-ci test
-SOLR_CONNECTIONS['default'] = SOLR_CONNECTIONS['test']
 
 # secret key added as a travis build step
