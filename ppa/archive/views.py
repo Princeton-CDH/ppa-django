@@ -16,18 +16,19 @@ from SolrClient.exceptions import SolrError
 from ppa.archive.forms import SearchForm, AddToCollectionForm, SearchWithinWorkForm
 from ppa.archive.models import DigitizedWork, Collection
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
-
+from ppa.common.views import VaryOnHeadersMixin
 
 logger = logging.getLogger(__name__)
 
 
-class DigitizedWorkListView(ListView):
+class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
     '''Search and browse digitized works.  Based on Solr index
     of works and pages.'''
 
     template_name = 'archive/list_digitizedworks.html'
     form_class = SearchForm
     paginate_by = 50
+    vary_headers = ['X-Requested-With']
 
     # keyword query; assume no search terms unless set
     query = None
