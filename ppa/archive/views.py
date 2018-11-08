@@ -359,12 +359,8 @@ class CollectionListView(ListView):
     template_name = 'archive/list_collections.html'
     ordering = ('name',)
 
-    # temporary workaround to exclude collections that aren't
-    # meant to be featured on the homepage or collection list
-    exclude = ['Dictionary', 'Pronunciation Guide']
-
     def get_queryset(self):
-        return super().get_queryset().exclude(name__in=self.exclude)
+        return super().get_queryset().public()
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)

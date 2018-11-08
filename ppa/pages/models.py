@@ -20,10 +20,9 @@ class HomePage(Page):
         verbose_name = "homepage"
 
     def get_context(self, request):
-        # TODO: need to adapt CollectionListView logic
-        # to get collection stats
         context = super().get_context(request)
-        context['collections'] = Collection.objects.all().order_by('?')[:2]
+        # include 2 random collections from those that are public
+        context['collections'] = Collection.objects.public().order_by('?')[:2]
         return context
 
 

@@ -17,12 +17,26 @@ from ppa.archive.solr import Indexable
 logger = logging.getLogger(__name__)
 
 
+class CollectionQuerySet(models.QuerySet):
+
+    # collections not meant to be featured on the home page
+    # or collection list - hard-coded for now, until we
+    # add a flag or something for admins to determine this.
+    exclude_from_public = ['Dictionary', 'Pronunciation Guide']
+
+    def public(self):
+        '''Collections that are meant to be displayed publicly'''
+        return self.exclude(name__in=self.exclude_from_public)
+
+
 class Collection(models.Model):
     '''A collection of :class:`ppa.archive.models.DigitizedWork` instances.'''
     #: the name of the collection
     name = models.CharField(max_length=255)
     #: a RichText description of the collection
     description = RichTextField(blank=True)
+
+    objects = CollectionQuerySet.as_manager()
 
     def __str__(self):
         return self.name
