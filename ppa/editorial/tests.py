@@ -28,6 +28,21 @@ class TestEditorialIndexPage(WagtailPageTests):
             'intro': rich_text('about these essays'),
         }))
 
+    def test_get_context(self):
+        index_page = EditorialIndexPage.objects.first()
+        ed_page = EditorialPage.objects.first()
+        context = index_page.get_context({})
+        assert 'posts' in context
+        assert ed_page in context['posts']
+
+        # set to not published
+        ed_page.live = False
+        ed_page.save()
+        context = index_page.get_context({})
+        assert ed_page not in context['posts']
+
+        # TODO: test with multiple, check sort order
+
 
 class TestEditorialPage(WagtailPageTests):
     fixtures = ['wagtail_pages']
