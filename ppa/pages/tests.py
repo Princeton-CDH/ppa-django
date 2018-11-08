@@ -15,11 +15,8 @@ class TestHomePage(WagtailPageTests):
     # a root page
 
     def setUp(self):
-         # create homepage instance for testing
+         # get homepage instance from fixture
         self.home = HomePage.objects.first()
-        # create(
-            # title='PPA', slug='home', depth=0, path='/home/',
-            # live=True)
 
     def test_parent_pages(self):
         self.assertAllowedParentPageTypes(
