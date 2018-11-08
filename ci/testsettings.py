@@ -33,9 +33,11 @@ SOLR_CONNECTIONS = {
         'URL': 'http://localhost:8983/solr/',
         'ADMIN_URL': 'http://localhost:8983/solr/admin/cores'
     },
+    'default': {
+        'COLLECTION': 'ppa-pa11y',
+        'URL': 'http://localhost:8983/solr/',
+        'ADMIN_URL': 'http://localhost:8983/solr/admin/cores'
+    },
 }
-
-# Use test solr for pa11y-ci test
-SOLR_CONNECTIONS['default'] = SOLR_CONNECTIONS['test']
 
 # secret key added as a travis build step

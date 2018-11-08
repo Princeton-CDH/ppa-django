@@ -10,6 +10,7 @@ env:
   - MOZ_HEADLESS=1
   - SOLR_VERSION=6.6.5
   - SOLR_CORE=test-ppa
+  - PA11Y_SOLR_CORE=ppa-pa11y
 cache:
   pip: true
   directories:
@@ -28,6 +29,7 @@ before_script:
 - sudo chown root /opt/google/chrome/chrome-sandbox
 - sudo chmod 4755 /opt/google/chrome/chrome-sandbox
 - SOLR_VERSION=$SOLR_VERSION SOLR_CORE=$SOLR_CORE bash ci/config_solr.sh
+- solr-${SOLR_VERSION}/bin/solr create -c $PA11Y_SOLR_CORE -n basic_configs
 - mysql -u root -e "create database test";
 - python manage.py migrate
 - python manage.py loaddata test_site wagtail_pages sample_digitized_works
