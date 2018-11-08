@@ -7,7 +7,7 @@
     "urls": [
         "http://localhost:8000/archive/",
         "http://localhost:8000/archive/?query=english&sort=relevance",
-        "http://localhost:8000/archive/chi.78013704/"
+        "http://localhost:8000/archive/chi.78013704/",
         "http://localhost:8000/archive/404-not-found"
     ]
 }
