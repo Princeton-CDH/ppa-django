@@ -12,7 +12,8 @@ from pairtree import pairtree_path, pairtree_client
 
 from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS
 from ppa.archive.solr import Indexable
-from ppa.archive.solr import get_solr_connection, PagedSolrQuery
+from ppa.archive.solr import PagedSolrQuery
+
 
 logger = logging.getLogger(__name__)
 
