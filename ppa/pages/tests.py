@@ -4,7 +4,6 @@ from wagtail.tests.utils.form_data import nested_form_data, streamfield
 import pytest
 
 from ppa.archive.models import Collection
-from ppa.archive.tests.conftest import solr
 from ppa.pages.models import HomePage, ContentPage
 from ppa.editorial.models import EditorialIndexPage
 
