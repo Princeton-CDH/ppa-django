@@ -102,6 +102,12 @@ class TestDigitizedWork(TestCase):
         assert digwork.pub_place == full_bibdata.marcxml['260']['a']
         assert digwork.publisher == full_bibdata.marcxml['260']['b']
 
+        # remove trailing slash from title
+        full_bibdata.marcxml['245']['a'] += ' /'
+        digwork.populate_from_bibdata(full_bibdata)
+        # title should omit last two characters
+        assert digwork.title == full_bibdata.marcxml['245']['a'][:-2]
+
         # second bibdata record with sort title
         with open(self.bibdata_full2) as bibdata:
             full_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
@@ -109,11 +115,12 @@ class TestDigitizedWork(TestCase):
         digwork = DigitizedWork(source_id='aeu.ark:/13960/t1pg22p71')
         digwork.populate_from_bibdata(full_bibdata)
         assert digwork.title == full_bibdata.marcxml['245']['a']
-        assert digwork.subtitle == full_bibdata.marcxml['245']['b']
+        # subtitle should omit last two characters (trailing space and slash)
+        assert digwork.subtitle == full_bibdata.marcxml['245']['b'][:-2]
         # fixture has title with non-sort characters
         assert digwork.sort_title == ' '.join([
             digwork.title[int(full_bibdata.marcxml['245'].indicators[1]):],
-            digwork.subtitle
+            full_bibdata.marcxml['245']['b']
         ])
 
         # test error in record (title non-sort character non-numeric)
@@ -121,7 +128,8 @@ class TestDigitizedWork(TestCase):
             full_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
             full_bibdata.marcxml['245'].indicators[1] = ' '
             digwork.populate_from_bibdata(full_bibdata)
-            assert digwork.sort_title == ' '.join([digwork.title, digwork.subtitle])
+            assert digwork.sort_title == \
+                ' '.join([digwork.title, full_bibdata.marcxml['245']['b']])
 
             # test error in title sort (doesn't include space after definite article)
             full_bibdata.marcxml['245'].indicators[1] = 3

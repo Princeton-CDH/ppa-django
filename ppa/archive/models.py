@@ -151,7 +151,8 @@ class DigitizedWork(models.Model, Indexable):
         # set fields from marc if available, since it has more details
         if bibdata.marcxml:
             # set title and subtitle from marc if possible
-            self.title = bibdata.marcxml['245']['a']
+            # strip trailing space & slash from title and subtitle
+            self.title = bibdata.marcxml['245']['a'].strip(' /')
 
             # according to PUL CAMS,
             # 245 subfield contains the subtitle *if* the preceding field
@@ -172,7 +173,7 @@ class DigitizedWork(models.Model, Indexable):
             #     self.subtitle = bibdata.marcxml['245']['b'] or ''
 
             # NOTE: skipping preceding character check for now
-            self.subtitle = bibdata.marcxml['245']['b'] or ''
+            self.subtitle = bibdata.marcxml['245']['b'].strip(' /') or ''
 
             # indicator 2 provides the number of characters to be
             # skipped when sorting (could be 0)
