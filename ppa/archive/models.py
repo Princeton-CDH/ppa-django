@@ -193,10 +193,12 @@ class DigitizedWork(models.Model, Indexable):
             self.author = bibdata.marcxml.author() or ''
             # field 260 includes publication information
             if '260' in bibdata.marcxml:
+                # strip trailing punctuation from publisher and pub place
+
                 # subfield $a is place of publication
-                self.pub_place = bibdata.marcxml['260']['a'] or ''
+                self.pub_place = bibdata.marcxml['260']['a'].strip(';:,') or ''
                 # subfield $b is name of publisher
-                self.publisher = bibdata.marcxml['260']['b'] or ''
+                self.publisher = bibdata.marcxml['260']['b'].strip(';:,') or ''
 
             # maybe: consider getting volume & series directly from
             # marc rather than relying on hathi enumcron ()

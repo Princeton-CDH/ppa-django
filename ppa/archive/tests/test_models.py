@@ -99,8 +99,9 @@ class TestDigitizedWork(TestCase):
         # fixture has indicator 0, no non-sort characters
         assert digwork.sort_title == ' '.join([digwork.title, digwork.subtitle])
         assert digwork.author == full_bibdata.marcxml.author()
-        assert digwork.pub_place == full_bibdata.marcxml['260']['a']
-        assert digwork.publisher == full_bibdata.marcxml['260']['b']
+        # comma should be stripped from publication place and publisher
+        assert digwork.pub_place == full_bibdata.marcxml['260']['a'].strip(',')
+        assert digwork.publisher == full_bibdata.marcxml['260']['b'].strip(',')
 
         # remove trailing slash from title
         full_bibdata.marcxml['245']['a'] += ' /'
