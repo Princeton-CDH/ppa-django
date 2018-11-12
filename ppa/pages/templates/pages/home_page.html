@@ -35,30 +35,14 @@
 </div>
 <div class="asides-collections ui vertical basic segment container">
     <div class="asides ui two cards">
-            {# TODO: pull in page content and blurbs from wagtail #}
-        <a class="aside card" href="/what-is-prosody/">
+        {% for card in preview_pages %}
+        <a class="aside card" href="{{ card.url }}">
             <div class="content">
-                <h3 class="header">What Is Prosody?</h3>
-                <div class="description">Prosody today means both the
-                    study of versification and the study of pronunciation.
-                    In literary studies, prosody is often interchanged
-                    for versification or meter, though in fact each of
-                    these terms have complicated and contested histories.
-                </div>
+                <h3 class="header">{{ card.title }}</h3>
+                <div class="description">{{ card.specific.description|richtext }}</div>
             </div>
         </a>
-        <a class="aside card" href="/history-of-the-archive/">
-            <div class="content">
-                <h3 class="header">History of the Archive</h3>
-                <div class="description">Meredith Martin began assembling
-                    the Archive in 2007 as she was writing <i>The Rise and
-                    Fall of Meter: Poetry and English National Culture,
-                    1860 – 1930</i>. Brogan was the first to assemble
-                    bibliographic records for 1,743 works on
-                    versification and prosody.
-                </div>
-            </div>
-        </a>
+        {% endfor %}
     </div>
     <div class="collections">
             {# TODO: pull in page content/blurb from wagtail #}
