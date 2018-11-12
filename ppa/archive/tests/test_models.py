@@ -103,11 +103,6 @@ class TestDigitizedWork(TestCase):
         assert digwork.pub_place == full_bibdata.marcxml['260']['a'].strip(',')
         assert digwork.publisher == full_bibdata.marcxml['260']['b'].strip(',')
 
-        # remove trailing slash from title
-        full_bibdata.marcxml['245']['a'] += ' /'
-        digwork.populate_from_bibdata(full_bibdata)
-        # title should omit last two characters
-        assert digwork.title == full_bibdata.marcxml['245']['a'][:-2]
 
         # second bibdata record with sort title
         with open(self.bibdata_full2) as bibdata:
@@ -136,6 +131,23 @@ class TestDigitizedWork(TestCase):
             full_bibdata.marcxml['245'].indicators[1] = 3
             digwork.populate_from_bibdata(full_bibdata)
             assert not digwork.sort_title.startswith(' ')
+
+        # test title cleanup
+        orig_bibdata_title = full_bibdata.marcxml['245']['a']
+        # - remove trailing slash from title
+        full_bibdata.marcxml['245']['a'] += ' /'
+        digwork.populate_from_bibdata(full_bibdata)
+        # title should omit last two characters
+        assert digwork.title == orig_bibdata_title
+        # - remove initial open bracket
+        full_bibdata.marcxml['245']['a'] = '[{}'.format(orig_bibdata_title)
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.title == orig_bibdata_title
+        # - internal brackets should be unchanged
+        full_bibdata.marcxml['245']['a'] = 'A third[-fourth] class reader.'
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.title == full_bibdata.marcxml['245']['a']
+
 
         # TODO: test publication info unavailable?
 

@@ -151,8 +151,9 @@ class DigitizedWork(models.Model, Indexable):
         # set fields from marc if available, since it has more details
         if bibdata.marcxml:
             # set title and subtitle from marc if possible
-            # strip trailing space & slash from title and subtitle
-            self.title = bibdata.marcxml['245']['a'].strip(' /')
+            # - clean title: strip trailing space & slash and initial bracket
+            self.title = bibdata.marcxml['245']['a'].rstrip(' /') \
+                .lstrip('[')
 
             # according to PUL CAMS,
             # 245 subfield contains the subtitle *if* the preceding field
@@ -173,7 +174,8 @@ class DigitizedWork(models.Model, Indexable):
             #     self.subtitle = bibdata.marcxml['245']['b'] or ''
 
             # NOTE: skipping preceding character check for now
-            self.subtitle = bibdata.marcxml['245']['b'].strip(' /') or ''
+            # strip trailing space & slash from subtitle
+            self.subtitle = bibdata.marcxml['245']['b'].rstrip(' /') or ''
 
             # indicator 2 provides the number of characters to be
             # skipped when sorting (could be 0)
@@ -196,9 +198,9 @@ class DigitizedWork(models.Model, Indexable):
                 # strip trailing punctuation from publisher and pub place
 
                 # subfield $a is place of publication
-                self.pub_place = bibdata.marcxml['260']['a'].strip(';:,') or ''
+                self.pub_place = bibdata.marcxml['260']['a'].rstrip(';:,') or ''
                 # subfield $b is name of publisher
-                self.publisher = bibdata.marcxml['260']['b'].strip(';:,') or ''
+                self.publisher = bibdata.marcxml['260']['b'].rstrip(';:,') or ''
 
             # maybe: consider getting volume & series directly from
             # marc rather than relying on hathi enumcron ()
