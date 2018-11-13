@@ -1,8 +1,6 @@
-@import 'scss/snippets/variables';
-
 #page {
     color: $dusk;
-    margin: $nav-height 0;
+    margin: 2*$nav-height 0 $nav-height;
 
     .paper {
         margin-top: $nav-height;

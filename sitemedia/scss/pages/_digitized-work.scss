@@ -1,16 +1,9 @@
-@import 'scss/snippets/variables';
-@import 'scss/snippets/mixins';
-@import 'snippets/search-result';
-@import 'snippets/preview-page';
-@import 'snippets/pagination';
-@import 'snippets/popups';
-
 #header {
-    padding: 0;
+    // padding: 0;
 
-    > * {
-        display: none;
-    }
+    // > * {
+    //     display: none;
+    // }
 }
 
 #digitized-work {
