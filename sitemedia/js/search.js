@@ -31,9 +31,15 @@ $(function(){
     $$collectionInputs.change(onCollectionChange)
     $$advancedSearchButton.click(toggleAdvancedSearch)
     onPageLoad() // misc functions that run once on page load
+
+    $$collectionInputs
+        .focus(e => $(e.target).parent().addClass('focus')) // make collection buttons focusable
+        .blur(e => $(e.target).parent().removeClass('focus')) 
+        .keypress(e => { if (e.which == 13) $(e.target).click() }) // pressing enter "clicks" them
     
     /* functions */
     function submitForm(state) {
+
         let sort = state.filter(field => field.name == 'sort')[0] // save one of the sort values (mobile or desktop); should be identical
         state = state.filter(field => field.value != '').filter(field => field.name != 'sort') // filter out empty fields and the sorts
         state.push(sort) // re-add the sort so there's only one (otherwise would be two values for mobile/desktop)
@@ -124,10 +130,4 @@ $(function(){
         let clearButton = $(event.target).parent().find('.clear.icon')
         $(event.target).val() == '' ? clearButton.hide() : clearButton.show()
     }
-
-    $$collectionInputs
-        .focus(e => $(e.target).parent().addClass('focus')) // make collection buttons focusable
-        .blur(e => $(e.target).parent().removeClass('focus')) 
-        .keypress(e => { if (e.which == 13) $(e.target).click() }) // pressing enter "clicks" them
-
 })
