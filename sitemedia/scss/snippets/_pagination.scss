@@ -7,7 +7,7 @@
         padding: 0;
         margin-bottom: 1rem; // when stacked above page-controls
 
-        @media screen and (min-width: 450px) {
+        @media (min-width: 450px) {
             margin-bottom: 0; // not stacked
         }
     }

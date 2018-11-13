@@ -231,7 +231,7 @@
         border-bottom: 2px solid $gold;
         padding-bottom: .5rem;
 
-        @media only screen and (min-width: 1069px) {
+        @media (min-width: $computer) {
             display: none;
         }
 
