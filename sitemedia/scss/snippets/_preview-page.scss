@@ -2,7 +2,7 @@
     width: 100%;
     display: flex;
     // on small screen, wrap text below image
-    @media only screen and (max-width: 768px) {
+    @media (max-width: $tablet) {
         flex-wrap: wrap;
     }
 
@@ -11,7 +11,7 @@
     }
 
     #search & { // on the search page, allow showing a second preview page
-        @media only screen and (min-width: 1440px) {
+        @media (min-width: $largeMonitor) {
             width: 50%;
 
             &:nth-child(2) {

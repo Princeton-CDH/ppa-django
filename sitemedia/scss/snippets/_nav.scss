@@ -31,7 +31,7 @@
         z-index: 1;
         display: none;
 
-        @media only screen and (min-width: $nav-breakpoint) {
+        @media (min-width: $nav-breakpoint) {
             display: flex;
         }
 
@@ -39,7 +39,7 @@
         &.search {
             display: flex;
 
-            @media only screen and (min-width: $nav-breakpoint) {
+            @media (min-width: $nav-breakpoint) {
                 display: none;
             }
         }
