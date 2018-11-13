@@ -408,6 +408,3 @@ class TestCollectionQuerySet(TestCase):
         assert brogan in public_collections
         assert dictionary not in public_collections
         assert pronunciation not in public_collections
-
-
-

@@ -81,7 +81,7 @@ class SolrSchema(object):
         # collapse query
         {'name': 'srcid', 'type': 'string', 'required': False},
         {'name': 'content', 'type': 'text_en', 'required': False},
-        {'name': 'item_type', 'type': 'string_i', 'required': False},
+        {'name': 'item_type', 'type': 'string', 'required': False},
         {'name': 'title', 'type': 'text_en', 'required': False},
         {'name': 'subtitle', 'type': 'text_en', 'required': False},
         {'name': 'sort_title', 'type': 'string_i', 'required': False},
@@ -90,19 +90,19 @@ class SolrSchema(object):
         {'name': 'pub_date', 'type': 'int', 'required': False},
         {'name': 'pub_place', 'type': 'text_en', 'required': False},
         {'name': 'publisher', 'type': 'text_en', 'required': False},
-        {'name': 'src_url', 'type': 'string_i', 'required': False},
-        {'name': 'order', 'type': 'string_i', 'required': False},
+        {'name': 'src_url', 'type': 'string', 'required': False},
+        {'name': 'order', 'type': 'string', 'required': False},
         {'name': 'collections', 'type': 'text_en', 'required': False,
          'multiValued': True},
         {'name': 'text', 'type': 'text_en', 'required': False, 'stored': False,
          'multiValued': True},
         # page fields
         {'name': 'label', 'type': 'text_en', 'required': False},
-        {'name': 'tags', 'type': 'string_i', 'required': False, 'multiValued': True},
+        {'name': 'tags', 'type': 'string', 'required': False, 'multiValued': True},
 
         # sort/facet copy fields
-        {'name': 'author_exact', 'type': 'string_i', 'required': False},
-        {'name': 'collections_exact', 'type': 'string_i', 'required': False,
+        {'name': 'author_exact', 'type': 'string', 'required': False},
+        {'name': 'collections_exact', 'type': 'string', 'required': False,
          'multiValued': True}
     ]
     #: fields to be copied into general purpose text field for searching
