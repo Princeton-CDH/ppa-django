@@ -19,6 +19,9 @@
         <legend class="sr-only">publication date fields</legend>
         <div class="four wide column" id="publication">
             {% render_field search_form.pub_date %}
+            <span class="validation">
+                {{ search_form.pubdate_validation_msg }}
+            </span>
             <a class="clear-selection" role="button">Clear Selection</a>
         </div>
         <div class="eight wide column" id="histogram">
