@@ -8,9 +8,6 @@ git+https://github.com/moonlitesolutions/SolrClient.git@19c5280c9f8e97#egg=SolrC
 pairtree
 pymarc
 cached_property
-#mezzanine
-# mezzanine from github required for django 1.11 compatibility; should be > 4.2.3
-git+https://github.com/stephenmcd/mezzanine.git@397409d#egg=mezzanine
 django-apptemplates
 progressbar2
 django-semanticui-forms
@@ -18,3 +15,4 @@ django-compressor
 django-compressor-toolkit
 lxml
 eulxml
+wagtail>=2.3

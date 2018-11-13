@@ -13,15 +13,26 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
+from django.conf import settings
 from django.conf.urls import url, include
+from django.conf.urls.static import serve
 from django.contrib import admin
-from django.contrib.sitemaps.views import sitemap
 from django.views.generic.base import TemplateView
-import mezzanine.urls
-from mezzanine.core.sitemaps import DisplayableSitemap
+from wagtail.admin import urls as wagtailadmin_urls
+from wagtail.core import urls as wagtail_urls
+from wagtail.documents import urls as wagtaildocs_urls
+from wagtail.contrib.sitemaps import views as sitemap_views, Sitemap
 
 from ppa.unapi.views import UnAPIView
-from ppa.archive.views import IndexView
+from ppa.archive.sitemaps import DigitizedWorkSitemap, ArchiveViewsSitemap
+
+
+# sitemap configuration for sections of the site
+sitemaps = {
+    'pages': Sitemap,  # wagtail content pages
+    'archive': ArchiveViewsSitemap,
+    'digitizedworks': DigitizedWorkSitemap,
+}
 
 
 urlpatterns = [
@@ -30,8 +41,6 @@ urlpatterns = [
     url(r'^grappelli/', include('grappelli.urls')),
     # pucas urls for CAS login
     url(r'^accounts/', include('pucas.cas_urls')),
-    # placeholder for home page
-    url(r'^$', IndexView.as_view(), name='home'),
     url(r'^archive/', include('ppa.archive.urls', namespace='archive')),
 
     # unapi service endpoint for Zotero
@@ -40,16 +49,22 @@ urlpatterns = [
     # for testing 500 errors
     url(r'^500/$', lambda _: 1/0),
 
-    # content pages managed by mezzanine
-    url("^", include(mezzanine.urls)),
-    
+    url(r'^cms/', include(wagtailadmin_urls)),
+    url(r'^documents/', include(wagtaildocs_urls)),
+
     # sitemaps
-    url(r'^sitemap\.xml$', sitemap, {'sitemaps': DisplayableSitemap},
-        name='django.contrib.sitemaps.views.sitemap')
+    url(r'^sitemap\.xml$', sitemap_views.index, {'sitemaps': sitemaps},
+        name='sitemap-index'),
+    url(r'^sitemap-(?P<section>.+)\.xml$', sitemap_views.sitemap, {'sitemaps': sitemaps},
+        name='django.contrib.sitemaps.views.sitemap'),
+
+    url(r'', include(wagtail_urls)),
 ]
 
-
-# Adds ``STATIC_URL`` to the context of error pages, so that error
-# pages can use JS, CSS and images.
-handler404 = "mezzanine.core.views.page_not_found"
-handler500 = "mezzanine.core.views.server_error"
+# serve media content for development
+if settings.DEBUG:
+    urlpatterns += [
+        url(r'^media/(?P<path>.*)$', serve, {
+            'document_root': settings.MEDIA_ROOT,
+        }),
+    ]

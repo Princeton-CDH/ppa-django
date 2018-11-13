@@ -7,14 +7,27 @@ from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
-from mezzanine.core.fields import RichTextField
+from wagtail.core.fields import RichTextField
 from pairtree import pairtree_path, pairtree_client
 
 from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS
 from ppa.archive.solr import Indexable
+from ppa.archive.solr import PagedSolrQuery
 
 
 logger = logging.getLogger(__name__)
+
+
+class CollectionQuerySet(models.QuerySet):
+
+    # collections not meant to be featured on the home page
+    # or collection list - hard-coded for now, until we
+    # add a flag or something for admins to determine this.
+    exclude_from_public = ['Dictionary', 'Pronunciation Guide']
+
+    def public(self):
+        '''Collections that are meant to be displayed publicly'''
+        return self.exclude(name__in=self.exclude_from_public)
 
 
 class Collection(models.Model):
@@ -23,6 +36,8 @@ class Collection(models.Model):
     name = models.CharField(max_length=255)
     #: a RichText description of the collection
     description = RichTextField(blank=True)
+
+    objects = CollectionQuerySet.as_manager()
 
     def __str__(self):
         return self.name
@@ -45,6 +60,41 @@ class Collection(models.Model):
     def name_changed(self):
         '''check if name has been changed (only works on current instance)'''
         return self.name != self.__initial['name']
+
+    @staticmethod
+    def stats():
+        '''Collection counts and date ranges, based on what is in Solr.
+        Returns a dictionary where they keys are collection names and
+        values are a dictionary with count and dates.
+        '''
+
+        # NOTE: if we *only* want counts, could just do a regular facet
+        solr_stats = PagedSolrQuery({
+            'q': '*:*',
+            'facet': True,
+            'facet.pivot': '{!stats=piv1}collections_exact',
+            # NOTE: if we pivot on collection twice, like this, we should
+            # have the information needed to generate a venn diagram
+            # of the collections (based on number of overlap)
+            # 'facet.pivot': '{!stats=piv1}collections_exact,collections_exact'
+            'stats': True,
+            'stats.field': '{!tag=piv1 min=true max=true}pub_date',
+            # don't return any actual items, just the facets
+            'rows': 0
+        })
+        facet_pivot = solr_stats.raw_response['facet_counts']['facet_pivot']
+        # simplify the pivot stat data for display
+        stats = {}
+        for info in facet_pivot['collections_exact']:
+            pub_date_stats = info['stats']['stats_fields']['pub_date']
+            stats[info['value']] = {
+                'count': info['count'],
+                'dates': '%(min)d–%(max)d' % pub_date_stats \
+                    if pub_date_stats['max'] != pub_date_stats['min'] \
+                    else '%d' % pub_date_stats['min']
+            }
+
+        return stats
 
 
 class DigitizedWork(models.Model, Indexable):
@@ -224,7 +274,8 @@ class DigitizedWork(models.Model, Indexable):
     def handle_collection_save(sender, instance, **kwargs):
         '''signal handler for collection save; reindex associated digitized works'''
         # only reindex if collection name has changed
-        if instance.name_changed:
+        # and if collection has already been saved
+        if instance.pk and instance.name_changed:
             # if the collection has any works associated
             works = instance.digitizedwork_set.all()
             if works.exists():

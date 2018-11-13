@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static humanize %}
+{% load static humanize wagtailcore_tags %}
 
 {% block js %}
 <script src="{% static 'js/home.js' %}" type="module"></script>
@@ -14,9 +14,9 @@
 {% block page_header %}
 <header class="ui vertical basic center aligned segment" id="header">
     <div id="scene">
-        <img class="layer one" data-depth="0.20" src="{% static 'img/ppa-logo-separated-shape/layer1.svg' %}">
-        <img class="layer two" data-depth="0.40" src="{% static 'img/ppa-logo-separated-shape/layer2.svg' %}">
-        <img class="layer three" data-depth="0.60" src="{% static 'img/ppa-logo-separated-shape/layer3.svg' %}">
+        <img class="layer one" data-depth="0.20" src="{% static 'img/ppa-logo-separated-shape/layer1.svg' %}" alt="">
+        <img class="layer two" data-depth="0.40" src="{% static 'img/ppa-logo-separated-shape/layer2.svg' %}" alt="">
+        <img class="layer three" data-depth="0.60" src="{% static 'img/ppa-logo-separated-shape/layer3.svg' %}" alt="">
     </div>
 </header>
 {% endblock %}
@@ -24,20 +24,7 @@
 {% block content %}
 <div class="ui vertical basic segment text container">
     <div class="intro">
-        <p>Welcome to the Princeton Prosody Archive, a full-text searchable database of thousands of digitized books published between 1570 and 1923.
-            The Archive collects historical documents and highlights discourses about the study of language,
-            the study of poetry, and where and how these intersect and diverge.</p>
-        <p>The PPA began as a collection of texts about versification. Now it covers the study of poetry, grammar, literary history, and speech.
-            We understand the PPA collections to be necessarily incomplete – a starting point for new scholarship in historical poetics and historical linguistics.
-            As such, we intend the words “prosody” and “archive” in their broadest possible senses.</p>
-        <p>The PPA makes several arguments, poses several questions, and welcomes new scholarship based on the work gathered here.
-            Some of our initial questions include: What if we began to understand poetics in all of its
-            historical, linguistic, and educational valences?</p>
-        <p>What if literary concepts such as meter and rhythm are historically contingent and fundamentally unstable?
-            What might scholars of distant reading the novel learn from a collection of materials pertaining to poetry?</p>
-        <p>Rather than a static repository of historical data, the PPA would like to compel users to rethink the past
-            and future of organizing, navigating, conceptualizing, and historicizing large amounts of data – about a single
-            poem or about evolving and contradictory thinking about the technology of poetic language.</p>
+        {{ page.body|richtext }}
     </div>
     <a class="archive-link" href="{% url 'archive:list' %}">
         <h3 class="ui header">
@@ -48,31 +35,17 @@
 </div>
 <div class="asides-collections ui vertical basic segment container">
     <div class="asides ui two cards">
-        <a class="aside card" href="/what-is-prosody/">
+        {% for card in preview_pages %}
+        <a class="aside card" href="{{ card.url }}">
             <div class="content">
-                <h3 class="header">What Is Prosody?</h3>
-                <div class="description">Prosody today means both the
-                    study of versification and the study of pronunciation.
-                    In literary studies, prosody is often interchanged
-                    for versification or meter, though in fact each of
-                    these terms have complicated and contested histories.
-                </div>
+                <h3 class="header">{{ card.title }}</h3>
+                <div class="description">{{ card.specific.description|richtext }}</div>
             </div>
         </a>
-        <a class="aside card" href="/history-of-the-archive/">
-            <div class="content">
-                <h3 class="header">History of the Archive</h3>
-                <div class="description">Meredith Martin began assembling
-                    the Archive in 2007 as she was writing <i>The Rise and
-                    Fall of Meter: Poetry and English National Culture,
-                    1860 – 1930</i>. Brogan was the first to assemble
-                    bibliographic records for 1,743 works on
-                    versification and prosody.
-                </div>
-            </div>
-        </a>
+        {% endfor %}
     </div>
     <div class="collections">
+            {# TODO: pull in page content/blurb from wagtail #}
         <h3 class="ui header about-header">About the Collections</h3>
         <div class="description">The Archive builds on bibliographic data from
             several sources as well as library catalog data from the HathiTrust
@@ -81,7 +54,7 @@
             of collections.
         </div>
         <div class="ui cards">
-            {% for item in object_list %}
+            {% for item in collections %}
             <a class="ui card" href="{% url 'archive:list' %}?collections={{ item.name|urlencode }}">
                 <div class="content">
                     <h3 class="header">{{ item.name }}</h3>
@@ -110,6 +83,7 @@
         </a>
     </div>
 </div>
+{# TODO: pull in recent editorial posts dynamically #}
 <div class="ui vertical basic segment container">
     <div class="updates ui two cards">
         <a class="ui post card">

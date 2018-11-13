@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load static wagtailcore_tags %}
+
+{% block meta_title %}{% firstof page.seo_title page.title %}{% endblock %}
+{% block meta_description %}{{ page.search_description }}{% endblock %}
+{# keywords for meta not currently implemented in wagtail #}
+
+{% block css %}
+<link rel="stylesheet" type="text/x-scss" href="{% static 'scss/page.scss' %}">
+{% endblock %}
+
+{% block page-context-id %}page{% endblock %}
+
+{# page title displayed in page header snippet #}
+
+{% block content %}
+<div class="ui container">
+    <div class="paper">
+        <h1 class="ui header">
+            {% firstof page.title page_title object.title %}
+        </h1>
+         {{ page.body|richtext }}
+    </div>
+</div>
+{% endblock %}
