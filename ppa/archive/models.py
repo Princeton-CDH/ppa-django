@@ -7,8 +7,10 @@ from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
-from wagtail.core.fields import RichTextField
 from pairtree import pairtree_path, pairtree_client
+from wagtail.core.fields import RichTextField
+from wagtail.admin.edit_handlers import FieldPanel
+from wagtail.snippets.models import register_snippet
 
 from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS
 from ppa.archive.solr import Indexable
@@ -30,6 +32,7 @@ class CollectionQuerySet(models.QuerySet):
         return self.exclude(name__in=self.exclude_from_public)
 
 
+@register_snippet
 class Collection(models.Model):
     '''A collection of :class:`ppa.archive.models.DigitizedWork` instances.'''
     #: the name of the collection
@@ -38,6 +41,12 @@ class Collection(models.Model):
     description = RichTextField(blank=True)
 
     objects = CollectionQuerySet.as_manager()
+
+    # configure for editing in wagtail admin
+    panels = [
+        FieldPanel('name'),
+        FieldPanel('description'),
+    ]
 
     def __str__(self):
         return self.name
