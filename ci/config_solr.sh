@@ -41,4 +41,4 @@ fi
 echo "Core created and Solr running on default port of 8983..."
 
 echo "Copying configuration to load analysis and ICU jars..."
-cp ../ci/solrconfig.xml "solr-${version}/solr/server/${SOLR_CORE}/conf/"
+cp ../ci/solrconfig.xml "solr-${version}/server/solr/${SOLR_CORE}/conf/"
