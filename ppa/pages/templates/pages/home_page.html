@@ -5,14 +5,10 @@
 <script src="{% static 'js/home.js' %}" type="module"></script>
 {% endblock %}
 
-{% block css %}
-<link rel="stylesheet" type="text/x-scss" href="{% static 'scss/home.scss' %}">
-{% endblock %}
-
 {% block page-context-id %}homepage{% endblock %}
 
 {% block page_header %}
-<header class="ui vertical basic center aligned segment" id="header">
+<header class="ui vertical basic center aligned segment homepage" id="header">
     <div id="scene">
         <img class="layer one" data-depth="0.20" src="{% static 'img/ppa-logo-separated-shape/layer1.svg' %}" alt="">
         <img class="layer two" data-depth="0.40" src="{% static 'img/ppa-logo-separated-shape/layer2.svg' %}" alt="">

@@ -1,9 +1,4 @@
-@import 'snippets/variables';
-@import 'snippets/mixins';
-
-/* homepage */
-
-#header {
+#header.homepage {
     display: flex;
     justify-content: center;
     margin-top: 2 * $nav-height;
