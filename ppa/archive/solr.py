@@ -36,7 +36,7 @@ class SolrSchema(object):
             "class":"solr.TextField",
             # for now, configuring index and query analyzers the same
             # if we want synonyms, query must be separate
-            "analyzer" : {
+            "analyzer": {
                 # "charFilters": [],
                 "tokenizer": {
                     "class": "solr.StandardTokenizerFactory",
@@ -55,7 +55,7 @@ class SolrSchema(object):
             'name': 'string_i',
             "class": "solr.TextField",
             "sortMissingLast": True,
-            "indexAnalyzer": {
+            "analyzer": {
                 "tokenizer": {
                     # treat entire field as a single token
                     "class": "solr.KeywordTokenizerFactory",
@@ -68,7 +68,7 @@ class SolrSchema(object):
                     {"class": "solr.ICUNormalizer2FilterFactory",
                      "name": "nfkc", "mode": "compose"}
                 ]
-            }
+            },
         },
     ]
 
@@ -135,6 +135,7 @@ class SolrSchema(object):
         for field_type in self.field_types:
             if field_type['name'] in current_field_types:
                 # if field exists but definition has changed, replace it
+                print(field_type != current_field_types[field_type['name']])
                 if field_type != current_field_types[field_type['name']]:
                     self.solr.schema.replace_field_type(self.solr_collection, field_type)
             # otherwise, create as a new field
