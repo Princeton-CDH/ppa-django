@@ -1,6 +1,7 @@
 from wagtail.core.models import Page, Site
 from wagtail.tests.utils import WagtailPageTests
-from wagtail.tests.utils.form_data import nested_form_data, streamfield
+from wagtail.tests.utils.form_data import nested_form_data, streamfield, \
+    rich_text
 import pytest
 
 from ppa.archive.models import Collection
@@ -15,12 +16,25 @@ class TestHomePage(WagtailPageTests):
     # a root page
 
     def setUp(self):
-         # get homepage instance from fixture
+        super().setUp()
+        # get homepage instance from fixture
         self.home = HomePage.objects.first()
+
+    def test_can_create(self):
+        root = Page.objects.get(title='Root')
+        self.assertCanCreateAt(Page, HomePage)
+        self.assertCanNotCreateAt(ContentPage, HomePage)
+        self.assertCanCreate(root, HomePage, nested_form_data({
+            'title': 'PPA',
+            'slug': 'newhome',
+            'body': rich_text('intro to PPA'),
+            # 'page_preview_1': None,
+            # 'page_preview_2': None,
+        }))
 
     def test_parent_pages(self):
         self.assertAllowedParentPageTypes(
-            HomePage, [])
+            HomePage, [Page])
 
     def test_subpages(self):
         self.assertAllowedSubpageTypes(
