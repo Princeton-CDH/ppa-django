@@ -1,7 +1,7 @@
 import { Subject } from 'rxjs'
-import Histogram from '../../static/archive/js/Histogram'
+import Histogram from '../Histogram'
 
-jasmine.getFixtures().fixturesPath = 'base/ppa/archive/fixtures/'
+jasmine.getFixtures().fixturesPath = 'base/sitemedia/js/fixtures/'
 
 describe('Histogram', () => {
 
