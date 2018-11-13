@@ -61,6 +61,9 @@ class SolrSchema(object):
                     "class": "solr.KeywordTokenizerFactory",
                 },
                 "filters": [
+                    # lower case to ensure alphabetical sort behaves as
+                    # expected
+                    {"class": "solr.LowerCaseFilterFactory"},
                     # enable normalization without case folding
                     # (preserve case for facets)
                     {"class": "solr.ASCIIFoldingFilterFactory",
@@ -135,7 +138,6 @@ class SolrSchema(object):
         for field_type in self.field_types:
             if field_type['name'] in current_field_types:
                 # if field exists but definition has changed, replace it
-                print(field_type != current_field_types[field_type['name']])
                 if field_type != current_field_types[field_type['name']]:
                     self.solr.schema.replace_field_type(self.solr_collection, field_type)
             # otherwise, create as a new field
