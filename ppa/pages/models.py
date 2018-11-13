@@ -34,8 +34,9 @@ class HomePage(Page):
         FieldPanel('body', classname="full"),
     ]
 
-    # no parent page allowed (don't allow homepage to be used as a child page)
-    parent_page_types = []
+    # only generic parent page allowed, so homepage can be created under
+    # Root but not otherwise used as a child page
+    parent_page_types = [Page]
 
     class Meta:
         verbose_name = "homepage"
