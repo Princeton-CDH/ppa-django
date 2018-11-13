@@ -635,10 +635,6 @@ class TestArchiveViews(TestCase):
         response = self.client.get(collection_list)
         # stats set properly in context
         assert 'stats' in response.context
-        assert response.context['stats'][coll1.name]['count'] == digworks.count()
-        assert response.context['stats'][coll1.name]['dates'] == '1880–1904'
-        assert response.context['stats'][coll2.name]['count'] == 1
-        assert response.context['stats'][coll2.name]['dates'] == '1903'
         # stats displayed on template
         self.assertContains(response, '%d digitized works' % digworks.count())
         self.assertContains(response, '1 digitized work')
@@ -860,49 +856,3 @@ class TestDigitizedWorkListView(TestCase):
 
             assert highlights == mockpsq.return_value.get_highlighting()
 
-
-class TestIndexView(TestCase):
-
-    @pytest.mark.usefixtures("solr")
-    def test_get_queryset(self):
-
-        # Create test collections to display
-        coll1 = Collection.objects.create(name='Random Grabbag')
-        coll2 = Collection.objects.create(
-            name='Foo through Time',
-            description="A <em>very</em> useful collection."
-        )
-
-        # Check that the context is set as expected
-        index = reverse('home')
-        response = self.client.get(index)
-        # it should have both collections that exist in it
-        assert coll1 in response.context['object_list']
-        assert coll2 in response.context['object_list']
-
-        # Check that the template is rendering as expected
-        # - basic checks right templates
-        self.assertTemplateUsed(response, 'base.html')
-        self.assertTemplateUsed(response, 'site_index.html')
-        # - detailed checks of template
-        self.assertContains(
-            response, 'Random Grabbag',
-            msg_prefix='should list a collection called Random Grabbag'
-        )
-        self.assertContains(
-            response, 'Foo through Time',
-            msg_prefix='should list a collection called Foo through Time'
-        )
-        self.assertContains(
-            response, '<em>very</em>', html=True,
-            msg_prefix='should render the description with HTML intact.'
-        )
-
-        # Add another collection
-        coll3 = Collection.objects.create(
-            name='Bar through Time',
-            description='A somewhat less useful collection.'
-        )
-        response = self.client.get(index)
-        # only two collections should be returned in the response
-        assert len(response.context['object_list']) == 2

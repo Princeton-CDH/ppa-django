@@ -3,6 +3,19 @@
 Deploy and Upgrade notes
 ========================
 
+0.10
+----
+
+* Switching from Mezzanine to Wagtail requires a manual migration *before*
+  installing the new version to avoid migration dependency conflicts:
+
+     python manage.py migrate pages zero
+
+* Wagtail provides predefined groups for *Editor* and *Moderator*. Users
+  who were previously in the *Content Editor* group should be added
+  to one of these, and the *Content Editor* group should be removed.
+
+
 0.9
 ---
 
