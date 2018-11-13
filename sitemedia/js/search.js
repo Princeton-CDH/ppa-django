@@ -39,7 +39,7 @@ $(function(){
     
     /* functions */
     function submitForm(state) {
-
+        if (!validate()) return
         let sort = state.filter(field => field.name == 'sort')[0] // save one of the sort values (mobile or desktop); should be identical
         state = state.filter(field => field.value != '').filter(field => field.name != 'sort') // filter out empty fields and the sorts
         state.push(sort) // re-add the sort so there's only one (otherwise would be two values for mobile/desktop)
@@ -72,6 +72,15 @@ $(function(){
                 cancelable: true
             }))
         })
+    }
+
+    function validate() {
+        if (!$$minDateInput[0].checkValidity() || !$$maxDateInput[0].checkValidity()) {
+            $('.validation').css('visibility', 'visible')
+            return false
+        }
+        $('.validation').css('visibility', 'hidden')
+        return true
     }
 
     function onClearDates() {
@@ -108,6 +117,7 @@ $(function(){
         $('.form').keydown(e => { if (e.which === 13) e.preventDefault() }) // don't allow enter key to submit the search
         $$textInputs.each(addClearButton)
         $$textInputs.on('input', onTextInput)
+        validate()
     }
 
     function toggleAdvancedSearch() {

@@ -107,6 +107,16 @@
                 margin: 0 1rem;
             }
         }
+
+        input:invalid {
+            border-color: red;
+            box-shadow: 0 0 4px 0 red;
+        }
+
+        .validation {
+            visibility: hidden;
+            color: red;
+        }
     }
 
     .clear-selection {
@@ -114,6 +124,7 @@
         color: $secondaryColor;
         position: absolute;
         bottom: -.5rem;
+        left: 1rem;
 
         &:hover {
             color: $gold;
