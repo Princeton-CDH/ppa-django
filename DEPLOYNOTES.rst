@@ -7,7 +7,7 @@ Deploy and Upgrade notes
 ----
 
 * Switching from Mezzanine to Wagtail requires a manual migration *before*
-  installing the new version to avoid migration dependency conflicts:
+  installing the new version to avoid migration dependency conflicts::
 
      python manage.py migrate pages zero
 
@@ -15,6 +15,21 @@ Deploy and Upgrade notes
   who were previously in the *Content Editor* group should be added
   to one of these, and the *Content Editor* group should be removed.
 
+ * Solr schema changes are required for this update as well as a reindex of
+   both works and pages. Before these can be run, however, an updated
+   ``solrconfig.xml`` that includes the appropriate ``<lib/>`` declarations
+   must be installed on the core. A sample of the correct declarations can
+   be found in ``ci/solrconfig.xml``. The following lines must be added::
+
+    <lib dir="${solr.install.dir:../../../..}/contrib/analysis-extras/lucene-libs/" regex="lucene-analyzers-icu-\d.*\.jar" />
+    <lib dir="${solr.install.dir:../../../..}/dist/" regex="solr-analysis-extras-\d.*\.jar" />
+    <lib dir="${solr.install.dir:../../../..}/contrib/analysis-extras/lib/" regex="icu4j-\d.*\.jar" />
+
+   After the Solr server has been restarted, the following commands should
+   be run::
+
+    python manage.py solr_schema
+    python manage.py index -c all -i all
 
 0.9
 ---
@@ -83,4 +98,3 @@ Deploy and Upgrade notes
 
     python manage.py hathi_import
     python manage.py hathi_import -v 0 --progress
-
