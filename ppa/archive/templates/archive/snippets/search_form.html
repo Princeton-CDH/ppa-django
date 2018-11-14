@@ -1,6 +1,6 @@
 {% load semanticui humanize %}
 <form class="ui form{% if error %} error{% endif %}">
-    <fieldset class="ui vertical stackable grid segment">
+    <div class="ui vertical stackable grid segment" role="group">
         <legend class="sr-only">text search fields</legend>
         <div class="twelve wide column">
             {% render_field search_form.query %}
@@ -14,8 +14,8 @@
                 {% render_field search_form.author %}
             </div>
         </div>
-    </fieldset>
-    <fieldset class="ui vertical stackable grid segment advanced">
+    </div>
+    <div class="ui vertical stackable grid segment advanced" role="group">
         <legend class="sr-only">publication date fields</legend>
         <div class="four wide column" id="publication">
             {% render_field search_form.pub_date %}
@@ -29,8 +29,8 @@
             <span class="min-date"></span>
             <span class="max-date"></span>
         </div>
-    </fieldset>
-    <fieldset class="ui vertical stackable basic grid segment advanced">
+    </div>
+    <div class="ui vertical stackable basic grid segment advanced" role="group">
         <legend class="sr-only">search filters</legend>
         <div class="twelve wide column" id="collections">
             <div class="field">
@@ -59,7 +59,7 @@
             </div>
         </div>
         -->
-    </fieldset>
+    </div>
     <div class="ui vertical basic segment show-advanced">
         <a>Advanced Search</a>
     </div>
