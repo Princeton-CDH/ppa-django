@@ -62,14 +62,11 @@ class SolrSchema(object):
                 },
                 "filters": [
                     # lower case to ensure alphabetical sort behaves as
-                    # expected
-                    {"class": "solr.LowerCaseFilterFactory"},
-                    # enable normalization without case folding
-                    # (preserve case for facets)
-                    {"class": "solr.ASCIIFoldingFilterFactory",
-                     "preserveOriginal": False},
-                    {"class": "solr.ICUNormalizer2FilterFactory",
-                     "name": "nfkc", "mode": "compose"}
+                    # expected and standardize using
+                    # the ICUFoldingFilterFactory
+                    # {"class": "solr.LowerCaseFilterFactory"},
+                    {"class": "solr.ICUFoldingFilterFactory"},
+
                 ]
             },
         },
