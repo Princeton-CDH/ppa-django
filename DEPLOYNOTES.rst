@@ -18,13 +18,9 @@ Deploy and Upgrade notes
  * Solr schema changes are required for this update as well as a reindex of
    both works and pages. Before these can be run, however, an updated
    ``solrconfig.xml`` that includes the appropriate ``<lib/>`` declarations
-   must be installed on the core. A sample of the correct declarations can
-   be found in ``ci/solrconfig.xml``. The following lines must be added::
-
-    <lib dir="${solr.install.dir:../../../..}/contrib/analysis-extras/lucene-libs/" regex="lucene-analyzers-icu-\d.*\.jar" />
-    <lib dir="${solr.install.dir:../../../..}/dist/" regex="solr-analysis-extras-\d.*\.jar" />
-    <lib dir="${solr.install.dir:../../../..}/contrib/analysis-extras/lib/" regex="icu4j-\d.*\.jar" />
-
+   must be installed on the core's `conf` folder. A correct copy may be found
+   in the `solr_conf` directory of this repository.
+   
    After the Solr server has been restarted, the following commands should
    be run::
 
