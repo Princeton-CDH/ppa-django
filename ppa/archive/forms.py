@@ -213,6 +213,8 @@ class SearchForm(forms.Form):
         super().__init__(data=data, *args, **kwargs)
 
         pubdate_range = self.pub_date_minmax()
+        self.pubdate_validation_msg = "Enter a 4-digit year between {} and {}." \
+            .format(pubdate_range[0], pubdate_range[1])
         # because pubdate is a multifield/multiwidget, access the widgets
         # under the multiwidgets
         pubdate_widgets = self.fields['pub_date'].widget.widgets

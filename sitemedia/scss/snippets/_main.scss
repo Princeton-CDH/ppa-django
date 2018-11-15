@@ -1,0 +1,9 @@
+main {
+    flex: 1;
+    margin-top: $nav-height;
+    margin-bottom: 2rem;
+
+    @media (min-width: $tablet) {
+        margin-bottom: 100px;
+    }
+}

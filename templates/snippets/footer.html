@@ -1,7 +1,7 @@
-{% load static %}
+{% load static wagtailcore_tags %}
 <footer class="ui basic inverted segment centered grid" id="footer">
     <nav class="ui inverted borderless menu">
-        <a class="item" href="{% url 'home' %}">Home</a>
+        <a class="item" href="{% slugurl 'home' %}">Home</a>
         <a class="item">Editorial</a>
         <a class="item" href="{% url 'archive:list-collections'%}">Collections</a>
         <a class="item" href="{% url 'archive:list' %}">Archive</a>
