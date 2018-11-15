@@ -105,8 +105,9 @@ class Command(BaseCommand):
         # let treebeard fix the hierarchy
         Page.fix_tree()
 
-
     def create_wagtail_site(self, root_page):
+        '''Create a wagtail site object from the current default
+        Django site.'''
         current_site = Site.objects.get(pk=settings.SITE_ID)
 
         # split domain into name and port
@@ -117,6 +118,8 @@ class Command(BaseCommand):
             port = 80
 
         # create wagtail site with same config and associate home page
-        WagtailSite.objects.get_or_create(hostname=domain, port=port,
+        wagtail_site, created = WagtailSite.objects.get_or_create(hostname=domain, port=port,
             site_name=current_site.name, root_page=root_page,
             is_default_site=True)
+
+        return wagtail_site

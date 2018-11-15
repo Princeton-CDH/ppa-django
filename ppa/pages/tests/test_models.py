@@ -238,7 +238,7 @@ class TestCollectionPage(WagtailPageTests):
             msg_prefix='should render the description with HTML intact.'
         )
 
-        # - check collection stats  displayed on template
+        # - check collection stats displayed on template
         self.assertContains(response, '%d digitized works' % digworks.count())
         self.assertContains(response, '1 digitized work')
         self.assertNotContains(response, '1 digitized works')
