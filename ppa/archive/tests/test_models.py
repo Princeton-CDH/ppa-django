@@ -186,6 +186,21 @@ class TestDigitizedWork(TestCase):
         assert not digwork.pub_place
         assert not digwork.publisher
 
+        # clean up publisher preliminary text
+        publisher = 'James Humphreys'
+        variants =  [
+            'Printed at',
+            'Printed and sold by',
+            'Printed and published by',
+            'Pub. for',
+            'Published for the',
+            'Publisht for the',
+        ]
+        for prefix in variants:
+            full_bibdata.marcxml['260']['b'] = ' '.join([prefix, publisher])
+            digwork.populate_from_bibdata(full_bibdata)
+            assert digwork.publisher == publisher
+
         # NOTE: not currently testing publication info unavailable
 
     def test_index_data(self):

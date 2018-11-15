@@ -197,6 +197,11 @@ class DigitizedWork(models.Model, Indexable):
     display_title.admin_order_field = 'sort_title'
     display_title.allow_tags = True
 
+    #: regular expresion for cleaning preliminary text from publisher names
+    printed_by_re = r'^(Printed)?( and )?(Pub(.|lished|lisht)?)?( and sold)? (by|for|at)( the)? ?'
+    # Printed by/for (the); Printed and sold by; Printed and published by;
+    # Pub./Published/Publisht at/by/for the
+
     def populate_from_bibdata(self, bibdata):
         '''Update record fields based on Hathi bibdata information.
         Full record is required in order to set all fields
@@ -279,6 +284,10 @@ class DigitizedWork(models.Model, Indexable):
                 # if publisher is marked as unknown ("sine nomine"), leave empty
                 if self.publisher.lower() == '[s.n.]':
                     self.publisher = ''
+
+            # remove printed by statement before publisher name
+            self.publisher = re.sub(self.printed_by_re, '', self.publisher,
+                flags=re.IGNORECASE)
 
             # maybe: consider getting volume & series directly from
             # marc rather than relying on hathi enumcron ()
