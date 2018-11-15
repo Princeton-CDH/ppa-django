@@ -76,3 +76,30 @@ class ContentPage(Page):
         if self.search_description.strip():
             return self.search_description
         return truncatechars_html(self.body, 250)
+
+
+class CollectionPage(Page):
+    '''Collection list page, with editable text content'''
+    body = RichTextField(blank=True)
+
+    content_panels = Page.content_panels + [
+        FieldPanel('body', classname="full"),
+    ]
+
+    # only allow creating directly under home page
+    parent_page_types = [HomePage]
+    # not allowed to have sub pages
+    subpage_types = []
+
+    def get_context(self, request):
+        context = super().get_context(request)
+
+        # include all collections with stats
+        context.update({
+            'collections': Collection.objects.all(),
+            'stats': Collection.stats(),
+        })
+        return context
+
+
+

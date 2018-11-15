@@ -30,7 +30,7 @@
     </a>
 </div>
 <div class="asides-collections ui vertical basic segment container">
-    <div class="asides ui two cards">
+   <div class="asides ui two cards">
         {% for card in preview_pages %}
         <a class="aside card" href="{{ card.url }}">
             <div class="content">
@@ -71,7 +71,7 @@
             </a>
             {% endfor %}
         </div>
-        <a class="collections-link" href="{% url 'archive:list-collections' %}">
+        <a class="collections-link" href="{% slugurl 'collections' %}">
             <h3 class="ui header">
                 {% include 'snippets/fermata.svg' %}
                 View All Collections

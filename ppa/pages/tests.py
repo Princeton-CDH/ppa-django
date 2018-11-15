@@ -1,11 +1,16 @@
+from time import sleep
+
+from django.contrib.contenttypes.models import ContentType
+from django.urls import reverse
 from wagtail.core.models import Page, Site
 from wagtail.tests.utils import WagtailPageTests
 from wagtail.tests.utils.form_data import nested_form_data, streamfield, \
     rich_text
 import pytest
 
-from ppa.archive.models import Collection
-from ppa.pages.models import HomePage, ContentPage
+from ppa.archive.models import Collection, DigitizedWork
+from ppa.archive.solr import get_solr_connection
+from ppa.pages.models import HomePage, ContentPage, CollectionPage
 from ppa.editorial.models import EditorialIndexPage
 
 
@@ -38,7 +43,7 @@ class TestHomePage(WagtailPageTests):
 
     def test_subpages(self):
         self.assertAllowedSubpageTypes(
-            HomePage, [ContentPage, EditorialIndexPage, Page])
+            HomePage, [ContentPage, EditorialIndexPage, CollectionPage, Page])
 
     @pytest.mark.usefixtures("solr")
     def test_get_context(self):
@@ -109,7 +114,7 @@ class TestContentPage(WagtailPageTests):
         self.assertCanCreateAt(HomePage, ContentPage)
         root = HomePage.objects.first()
         self.assertCanCreate(root, ContentPage, nested_form_data({
-            'title': 'About of the PPA',
+            'title': 'About the PPA',
             'slug': 'about',
             'body': streamfield([
                 ('text', 'how the ppa came to be...'),
@@ -125,4 +130,113 @@ class TestContentPage(WagtailPageTests):
             ContentPage, [ContentPage, Page])
 
 
+class TestCollectionPage(WagtailPageTests):
+    fixtures = ['wagtail_pages', 'sample_digitized_works']
 
+    def setUp(self):
+        super().setUp()
+        self.home = HomePage.objects.first()
+        self.collection_page = CollectionPage.objects.create(
+            title='About the Collections',
+            slug='collections',
+            depth=self.home.depth + 1,
+            show_in_menus=False,
+            path=self.home.path + '0003',
+            content_type=ContentType.objects.get_for_model(CollectionPage)
+        )
+
+    def test_can_create(self):
+        self.assertCanCreateAt(HomePage, CollectionPage)
+        self.assertCanCreate(self.home, CollectionPage, nested_form_data({
+            'title': 'About the Collections',
+            'slug': 'more-collections',
+            'body': rich_text('collection overview here...'),
+        }))
+
+    def test_parent_pages(self):
+        self.assertAllowedParentPageTypes(
+            CollectionPage, [HomePage])
+
+    def test_subpages(self):
+        self.assertAllowedSubpageTypes(
+            CollectionPage, [])
+
+    @pytest.mark.usefixtures("solr")
+    def test_get_context(self):
+        # Create test collections to display
+        coll1 = Collection.objects.create(name='Random Grabbag')
+        dictionary = Collection.objects.create(name='Dictionary')
+        coll2 = Collection.objects.create(
+            name='Foo through Time',
+            description="A <em>very</em> useful collection."
+        )
+
+        context = self.collection_page.get_context({})
+        assert 'collections' in context
+        assert 'stats' in context
+
+        # should include all collections
+        assert 'collections' in context
+        assert len(context['collections']) == Collection.objects.count()
+        assert 'stats' in context
+
+    @pytest.mark.usefixtures("solr")
+    def test_template(self):
+        # Check that the template is rendering as expected
+        site = Site.objects.first()
+        coll1 = Collection.objects.create(name='Random Grabbag')
+        coll2 = Collection.objects.create(
+            name='Foo through Time',
+            description="A <em>very</em> useful collection."
+        )
+        empty_coll = Collection.objects.create(name='Empty Box')
+
+        # add items to collections to check stats & links
+        # - put everything in collection 1
+        digworks = DigitizedWork.objects.all()
+        for digwork in digworks:
+            digwork.collections.add(coll1)
+        # just one item in collection 2
+        wintry = digworks.get(title__icontains='Wintry')
+        wintry.collections.add(coll2)
+
+        # reindex the digitized works so we can check stats
+        solr, solr_collection = get_solr_connection()
+        solr.index(solr_collection, [dw.index_data() for dw in digworks],
+                   params={"commitWithin": 100})
+        sleep(2)
+
+        response = self.client.get(self.collection_page.relative_url(site))
+
+        # - check that correct templates are used
+        self.assertTemplateUsed(response, 'base.html')
+        self.assertTemplateUsed(response, 'pages/content_page.html')
+        self.assertTemplateUsed(response, 'pages/collection_page.html')
+        # - check user-editable page content displayed
+        self.assertContains(response, self.collection_page.body)
+        # - check collection display
+        self.assertContains(
+            response, coll1.name,
+            msg_prefix='should list a collection called Random Grabbag'
+        )
+        self.assertContains(
+            response, coll2.name,
+            msg_prefix='should list a collection called Foo through Time'
+        )
+        self.assertContains(
+            response, coll2.description, html=True,
+            msg_prefix='should render the description with HTML intact.'
+        )
+
+        # - check collection stats  displayed on template
+        self.assertContains(response, '%d digitized works' % digworks.count())
+        self.assertContains(response, '1 digitized work')
+        self.assertNotContains(response, '1 digitized works')
+        self.assertContains(response, '1880–1904')
+        self.assertContains(response, '1903')
+        # - check collection search links
+        archive_url = reverse('archive:list')
+        self.assertContains(response, 'href="%s?collections=%s"' % (archive_url, coll1.pk))
+        self.assertContains(response, 'href="%s?collections=%s"' % (archive_url, coll2.pk))
+        # empty collection should not link
+        self.assertNotContains(response, 'href="%s?collections=%s"' % (archive_url, empty_coll.pk))

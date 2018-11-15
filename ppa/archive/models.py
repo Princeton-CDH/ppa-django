@@ -48,6 +48,10 @@ class Collection(models.Model):
         FieldPanel('description'),
     ]
 
+    class Meta:
+        ordering = ('name',)
+
+
     def __str__(self):
         return self.name
 

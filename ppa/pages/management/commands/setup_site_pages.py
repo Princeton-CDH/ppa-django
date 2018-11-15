@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from wagtail.core.models import Site as WagtailSite, Page
 
-from ppa.pages.models import HomePage, ContentPage
+from ppa.pages.models import HomePage, ContentPage, CollectionPage
 from ppa.editorial.models import EditorialIndexPage
 
 
@@ -53,7 +53,7 @@ class Command(BaseCommand):
         home.url_path = '/home/'
         home.save()
 
-
+        # create editorial index page
         editorial = EditorialIndexPage.objects.first()
         if not editorial:
             editorial = EditorialIndexPage.objects.create(
@@ -65,10 +65,20 @@ class Command(BaseCommand):
                 content_type=ContentType.objects.get_for_model(EditorialIndexPage)
             )
 
-        ## collections page to do (once it exists)
+        ## create collections page
+        collections = CollectionPage.objects.first()
+        if not collections:
+            collections = CollectionPage.objects.create(
+                title='About the Collections',
+                slug='collections',
+                depth=home.depth + 1,
+                show_in_menus=False,
+                path=home.path + '0002',
+                content_type=ContentType.objects.get_for_model(CollectionPage)
+            )
 
         # create content page stubs if they are not already present
-        index = 2
+        index = 3
         for slug, title in self.content_pages.items():
             cpage = ContentPage.objects.filter(slug=slug).first()
             if not cpage:

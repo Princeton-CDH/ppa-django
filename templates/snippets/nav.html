@@ -4,7 +4,7 @@
 <nav class="ui top sidebar inverted vertical borderless menu" id="mobile-nav">
     <a class="item" href="/history-of-the-archive/">History of the Archive</a>
     <a class="item" href="/what-is-prosody/">What is Prosody</a>
-    <a class="item" href="{% url 'archive:list-collections'%}">About the Collections</a>
+    <a class="item" href="{% slugurl 'collections'%}">About the Collections</a>
     <a class="item" href="{% slugurl 'editorial' %}">Editorial</a>
     <a class="item" href="{% url 'archive:list' %}">View the Archive</a>
 </nav>
@@ -33,7 +33,7 @@
     </div>
 
     <div class="right menu">
-        <a class="item" href="{% url 'archive:list-collections'%}">About the Collections</a>
+        <a class="item" href="{% slugurl 'collections'%}">About the Collections</a>
         <a class="item" href="{% url 'archive:list' %}">
             View the Archive
             <i class="search icon"></i>
