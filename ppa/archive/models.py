@@ -1,5 +1,6 @@
 import logging
 import os.path
+import re
 from zipfile import ZipFile
 
 from cached_property import cached_property
@@ -254,6 +255,15 @@ class DigitizedWork(models.Model, Indexable):
             self.sort_title = bibdata.marcxml.title()[non_sort:].strip(' "[')
 
             self.author = bibdata.marcxml.author() or ''
+            # remove a note present on some records and strip whitespace
+            self.author = self.author.replace('[from old catalog]', '').strip()
+            # removing trailing period, except when it is part of an
+            # initial or known abbreviation (i.e, Esq.)
+            # Look for single initial, but support initials with no spaces
+            if self.author.endswith('.') and not \
+              re.search(r'( ([A-Z]\.)*[A-Z]| Esq)\.$', self.author):
+                self.author = self.author.rstrip('.')
+
             # field 260 includes publication information
             if '260' in bibdata.marcxml:
                 # strip trailing punctuation from publisher and pub place

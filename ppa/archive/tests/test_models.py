@@ -98,11 +98,11 @@ class TestDigitizedWork(TestCase):
         assert digwork.subtitle == full_bibdata.marcxml['245']['b']
         # fixture has indicator 0, no non-sort characters
         assert digwork.sort_title == ' '.join([digwork.title, digwork.subtitle])
-        assert digwork.author == full_bibdata.marcxml.author()
+        # authors should have trailing period removed
+        assert digwork.author == full_bibdata.marcxml.author().rstrip('.')
         # comma should be stripped from publication place and publisher
         assert digwork.pub_place == full_bibdata.marcxml['260']['a'].strip(',')
         assert digwork.publisher == full_bibdata.marcxml['260']['b'].strip(',')
-
 
         # second bibdata record with sort title
         with open(self.bibdata_full2) as bibdata:
@@ -160,8 +160,26 @@ class TestDigitizedWork(TestCase):
         digwork.populate_from_bibdata(full_bibdata)
         assert digwork.title == full_bibdata.marcxml['245']['a']
 
+        # author trailing period not removed for single initials
+        # - name with initials, no date
+        full_bibdata.marcxml['100']['a'] = 'Mitchell, M. S.'
+        full_bibdata.marcxml['100']['d'] = ''
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.author == full_bibdata.marcxml['100']['a']
+        # - initials with no space
+        full_bibdata.marcxml['100']['a'] = 'Mitchell, M.S.'
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.author == full_bibdata.marcxml['100']['a']
+        # - esquire
+        full_bibdata.marcxml['100']['a'] = 'Wilson, Richard, Esq.'
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.author == full_bibdata.marcxml['100']['a']
+        # - remove '[from old catalog]'
+        full_bibdata.marcxml['100']['a'] = 'Thurber, Samuel. [from old catalog]'
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.author == 'Thurber, Samuel'
 
-        # TODO: test publication info unavailable?
+        # NOTE: not currently testing publication info unavailable
 
     def test_index_data(self):
         digwork = DigitizedWork.objects.create(
