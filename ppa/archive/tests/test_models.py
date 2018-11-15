@@ -118,6 +118,8 @@ class TestDigitizedWork(TestCase):
             digwork.title[int(full_bibdata.marcxml['245'].indicators[1]):],
             full_bibdata.marcxml['245']['b']
         ])
+        # store title before modifying it for tests
+        orig_bibdata_title = full_bibdata.marcxml['245']['a']
 
         # test error in record (title non-sort character non-numeric)
         with open(self.bibdata_full2) as bibdata:
@@ -132,8 +134,18 @@ class TestDigitizedWork(TestCase):
             digwork.populate_from_bibdata(full_bibdata)
             assert not digwork.sort_title.startswith(' ')
 
+            # test cleaning up leading punctuation
+            full_bibdata.marcxml['245'].indicators[1] = 0
+            full_bibdata.marcxml['245']['a'] = '"Elocutionary Language."'
+            digwork.populate_from_bibdata(full_bibdata)
+            assert not digwork.sort_title.startswith('"')
+
+            full_bibdata.marcxml['245']['a'] = "[Pamphlets on Language.]"
+            digwork.populate_from_bibdata(full_bibdata)
+            assert not digwork.sort_title.startswith('[')
+
         # test title cleanup
-        orig_bibdata_title = full_bibdata.marcxml['245']['a']
+        full_bibdata.marcxml['245']['a'] = orig_bibdata_title
         # - remove trailing slash from title
         full_bibdata.marcxml['245']['a'] += ' /'
         digwork.populate_from_bibdata(full_bibdata)

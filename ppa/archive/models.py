@@ -189,8 +189,10 @@ class DigitizedWork(models.Model, Indexable):
 
             # strip whitespace, since a small number of records have a
             # nonsort value that doesn't include a space after a
-            # definite article
-            self.sort_title = bibdata.marcxml.title()[non_sort:].strip()
+            # definite article.
+            # Also strip punctuation, since MARC only includes it in
+            # non-sort count when there is a definite article.
+            self.sort_title = bibdata.marcxml.title()[non_sort:].strip(' "[')
 
             self.author = bibdata.marcxml.author() or ''
             # field 260 includes publication information
