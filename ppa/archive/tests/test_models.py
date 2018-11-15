@@ -186,6 +186,17 @@ class TestDigitizedWork(TestCase):
         assert not digwork.pub_place
         assert not digwork.publisher
 
+        # brackets around publisher and pub place should be removed
+        full_bibdata.marcxml['260']['a'] = '[London]'
+        full_bibdata.marcxml['260']['b'] = '[Faber]'
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.pub_place == full_bibdata.marcxml['260']['a'].strip('[]')
+        assert digwork.publisher == full_bibdata.marcxml['260']['b'].strip('[]')
+        full_bibdata.marcxml['260']['a'] = 'New Brunswick [N.J.]'
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.pub_place == full_bibdata.marcxml['260']['a']
+
+
         # clean up publisher preliminary text
         publisher = 'James Humphreys'
         variants =  [

@@ -309,6 +309,11 @@ class DigitizedWork(models.Model, Indexable):
         # included in the bibdata in case it changes - so let's just store it
         self.source_url = copy_details['itemURL']
 
+        # remove brackets around inferred publishers, place of publication
+        # *only* if they wrap the whole text
+        self.publisher = re.sub(r'^\[(.*)\]$', r'\1', self.publisher)
+        self.pub_place = re.sub(r'^\[(.*)\]$', r'\1', self.pub_place)
+
         # should also consider storing:
         # - last update, rights code / rights string, item url
         # (maybe solr only?)
