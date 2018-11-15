@@ -25,6 +25,17 @@ class TestHomePage(WagtailPageTests):
         # get homepage instance from fixture
         self.home = HomePage.objects.first()
 
+        # collection page for testing homepage context & template logic
+        self.collection_page = CollectionPage.objects.create(
+            title='All About My PPA Collections',
+            slug='collections',
+            depth=self.home.depth + 1,
+            show_in_menus=False,
+            path=self.home.path + '0003',
+            content_type=ContentType.objects.get_for_model(CollectionPage),
+            body=rich_text('You want a collection?'),
+        )
+
     def test_can_create(self):
         root = Page.objects.get(title='Root')
         self.assertCanCreateAt(Page, HomePage)
@@ -67,6 +78,8 @@ class TestHomePage(WagtailPageTests):
         assert coll1 in context['collections']
         assert coll2 in context['collections']
         assert 'stats' in context
+        assert 'collection_page' in context
+        assert context['collection_page'] == self.collection_page
 
         # Add another collection
         coll3 = Collection.objects.create(
@@ -105,6 +118,13 @@ class TestHomePage(WagtailPageTests):
             response, coll2.description, html=True,
             msg_prefix='should render the description with HTML intact.'
         )
+        # - collection page display
+        self.assertContains(response, self.collection_page.title,
+            msg_prefix='should render collection page title')
+        self.assertContains(response, self.collection_page.body,
+            msg_prefix='should include collection page body content')
+        self.assertContains(response, self.collection_page.relative_url(site),
+            msg_prefix='should link to collection page')
 
 
 class TestContentPage(WagtailPageTests):
