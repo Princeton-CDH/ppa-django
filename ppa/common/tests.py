@@ -62,3 +62,30 @@ class TestVaryOnHeadersMixin(TestCase):
         response = vary_on_view.dispatch(request)
         # check for the set header with the values supplied
         assert response['Vary'] == 'X-Foobar, X-Bazbar'
+
+
+
+class TestRobotsTxt(TestCase):
+
+    def test_robots_txt(self):
+        res = self.client.get('/robots.txt')
+        # successfully gets robots.txt
+        assert res.status_code == 200
+        # is text/plain
+        assert res['Content-Type'] == 'text/plain'
+        # uses robots.txt template
+        assert 'robots.txt' in [template.name for template in res.templates]
+
+        # links to sitemap
+        self.assertContains(res, '/sitemap.xml')
+
+        with self.settings(SHOW_TEST_WARNING=False):
+            res = self.client.get('/robots.txt')
+            self.assertContains(res, 'Disallow: /admin')
+            self.assertNotContains(res, 'Twitterbot')
+        with self.settings(SHOW_TEST_WARNING=True):
+            res = self.client.get('/robots.txt')
+            self.assertNotContains(res, 'Disallow: /admin')
+            self.assertContains(res, 'Disallow: /')
+            self.assertContains(res, 'Twitterbot')
+
