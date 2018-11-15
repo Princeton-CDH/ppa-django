@@ -75,33 +75,4 @@
     </div>
     {% endif %}
 </div>
-{# TODO: pull in recent editorial posts dynamically #}
-<div class="ui vertical basic segment container">
-    <div class="updates ui two cards">
-        <a class="ui post card">
-            <div class="content">
-                <div class="header">Updates Post Title</div>
-                <div class="meta">Oct 10 2017</div>
-                <div class="description">
-                    {% lorem 30 w random %}
-                </div>
-            </div>
-        </a>
-        <a class="ui post card">
-            <div class="content">
-                <div class="header">Updates Post Title</div>
-                <div class="meta">Oct 10 2017</div>
-                <div class="description">
-                    {% lorem 30 w random %}
-                </div>
-            </div>
-        </a>
-    </div>
-    <a class="archive-link" href="{% url 'archive:list' %}">
-        <h3 class="ui header">
-            {% include 'snippets/fermata.svg' %}
-            View and search the archive
-        </h3>
-    </a>
-</div>
 {% endblock %}
