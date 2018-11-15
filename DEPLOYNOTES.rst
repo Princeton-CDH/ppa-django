@@ -7,7 +7,7 @@ Deploy and Upgrade notes
 ----
 
 * Switching from Mezzanine to Wagtail requires a manual migration *before*
-  installing the new version to avoid migration dependency conflicts:
+  installing the new version to avoid migration dependency conflicts::
 
      python manage.py migrate pages zero
 
@@ -15,6 +15,18 @@ Deploy and Upgrade notes
   who were previously in the *Content Editor* group should be added
   to one of these, and the *Content Editor* group should be removed.
 
+* Solr schema changes for this release require an updated ``solrconfig.xml``
+  with additional ``<lib/>`` declarations. Copy ``solr_conf/solrconfig.xml``
+  to the Solr core's `conf` directory, and then restart the Solr server
+  to enable the new library paths.
+
+  Because this includes a Solr schema field type change that cannot be converted
+  automatically, the index must be cleared before changing the schema,
+  and then all content must be reindexed::
+
+    python manage.py index --clear all --index none
+    python manage.py solr_schema
+    python manage.py index
 
 0.9
 ---
@@ -83,4 +95,3 @@ Deploy and Upgrade notes
 
     python manage.py hathi_import
     python manage.py hathi_import -v 0 --progress
-

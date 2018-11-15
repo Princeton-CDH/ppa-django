@@ -394,4 +394,3 @@ class TestCollection(TestCase):
         assert stats[coll2.name]['count'] == 1
         assert stats[coll2.name]['dates'] == '1903'
 
-

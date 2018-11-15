@@ -264,6 +264,11 @@ class TestArchiveViews(TestCase):
             {'content': content, 'order': i, 'item_type': 'page',
              'srcid': htid, 'id': '%s.%s' % (htid, i)}
             for i, content in enumerate(sample_page_content)]
+        # Contrive a sort title such that tests below for title_asc will fail
+        # if case insensitive sorting is not working
+        dial = DigitizedWork.objects.filter(title__icontains='Dial').first()
+        dial.sort_title = 'The deal'
+        dial.save()
         # add a collection to use in testing the view
         collection = Collection.objects.create(name='Test Collection')
         digitized_works = DigitizedWork.objects.all()
@@ -432,7 +437,6 @@ class TestArchiveViews(TestCase):
         # the list of ids should match exactly
         assert list(sorted_work_ids) == \
             [work['srcid'] for work in response.context['object_list']]
-
         # - check that a query allows relevance as sort order toggle in form
         response = self.client.get(url, {'query': 'foo', 'sort': 'title_asc'})
         enabled_input = \
@@ -781,4 +785,3 @@ class TestDigitizedWorkListView(TestCase):
             assert ' AND id:("p1a" "p1b" "p2a" "p2b")' in solr_opts['q']
 
             assert highlights == mockpsq.return_value.get_highlighting()
-
