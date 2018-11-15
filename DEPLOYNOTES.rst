@@ -15,17 +15,23 @@ Deploy and Upgrade notes
   who were previously in the *Content Editor* group should be added
   to one of these, and the *Content Editor* group should be removed.
 
- * Solr schema changes are required for this update as well as a reindex of
-   both works and pages. Before these can be run, however, an updated
-   ``solrconfig.xml`` that includes the appropriate ``<lib/>`` declarations
-   must be installed on the core's `conf` folder. A correct copy may be found
-   in the `solr_conf` directory of this repository.
-   
-   After the Solr server has been restarted, the following commands should
-   be run::
+* Solr schema changes for this release require an updated ``solrconfig.xml``
+  with additional ``<lib/>`` declarations. A sample config file can
+  be found in ``ci/solrconfig.xml``. The following lines must be added::
 
+    <lib dir="${solr.install.dir:../../../..}/contrib/analysis-extras/lucene-libs/" regex="lucene-analyzers-icu-\d.*\.jar" />
+    <lib dir="${solr.install.dir:../../../..}/dist/" regex="solr-analysis-extras-\d.*\.jar" />
+    <lib dir="${solr.install.dir:../../../..}/contrib/analysis-extras/lib/" regex="icu4j-\d.*\.jar" />
+
+  Restart the Solr server to enable the new library paths.
+
+  Because this includes a Solr schema field type change that cannot be converted
+  automatically, the index must be cleared before changing the schema,
+  and then all content must be reindexed::
+
+    python manage.py index --clear all --index none
     python manage.py solr_schema
-    python manage.py index -c all -i all
+    python manage.py index
 
 0.9
 ---
