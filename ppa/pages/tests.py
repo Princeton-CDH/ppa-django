@@ -63,26 +63,16 @@ class TestHomePage(WagtailPageTests):
         dictionary = Collection.objects.create(name='Dictionary')
         context = self.home.get_context({})
         assert 'collections' in context
-        # non-public collections should be excluded
-        assert dictionary not in context['collections']
-
-        coll2 = Collection.objects.create(
-            name='Foo through Time',
-            description="A <em>very</em> useful collection."
-        )
-
-        context = self.home.get_context({})
-        # it should have both collections that exist in it
-        assert 'collections' in context
         assert len(context['collections']) == 2
         assert coll1 in context['collections']
-        assert coll2 in context['collections']
+        # no longer excluding dictionary collections
+        assert dictionary in context['collections']
         assert 'stats' in context
         assert 'collection_page' in context
         assert context['collection_page'] == self.collection_page
 
-        # Add another collection
-        coll3 = Collection.objects.create(
+        # Add a third collection
+        coll2 = Collection.objects.create(
             name='Bar through Time',
             description='A somewhat less useful collection.'
         )

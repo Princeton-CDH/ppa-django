@@ -55,10 +55,10 @@ class HomePage(Page):
         # grab collection page for displaying collection overview
         collection_page = CollectionPage.objects.live().first()
 
-        # include 2 random collections from those that are public
+        # include 2 random collections
         # along with stats for all collections
         context.update({
-            'collections': Collection.objects.public().order_by('?')[:2],
+            'collections': Collection.objects.order_by('?')[:2],
             'stats': Collection.stats(),
             'preview_pages': preview_pages,
             'collection_page': collection_page
