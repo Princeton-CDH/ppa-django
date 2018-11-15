@@ -179,6 +179,13 @@ class TestDigitizedWork(TestCase):
         digwork.populate_from_bibdata(full_bibdata)
         assert digwork.author == 'Thurber, Samuel'
 
+        # sine loco/nomine should be cleared out
+        full_bibdata.marcxml['260']['a'] = '[S.l.]'
+        full_bibdata.marcxml['260']['b'] = '[s.n.]'
+        digwork.populate_from_bibdata(full_bibdata)
+        assert not digwork.pub_place
+        assert not digwork.publisher
+
         # NOTE: not currently testing publication info unavailable
 
     def test_index_data(self):

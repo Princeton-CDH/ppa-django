@@ -270,8 +270,15 @@ class DigitizedWork(models.Model, Indexable):
 
                 # subfield $a is place of publication
                 self.pub_place = bibdata.marcxml['260']['a'].rstrip(';:,') or ''
+                # if place is marked as unknown ("sine loco"), leave empty
+                if self.pub_place.lower() == '[s.l.]':
+                    self.pub_place = ''
+
                 # subfield $b is name of publisher
                 self.publisher = bibdata.marcxml['260']['b'].rstrip(';:,') or ''
+                # if publisher is marked as unknown ("sine nomine"), leave empty
+                if self.publisher.lower() == '[s.n.]':
+                    self.publisher = ''
 
             # maybe: consider getting volume & series directly from
             # marc rather than relying on hathi enumcron ()
