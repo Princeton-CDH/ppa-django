@@ -196,7 +196,6 @@ class TestDigitizedWork(TestCase):
         digwork.populate_from_bibdata(full_bibdata)
         assert digwork.pub_place == full_bibdata.marcxml['260']['a']
 
-
         # clean up publisher preliminary text
         publisher = 'James Humphreys'
         variants =  [
@@ -211,6 +210,15 @@ class TestDigitizedWork(TestCase):
             full_bibdata.marcxml['260']['b'] = ' '.join([prefix, publisher])
             digwork.populate_from_bibdata(full_bibdata)
             assert digwork.publisher == publisher
+
+        # handle subtitle, publisher, place of publication unset
+        full_bibdata.marcxml['245']['b'] = None
+        full_bibdata.marcxml['260']['a'] = None
+        full_bibdata.marcxml['260']['b'] = None
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.subtitle == ''
+        assert digwork.pub_place == ''
+        assert digwork.publisher == ''
 
         # NOTE: not currently testing publication info unavailable
 

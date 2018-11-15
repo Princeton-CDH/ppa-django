@@ -239,8 +239,9 @@ class DigitizedWork(models.Model, Indexable):
             #     self.subtitle = bibdata.marcxml['245']['b'] or ''
 
             # NOTE: skipping preceding character check for now
+            self.subtitle = bibdata.marcxml['245']['b'] or ''
             # strip trailing space & slash from subtitle
-            self.subtitle = bibdata.marcxml['245']['b'].rstrip(' /') or ''
+            self.subtitle = self.subtitle.rstrip(' /')
 
             # indicator 2 provides the number of characters to be
             # skipped when sorting (could be 0)
@@ -274,13 +275,15 @@ class DigitizedWork(models.Model, Indexable):
                 # strip trailing punctuation from publisher and pub place
 
                 # subfield $a is place of publication
-                self.pub_place = bibdata.marcxml['260']['a'].rstrip(';:,') or ''
+                self.pub_place = bibdata.marcxml['260']['a'] or ''
+                self.pub_place = self.pub_place.rstrip(';:,')
                 # if place is marked as unknown ("sine loco"), leave empty
                 if self.pub_place.lower() == '[s.l.]':
                     self.pub_place = ''
 
                 # subfield $b is name of publisher
-                self.publisher = bibdata.marcxml['260']['b'].rstrip(';:,') or ''
+                self.publisher = bibdata.marcxml['260']['b'] or ''
+                self.publisher = self.publisher.rstrip(';:,')
                 # if publisher is marked as unknown ("sine nomine"), leave empty
                 if self.publisher.lower() == '[s.n.]':
                     self.publisher = ''
