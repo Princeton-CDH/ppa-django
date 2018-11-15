@@ -37,6 +37,8 @@ Example usage::
     python manage.py index --clear all
     # clear works only, then index works
     python manage.py index --clear works --index works
+    # clear everything, index nothing
+    python manage.py index --clear all --index none
 
 '''
 
@@ -77,7 +79,7 @@ class Command(BaseCommand):
             'source_ids', nargs='*',
             help='Optional list of specific works to index by source (HathiTrust) id.')
         parser.add_argument(
-            '-i', '--index', choices=['all', 'works', 'pages'], default='all',
+            '-i', '--index', choices=['all', 'works', 'pages', 'none'], default='all',
             help='Index only works or pages (by default indexes all)')
         parser.add_argument(
             '-w', '--works', dest='index', const='works', action='store_const',
@@ -144,7 +146,7 @@ class Command(BaseCommand):
                 if progbar:
                     progbar.update(count)
 
-        self.solr.commit(self.solr_collection)
+        self.solr.commit(self.solr_collection, openSearcher=True)
 
     def index(self, index_data, progbar=None):
         '''index an iterable into the configured solr instance
@@ -175,6 +177,8 @@ class Command(BaseCommand):
         '''Remove items from the Solr index.  Mode should be one of
         'all', 'works', or 'pages'.'''
         del_query = self.delete_query.get(mode, None)
+        if self.verbosity >= self.v_normal:
+            self.stdout.write('Clearing %s from the index' % mode)
         if del_query:
             # return value doesn't tell us anything useful, so nothing
             # to return here
