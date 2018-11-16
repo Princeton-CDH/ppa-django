@@ -2,18 +2,15 @@
 <footer class="ui basic inverted segment centered grid" id="footer">
     <nav class="ui inverted borderless menu">
         <a class="item" href="{% slugurl 'home' %}">Home</a>
-        <a class="item">Editorial</a>
-        <a class="item" href="{% url 'archive:list-collections'%}">Collections</a>
+        <a class="item" href="{% slugurl 'editorial' %}">Editorial</a>
+        <a class="item" href="{% slugurl 'collections' %}">Collections</a>
         <a class="item" href="{% url 'archive:list' %}">Archive</a>
     </nav>
     <div class="ui container">
         <div class="ui inverted horizontal link list">
-            <a class="item" href="/history-of-the-archive">History of the Archive</a>
-            <a class="item" href="/what-is-prosody">What is Prosody</a>
-            <a class="item" href="/how-to-search">How to Search</a>
-            <a class="item" href="/how-to-cite">How to Cite</a>
-            <a class="item" href="/credits">Contributors and Board Members</a>
-            <a class="item">Contact Us</a>
+            {% for page in request.site.root_page.get_children.live.in_menu %}
+            <a class="item" href="{{ page.url }}">{{ page.title }}</a>
+            {% endfor %}
         </div>
     </div>
     <img class="ppa-logo" src="{% static 'img/ppa-logo-for-dark-wo-bg.svg' %}" alt="Princeton Prosody Archive" />
@@ -32,6 +29,13 @@
             <span class="item">©2018 Trustees of Princeton University</span>
             <a class="item" href="https://accessibility.princeton.edu/">Accessibility</a>
             <a class="item" href="https://accessibility.princeton.edu/accessibility-assistance">Accessibility Assistance</a>
+
+            {# link to technical documentation page, if it exists #}
+            {% slugurl 'technical' as technical_url %}
+            {% if technical_url %}
+            <a class="item" href="{{ technical_url }}">Technical</a>
+            {% endif %}
+
             <span class="item" id="sw_version">{{ SW_VERSION }}</span>
         </div>
     </div>
