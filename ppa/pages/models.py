@@ -1,8 +1,12 @@
 from django.db import models
 from django.template.defaultfilters import truncatechars_html
+from wagtail.core import blocks
 from wagtail.core.models import Page
-from wagtail.core.fields import RichTextField
-from wagtail.admin.edit_handlers import FieldPanel, PageChooserPanel
+from wagtail.core.fields import RichTextField, StreamField
+from wagtail.admin.edit_handlers import FieldPanel, PageChooserPanel, \
+    StreamFieldPanel
+from wagtail.images.blocks import ImageChooserBlock
+from wagtail.documents.blocks import DocumentChooserBlock
 
 from ppa.archive.models import Collection
 
@@ -66,12 +70,20 @@ class HomePage(Page):
         return context
 
 
+class BodyContentBlock(blocks.StreamBlock):
+    '''Common set of content blocks to be used on both content pages
+    and editorial pages'''
+    paragraph = blocks.RichTextBlock()
+    image  =  ImageChooserBlock()
+    document = DocumentChooserBlock()
+
+
 class ContentPage(Page):
     '''Basic content page model.'''
-    body = RichTextField(blank=True)
+    body = StreamField(BodyContentBlock)
 
     content_panels = Page.content_panels + [
-        FieldPanel('body', classname="full"),
+        StreamFieldPanel('body'),
     ]
 
     def description(self):

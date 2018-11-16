@@ -124,10 +124,10 @@ class TestContentPage(WagtailPageTests):
         self.assertCanCreateAt(HomePage, ContentPage)
         root = HomePage.objects.first()
         self.assertCanCreate(root, ContentPage, nested_form_data({
-            'title': 'About the PPA',
+            'title': 'About of the PPA',
             'slug': 'about',
             'body': streamfield([
-                ('text', 'how the ppa came to be...'),
+                ('paragraph', rich_text('some analysis'))
             ])
         }))
 

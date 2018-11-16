@@ -46,7 +46,7 @@
         <div class="description">{{ collection_page.body|richtext }}</div>
         <div class="ui cards">
             {% for item in collections %}
-            <a class="ui card" href="{% url 'archive:list' %}?collections={{ item.name|urlencode }}">
+            <a class="ui card" href="{% url 'archive:list' %}?collections={{ item.pk }}">
                 <div class="content">
                     <h3 class="header">{{ item.name }}</h3>
                     {% with coll_stats=stats|dict_item:item.name %}

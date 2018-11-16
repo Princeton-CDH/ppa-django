@@ -23,7 +23,9 @@
         <h1 class="ui header">
             {% firstof page.title page_title object.title %}
         </h1>
-         {{ page.body|richtext }}
+        {% for block in page.body %}
+            <section>{% include_block block %}</section>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}
