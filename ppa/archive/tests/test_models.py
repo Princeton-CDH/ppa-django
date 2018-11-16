@@ -98,9 +98,11 @@ class TestDigitizedWork(TestCase):
         assert digwork.subtitle == full_bibdata.marcxml['245']['b']
         # fixture has indicator 0, no non-sort characters
         assert digwork.sort_title == ' '.join([digwork.title, digwork.subtitle])
-        assert digwork.author == full_bibdata.marcxml.author()
-        assert digwork.pub_place == full_bibdata.marcxml['260']['a']
-        assert digwork.publisher == full_bibdata.marcxml['260']['b']
+        # authors should have trailing period removed
+        assert digwork.author == full_bibdata.marcxml.author().rstrip('.')
+        # comma should be stripped from publication place and publisher
+        assert digwork.pub_place == full_bibdata.marcxml['260']['a'].strip(',')
+        assert digwork.publisher == full_bibdata.marcxml['260']['b'].strip(',')
 
         # second bibdata record with sort title
         with open(self.bibdata_full2) as bibdata:
@@ -109,26 +111,116 @@ class TestDigitizedWork(TestCase):
         digwork = DigitizedWork(source_id='aeu.ark:/13960/t1pg22p71')
         digwork.populate_from_bibdata(full_bibdata)
         assert digwork.title == full_bibdata.marcxml['245']['a']
-        assert digwork.subtitle == full_bibdata.marcxml['245']['b']
+        # subtitle should omit last two characters (trailing space and slash)
+        assert digwork.subtitle == full_bibdata.marcxml['245']['b'][:-2]
         # fixture has title with non-sort characters
         assert digwork.sort_title == ' '.join([
             digwork.title[int(full_bibdata.marcxml['245'].indicators[1]):],
-            digwork.subtitle
+            full_bibdata.marcxml['245']['b']
         ])
+        # store title before modifying it for tests
+        orig_bibdata_title = full_bibdata.marcxml['245']['a']
 
         # test error in record (title non-sort character non-numeric)
         with open(self.bibdata_full2) as bibdata:
             full_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
             full_bibdata.marcxml['245'].indicators[1] = ' '
             digwork.populate_from_bibdata(full_bibdata)
-            assert digwork.sort_title == ' '.join([digwork.title, digwork.subtitle])
+            assert digwork.sort_title == \
+                ' '.join([digwork.title, full_bibdata.marcxml['245']['b']])
 
             # test error in title sort (doesn't include space after definite article)
             full_bibdata.marcxml['245'].indicators[1] = 3
             digwork.populate_from_bibdata(full_bibdata)
             assert not digwork.sort_title.startswith(' ')
 
-        # TODO: test publication info unavailable?
+            # test cleaning up leading punctuation
+            full_bibdata.marcxml['245'].indicators[1] = 0
+            full_bibdata.marcxml['245']['a'] = '"Elocutionary Language."'
+            digwork.populate_from_bibdata(full_bibdata)
+            assert not digwork.sort_title.startswith('"')
+
+            full_bibdata.marcxml['245']['a'] = "[Pamphlets on Language.]"
+            digwork.populate_from_bibdata(full_bibdata)
+            assert not digwork.sort_title.startswith('[')
+
+        # test title cleanup
+        full_bibdata.marcxml['245']['a'] = orig_bibdata_title
+        # - remove trailing slash from title
+        full_bibdata.marcxml['245']['a'] += ' /'
+        digwork.populate_from_bibdata(full_bibdata)
+        # title should omit last two characters
+        assert digwork.title == orig_bibdata_title
+        # - remove initial open bracket
+        full_bibdata.marcxml['245']['a'] = '[{}'.format(orig_bibdata_title)
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.title == orig_bibdata_title
+        # - internal brackets should be unchanged
+        full_bibdata.marcxml['245']['a'] = 'A third[-fourth] class reader.'
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.title == full_bibdata.marcxml['245']['a']
+
+        # author trailing period not removed for single initials
+        # - name with initials, no date
+        full_bibdata.marcxml['100']['a'] = 'Mitchell, M. S.'
+        full_bibdata.marcxml['100']['d'] = ''
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.author == full_bibdata.marcxml['100']['a']
+        # - initials with no space
+        full_bibdata.marcxml['100']['a'] = 'Mitchell, M.S.'
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.author == full_bibdata.marcxml['100']['a']
+        # - esquire
+        full_bibdata.marcxml['100']['a'] = 'Wilson, Richard, Esq.'
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.author == full_bibdata.marcxml['100']['a']
+        # - remove '[from old catalog]'
+        full_bibdata.marcxml['100']['a'] = 'Thurber, Samuel. [from old catalog]'
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.author == 'Thurber, Samuel'
+
+        # sine loco/nomine should be cleared out
+        full_bibdata.marcxml['260']['a'] = '[S.l.]'
+        full_bibdata.marcxml['260']['b'] = '[s.n.]'
+        digwork.populate_from_bibdata(full_bibdata)
+        assert not digwork.pub_place
+        assert not digwork.publisher
+
+        # brackets around publisher and pub place should be removed
+        full_bibdata.marcxml['260']['a'] = '[London]'
+        full_bibdata.marcxml['260']['b'] = '[Faber]'
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.pub_place == full_bibdata.marcxml['260']['a'].strip('[]')
+        assert digwork.publisher == full_bibdata.marcxml['260']['b'].strip('[]')
+        full_bibdata.marcxml['260']['a'] = 'New Brunswick [N.J.]'
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.pub_place == full_bibdata.marcxml['260']['a']
+
+        # clean up publisher preliminary text
+        publisher = 'James Humphreys'
+        variants =  [
+            'Printed at',
+            'Printed and sold by',
+            'Printed and published by',
+            'Pub. for',
+            'Published for the',
+            'Publisht for the',
+        ]
+        for prefix in variants:
+            full_bibdata.marcxml['260']['b'] = ' '.join([prefix, publisher])
+            digwork.populate_from_bibdata(full_bibdata)
+            assert digwork.publisher == publisher
+
+        # handle subtitle, publisher, place of publication unset
+        full_bibdata.marcxml['245']['b'] = None
+        full_bibdata.marcxml['260']['a'] = None
+        full_bibdata.marcxml['260']['b'] = None
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.subtitle == ''
+        assert digwork.pub_place == ''
+        assert digwork.publisher == ''
+
+        # NOTE: not currently testing publication info unavailable
 
     def test_index_data(self):
         digwork = DigitizedWork.objects.create(
