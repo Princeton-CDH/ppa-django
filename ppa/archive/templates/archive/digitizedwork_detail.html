@@ -14,6 +14,10 @@
 
 {% block page-context-id %}digitized-work{% endblock %}
 
+{% block page_nav %}
+    {% include 'snippets/nav.html' with style="archive" active="archive" %}
+{% endblock %}
+
 {% block content %}
 <section class="ui basic vertical segment container">
     <form class="ui form">

@@ -43,6 +43,18 @@
     }
 }
 
+@mixin triangle-overlay($color) {
+    height: 0;
+    width: 0;
+    left: calc(100% - 50px);
+    border-right: 25px solid $color;
+    border-bottom: 25px solid $color;
+    border-top: 25px solid transparent;
+    border-left: 25px solid transparent;
+    z-index: -1;
+    opacity: 0.5;
+}
+
 @mixin font-smooth() {
     font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

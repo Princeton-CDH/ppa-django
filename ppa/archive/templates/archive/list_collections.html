@@ -5,6 +5,10 @@
 
 {% block page-context-id %}collections{% endblock %}
 
+{% block page_nav %}
+    {% include 'snippets/nav.html' with style="archive" active="collections" %}
+{% endblock %}
+
 {% block page_header %}
 <header id="header" class="ui center aligned text container">
     <h1 class="ui header">Collections</h1>

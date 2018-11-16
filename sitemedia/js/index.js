@@ -15,8 +15,8 @@ $(function(){
         .sidebar('setting', {
             onChange: () => {
                 // swap the hamburger icon for a close icon
-                $('.times.icon').toggle()
-                $('.sidebar.icon').toggle()
+                $('.close.icon').toggle()
+                $('.menu.icon').toggle()
             }
         })
 })

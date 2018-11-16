@@ -7,4 +7,4 @@
 *******************************/
 
 /* Inverted */
-@invertedBackground: @dusk;
+@invertedBackground: @darkGrey;

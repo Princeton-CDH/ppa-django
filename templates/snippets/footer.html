@@ -1,12 +1,12 @@
 {% load static wagtailcore_tags %}
 <footer class="ui basic inverted segment centered grid" id="footer">
-    <nav class="ui inverted borderless menu">
-        <a class="item" href="{% slugurl 'home' %}">Home</a>
-        <a class="item">Editorial</a>
-        <a class="item" href="{% url 'archive:list-collections'%}">Collections</a>
-        <a class="item" href="{% url 'archive:list' %}">Archive</a>
-    </nav>
     <div class="ui container">
+        <nav class="ui inverted borderless menu">
+            <a class="item" href="{% slugurl 'home' %}">Home</a>
+            <a class="item">Editorial</a>
+            <a class="item" href="{% url 'archive:list-collections'%}">Collections</a>
+            <a class="item" href="{% url 'archive:list' %}">Archive</a>
+        </nav>
         <div class="ui inverted horizontal link list">
             <a class="item" href="/history-of-the-archive">History of the Archive</a>
             <a class="item" href="/what-is-prosody">What is Prosody</a>
@@ -15,9 +15,7 @@
             <a class="item" href="/credits">Contributors and Board Members</a>
             <a class="item">Contact Us</a>
         </div>
-    </div>
-    <img class="ppa-logo" src="{% static 'img/ppa-logo-for-dark-wo-bg.svg' %}" alt="Princeton Prosody Archive" />
-    <div class="ui container">
+        <img class="ppa-logo" src="{% static 'img/ppa-logo-for-dark-wo-bg.svg' %}" alt="Princeton Prosody Archive" />
         <div class="ui inverted horizontal list">
             <a class="item ui small image" href="https://www.princeton.edu/">
                 <img src="{% static 'img/PUsig2-ww-ws.svg' %}" alt="Princeton University" />
@@ -26,8 +24,6 @@
                 <img src="{% static 'img/CDH_logo_W.svg' %}" alt="The Center for Digital Humanities at Princeton" />
             </a>
         </div>
-    </div>
-    <div class="ui container">
         <div class="contact ui inverted horizontal link list">
             <span class="item">©2018 Trustees of Princeton University</span>
             <a class="item" href="https://accessibility.princeton.edu/">Accessibility</a>

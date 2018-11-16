@@ -7,6 +7,10 @@
 
 {% block page-context-id %}homepage{% endblock %}
 
+{% block page_nav %}
+    {% include 'snippets/nav.html' with style="homepage" %}
+{% endblock %}
+
 {% block page_header %}
 <header class="ui vertical basic center aligned segment homepage" id="header">
     <div id="scene">

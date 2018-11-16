@@ -11,20 +11,36 @@
 @itemTextTransform: uppercase;
 
 /*--------------
+     States
+---------------*/
+
+/* Hovered Item */
+@hoverItemBackground: @itemBackground;
+@hoverItemTextColor: @itemTextColor;
+
+/* Pressed Item */
+@pressedItemBackground: @itemBackground;
+
+/* Active Item */
+@activeItemBackground: @itemBackground;
+@activeItemTextColor: @itemTextColor;
+
+/* Active Hovered Item */
+@activeHoverItemBackground: @itemBackground;
+@activeHoverItemColor: @itemTextColor;
+
+/* Selected Dropdown */
+@dropdownSelectedItemBackground: @itemBackground;
+@dropdownSelectedItemColor: @itemTextColor;
+
+/* Active Dropdown */
+@dropdownActiveItemBackground: @itemBackground;
+@dropdownActiveItemColor: @itemTextColor;
+@dropdownActiveItemFontWeight: @normal;
+
+/*--------------
    Variations
 ---------------*/
 
 /* Inverted */
-@invertedBackground: @dusk;
-@invertedItemTextColor: @white;
-
-/*--------------
-     Types
----------------*/
-
-/* Pointing */
-@secondaryPointingBorderColor: @primaryColor;
-@secondaryPointingActiveBorderColor: @primaryColor;
-@secondaryPointingActiveTextColor: @primaryColor;
-@secondaryPointingHoverTextColor: @primaryColor;
-@secondaryPointingItemVerticalPadding: @itemVerticalPadding;
+@invertedBackground: @darkGrey;
