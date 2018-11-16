@@ -112,7 +112,7 @@ class TestContentPage(WagtailPageTests):
             'title': 'About of the PPA',
             'slug': 'about',
             'body': streamfield([
-                ('text', 'how the ppa came to be...'),
+                ('paragraph', rich_text('some analysis'))
             ])
         }))
 

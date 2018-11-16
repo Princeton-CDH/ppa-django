@@ -6,6 +6,8 @@ from wagtail.admin.edit_handlers import FieldPanel, StreamFieldPanel
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.documents.blocks import DocumentChooserBlock
 
+from ppa.pages.models import BodyContentBlock
+
 
 class EditorialIndexPage(Page):
     '''Editorial index page; list recent editorial articles.'''
@@ -39,11 +41,7 @@ class EditorialPage(Page):
     date = models.DateField("Post date")
     # preliminary streamfield; we may need other options for content
     # (maybe a footnotes block?)
-    body = StreamField([
-        ('paragraph', blocks.RichTextBlock()),
-        ('image', ImageChooserBlock()),
-        ('document', DocumentChooserBlock()),
-    ])
+    body = StreamField(BodyContentBlock)
     content_panels = Page.content_panels + [
         FieldPanel('date'),
         StreamFieldPanel('body'),
