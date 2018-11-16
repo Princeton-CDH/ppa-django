@@ -6,11 +6,11 @@ from ppa.archive.models import DigitizedWork
 
 class ArchiveViewsSitemap(Sitemap):
     '''Sitemap for archive views that are not Wagtail pages but also
-    not tied to models.'''
+    not tied to models (currently archive search/browse page only).'''
 
     def items(self):
         # return list of view names
-        return ['list', 'list-collections']
+        return ['list']
 
     def location(self, obj):
         # generate url based on archives url names
