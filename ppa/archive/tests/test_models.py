@@ -486,17 +486,3 @@ class TestCollection(TestCase):
         assert stats[coll2.name]['count'] == 1
         assert stats[coll2.name]['dates'] == '1903'
 
-
-class TestCollectionQuerySet(TestCase):
-
-    def test_public(self):
-        random = Collection.objects.create(name='Random Assortment')
-        brogan = Collection.objects.create(name='Brogan\'s List')
-        dictionary = Collection.objects.create(name='Dictionary')
-        pronunciation = Collection.objects.create(name='Pronunciation Guide')
-
-        public_collections = Collection.objects.public()
-        assert random in public_collections
-        assert brogan in public_collections
-        assert dictionary not in public_collections
-        assert pronunciation not in public_collections
