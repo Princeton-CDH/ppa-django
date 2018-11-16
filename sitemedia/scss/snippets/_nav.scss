@@ -6,9 +6,20 @@
     padding: 0;
     z-index: 103; // above mobile nav
     transition: margin-top 0.25s;
+    border-top: 5px solid $pink;
+    border-bottom: none;
+    box-shadow: none;
+
+    &.homepage {
+        border-color: $darkBlue;
+    }
+
+    &.archive {
+        border-color: $teal;
+    }
 
     &.hidden {
-        margin-top: -$nav-height;
+        margin-top: -$nav-height - 5px;
     }
 
     .brand {
@@ -18,13 +29,6 @@
         position: absolute;
         justify-content: center;
         margin: 0;
-        
-        .item {
-            font-weight: bold;
-            display: flex;
-            font-size: 2rem;
-            padding: .5rem;
-        }
     }
     
     .item {
@@ -43,9 +47,50 @@
                 display: none;
             }
         }
+        
+        &.about,
+        &.editorial {
+            &.active::before {
+                @include triangle-overlay($pink);
+            }
+        }
+
+        &.collections,
+        &.archive {
+            &.active::before {
+                @include triangle-overlay($teal);
+            }
+        }
+    }
+    
+    a.item:hover {
+        border-bottom: 10px solid $darkBlue;
+        padding-bottom: 8px;
     }
 
-    .search.icon {
-        margin-left: .25rem;
+    img {
+        height: 1.25rem;
+        width: 1.25rem;
+    }
+
+    .search.icon,
+    .dropdown.icon {
+        margin-left: .5rem;
+    }
+
+    .search .search.icon {
+        margin-left: 0;
+    }
+
+    .dropdown.icon {
+        transform: rotate(90deg);
+    }
+
+    .close.icon {
+        display: none;
+    }
+    
+    .item:hover .dropdown.icon {
+        transform: rotate(-90deg);
     }
 }

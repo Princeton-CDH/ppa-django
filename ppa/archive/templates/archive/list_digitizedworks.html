@@ -13,6 +13,10 @@ href="{% url 'unapi' %}" />
 {% block page-subtitle %}Archive | {% endblock %}
 {% block page-context-id %}search{% endblock %}
 
+{% block page_nav %}
+    {% include 'snippets/nav.html' with style="archive" active="archive" %}
+{% endblock %}
+
 {% block page_header %}
 <header id="header" class="ui center aligned text container">
     <h1 class="ui sub header">Archive</h1>

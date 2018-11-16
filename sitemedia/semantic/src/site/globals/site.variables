@@ -71,9 +71,13 @@
 @offWhite     : #F1F0EB;
 @lightGrey    : #D8D8D8;
 @midGrey      : #737373;
-@darkGrey     : #4A4A4A;
+@darkGrey     : #5C5C63;
+@darkestGrey  : #363636;
 @melon        : #FF675D;
 @dusk         : #444867;
+@teal         : #57C4C4;
+@darkBlue     : #4661AC;
+@pink         : #F05B69;
 
 /*-------------------
        Links
@@ -87,7 +91,7 @@
 --------------------*/
 
 @pageBackground  : @backgroundColor;
-@textColor       : @darkGrey;
+@textColor       : @darkestGrey;
 
 /*--------------
    Form Input
