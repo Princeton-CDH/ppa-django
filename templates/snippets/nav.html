@@ -19,7 +19,7 @@
     <div class="ui simple item dropdown">
         <div class="text">About</div>
         <i class="dropdown icon"></i>
-        <div class="menu">
+        <div class="inverted menu">
             {# NOTE: currently relies on editorial not having show_in_menu set #}
             {% for page in request.site.root_page.get_children.live.in_menu %}
             <div class="item"><a href="{{ page.url }}">{{ page.title }}</a></div>
