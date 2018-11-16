@@ -1,5 +1,6 @@
 import logging
 import os.path
+import re
 from zipfile import ZipFile
 
 from cached_property import cached_property
@@ -186,6 +187,11 @@ class DigitizedWork(models.Model, Indexable):
     display_title.admin_order_field = 'sort_title'
     display_title.allow_tags = True
 
+    #: regular expresion for cleaning preliminary text from publisher names
+    printed_by_re = r'^(Printed)?( and )?(Pub(.|lished|lisht)?)?( and sold)? (by|for|at)( the)? ?'
+    # Printed by/for (the); Printed and sold by; Printed and published by;
+    # Pub./Published/Publisht at/by/for the
+
     def populate_from_bibdata(self, bibdata):
         '''Update record fields based on Hathi bibdata information.
         Full record is required in order to set all fields
@@ -200,7 +206,9 @@ class DigitizedWork(models.Model, Indexable):
         # set fields from marc if available, since it has more details
         if bibdata.marcxml:
             # set title and subtitle from marc if possible
-            self.title = bibdata.marcxml['245']['a']
+            # - clean title: strip trailing space & slash and initial bracket
+            self.title = bibdata.marcxml['245']['a'].rstrip(' /') \
+                .lstrip('[')
 
             # according to PUL CAMS,
             # 245 subfield contains the subtitle *if* the preceding field
@@ -222,6 +230,8 @@ class DigitizedWork(models.Model, Indexable):
 
             # NOTE: skipping preceding character check for now
             self.subtitle = bibdata.marcxml['245']['b'] or ''
+            # strip trailing space & slash from subtitle
+            self.subtitle = self.subtitle.rstrip(' /')
 
             # indicator 2 provides the number of characters to be
             # skipped when sorting (could be 0)
@@ -235,16 +245,42 @@ class DigitizedWork(models.Model, Indexable):
 
             # strip whitespace, since a small number of records have a
             # nonsort value that doesn't include a space after a
-            # definite article
-            self.sort_title = bibdata.marcxml.title()[non_sort:].strip()
+            # definite article.
+            # Also strip punctuation, since MARC only includes it in
+            # non-sort count when there is a definite article.
+            self.sort_title = bibdata.marcxml.title()[non_sort:].strip(' "[')
 
             self.author = bibdata.marcxml.author() or ''
+            # remove a note present on some records and strip whitespace
+            self.author = self.author.replace('[from old catalog]', '').strip()
+            # removing trailing period, except when it is part of an
+            # initial or known abbreviation (i.e, Esq.)
+            # Look for single initial, but support initials with no spaces
+            if self.author.endswith('.') and not \
+              re.search(r'( ([A-Z]\.)*[A-Z]| Esq)\.$', self.author):
+                self.author = self.author.rstrip('.')
+
             # field 260 includes publication information
             if '260' in bibdata.marcxml:
+                # strip trailing punctuation from publisher and pub place
+
                 # subfield $a is place of publication
                 self.pub_place = bibdata.marcxml['260']['a'] or ''
+                self.pub_place = self.pub_place.rstrip(';:,')
+                # if place is marked as unknown ("sine loco"), leave empty
+                if self.pub_place.lower() == '[s.l.]':
+                    self.pub_place = ''
+
                 # subfield $b is name of publisher
                 self.publisher = bibdata.marcxml['260']['b'] or ''
+                self.publisher = self.publisher.rstrip(';:,')
+                # if publisher is marked as unknown ("sine nomine"), leave empty
+                if self.publisher.lower() == '[s.n.]':
+                    self.publisher = ''
+
+            # remove printed by statement before publisher name
+            self.publisher = re.sub(self.printed_by_re, '', self.publisher,
+                flags=re.IGNORECASE)
 
             # maybe: consider getting volume & series directly from
             # marc rather than relying on hathi enumcron ()
@@ -265,6 +301,11 @@ class DigitizedWork(models.Model, Indexable):
         # hathi source url can currently be inferred from htid, but is
         # included in the bibdata in case it changes - so let's just store it
         self.source_url = copy_details['itemURL']
+
+        # remove brackets around inferred publishers, place of publication
+        # *only* if they wrap the whole text
+        self.publisher = re.sub(r'^\[(.*)\]$', r'\1', self.publisher)
+        self.pub_place = re.sub(r'^\[(.*)\]$', r'\1', self.pub_place)
 
         # should also consider storing:
         # - last update, rights code / rights string, item url

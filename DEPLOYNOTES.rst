@@ -15,6 +15,11 @@ Deploy and Upgrade notes
   who were previously in the *Content Editor* group should be added
   to one of these, and the *Content Editor* group should be removed.
 
+* To benefit from new logic for cleaning metadata fields on import, the
+  HathiTrust import should be run::
+
+    python manage.py hathi_import -v 0 --progress --update
+
 * Solr schema changes for this release require an updated ``solrconfig.xml``
   with additional ``<lib/>`` declarations. Copy ``solr_conf/solrconfig.xml``
   to the Solr core's `conf` directory, and then restart the Solr server
@@ -30,6 +35,7 @@ Deploy and Upgrade notes
 
 * Run ``python manage.py setup_site_pages` to create stub pages for all
   site content needed for main site navigation.
+
 
 0.9
 ---
