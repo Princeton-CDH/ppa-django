@@ -547,6 +547,8 @@ class TestArchiveViews(TestCase):
             assert digwork.source_id in digwork_data
             assert digwork.record_id in digwork_data
             assert digwork.title in digwork_data
+            assert digwork.subtitle in digwork_data
+            assert digwork.sort_title in digwork_data
             assert digwork.author in digwork_data
             assert str(digwork.pub_date) in digwork_data
             assert digwork.pub_place in digwork_data
