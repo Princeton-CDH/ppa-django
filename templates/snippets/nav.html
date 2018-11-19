@@ -1,9 +1,11 @@
+{% load wagtailcore_tags %}
+
 <!-- mobile navigation -->
 <nav class="ui top sidebar inverted vertical borderless menu" id="mobile-nav">
     <a class="item" href="/history-of-the-archive/">History of the Archive</a>
     <a class="item" href="/what-is-prosody/">What is Prosody</a>
-    <a class="item" href="{% url 'archive:list-collections'%}">About the Collections</a>
-    <a class="item" href="#">Editorial</a>
+    <a class="item" href="{% slugurl 'collections'%}">About the Collections</a>
+    <a class="item" href="{% slugurl 'editorial' %}">Editorial</a>
     <a class="item" href="{% url 'archive:list' %}">View the Archive</a>
 </nav>
 <!-- main navigation -->
@@ -12,14 +14,26 @@
         <i class="sidebar icon"></i>
         <i class="times icon" style="display:none;"></i>
     </a>
-    <a class="item" href="/history-of-the-archive/">History of the Archive</a>
-    <a class="item" href="/what-is-prosody/">What is Prosody</a>
-    <div class="ui header brand">
-        <a class="item" href="/">PPA</a>
+
+    {# preliminary about menu from wagtail #}
+    <div class="ui simple item dropdown">
+        <div class="text">About</div>
+        <i class="dropdown icon"></i>
+        <div class="inverted menu">
+            {# NOTE: currently relies on editorial not having show_in_menu set #}
+            {% for page in request.site.root_page.get_children.live.in_menu %}
+            <div class="item"><a href="{{ page.url }}">{{ page.title }}</a></div>
+            {% endfor %}
+        </div>
     </div>
+
+    <a class="item" href="{% slugurl 'editorial' %}">Editorial</a>
+    <div class="ui header brand">
+        <a class="item" href="{% slugurl 'home' %}">PPA</a>
+    </div>
+
     <div class="right menu">
-        <a class="item" href="{% url 'archive:list-collections'%}">About the Collections</a>
-        <a class="item">Editorial</a>
+        <a class="item" href="{% slugurl 'collections'%}">About the Collections</a>
         <a class="item" href="{% url 'archive:list' %}">
             View the Archive
             <i class="search icon"></i>

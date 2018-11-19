@@ -8,7 +8,8 @@ $(function(){
     const $menuButton = $('.toc.item')
 
     /* bindings */
-    new PitBar($mainNav, $mobileNav)
+    let pb = new PitBar($mainNav, $mobileNav)
+
     $mobileNav
         .sidebar('attach events', $menuButton)
         .sidebar('setting', {

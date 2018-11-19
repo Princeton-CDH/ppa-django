@@ -3,6 +3,40 @@
 Deploy and Upgrade notes
 ========================
 
+0.10
+----
+
+* Switching from Mezzanine to Wagtail requires a manual migration *before*
+  installing the new version to avoid migration dependency conflicts::
+
+     python manage.py migrate pages zero
+
+* Wagtail provides predefined groups for *Editor* and *Moderator*. Users
+  who were previously in the *Content Editor* group should be added
+  to one of these, and the *Content Editor* group should be removed.
+
+* To benefit from new logic for cleaning metadata fields on import, the
+  HathiTrust import should be run::
+
+    python manage.py hathi_import -v 0 --progress --update
+
+* Solr schema changes for this release require an updated ``solrconfig.xml``
+  with additional ``<lib/>`` declarations. Copy ``solr_conf/solrconfig.xml``
+  to the Solr core's `conf` directory, and then restart the Solr server
+  to enable the new library paths.
+
+  Because this includes a Solr schema field type change that cannot be converted
+  automatically, the index must be cleared before changing the schema,
+  and then all content must be reindexed::
+
+    python manage.py index --clear all --index none
+    python manage.py solr_schema
+    python manage.py index
+
+* Run ``python manage.py setup_site_pages`` to create stub pages for all
+  site content needed for main site navigation.
+
+
 0.9
 ---
 
@@ -13,9 +47,10 @@ Deploy and Upgrade notes
 
     python manage.py hathi_import -v 0 --progress --update
 
-* This update requires a full reindex; due to changes in page indexing, pages
-  must be cleared from the Solr index::
+* This update requires a Solr schema update and a full reindex; due to changes
+  in page indexing, pages must also be cleared from the Solr index::
 
+     python manage.py solr_schema
      python manage.py index --clear pages
 
 
@@ -69,4 +104,3 @@ Deploy and Upgrade notes
 
     python manage.py hathi_import
     python manage.py hathi_import -v 0 --progress
-

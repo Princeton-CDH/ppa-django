@@ -16,9 +16,9 @@ DATABASES = {
         'HOST': 'localhost',
         'PORT': '',
         'TEST': {
-                'CHARSET': 'utf8',
-                'COLLATION': 'utf8_general_ci',
-            },
+            'CHARSET': 'utf8',
+            'COLLATION': 'utf8_general_ci',
+        },
     },
 }
 
@@ -28,12 +28,16 @@ ALLOWED_HOSTS = ['*']
 
 # required for integration tests that query Solr
 SOLR_CONNECTIONS = {
-  'test': {
+    'test': {
         'COLLECTION': 'test-ppa',
         'URL': 'http://localhost:8983/solr/',
         'ADMIN_URL': 'http://localhost:8983/solr/admin/cores'
     },
+    'default': {
+        'COLLECTION': 'ppa-pa11y',
+        'URL': 'http://localhost:8983/solr/',
+        'ADMIN_URL': 'http://localhost:8983/solr/admin/cores'
+    },
 }
-
 
 # secret key added as a travis build step

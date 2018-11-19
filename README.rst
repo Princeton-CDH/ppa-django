@@ -4,7 +4,7 @@ ppa-django
 .. sphinx-start-marker-do-not-remove
 
 Django web application for the new `Princeton Prosody Archive
-<https://cdh.princeton.edu/princeton-prosody-archive/>`_.
+<https://cdh.princeton.edu/projects/princeton-prosody-archive/>`_.
 
 Code and architecture documentation for the current release available
 at `<https://princeton-cdh.github.io/ppa-django/>`_.
