@@ -351,34 +351,18 @@ class DigitizedWorkDetailView(DetailView):
         return context
 
 
-class CollectionListView(ListView):
-    '''Display list of :class:`ppa.archive.models.Collection`
-    with description and summary statistics.
-    '''
-    model = Collection
-    # NOTE: For consistency with DigitizedWork's list view
-    template_name = 'archive/list_collections.html'
-    ordering = ('name',)
-
-    def get_queryset(self):
-        return super().get_queryset().public()
-
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-        context['stats'] = Collection.stats()
-        return context
-
-
 class DigitizedWorkCSV(ListView):
     '''Export of digitized work details as CSV download.'''
     # NOTE: csv logic could be extracted as a view mixin for reuse
     model = DigitizedWork
     # order by id for now, for simplicity
     ordering = 'id'
-    header_row = ['Database ID', 'Source ID', 'Record ID', 'Title', 'Author',
-                  'Publication Date', 'Publication Place', 'Publisher',
-                  'Enumcron', 'Collection', 'Public Notes', 'Notes',
-                  'Page Count', 'Date Added', 'Last Updated']
+    header_row = [
+        'Database ID', 'Source ID', 'Record ID', 'Title', 'Subtitle',
+        'Sort title', 'Author', 'Publication Date', 'Publication Place',
+        'Publisher', 'Enumcron', 'Collection', 'Public Notes', 'Notes',
+        'Page Count', 'Date Added', 'Last Updated'
+    ]
 
     def get_csv_filename(self):
         '''Return the CSV file name based on the current datetime.
@@ -394,8 +378,9 @@ class DigitizedWorkCSV(ListView):
         :returns: rows for CSV columns
         :rtype: tuple
         '''
-        return ((dw.id, dw.source_id, dw.record_id, dw.title, dw.author,
-                 dw.pub_date, dw.pub_place, dw.publisher, dw.enumcron,
+        return ((dw.id, dw.source_id, dw.record_id, dw.title, dw.subtitle,
+                 dw.sort_title, dw.author, dw.pub_date, dw.pub_place,
+                 dw.publisher, dw.enumcron,
                  ';'.join([coll.name for coll in dw.collections.all()]),
                  dw.public_notes, dw.notes, dw.page_count, dw.added,
                  dw.updated

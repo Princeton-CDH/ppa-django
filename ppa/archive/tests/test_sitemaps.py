@@ -15,7 +15,8 @@ class TestArchiveViewsSitemap(TestCase):
     def test_items(self):
         items = self.sitemap.items()
         assert 'list' in items
-        assert 'list-collections' in items
+        # collection list view no longer in archives (now a wagtail page)
+        assert 'list-collections' not in items
 
     def test_location(self):
         assert self.sitemap.location('list') == reverse('archive:list')
@@ -24,6 +25,11 @@ class TestArchiveViewsSitemap(TestCase):
         assert self.sitemap.lastmod('list') == self.latest_digwork.updated
         assert self.sitemap.lastmod('list-collection') \
             == self.latest_digwork.updated
+
+    def test_get(self):
+        # test that it actually renders, to catch any other problems
+        resp = self.client.get('/sitemap-archive.xml')
+        assert resp.status_code == 200
 
 
 class TestDigitizedWorkSitemap(TestCase):
@@ -38,3 +44,8 @@ class TestDigitizedWorkSitemap(TestCase):
     def test_lastmod(self):
         digwork = DigitizedWork.objects.first()
         assert self.sitemap.lastmod(digwork) == digwork.updated
+
+    def test_get(self):
+        # test that it actually renders, to cactch any other problems
+        resp = self.client.get('/sitemap-digitizedworks.xml')
+        assert resp.status_code == 200

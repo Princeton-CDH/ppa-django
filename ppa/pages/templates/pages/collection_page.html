@@ -1,7 +1,5 @@
-{% extends "base.html" %}
-{% load static humanize ppa_tags humanize %}
-
-{% block page-subtitle %}Archive | Collections {% endblock %}
+{% extends "pages/content_page.html" %}
+{% load humanize wagtailcore_tags %}
 
 {% block page-context-id %}collections{% endblock %}
 
@@ -9,17 +7,19 @@
     {% include 'snippets/nav.html' with style="archive" active="collections" %}
 {% endblock %}
 
+{# currently not part of content page template  #}
 {% block page_header %}
 <header id="header" class="ui center aligned text container">
-    <h1 class="ui header">Collections</h1>
+    <h1 class="ui header">{{ page.title }}</h1>
 </header>
 {% endblock %}
 
 {% block content %}
 <div class="ui text container">
-    <p class="page-description">The Archive builds on bibliographic data from several sources as well as library catalog data from the HathiTrust Research Center. It is divided into {{ object_list.count|apnumber }} collections. Users are able to search across collections or within any combination of collections.</p>
+    <p class="page-description">{{ page.body|richtext }}</p>
+
     <section class="collection-cards ui cards">
-        {% for item in object_list %}
+        {% for item in collections %}
         {% with coll_stats=stats|dict_item:item.name %}
             {% with coll_stats.count|yesno:"a,span" as tag %}
         {# collections with no items are displayed but do not link to search #}
@@ -29,7 +29,7 @@
                     <div class="meta">
                         {% firstof coll_stats.count "0" as count %}
                         <p>{{ count|intcomma }} digitized work{{ count|pluralize }}
-                            {% if coll_stats.dates %} - {{ coll_stats.dates }}{% endif %}
+                            {% if coll_stats.dates %} &middot; {{ coll_stats.dates }}{% endif %}
                         </p>
                     </div>
                 {% if item.description %}

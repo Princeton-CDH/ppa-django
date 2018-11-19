@@ -1,10 +1,12 @@
-{% load static %}
+{% load static wagtailcore_tags %}
+
 <!-- mobile navigation -->
 <nav class="ui top sidebar vertical borderless menu {{ style }}" id="mobile-nav">
-    <span class="item">About</span>
-    <a class="item">Editorial</a>
-    <a class="item" href="{% url 'archive:list-collections'%}">Collections</a>
-    <a class="item" href="{% url 'archive:list' %}">Archive</a>
+    <a class="item" href="/history-of-the-archive/">History of the Archive</a>
+    <a class="item" href="/what-is-prosody/">What is Prosody</a>
+    <a class="item" href="{% slugurl 'collections'%}">About the Collections</a>
+    <a class="item" href="{% slugurl 'editorial' %}">Editorial</a>
+    <a class="item" href="{% url 'archive:list' %}">View the Archive</a>
 </nav>
 <!-- main navigation -->
 <nav class="ui top fixed borderless menu {{ style }}" id="main-nav">
@@ -16,12 +18,23 @@
         About
         <img class="dropdown icon" src="{% static 'img/icons/RightChevron.svg' %}" alt="">
     </span>
-    <a class="editorial item {% if active == 'editorial' %}active{% endif %}">
+    {# preliminary about menu from wagtail #}
+    <div class="ui simple item dropdown">
+        <div class="text">About</div>
+        <i class="dropdown icon"></i>
+        <div class="inverted menu">
+            {# NOTE: currently relies on editorial not having show_in_menu set #}
+            {% for page in request.site.root_page.get_children.live.in_menu %}
+            <div class="item"><a href="{{ page.url }}">{{ page.title }}</a></div>
+            {% endfor %}
+        </div>
+    </div>
+    <a href="{% slugurl 'editorial' %}"
+        class="editorial item {% if active == 'editorial' %}active{% endif %}">
         Editorial
     </a>
     <div class="ui header brand">
-        <a href="/">
-        </a>
+        <a class="item" href="{% slugurl 'home' %}">PPA</a>
     </div>
     <div class="right menu">
         <a class="collections item {% if active == 'collections' %}active{% endif %}"
