@@ -14,11 +14,11 @@ export default class PitBar {
         this.pitbar = pitbar
         this.mobileNav = mobileNav || false
         this.scroll = 0
-        $(window).scroll(this.checkScroll.bind(this)) // prevents using scroll event as context
+        $('.pusher').scroll(this.checkScroll.bind(this)) // prevents using scroll event as context
     }
 
     checkScroll() {
-        let scrolled = $(document).scrollTop()
+        let scrolled = $('.pusher').scrollTop()
         if (scrolled - this.scroll > 25 && scrolled > this.scroll && scrolled > 90) { // scroll down
             if (!this.pitbar.hasClass('hidden')) {
                 if (this.mobileNav && !this.mobileNav.hasClass('visible')) {

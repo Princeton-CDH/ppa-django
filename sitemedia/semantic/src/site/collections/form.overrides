@@ -35,7 +35,7 @@
         box-shadow: @inputFocusBoxShadow;
     }
 
-    > fieldset.vertical.segment {
+    > .vertical.segment {
         background-color: @inputBackground;
     }
 }

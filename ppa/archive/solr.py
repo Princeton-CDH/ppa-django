@@ -28,14 +28,60 @@ class SolrSchema(object):
     '''Solr Schema object.  Includes project schema configuration and
     methods to update configured Solr instance.'''
 
+    # ported from winthrop-django
+    field_types = [
+
+        {
+            'name': 'text_en',
+            "class":"solr.TextField",
+            # for now, configuring index and query analyzers the same
+            # if we want synonyms, query must be separate
+            "analyzer": {
+                # "charFilters": [],
+                "tokenizer": {
+                    "class": "solr.StandardTokenizerFactory",
+                },
+                "filters": [
+                    {"class": "solr.StopFilterFactory"},
+                    {"class": "solr.LowerCaseFilterFactory"},
+                    {"class": "solr.EnglishPossessiveFilterFactory"},
+                    {"class": "solr.KeywordMarkerFilterFactory"},
+                    {"class": "solr.PorterStemFilterFactory"},
+                    {"class": "solr.ICUFoldingFilterFactory"},
+                ]
+            }
+        },
+        {
+            'name': 'string_i',
+            "class": "solr.TextField",
+            "sortMissingLast": True,
+            "analyzer": {
+                "tokenizer": {
+                    # treat entire field as a single token
+                    "class": "solr.KeywordTokenizerFactory",
+                },
+                "filters": [
+                    # lower case to ensure alphabetical sort behaves as
+                    # expected and standardize using
+                    # the ICUFoldingFilterFactory
+                    # {"class": "solr.LowerCaseFilterFactory"},
+                    {"class": "solr.ICUFoldingFilterFactory"},
+
+                ]
+            },
+        },
+    ]
+
     #: solr schema field definitions
     fields = [
+        # srcid cannot be string_i, as Textfield cannot be used in
+        # collapse query
         {'name': 'srcid', 'type': 'string', 'required': False},
         {'name': 'content', 'type': 'text_en', 'required': False},
         {'name': 'item_type', 'type': 'string', 'required': False},
         {'name': 'title', 'type': 'text_en', 'required': False},
         {'name': 'subtitle', 'type': 'text_en', 'required': False},
-        {'name': 'sort_title', 'type': 'string', 'required': False},
+        {'name': 'sort_title', 'type': 'string_i', 'required': False},
         {'name': 'enumcron', 'type': 'string', 'required': False},
         {'name': 'author', 'type': 'text_en', 'required': False},
         {'name': 'pub_date', 'type': 'int', 'required': False},
@@ -74,10 +120,29 @@ class SolrSchema(object):
         schema_info = self.solr.schema.get_schema_fields(self.solr_collection)
         return [field['name'] for field in schema_info['fields']]
 
+    def solr_schema_field_types(self):
+        '''Dictionary of currently configured Solr schema fields'''
+        response = self.solr.schema.get_schema_field_types(self.solr_collection)
+        return {field_type['name']: field_type for field_type in response['fieldTypes']}
+
     def update_solr_schema(self):
         '''Update the configured solr instance schema to match
         the configured fields.  Returns a tuple with the number of fields
         created and updated.'''
+
+        current_field_types = self.solr_schema_field_types()
+
+        for field_type in self.field_types:
+            if field_type['name'] in current_field_types:
+                # if field exists but definition has changed, replace it
+                if field_type != current_field_types[field_type['name']]:
+                    self.solr.schema.replace_field_type(self.solr_collection, field_type)
+            # otherwise, create as a new field
+            else:
+                self.solr.schema.create_field_type(self.solr_collection, field_type)
+
+            # TODO: deletion?
+
         current_fields = self.solr_schema_fields()
 
         created = updated = removed = 0
@@ -361,6 +426,9 @@ class Indexable(object):
 
     @classmethod
     def identify_index_dependencies(cls):
+        '''Identify and set lists of index dependencies for the subclass
+        of :class:`Indexable`.
+        '''
         # determine and document index dependencies
         # for indexable models based on index_depends_on field
 

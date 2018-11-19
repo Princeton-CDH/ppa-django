@@ -1,0 +1,43 @@
+#collections {
+    .page-description {
+        color: $dusk;
+        font-family: $headerFont;
+        font-size: 16px;
+        margin: 2rem auto;
+        width: 290px;
+
+        @media (min-width: $tablet) {
+            margin: 4rem 0;
+            width: 100%;
+            font-size: 20px;
+        }
+    }
+
+    .archive-link {
+        text-align: center;
+        
+        > .header {
+            font-size: 16px;
+            font-weight: normal;
+            text-transform: uppercase;
+            font-family: $pageFont;
+            margin-top: 2rem;
+        }
+    }
+
+    .collection-cards {
+        margin: 0;
+        flex-flow: column nowrap;
+        align-items: center;
+
+        @media (min-width: $tablet) {
+            flex-flow: row wrap;
+            justify-content: space-between;
+            align-items: initial;
+
+            .card:last-child {
+                margin-left: auto;
+            }
+        }
+    }
+}

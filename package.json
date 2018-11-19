@@ -25,7 +25,7 @@
     "postinstall": "npm run build",
     "start": "npm run watch",
     "test": "karma start --single-run",
-    "pa11y": "pa11y-ci --sitemap http://localhost:8000/sitemap.xml"
+    "pa11y": "pa11y-ci --sitemap http://localhost:8000/sitemap-pages.xml"
   },
   "devDependencies": {
     "jasmine-core": "^3.1.0",

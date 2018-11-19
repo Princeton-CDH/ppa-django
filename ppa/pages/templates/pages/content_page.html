@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load static wagtailcore_tags %}
+
+{% block meta_title %}{% firstof page.seo_title page.title %}{% endblock %}
+{% block meta_description %}{{ page.search_description }}{% endblock %}
+{# keywords for meta not yet implemented in wagtail #}
+
+{% block page-subtitle %}{% firstof page.seo_title page.title %} · {% endblock %}
+{% block page-context-id %}page{% endblock %}
+
+{# page title displayed in page header snippet ? or only for some content pages #}
+{% comment %}
+{% block page_header %}
+<header id="header" class="ui center aligned text container">
+    <h1 class="ui header">{{ page.title }}</h1>
+</header>
+{% endblock %}
+{% endcomment %}
+
+{% block content %}
+<div class="ui container">
+    <div class="paper">
+        <h1 class="ui header">
+            {% firstof page.title page_title object.title %}
+        </h1>
+        {% for block in page.body %}
+            <section>{% include_block block %}</section>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

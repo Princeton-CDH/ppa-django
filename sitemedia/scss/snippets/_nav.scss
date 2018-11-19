@@ -1,0 +1,51 @@
+#mobile-nav {
+    top: $nav-height !important; // have to override SUI's !important
+}
+
+#main-nav {
+    padding: 0;
+    z-index: 103; // above mobile nav
+    transition: margin-top 0.25s;
+
+    &.hidden {
+        margin-top: -$nav-height;
+    }
+
+    .brand {
+        width: 100%;
+        height: $nav-height;
+        display: flex;
+        position: absolute;
+        justify-content: center;
+        margin: 0;
+        
+        .item {
+            font-weight: bold;
+            display: flex;
+            font-size: 2rem;
+            padding: .5rem;
+        }
+    }
+    
+    .item {
+        z-index: 1;
+        display: none;
+
+        @media (min-width: $nav-breakpoint) {
+            display: flex;
+        }
+
+        &.toc,
+        &.search {
+            display: flex;
+
+            @media (min-width: $nav-breakpoint) {
+                display: none;
+            }
+        }
+    }
+
+    .search.icon {
+        margin-left: .25rem;
+    }
+}

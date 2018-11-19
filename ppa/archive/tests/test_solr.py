@@ -52,6 +52,30 @@ class TestSolrSchema(TestCase):
         for expected_field in ['author', 'title', 'date']:
             assert expected_field in fields
 
+    def test_solr_schema_field_types(self, mock_get_solr_connection):
+        mocksolr = Mock()
+        mock_get_solr_connection.return_value = (mocksolr, 'testcoll')
+        mockresponse = {
+            'fieldTypes': [
+                {'name': 'binary', 'class': 'solr.BinaryField'},
+                {'name': 'string_i', 'class': 'solr.TextField',
+                    'sortMissingLast': True,
+                    'analyzer': {'tokenizer':
+                    {'class': 'solr.KeywordTokenizerFactory'}}
+                },
+            ]
+        }
+        mocksolr.schema.get_schema_field_types.return_value = mockresponse
+        schema = SolrSchema()
+        field_types = schema.solr_schema_field_types()
+        # two fieldTypes are present
+        for expected_field_type in ['binary', 'string_i']:
+            assert expected_field_type in field_types
+        # the value of their key is their definition
+        assert field_types['binary'] == mockresponse['fieldTypes'][0]
+        assert field_types['string_i'] == mockresponse['fieldTypes'][1]
+
+
     def test_update_solr_schema(self, mock_get_solr_connection):
         mocksolr = Mock()
         coll = 'testcoll'
@@ -63,11 +87,30 @@ class TestSolrSchema(TestCase):
             test_copy_field
         ]
 
+        # test that a custom field will be set if it isn't defined
+        # by mocking an empty list of fields
+        mocksolr.schema.get_schema_field_types.return_value = {
+            'fieldTypes': []
+        }
+
         schema = SolrSchema()
         schema.fields = [
             {'name': 'author', 'type': 'text_en', 'required': False},
             {'name': 'title', 'type': 'text_en', 'required': False},
             {'name': 'pub_date', 'type': 'int', 'required': False},
+        ]
+        schema.field_types = [
+            {
+                'name': 'string_i',
+                "class": "solr.TextField",
+                "sortMissingLast": True,
+                "analyzer": {
+                    "tokenizer": {
+                        # treat entire field as a single token
+                        "class": "solr.KeywordTokenizerFactory",
+                    },
+                }
+            },
         ]
 
         created, updated, removed = schema.update_solr_schema()
@@ -81,9 +124,25 @@ class TestSolrSchema(TestCase):
         mocksolr.schema.delete_field.assert_not_called()
         mocksolr.schema.delete_copy_field.assert_called_with(coll, test_copy_field)
 
-        # simulate all fields in solr
+        # assert that the schema field types have been updated
+        mocksolr.schema.create_field_type\
+            .assert_called_with(coll, schema.field_types[0])
+
+
+
+        # simulate all fields and field types in solr
         mocksolr.schema.get_schema_fields.return_value = {'fields': schema.fields}
+        mocksolr.schema.get_schema_field_types.return_value = {
+            'fieldTypes': [
+                {'name': 'string_i', 'class': 'solr.TextField',
+                    'sortMissingLast': True,
+                    'analyzer': {'tokenizer':
+                    {'class': 'solr.KeywordTokenizerFactory'}}
+                },
+            ]
+        }
         mocksolr.schema.create_field.reset_mock()
+        mocksolr.schema.create_field_type.reset_mock()
 
         created, updated, removed = schema.update_solr_schema()
         assert created == 0
@@ -93,7 +152,9 @@ class TestSolrSchema(TestCase):
         for field_def in schema.fields:
             mocksolr.schema.replace_field.assert_any_call(coll, field_def)
         mocksolr.schema.delete_field.assert_not_called()
-
+        # field type definitions did not change, so should be no-op
+        mocksolr.schema.create_field_type.assert_not_called()
+        mocksolr.schema.replace_field_type.assert_not_called()
         # remove outdated fields
         mocksolr.schema.get_schema_fields.return_value = {
             'fields': schema.fields + [
@@ -104,13 +165,24 @@ class TestSolrSchema(TestCase):
                 {'name': 'oldfield'},
             ]
         }
+        # also test that replace field type detects a change to string_i
+        schema.field_types = [
+            {'name': 'string_i', "class": "solr.TextField", }
+        ]
+
         mocksolr.schema.create_field.reset_mock()
         mocksolr.schema.replace_field.reset_mock()
+        mocksolr.schema.create_field_type.reset_mock()
+        mocksolr.schema.replace_field_type.reset_mock()
         created, updated, removed = schema.update_solr_schema()
         assert created == 0
         assert updated == 3
         assert removed == 1
         mocksolr.schema.delete_field.assert_called_once_with(coll, 'oldfield')
+        # replace_field_type should have been called, create should not have
+        mocksolr.schema.create_field_type.assert_not_called()
+        mocksolr.schema.replace_field_type\
+            .assert_called_once_with(coll, schema.field_types[0])
 
 
 @override_settings(SOLR_CONNECTIONS=TEST_SOLR_CONNECTIONS)
