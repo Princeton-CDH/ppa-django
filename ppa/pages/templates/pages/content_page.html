@@ -9,7 +9,11 @@
 {% block page-context-id %}page{% endblock %}
 
 {% block page_nav %}
-    {% include 'snippets/nav.html' %}
+    {% if page in request.site.root_page.get_chidren.live.in_menu %}
+        {% include 'snippets/nav.html' %}
+    {% else %}
+        {% include 'snippets/nav.html' with active="about" %}
+    {% endif %}
 {% endblock %}
 
 {# page title displayed in page header snippet ? or only for some content pages #}

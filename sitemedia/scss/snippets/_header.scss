@@ -1,6 +1,6 @@
 #header { // currently only used for "archive" text on search page
-    margin-top: $nav-height;
-    padding-top: $nav-height;
+    margin-top: 2 * $nav-height;
+    padding-top: 20px;
 
     .sub.header {
         font-size: 20px;
