@@ -426,6 +426,9 @@ class Indexable(object):
 
     @classmethod
     def identify_index_dependencies(cls):
+        '''Identify and set lists of index dependencies for the subclass
+        of :class:`Indexable`.
+        '''
         # determine and document index dependencies
         # for indexable models based on index_depends_on field
 
