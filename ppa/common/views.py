@@ -13,7 +13,7 @@ class VaryOnHeadersMixin(View):
     vary_headers = []
 
     def dispatch(self, request, *args, **kwargs):
-        '''wrap default dispatch method to patch haeders on the response'''
+        '''Wrap default dispatch method to patch haeders on the response.'''
         response = super(VaryOnHeadersMixin, self).dispatch(request, *args, **kwargs)
         patch_vary_headers(response, self.vary_headers)
         return response

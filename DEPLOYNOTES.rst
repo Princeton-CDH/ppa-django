@@ -33,7 +33,7 @@ Deploy and Upgrade notes
     python manage.py solr_schema
     python manage.py index
 
-* Run ``python manage.py setup_site_pages` to create stub pages for all
+* Run ``python manage.py setup_site_pages`` to create stub pages for all
   site content needed for main site navigation.
 
 
