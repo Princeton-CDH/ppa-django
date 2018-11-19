@@ -80,6 +80,10 @@ Sbelley, <em>Prometheus</em>, II. v.
     assert isinstance(highlighted, SafeString)
     # < should be escaped
     assert highlighted.startswith('&lt;s Shelley')
+    # check that output is unchanged if autoescape is off
+    highlighted = solr_highlight(val, autoescape=False)
+    assert highlighted == val
+
 
 def test_json():
     # should be the same as json_dumps()
