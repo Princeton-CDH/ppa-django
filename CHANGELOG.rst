@@ -3,6 +3,28 @@
 CHANGELOG
 =========
 
+0.10.0
+------
+
+* As a content editor, I want unneeded punctuation removed when importing or updating records from HathiTrust metadata, so that records are easier to search and browse.
+* As a user, I want item titles to be case-insensitive when sorting, so that I can find content alphabetically.
+* As a user, I want my search input for publication year to be validated in the browser so that I can't enter invalid dates.
+
+Content management updates
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* As a content editor, I want to arrange content pages on the site so that I can update site navigation when information changes. #98
+* As an admin, I want the site to provide XML sitemaps for content pages, collection and archive pages, and digitized works so that site content will be findable by search engines.
+* Replace Mezzanine with Wagtail as content management system.
+* Add built-in fixtures to create default page structure within Wagtail.
+
+Design updates
+^^^^^^^^^^^^^^
+
+* Refactor SCSS and media queries.
+* Fixes issues with histogram and pub date display on Chrome.
+* Fixes an issue where hitting back on a search could result in unformatted JSON being displayed.
+
 0.9.0
 -----
 
