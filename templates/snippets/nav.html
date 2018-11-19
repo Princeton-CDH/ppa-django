@@ -14,15 +14,11 @@
         <img class="menu icon" src="{% static 'img/icons/Menu.svg' %}" alt="">
         <img class="close icon" src="{% static 'img/icons/Delete.svg' %}" alt="">
     </a>
-    <span class="about item {% if active == 'about' %}active{% endif %}">
-        About
-        <img class="dropdown icon" src="{% static 'img/icons/RightChevron.svg' %}" alt="">
-    </span>
     {# preliminary about menu from wagtail #}
-    <div class="ui simple item dropdown">
+    <div class="about ui simple item dropdown {% if active == 'about' %}active{% endif %}">
         <div class="text">About</div>
-        <i class="dropdown icon"></i>
-        <div class="inverted menu">
+        <img class="dropdown icon" src="{% static 'img/icons/RightChevron.svg' %}" alt="">
+        <div class="menu">
             {# NOTE: currently relies on editorial not having show_in_menu set #}
             {% for page in request.site.root_page.get_children.live.in_menu %}
             <div class="item"><a href="{{ page.url }}">{{ page.title }}</a></div>
@@ -38,7 +34,7 @@
     </div>
     <div class="right menu">
         <a class="collections item {% if active == 'collections' %}active{% endif %}"
-            href="{% url 'archive:list-collections'%}">Collections
+            href="{% slugurl 'collections' %}">Collections
         </a>
         <a class="archive item {% if active == 'archive' %}active{% endif %}"
             href="{% url 'archive:list' %}">
