@@ -1,11 +1,67 @@
+#mobile-nav,
+#main-nav {
+    img { // icons
+        height: 1.25rem;
+        width: 1.25rem;
+    }
+
+    .search.icon,
+    .dropdown.item .icon {
+        margin-left: .5rem;
+    }
+
+    .dropdown.item .icon {
+        transform: rotate(90deg);
+    }
+
+    .dropdown.item:hover .icon {
+        transform: rotate(-90deg);
+    }
+}
+
 #mobile-nav {
     top: $nav-height !important; // have to override SUI's !important
+    box-shadow: none;
+    border: 0;
+
+    .item {
+        text-transform: uppercase !important; // sui...
+        padding: 1rem !important;
+    }
+
+    .dropdown {
+        &:hover {
+            padding-bottom: 0 !important;
+
+            > .menu {
+                overflow: hidden;
+                height: 1rem;
+            }
+        }
+
+        &.active > .menu {
+            height: auto;
+        }
+
+        .menu {
+            position: relative;
+            left: 0;
+        }
+
+        .item:last-child {
+            padding-bottom: 0 !important;
+        }
+    }
+
+    .search.icon {
+        display: inline-block;
+    }
 }
 
 #main-nav {
     padding: 0;
     z-index: 103; // above mobile nav
-    transition: margin-top 0.25s;
+    transition: margin-top 0.5s;
     border-top: 5px solid $pink;
     border-bottom: none;
     box-shadow: none;
@@ -19,21 +75,49 @@
     }
 
     &.hidden {
-        margin-top: -$nav-height - 5px;
+        margin-top: -100px;
     }
 
     .brand {
         width: 100%;
-        height: $nav-height;
+        height: 0;
         display: flex;
         position: absolute;
         justify-content: center;
+        background: transparent;
         margin: 0;
+
+        .item { // PPA logotype
+            background: white;
+            display: flex;
+            height: 95px;
+            width: 200px;
+            padding: 0;
+            opacity: 1;
+            transition: opacity 0.2s;
+
+            &.hidden {
+                opacity: 0;
+            }
+    
+            &:hover {
+                border: none;
+                padding: 0;
+            }
+    
+            img {
+                position: relative;
+                width: 150px;
+                height: 80px;
+                margin: auto;
+            }
+        }
     }
     
     .item {
         z-index: 1;
         display: none;
+        text-transform: uppercase !important; // override sui
 
         @media (min-width: $nav-breakpoint) {
             display: flex;
@@ -47,8 +131,13 @@
                 display: none;
             }
         }
+
+        &.about {
+            &.triangle::before { // can't use .active because it's a dropdown
+                @include triangle-overlay($pink);
+            }
+        }
         
-        &.about,
         &.editorial {
             &.active::before {
                 @include triangle-overlay($pink);
@@ -62,35 +151,17 @@
             }
         }
     }
-    
+
     a.item:hover {
         border-bottom: 10px solid $darkBlue;
         padding-bottom: 8px;
-    }
-
-    img {
-        height: 1.25rem;
-        width: 1.25rem;
-    }
-
-    .search.icon,
-    .dropdown.icon {
-        margin-left: .5rem;
     }
 
     .search .search.icon {
         margin-left: 0;
     }
 
-    .dropdown.icon {
-        transform: rotate(90deg);
-    }
-
     .close.icon {
         display: none;
-    }
-    
-    .item:hover .dropdown.icon {
-        transform: rotate(-90deg);
     }
 }

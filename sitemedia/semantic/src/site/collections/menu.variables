@@ -10,6 +10,9 @@
 @itemVerticalPadding: @relativeBig;
 @itemTextTransform: uppercase;
 
+/* Dropdown */
+@dropdownMenuBoxShadow: none;
+
 /*--------------
      States
 ---------------*/
@@ -38,9 +41,16 @@
 @dropdownActiveItemColor: @itemTextColor;
 @dropdownActiveItemFontWeight: @normal;
 
+/* Hovered Dropdown */
+@dropdownHoveredItemBackground: @dropdownItemBackground;
+@dropdownHoveredItemColor: @dropdownItemColor;
+
 /*--------------
    Variations
 ---------------*/
 
 /* Inverted */
 @invertedBackground: @darkGrey;
+
+/* Dropdown Variations */
+@dropdownVerticalMenuBoxShadow: @dropdownMenuBoxShadow;

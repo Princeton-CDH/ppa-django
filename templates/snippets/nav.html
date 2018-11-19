@@ -2,41 +2,36 @@
 
 <!-- mobile navigation -->
 <nav class="ui top sidebar vertical borderless menu {{ style }}" id="mobile-nav">
-    <a class="item" href="/history-of-the-archive/">History of the Archive</a>
-    <a class="item" href="/what-is-prosody/">What is Prosody</a>
-    <a class="item" href="{% slugurl 'collections'%}">About the Collections</a>
+    {% include 'snippets/about.html' %}
     <a class="item" href="{% slugurl 'editorial' %}">Editorial</a>
-    <a class="item" href="{% url 'archive:list' %}">View the Archive</a>
+    <a class="item" href="{% slugurl 'collections'%}">Collections</a>
+    <a class="item" href="{% url 'archive:list' %}">
+        Archive
+        <img class="search icon" src="{% static 'img/icons/Search.svg' %}" alt="">
+    </a>
 </nav>
+
 <!-- main navigation -->
 <nav class="ui top fixed borderless menu {{ style }}" id="main-nav">
     <a class="toc item" id="toc">
         <img class="menu icon" src="{% static 'img/icons/Menu.svg' %}" alt="">
         <img class="close icon" src="{% static 'img/icons/Delete.svg' %}" alt="">
     </a>
-    {# preliminary about menu from wagtail #}
-    <div class="about ui simple item dropdown {% if active == 'about' %}active{% endif %}">
-        <div class="text">About</div>
-        <img class="dropdown icon" src="{% static 'img/icons/RightChevron.svg' %}" alt="">
-        <div class="menu">
-            {# NOTE: currently relies on editorial not having show_in_menu set #}
-            {% for page in request.site.root_page.get_children.live.in_menu %}
-            <div class="item"><a href="{{ page.url }}">{{ page.title }}</a></div>
-            {% endfor %}
-        </div>
-    </div>
+    {% include 'snippets/about.html' %}
     <a href="{% slugurl 'editorial' %}"
-        class="editorial item {% if active == 'editorial' %}active{% endif %}">
+        class="editorial item{% if active == 'editorial' %} active{% endif %}">
         Editorial
     </a>
     <div class="ui header brand">
-        <a class="item" href="{% slugurl 'home' %}">PPA</a>
+        <a class="item" href="{% slugurl 'home' %}">
+            <img src="{% static 'img/ppaLogoType_NavBar_Revised.svg' %}" alt="">
+        </a>
     </div>
     <div class="right menu">
-        <a class="collections item {% if active == 'collections' %}active{% endif %}"
+        <a class="collections item{% if active == 'collections' %} active{% endif %}"
             href="{% slugurl 'collections' %}">Collections
         </a>
-        <a class="archive item {% if active == 'archive' %}active{% endif %}"
+        <a class="archive item ={% if active == 'archive' %} active{% endif %}"
             href="{% url 'archive:list' %}">
             Archive
             <img class="search icon" src="{% static 'img/icons/Search.svg' %}" alt="">
