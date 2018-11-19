@@ -13,7 +13,7 @@ CHANGELOG
 Content management updates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* As a content editor, I want to arrange content pages on the site so that I can update site navigation when information changes. #98
+* As a content editor, I want to arrange content pages on the site so that I can update site navigation when information changes.
 * As an admin, I want the site to provide XML sitemaps for content pages, collection and archive pages, and digitized works so that site content will be findable by search engines.
 * Replace Mezzanine with Wagtail as content management system.
 * Add built-in fixtures to create default page structure within Wagtail.
