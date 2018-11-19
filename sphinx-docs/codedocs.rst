@@ -78,7 +78,7 @@ Editorial
 Models
 ^^^^^^
 .. automodule:: ppa.editorial.models
-
+    :members: 
 
 Pages
 -----

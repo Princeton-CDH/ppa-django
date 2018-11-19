@@ -18,7 +18,7 @@ Wagtail (Release 0.10)
     :target: _static/ppa-schema-v10.png
     :alt: PPA Databse Schema, version 0.10
 
-The primary purpose of this database revision was to remove Mezzanine and add
+The primary purpose of this database revision is to remove Mezzanine and add
 Wagtail as the CMS employed by the project. The pages module represents the
 various page types (constituting separate Django apps) that are all subclasses
 of Wagtail's base page model (expanded for detail with one example of the
