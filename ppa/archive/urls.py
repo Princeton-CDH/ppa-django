@@ -5,8 +5,6 @@ from ppa.archive import views
 
 
 urlpatterns = [
-    url('^collections/$', views.CollectionListView.as_view(),
-        name='list-collections'),
     url(
         '^add-to-collection/$',
         staff_member_required(views.AddToCollection.as_view()),

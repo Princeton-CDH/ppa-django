@@ -1,8 +1,12 @@
 from django.db import models
 from django.template.defaultfilters import truncatechars_html
+from wagtail.core import blocks
 from wagtail.core.models import Page
-from wagtail.core.fields import RichTextField
-from wagtail.admin.edit_handlers import FieldPanel, PageChooserPanel
+from wagtail.core.fields import RichTextField, StreamField
+from wagtail.admin.edit_handlers import FieldPanel, PageChooserPanel, \
+    StreamFieldPanel
+from wagtail.images.blocks import ImageChooserBlock
+from wagtail.documents.blocks import DocumentChooserBlock
 
 from ppa.archive.models import Collection
 
@@ -52,22 +56,34 @@ class HomePage(Page):
         if not preview_pages:
             preview_pages = ContentPage.objects.filter(slug__in=['history', 'prosody'])
 
-        # include 2 random collections from those that are public
+        # grab collection page for displaying collection overview
+        collection_page = CollectionPage.objects.live().first()
+
+        # include 2 random collections
         # along with stats for all collections
         context.update({
-            'collections': Collection.objects.public().order_by('?')[:2],
+            'collections': Collection.objects.order_by('?')[:2],
             'stats': Collection.stats(),
-            'preview_pages': preview_pages
+            'preview_pages': preview_pages,
+            'collection_page': collection_page
         })
         return context
 
 
+class BodyContentBlock(blocks.StreamBlock):
+    '''Common set of content blocks to be used on both content pages
+    and editorial pages'''
+    paragraph = blocks.RichTextBlock()
+    image  =  ImageChooserBlock()
+    document = DocumentChooserBlock()
+
+
 class ContentPage(Page):
     '''Basic content page model.'''
-    body = RichTextField(blank=True)
+    body = StreamField(BodyContentBlock)
 
     content_panels = Page.content_panels + [
-        FieldPanel('body', classname="full"),
+        StreamFieldPanel('body'),
     ]
 
     def description(self):
@@ -76,3 +92,30 @@ class ContentPage(Page):
         if self.search_description.strip():
             return self.search_description
         return truncatechars_html(self.body, 250)
+
+
+class CollectionPage(Page):
+    '''Collection list page, with editable text content'''
+    body = RichTextField(blank=True)
+
+    content_panels = Page.content_panels + [
+        FieldPanel('body', classname="full"),
+    ]
+
+    # only allow creating directly under home page
+    parent_page_types = [HomePage]
+    # not allowed to have sub pages
+    subpage_types = []
+
+    def get_context(self, request):
+        context = super().get_context(request)
+
+        # include all collections with stats
+        context.update({
+            'collections': Collection.objects.all(),
+            'stats': Collection.stats(),
+        })
+        return context
+
+
+

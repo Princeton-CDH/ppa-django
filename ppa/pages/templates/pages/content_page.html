@@ -3,15 +3,16 @@
 
 {% block meta_title %}{% firstof page.seo_title page.title %}{% endblock %}
 {% block meta_description %}{{ page.search_description }}{% endblock %}
-{# keywords for meta not currently implemented in wagtail #}
+{# keywords for meta not yet implemented in wagtail #}
 
+{% block page-subtitle %}{% firstof page.seo_title page.title %} · {% endblock %}
 {% block page-context-id %}page{% endblock %}
 
 {% block page_nav %}
     {% include 'snippets/nav.html' %}
 {% endblock %}
 
-{# page title displayed in page header snippet #}
+{# page title displayed in page header snippet ? or only for some content pages #}
 
 {% block content %}
 <div class="ui container">
@@ -19,7 +20,9 @@
         <h1 class="ui header">
             {% firstof page.title page_title object.title %}
         </h1>
-         {{ page.body|richtext }}
+        {% for block in page.body %}
+            <section>{% include_block block %}</section>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}
