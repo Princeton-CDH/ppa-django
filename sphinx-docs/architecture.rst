@@ -12,6 +12,19 @@ page content.
 Database
 --------
 
+Wagtail (Release 0.10)
+^^^^^^^^^^^^^^^^^^^^^^
+.. image:: _static/ppa-schema-v10.png
+    :target: _static/ppa-schema-v10.png
+    :alt: PPA Databse Schema, version 0.10
+
+The primary purpose of this database revision was to remove Mezzanine and add
+Wagtail as the CMS employed by the project. The pages module represents the
+various page types (constituting separate Django apps) that are all subclasses
+of Wagtail's base page model (expanded for detail with one example of the
+subclassed types).
+
+
 Collections (Release 0.6)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 .. image:: _static/ppa-schema-v06.png
