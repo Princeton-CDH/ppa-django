@@ -2,6 +2,7 @@ from datetime import date
 
 from django.http import Http404
 from wagtail.core.url_routing import RouteResult
+from wagtail.core.models import Site
 from wagtail.tests.utils import WagtailPageTests
 from wagtail.tests.utils.form_data import nested_form_data, \
     streamfield, rich_text
@@ -47,6 +48,8 @@ class TestEditorialIndexPage(WagtailPageTests):
         # TODO: test with multiple, check sort order
 
     def test_route(self):
+        # test route method directly
+
         index_page = EditorialIndexPage.objects.first()
         # no path components - should serve index page
         response = index_page.route({}, [])
@@ -57,17 +60,17 @@ class TestEditorialIndexPage(WagtailPageTests):
         with pytest.raises(Http404):
             index_page.route({}, ['2018'])
         with pytest.raises(Http404):
-            index_page.route({}, ['2018', '11'])
+            index_page.route({}, ['2018', '01'])
 
         # non-numeric year/month should 404
         with pytest.raises(Http404):
             index_page.route({}, ['two'])
         with pytest.raises(Http404):
-            index_page.route({}, ['2018', 'eleven'])
+            index_page.route({}, ['2018', 'one'])
 
         # non-existent slug should 404
         with pytest.raises(Http404):
-            index_page.route({}, ['2018', '11', 'first-post'])
+            index_page.route({}, ['2018', '01', 'first-post'])
 
         # test with actual editorial page
         editorial_page = EditorialPage.objects.first()
@@ -75,6 +78,41 @@ class TestEditorialIndexPage(WagtailPageTests):
         path_components = editorial_page.url_path.strip('/').split('/')[-3:]
         response = index_page.route({}, path_components)
         assert response.page == editorial_page
+
+    def test_routing(self):
+        # test getting urls with django test client
+
+        index_page = EditorialIndexPage.objects.first()
+        editorial_page = EditorialPage.objects.first()
+        site = Site.objects.first()
+        editorial_index_url = index_page.relative_url(site)
+        response = self.client.get(editorial_index_url)
+        assert response.status_code == 200
+        # basic template/content check
+        self.assertContains(response, index_page.title)
+        self.assertContains(response, editorial_page.title)
+        self.assertContains(response, editorial_page.relative_url(site))
+
+        # year only should 404
+        response = self.client.get(editorial_index_url + '2018/')
+        assert response.status_code == 404
+        # year/month only should 404
+        response = self.client.get(editorial_index_url + '2018/01/')
+        assert response.status_code == 404
+        # non-existent slug should 404
+        response = self.client.get(editorial_index_url + '2018/01/not-found/')
+        assert response.status_code == 404
+        # non-numeric should 404
+        response = self.client.get(editorial_index_url + '2018/two/not-found/')
+        assert response.status_code == 404
+
+        response = self.client.get(editorial_page.relative_url(site))
+        assert response.status_code == 200
+
+        # single-digit month should 404
+        print(editorial_page.relative_url(site).replace('/01/', '/1/'))
+        response = self.client.get(editorial_page.relative_url(site).replace('/01/', '/1/'))
+        assert response.status_code == 404
 
 
 class TestEditorialPage(WagtailPageTests):

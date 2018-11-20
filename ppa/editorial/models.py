@@ -8,7 +8,6 @@ from wagtail.core.fields import RichTextField, StreamField
 from wagtail.admin.edit_handlers import FieldPanel, StreamFieldPanel
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.documents.blocks import DocumentChooserBlock
-from wagtail.contrib.routable_page.models import RoutablePageMixin, route
 
 from ppa.pages.models import BodyContentBlock
 
@@ -37,10 +36,12 @@ class EditorialIndexPage(Page):
         '''Customize editorial page routing to serve editorial pages
         by year/month/slug.'''
 
+        # NOTE: might be able to use RoutablePageMixin for this,
+        # but could not get that to work
+
         if path_components:
 
             # if not enough path components are specified, raise a 404
-
             if len(path_components) < 3:
                 raise Http404
                 # (could eventually handle year/month to display posts by
@@ -49,6 +50,12 @@ class EditorialIndexPage(Page):
             # currently only handle year/month/post-slug/
             if len(path_components) >= 3:
                 # request is for a child of this page
+
+                # not using a regex route, so check character count
+                # - want a four-digit year and a two-digit month
+                if len(path_components[0]) != 4 or len(path_components[1]) != 2:
+                    raise Http404
+
                 try:
                     year = int(path_components[0])
                     month = int(path_components[1])
