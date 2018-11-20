@@ -5,7 +5,7 @@
     <div class="ui selection dropdown" id="sort">
         <img class="chevron icon"
             src="{% static 'img/icons/RightChevron.svg' %}" alt="">
-        <input type="hidden" name="sort">
+        <input type="hidden" name="sort" id="id_sort">
         <div class="text">
         {% for sort in search_form.sort %}
             {% if sort.data.selected %}
