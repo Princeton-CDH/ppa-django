@@ -11,11 +11,8 @@
     }
 
     .dropdown.item .icon {
+        transition: all 0.2s ease;
         transform: rotate(90deg);
-    }
-
-    .dropdown.item:hover .icon {
-        transform: rotate(-90deg);
     }
 }
 
@@ -26,21 +23,34 @@
 
     .item {
         text-transform: uppercase !important; // sui...
-        padding: 1rem !important;
+        padding: 0.75rem !important;
     }
 
-    .dropdown {
-        &:hover {
-            padding-bottom: 0 !important;
+    .ui.dropdown {
+        &:hover:not(.active) {
+            height: 35px;
+        }
 
-            > .menu {
-                overflow: hidden;
-                height: 1rem;
-            }
+        &:hover > .menu {
+            visibility: hidden;
+            height: 1rem;
+        }
+
+        &.active .icon {
+            transform: rotate(-90deg);
+        }
+
+        &.active {
+            padding-bottom: 0 !important;
         }
 
         &.active > .menu {
+            padding-top: 0.5rem;
             height: auto;
+        }
+
+        .icon {
+            float: none;
         }
 
         .menu {
@@ -48,8 +58,18 @@
             left: 0;
         }
 
+        .item {
+            visibility: hidden;
+            // padding: 0.5rem !important;
+            margin-left: 1rem;
+        }
+
+        &.active .item {
+            visibility: visible;
+        }
+
         .item:last-child {
-            padding-bottom: 0 !important;
+            // padding-bottom: 0.25rem !important;
         }
     }
 
@@ -163,5 +183,9 @@
 
     .close.icon {
         display: none;
+    }
+
+    .dropdown.item:hover .icon {
+        transform: rotate(-90deg);
     }
 }
