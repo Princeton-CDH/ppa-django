@@ -54,11 +54,11 @@
 --------------------*/
 
 @primaryColor          : @darkBlue;
-@secondaryColor        : @dusk;
+@secondaryColor        : @teal;
 @backgroundColor       : @lightestGrey;
 
-@lightPrimaryColor     : @lightGold;
-@lightSecondaryColor   : @lightGreen;
+@lightPrimaryColor     : @darkBlue;
+@lightSecondaryColor   : @teal;
 
 /*-------------------
       Site Colors
