@@ -440,7 +440,7 @@ class TestArchiveViews(TestCase):
         # - check that a query allows relevance as sort order toggle in form
         response = self.client.get(url, {'query': 'foo', 'sort': 'title_asc'})
         enabled_input = \
-            '<div class="item" data-value="relevance">Relevance</div>'
+            '<div class="item " data-value="relevance">Relevance</div>'
         self.assertContains(response, enabled_input, html=True)
         response = self.client.get(url, {'title': 'foo', 'sort': 'title_asc'})
         self.assertContains(response, enabled_input, html=True)
@@ -494,7 +494,7 @@ class TestArchiveViews(TestCase):
         # should have the histogram data
         self.assertContains(response, "<pre class=\"count\">")
         # should have pagination
-        self.assertContains(response, "<div class=\"pagination")
+        self.assertContains(response, "<div class=\"page-controls")
         # test a query
         response = self.client.get(
             url, {'query': 'blood AND bone AND alternate'},
