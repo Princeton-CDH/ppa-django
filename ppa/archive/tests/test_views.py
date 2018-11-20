@@ -6,6 +6,7 @@ from time import sleep
 from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
+from django.db.models.functions import Lower
 from django.template.defaultfilters import escape
 from django.test import TestCase
 from django.urls import reverse
@@ -432,7 +433,7 @@ class TestArchiveViews(TestCase):
         assert sorted_object_list == response.context['object_list']
         # one last test using title
         response = self.client.get(url, {'query': '', 'sort': 'title_asc'})
-        sorted_work_ids = DigitizedWork.objects.order_by('sort_title') \
+        sorted_work_ids = DigitizedWork.objects.order_by(Lower('sort_title')) \
                                        .values_list('source_id', flat=True)
         # the list of ids should match exactly
         assert list(sorted_work_ids) == \
