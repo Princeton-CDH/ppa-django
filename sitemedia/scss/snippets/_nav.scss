@@ -119,6 +119,8 @@
             pointer-events: all;
 
             &.hidden {
+                pointer-events: none;
+                
                 @media (max-width: $tablet) {
                     opacity: 0;
                 }
