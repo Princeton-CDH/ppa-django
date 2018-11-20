@@ -12,13 +12,13 @@ $(function(){
     const $$paginationTop = $('.pagination').first()
     const $$resultsCount = $('.workscount .count')
     const $$clearDatesLink = $('.clear-selection')
-    const $$checkboxes = $('.ui.checkbox')
     const $$minDateInput = $('#id_pub_date_0')
     const $$maxDateInput = $('#id_pub_date_1')
     const $$sortDropdown = $('#sort')
+    const $$sortInput = $('#sort input')
     const $$collectionInputs = $('#collections input')
     const $$textInputs = $('input[type="text"]')
-    const $$relevanceOption = $('option[value="relevance"]')
+    const $$relevanceOption = $('#sort .item[data-value="relevance"]')
     const $$advancedSearchButton = $('.show-advanced')
 
     /* bindings */
@@ -35,16 +35,16 @@ $(function(){
     
     /* functions */
     function submitForm(state) {
-        if (!validate()) return
+        if (!validate()) return // don't submit an invalid form
         state = state.filter(field => field.value != '') // filter out empty fields
         if (state.filter(field => $$textInputs.get().map(el => el.name).includes(field.name)).length == 0) { // if no text query,
-            $$relevanceOption.prop('disabled', true) // disable relevance
-            if (state.filter(field => field.name == 'sort')[0].value == 'relevance') { // and if relevance had been selected,
-                $$sortDropdown.val('title_asc').click() // switch to title instead
+            $$relevanceOption.addClass('disabled') // disable relevance
+            if (state.find(field => field.name == 'sort').value == 'relevance') { // and if relevance had been selected,
+                $$sortDropdown.dropdown('set selected', 'title_asc') // set to title A-Z
             }
         }
         else {
-            $$relevanceOption.prop('disabled', false) // enable relevance sort
+            $$relevanceOption.removeClass('disabled') // enable relevance sort
         }
         let url = `?${$.param(state)}` // serialize state using $.param to make querystring
         window.history.pushState(state, 'PPA Archive Search', url) // update the URL bar
@@ -86,13 +86,15 @@ $(function(){
     }
 
     function onPageLoad() {
-        $$sortDropdown.val($$sortDropdown.find('option:selected').val())
+        if ($$textInputs.get().filter(e => e.value).length == 0) { // if no text query, disable relevance
+            $$relevanceOption.addClass('disabled')
+        }
         dateHistogram.update(JSON.parse($('.ajax-container pre.facets').html())) // render the histogram initially
-        $$relevanceOption.prop('disabled', true) // also disable it on mobile
         $$collectionInputs.filter(':disabled').parent().addClass('disabled') // disable empty collections
         $('.question-popup').popup() // initialize the question popup
-        $$checkboxes.checkbox() // this is just a standard semantic UI behavior
-        $$sortDropdown.dropdown() // same here
+        $$sortDropdown.dropdown('setting', {
+            onChange: () => $$sortInput[0].dispatchEvent(new Event('input')) // make sure sort changes trigger a submission
+        })
         $('.form').keydown(e => { if (e.which === 13) e.preventDefault() }) // don't allow enter key to submit the search
         $$textInputs.each(addClearButton)
         $$textInputs.on('input', onTextInput)
