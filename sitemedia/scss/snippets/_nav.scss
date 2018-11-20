@@ -119,7 +119,9 @@
             pointer-events: all;
 
             &.hidden {
-                opacity: 0;
+                @media (max-width: $tablet) {
+                    opacity: 0;
+                }
             }
     
             &:hover {
