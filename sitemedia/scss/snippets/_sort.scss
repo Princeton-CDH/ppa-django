@@ -1,0 +1,48 @@
+.sort {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    label { // "SORT BY" text
+        text-transform: uppercase;
+        margin-right: 1rem;
+    }
+
+    .text {
+        vertical-align: middle;
+    }
+
+    #sort {
+        min-height: 0;
+        height: 35px;
+        padding: 8px 10px 6px;
+    }
+
+    #sort .menu {
+        max-height: none;
+    }
+
+    .chevron.icon {
+        transition: all 0.2s ease;
+        transform: rotate(90deg);
+        height: 1.25rem;
+        width: 1.25rem;
+        float: right;
+        vertical-align: middle;
+    }
+
+    .dropdown.active .chevron.icon {
+        transform: rotate(-90deg);
+    }
+
+    .chevron.down.icon {
+        position: absolute;
+        right: .5rem;
+        color: black;
+        opacity: 0.9;
+    }
+    
+    .active.dropdown .chevron.down.icon {
+        transform: rotate(180deg);
+    }
+}

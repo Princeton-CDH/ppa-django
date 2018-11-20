@@ -15,19 +15,15 @@ $(function(){
     const $$checkboxes = $('.ui.checkbox')
     const $$minDateInput = $('#id_pub_date_0')
     const $$maxDateInput = $('#id_pub_date_1')
-    const $$sortInputs = $('.sort input')
-    const $$sortSelect = $('.sort .dropdown')
+    const $$sortDropdown = $('#sort')
     const $$collectionInputs = $('#collections input')
     const $$textInputs = $('input[type="text"]')
-    const $$relevanceSort = $('input[value="relevance"]')
-    const $$relevanceOption = $('.sort .dropdown option[value="relevance"]')
+    const $$relevanceOption = $('option[value="relevance"]')
     const $$advancedSearchButton = $('.show-advanced')
 
     /* bindings */
     archiveSearchForm.onStateChange(submitForm)
     $$clearDatesLink.click(onClearDates)
-    $$sortInputs.change(onSortChange)
-    $$sortSelect.change(onMobileSortChange)
     $$collectionInputs.change(onCollectionChange)
     $$advancedSearchButton.click(toggleAdvancedSearch)
     onPageLoad() // misc functions that run once on page load
@@ -40,20 +36,15 @@ $(function(){
     /* functions */
     function submitForm(state) {
         if (!validate()) return
-        let sort = state.filter(field => field.name == 'sort')[0] // save one of the sort values (mobile or desktop); should be identical
-        state = state.filter(field => field.value != '').filter(field => field.name != 'sort') // filter out empty fields and the sorts
-        state.push(sort) // re-add the sort so there's only one (otherwise would be two values for mobile/desktop)
+        state = state.filter(field => field.value != '') // filter out empty fields
         if (state.filter(field => $$textInputs.get().map(el => el.name).includes(field.name)).length == 0) { // if no text query,
-            $$relevanceSort.prop('disabled', true).parent().addClass('disabled') // disable relevance
-            $$relevanceOption.prop('disabled', true) // also disable it on mobile
+            $$relevanceOption.prop('disabled', true) // disable relevance
             if (state.filter(field => field.name == 'sort')[0].value == 'relevance') { // and if relevance had been selected,
-                $('input[value="title_asc"]').click() // switch to title instead
-                $$sortSelect.val('title_asc').click() // also on mobile
+                $$sortDropdown.val('title_asc').click() // switch to title instead
             }
         }
         else {
-            $$relevanceSort.prop('disabled', false).parent().removeClass('disabled') // enable relevance sort
-            $$relevanceOption.prop('disabled', false) // also enable it on mobile
+            $$relevanceOption.prop('disabled', false) // enable relevance sort
         }
         let url = `?${$.param(state)}` // serialize state using $.param to make querystring
         window.history.pushState(state, 'PPA Archive Search', url) // update the URL bar
@@ -94,26 +85,14 @@ $(function(){
         $(event.currentTarget).parent().toggleClass('active')
     }
 
-    function onSortChange(event) {
-        $(event.currentTarget).parent().siblings().removeClass('active')
-        $(event.currentTarget).parent().addClass('active')
-        $$sortSelect.val(event.currentTarget.value).click() // keep main sort in sync with mobile
-    }
-
-    function onMobileSortChange(event) {
-        $$sortInputs.filter(`[value=${event.target.value}]`).parent().click() // keep main sort in sync with mobile
-    }
-
     function onPageLoad() {
+        $$sortDropdown.val($$sortDropdown.find('option:selected').val())
         dateHistogram.update(JSON.parse($('.ajax-container pre.facets').html())) // render the histogram initially
-        $$sortInputs.filter(':disabled').parent().addClass('disabled') // disable keyword sort if no query
         $$relevanceOption.prop('disabled', true) // also disable it on mobile
-        $$sortSelect.val($$sortInputs.filter(':checked').val()) // set the mobile sort to the same default as the other sort
         $$collectionInputs.filter(':disabled').parent().addClass('disabled') // disable empty collections
         $('.question-popup').popup() // initialize the question popup
-        $$sortSelect.find('.dropdown.icon').removeClass('dropdown').addClass('chevron down') // change the icon
         $$checkboxes.checkbox() // this is just a standard semantic UI behavior
-        $$sortSelect.dropdown() // same here
+        $$sortDropdown.dropdown() // same here
         $('.form').keydown(e => { if (e.which === 13) e.preventDefault() }) // don't allow enter key to submit the search
         $$textInputs.each(addClearButton)
         $$textInputs.on('input', onTextInput)

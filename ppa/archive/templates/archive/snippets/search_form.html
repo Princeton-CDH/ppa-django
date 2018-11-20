@@ -68,26 +68,8 @@
         <p class="count">Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}</p>
         <p class="zotero">Work citations can be exported to <a href="https://www.zotero.org/support/getting_stuff_into_your_library">Zotero</a></p>
     </div>
-    {% include 'archive/snippets/pagination.html' %}
-    <div class="sort">
-        <div class="ui secondary pointing stackable menu">
-            <span class="item">Sort By</span>
-            {% for sort in search_form.sort %}
-            <label class="item {% if sort.data.selected %}active{% endif %}" for="{{ sort.id_for_label }}" role="radio">
-                {{ sort.choice_label }}
-                {{ sort.tag }}
-            </label>
-            {% endfor %}
-        </div>
-        <div class="mobile-sort">
-            <label for="sort">Sort By</label>
-            <select class="ui dropdown" name="sort" id="sort">
-                {% for sort in search_form.sort %}
-                <option value="{{ sort.data.value }}">
-                    {{ sort.choice_label }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
+    <div class="pagination-sort">
+        {% include 'archive/snippets/pagination.html' %}
+        {% include 'archive/snippets/sort.html' %}
     </div>
 </form>
