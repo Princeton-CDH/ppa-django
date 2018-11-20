@@ -1,3 +1,12 @@
+'''
+**setup_site_pages** is a custom manage command to install
+a default set of pages and menus for the Wagtail CMS. It is designed not to
+touch other content.
+
+Example usage::
+
+    python manage.py setup_site_pages
+'''
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.contrib.contenttypes.models import ContentType
