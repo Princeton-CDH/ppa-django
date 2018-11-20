@@ -86,9 +86,6 @@ $(function(){
     }
 
     function onPageLoad() {
-        if ($$textInputs.get().filter(e => e.value).length == 0) { // if no text query, disable relevance
-            $$relevanceOption.addClass('disabled')
-        }
         dateHistogram.update(JSON.parse($('.ajax-container pre.facets').html())) // render the histogram initially
         $$collectionInputs.filter(':disabled').parent().addClass('disabled') // disable empty collections
         $('.question-popup').popup() // initialize the question popup
