@@ -7,15 +7,18 @@
     <a class="item" href="{% slugurl 'collections'%}">Collections</a>
     <a class="item" href="{% url 'archive:list' %}">
         Archive
-        <img class="search icon" src="{% static 'img/icons/Search.svg' %}" alt="">
+        <img class="search icon"
+            src="{% static 'img/icons/Search.svg' %}" alt="">
     </a>
 </nav>
 
 <!-- main navigation -->
 <nav class="ui top fixed borderless menu {{ style }}" id="main-nav">
     <a class="toc item" id="toc">
-        <img class="menu icon" src="{% static 'img/icons/Menu.svg' %}" alt="">
-        <img class="close icon" src="{% static 'img/icons/Delete.svg' %}" alt="">
+        <img class="menu icon" src="{% static 'img/icons/Menu.svg' %}"
+            alt="open menu">
+        <img class="close icon" src="{% static 'img/icons/Delete.svg' %}"
+            alt="close menu">
     </a>
     {% include 'snippets/about.html' %}
     <a href="{% slugurl 'editorial' %}"
@@ -24,7 +27,7 @@
     </a>
     <div class="ui header brand">
         <a class="item" href="{% slugurl 'home' %}">
-            <img src="{% static 'img/ppaLogoType_NavBar_Revised.svg' %}" alt="">
+            <img src="{% static 'img/ppaLogoType_NavBar_Revised.svg' %}" alt="home">
         </a>
     </div>
     <div class="right menu">
@@ -34,10 +37,12 @@
         <a class="archive item{% if active == 'archive' %} active{% endif %}"
             href="{% url 'archive:list' %}">
             Archive
-            <img class="search icon" src="{% static 'img/icons/Search.svg' %}" alt="">
+            <img class="search icon"
+                src="{% static 'img/icons/Search.svg' %}" alt="">
         </a>
-        <a class="search item" href="{% url 'archive:list' %}" title="search">
-            <img class="search icon" src="{% static 'img/icons/Search.svg' %}" alt="">
+        <a class="search item" href="{% url 'archive:list' %}">
+            <img class="search icon"
+                src="{% static 'img/icons/Search.svg' %}" alt="search">
         </a>
     </div>
 </nav>
