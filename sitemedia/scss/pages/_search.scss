@@ -196,76 +196,8 @@
         }
     }
 
-    /* sorting */
-    .sort {
-        margin: 2rem 1rem 0;
-
-        .menu {
-            display: none;
-            justify-content: space-between;
-            flex-direction: column;
-
-            @media (min-width: $computer) {
-                display: flex;
-                flex-direction: row;
-            }
-
-            .item {
-                padding: 0;
-                margin: 0;
-                text-transform: none;
-                border: none;
-                cursor: pointer;
-
-                @media (min-width: $computer) {
-                    margin: 1rem;
-                }
-            }
-
-            .item > input {
-                display: none; // hide checkboxes
-            }
-
-            span.item { // "SORT BY" text
-                margin-left: 0;
-                text-transform: uppercase;
-                cursor: initial;
-            }
-        }
-    }
-
-    .mobile-sort {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 2px solid $gold;
-        padding-bottom: .5rem;
-
-        @media (min-width: $computer) {
-            display: none;
-        }
-
-        label { // "SORT BY" text
-            text-transform: uppercase;
-        }
-
-        .chevron.down.icon {
-            transition: all 0.2s ease;
-            position: absolute;
-            right: .5rem;
-            color: black;
-            opacity: 0.9;
-        }
-        
-        .active.dropdown .chevron.down.icon {
-            transform: rotate(180deg);
-        }
-    }
-
-
     .workscount {
         margin: 2rem auto;
-        color: $midGrey;
         font-size: 1rem;
 
         p:first-child {
@@ -280,5 +212,52 @@
 
     .data {
         display: none;
+    }
+
+    .pagination-sort {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        margin: 0 1rem;
+        border-bottom: 2px solid $teal;
+
+        @media (min-width: $tablet) {
+            justify-content: space-between;
+        }
+    }
+
+    .page-controls {
+        width: 100%;
+        text-align: center;
+        margin-top: 1rem;
+ 
+        @media (min-width: $tablet) {
+            width: auto;
+            margin: 0;
+        }
+
+        @media (min-width: $computer) {
+            position: absolute;
+            right: 0;
+            left: 0;
+            text-align: center;
+        }
+    }
+
+    .sort {
+        width: 100%;
+        margin: 1rem 0;
+
+        @media (min-width: $tablet) {
+            label {
+                margin-left: auto;
+                margin-right: 1rem;
+            }
+        }
+
+        @media (min-width: $computer) {
+            width: auto;
+        }
     }
 }

@@ -1,64 +1,49 @@
-.pagination.ui.grid {
-    display: flex;
-    justify-content: center;
-    margin: 0;
-
-    .items-per-page {
-        padding: 0;
-        margin-bottom: 1rem; // when stacked above page-controls
-
-        @media (min-width: 450px) {
-            margin-bottom: 0; // not stacked
-        }
-    }
-
-    @media (min-width: $tablet) {
-        justify-content: space-between;
-        margin: 0 1rem;
-    }
-
+.items-per-page {
+    padding: 0;
+    
     .display-label { // "Display"
         margin-right: .5rem;
     }
-
+    
     .results-label { // "Results per page"
         margin-left: .5rem;
     }
+}
 
-    .page-controls {
-        padding: 0;
+.page-controls {
+    padding: 0;
 
-        span { // "..." indicator
-            display: none;
-            margin: 0 .5rem;
+    span { // "..." indicator
+        display: none;
+        margin: 0 .5rem;
 
-            @media (min-width: $tablet) {
-                display: inline-block;
-            }
-        }
-
-        .button {
-            margin: 0 2px;
-
-            @media (min-width: $tablet) {
-                margin: 0 5px;
-            }
-    
-            &:first-child {
-                margin-left: 0;
-            }
-    
-            &:last-child {
-                margin-right: 0;
-            }
+        @media (min-width: $tablet) {
+            display: inline-block;
         }
     }
 
+    .button {
+        margin: 0 2px;
+
+        @media (min-width: $tablet) {
+            margin: 0 5px;
+        }
+
+        &:first-child {
+            margin-left: 0;
+        }
+
+        &:last-child {
+            margin-right: 0;
+        }
+    }
+    
     .icon.button {
         width: 30px;
-
+    
         .chevron.icon::before {
             margin-left: -0.5rem;
         }
     }
 }
+
