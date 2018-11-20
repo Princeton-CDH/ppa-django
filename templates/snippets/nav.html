@@ -31,7 +31,7 @@
         <a class="collections item{% if active == 'collections' %} active{% endif %}"
             href="{% slugurl 'collections' %}">Collections
         </a>
-        <a class="archive item ={% if active == 'archive' %} active{% endif %}"
+        <a class="archive item{% if active == 'archive' %} active{% endif %}"
             href="{% url 'archive:list' %}">
             Archive
             <img class="search icon" src="{% static 'img/icons/Search.svg' %}" alt="">
