@@ -68,7 +68,7 @@
 @gold         : #A98F5F;
 @lightGreen   : #07AE79;
 @lightGold    : #CDAD7E;
-@offWhite     : #F1F0EB;
+@lightestGrey : #E9E9E9;
 @lightGrey    : #D8D8D8;
 @midGrey      : #737373;
 @darkGrey     : #5C5C63;
