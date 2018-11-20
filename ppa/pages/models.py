@@ -1,5 +1,5 @@
 from django.db import models
-from django.template.defaultfilters import truncatechars_html
+from django.template.defaultfilters import truncatechars_html, striptags
 from wagtail.core import blocks
 from wagtail.core.models import Page
 from wagtail.core.fields import RichTextField, StreamField
@@ -78,21 +78,41 @@ class BodyContentBlock(blocks.StreamBlock):
     document = DocumentChooserBlock()
 
 
-class ContentPage(Page):
+class PagePreviewDescriptionMixin(models.Model):
+    description = RichTextField(blank=True,
+        help_text='Optional. Brief description for preview display. Will ' +
+        'also be used for search description (without tags), if one is not entered.')
+
+    class Meta:
+        abstract = True
+
+    def get_description(self):
+        '''Get formatted description for preview. Uses description field
+        if there is content, otherwise uses the beginning of the body content.'''
+        if self.description.strip():
+            return self.description
+
+        # TODO: iterate blocks and only use the first text block (i.e. skip images)
+        return truncatechars_html(self.body, 250)
+
+    def get_plaintext_description(self):
+        '''Get plain-text description for use in metadata. Uses
+        search_description field if set; otherwise uses the result of
+        :meth:`get_description` with tags stripped.'''
+
+        if self.search_description.strip():
+            return self.search_description
+        return striptags(self.get_description())
+
+
+class ContentPage(Page, PagePreviewDescriptionMixin):
     '''Basic content page model.'''
     body = StreamField(BodyContentBlock)
 
     content_panels = Page.content_panels + [
+        FieldPanel('description'),
         StreamFieldPanel('body'),
     ]
-
-    def description(self):
-        '''Brief description of the page, for use as a preview when
-        displayed as a card on other pages.'''
-        if self.search_description.strip():
-            return self.search_description
-        return truncatechars_html(self.body, 250)
-
 
 class CollectionPage(Page):
     '''Collection list page, with editable text content'''
