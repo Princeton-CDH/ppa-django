@@ -53,9 +53,9 @@
     Brand Colors
 --------------------*/
 
-@primaryColor          : @gold;
+@primaryColor          : @darkBlue;
 @secondaryColor        : @dusk;
-@backgroundColor       : @offWhite;
+@backgroundColor       : @lightestGrey;
 
 @lightPrimaryColor     : @lightGold;
 @lightSecondaryColor   : @lightGreen;
@@ -68,7 +68,7 @@
 @gold         : #A98F5F;
 @lightGreen   : #07AE79;
 @lightGold    : #CDAD7E;
-@offWhite     : #F1F0EB;
+@lightestGrey : #E0E0E0;
 @lightGrey    : #D8D8D8;
 @midGrey      : #737373;
 @darkGrey     : #5C5C63;
