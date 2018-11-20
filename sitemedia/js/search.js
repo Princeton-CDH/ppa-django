@@ -111,9 +111,9 @@ $(function(){
         $$sortSelect.val($$sortInputs.filter(':checked').val()) // set the mobile sort to the same default as the other sort
         $$collectionInputs.filter(':disabled').parent().addClass('disabled') // disable empty collections
         $('.question-popup').popup() // initialize the question popup
-        $('.ui.dropdown .dropdown.icon').removeClass('dropdown').addClass('chevron down') // change the icon
+        $$sortSelect.find('.dropdown.icon').removeClass('dropdown').addClass('chevron down') // change the icon
         $$checkboxes.checkbox() // this is just a standard semantic UI behavior
-        $('.ui.dropdown').dropdown() // same here
+        $$sortSelect.dropdown() // same here
         $('.form').keydown(e => { if (e.which === 13) e.preventDefault() }) // don't allow enter key to submit the search
         $$textInputs.each(addClearButton)
         $$textInputs.on('input', onTextInput)
