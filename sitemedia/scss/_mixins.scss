@@ -1,23 +1,28 @@
-@mixin responsive-banner($src) {
-    background-position: top;
+@mixin responsive-banner($src, $color) {
+    mask-position: top;
     background-repeat: no-repeat;
+    background-color: $color;
     
     // small 1x and 2x
     min-height: $banner-height;
-    background-image: url("#{$src}_S@1x.png");
+    mask-image: url("#{$src}_S@1x.png");
+	-webkit-mask-image: url("#{$src}_S@1x.png");
     @media (-webkit-min-device-pixel-ratio: 2),
             (min-resolution: 192dpi) {
-        background-image: url("#{$src}_S@2x.png");
+        mask-image: url("#{$src}_S@2x.png");
+	    -webkit-mask-image: url("#{$src}_S@2x.png");
     }
 
     // medium 1x and 2x
     @media (min-width: $tablet) {
         min-height: $banner-height-m;
         margin-bottom: -30px;
-        background-image: url("#{$src}_M@1x.png");
+        mask-image: url("#{$src}_M@1x.png");
+	    -webkit-mask-image: url("#{$src}_M@1x.png");
         @media (-webkit-min-device-pixel-ratio: 2),
             (min-resolution: 192dpi) {
-            background-image: url("#{$src}_M@2x.png");
+            mask-image: url("#{$src}_M@2x.png");
+	        -webkit-mask-image: url("#{$src}_M@2x.png");
         }
     }
 
@@ -25,10 +30,12 @@
     @media (min-width: $computer) {
         margin-bottom: -140px;
         min-height: $banner-height-l;
-        background-image: url("#{$src}@1x.png");
+        mask-image: url("#{$src}@1x.png");
+	    -webkit-mask-image: url("#{$src}@1x.png");
         @media (-webkit-min-device-pixel-ratio: 2),
             (min-resolution: 192dpi) {
-            background-image: url("#{$src}@2x.png");
+            mask-image: url("#{$src}@2x.png");
+	        -webkit-mask-image: url("#{$src}@2x.png");
         }
     }
 }
