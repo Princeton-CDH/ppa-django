@@ -9,6 +9,7 @@
     margin: 1em 0;
     width: @width;
     height: @height;
+    transition: all 0.2s ease;
 
     @media (min-width: @tabletBreakpoint) {
         margin: 2em 0;
@@ -35,6 +36,7 @@
         font-family: @headerFont;
         font-size: 16px;
         line-height: normal;
+        text-align: left;
 
         > * {
             line-height: normal;

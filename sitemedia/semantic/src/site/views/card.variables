@@ -8,6 +8,7 @@
 
 /* Shadow */
 @shadowDistance: 4px;
+@hoverShadowDistance: 2 * @shadowDistance;
 @shadowColor: @lightGrey;
 @shadowBoxShadow: @shadowDistance @shadowDistance 0px 0px @shadowColor;
 
@@ -35,7 +36,7 @@
 
 /* Description */
 @descriptionDistance: 1em;
-@descriptionColor: @secondaryColor;
+@descriptionColor: @textColor;
 
 /*-------------------
       Variations
@@ -47,11 +48,11 @@
 @linkHoverZIndex: initial;
 @linkHoverRaiseDistance: 0px;
 @linkHoverTransform: none;
-@linkShadowColor: @lightPrimaryColor;
-@linkHoverShadowColor: @melon;
+@linkShadowColor: @lightSecondaryColor;
+@linkHoverShadowColor: @lightSecondaryColor;
 
-@linkBoxShadow: @shadowDistance @shadowDistance 0px 0px @lightPrimaryColor;
-@linkHoverBoxShadow: @shadowDistance @shadowDistance 0px 0px @linkHoverShadowColor;
+@linkBoxShadow: @shadowDistance @shadowDistance 0px 0px @linkShadowColor;
+@linkHoverBoxShadow: @hoverShadowDistance @hoverShadowDistance 0px 0px @linkHoverShadowColor;
 @shadowHoverBoxShadow: @linkHoverBoxShadow;
 
 /* Aside */
@@ -61,8 +62,8 @@
 @asidePadding: 30px;
 
 /* Aside Link */
-@asideLinkBorder: 10px solid @linkShadowColor;
-@asideLinkHoverBorder: 10px solid @linkHoverShadowColor;
+@asideLinkBorder: 10px solid @pink;
+@asideLinkHoverBorder: 20px solid @pink;
 
 /* Stack */
 @stackMargin: 1em 0 3em;
