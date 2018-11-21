@@ -39,9 +39,10 @@
     }
 
     img {
+        text-align: center;
         object-fit: cover;
         height: unset;
-        width: 100%;
+        max-width: 100%;
     }
 
     img,
