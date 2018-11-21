@@ -25,7 +25,7 @@
 @contentPadding: 0;
 
 /* Header */
-@headerColor: @secondaryColor;
+@headerColor: @textColor;
 @headerFontSize: @relativeMassive;
 
 /* Metadata */

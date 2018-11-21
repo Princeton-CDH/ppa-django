@@ -16,17 +16,21 @@
     {% endif %}
 {% endblock %}
 
+{% block page_header %}
+<header class="ui vertical basic center aligned segment contentpage" id="header">
+    <div class="banner"></div>
+</header>
+{% endblock %}
+
 {# page title displayed in page header snippet ? or only for some content pages #}
 
 {% block content %}
-<div class="ui container">
-    <div class="paper">
-        <h1 class="ui header">
-            {% firstof page.title page_title object.title %}
-        </h1>
-        {% for block in page.body %}
-            <section>{% include_block block %}</section>
-        {% endfor %}
-    </div>
-</div>
+<article class="ui text container">
+    <h1 class="ui header">
+        {% firstof page.title page_title object.title %}
+    </h1>
+    {% for block in page.body %}
+        {% include_block block %}
+    {% endfor %}
+</article>
 {% endblock %}

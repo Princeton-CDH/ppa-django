@@ -1,15 +1,24 @@
-#page {
-    color: $dusk;
-    margin: 2*$nav-height 0 $nav-height;
+#header.contentpage {
+    margin-bottom: -25rem;
 
-    .paper {
-        margin-top: $nav-height;
-        padding: 40px 60px 80px 60px;
-        background: white;
+    @media (min-width: $tablet) {
+        margin-bottom: -35rem;
     }
 
+    @media (min-width: $computer) {
+        margin-bottom: -45rem;
+    }
+
+    .banner {
+        @include responsive-banner("/static/img/ppa_pattern_home", $pink);
+    }
+}
+
+#page {
+    margin: 2*$nav-height 0 $nav-height;
+
     h1 {
-        text-align: center;
+        border-bottom: 5px solid $pink;
         font-size: 40px;
         font-weight: normal;
         margin: 40px 0;
@@ -27,5 +36,16 @@
     h3 {
         font-weight: normal;
         font-style: italic;
+    }
+
+    img {
+        object-fit: cover;
+        height: unset;
+        width: 100%;
+    }
+
+    img,
+    .rich-text {
+        margin-bottom: 1rem;
     }
 }
