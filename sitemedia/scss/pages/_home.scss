@@ -2,12 +2,15 @@
     display: flex;
     justify-content: center;
     margin-top: 2 * $nav-height;
-    background-size: 250%;
+    margin-bottom: -10rem;
 
-    @include responsive-banner("/static/img/ppa_pattern_home");
-    
-    @media (min-width: $tablet) {
-        background-size: 150%;
+    @media (min-width: $computer) {
+        margin-bottom: -20rem;
+    }
+
+    .banner {
+        @include responsive-banner("/static/img/ppa_pattern_home", $midGrey);
+        opacity: 0.5;
     }
 
     #scene { // parallax items
@@ -17,6 +20,7 @@
         top: 0;
         margin: auto;
         width: 300px;
+        mask-image: none;
 
         @media (min-width: $tablet) {
             width: 600px;
