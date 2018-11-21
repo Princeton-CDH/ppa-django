@@ -179,11 +179,19 @@
         }
     }
     
-    .collections-link > .header {
-        margin: 1rem 0 2rem;
+    .collections-link {
+        display: inline-block;
+        border-bottom: 2px solid $darkBlue;
+        
+        .header {
+            color: $darkBlue;
+            font-family: $pageFont;
+            font-weight: normal;
+            text-transform: uppercase;
+        }
 
-        @media (min-width: $tablet) {
-            margin: 0 0 1rem;
+        .fermata {
+            height: 2rem;
         }
     }
 }
