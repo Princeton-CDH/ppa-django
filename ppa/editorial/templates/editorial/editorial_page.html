@@ -3,14 +3,10 @@
 
 {% load wagtailcore_tags %}
 
-{% block content %}
-<div class="ui vertical basic segment">
-    <div class="ui text container">
-        <article>
-        {% for block in page.body %}
-            <section>{% include_block block %}</section>
-        {% endfor %}
-     </article>
-    </div>
-</div>
+{% block page_nav %}
+    {% if page in request.site.root_page.get_chidren.live.in_menu %}
+        {% include 'snippets/nav.html' %}
+    {% else %}
+        {% include 'snippets/nav.html' with active="editorial" %}
+    {% endif %}
 {% endblock %}
