@@ -73,10 +73,6 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             sort = search_opts.get("sort", None)
             collections = search_opts.get("collections", None)
 
-            if self.query:
-                # simple keyword search across all text content
-                text_query = "text:(%s)" % self.query
-                # work_q.append(text_query)
 
             work_q = []
             # restrict by collection if specified
@@ -143,7 +139,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
 
         # if there are any queries to filter works  or search by text,
         # combine the queries and construct solr query
-        if work_q or text_query:
+        if work_q or self.query:
             query_parts = []
 
             # work-level metadata queries and filters
@@ -163,11 +159,11 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                     query_parts.append(work_query)
 
             # general text query, if there is one
-            if text_query:
+            if self.query:
                 # search for works that match the filter OR for works
                 # associated with pages that match
                 query_parts.append(
-                     '(%s OR {!join from=srcid to=id v=$text_query})' % text_query
+                     '(%s OR {!join from=srcid to=id v=$text_query})' % self.query
                 )
 
             # combine work and text queries together with AND
@@ -236,7 +232,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
         # NOTE 2: using quotes around ids to handle ids that include
         # colons, e.g. ark:/foo/bar .
         solr_pageq = PagedSolrQuery({
-            'q': 'text:(%s) AND id:(%s)' % \
+            'q': '%s AND id:(%s)' % \
                 (self.query, ' '.join('"%s"' % pid for pid in page_ids)),
             # enable highlighting on content field with 3 snippets
             'hl': True,
@@ -497,4 +493,3 @@ class AddToCollection(ListView, FormView):
         # doesn't pass the form with error set
         self.object_list = self.get_queryset()
         return self.render_to_response(self.get_context_data(form=form))
-
