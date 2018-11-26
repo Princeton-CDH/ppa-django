@@ -9,6 +9,7 @@
     margin: 1em 0;
     width: @width;
     height: @height;
+    transition: all 0.2s ease;
 
     @media (min-width: @tabletBreakpoint) {
         margin: 2em 0;
@@ -35,6 +36,7 @@
         font-family: @headerFont;
         font-size: 16px;
         line-height: normal;
+        text-align: left;
 
         > * {
             line-height: normal;
@@ -59,14 +61,18 @@
         height: @asideHeight;
         margin: @asideMargin;
         padding: @asidePadding;
-        box-shadow: none;
+        box-shadow: @asideBoxShadow;
+
+        @media (min-width: @tabletBreakpoint) {
+            width: 300px;
+        }
 
         &:hover {
-            box-shadow: none;
+            box-shadow: @asideHoverBoxShadow;
         }
 
         .header:not(.ui) {
-            font-size: 26px;
+            font-size: 2em;
         }
 
         .description {
@@ -161,10 +167,10 @@ a.ui.card,
     }
 
     &.aside {
-        border-left: @asideLinkBorder;
+        box-shadow: @asideLinkBoxShadow;
 
         &:hover {
-            border-left: @asideLinkHoverBorder;
+            box-shadow: @asideLinkHoverBoxShadow;
         }
     }
 
