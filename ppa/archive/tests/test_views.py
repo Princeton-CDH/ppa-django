@@ -312,11 +312,10 @@ class TestArchiveViews(TestCase):
             self.assertContains(response, digwork.subtitle)
             self.assertContains(response, digwork.source_id)
             self.assertContains(response, digwork.author)
-            # NOTE: enumcron suppressed for now (possibly for good)
-            # self.assertContains(response, digwork.enumcron)
+            self.assertContains(response, digwork.enumcron)
             # at least one publisher includes an ampersand, so escape text
             self.assertContains(response, escape(digwork.publisher))
-            self.assertContains(response, digwork.pub_place)
+            # self.assertContains(response, digwork.pub_place)
             self.assertContains(response, digwork.pub_date)
             # link to detail page
             self.assertContains(response, digwork.get_absolute_url())

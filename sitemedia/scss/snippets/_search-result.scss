@@ -10,12 +10,23 @@
         background-color: #fff;
     }
 
+    .result-number {
+        color: $darkestGrey;
+        font-family: $pageFont;
+    }
+
     .unapi-id {
         display: none;
     }
 
     .buttons {
-        margin: 2rem 0 0;
+        margin-top: 1rem;
+        display: flex;
+        flex-flow: row wrap;
+
+        .button {
+            flex: none;
+        }
     }
 
     .pages .wrapper {
@@ -25,24 +36,29 @@
 
     .labels {
         position: absolute;
-        top: 0.7rem;
+        top: 1rem;
         left: 1rem;
     }
 
     .title {
-        margin-left: 3rem;
-    }
+        margin-left: 0;
+        margin-top: 2.5rem;
+        font-family: $headerFont;
 
-    .title a:hover .header {
-        color: $gold;
+        @media (min-width: $tablet) {
+            margin-left: 3rem;
+            margin-top: 0;
+        }
     }
 
     .labels,
-    .title .header, 
-    .author.header {
-        font-size: 20px;
-        font-family: $headerFont;
-        color: $secondaryColor;
+    .title .header {
+        font-size: 1.25rem;
+        color: $darkestGrey;
+
+        @media (min-width: $tablet) {
+            font-size: 1.5rem;
+        }
     }
 
     .title .sub.header {
@@ -51,11 +67,44 @@
         text-transform: none;
     }
 
-    .author {
-        font-weight: 400;
+    .item-detail {
+        bottom: 1rem;
+        right: 1rem;
+        color: $darkBlue;
+        margin-left: auto;
+
+        .chevron {
+            fill: $darkBlue;
+            vertical-align: middle;
+            margin-left: -0.5rem;
+            width: 2rem;
+            height: 2rem;
+        }
+
+        @media (min-width: $computer) {
+            visibility: hidden;
+        }
+
+        @media (min-width: $largeMonitor) {
+            position: absolute;
+            right: -12rem;
+            top: 6rem;
+            bottom: 0;
+            margin: auto 0;
+            height: 4rem;
+
+            .chevron {
+                position: absolute;
+                left: 2.5rem;
+                top: -3rem;
+                height: 3rem;
+                width: 3rem;
+                margin: 0;
+            }
+        }
     }
 
-    .metadata .publication {
+    .metadata .grid {
         margin: 0;
 
         > .column {
@@ -75,9 +124,23 @@
             }
         }
 
-        .pub_place,
-        .enumcron {
-            font-style: italic;
+        .field-name {
+            font-weight: bold;
         }
+
+        p span {
+            display: block;
+        }
+
+        .author .field-value,
+        .pub-date .field-value {
+            font-size: 1.2rem;
+        }
+    }
+}
+
+.results-list .item:hover {
+    .item-detail {
+        visibility: visible;
     }
 }
