@@ -18,24 +18,33 @@
             </div>
         </div>
         <div class="metadata six wide column">
-            {% if item.author %}
-                <p class="author ui header">{{ item.author }}</p>
-            {% endif %}
-            <div class="publication ui grid">
+            <div class="ui grid">
                 <div class="eight wide column">
-                    {% if item.publisher %}
-                        <span class="publisher">{{ item.publisher }}</span><br>
+                    {% if item.author %}
+                    <p class="author">
+                        <span class="field-name">Author</span>
+                        <span class="field-value">{{ item.author }}</span>
+                    </p>
                     {% endif %}
-                    {% if item.pub_place %}
-                        <span class="pub_place">{{ item.pub_place }}</span><br>
+                    {% if item.publisher %}
+                    <p class="publisher">
+                        <span class="field-name">Publisher</span>
+                            <span class="field-value">{{ item.publisher }}</span>
+                    </p>
                     {% endif %}
                 </div>
                 <div class="four wide column">
                     {% if item.pub_date %}
-                        <span class="pub_date">{{ item.pub_date }}</span><br>
+                    <p class="pub-date">
+                        <span class="field-name">Pub. Date</span>
+                        <span class="field-value">{{ item.pub_date }}</span>
+                    </p>
                     {% endif %}
                     {% if item.enumcron %}
-                        <span class="enumcron">{{ item.enumcron }}</span><br>
+                    <p class="volume">
+                        <span class="field-name">Volume</span>
+                        <span class="field-value">{{ item.enumcron }}</span>
+                    </p>
                     {% endif %}
                 </div>
             </div>
