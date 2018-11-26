@@ -1,4 +1,5 @@
-{% load humanize %}
+{% load static humanize %}
+
 <div class="item">
     <abbr class="unapi-id" title="{{ item.srcid }}"></abbr>
     <div class="ui stackable grid">
@@ -10,12 +11,10 @@
                 {% endif %}
             </div>
             <div class="title">
-                <a href="{% url 'archive:detail' item.srcid %}">
-                    <p>
-                        <span class="ui header">{{ item.title }}</span>
-                        <span class="ui sub header">{{ item.subtitle}}</span>
-                    </p>
-                </a>
+                <p>
+                    <span class="ui header">{{ item.title }}</span>
+                    <span class="ui sub header">{{ item.subtitle}}</span>
+                </p>
             </div>
         </div>
         <div class="metadata six wide column">
@@ -50,9 +49,9 @@
                         <label class="ui basic button">{{ collection }}</label>
                     {% endfor %}
                 {% endif %}
-                <a class="ui right floated right labeled primary icon button" href="{{ item.src_url }}" target="_blank">
-                    HathiTrust
-                    <i class="right arrow icon"></i>
+                <a class="item-detail" href="{% url 'archive:detail' item.srcid %}">
+                    <span>See more details</span>
+                    {% include 'snippets/chevron.svg' %}
                 </a>
             </div>
         </div>
@@ -77,7 +76,6 @@
                     {% endif %}
                 {% endif %}
             {% endwith %}
-            <!--<p>{{ item.enumcron }}</p>-->
         </div>
         {% endif %}
     </div>
