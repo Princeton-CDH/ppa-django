@@ -194,6 +194,10 @@
                 margin-left: auto;
             }
         }
+
+        @media (min-width: $computer) {
+            flex-direction: column;
+        }
     }
 
     .about-header {
