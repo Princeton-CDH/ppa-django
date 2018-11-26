@@ -20,7 +20,13 @@
     }
 
     .buttons {
-        margin: 2rem 0 0;
+        margin-top: 1rem;
+        display: flex;
+        flex-flow: row wrap;
+
+        .button {
+            flex: none;
+        }
     }
 
     .pages .wrapper {
@@ -35,15 +41,24 @@
     }
 
     .title {
-        margin-left: 3rem;
+        margin-left: 0;
+        margin-top: 2.5rem;
         font-family: $headerFont;
+
+        @media (min-width: $tablet) {
+            margin-left: 3rem;
+            margin-top: 0;
+        }
     }
 
     .labels,
-    .title .header, 
-    .author.header {
-        font-size: 1.5rem;
+    .title .header {
+        font-size: 1.25rem;
         color: $darkestGrey;
+
+        @media (min-width: $tablet) {
+            font-size: 1.5rem;
+        }
     }
 
     .title .sub.header {
@@ -53,11 +68,10 @@
     }
 
     .item-detail {
-        display: inline-block;
-        position: absolute;
-        bottom: 0;
+        bottom: 1rem;
         right: 1rem;
         color: $darkBlue;
+        margin-left: auto;
 
         .chevron {
             fill: $darkBlue;
@@ -68,10 +82,11 @@
         }
 
         @media (min-width: $computer) {
-            display: none;
+            visibility: hidden;
         }
 
         @media (min-width: $largeMonitor) {
+            position: absolute;
             right: -12rem;
             top: 6rem;
             bottom: 0;
@@ -89,7 +104,7 @@
         }
     }
 
-    .metadata .publication {
+    .metadata .grid {
         margin: 0;
 
         > .column {
@@ -109,15 +124,23 @@
             }
         }
 
-        .pub_place,
-        .enumcron {
-            font-style: italic;
+        .field-name {
+            font-weight: bold;
+        }
+
+        p span {
+            display: block;
+        }
+
+        .author .field-value,
+        .pub-date .field-value {
+            font-size: 1.2rem;
         }
     }
 }
 
 .results-list .item:hover {
     .item-detail {
-        display: inline-block;
+        visibility: visible;
     }
 }
