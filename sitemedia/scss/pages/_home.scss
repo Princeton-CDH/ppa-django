@@ -61,25 +61,67 @@
     
     .intro {
         text-align: left;
-        font-size: 16px;
+        font-size: 1.2rem;
         font-family: $headerFont;
         margin: 3rem 0;
         
         @media (min-width: $tablet) {
-            font-size: 20px;
+            font-size: 1.5rem;
             margin-top: 9rem;
         }
 
         @media (min-width: $computer) {
             margin-top: 6rem;
         }
+    }
 
-        ~ .archive-link {
-            margin: 0 0 2rem;
-    
+    .archive-link {
+        display: inline-block;
+        padding: 0.8rem;
+        background-color: $darkBlue;
+        border-radius: 3px;
+        margin: 0 0 2rem;
+
+        @media (min-width: $tablet) {
+            padding: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .header {
+            color: white;
+            font-size: 1rem;
+            font-weight: normal;
+            text-transform: uppercase;
+            font-family: $pageFont;
+
             @media (min-width: $tablet) {
-                margin: 2rem 0 4rem;
+                font-size: 1.2rem;
             }
+        }
+
+        .fermata {
+            fill: white;
+        }
+    }
+
+    .learn-more {
+        font-size: 1rem;
+        font-weight: bold;
+
+        @media (min-width: $tablet) {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (min-width: $computer) {
+            margin-bottom: 6rem;
+        }
+
+        img {
+            height: 2rem;
+            width: 2rem;
+            transform: rotate(90deg);
+            margin-top: .25rem;
         }
     }
 
@@ -89,64 +131,92 @@
 
         @media (min-width: $computer) {
             flex-direction: row;
+            justify-content: center;
             padding: 0;
         }
     }
 
     .collections {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        .cards {
+            margin: 0;
+            width: 100%;
+            align-content: center;
+            flex-direction: column;
+
+            @media (min-width: $tablet) {
+                flex-direction: row;
+                justify-content: flex-end;
+
+                .card:last-of-type {
+                    margin-left: auto;
+                }
+            }
+        }
+
         @media (min-width: $computer) {
             display: flex;
             flex-direction: column;
             align-items: center;
             padding-top: 1rem;
+            margin-left: 5rem;
 
             .cards .card {
                 margin: 1rem auto;
             }
+
+            .cards {
+                flex-direction: column;
+            }
         }
     }
-    
-    .asides,
-    .updates,
-    .collections .cards {
-        margin: 0 0 2rem 0;
-        justify-content: center;
-        align-items: center;
-        flex-wrap: wrap;
+
+
+    .asides {
         flex-direction: column;
-        
+        justify-content: flex-end;
+        align-items: center;
+        margin: 0;
+
         @media (min-width: $tablet) {
             flex-direction: row;
-            justify-content: space-between;
-            align-items: initial;
+            justify-content: flex-end;
 
-            .card:not(.aside):last-child {
+            .card:first-of-type {
+                margin-left: 10px;
+            }
+
+            .card:last-of-type {
                 margin-left: auto;
             }
         }
     }
 
-    .asides {
-        justify-content: flex-end;
+    .about-header {
+        margin-top: 0;
+        font-size: 2rem;
+
+        @media (min-width: $tablet) {
+            margin-top: 3rem;
+        }
 
         @media (min-width: $computer) {
-            margin-bottom: 0;
+            margin-top: 0;
         }
-    }
-    
-    .about-header {
-        font-size: 26px;
-        margin-top: -1rem;
     }
     
     .about-header ~ .description {
         color: $secondaryColor;
-        font-size: 18px;
+        font-size: 1.25rem;
         font-family: $headerFont;
         line-height: normal;
         margin-left: auto;
         margin-right: auto;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
         max-width: 100%;
 
         @media (min-width: $tablet) {
@@ -160,28 +230,14 @@
         }
     }
     
-    .archive-link {
-        display: inline-block;
-        padding: 1rem;
-        background-color: $darkBlue;
-        border-radius: 3px;
-        
-        .header {
-            color: white;
-            font-size: 16px;
-            font-weight: normal;
-            text-transform: uppercase;
-            font-family: $pageFont;
-        }
-
-        .fermata {
-            fill: white;
-        }
-    }
-    
     .collections-link {
         display: inline-block;
         border-bottom: 2px solid $darkBlue;
+        margin: 2rem 0 4rem;
+
+        @media (min-width: $tablet) {
+            margin: 2rem 0;
+        }
         
         .header {
             color: $darkBlue;
