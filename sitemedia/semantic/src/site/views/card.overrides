@@ -10,6 +10,7 @@
     width: @width;
     height: @height;
     transition: all 0.2s ease;
+    overflow: hidden;
 
     @media (min-width: @tabletBreakpoint) {
         margin: 2rem 0;
@@ -34,12 +35,12 @@
 
     .description {
         font-family: @fontFamily;
-        font-size: 1.2rem;
+        font-size: 1rem;
         line-height: normal;
         text-align: left;
 
         > * {
-            line-height: normal;
+            line-height: 1.25;
         }
 
         @media (min-width: @tabletBreakpoint) {
