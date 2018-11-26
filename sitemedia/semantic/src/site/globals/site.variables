@@ -9,14 +9,14 @@
 @fontName              : 'Open Sans';
 @headerFontName        : 'Gentium Book Basic';
 
-@pageFont              : @fontName, Helvetica, sans-serif;
+@pageFont              : Helvetica, sans-serif;
 @headerFont            : @headerFontName, Palatino, serif;
 
 @googleFontSizes       : '600,600i,700,700i';
 @googleFontSizesHeader : '400,400i,700,700i';
 @googleFont            : %('%s:@{googleFontSizes}', escape(@fontName));
 @googleFontHeader      : %('%s:@{googleFontSizesHeader}', escape(@headerFontName));
-@googleFontRequest     : '@{googleFont}|@{googleFontHeader}';
+@googleFontRequest     : '@{googleFontHeader}';
 
 /*-------------------
       Base Sizes

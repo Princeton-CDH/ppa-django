@@ -62,7 +62,6 @@
     .intro {
         text-align: left;
         font-size: 1.2rem;
-        font-family: $headerFont;
         margin: 3rem 0;
         
         @media (min-width: $tablet) {
@@ -184,7 +183,6 @@
 
         @media (min-width: $tablet) {
             flex-direction: row;
-            justify-content: flex-end;
 
             .card:first-of-type {
                 margin-left: 10px;
