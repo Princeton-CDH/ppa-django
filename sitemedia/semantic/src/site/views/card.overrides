@@ -61,14 +61,18 @@
         height: @asideHeight;
         margin: @asideMargin;
         padding: @asidePadding;
-        box-shadow: none;
+        box-shadow: @asideBoxShadow;
+
+        @media (min-width: @tabletBreakpoint) {
+            width: 300px;
+        }
 
         &:hover {
-            box-shadow: none;
+            box-shadow: @asideHoverBoxShadow;
         }
 
         .header:not(.ui) {
-            font-size: 26px;
+            font-size: 2em;
         }
 
         .description {
@@ -163,10 +167,10 @@ a.ui.card,
     }
 
     &.aside {
-        border-left: @asideLinkBorder;
+        box-shadow: @asideLinkBoxShadow;
 
         &:hover {
-            border-left: @asideLinkHoverBorder;
+            box-shadow: @asideLinkHoverBoxShadow;
         }
     }
 
