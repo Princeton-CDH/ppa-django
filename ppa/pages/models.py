@@ -79,9 +79,17 @@ class BodyContentBlock(blocks.StreamBlock):
 
 
 class PagePreviewDescriptionMixin(models.Model):
+    '''Page mixin with logic for page preview content. Adds an optional
+    richtext description field, and methods to get description and plain-text
+    description, for use in previews on the site and plain-text metadata
+    previews.'''
+
     description = RichTextField(blank=True,
         help_text='Optional. Brief description for preview display. Will ' +
         'also be used for search description (without tags), if one is not entered.')
+
+    #: maximum length for description to be displayed
+    max_length = 250
 
     class Meta:
         abstract = True
@@ -92,8 +100,10 @@ class PagePreviewDescriptionMixin(models.Model):
         if self.description.strip():
             return self.description
 
-        # TODO: iterate blocks and only use the first text block (i.e. skip images)
-        return truncatechars_html(self.body, 250)
+        # Iterate over blocks and use content from the first paragraph content
+        for block in self.body:
+            if block.block_type == 'paragraph':
+                return truncatechars_html(block, self.max_length)
 
     def get_plaintext_description(self):
         '''Get plain-text description for use in metadata. Uses
