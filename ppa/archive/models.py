@@ -28,6 +28,10 @@ class Collection(models.Model):
     name = models.CharField(max_length=255)
     #: a RichText description of the collection
     description = RichTextField(blank=True)
+    #: flag to indicate collections to be excluded by default in
+    #: public search
+    exclude = models.BooleanField(default=False,
+        help_text='Exclude by default on public search.')
 
     # configure for editing in wagtail admin
     panels = [
