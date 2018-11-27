@@ -13,16 +13,17 @@
 
 {% block page_header %}
 <header class="ui vertical basic center aligned segment homepage" id="header">
+    <div class="banner"></div>
     <div id="scene">
-        <img class="layer one" data-depth="0.20" src="{% static 'img/ppa-logo-separated-shape/layer1.svg' %}" alt="">
-        <img class="layer two" data-depth="0.40" src="{% static 'img/ppa-logo-separated-shape/layer2.svg' %}" alt="">
-        <img class="layer three" data-depth="0.60" src="{% static 'img/ppa-logo-separated-shape/layer3.svg' %}" alt="">
+        <img class="layer one" data-depth="0.20" src="{% static 'img/ppaLogo_Layers_Revised/PPALogo_Blue.svg' %}" alt="">
+        <img class="layer two" data-depth="0.40" src="{% static 'img/ppaLogo_Layers_Revised/PPALogo_Teal.svg' %}" alt="">
+        <img class="layer three" data-depth="0.60" src="{% static 'img/ppaLogo_Layers_Revised/PPALogo_Red.svg' %}" alt="">
     </div>
 </header>
 {% endblock %}
 
 {% block content %}
-<div class="ui vertical basic segment text container">
+<div class="ui vertical basic segment container">
     <div class="intro">
         {{ page.body|richtext }}
     </div>
@@ -32,6 +33,11 @@
             View and search the archive
         </h3>
     </a>
+    <p class="learn-more">
+        Learn more below<br>
+        <img class="chevron icon"
+            src="{% static 'img/icons/RightChevron.svg' %}" alt="">
+    </p>
 </div>
 <div class="asides-collections ui vertical basic segment container">
    <div class="asides ui two cards">

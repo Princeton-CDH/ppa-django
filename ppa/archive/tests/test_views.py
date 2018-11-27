@@ -312,11 +312,10 @@ class TestArchiveViews(TestCase):
             self.assertContains(response, digwork.subtitle)
             self.assertContains(response, digwork.source_id)
             self.assertContains(response, digwork.author)
-            # NOTE: enumcron suppressed for now (possibly for good)
-            # self.assertContains(response, digwork.enumcron)
+            self.assertContains(response, digwork.enumcron)
             # at least one publisher includes an ampersand, so escape text
             self.assertContains(response, escape(digwork.publisher))
-            self.assertContains(response, digwork.pub_place)
+            # self.assertContains(response, digwork.pub_place)
             self.assertContains(response, digwork.pub_date)
             # link to detail page
             self.assertContains(response, digwork.get_absolute_url())
@@ -441,7 +440,7 @@ class TestArchiveViews(TestCase):
         # - check that a query allows relevance as sort order toggle in form
         response = self.client.get(url, {'query': 'foo', 'sort': 'title_asc'})
         enabled_input = \
-            '<input type="radio" name="sort" value="relevance" id="id_sort_0" />'
+            '<div class="item " data-value="relevance">Relevance</div>'
         self.assertContains(response, enabled_input, html=True)
         response = self.client.get(url, {'title': 'foo', 'sort': 'title_asc'})
         self.assertContains(response, enabled_input, html=True)
@@ -452,7 +451,7 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url, {'sort': 'title_asc'})
         self.assertContains(
             response,
-            '<input type="radio" name="sort" value="relevance" id="id_sort_0" disabled="disabled" />',
+            '<div class="item disabled" data-value="relevance">Relevance</div>',
             html=True
         )
         # default sort should be title if no keyword search and no sort specified
@@ -495,7 +494,7 @@ class TestArchiveViews(TestCase):
         # should have the histogram data
         self.assertContains(response, "<pre class=\"count\">")
         # should have pagination
-        self.assertContains(response, "<div class=\"pagination")
+        self.assertContains(response, "<div class=\"page-controls")
         # test a query
         response = self.client.get(
             url, {'query': 'blood AND bone AND alternate'},

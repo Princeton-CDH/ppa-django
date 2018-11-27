@@ -8,11 +8,12 @@
 
 /* Shadow */
 @shadowDistance: 4px;
+@hoverShadowDistance: 2 * @shadowDistance;
 @shadowColor: @lightGrey;
 @shadowBoxShadow: @shadowDistance @shadowDistance 0px 0px @shadowColor;
 
 /* Card */
-@fontFamily: @headerFont;
+@fontFamily: @pageFont;
 @width: 290px;
 @height: 230px;
 @borderWidth: 0px;
@@ -25,7 +26,7 @@
 @contentPadding: 0;
 
 /* Header */
-@headerColor: @secondaryColor;
+@headerColor: @textColor;
 @headerFontSize: @relativeMassive;
 
 /* Metadata */
@@ -34,8 +35,8 @@
 @metaColor: @midGrey;
 
 /* Description */
-@descriptionDistance: 1em;
-@descriptionColor: @secondaryColor;
+@descriptionDistance: 1rem;
+@descriptionColor: @textColor;
 
 /*-------------------
       Variations
@@ -47,25 +48,31 @@
 @linkHoverZIndex: initial;
 @linkHoverRaiseDistance: 0px;
 @linkHoverTransform: none;
-@linkShadowColor: @lightPrimaryColor;
-@linkHoverShadowColor: @melon;
+@linkShadowColor: @lightSecondaryColor;
+@linkHoverShadowColor: @lightSecondaryColor;
 
-@linkBoxShadow: @shadowDistance @shadowDistance 0px 0px @lightPrimaryColor;
-@linkHoverBoxShadow: @shadowDistance @shadowDistance 0px 0px @linkHoverShadowColor;
+@linkBoxShadow: @shadowDistance @shadowDistance 0px 0px @linkShadowColor;
+@linkHoverBoxShadow: @hoverShadowDistance @hoverShadowDistance 0px 0px @linkHoverShadowColor;
 @shadowHoverBoxShadow: @linkHoverBoxShadow;
 
 /* Aside */
-@asideMargin: 0 0 2em;
-@asideWidth: 310px;
+@asideMargin: 0 0 2rem;
+@asideWidth: 280px;
 @asideHeight: 360px;
 @asidePadding: 30px;
+@asideShadowDistance: 10px;
+@asideShadowColor: @pink;
+@asideBoxShadow: -@asideShadowDistance 0 0 @shadowColor;
+@asideHoverBoxShadow: -2 * @asideShadowDistance 0 0 @shadowColor;
 
 /* Aside Link */
-@asideLinkBorder: 10px solid @linkShadowColor;
-@asideLinkHoverBorder: 10px solid @linkHoverShadowColor;
+@asideLinkBorder: 10px solid @pink;
+@asideLinkHoverBorder: 20px solid @pink;
+@asideLinkBoxShadow: -@asideShadowDistance 0 0 @asideShadowColor;
+@asideLinkHoverBoxShadow: -2 * @asideShadowDistance 0 0 @asideShadowColor;
 
 /* Stack */
-@stackMargin: 1em 0 3em;
+@stackMargin: 1rem 0 3rem;
 @stackBoxShadow:
     @shadowBoxShadow,
     @shadowDistance * 4 @shadowDistance * 4 0px 0px @background,
@@ -93,13 +100,13 @@
 /* Post */
 @postBackgroundColor: @primaryColor;
 @postBackgroundTextColor: @invertedTextColor;
-@postBackgroundPadding: 4em 2em 2em 2em;
+@postBackgroundPadding: 4rem 2rem 2rem 2rem;
 
 @postPageWidth: 200px;
 @postPageHeight: 260px;
 @postPageColor: @background;
 @postPageTextColor: @headerColor;
-@postPagePadding: 2em;
+@postPagePadding: 2rem;
 @postPageBoxShadow: @shadowBoxShadow;
 
 /* Post Link */
