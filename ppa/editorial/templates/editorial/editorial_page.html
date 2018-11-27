@@ -4,9 +4,5 @@
 {% load wagtailcore_tags %}
 
 {% block page_nav %}
-    {% if page in request.site.root_page.get_chidren.live.in_menu %}
-        {% include 'snippets/nav.html' %}
-    {% else %}
-        {% include 'snippets/nav.html' with active="editorial" %}
-    {% endif %}
+    {% include 'snippets/nav.html' with active="editorial" %}
 {% endblock %}
