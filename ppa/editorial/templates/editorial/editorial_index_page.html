@@ -1,6 +1,10 @@
 {% extends 'pages/content_page.html' %}
 {% load wagtailcore_tags %}
 
+{% block page_nav %}
+    {% include 'snippets/nav.html' with active="editorial" %}
+{% endblock %}
+
 {% block content %}
 <div class="ui vertical basic segment">
     <div class="ui text container">
