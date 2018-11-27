@@ -97,13 +97,19 @@ class PagePreviewDescriptionMixin(models.Model):
     def get_description(self):
         '''Get formatted description for preview. Uses description field
         if there is content, otherwise uses the beginning of the body content.'''
-        if self.description.strip():
-            return self.description
 
-        # Iterate over blocks and use content from the first paragraph content
-        for block in self.body:
-            if block.block_type == 'paragraph':
-                return truncatechars_html(block, self.max_length)
+        # use description field if set
+        description = self.description.strip()
+
+        # if not, use beginning of body content
+        if not description:
+            # Iterate over blocks and use content from the first paragraph content
+            for block in self.body:
+                if block.block_type == 'paragraph':
+                    description = block
+
+        # truncate either way
+        return truncatechars_html(description, self.max_length)
 
     def get_plaintext_description(self):
         '''Get plain-text description for use in metadata. Uses

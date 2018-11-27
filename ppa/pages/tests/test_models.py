@@ -154,7 +154,7 @@ class TestContentPage(WagtailPageTests):
         assert desc[:200] == str(content_page.body[0])[:200]
 
         # test content page with image for first block
-        content_page = ContentPage(
+        content_page2 = ContentPage(
             title='What is Prosody?',
             body=[
                 ('image', '<img src="milton-example.png"/>'),
@@ -162,12 +162,17 @@ class TestContentPage(WagtailPageTests):
             ]
         )
         # should ignore image block and use first paragraph content
-        assert content_page.get_description()[:200] == \
-            str(content_page.body[1])[:200]
+        assert content_page2.get_description()[:200] == \
+            str(content_page2.body[1])[:200]
 
         # should use description field when set
-        content_page.description = '<p>A short intro to prosody.</p>'
-        assert content_page.get_description() == content_page.description
+        content_page2.description = '<p>A short intro to prosody.</p>'
+        assert content_page2.get_description() == content_page2.description
+
+        # should truncate if description content is too long
+        content_page2.description = content_page.body[0]
+        assert len(striptags(content_page.get_description())) \
+            <= content_page.max_length
 
     def test_get_plaintext_description(self):
         # description set but no search description
