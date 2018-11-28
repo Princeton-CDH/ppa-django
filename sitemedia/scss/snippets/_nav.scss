@@ -94,6 +94,10 @@
         border-color: $teal;
     }
 
+    &.editorial {
+        border-color: $purple;
+    }
+
     &.hidden {
         margin-top: -100px;
     }
@@ -166,7 +170,7 @@
         
         &.editorial {
             &.active::before {
-                @include triangle-overlay($pink);
+                @include triangle-overlay($purple);
             }
         }
 
