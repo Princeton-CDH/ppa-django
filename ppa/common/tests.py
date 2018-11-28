@@ -4,7 +4,6 @@ from django.contrib.auth.models import User, Group
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from wagtail.core.models import Site, Page
-from wagtail.core.templatetags.wagtailcore_tags import slugurl
 
 from ppa.common.admin import LocalUserAdmin
 from ppa.common.views import VaryOnHeadersMixin
@@ -28,7 +27,6 @@ class TestLocalUserAdmin(TestCase):
         assert grp1.name in group_names
         assert grp2.name in group_names
         assert grp3.name not in group_names
-
 
 
 class TestSitemaps(TestCase):
