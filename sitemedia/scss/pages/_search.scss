@@ -1,7 +1,7 @@
 #search {
     margin-top: 0;
     
-    .container {
+    .container:not(.message) {
         @include wide-container();
     }
 
@@ -28,13 +28,6 @@
         > .twelve.wide.column:not(:nth-of-type(1)) {
             padding-top: 0 !important;
         }
-    }
-
-    .clear.times.icon {
-        left: auto;
-        right: 0;
-        cursor: pointer;
-        pointer-events: all;
     }
 
     .show-advanced {
@@ -134,28 +127,6 @@
         }
     }
 
-    #histogram {
-        height: 8rem;
-
-        .values {
-            display: none;
-        }
-
-        .visualization {
-            width: 100%;
-            height: 4rem;
-        }
-
-        .min-date,
-        .max-date{
-            color: $midGrey;
-        }
-
-        .max-date {
-            float: right;
-        }
-    }
-
     #collections {
         .field {
             margin-bottom: -5px;
@@ -182,8 +153,7 @@
     }
 
     .zotero a {
-        color: $darkBlue;
-        border-bottom: 2px solid $darkBlue;
+        @include link;
     }
 
     #booleans {

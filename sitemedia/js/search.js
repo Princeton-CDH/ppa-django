@@ -1,5 +1,6 @@
 import ReactiveForm from './ReactiveForm'
 import Histogram from './Histogram'
+import clearable from './clearable'
 
 $(function(){
 
@@ -94,29 +95,11 @@ $(function(){
             onChange: () => $$sortInput[0].dispatchEvent(new Event('input')) // make sure sort changes trigger a submission
         })
         $('.form').keydown(e => { if (e.which === 13) e.preventDefault() }) // don't allow enter key to submit the search
-        $$textInputs.each(addClearButton)
-        $$textInputs.on('input', onTextInput)
+        $$textInputs.each((_, el) => clearable(el)) // make text inputs clearable
         validate()
     }
 
     function toggleAdvancedSearch() {
         $('.advanced').slideToggle()
-    }
-
-    function addClearButton(_, el) {
-        let clearButton = $('<i/>', { class: 'clear times icon' })
-        let clearField = () => { // called when the icon is clicked
-            $(el).val('') // empty the field
-            el.dispatchEvent(new Event('input')) // fake input to trigger resubmit
-        }
-        $(el).val() == '' ? clearButton.hide() : clearButton.show() // if the field is pre-populated, show it
-        clearButton.click(clearField) // clicking it clears the field
-        clearButton.insertAfter(el)
-    }
-
-    function onTextInput(event) {
-        // if the input was cleared out, hide the clear button, otherwise show it
-        let clearButton = $(event.target).parent().find('.clear.icon')
-        $(event.target).val() == '' ? clearButton.hide() : clearButton.show()
     }
 })
