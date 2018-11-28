@@ -89,3 +89,30 @@ class TestRobotsTxt(TestCase):
             self.assertContains(res, 'Disallow: /')
             self.assertContains(res, 'Twitterbot')
 
+
+class TestAnalytics(TestCase):
+
+    def test_analytics(self):
+
+        # No analytics setting should default to false
+        # use a url that without running setup for Wagtail will use base.html
+        url = reverse('archive:list')
+
+        res = self.client.get(url)
+        # should not have the script tag to load gtag.js
+        self.assertNotContains(
+            res,
+            'https://www.googletagmanager.com/gtag/js?id=UA-87887700-5'
+        )
+        # should not have the call to init_gtags.js snippet
+        self.assertNotContains(res, 'init_gtags.js')
+        with self.settings(INCLUDE_ANALYTICS=True):
+            # setting should toggle analytics
+            res = self.client.get(url)
+            # should have the script tag to load gtag.js
+            self.assertContains(
+                res,
+                'https://www.googletagmanager.com/gtag/js?id=UA-87887700-5'
+            )
+            # should have the call to init_gtags.js snippet
+            self.assertContains(res, 'init_gtags.js')
