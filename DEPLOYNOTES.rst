@@ -3,6 +3,14 @@
 Deploy and Upgrade notes
 ========================
 
+0.11
+----
+
+* ``INCLUDE_ANALYTICS`` setting should be flagged to ``True`` in
+  ``local_settings.py`` for production deployments of code to enable
+  Google Analytics.
+  
+
 0.10
 ----
 
