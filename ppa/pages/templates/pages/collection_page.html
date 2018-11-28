@@ -7,17 +7,16 @@
     {% include 'snippets/nav.html' with style="archive" active="collections" %}
 {% endblock %}
 
-{# currently not part of content page template  #}
 {% block page_header %}
-<header id="header" class="ui center aligned text container">
-    <h1 class="ui header">{{ page.title }}</h1>
-</header>
+    {% include 'snippets/header.html' with style='collections' %}
 {% endblock %}
 
 {% block content %}
 <div class="ui text container">
-    <p class="page-description">{{ page.body|richtext }}</p>
-
+    <h1 class="ui header">
+        {% firstof page.title page_title object.title %}
+    </h1>
+    <div class="page-description">{{ page.body|richtext }}</div>
     <section class="collection-cards ui cards">
         {% for item in collections %}
         {% with coll_stats=stats|dict_item:item.name %}

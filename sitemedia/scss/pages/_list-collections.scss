@@ -1,15 +1,16 @@
 #collections {
-    .page-description {
-        color: $dusk;
-        font-family: $headerFont;
-        font-size: 16px;
-        margin: 2rem auto;
-        width: 290px;
+    h1 {
+        @include underline-headline($teal);
+    }
 
+    .page-description {
+        font-size: 1.2rem;
+        max-width: 667px;
+        width: 100%;
+        margin-bottom: 1rem;
+ 
         @media (min-width: $tablet) {
-            margin: 4rem 0;
-            width: 100%;
-            font-size: 20px;
+            font-size: 1.5rem;
         }
     }
 
@@ -20,7 +21,6 @@
             font-size: 16px;
             font-weight: normal;
             text-transform: uppercase;
-            font-family: $pageFont;
             margin-top: 2rem;
         }
     }
