@@ -44,24 +44,20 @@
         .page-number {
 
           a {
-            font-size: 14px;
+            font-size: 1rem;
             font-family: $pageFont;
-            color: $gold;
           }
         }
 
         .snippet {
-            font-size: 18px;
-            font-family: $headerFont;
+            font-size: 1.25rem;
             color: $darkGrey;
             line-height: normal;
         }
     }
 
-
-
     em {
         font-style: normal;
-        color: $melon;
+        color: $blue;
     }
 }

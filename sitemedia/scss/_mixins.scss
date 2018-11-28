@@ -67,6 +67,12 @@
     opacity: 0.5;
 }
 
+@mixin link() {
+    color: $darkBlue;
+    border-bottom: 2px solid $darkBlue;
+    cursor: pointer;
+}
+
 @mixin font-smooth() {
     font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
