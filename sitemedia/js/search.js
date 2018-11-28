@@ -10,7 +10,7 @@ $(function(){
 
     /* dom */
     const $$results = $('.ajax-container')
-    const $$paginationTop = $('.pagination').first()
+    const $$paginationTop = $('.page-controls').first()
     const $$resultsCount = $('.workscount .count')
     const $$clearDatesLink = $('.clear-selection')
     const $$minDateInput = $('#id_pub_date_0')
@@ -56,7 +56,7 @@ $(function(){
             }
         })
         req.then(res => res.text()).then(html => { // submit the form and get html back
-            $$paginationTop.html($(html).find('.pagination').html()) // update the top pagination
+            $$paginationTop.html($(html).find('.page-controls').html()) // update the top pagination
             dateHistogram.update(JSON.parse($(html).find('pre.facets').html())) // update the histogram
             $$resultsCount.html($(html).find('pre.count').html()) // update the results count
             $$results.html(html) // update the results
