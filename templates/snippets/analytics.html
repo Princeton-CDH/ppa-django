@@ -1,0 +1,6 @@
+{% load compress static %}
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-87887700-5"></script>
+{% compress js %}
+    <script src="{% static 'js/snippets/init_gtags.js' %}"></script>
+{% endcompress %}

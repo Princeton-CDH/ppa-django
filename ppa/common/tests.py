@@ -1,13 +1,14 @@
 from unittest.mock import Mock
 
 from django.contrib.auth.models import User, Group
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from wagtail.core.models import Site, Page
 from wagtail.core.templatetags.wagtailcore_tags import slugurl
 
 from ppa.common.admin import LocalUserAdmin
 from ppa.common.views import VaryOnHeadersMixin
+from ppa.archive.views import DigitizedWorkListView
 
 
 class TestLocalUserAdmin(TestCase):
@@ -116,3 +117,16 @@ class TestAnalytics(TestCase):
             )
             # should have the call to init_gtags.js snippet
             self.assertContains(res, 'init_gtags.js')
+
+        # Now test that request.is_preview disables analytics
+        request = RequestFactory().get('/')
+        request.is_preview = True
+        res = DigitizedWorkListView.as_view()(request)
+        # should not have analytics snippet
+        # should not have the script tag to load gtag.js
+        self.assertNotContains(
+            res,
+            'https://www.googletagmanager.com/gtag/js?id=UA-87887700-5'
+        )
+        # should not have the call to init_gtags.js snippet
+        self.assertNotContains(res, 'init_gtags.js')
