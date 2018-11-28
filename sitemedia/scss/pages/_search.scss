@@ -205,7 +205,7 @@
 
     .pagination-bottom {
         padding: 0 1rem;
-        
+
         .page-controls {
             position: relative;
         }
@@ -243,5 +243,9 @@
         @media (min-width: $computer) {
             width: auto;
         }
+    }
+
+    .message {
+        margin-top: 2rem;
     }
 }
