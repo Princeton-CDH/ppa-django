@@ -9,7 +9,7 @@ from wagtail.admin.edit_handlers import FieldPanel, StreamFieldPanel
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.documents.blocks import DocumentChooserBlock
 
-from ppa.pages.models import BodyContentBlock
+from ppa.pages.models import BodyContentBlock, PagePreviewDescriptionMixin
 
 
 class EditorialIndexPage(Page):
@@ -83,7 +83,7 @@ class EditorialIndexPage(Page):
             return super().route(request, path_components)
 
 
-class EditorialPage(Page):
+class EditorialPage(Page, PagePreviewDescriptionMixin):
     '''Editorial page, for scholarly, educational, or other essay-like
     content related to the site'''
 
@@ -91,6 +91,7 @@ class EditorialPage(Page):
     # (maybe a footnotes block?)
     body = StreamField(BodyContentBlock)
     content_panels = Page.content_panels + [
+        FieldPanel('description'),
         StreamFieldPanel('body'),
     ]
 

@@ -2,7 +2,7 @@
 {% load static wagtailcore_tags %}
 
 {% block meta_title %}{% firstof page.seo_title page.title %}{% endblock %}
-{% block meta_description %}{{ page.search_description }}{% endblock %}
+{% block meta_description %}{{ page.get_plaintext_description }}{% endblock %}
 {# keywords for meta not yet implemented in wagtail #}
 
 {% block page-subtitle %}{% firstof page.seo_title page.title %} · {% endblock %}
