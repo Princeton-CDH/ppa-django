@@ -180,17 +180,29 @@
     .data {
         display: none;
     }
-
-    .pagination-sort {
+    
+    .pagination-sort,
+    .pagination-bottom {
         display: flex;
         justify-content: center;
         align-items: center;
         flex-wrap: wrap;
-        margin: 0 1rem;
-        border-bottom: 2px solid $teal;
-
+        
         @media (min-width: $tablet) {
             justify-content: space-between;
+        }
+    }
+    
+    .pagination-sort {
+        margin: 0 1rem;
+        border-bottom: 2px solid $teal;
+    }
+
+    .pagination-bottom {
+        padding: 0 1rem;
+        
+        .page-controls {
+            position: relative;
         }
     }
 
