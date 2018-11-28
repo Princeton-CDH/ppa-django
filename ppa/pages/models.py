@@ -1,5 +1,5 @@
 from django.db import models
-from django.template.defaultfilters import truncatechars_html
+from django.template.defaultfilters import truncatechars_html, striptags
 from wagtail.core import blocks
 from wagtail.core.models import Page
 from wagtail.core.fields import RichTextField, StreamField
@@ -78,21 +78,57 @@ class BodyContentBlock(blocks.StreamBlock):
     document = DocumentChooserBlock()
 
 
-class ContentPage(Page):
+class PagePreviewDescriptionMixin(models.Model):
+    '''Page mixin with logic for page preview content. Adds an optional
+    richtext description field, and methods to get description and plain-text
+    description, for use in previews on the site and plain-text metadata
+    previews.'''
+
+    description = RichTextField(blank=True,
+        help_text='Optional. Brief description for preview display. Will ' +
+        'also be used for search description (without tags), if one is not entered.')
+
+    #: maximum length for description to be displayed
+    max_length = 250
+
+    class Meta:
+        abstract = True
+
+    def get_description(self):
+        '''Get formatted description for preview. Uses description field
+        if there is content, otherwise uses the beginning of the body content.'''
+
+        # use description field if set
+        description = self.description.strip()
+
+        # if not, use beginning of body content
+        if not description:
+            # Iterate over blocks and use content from the first paragraph content
+            for block in self.body:
+                if block.block_type == 'paragraph':
+                    description = block
+
+        # truncate either way
+        return truncatechars_html(description, self.max_length)
+
+    def get_plaintext_description(self):
+        '''Get plain-text description for use in metadata. Uses
+        search_description field if set; otherwise uses the result of
+        :meth:`get_description` with tags stripped.'''
+
+        if self.search_description.strip():
+            return self.search_description
+        return striptags(self.get_description())
+
+
+class ContentPage(Page, PagePreviewDescriptionMixin):
     '''Basic content page model.'''
     body = StreamField(BodyContentBlock)
 
     content_panels = Page.content_panels + [
+        FieldPanel('description'),
         StreamFieldPanel('body'),
     ]
-
-    def description(self):
-        '''Brief description of the page, for use as a preview when
-        displayed as a card on other pages.'''
-        if self.search_description.strip():
-            return self.search_description
-        return truncatechars_html(self.body, 250)
-
 
 class CollectionPage(Page):
     '''Collection list page, with editable text content'''

@@ -22,7 +22,7 @@
                     <div class="header">{{ post.title }}</div>
                     <div class="meta">{{ post.post_date }}</div>
                     <div class="description">
-                        {{ post.search_description }}
+                        {{ post.get_description|richtext }}
                     </div>
                 </div>
                 </a>
