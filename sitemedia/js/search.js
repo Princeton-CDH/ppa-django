@@ -39,7 +39,8 @@ $(function(){
         state = state.filter(field => field.value != '') // filter out empty fields
         if (state.filter(field => $$textInputs.get().map(el => el.name).includes(field.name)).length == 0) { // if no text query,
             $$relevanceOption.addClass('disabled') // disable relevance
-            if (state.find(field => field.name == 'sort').value == 'relevance') { // and if relevance had been selected,
+            let sort = state.find(field => field.name == 'sort') // check if a sort was set
+            if (sort && sort.value == 'relevance') { // and if it was relevance,
                 $$sortDropdown.dropdown('set selected', 'title_asc') // set to title A-Z
             }
         }
