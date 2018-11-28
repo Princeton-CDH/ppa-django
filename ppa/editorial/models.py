@@ -2,13 +2,11 @@ from datetime import date
 
 from django.db import models
 from django.http import Http404
-from wagtail.core import blocks
+from wagtail.admin.edit_handlers import FieldPanel, StreamFieldPanel
 from wagtail.core.models import Page
 from wagtail.core.fields import RichTextField, StreamField
-from wagtail.admin.edit_handlers import FieldPanel, StreamFieldPanel
-from wagtail.images.blocks import ImageChooserBlock
-from wagtail.documents.blocks import DocumentChooserBlock
-
+from wagtail.snippets.blocks import SnippetChooserBlock
+from wagtail.snippets.models import register_snippet
 from ppa.pages.models import BodyContentBlock, PagePreviewDescriptionMixin
 
 
@@ -83,6 +81,20 @@ class EditorialIndexPage(Page):
             return super().route(request, path_components)
 
 
+@register_snippet
+class Person(models.Model):
+    name = models.CharField(max_length=255)
+    url = models.URLField(blank=True, default='')
+
+    panels = [
+        FieldPanel('name'),
+        FieldPanel('url'),
+    ]
+
+    def __str__(self):
+        return self.name
+
+
 class EditorialPage(Page, PagePreviewDescriptionMixin):
     '''Editorial page, for scholarly, educational, or other essay-like
     content related to the site'''
@@ -90,8 +102,13 @@ class EditorialPage(Page, PagePreviewDescriptionMixin):
     # preliminary streamfield; we may need other options for content
     # (maybe a footnotes block?)
     body = StreamField(BodyContentBlock)
+    authors = StreamField(
+        [('author', SnippetChooserBlock(Person))],
+        blank=True
+    )
     content_panels = Page.content_panels + [
         FieldPanel('description'),
+        StreamFieldPanel('authors'),
         StreamFieldPanel('body'),
     ]
 
@@ -116,4 +133,3 @@ class EditorialPage(Page, PagePreviewDescriptionMixin):
             self.url_path = '/'
 
         return self.url_path
-
