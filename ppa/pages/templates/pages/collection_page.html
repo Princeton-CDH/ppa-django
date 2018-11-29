@@ -40,13 +40,13 @@
         </{{ tag }}>
         {% endwith %} {% endwith %}
         {% endfor %}
+        <a class="archive-link" href="{% url 'archive:list' %}">
+            <h3 class="ui header">
+                {% include 'snippets/fermata.svg' %}
+                View and search the archive
+            </h3>
+        </a>
     </section>
-    <a class="archive-link" href="{% url 'archive:list' %}">
-        <h3 class="ui header">
-            {% include 'snippets/fermata.svg' %}
-            View and search the archive
-        </h3>
-    </a>
 </div>
 {% endblock %}
 
