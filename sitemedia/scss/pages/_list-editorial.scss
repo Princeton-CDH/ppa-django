@@ -1,0 +1,5 @@
+#list-editorial {
+    h1 {
+        @include underline-headline($purple);
+    }
+}

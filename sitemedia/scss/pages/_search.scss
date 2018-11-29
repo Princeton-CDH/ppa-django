@@ -1,12 +1,17 @@
 #search {
-    margin-top: 0;
+
+    .sub.header { // "ARCHIVE" text
+        font-size: 1.5rem;
+        margin: 1rem 0;
+        text-align: center;
+    }
     
     .container:not(.message) {
         @include wide-container();
     }
 
     .search {
-        padding-bottom: 0;
+        padding: 0;
     }
 
     .form > .vertical.segment { // stacked fieldsets

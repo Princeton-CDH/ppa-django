@@ -45,6 +45,24 @@
     }
 }
 
+@mixin notes-header($color) {
+    .banner {
+        @include responsive-banner("/static/img/ppa_pattern_home", $color);
+    }
+}
+
+@mixin underline-headline($color) {
+    border-bottom: 5px solid $color;
+    font-size: 2rem;
+    font-weight: normal;
+    margin: 4rem 0 2rem;
+
+    @media (min-width: $tablet) {
+        font-size: 3rem;
+        margin: 3rem 0;
+    }
+}
+
 @mixin wide-container() {
     width: 100%;
     margin-left: auto !important;

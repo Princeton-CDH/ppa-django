@@ -17,9 +17,7 @@
 {% endblock %}
 
 {% block page_header %}
-<header class="ui vertical basic center aligned segment contentpage" id="header">
-    <div class="banner"></div>
-</header>
+    {% include 'snippets/header.html' with style='contentpage' %}
 {% endblock %}
 
 {# page title displayed in page header snippet ? or only for some content pages #}

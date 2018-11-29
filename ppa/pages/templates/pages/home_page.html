@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block page_header %}
-<header class="ui vertical basic center aligned segment homepage" id="header">
+<header class="homepage" id="header">
     <div class="banner"></div>
     <div id="scene">
         <img class="layer one" data-depth="0.20" src="{% static 'img/ppaLogo_Layers_Revised/PPALogo_Blue.svg' %}" alt="">
@@ -23,7 +23,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="ui vertical basic segment container">
+<div class="hero ui vertical basic segment container">
     <div class="intro">
         {{ page.body|richtext }}
     </div>

@@ -1,13 +1,22 @@
 {% extends 'pages/content_page.html' %}
 {% load wagtailcore_tags %}
 
+{% block page-context-id %}list-editorial{% endblock %}
+
 {% block page_nav %}
     {% include 'snippets/nav.html' with style="editorial" active="editorial" %}
+{% endblock %}
+
+{% block page_header %}
+    {% include 'snippets/header.html' with style='editorial' %}
 {% endblock %}
 
 {% block content %}
 <div class="ui vertical basic segment">
     <div class="ui text container">
+        <h1 class="ui header">
+            {% firstof page.title page_title object.title %}
+        </h1>
          {{ page.intro|richtext }}
     </div>
 </div>
