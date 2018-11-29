@@ -79,10 +79,10 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                 # work_q.append(text_query)
 
             work_q = []
-            # restrict by collection if specified
-            if collections:
-                work_q.append('collections_exact:(%s)' % \
-                    (' OR '.join(['"%s"' % coll for coll in collections])))
+
+            # always restrict by collection (no collections = no items)
+            work_q.append('collections_exact:(%s)' % \
+                (' OR '.join(['"%s"' % coll for coll in collections])))
 
             # filter books by title or author if there is a query
             for field in ['title', 'author']:

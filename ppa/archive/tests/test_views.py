@@ -15,6 +15,7 @@ from django.utils.timezone import now
 import pytest
 from SolrClient.exceptions import SolrError
 
+from ppa.archive import NO_COLLECTION_LABEL
 from ppa.archive.forms import SearchForm
 from ppa.archive.models import DigitizedWork, Collection
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
@@ -287,9 +288,7 @@ class TestArchiveViews(TestCase):
         # no query - should find all
         response = self.client.get(url)
         assert response.status_code == 200
-        # NOTE: temporarily -1 because one fixture is not in a collection
-        # self.assertContains(response, '%d digitized works' % len(digitized_works))
-        self.assertContains(response, '%d digitized works' % (len(digitized_works) - 1))
+        self.assertContains(response, '%d digitized works' % len(digitized_works))
         self.assertContains(response, '<p class="result-number">1</p>',
             msg_prefix='results have numbers')
         self.assertContains(response, '<p class="result-number">2</p>',
@@ -439,11 +438,7 @@ class TestArchiveViews(TestCase):
         assert sorted_object_list == response.context['object_list']
         # one last test using title
         response = self.client.get(url, {'query': '', 'sort': 'title_asc'})
-        # sorted_work_ids = DigitizedWork.objects.order_by(Lower('sort_title')) \
-        #                                .values_list('source_id', flat=True)
-        # NOTE: temporarily exclude items with no collections
         sorted_work_ids = DigitizedWork.objects.order_by(Lower('sort_title')) \
-                                       .exclude(collections__isnull=True) \
                                        .values_list('source_id', flat=True)
         # the list of ids should match exactly
         assert list(sorted_work_ids) == \
@@ -470,8 +465,8 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url)
         assert response.context['search_form'].cleaned_data['sort'] == 'title_asc'
         # default collections should be set based on exclude option
-        assert list(response.context['search_form'].cleaned_data['collections']) == \
-            list(Collection.objects.filter(exclude=False))
+        assert set(response.context['search_form'].cleaned_data['collections']) == \
+            set([NO_COLLECTION_LABEL]).union((set(Collection.objects.filter(exclude=False))))
 
         # if relevance sort is requested but no keyword, switch to default sort
         response = self.client.get(url, {'sort': 'relevance'})
@@ -486,9 +481,7 @@ class TestArchiveViews(TestCase):
         # basic date range request
         response = self.client.get(url, {'pub_date_0': 1900, 'pub_date_1': 1922})
         # in fixture data, only wintry and 135000 words are after 1900
-        # assert len(response.context['object_list']) == 2
-        # NOTE temporarily 1 because 135000 words not in a collection
-        assert len(response.context['object_list']) == 1
+        assert len(response.context['object_list']) == 2
         self.assertContains(response, wintry.source_id)
 
         # invalid date range request / invalid form - not an exception
@@ -498,7 +491,8 @@ class TestArchiveViews(TestCase):
 
         # no collections = no items
         response = self.client.get(url, {'collections': ''})
-        assert not response.context['object_list'].count()
+        # assert not response.context['object_list'].count()
+        assert not response.context['object_list']
 
         # ajax request for search results
         response = self.client.get(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -510,9 +504,7 @@ class TestArchiveViews(TestCase):
         self.assertTemplateNotUsed('archive/snippets/search_form.html')
         self.assertTemplateNotUsed('archive/list_digitizedworks.html')
         # should have all the results
-        # assert len(response.context['object_list']) == len(digitized_works)
-        # NOTE temporarily -1 for fixture item not in collection
-        assert len(response.context['object_list']) == len(digitized_works) -1
+        assert len(response.context['object_list']) == len(digitized_works)
         # should have the results count
         self.assertContains(response, " digitized works")
         # should have the histogram data

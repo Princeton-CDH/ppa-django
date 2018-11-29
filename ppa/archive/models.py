@@ -14,6 +14,7 @@ from wagtail.admin.edit_handlers import FieldPanel
 from wagtail.snippets.models import register_snippet
 
 from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS
+from ppa.archive import NO_COLLECTION_LABEL
 from ppa.archive.solr import Indexable
 from ppa.archive.solr import PagedSolrQuery
 
