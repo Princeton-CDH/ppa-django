@@ -488,8 +488,9 @@ class TestArchiveViews(TestCase):
         assert not response.context['object_list'].count()
         self.assertContains(response, 'Invalid range')
 
-        # no collections = no items
+        # no collections = no items (but not an error)
         response = self.client.get(url, {'collections': ''})
+        assert response.status_code == 200
         assert not response.context['object_list']
 
         # special 'uncategorized' collection

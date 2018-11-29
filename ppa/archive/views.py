@@ -80,9 +80,17 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
 
             work_q = []
 
-            # always restrict by collection (no collections = no items)
-            work_q.append('collections_exact:(%s)' % \
-                (' OR '.join(['"%s"' % coll for coll in collections])))
+            # restrict by collection
+            if collections:
+                work_q.append('collections_exact:(%s)' % \
+                    (' OR '.join(['"%s"' % coll for coll in collections])))
+
+            # For collection exclusion logic to work properly, if no collections
+            # are selected, no items should be returned. This query
+            # should return no items but still provide facet data to populate
+            # the collection filters on the form properly.
+            else:
+                work_q.append('item_type:work AND -collections_exact:[* TO *]')
 
             # filter books by title or author if there is a query
             for field in ['title', 'author']:
