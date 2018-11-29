@@ -15,9 +15,8 @@ from django.utils.timezone import now
 import pytest
 from SolrClient.exceptions import SolrError
 
-from ppa.archive import NO_COLLECTION_LABEL
-from ppa.archive.forms import SearchForm
-from ppa.archive.models import DigitizedWork, Collection
+from ppa.archive.forms import SearchForm, ModelMultipleChoiceFieldWithEmpty
+from ppa.archive.models import DigitizedWork, Collection, NO_COLLECTION_LABEL
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView
 from ppa.archive.templatetags.ppa_tags import page_image_url, page_url
@@ -491,8 +490,14 @@ class TestArchiveViews(TestCase):
 
         # no collections = no items
         response = self.client.get(url, {'collections': ''})
-        # assert not response.context['object_list'].count()
         assert not response.context['object_list']
+
+        # special 'uncategorized' collection
+        response = self.client.get(url, {'collections': ModelMultipleChoiceFieldWithEmpty.EMPTY_ID})
+        print(response.context['object_list'])
+
+        assert len(response.context['object_list']) == \
+            DigitizedWork.objects.filter(collections__isnull=True).count()
 
         # ajax request for search results
         response = self.client.get(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')

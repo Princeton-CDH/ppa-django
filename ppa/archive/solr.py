@@ -10,8 +10,6 @@ from django.db.models.query import QuerySet
 import requests
 from SolrClient import SolrClient
 
-from ppa.archive import NO_COLLECTION_LABEL
-
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +100,7 @@ class SolrSchema(object):
         # sort/facet copy fields
         {'name': 'author_exact', 'type': 'string', 'required': False},
         {'name': 'collections_exact', 'type': 'string', 'required': False,
-         'multiValued': True, 'default': 'Uncategorized'}
+         'multiValued': True}
     ]
     #: fields to be copied into general purpose text field for searching
     text_fields = ['srcid', 'content', 'title', 'author', 'pub_date', 'enumcron',

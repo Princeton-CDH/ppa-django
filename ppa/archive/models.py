@@ -14,12 +14,15 @@ from wagtail.admin.edit_handlers import FieldPanel
 from wagtail.snippets.models import register_snippet
 
 from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS
-from ppa.archive import NO_COLLECTION_LABEL
 from ppa.archive.solr import Indexable
 from ppa.archive.solr import PagedSolrQuery
 
 
 logger = logging.getLogger(__name__)
+
+
+#: label to use for items that are not in a collection
+NO_COLLECTION_LABEL = 'Uncategorized'
 
 
 @register_snippet
@@ -366,8 +369,12 @@ class DigitizedWork(models.Model, Indexable):
             'publisher': self.publisher,
             'enumcron': self.enumcron,
             'author': self.author,
-            'collections': [collection.name for collection
-                            in self.collections.all()],
+            # set default value to simplify queries to find uncollected items
+            # (not set in Solr schema because needs to be works only)
+            'collections':
+                [collection.name for collection in self.collections.all()]
+                if self.collections.exists()
+                else [NO_COLLECTION_LABEL],
             # general purpose multivalued field, currently only
             # includes public notes in this method, other fields
             # copied in Solr schema.

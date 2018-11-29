@@ -5,8 +5,7 @@ from django.core.validators import RegexValidator
 from django.db.models import Max, Min
 from django.utils.safestring import mark_safe
 
-from ppa.archive import NO_COLLECTION_LABEL
-from ppa.archive.models import Collection, DigitizedWork
+from ppa.archive.models import Collection, DigitizedWork, NO_COLLECTION_LABEL
 
 
 class SelectDisabledMixin(object):
