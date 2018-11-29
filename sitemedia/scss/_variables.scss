@@ -35,5 +35,6 @@ $banner-height-m: 400px;
 $banner-height-l: 570px;
 
 // typography
-$pageFont              : Helvetica, sans-serif;
-$headerFont            : 'Gentium Book Basic', Palatino, serif;
+$pageFont              : 'Open Sans', Helvetica, sans-serif;
+$headerFont            : $pageFont; // evaluate using only sans
+// $headerFont            : 'Gentium Book Basic', Palatino, serif;
