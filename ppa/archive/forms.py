@@ -221,8 +221,8 @@ class SearchForm(forms.Form):
         for idx, val in enumerate(pubdate_range):
             # don't set None as placeholder (only possible if db is empty)
             if val:
-                # set placeholder and max/min values
-                pubdate_widgets[idx].attrs.update({'placeholder': val,
+                # set max/min and initial values
+                pubdate_widgets[idx].attrs.update({'value': pubdate_range[idx],
                     'min': pubdate_range[0], 'max': pubdate_range[1]})
 
         # relevance is disabled unless we have a keyword query present
