@@ -9,6 +9,6 @@ def template_globals(request):
     context_extras = {
         'SHOW_TEST_WARNING': getattr(settings, 'SHOW_TEST_WARNING', False),
         'site': Site.objects.get_current(),
-        'INCLUDE_ANALYTICS': getattr(settings, 'INCLUDE_ANALYTICS', False)
+        'GTAGS_ANALYTICS_ID': getattr(settings, 'GTAGS_ANALYTICS_ID', False)
     }
     return context_extras

@@ -1,7 +1,7 @@
 from unittest.mock import Mock
 
 from django.contrib.auth.models import User, Group
-from django.test import RequestFactory, TestCase
+from django.test import override_settings, RequestFactory, TestCase
 from django.urls import reverse
 from wagtail.core.models import Site, Page
 
@@ -91,6 +91,9 @@ class TestRobotsTxt(TestCase):
 
 class TestAnalytics(TestCase):
 
+    # make the test enviroment as if setting is not set by default
+    # regardless of test runner's actual settings.
+    @override_settings(GTAGS_ANALYTICS_ID=None)
     def test_analytics(self):
 
         # No analytics setting should default to false
@@ -101,20 +104,22 @@ class TestAnalytics(TestCase):
         # should not have the script tag to load gtag.js
         self.assertNotContains(
             res,
-            'https://www.googletagmanager.com/gtag/js?id=UA-87887700-5'
+            'https://www.googletagmanager.com/gtag/js?id='
         )
-        # should not have the call to init_gtags.js snippet
-        self.assertNotContains(res, 'init_gtags.js')
-        with self.settings(INCLUDE_ANALYTICS=True):
+        # should not have the call to gtags snippet
+        self.assertNotContains(res, 'gtag(')
+        with self.settings(GTAGS_ANALYTICS_ID='UA-415'):
             # setting should toggle analytics
             res = self.client.get(url)
             # should have the script tag to load gtag.js
             self.assertContains(
                 res,
-                'https://www.googletagmanager.com/gtag/js?id=UA-87887700-5'
+                'https://www.googletagmanager.com/gtag/js?id=UA-415'
             )
-            # should have the call to init_gtags.js snippet
-            self.assertContains(res, 'init_gtags.js')
+            # should have the call to gtags snippet
+            self.assertContains(res, 'gtag(')
+            # should also have the UA in the config call
+            self.assertContains(res, 'UA-415', count=2)
 
         # Now test that request.is_preview disables analytics
         request = RequestFactory().get('/')
@@ -124,7 +129,7 @@ class TestAnalytics(TestCase):
         # should not have the script tag to load gtag.js
         self.assertNotContains(
             res,
-            'https://www.googletagmanager.com/gtag/js?id=UA-87887700-5'
+            'https://www.googletagmanager.com/gtag/js?id='
         )
-        # should not have the call to init_gtags.js snippet
-        self.assertNotContains(res, 'init_gtags.js')
+        # should not have the call to gtags snippet
+        self.assertNotContains(res, 'gtag(')
