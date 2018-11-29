@@ -3,6 +3,14 @@
 Deploy and Upgrade notes
 ========================
 
+0.11
+----
+
+* Updated collection search logic requires reindexing works::
+
+    python manage.py index --works
+
+
 0.10
 ----
 
