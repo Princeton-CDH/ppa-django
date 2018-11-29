@@ -47,6 +47,18 @@ class TestSearchForm(TestCase):
         searchform = SearchForm(fake_form)
         assert searchform.is_valid()
 
+    def test_defaults(self):
+        defaults = SearchForm.defaults()
+        assert defaults['sort'] == 'title_asc'
+        # all collections should be selected, since none are set to exclude
+        assert defaults['collections'] == \
+            list(Collection.objects.all().values_list('id', flat=True))
+
+        Collection.objects.filter(name='empty').update(exclude=True)
+        defaults = SearchForm.defaults()
+        assert Collection.objects.get(name='empty').pk not in \
+            defaults['collections']
+
     def test_collection_choices(self):
         # test collection set to disabled based on solr facets
 

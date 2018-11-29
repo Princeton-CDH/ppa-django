@@ -206,6 +206,18 @@ class SearchForm(forms.Form):
         'collections_exact': 'collections'
     }
 
+    @staticmethod
+    def defaults():
+        '''Default values when initializing the form.  Sort by title,
+        pre-select collections based exclude property.'''
+        return {
+        'sort': 'title_asc',
+        'collections': list(Collection.objects.filter(exclude=False) \
+                                      .values_list('id', flat=True))
+    }
+
+
+
     def __init__(self, data=None, *args, **kwargs):
         '''
         Set choices dynamically based on form kwargs and presence of keywords.
