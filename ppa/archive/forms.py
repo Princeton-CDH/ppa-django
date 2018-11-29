@@ -156,10 +156,11 @@ class SearchForm(forms.Form):
         ('author_desc', 'Author Z-A'),
     ]
 
-    # this appears when you hover over the question mark icon
-    QUESTION_POPUP_TEXT = mark_safe('''
+    #: help text to be shown with the form
+    #: (appears when you hover over the question mark icon)
+    QUESTION_POPUP_TEXT = '''
     Boolean search within a field is supported. Operators must be capitalized (AND, OR).
-    ''')
+    '''
 
     # text inputs
     query = forms.CharField(label='Keyword or Phrase', required=False,
@@ -225,11 +226,11 @@ class SearchForm(forms.Form):
         '''Default values when initializing the form.  Sort by title,
         pre-select collections based exclude property.'''
         return {
-        'sort': 'title_asc',
-        # always include uncategorized collections; no harm if not present
-        'collections': [ModelMultipleChoiceFieldWithEmpty.EMPTY_ID] + \
-            list(Collection.objects.filter(exclude=False) \
-                                   .values_list('id', flat=True)),
+            'sort': 'title_asc',
+            # always include uncategorized collections; no harm if not present
+            'collections': [ModelMultipleChoiceFieldWithEmpty.EMPTY_ID] + \
+                            list(Collection.objects.filter(exclude=False) \
+                                           .values_list('id', flat=True)),
     }
 
     def __init__(self, data=None, *args, **kwargs):
@@ -308,12 +309,12 @@ class SearchForm(forms.Form):
                 # if there are items not in a collection, add an option
                 # so they will be findable
                 if NO_COLLECTION_LABEL in facet_dict:
-                    new_choice.append((ModelMultipleChoiceFieldWithEmpty.EMPTY_ID,
-                                       {'label': NO_COLLECTION_LABEL}))
+                    new_choice.append(
+                        (ModelMultipleChoiceFieldWithEmpty.EMPTY_ID,
+                         {'label': NO_COLLECTION_LABEL}))
 
                 # replace choices with new version
                 self.fields[formfield].widget.choices = new_choice
-
 
             # normal facet field behavior: populate choices from facet
             # disabling for now, not currently in use
@@ -357,10 +358,11 @@ class SearchWithinWorkForm(forms.Form):
     of a digitized work.
     '''
 
-    # this appears when you hover over the question mark icon
-    QUESTION_POPUP_TEXT = mark_safe('''
+    #: help text to be shown with the form
+    #: (appears when you hover over the question mark icon)
+    QUESTION_POPUP_TEXT = '''
     Boolean search is supported. Operators must be capitalized (AND, OR).
-    ''')
+    '''
 
     # single text input
     query = forms.CharField(label='Search within the Volume', required=False,
