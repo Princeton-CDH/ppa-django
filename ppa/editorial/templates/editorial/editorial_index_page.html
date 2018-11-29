@@ -20,24 +20,29 @@
          {{ page.intro|richtext }}
     </div>
 </div>
-
 <div class="ui vertical basic segment">
+    <div class="pagination ui container">
+        {% comment %} {% include 'archive/snippets/pagination.html' %} {% endcomment %}
+    </div>
     <div class="ui text container">
-        <div class="updates ui two stackable cards">
+        <div class="updates ui cards">
             {% for post in posts %}
-            <div class="ui post card">
-                <a href="{{ post.url }}">
+            <a class="ui post card" href="{{ post.url }}">
                 <div class="content">
-                    <div class="header">{{ post.title }}</div>
-                    <div class="meta">{{ post.post_date }}</div>
+                    <div class="top">
+                        <div class="header">{{ post.title }}</div>
+                        <div class="meta">By {{ post.author }} / On {{ post.post_date }}</div>
+                    </div>
                     <div class="description">
                         {{ post.get_description|richtext }}
                     </div>
                 </div>
-                </a>
-            </div>
+            </a>
             {% endfor %}
         </div>
+    </div>
+    <div class="pagination ui container">
+        {% comment %} {% include 'archive/snippets/pagination.html' %} {% endcomment %}
     </div>
 </div>
 </div>
