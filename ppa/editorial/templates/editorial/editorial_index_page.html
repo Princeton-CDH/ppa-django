@@ -20,10 +20,12 @@
          {{ page.intro|richtext }}
     </div>
 </div>
-
 <div class="ui vertical basic segment">
+    <div class="pagination ui container">
+        {% include 'archive/snippets/pagination.html' %}
+    </div>
     <div class="ui text container">
-        <div class="updates ui two stackable cards">
+        <div class="updates ui cards">
             {% for post in posts %}
             <a class="ui post card" href="{{ post.url }}">
                 <div class="content">
@@ -38,6 +40,9 @@
             </a>
             {% endfor %}
         </div>
+    </div>
+    <div class="pagination ui container">
+        {% include 'archive/snippets/pagination.html' %}
     </div>
 </div>
 </div>
