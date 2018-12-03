@@ -92,8 +92,6 @@ class SolrSchema(object):
         {'name': 'collections', 'type': 'text_en', 'required': False,
          'multiValued': True},
         {'name': 'notes', 'type': 'text_en', 'required': False},
-        {'name': 'text', 'type': 'text_en', 'required': False, 'stored': False,
-         'multiValued': True},
         # page fields
         {'name': 'label', 'type': 'text_en', 'required': False},
         {'name': 'tags', 'type': 'string', 'required': False, 'multiValued': True},
@@ -104,9 +102,10 @@ class SolrSchema(object):
          'multiValued': True}
     ]
     #: fields to be copied into general purpose text field for searching
-    text_fields = ['srcid', 'content', 'title', 'author', 'pub_date', 'enumcron',
-                   'pub_place', 'publisher']
-    #: copy fields, e.g. for facets
+    text_fields = []
+    # NOTE: superceded by query field configuration in solr config
+
+    # #: copy fields, e.g. for facets
     copy_fields = [
         ('author', 'author_exact'),
         ('collections', 'collections_exact'),
