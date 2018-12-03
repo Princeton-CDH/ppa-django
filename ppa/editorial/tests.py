@@ -90,9 +90,23 @@ class TestEditorialIndexPage(WagtailPageTests):
         response = self.client.get(editorial_index_url)
         assert response.status_code == 200
         # basic template/content check
+        # NOTE: Should these be refactored into separate template
+        # checking test?
         self.assertContains(response, index_page.title)
         self.assertContains(response, editorial_page.title)
         self.assertContains(response, editorial_page.relative_url(site))
+        # each should be shown once
+        person_a = Person.objects.get(name='Person A')
+        person_b = Person.objects.get(name='Person B')
+        self.assertContains(response, person_a.name, count=1)
+        self.assertContains(response, person_b.name, count=1)
+        # the url for person A should not be present to avoid a
+        # link within a link
+        self.assertNotContains(
+            response,
+            '<a href="%s"' % person_a.url,
+            html=True,
+        )
 
         # year only should 404
         response = self.client.get(editorial_index_url + '2018/')
@@ -111,7 +125,6 @@ class TestEditorialIndexPage(WagtailPageTests):
         assert response.status_code == 200
 
         # single-digit month should 404
-        print(editorial_page.relative_url(site).replace('/01/', '/1/'))
         response = self.client.get(editorial_page.relative_url(site).replace('/01/', '/1/'))
         assert response.status_code == 404
 
@@ -152,7 +165,8 @@ class TestEditorialPage(WagtailPageTests):
                 ('paragraph', rich_text('some analysis'))
             ]),
             'authors': streamfield([
-                ('author', [foo.pk, bar.pk]),
+                ('author', foo.pk),
+                ('author', bar.pk)
             ])
         }))
 
@@ -173,6 +187,24 @@ class TestEditorialPage(WagtailPageTests):
         editorial_page.first_published_at = None
         url_path = editorial_page.set_url_path(index_page)
         assert date.today().strftime('/%Y/%m/') in url_path
+
+    def test_template_rendering(self):
+        # For EditorialIndexPage's equivalent, see test_routing
+        editorial_page = EditorialPage.objects.get(
+            title__icontains='Test Page with Authors'
+        )
+        site = Site.objects.first()
+        editorial_url = editorial_page.relative_url(site)
+        response = self.client.get(editorial_url)
+        # basic template/content check
+        self.assertContains(response, editorial_page.title)
+        # each author should be shown once
+        person_a = Person.objects.get(name='Person A')
+        person_b = Person.objects.get(name='Person B')
+        self.assertContains(response, person_a.name, count=1)
+        self.assertContains(response, person_b.name, count=1)
+        # the url for person A should be present once
+        self.assertContains(response, person_a.url, count=1)
 
 
 class TestPerson(TestCase):

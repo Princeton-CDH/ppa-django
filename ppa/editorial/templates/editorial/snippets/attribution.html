@@ -1,10 +1,10 @@
 {# Snippet to include authors and date attribution to editorial posts #}
 {% for block in page.authors %}
-    {% if block.value.url %}
+    {% if block.value.url and add_link %}
         <a href="{{ block.value.url }}" target="_blank">
     {% endif %}
         By {{ block.value.name }}
-        {% if block.value.url %}</a>{% endif %}
+        {% if block.value.url and add_link %}</a>{% endif %}
         {% if not forloop.last %}, {% endif %}
 {% endfor %}
 / On {{ page.first_published_at|date:"F j, Y"}}

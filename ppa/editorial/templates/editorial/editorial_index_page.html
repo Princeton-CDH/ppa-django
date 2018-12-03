@@ -32,6 +32,7 @@
                     <div class="top">
                         <div class="header">{{ post.title }}</div>
                         <div class="meta">{% include 'editorial/snippets/attribution.html' with page=post %}</div>
+                    </div>
                     <div class="description">
                         {{ post.get_description|richtext }}
                     </div>
@@ -43,6 +44,5 @@
     <div class="pagination ui container">
         {% comment %} {% include 'archive/snippets/pagination.html' %} {% endcomment %}
     </div>
-</div>
 </div>
 {% endblock %}
