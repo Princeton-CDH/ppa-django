@@ -27,28 +27,6 @@
     }
 
     .ui.dropdown {
-        &:hover:not(.active) {
-            height: 35px;
-        }
-
-        &:hover > .menu {
-            visibility: hidden;
-            height: 1rem;
-        }
-
-        &.active .icon {
-            transform: rotate(-90deg);
-        }
-
-        &.active {
-            padding-bottom: 0 !important;
-        }
-
-        &.active > .menu {
-            padding-top: 0.5rem;
-            height: auto;
-        }
-
         .icon {
             float: none;
         }
@@ -60,12 +38,24 @@
 
         .item {
             visibility: hidden;
-            // padding: 0.5rem !important;
             margin-left: 1rem;
         }
 
-        &.active .item {
-            visibility: visible;
+        &.active {
+            padding-bottom: 0 !important;
+
+            .item {
+                visibility: visible;
+            }
+
+            .icon {
+                transform: rotate(-90deg);
+            }
+
+            > .menu {
+                padding-top: 0.5rem;
+                height: auto;
+            }
         }
     }
 
