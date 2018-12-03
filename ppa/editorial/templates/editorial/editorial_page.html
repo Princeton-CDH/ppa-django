@@ -1,6 +1,8 @@
 {% extends 'pages/content_page.html' %}
 {% load static wagtailcore_tags %}
 
+{% block page-context-id %}editorial{% endblock %}
+
 {% block meta_title %}{% firstof page.seo_title page.title %}{% endblock %}
 {% block meta_description %}{{ page.get_plaintext_description }}{% endblock %}
 {# keywords for meta not yet implemented in wagtail #}
@@ -11,4 +13,16 @@
 
 {% block page_nav %}
     {% include 'snippets/nav.html' with style="editorial" active="editorial" %}
+{% endblock %}
+
+{% block content %}
+<article class="ui text container">
+    <h1 class="ui header">
+        {% firstof page.title page_title object.title %}<br/>
+        <span class="meta">By {{ post.author }} / On {{ post.post_date }}</span>
+    </h1>
+    {% for block in page.body %}
+        {% include_block block %}
+    {% endfor %}
+</article>
 {% endblock %}
