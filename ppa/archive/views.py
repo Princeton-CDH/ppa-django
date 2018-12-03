@@ -14,7 +14,7 @@ from django.views.generic.edit import FormView
 from SolrClient.exceptions import SolrError
 
 from ppa.archive.forms import SearchForm, AddToCollectionForm, SearchWithinWorkForm
-from ppa.archive.models import DigitizedWork, Collection
+from ppa.archive.models import DigitizedWork, Collection, NO_COLLECTION_LABEL
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 from ppa.common.views import VaryOnHeadersMixin
 
@@ -293,6 +293,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             'page_highlights': self.get_page_highlights(page_groups),
             # query for use template links to detail view with search
             'query': self.query,
+            'NO_COLLECTION_LABEL': NO_COLLECTION_LABEL
         })
         return context
 

@@ -335,6 +335,10 @@ class TestArchiveViews(TestCase):
             response, 'babel.hathitrust.org/cgi/imgsrv/image',
             msg_prefix='no page images displayed without keyword search')
 
+        # no collection label should only display once
+        # (for collection selection badge, not for result display)
+        self.assertContains(response, NO_COLLECTION_LABEL, count=1)
+
         # search term in title
         response = self.client.get(url, {'query': 'wintry'})
         # relevance sort for keyword search
