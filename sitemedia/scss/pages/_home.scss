@@ -10,7 +10,7 @@
     .container {
         text-align: center;
 
-        @media (min-width: $largeMonitor) {
+        @media (min-width: 1200px) {
             width: 1140px;
         }
     }
