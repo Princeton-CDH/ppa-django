@@ -29,27 +29,6 @@
         margin: 0 0 2rem;
     }
 
-    .learn-more {
-        font-size: 1rem;
-        font-weight: bold;
-
-        @media (min-width: $tablet) {
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
-        }
-
-        @media (min-width: $computer) {
-            margin-bottom: 6rem;
-        }
-
-        img {
-            height: 2rem;
-            width: 2rem;
-            transform: rotate(90deg);
-            margin-top: .25rem;
-        }
-    }
-
     .asides-collections {
         display: flex;
         flex-direction: column;
