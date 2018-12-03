@@ -1,13 +1,13 @@
 from datetime import date
 
-from django.db import models
 from django.http import Http404
 from wagtail.admin.edit_handlers import FieldPanel, StreamFieldPanel
 from wagtail.core.models import Page
 from wagtail.core.fields import RichTextField, StreamField
 from wagtail.snippets.blocks import SnippetChooserBlock
-from wagtail.snippets.models import register_snippet
-from ppa.pages.models import BodyContentBlock, PagePreviewDescriptionMixin
+
+from ppa.pages.models import BodyContentBlock, PagePreviewDescriptionMixin, \
+    Person
 
 
 class EditorialIndexPage(Page):
@@ -81,20 +81,6 @@ class EditorialIndexPage(Page):
             return super().route(request, path_components)
 
 
-@register_snippet
-class Person(models.Model):
-    name = models.CharField(max_length=255)
-    url = models.URLField(blank=True, default='')
-
-    panels = [
-        FieldPanel('name'),
-        FieldPanel('url'),
-    ]
-
-    def __str__(self):
-        return self.name
-
-
 class EditorialPage(Page, PagePreviewDescriptionMixin):
     '''Editorial page, for scholarly, educational, or other essay-like
     content related to the site'''
@@ -104,7 +90,9 @@ class EditorialPage(Page, PagePreviewDescriptionMixin):
     body = StreamField(BodyContentBlock)
     authors = StreamField(
         [('author', SnippetChooserBlock(Person))],
-        blank=True
+        blank=True,
+        help_text='Select people snippets to add as authors. Use the plus '
+                  'sign to add as many as you like. Drag and drop to order.'
     )
     content_panels = Page.content_panels + [
         FieldPanel('description'),
