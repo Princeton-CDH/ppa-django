@@ -1,6 +1,7 @@
 from datetime import date
 
 from django.http import Http404
+from django.test import TestCase
 from wagtail.core.url_routing import RouteResult
 from wagtail.core.models import Site
 from wagtail.tests.utils import WagtailPageTests
@@ -9,7 +10,7 @@ from wagtail.tests.utils.form_data import nested_form_data, \
 import pytest
 
 from ppa.pages.models import HomePage
-from ppa.editorial.models import EditorialIndexPage, EditorialPage
+from ppa.editorial.models import EditorialIndexPage, EditorialPage, Person
 
 
 class TestEditorialIndexPage(WagtailPageTests):
@@ -128,12 +129,30 @@ class TestEditorialPage(WagtailPageTests):
     def test_can_create(self):
         self.assertCanCreateAt(EditorialIndexPage, EditorialPage)
         parent = EditorialIndexPage.objects.first()
+        # first test without authors, since they're optional
         self.assertCanCreate(parent, EditorialPage, nested_form_data({
             'title': 'Essay',
             'slug': 'essay',
             'date': date.today(),
             'body': streamfield([
                 ('paragraph', rich_text('some analysis'))
+            ]),
+            'authors': streamfield([])
+        }))
+
+        # now check that this can be done with the person snippet,
+        # both with and without url
+        foo = Person.objects.create(name='foo', url='http://bar.com/')
+        bar = Person.objects.create(name='bar')
+        self.assertCanCreate(parent, EditorialPage, nested_form_data({
+            'title': 'Essay2',
+            'slug': 'essay2',
+            'date': date.today(),
+            'body': streamfield([
+                ('paragraph', rich_text('some analysis'))
+            ]),
+            'authors': streamfield([
+                ('author', [foo.pk, bar.pk]),
             ])
         }))
 
@@ -155,3 +174,9 @@ class TestEditorialPage(WagtailPageTests):
         url_path = editorial_page.set_url_path(index_page)
         assert date.today().strftime('/%Y/%m/') in url_path
 
+
+class TestPerson(TestCase):
+
+    def test_str(self):
+        p = Person(name='A person')
+        assert str(p) == 'A person'
