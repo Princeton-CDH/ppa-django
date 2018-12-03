@@ -196,7 +196,8 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             # default expand sort is score desc
             'expand': 'true',
             'expand.rows': 2,   # number of items in the collapsed group, i.e pages to display
-            'text_query': self.query,
+            # explicitly query pages on text content (join q seems to skip qf)
+            'text_query': 'content:(%s)' % self.query,
             'work_query': work_query
         }
 
