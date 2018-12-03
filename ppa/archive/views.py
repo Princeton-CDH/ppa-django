@@ -151,7 +151,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                 # search for works that match the filters OR for pages that belong
                 # to a work that matches, but only if there is also a text_query.
                 # If there is not text_query, pages are not needed.
-                if text_query:
+                if self.query:
                     query_parts.append(
                         '(%s OR {!join from=id to=srcid v=$work_query})' % work_query
                     )
@@ -196,7 +196,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             # default expand sort is score desc
             'expand': 'true',
             'expand.rows': 2,   # number of items in the collapsed group, i.e pages to display
-            'text_query': text_query,
+            'text_query': self.query,
             'work_query': work_query
         }
 
@@ -304,7 +304,7 @@ class DigitizedWorkDetailView(DetailView):
         if query:
             context['query'] = query
             digwork = context['object']
-            solr_q = 'text:(%s)' % query
+            solr_q = query
             solr_opts = {
                 'q': solr_q,
                 # sort by page order by default
