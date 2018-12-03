@@ -28,6 +28,8 @@
 <article class="ui text container">
     <h1 class="ui header">
         {% firstof page.title page_title object.title %}
+        {% block attribution %}{% endblock %}
+
     </h1>
     {% for block in page.body %}
         {% include_block block %}
