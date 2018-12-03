@@ -1,12 +1,17 @@
 #search {
-    margin-top: 0;
+
+    .sub.header { // "ARCHIVE" text
+        font-size: 1.5rem;
+        margin: 1rem 0;
+        text-align: center;
+    }
     
-    .container {
+    .container:not(.message) {
         @include wide-container();
     }
 
     .search {
-        padding-bottom: 0;
+        padding: 0;
     }
 
     .form > .vertical.segment { // stacked fieldsets
@@ -28,13 +33,6 @@
         > .twelve.wide.column:not(:nth-of-type(1)) {
             padding-top: 0 !important;
         }
-    }
-
-    .clear.times.icon {
-        left: auto;
-        right: 0;
-        cursor: pointer;
-        pointer-events: all;
     }
 
     .show-advanced {
@@ -134,28 +132,6 @@
         }
     }
 
-    #histogram {
-        height: 8rem;
-
-        .values {
-            display: none;
-        }
-
-        .visualization {
-            width: 100%;
-            height: 4rem;
-        }
-
-        .min-date,
-        .max-date{
-            color: $midGrey;
-        }
-
-        .max-date {
-            float: right;
-        }
-    }
-
     #collections {
         .field {
             margin-bottom: -5px;
@@ -182,8 +158,7 @@
     }
 
     .zotero a {
-        color: $darkBlue;
-        border-bottom: 2px solid $darkBlue;
+        @include link;
     }
 
     #booleans {
@@ -210,17 +185,29 @@
     .data {
         display: none;
     }
-
-    .pagination-sort {
+    
+    .pagination-sort,
+    .pagination-bottom {
         display: flex;
         justify-content: center;
         align-items: center;
         flex-wrap: wrap;
-        margin: 0 1rem;
-        border-bottom: 2px solid $teal;
-
+        
         @media (min-width: $tablet) {
             justify-content: space-between;
+        }
+    }
+    
+    .pagination-sort {
+        margin: 0 1rem;
+        border-bottom: 2px solid $teal;
+    }
+
+    .pagination-bottom {
+        padding: 0 1rem;
+
+        .page-controls {
+            position: relative;
         }
     }
 
@@ -256,5 +243,9 @@
         @media (min-width: $computer) {
             width: auto;
         }
+    }
+
+    .message {
+        margin-top: 2rem;
     }
 }

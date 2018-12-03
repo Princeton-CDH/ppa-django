@@ -139,14 +139,12 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                 # NOTE: per facet.range.include documentation, default behavior
                 # is to include lower bound and exclude upper bound.
                 # For simplicity, increase range end by one.
-                'f.%s.facet.range.end' % range_facet: end,
+                'f.%s.facet.range.end' % range_facet: end + 1,
                 # calculate gap based start and end & desired number of slices
                 # ideally, generate 24 slices; minimum gap size of 1
                 'f.%s.facet.range.gap' % range_facet: max(1, int((end - start) / 24)),
                 # restrict last range to *actual* maximum value
                 'f.%s.facet.range.hardend' % range_facet: True,
-                # include start and end values in the bins
-                'f.%s.facet.range.include' % range_facet: 'edge'
             })
 
         # if there are any queries to filter works  or search by text,
@@ -275,6 +273,11 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             self.form.set_choices_from_facets(facet_dict)
             # needs to be inside try/catch or it will re-trigger any error
             facet_ranges = self.solrq.facet_ranges
+            # facet ranges are used for display; when sending to solr we
+            # increase the end bound by one so that year is included;
+            # subtract it back so display matches user entered dates
+            facet_ranges['pub_date']['end'] -= 1
+
         except SolrError as solr_err:
             context = {'object_list': []}
             if 'Cannot parse' in str(solr_err):

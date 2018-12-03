@@ -1,12 +1,14 @@
 {% extends 'pages/content_page.html' %}
 {% load static wagtailcore_tags %}
 
-{% load wagtailcore_tags %}
+{% block meta_title %}{% firstof page.seo_title page.title %}{% endblock %}
+{% block meta_description %}{{ page.get_plaintext_description }}{% endblock %}
+{# keywords for meta not yet implemented in wagtail #}
+
+{% block page_header %}
+    {% include 'snippets/header.html' with style='editorial' %}
+{% endblock %}
 
 {% block page_nav %}
-    {% if page in request.site.root_page.get_chidren.live.in_menu %}
-        {% include 'snippets/nav.html' %}
-    {% else %}
-        {% include 'snippets/nav.html' with active="editorial" %}
-    {% endif %}
+    {% include 'snippets/nav.html' with style="editorial" active="editorial" %}
 {% endblock %}

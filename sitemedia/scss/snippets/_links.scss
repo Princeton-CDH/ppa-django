@@ -1,0 +1,27 @@
+.archive-link {
+    display: inline-block;
+    padding: 0.8rem;
+    background-color: $darkBlue;
+    border-radius: 3px;
+
+    @media (min-width: $tablet) {
+        padding: 1rem;
+        margin: 2rem 0;
+    }
+    
+    .ui.header {
+        color: white;
+        font-size: 1rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-family: $pageFont;
+
+        @media (min-width: $tablet) {
+            font-size: 1.2rem;
+        }
+    }
+
+    .fermata {
+        fill: white;
+    }
+}
