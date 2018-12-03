@@ -3,6 +3,34 @@
 CHANGELOG
 =========
 
+0.11.0
+------
+
+* As a content editor, I want to control how the description of my editorial content is displayed when on PPA, when shared, and when searched.
+* As a content editor, I want to add new or edit existing editorial content so that I can publish and promote scholarly work related to the project.
+* As an admin, I should not be able to edit wagtail content in the Django admin so that I don't uninintentionally break content by editing it in the wrong place.
+
+Bugs/chores
+^^^^^^^^^^^
+
+* Constrains image sizes in editorial posts
+* Sets up Google Analytics
+* Fixes an issue with incorrect facet data from Solr for certain date ranges
+* Switches to sans-serif font (Open Sans) sitewide
+* Adds tzinfo to mysql to fix failing tests in CI
+
+Design updates
+^^^^^^^^^^^^^^
+
+* Homepage
+* Top navigation menu
+* Content pages
+* Collections list page
+* Search sorting and pagination
+* Archive search page
+* Digitized work detail page
+* Editorial post list page
+
 0.10.0
 ------
 
