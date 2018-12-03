@@ -15,7 +15,7 @@
 /* Card */
 @fontFamily: @pageFont;
 @width: 290px;
-@height: 230px;
+@height: 260px;
 @borderWidth: 0px;
 @padding: 20px;
 
