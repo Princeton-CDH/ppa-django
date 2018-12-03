@@ -205,6 +205,15 @@ class TestEditorialPage(WagtailPageTests):
         self.assertContains(response, person_b.name, count=1)
         # the url for person A should be present once
         self.assertContains(response, person_a.url, count=1)
+        # check order of authors in the page context
+        # should be out of alpha order
+        page = response.context['page']
+        # authors are stored as values and not as actual links,
+        # so without the template tag to unpack the stream data,
+        # can check that their value = pk of authors.
+        # order as set in the editorial page should be [B is 2, A is 1]
+        assert page.authors.stream_data[0]['value'] == 2
+        assert page.authors.stream_data[1]['value'] == 1
 
 
 class TestPerson(TestCase):
