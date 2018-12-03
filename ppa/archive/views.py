@@ -16,18 +16,19 @@ from SolrClient.exceptions import SolrError
 from ppa.archive.forms import SearchForm, AddToCollectionForm, SearchWithinWorkForm
 from ppa.archive.models import DigitizedWork, Collection
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
-
+from ppa.common.views import VaryOnHeadersMixin
 
 logger = logging.getLogger(__name__)
 
 
-class DigitizedWorkListView(ListView):
+class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
     '''Search and browse digitized works.  Based on Solr index
     of works and pages.'''
 
     template_name = 'archive/list_digitizedworks.html'
     form_class = SearchForm
     paginate_by = 50
+    vary_headers = ['X-Requested-With']
 
     # keyword query; assume no search terms unless set
     query = None
@@ -130,14 +131,12 @@ class DigitizedWorkListView(ListView):
                 # NOTE: per facet.range.include documentation, default behavior
                 # is to include lower bound and exclude upper bound.
                 # For simplicity, increase range end by one.
-                'f.%s.facet.range.end' % range_facet: end,
+                'f.%s.facet.range.end' % range_facet: end + 1,
                 # calculate gap based start and end & desired number of slices
                 # ideally, generate 24 slices; minimum gap size of 1
                 'f.%s.facet.range.gap' % range_facet: max(1, int((end - start) / 24)),
                 # restrict last range to *actual* maximum value
                 'f.%s.facet.range.hardend' % range_facet: True,
-                # include start and end values in the bins
-                'f.%s.facet.range.include' % range_facet: 'edge'
             })
 
         # if there are any queries to filter works  or search by text,
@@ -266,6 +265,11 @@ class DigitizedWorkListView(ListView):
             self.form.set_choices_from_facets(facet_dict)
             # needs to be inside try/catch or it will re-trigger any error
             facet_ranges = self.solrq.facet_ranges
+            # facet ranges are used for display; when sending to solr we
+            # increase the end bound by one so that year is included;
+            # subtract it back so display matches user entered dates
+            facet_ranges['pub_date']['end'] -= 1
+
         except SolrError as solr_err:
             context = {'object_list': []}
             if 'Cannot parse' in str(solr_err):
@@ -350,65 +354,18 @@ class DigitizedWorkDetailView(DetailView):
         return context
 
 
-class CollectionListView(ListView):
-    '''Display list of :class:`ppa.archive.models.Collection`
-    with description and summary statistics.
-    '''
-    model = Collection
-    # NOTE: For consistency with DigitizedWork's list view
-    template_name = 'archive/list_collections.html'
-    ordering = ('name',)
-
-    # temporary workaround to exclude collections that aren't
-    # meant to be featured on the homepage or collection list
-    exclude = ['Dictionary', 'Pronunciation Guide']
-
-    def get_queryset(self):
-        return super().get_queryset().exclude(name__in=self.exclude)
-
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-        # NOTE: if we *only* want counts, could just do a regular facet
-
-        solr_stats = PagedSolrQuery({
-            'q': '*:*',
-            'facet': True,
-            'facet.pivot': '{!stats=piv1}collections_exact',
-            # NOTE: if we pivot on collection twice, like this, we should
-            # have the information needed to generate a venn diagram
-            # of the collections (based on number of overlap)
-            # 'facet.pivot': '{!stats=piv1}collections_exact,collections_exact'
-            'stats': True,
-            'stats.field': '{!tag=piv1 min=true max=true}pub_date',
-            # don't return any actual items, just the facets
-            'rows': 0
-        })
-        facet_pivot = solr_stats.raw_response['facet_counts']['facet_pivot']
-        # simplify the pivot stat data for display
-        stats = {}
-        for info in facet_pivot['collections_exact']:
-            pub_date_stats = info['stats']['stats_fields']['pub_date']
-            stats[info['value']] = {
-                'count': info['count'],
-                'dates': '%(min)d–%(max)d' % pub_date_stats \
-                    if pub_date_stats['max'] != pub_date_stats['min'] \
-                    else '%d' % pub_date_stats['min']
-            }
-        context['stats'] = stats
-
-        return context
-
-
 class DigitizedWorkCSV(ListView):
     '''Export of digitized work details as CSV download.'''
     # NOTE: csv logic could be extracted as a view mixin for reuse
     model = DigitizedWork
     # order by id for now, for simplicity
     ordering = 'id'
-    header_row = ['Database ID', 'Source ID', 'Record ID', 'Title', 'Author',
-                  'Publication Date', 'Publication Place', 'Publisher',
-                  'Enumcron', 'Collection', 'Public Notes', 'Notes',
-                  'Page Count', 'Date Added', 'Last Updated']
+    header_row = [
+        'Database ID', 'Source ID', 'Record ID', 'Title', 'Subtitle',
+        'Sort title', 'Author', 'Publication Date', 'Publication Place',
+        'Publisher', 'Enumcron', 'Collection', 'Public Notes', 'Notes',
+        'Page Count', 'Date Added', 'Last Updated'
+    ]
 
     def get_csv_filename(self):
         '''Return the CSV file name based on the current datetime.
@@ -424,8 +381,9 @@ class DigitizedWorkCSV(ListView):
         :returns: rows for CSV columns
         :rtype: tuple
         '''
-        return ((dw.id, dw.source_id, dw.record_id, dw.title, dw.author,
-                 dw.pub_date, dw.pub_place, dw.publisher, dw.enumcron,
+        return ((dw.id, dw.source_id, dw.record_id, dw.title, dw.subtitle,
+                 dw.sort_title, dw.author, dw.pub_date, dw.pub_place,
+                 dw.publisher, dw.enumcron,
                  ';'.join([coll.name for coll in dw.collections.all()]),
                  dw.public_notes, dw.notes, dw.page_count, dw.added,
                  dw.updated
@@ -543,16 +501,3 @@ class AddToCollection(ListView, FormView):
         self.object_list = self.get_queryset()
         return self.render_to_response(self.get_context_data(form=form))
 
-
-class IndexView(CollectionListView):
-    '''
-    A homepage view that uses collection data, but renders it in a template
-    with additional information.
-    '''
-
-    model = Collection
-    template_name = 'site_index.html'
-
-    def get_queryset(self):
-        # get two random collections
-        return super().get_queryset().order_by('?')[:2]

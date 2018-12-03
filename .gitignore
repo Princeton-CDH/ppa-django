@@ -2,8 +2,8 @@
 node_modules/
 
 # Media ignores
-static/media/
-static/CACHE
+static/
+media/
 sitemedia/fonts
 **/.sass-cache/
 

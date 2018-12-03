@@ -6,6 +6,7 @@ from time import sleep
 from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
+from django.db.models.functions import Lower
 from django.template.defaultfilters import escape
 from django.test import TestCase
 from django.urls import reverse
@@ -264,6 +265,11 @@ class TestArchiveViews(TestCase):
             {'content': content, 'order': i, 'item_type': 'page',
              'srcid': htid, 'id': '%s.%s' % (htid, i)}
             for i, content in enumerate(sample_page_content)]
+        # Contrive a sort title such that tests below for title_asc will fail
+        # if case insensitive sorting is not working
+        dial = DigitizedWork.objects.filter(title__icontains='Dial').first()
+        dial.sort_title = 'The deal'
+        dial.save()
         # add a collection to use in testing the view
         collection = Collection.objects.create(name='Test Collection')
         digitized_works = DigitizedWork.objects.all()
@@ -306,11 +312,10 @@ class TestArchiveViews(TestCase):
             self.assertContains(response, digwork.subtitle)
             self.assertContains(response, digwork.source_id)
             self.assertContains(response, digwork.author)
-            # NOTE: enumcron suppressed for now (possibly for good)
-            # self.assertContains(response, digwork.enumcron)
+            self.assertContains(response, digwork.enumcron)
             # at least one publisher includes an ampersand, so escape text
             self.assertContains(response, escape(digwork.publisher))
-            self.assertContains(response, digwork.pub_place)
+            # self.assertContains(response, digwork.pub_place)
             self.assertContains(response, digwork.pub_date)
             # link to detail page
             self.assertContains(response, digwork.get_absolute_url())
@@ -427,16 +432,15 @@ class TestArchiveViews(TestCase):
         assert sorted_object_list == response.context['object_list']
         # one last test using title
         response = self.client.get(url, {'query': '', 'sort': 'title_asc'})
-        sorted_work_ids = DigitizedWork.objects.order_by('sort_title') \
+        sorted_work_ids = DigitizedWork.objects.order_by(Lower('sort_title')) \
                                        .values_list('source_id', flat=True)
         # the list of ids should match exactly
         assert list(sorted_work_ids) == \
             [work['srcid'] for work in response.context['object_list']]
-
         # - check that a query allows relevance as sort order toggle in form
         response = self.client.get(url, {'query': 'foo', 'sort': 'title_asc'})
         enabled_input = \
-            '<input type="radio" name="sort" value="relevance" id="id_sort_0" />'
+            '<div class="item " data-value="relevance">Relevance</div>'
         self.assertContains(response, enabled_input, html=True)
         response = self.client.get(url, {'title': 'foo', 'sort': 'title_asc'})
         self.assertContains(response, enabled_input, html=True)
@@ -447,7 +451,7 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url, {'sort': 'title_asc'})
         self.assertContains(
             response,
-            '<input type="radio" name="sort" value="relevance" id="id_sort_0" disabled="disabled" />',
+            '<div class="item disabled" data-value="relevance">Relevance</div>',
             html=True
         )
         # default sort should be title if no keyword search and no sort specified
@@ -490,7 +494,7 @@ class TestArchiveViews(TestCase):
         # should have the histogram data
         self.assertContains(response, "<pre class=\"count\">")
         # should have pagination
-        self.assertContains(response, "<div class=\"pagination")
+        self.assertContains(response, "<div class=\"page-controls")
         # test a query
         response = self.client.get(
             url, {'query': 'blood AND bone AND alternate'},
@@ -543,6 +547,8 @@ class TestArchiveViews(TestCase):
             assert digwork.source_id in digwork_data
             assert digwork.record_id in digwork_data
             assert digwork.title in digwork_data
+            assert digwork.subtitle in digwork_data
+            assert digwork.sort_title in digwork_data
             assert digwork.author in digwork_data
             assert str(digwork.pub_date) in digwork_data
             assert digwork.pub_place in digwork_data
@@ -572,84 +578,6 @@ class TestArchiveViews(TestCase):
         response = self.client.get(reverse('admin:auth_user_changelist'))
         self.assertNotContains(response, reverse('archive:csv'),
             msg_prefix='CSV download link should only be on digitized work list')
-
-    @pytest.mark.usefixtures("solr")
-    def test_collection_list(self):
-        # Create test collections to display
-        coll1 = Collection.objects.create(name='Random Grabbag')
-        coll2 = Collection.objects.create(
-            name='Foo through Time',
-            description="A <em>very</em> useful collection."
-        )
-        empty_coll = Collection.objects.create(name='Empty Box')
-        # collections that should be skipped
-        dictionary = Collection.objects.create(name='Dictionary')
-        pronunc = Collection.objects.create(name='Pronunciation Guide')
-
-        # Check that the context is set as expected
-        collection_list = reverse('archive:list-collections')
-        response = self.client.get(collection_list)
-        # it should have both collections that exist in it
-        assert coll1 in response.context['object_list']
-        assert coll2 in response.context['object_list']
-        assert dictionary not in response.context['object_list']
-        assert pronunc not in response.context['object_list']
-
-        # Check that the template is rendering as expected
-        collection_list = reverse('archive:list-collections')
-        response = self.client.get(collection_list)
-        # - basic checks right templates
-        self.assertTemplateUsed(response, 'base.html')
-        self.assertTemplateUsed(response, 'archive/list_collections.html')
-        # - detailed checks of template
-        self.assertContains(
-            response, 'Random Grabbag',
-            msg_prefix='should list a collection called Random Grabbag'
-        )
-        self.assertContains(
-            response, 'Foo through Time',
-            msg_prefix='should list a collection called Foo through Time'
-        )
-        self.assertContains(
-            response, '<em>very</em>', html=True,
-            msg_prefix='should render the description with HTML intact.'
-        )
-
-        ## test collection stats from Solr
-
-        # add items to collections
-        # - put everything in collection 1
-        digworks = DigitizedWork.objects.all()
-        for digwork in digworks:
-            digwork.collections.add(coll1)
-        # just one item in collection 2
-        wintry = digworks.get(title__icontains='Wintry')
-        wintry.collections.add(coll2)
-
-        # reindex the digitized works so we can check stats
-        solr, solr_collection = get_solr_connection()
-        solr.index(solr_collection, [dw.index_data() for dw in digworks],
-                   params={"commitWithin": 100})
-        sleep(2)
-
-        response = self.client.get(collection_list)
-        # stats set properly in context
-        assert 'stats' in response.context
-        assert response.context['stats'][coll1.name]['count'] == digworks.count()
-        assert response.context['stats'][coll1.name]['dates'] == '1880–1904'
-        assert response.context['stats'][coll2.name]['count'] == 1
-        assert response.context['stats'][coll2.name]['dates'] == '1903'
-        # stats displayed on template
-        self.assertContains(response, '%d digitized works' % digworks.count())
-        self.assertContains(response, '1 digitized work')
-        self.assertNotContains(response, '1 digitized works')
-        self.assertContains(response, '1880–1904')
-        self.assertContains(response, '1903')
-        # collections with items should link to search
-        archive_url = reverse('archive:list')
-        self.assertContains(response, 'href="%s?collections=%s"' % (archive_url, coll1.pk))
-        self.assertContains(response, 'href="%s?collections=%s"' % (archive_url, coll2.pk))
-        self.assertNotContains(response, 'href="%s?collections=%s"' % (archive_url, empty_coll.pk))
 
 
 class TestAddToCollection(TestCase):
@@ -859,50 +787,3 @@ class TestDigitizedWorkListView(TestCase):
             assert ' AND id:("p1a" "p1b" "p2a" "p2b")' in solr_opts['q']
 
             assert highlights == mockpsq.return_value.get_highlighting()
-
-
-class TestIndexView(TestCase):
-
-    @pytest.mark.usefixtures("solr")
-    def test_get_queryset(self):
-
-        # Create test collections to display
-        coll1 = Collection.objects.create(name='Random Grabbag')
-        coll2 = Collection.objects.create(
-            name='Foo through Time',
-            description="A <em>very</em> useful collection."
-        )
-
-        # Check that the context is set as expected
-        index = reverse('home')
-        response = self.client.get(index)
-        # it should have both collections that exist in it
-        assert coll1 in response.context['object_list']
-        assert coll2 in response.context['object_list']
-
-        # Check that the template is rendering as expected
-        # - basic checks right templates
-        self.assertTemplateUsed(response, 'base.html')
-        self.assertTemplateUsed(response, 'site_index.html')
-        # - detailed checks of template
-        self.assertContains(
-            response, 'Random Grabbag',
-            msg_prefix='should list a collection called Random Grabbag'
-        )
-        self.assertContains(
-            response, 'Foo through Time',
-            msg_prefix='should list a collection called Foo through Time'
-        )
-        self.assertContains(
-            response, '<em>very</em>', html=True,
-            msg_prefix='should render the description with HTML intact.'
-        )
-
-        # Add another collection
-        coll3 = Collection.objects.create(
-            name='Bar through Time',
-            description='A somewhat less useful collection.'
-        )
-        response = self.client.get(index)
-        # only two collections should be returned in the response
-        assert len(response.context['object_list']) == 2

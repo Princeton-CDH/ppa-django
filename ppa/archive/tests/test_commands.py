@@ -339,6 +339,11 @@ class TestIndexCommand(TestCase):
         cmd.clear('foo')
         cmd.solr.delete_doc_by_query.assert_not_called()
 
+        cmd.stdout = StringIO()
+        cmd.verbosity = 3
+        cmd.clear('works')
+        assert cmd.stdout.getvalue() == 'Clearing works from the index'
+
     @patch('ppa.archive.management.commands.index.get_solr_connection')
     @patch('ppa.archive.management.commands.index.progressbar')
     @patch.object(index.Command, 'index')
@@ -361,7 +366,7 @@ class TestIndexCommand(TestCase):
         # not enough data to run progress bar
         mockprogbar.ProgressBar.assert_not_called()
         # commit called after works are indexed
-        mocksolr.commit.assert_called_with(test_coll)
+        mocksolr.commit.assert_called_with(test_coll, openSearcher=True)
         # only called once (no pages)
         assert mock_cmd_index_method.call_count == 1
 
@@ -418,3 +423,11 @@ class TestIndexCommand(TestCase):
             assert mock_cmd_index_method.call_count == 2
             # page index data called once only
             assert mock_page_index_data.call_count == 1
+
+            # index nothing
+            mock_cmd_index_method.reset_mock()
+            mock_page_index_data.reset_mock()
+            call_command('index', index='none', stdout=stdout)
+            assert not mock_cmd_index_method.call_count
+            assert not mock_page_index_data.call_count
+

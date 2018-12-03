@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>CHANGELOG &#8212; Princeton Prosody Archive 0.9.0 documentation</title>
+    <title>CHANGELOG &#8212; Princeton Prosody Archive 0.11.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -37,7 +37,63 @@
   <div class="section" id="changelog">
 <span id="id1"></span><h1>CHANGELOG<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="id2">
-<h2>0.9.0<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<h2>0.11.0<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>As a content editor, I want to control how the description of my editorial content is displayed when on PPA, when shared, and when searched.</li>
+<li>As a content editor, I want to add new or edit existing editorial content so that I can publish and promote scholarly work related to the project.</li>
+<li>As an admin, I should not be able to edit wagtail content in the Django admin so that I don’t uninintentionally break content by editing it in the wrong place.</li>
+</ul>
+<div class="section" id="bugs-chores">
+<h3>Bugs/chores<a class="headerlink" href="#bugs-chores" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Constrains image sizes in editorial posts</li>
+<li>Sets up Google Analytics</li>
+<li>Fixes an issue with incorrect facet data from Solr for certain date ranges</li>
+<li>Switches to sans-serif font (Open Sans) sitewide</li>
+<li>Adds tzinfo to mysql to fix failing tests in CI</li>
+</ul>
+</div>
+<div class="section" id="design-updates">
+<h3>Design updates<a class="headerlink" href="#design-updates" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Homepage</li>
+<li>Top navigation menu</li>
+<li>Content pages</li>
+<li>Collections list page</li>
+<li>Search sorting and pagination</li>
+<li>Archive search page</li>
+<li>Digitized work detail page</li>
+<li>Editorial post list page</li>
+</ul>
+</div>
+</div>
+<div class="section" id="id3">
+<h2>0.10.0<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>As a content editor, I want unneeded punctuation removed when importing or updating records from HathiTrust metadata, so that records are easier to search and browse.</li>
+<li>As a user, I want item titles to be case-insensitive when sorting, so that I can find content alphabetically.</li>
+<li>As a user, I want my search input for publication year to be validated in the browser so that I can’t enter invalid dates.</li>
+</ul>
+<div class="section" id="content-management-updates">
+<h3>Content management updates<a class="headerlink" href="#content-management-updates" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>As a content editor, I want to arrange content pages on the site so that I can update site navigation when information changes.</li>
+<li>As an admin, I want the site to provide XML sitemaps for content pages, collection and archive pages, and digitized works so that site content will be findable by search engines.</li>
+<li>Replace Mezzanine with Wagtail as content management system.</li>
+<li>Add built-in fixtures to create default page structure within Wagtail.</li>
+</ul>
+</div>
+<div class="section" id="id4">
+<h3>Design updates<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Refactor SCSS and media queries.</li>
+<li>Fixes issues with histogram and pub date display on Chrome.</li>
+<li>Fixes an issue where hitting back on a search could result in unformatted JSON being displayed.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="id5">
+<h2>0.9.0<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>As an admin, I would like to be able to see the Hathi Catalog IDs for a volume so that I can see how individual volumes are grouped together within the HathiTrust.</li>
 <li>As an admin, I want the CSV report of materials on the site to include items’ Hathi catalog ID so that I can identify duplicates and multi-volume works.</li>
@@ -49,8 +105,8 @@
 <li>As a user, I want different styles for the main title and subtitle on search results so that I can visually distinguish titles.</li>
 <li>As a user, I want item titles to ignore definite articles and punctuation when sorting, so that I can find the most relevant content first.</li>
 </ul>
-<div class="section" id="design-updates">
-<h3>Design updates<a class="headerlink" href="#design-updates" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id6">
+<h3>Design updates<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>Updates styles site-wide to match new designs for most pages</li>
 <li>Fixes some issues with min/max date display on publication date histogram</li>
@@ -60,8 +116,8 @@
 </ul>
 </div>
 </div>
-<div class="section" id="id3">
-<h2>0.8.1<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id7">
+<h2>0.8.1<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
 <p>Minor updates, tweaks, and fixes:</p>
 <ul class="simple">
 <li>Set HathiTrust links to open in new browser window or tab</li>
@@ -228,11 +284,21 @@ than adding digital works to collections.</li>
   <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">CHANGELOG</a><ul>
-<li><a class="reference internal" href="#id2">0.9.0</a><ul>
+<li><a class="reference internal" href="#id2">0.11.0</a><ul>
+<li><a class="reference internal" href="#bugs-chores">Bugs/chores</a></li>
 <li><a class="reference internal" href="#design-updates">Design updates</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id3">0.8.1</a></li>
+<li><a class="reference internal" href="#id3">0.10.0</a><ul>
+<li><a class="reference internal" href="#content-management-updates">Content management updates</a></li>
+<li><a class="reference internal" href="#id4">Design updates</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id5">0.9.0</a><ul>
+<li><a class="reference internal" href="#id6">Design updates</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id7">0.8.1</a></li>
 <li><a class="reference internal" href="#search-filtering-and-highlighting">0.8 Search filtering and highlighting</a><ul>
 <li><a class="reference internal" href="#search-filters-and-highlighting">Search filters and highlighting</a></li>
 <li><a class="reference internal" href="#basic-content-management">Basic content management</a></li>

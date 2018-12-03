@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static humanize wagtailcore_tags %}
+
+{% block js %}
+<script src="{% static 'js/home.js' %}" type="module"></script>
+{% endblock %}
+
+{% block page-context-id %}homepage{% endblock %}
+
+{% block page_nav %}
+    {% include 'snippets/nav.html' with style="homepage" %}
+{% endblock %}
+
+{% block page_header %}
+<header class="homepage" id="header">
+    <div class="banner"></div>
+    <div id="scene">
+        <img class="layer one" data-depth="0.20" src="{% static 'img/ppaLogo_Layers_Revised/PPALogo_Blue.svg' %}" alt="">
+        <img class="layer two" data-depth="0.40" src="{% static 'img/ppaLogo_Layers_Revised/PPALogo_Teal.svg' %}" alt="">
+        <img class="layer three" data-depth="0.60" src="{% static 'img/ppaLogo_Layers_Revised/PPALogo_Red.svg' %}" alt="">
+    </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="hero ui vertical basic segment container">
+    <div class="intro">
+        {{ page.body|richtext }}
+    </div>
+    <a class="archive-link" href="{% url 'archive:list' %}">
+        <h3 class="ui header">
+            {% include 'snippets/fermata.svg' %}
+            View and search the archive
+        </h3>
+    </a>
+    <p class="learn-more">
+        Learn more below<br>
+        <img class="chevron icon"
+            src="{% static 'img/icons/RightChevron.svg' %}" alt="">
+    </p>
+</div>
+<div class="asides-collections ui vertical basic segment container">
+   <div class="asides ui two cards">
+        {% for card in preview_pages %}
+        <a class="aside card" href="{{ card.url }}">
+            <div class="content">
+                <h3 class="header">{{ card.title }}</h3>
+                <div class="description">{{ card.specific.get_description|richtext }}</div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% if collection_page %}  {# page content pulled in from wagtail #}
+    <div class="collections">
+        <h3 class="ui header about-header">{{ collection_page.title }}</h3>
+        <div class="description">{{ collection_page.body|richtext }}</div>
+        <div class="ui cards">
+            {% for item in collections %}
+            <a class="ui card" href="{% url 'archive:list' %}?collections={{ item.pk }}">
+                <div class="content">
+                    <h3 class="header">{{ item.name }}</h3>
+                    {% with coll_stats=stats|dict_item:item.name %}
+                        <div class="meta">
+                            {% firstof coll_stats.count "0" as count %}
+                            <p>{{ count|intcomma }} digitized work{{ count|pluralize }}
+                                {% if coll_stats.dates %} - {{ coll_stats.dates }}{% endif %}
+                            </p>
+                        </div>
+                    {% endwith %}
+                    {% if item.description %}
+                    <div class="description">
+                        {{ item.description|safe }}
+                    </div>
+                    {% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        <a class="collections-link" href="{% pageurl collection_page %}">
+            <h3 class="ui header">
+                {% include 'snippets/fermata.svg' %}
+                View All Collections
+            </h3>
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
