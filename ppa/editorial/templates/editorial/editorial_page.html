@@ -16,10 +16,7 @@
 {% block attribution %}
 <div>
     <p>
-{% for block in page.authors %}
-        {% include_block block %}{% if not forloop.last %}, {% endif %}
-{% endfor %}
-
+{% include 'editorial/snippets/attribution.html' with page=page %}
     </p>
 </div>
 {% endblock %}
