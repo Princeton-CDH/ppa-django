@@ -9,6 +9,7 @@
     -webkit-mask-position: top;
     -webkit-mask-size: cover;
     -webkit-mask-repeat: no-repeat;
+    z-index: -1;
     
     // small 1x and 2x
     min-height: $banner-height;
