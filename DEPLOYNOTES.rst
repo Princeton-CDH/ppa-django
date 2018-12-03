@@ -3,12 +3,18 @@
 Deploy and Upgrade notes
 ========================
 
+0.12
+----
+
+* Updated collection search logic requires reindexing works::
+
+    python manage.py index --works
+
 0.11
 ----
 
 * ``GTAGS_ANALYTICS_ID`` should include the property ID for the site, in order
     to enable Google Analytics on non-preview pages.
-
 
 0.10
 ----
