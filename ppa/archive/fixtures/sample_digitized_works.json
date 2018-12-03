@@ -3,14 +3,16 @@
   "model": "archive.collection",
   "pk": 1,
   "fields": {
-    "name": "Prosody"
+    "name": "Prosody",
+    "exclude": false
   }
 },
 {
   "model": "archive.collection",
   "pk": 2,
   "fields": {
-    "name": "typographically unique"
+    "name": "typographically unique",
+    "exclude": false
   }
 },
 {

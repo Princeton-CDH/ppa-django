@@ -14,7 +14,7 @@ from django.views.generic.edit import FormView
 from SolrClient.exceptions import SolrError
 
 from ppa.archive.forms import SearchForm, AddToCollectionForm, SearchWithinWorkForm
-from ppa.archive.models import DigitizedWork, Collection
+from ppa.archive.models import DigitizedWork, Collection, NO_COLLECTION_LABEL
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 from ppa.common.views import VaryOnHeadersMixin
 
@@ -48,7 +48,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             if 'sort' in form_opts and form_opts['sort'] == 'relevance':
                 del form_opts['sort']
 
-        for key, val in self.form_class.defaults.items():
+        for key, val in self.form_class.defaults().items():
             # set as list to avoid nested lists
             # follows solution using in derrida-django for InstanceListView
             if isinstance(val, list):
@@ -79,10 +79,18 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                 # work_q.append(text_query)
 
             work_q = []
-            # restrict by collection if specified
+
+            # restrict by collection
             if collections:
                 work_q.append('collections_exact:(%s)' % \
                     (' OR '.join(['"%s"' % coll for coll in collections])))
+
+            # For collection exclusion logic to work properly, if no
+            # collections are selected, no items should be returned.
+            # This query should return no items but still provide facet
+            # data to populate the collection filters on the form properly.
+            else:
+                work_q.append('item_type:work AND -collections_exact:[* TO *]')
 
             # filter books by title or author if there is a query
             for field in ['title', 'author']:
@@ -288,6 +296,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             'page_highlights': self.get_page_highlights(page_groups),
             # query for use template links to detail view with search
             'query': self.query,
+            'NO_COLLECTION_LABEL': NO_COLLECTION_LABEL
         })
         return context
 

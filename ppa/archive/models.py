@@ -21,6 +21,10 @@ from ppa.archive.solr import PagedSolrQuery
 logger = logging.getLogger(__name__)
 
 
+#: label to use for items that are not in a collection
+NO_COLLECTION_LABEL = 'Uncategorized'
+
+
 @register_snippet
 class Collection(models.Model):
     '''A collection of :class:`ppa.archive.models.DigitizedWork` instances.'''
@@ -28,6 +32,10 @@ class Collection(models.Model):
     name = models.CharField(max_length=255)
     #: a RichText description of the collection
     description = RichTextField(blank=True)
+    #: flag to indicate collections to be excluded by default in
+    #: public search
+    exclude = models.BooleanField(default=False,
+        help_text='Exclude by default on public search.')
 
     # configure for editing in wagtail admin
     panels = [
@@ -361,8 +369,12 @@ class DigitizedWork(models.Model, Indexable):
             'publisher': self.publisher,
             'enumcron': self.enumcron,
             'author': self.author,
-            'collections': [collection.name for collection
-                            in self.collections.all()],
+            # set default value to simplify queries to find uncollected items
+            # (not set in Solr schema because needs to be works only)
+            'collections':
+                [collection.name for collection in self.collections.all()]
+                if self.collections.exists()
+                else [NO_COLLECTION_LABEL],
             # general purpose multivalued field, currently only
             # includes public notes in this method, other fields
             # copied in Solr schema.

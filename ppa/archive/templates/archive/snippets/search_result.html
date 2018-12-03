@@ -55,7 +55,10 @@
                     {% endfor %}
                 {% else %} {# solr object with list of strings #}
                     {% for collection in item.collections %}
+                        {# Don't display collection badge for uncategorized items #}
+                        {% if collection != NO_COLLECTION_LABEL %}
                         <label class="ui basic button">{{ collection }}</label>
+                        {% endif %}
                     {% endfor %}
                 {% endif %}
                 <a class="item-detail" href="{% url 'archive:detail' item.srcid %}">

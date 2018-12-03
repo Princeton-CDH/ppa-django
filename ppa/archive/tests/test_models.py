@@ -14,7 +14,7 @@ from pairtree import pairtree_client, pairtree_path
 import pytest
 
 from ppa.archive import hathi
-from ppa.archive.models import DigitizedWork, Collection
+from ppa.archive.models import DigitizedWork, Collection, NO_COLLECTION_LABEL
 from ppa.archive.solr import get_solr_connection, Indexable
 
 
@@ -256,6 +256,10 @@ class TestDigitizedWork(TestCase):
         # with enumcron
         digwork.enumcron = 'v.7 (1848)'
         assert digwork.index_data()['enumcron'] == digwork.enumcron
+
+        # not in a collection
+        digwork.collections.clear()
+        assert digwork.index_data()['collections'] == [NO_COLLECTION_LABEL]
 
     def test_get_absolute_url(self):
         work = DigitizedWork.objects.first()

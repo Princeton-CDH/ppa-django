@@ -75,5 +75,10 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
                                              'to collections')
 
 
+class CollectionAdmin(admin.ModelAdmin):
+    list_display = ('name', 'exclude')
+    list_editable = ('exclude', )
+
+
 admin.site.register(DigitizedWork, DigitizedWorkAdmin)
-admin.site.register(Collection)
+admin.site.register(Collection, CollectionAdmin)
