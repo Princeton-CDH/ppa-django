@@ -759,6 +759,8 @@
           author^4
           pub_date
           enumcron
+          pub_place
+          publisher
       </str>
     </lst>
     <!-- In addition to defaults, "appends" params can be specified
