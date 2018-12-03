@@ -755,8 +755,9 @@
       <str name="qf">
           srcid
           content
-          title^4
-          author^4
+          title^10
+          author^20
+          notes^20
           pub_date
           enumcron
           pub_place

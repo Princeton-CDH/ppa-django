@@ -91,6 +91,7 @@ class SolrSchema(object):
         {'name': 'order', 'type': 'string', 'required': False},
         {'name': 'collections', 'type': 'text_en', 'required': False,
          'multiValued': True},
+        {'name': 'notes', 'type': 'text_en', 'required': False},
         {'name': 'text', 'type': 'text_en', 'required': False, 'stored': False,
          'multiValued': True},
         # page fields

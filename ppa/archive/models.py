@@ -363,10 +363,7 @@ class DigitizedWork(models.Model, Indexable):
             'author': self.author,
             'collections': [collection.name for collection
                             in self.collections.all()],
-            # general purpose multivalued field, currently only
-            # includes public notes in this method, other fields
-            # copied in Solr schema.
-            'text': [self.public_notes],
+            'notes': self.public_notes,
             # hard-coded to distinguish from & sort with pages
             'item_type': 'work',
             'order': '0',
