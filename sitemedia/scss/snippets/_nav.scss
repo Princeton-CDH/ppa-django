@@ -17,7 +17,7 @@
 }
 
 #mobile-nav {
-    top: $nav-height !important; // have to override SUI's !important
+    top: $nav-height-mobile !important; // have to override SUI's !important
     box-shadow: none;
     border: 0;
 
@@ -66,10 +66,6 @@
 
         &.active .item {
             visibility: visible;
-        }
-
-        .item:last-child {
-            // padding-bottom: 0.25rem !important;
         }
     }
 

@@ -1,4 +1,5 @@
-$nav-height: 50px;
+$nav-height: 55px;
+$nav-height-mobile: 50px;
 $nav-breakpoint: 1068px; // point at which we switch to mobile nav
 
 $green        : #254E2E;
@@ -34,5 +35,6 @@ $banner-height-m: 400px;
 $banner-height-l: 570px;
 
 // typography
-$pageFont              : Helvetica, sans-serif;
-$headerFont            : 'Gentium Book Basic', Palatino, serif;
+$pageFont              : 'Open Sans', Helvetica, sans-serif;
+$headerFont            : $pageFont; // evaluate using only sans
+// $headerFont            : 'Gentium Book Basic', Palatino, serif;

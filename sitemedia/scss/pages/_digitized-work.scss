@@ -1,6 +1,6 @@
 #digitized-work {
-    margin-top: 3 * $nav-height;
-
+    padding-top: 100px;
+    
     .container:not(.message) {
         @include wide-container();
     }

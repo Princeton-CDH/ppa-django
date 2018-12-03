@@ -153,12 +153,18 @@ class TestContentPage(WagtailPageTests):
         # (excluding end of content because truncation is inside tags)
         assert desc[:200] == str(content_page.body[0])[:200]
 
+        # empty tags in description shouldn't be used
+        content_page.description = '<p></p>'
+        desc = content_page.get_description()
+        assert desc[:200] == str(content_page.body[0])[:200]
+
         # test content page with image for first block
         content_page2 = ContentPage(
             title='What is Prosody?',
             body=[
                 ('image', '<img src="milton-example.png"/>'),
-                ('paragraph', '<p>Prosody today means both the study of versification and pronunciation</p>')
+                ('paragraph', '<p>Prosody today means both the study of versification and pronunciation</p>'),
+                ('paragraph', '<p>More content here...</p>'),
             ]
         )
         # should ignore image block and use first paragraph content

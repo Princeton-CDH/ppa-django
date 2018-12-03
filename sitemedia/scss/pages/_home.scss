@@ -1,55 +1,11 @@
-#header.homepage {
-    display: flex;
-    justify-content: center;
-    margin-top: 2 * $nav-height;
-    margin-bottom: -5rem;
-
-    @media (min-width: $tablet) {
-        margin-bottom: -10rem;
-    }
-
-    @media (min-width: $computer) {
-        margin-bottom: -20rem;
-    }
-
-    .banner {
-        @include responsive-banner("/static/img/ppa_pattern_home", $midGrey);
-        opacity: 0.5;
-    }
-
-    #scene { // parallax items
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 0;
-        margin: auto;
-        margin-top: 2rem;
-        width: 300px;
-        mask-image: none;
+#homepage {
+    .hero {
+        margin-top: 20rem;
 
         @media (min-width: $tablet) {
-            margin-top: 8rem;
-        }
-
-        .layer {
-            height: 200px;
-            left: 0;
-            top: 0;
-            right: 0;
-            margin: 0 auto;
-            user-select: none;
-            -moz-user-select: none;
-            -webkit-user-select: none;
-
-            @media (min-width: $tablet) {
-                height: 300px;
-            }
+            margin-top: 28rem;
         }
     }
-
-}
-
-#homepage {
 
     .container {
         text-align: center;
@@ -62,45 +18,15 @@
     .intro {
         text-align: left;
         font-size: 1.2rem;
-        margin: 3rem 0;
+        margin-bottom: 3rem;
         
         @media (min-width: $tablet) {
             font-size: 1.5rem;
-            margin-top: 9rem;
-        }
-
-        @media (min-width: $computer) {
-            margin-top: 6rem;
         }
     }
 
     .archive-link {
-        display: inline-block;
-        padding: 0.8rem;
-        background-color: $darkBlue;
-        border-radius: 3px;
         margin: 0 0 2rem;
-
-        @media (min-width: $tablet) {
-            padding: 1rem;
-            margin: 2rem 0;
-        }
-        
-        .header {
-            color: white;
-            font-size: 1rem;
-            font-weight: normal;
-            text-transform: uppercase;
-            font-family: $pageFont;
-
-            @media (min-width: $tablet) {
-                font-size: 1.2rem;
-            }
-        }
-
-        .fermata {
-            fill: white;
-        }
     }
 
     .learn-more {

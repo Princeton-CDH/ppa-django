@@ -17,6 +17,7 @@
 @width: 290px;
 @height: 230px;
 @borderWidth: 0px;
+@padding: 20px;
 
 /*-------------------
        Content
@@ -98,16 +99,11 @@
 ;
 
 /* Post */
-@postBackgroundColor: @primaryColor;
-@postBackgroundTextColor: @invertedTextColor;
-@postBackgroundPadding: 4rem 2rem 2rem 2rem;
-
-@postPageWidth: 200px;
-@postPageHeight: 260px;
-@postPageColor: @background;
-@postPageTextColor: @headerColor;
-@postPagePadding: 2rem;
-@postPageBoxShadow: @shadowBoxShadow;
+@postHeight: 430px;
+@postLargeHeight: 330px;
+@postPadding: 1rem;
 
 /* Post Link */
-@postLinkHoverBoxShadow: @linkHoverBoxShadow;
+@postLinkShadowColor: @purple;
+@postLinkBoxShadow: @shadowDistance @shadowDistance 0px 0px @postLinkShadowColor;
+@postLinkHoverBoxShadow: @hoverShadowDistance @hoverShadowDistance 0px 0px @postLinkShadowColor;
