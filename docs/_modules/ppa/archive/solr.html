@@ -1,0 +1,583 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>ppa.archive.solr &#8212; Princeton Prosody Archive 0.11.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for ppa.archive.solr</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">cached_property</span> <span class="k">import</span> <span class="n">cached_property</span>
+<span class="kn">from</span> <span class="nn">django.conf</span> <span class="k">import</span> <span class="n">settings</span>
+<span class="kn">from</span> <span class="nn">django.db.models.fields.related_descriptors</span> <span class="k">import</span> <span class="n">ManyToManyDescriptor</span>
+<span class="kn">from</span> <span class="nn">django.db.models.query</span> <span class="k">import</span> <span class="n">QuerySet</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">SolrClient</span> <span class="k">import</span> <span class="n">SolrClient</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_solr_connection"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.get_solr_connection">[docs]</a><span class="k">def</span> <span class="nf">get_solr_connection</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;Initialize a Solr connection using project settings&#39;&#39;&#39;</span>
+    <span class="c1"># TODO: error handling on config not present?</span>
+    <span class="n">solr_config</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">SOLR_CONNECTIONS</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span>
+    <span class="n">solr</span> <span class="o">=</span> <span class="n">SolrClient</span><span class="p">(</span><span class="n">solr_config</span><span class="p">[</span><span class="s1">&#39;URL&#39;</span><span class="p">])</span>
+    <span class="c1"># NOTE: may want to extend SolrClient to set a default collection</span>
+    <span class="n">solr_collection</span> <span class="o">=</span> <span class="n">solr_config</span><span class="p">[</span><span class="s1">&#39;COLLECTION&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">solr</span><span class="p">,</span> <span class="n">solr_collection</span></div>
+
+
+<div class="viewcode-block" id="SolrSchema"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.SolrSchema">[docs]</a><span class="k">class</span> <span class="nc">SolrSchema</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Solr Schema object.  Includes project schema configuration and</span>
+<span class="sd">    methods to update configured Solr instance.&#39;&#39;&#39;</span>
+
+    <span class="c1"># ported from winthrop-django</span>
+    <span class="n">field_types</span> <span class="o">=</span> <span class="p">[</span>
+
+        <span class="p">{</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;text_en&#39;</span><span class="p">,</span>
+            <span class="s2">&quot;class&quot;</span><span class="p">:</span><span class="s2">&quot;solr.TextField&quot;</span><span class="p">,</span>
+            <span class="c1"># for now, configuring index and query analyzers the same</span>
+            <span class="c1"># if we want synonyms, query must be separate</span>
+            <span class="s2">&quot;analyzer&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="c1"># &quot;charFilters&quot;: [],</span>
+                <span class="s2">&quot;tokenizer&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;solr.StandardTokenizerFactory&quot;</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;filters&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="p">{</span><span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;solr.StopFilterFactory&quot;</span><span class="p">},</span>
+                    <span class="p">{</span><span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;solr.LowerCaseFilterFactory&quot;</span><span class="p">},</span>
+                    <span class="p">{</span><span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;solr.EnglishPossessiveFilterFactory&quot;</span><span class="p">},</span>
+                    <span class="p">{</span><span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;solr.KeywordMarkerFilterFactory&quot;</span><span class="p">},</span>
+                    <span class="p">{</span><span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;solr.PorterStemFilterFactory&quot;</span><span class="p">},</span>
+                    <span class="p">{</span><span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;solr.ICUFoldingFilterFactory&quot;</span><span class="p">},</span>
+                <span class="p">]</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;string_i&#39;</span><span class="p">,</span>
+            <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;solr.TextField&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;sortMissingLast&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;analyzer&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;tokenizer&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="c1"># treat entire field as a single token</span>
+                    <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;solr.KeywordTokenizerFactory&quot;</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;filters&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="c1"># lower case to ensure alphabetical sort behaves as</span>
+                    <span class="c1"># expected and standardize using</span>
+                    <span class="c1"># the ICUFoldingFilterFactory</span>
+                    <span class="c1"># {&quot;class&quot;: &quot;solr.LowerCaseFilterFactory&quot;},</span>
+                    <span class="p">{</span><span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;solr.ICUFoldingFilterFactory&quot;</span><span class="p">},</span>
+
+                <span class="p">]</span>
+            <span class="p">},</span>
+        <span class="p">},</span>
+    <span class="p">]</span>
+
+    <span class="c1">#: solr schema field definitions</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="c1"># srcid cannot be string_i, as Textfield cannot be used in</span>
+        <span class="c1"># collapse query</span>
+        <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;srcid&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;string&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;content&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;text_en&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;item_type&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;string&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;text_en&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;subtitle&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;text_en&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;sort_title&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;string_i&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;enumcron&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;string&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;author&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;text_en&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;pub_date&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;int&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;pub_place&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;text_en&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;publisher&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;text_en&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;src_url&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;string&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;order&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;string&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;collections&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;text_en&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+         <span class="s1">&#39;multiValued&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;text_en&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;stored&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+         <span class="s1">&#39;multiValued&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+        <span class="c1"># page fields</span>
+        <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;label&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;text_en&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;tags&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;string&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;multiValued&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+
+        <span class="c1"># sort/facet copy fields</span>
+        <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;author_exact&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;string&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;collections_exact&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;string&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+         <span class="s1">&#39;multiValued&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+    <span class="p">]</span>
+    <span class="c1">#: fields to be copied into general purpose text field for searching</span>
+    <span class="n">text_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;srcid&#39;</span><span class="p">,</span> <span class="s1">&#39;content&#39;</span><span class="p">,</span> <span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;author&#39;</span><span class="p">,</span> <span class="s1">&#39;pub_date&#39;</span><span class="p">,</span> <span class="s1">&#39;enumcron&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;pub_place&#39;</span><span class="p">,</span> <span class="s1">&#39;publisher&#39;</span><span class="p">]</span>
+    <span class="c1">#: copy fields, e.g. for facets</span>
+    <span class="n">copy_fields</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s1">&#39;author&#39;</span><span class="p">,</span> <span class="s1">&#39;author_exact&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;collections&#39;</span><span class="p">,</span> <span class="s1">&#39;collections_exact&#39;</span><span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">solr_collection</span> <span class="o">=</span> <span class="n">get_solr_connection</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Using </span><span class="si">%s</span><span class="s1"> core.&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">solr_collection</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SolrSchema.solr_schema_fields"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.SolrSchema.solr_schema_fields">[docs]</a>    <span class="k">def</span> <span class="nf">solr_schema_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;List of currently configured Solr schema fields&#39;&#39;&#39;</span>
+        <span class="n">schema_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solr</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get_schema_fields</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solr_collection</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">field</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">schema_info</span><span class="p">[</span><span class="s1">&#39;fields&#39;</span><span class="p">]]</span></div>
+
+<div class="viewcode-block" id="SolrSchema.solr_schema_field_types"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.SolrSchema.solr_schema_field_types">[docs]</a>    <span class="k">def</span> <span class="nf">solr_schema_field_types</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Dictionary of currently configured Solr schema fields&#39;&#39;&#39;</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solr</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get_schema_field_types</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solr_collection</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">field_type</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]:</span> <span class="n">field_type</span> <span class="k">for</span> <span class="n">field_type</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s1">&#39;fieldTypes&#39;</span><span class="p">]}</span></div>
+
+<div class="viewcode-block" id="SolrSchema.update_solr_schema"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.SolrSchema.update_solr_schema">[docs]</a>    <span class="k">def</span> <span class="nf">update_solr_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Update the configured solr instance schema to match</span>
+<span class="sd">        the configured fields.  Returns a tuple with the number of fields</span>
+<span class="sd">        created and updated.&#39;&#39;&#39;</span>
+
+        <span class="n">current_field_types</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solr_schema_field_types</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">field_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_types</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">field_type</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">current_field_types</span><span class="p">:</span>
+                <span class="c1"># if field exists but definition has changed, replace it</span>
+                <span class="k">if</span> <span class="n">field_type</span> <span class="o">!=</span> <span class="n">current_field_types</span><span class="p">[</span><span class="n">field_type</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">solr</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">replace_field_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solr_collection</span><span class="p">,</span> <span class="n">field_type</span><span class="p">)</span>
+            <span class="c1"># otherwise, create as a new field</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">solr</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">create_field_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solr_collection</span><span class="p">,</span> <span class="n">field_type</span><span class="p">)</span>
+
+            <span class="c1"># TODO: deletion?</span>
+
+        <span class="n">current_fields</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solr_schema_fields</span><span class="p">()</span>
+
+        <span class="n">created</span> <span class="o">=</span> <span class="n">updated</span> <span class="o">=</span> <span class="n">removed</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">field</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">current_fields</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">solr</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">create_field</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solr_collection</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span>
+                <span class="n">created</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">solr</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">replace_field</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solr_collection</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span>
+                <span class="n">updated</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># remove and recreate copy fields to avoid adding them multiple times</span>
+        <span class="n">copy_fields</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solr</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get_schema_copyfields</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solr_collection</span><span class="p">)</span>
+
+        <span class="n">current_cp_fields</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">text_fields</span><span class="p">:</span>
+            <span class="n">cp_field</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="n">field</span><span class="p">,</span> <span class="s1">&#39;dest&#39;</span><span class="p">:</span> <span class="s1">&#39;text&#39;</span><span class="p">}</span>
+            <span class="n">current_cp_fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cp_field</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cp_field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">copy_fields</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">solr</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">create_copy_field</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solr_collection</span><span class="p">,</span>
+                    <span class="n">cp_field</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">src_field</span><span class="p">,</span> <span class="n">dest_field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy_fields</span><span class="p">:</span>
+            <span class="n">cp_field</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="n">src_field</span><span class="p">,</span> <span class="s1">&#39;dest&#39;</span><span class="p">:</span> <span class="n">dest_field</span><span class="p">}</span>
+            <span class="n">current_cp_fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cp_field</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cp_field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">copy_fields</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">solr</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">create_copy_field</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solr_collection</span><span class="p">,</span>
+                    <span class="n">cp_field</span><span class="p">)</span>
+
+        <span class="c1"># delete previous copy cp fields that are no longer wanted</span>
+        <span class="k">for</span> <span class="n">cp_field</span> <span class="ow">in</span> <span class="n">copy_fields</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cp_field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">current_cp_fields</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">solr</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">delete_copy_field</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solr_collection</span><span class="p">,</span> <span class="n">cp_field</span><span class="p">)</span>
+
+        <span class="c1"># remove previously defined fields that are no longer current</span>
+        <span class="n">field_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">field</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">current_fields</span><span class="p">:</span>
+            <span class="c1"># don&#39;t remove special fields!</span>
+            <span class="k">if</span> <span class="n">field</span> <span class="o">==</span> <span class="s1">&#39;id&#39;</span> <span class="ow">or</span> <span class="n">field</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">field_names</span><span class="p">:</span>
+                <span class="n">removed</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">solr</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">delete_field</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solr_collection</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">created</span><span class="p">,</span> <span class="n">updated</span><span class="p">,</span> <span class="n">removed</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="CoreAdmin"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.CoreAdmin">[docs]</a><span class="k">class</span> <span class="nc">CoreAdmin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Solr Core Admin API wrapper&#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">admin_url</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">SOLR_CONNECTIONS</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ADMIN_URL&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CoreAdmin.reload"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.CoreAdmin.reload">[docs]</a>    <span class="k">def</span> <span class="nf">reload</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">core</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Reload an existing Solr core, e.g. so that schema changes</span>
+<span class="sd">        take effect.  If core is not specified, uses the configured</span>
+<span class="sd">        project collection/core.&#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">core</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">core</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">SOLR_CONNECTIONS</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;COLLECTION&#39;</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">admin_url</span><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;action&#39;</span><span class="p">:</span> <span class="s1">&#39;RELOAD&#39;</span><span class="p">,</span> <span class="s1">&#39;core&#39;</span><span class="p">:</span> <span class="n">core</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="n">requests</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">ok</span></div></div>
+
+
+<div class="viewcode-block" id="PagedSolrQuery"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.PagedSolrQuery">[docs]</a><span class="k">class</span> <span class="nc">PagedSolrQuery</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;A Solr query object that wraps a :mod:`SolrClient` query in a way</span>
+<span class="sd">    that allows search results to be paginated by django paginator.&#39;&#39;&#39;</span>
+
+    <span class="n">query_opts</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">_result</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query_opts</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">solr_collection</span> <span class="o">=</span> <span class="n">get_solr_connection</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">query_opts</span> <span class="o">=</span> <span class="n">query_opts</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="c1"># possibly should default to &#39;q&#39;: &#39;*:*&#39; ...</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_results</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span>
+
+<div class="viewcode-block" id="PagedSolrQuery.get_facets"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.PagedSolrQuery.get_facets">[docs]</a>    <span class="k">def</span> <span class="nf">get_facets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Wrap SolrClient.SolrResponse.get_facets() to get query facets as a dict</span>
+<span class="sd">        of dicts.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">get_facets</span><span class="p">()</span></div>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span> <span class="nf">facet_ranges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; Return Solr range facets, with counts converted from a list of</span>
+<span class="sd">        start date and count to an :class:`~collections.OrderedDict`.&#39;&#39;&#39;</span>
+        <span class="c1"># NOTE: the get_facets_ranges in SolrClient *only* returns the range</span>
+        <span class="c1"># and drops the start, end, and gap information, which are valuable.</span>
+        <span class="n">facet_counts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;facet_counts&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">facet_counts</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">facet_ranges</span> <span class="o">=</span> <span class="n">facet_counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;facet_ranges&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">facet_ranges</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">facet_ranges</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="n">val</span><span class="p">[</span><span class="s1">&#39;counts&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">val</span><span class="p">[</span><span class="s1">&#39;counts&#39;</span><span class="p">][::</span><span class="mi">2</span><span class="p">],</span> <span class="n">val</span><span class="p">[</span><span class="s1">&#39;counts&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]))</span>
+            <span class="k">return</span> <span class="n">facet_ranges</span>
+
+<div class="viewcode-block" id="PagedSolrQuery.get_facets_ranges"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.PagedSolrQuery.get_facets_ranges">[docs]</a>    <span class="k">def</span> <span class="nf">get_facets_ranges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Wrap SolrClient.SolrResponse.get_facets() to get query facets as a dict</span>
+<span class="sd">        of dicts.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">get_facets_ranges</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PagedSolrQuery.get_results"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.PagedSolrQuery.get_results">[docs]</a>    <span class="k">def</span> <span class="nf">get_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Return results of the Solr query.</span>
+
+<span class="sd">        :return: docs as a list of dictionaries.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solr</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solr_collection</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">query_opts</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="o">.</span><span class="n">docs</span></div>
+
+<div class="viewcode-block" id="PagedSolrQuery.count"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.PagedSolrQuery.count">[docs]</a>    <span class="k">def</span> <span class="nf">count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Total number of results in the query&#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">query_opts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query_opts</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">query_opts</span><span class="p">[</span><span class="s1">&#39;rows&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="c1"># FIXME: do we actually want to store the result with no rows?</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solr</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solr_collection</span><span class="p">,</span> <span class="n">query_opts</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span><span class="o">.</span><span class="n">get_num_found</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PagedSolrQuery.get_json"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.PagedSolrQuery.get_json">[docs]</a>    <span class="k">def</span> <span class="nf">get_json</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Return query response as JSON data, to allow full access to anything</span>
+<span class="sd">        included in Solr data.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">get_json</span><span class="p">()</span></div>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span> <span class="nf">raw_response</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Return the raw Solr result to provide access to return sections</span>
+<span class="sd">        not exposed by SolrClient&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_json</span><span class="p">())</span>
+
+<div class="viewcode-block" id="PagedSolrQuery.get_expanded"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.PagedSolrQuery.get_expanded">[docs]</a>    <span class="k">def</span> <span class="nf">get_expanded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;get the expanded results from a collapsed query&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;expanded&#39;</span><span class="p">,</span> <span class="p">{})</span></div>
+
+<div class="viewcode-block" id="PagedSolrQuery.get_highlighting"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.PagedSolrQuery.get_highlighting">[docs]</a>    <span class="k">def</span> <span class="nf">get_highlighting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;get highlighting results from the response&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;highlighting&#39;</span><span class="p">,</span> <span class="p">{})</span></div>
+
+<div class="viewcode-block" id="PagedSolrQuery.set_limits"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.PagedSolrQuery.set_limits">[docs]</a>    <span class="k">def</span> <span class="nf">set_limits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Return a subsection of the results, to support slicing.&#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">query_opts</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+            <span class="s1">&#39;start&#39;</span><span class="p">:</span> <span class="n">start</span><span class="p">,</span>
+            <span class="s1">&#39;rows&#39;</span><span class="p">:</span> <span class="n">stop</span> <span class="o">-</span> <span class="n">start</span>
+        <span class="p">})</span></div>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Return a single result or a slice of results&#39;&#39;&#39;</span>
+        <span class="c1"># based on django queryset logic</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">slice</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span>
+        <span class="k">assert</span> <span class="p">((</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">slice</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">k</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">))</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">slice</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">k</span><span class="o">.</span><span class="n">start</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span>
+                 <span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">stop</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">k</span><span class="o">.</span><span class="n">stop</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">))),</span> \
+            <span class="s2">&quot;Negative indexing is not supported.&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="c1"># qs = self._chain() # do we need something like this?</span>
+            <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">stop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">stop</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">stop</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">stop</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_limits</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">)</span>
+            <span class="c1"># qs.query.set_limits(start, stop)</span>
+            <span class="c1"># return list(qs)[::k.step] if k.step else qs</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_results</span><span class="p">())[::</span><span class="n">k</span><span class="o">.</span><span class="n">step</span><span class="p">]</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">step</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_results</span><span class="p">()</span>
+
+        <span class="c1"># single item</span>
+        <span class="c1"># qs = self._chain()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_limits</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># qs.query.set_limits(k, k + 1)</span>
+        <span class="c1"># qs._fetch_all()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_results</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span></div>
+        <span class="c1"># return qs._result_cache[0]</span>
+
+
+<div class="viewcode-block" id="Indexable"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.Indexable">[docs]</a><span class="k">class</span> <span class="nc">Indexable</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Mixin for objects that are indexed in Solr.  Subclasses must implement</span>
+<span class="sd">    `index_id` and `index` methods.</span>
+
+<span class="sd">    Subclasses may include an `index_depends_on` property which is used</span>
+<span class="sd">    by :meth:`identify_index_dependencies` to determine index dependencies</span>
+<span class="sd">    on related objects, including many-to-many relationships.  This property</span>
+<span class="sd">    should be structured like this::</span>
+
+<span class="sd">        index_depends_on = {</span>
+<span class="sd">            &#39;attr_name&#39;: {      # string name of the attribute on this model</span>
+<span class="sd">                &#39;save&#39;: handle_attr_save,  # signal handler for post_save on this model</span>
+<span class="sd">                &#39;delete&#39;: handle_attr_delete,   # signal handler for pre_delete on this model</span>
+<span class="sd">            }</span>
+<span class="sd">        }</span>
+
+<span class="sd">    If the attribute is a many-to-many field, indexing will be configured on</span>
+<span class="sd">    the model when the based on relationship changes (a signal handler will</span>
+<span class="sd">    listen for :class:`models.signals.m2m_changed` on the through model).</span>
+<span class="sd">    Signal handler methods for save and delete are optional.</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c1"># TODO: set default solr params / commit within here? maybe get value</span>
+    <span class="c1"># from django settings?</span>
+
+    <span class="c1">#: number of items to index at once when indexing a large number of items</span>
+    <span class="n">index_chunk_size</span> <span class="o">=</span> <span class="mi">150</span>
+
+<div class="viewcode-block" id="Indexable.index_data"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.Indexable.index_data">[docs]</a>    <span class="k">def</span> <span class="nf">index_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;should return a dictionary of data for indexing in Solr&#39;&#39;&#39;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="Indexable.index_id"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.Indexable.index_id">[docs]</a>    <span class="k">def</span> <span class="nf">index_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;the value that is used as the Solr id for this object&#39;&#39;&#39;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="Indexable.index"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.Indexable.index">[docs]</a>    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Index the current object in Solr.  Allows passing in</span>
+<span class="sd">        parameter, e.g. to set a `commitWithin` value.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">solr</span><span class="p">,</span> <span class="n">solr_collection</span> <span class="o">=</span> <span class="n">get_solr_connection</span><span class="p">()</span>
+        <span class="n">solr</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">solr_collection</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index_data</span><span class="p">()],</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Indexable.index_items"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.Indexable.index_items">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">index_items</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">items</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">progbar</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Indexable class method to index multiple items at once.  Takes a</span>
+<span class="sd">        list, queryset, or generator of Indexable items or dictionaries.</span>
+<span class="sd">        Items are indexed in chunks, based on :attr:`Indexable.index_chunk_size`.</span>
+<span class="sd">        Takes an optional progressbar object to update when indexing items</span>
+<span class="sd">        in chunks. Returns a count of the number of items indexed.&#39;&#39;&#39;</span>
+        <span class="n">solr</span><span class="p">,</span> <span class="n">solr_collection</span> <span class="o">=</span> <span class="n">get_solr_connection</span><span class="p">()</span>
+
+        <span class="c1"># if this is a queryset, use iterator to get it in chunks</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">QuerySet</span><span class="p">):</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="n">items</span><span class="o">.</span><span class="n">iterator</span><span class="p">()</span>
+
+        <span class="c1"># if this is a normal list, convert it to an iterator</span>
+        <span class="c1"># so we don&#39;t iterate the same slice over and over</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+
+        <span class="c1"># index in chunks to support efficiently indexing large numbers</span>
+        <span class="c1"># of items (adapted from index script)</span>
+        <span class="n">chunk</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">index_chunk_size</span><span class="p">))</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">chunk</span><span class="p">:</span>
+            <span class="c1"># call index data method if present; otherwise assume item is dict</span>
+            <span class="n">solr</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">solr_collection</span><span class="p">,</span>
+                       <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">index_data</span><span class="p">()</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;index_data&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">i</span>
+                        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">chunk</span><span class="p">],</span>
+                       <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+            <span class="n">count</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+            <span class="c1"># update progress bar if one was passed in</span>
+            <span class="k">if</span> <span class="n">progbar</span><span class="p">:</span>
+                <span class="n">progbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+
+            <span class="c1"># get the next chunk</span>
+            <span class="n">chunk</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">index_chunk_size</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">count</span></div>
+
+<div class="viewcode-block" id="Indexable.remove_from_index"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.Indexable.remove_from_index">[docs]</a>    <span class="k">def</span> <span class="nf">remove_from_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Remove the current object from Solr by identifier using</span>
+<span class="sd">        :meth:`index_id`&#39;&#39;&#39;</span>
+        <span class="n">solr</span><span class="p">,</span> <span class="n">solr_collection</span> <span class="o">=</span> <span class="n">get_solr_connection</span><span class="p">()</span>
+        <span class="c1"># NOTE: using quotes on id to handle ids that include colons or other</span>
+        <span class="c1"># characters that have meaning in Solr/lucene queries</span>
+        <span class="n">solr</span><span class="o">.</span><span class="n">delete_doc_by_id</span><span class="p">(</span><span class="n">solr_collection</span><span class="p">,</span> <span class="s1">&#39;&quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_id</span><span class="p">(),</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span></div>
+
+    <span class="n">related</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">m2m</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Indexable.identify_index_dependencies"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.solr.Indexable.identify_index_dependencies">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">identify_index_dependencies</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Identify and set lists of index dependencies for the subclass</span>
+<span class="sd">        of :class:`Indexable`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># determine and document index dependencies</span>
+        <span class="c1"># for indexable models based on index_depends_on field</span>
+
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">related</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">cls</span><span class="o">.</span><span class="n">m2m</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">related</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">m2m</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">Indexable</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">dep</span><span class="p">,</span> <span class="n">opts</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">index_depends_on</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="c1"># if a string, assume attribute of model</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dep</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">dep</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">ManyToManyDescriptor</span><span class="p">):</span>
+                        <span class="c1"># store related model and options with signal handlers</span>
+                        <span class="n">related</span><span class="p">[</span><span class="n">attr</span><span class="o">.</span><span class="n">rel</span><span class="o">.</span><span class="n">model</span><span class="p">]</span> <span class="o">=</span> <span class="n">opts</span>
+                        <span class="c1"># add through model to many to many list</span>
+                        <span class="n">m2m</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">attr</span><span class="o">.</span><span class="n">through</span><span class="p">)</span>
+
+        <span class="bp">cls</span><span class="o">.</span><span class="n">related</span> <span class="o">=</span> <span class="n">related</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">m2m</span> <span class="o">=</span> <span class="n">m2m</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Princeton Prosody Archive</a></h1>
+
+
+
+<p class="blurb">Django web application for "Princeton Prosody Archive" CDH project</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=Princeton-CDH&repo=ppa-django&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+    
+
+<p>
+<a class="badge" href="https://travis-ci.org/Princeton-CDH/ppa-django">
+    <img
+        alt="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
+        src="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
+    />
+</a>
+</p>
+
+
+
+
+    
+
+<p>
+<a class="badge" href="https://codecov.io/github/Princeton-CDH/ppa-django">
+    <img
+    alt="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
+    src="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
+    />
+</a>
+</p>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../codedocs.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deploynotes.html">Deploy Notes</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><div class="powered_by">
+<p>Powered by:</p>
+<a href="http://cdh.princeton.edu/">
+<img src="https://cdh.princeton.edu/static/img/CDH_logo.svg"
+    alt="Center for Digital Humanities @ Princeton" />
+</a>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, CDH @ Princeton University.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
