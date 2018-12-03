@@ -158,16 +158,17 @@
             }
         }
 
-        &.about {
-            &.triangle::before { // can't use .active because it's a dropdown
-                @include triangle-overlay($pink);
-            }
+        &.active,
+        &.about.triangle {
+            font-weight: bold;
+        }
+
+        &.about.triangle::before { 
+            @include triangle-overlay($pink);
         }
         
-        &.editorial {
-            &.active::before {
-                @include triangle-overlay($purple);
-            }
+        &.editorial.active::before {
+            @include triangle-overlay($purple);
         }
 
         &.collections,
