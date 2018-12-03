@@ -1,3 +1,0 @@
-$(function(){
-    $('.question-popup').popup()
-})

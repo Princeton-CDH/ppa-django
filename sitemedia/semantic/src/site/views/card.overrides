@@ -5,13 +5,15 @@
 .ui.card,
 .ui.cards > .card
 {
-    padding: 20px;
-    margin: 1em 0;
+    padding: @padding;
+    margin: 1rem 0;
     width: @width;
     height: @height;
+    transition: all 0.2s ease;
+    overflow: hidden;
 
     @media (min-width: @tabletBreakpoint) {
-        margin: 2em 0;
+        margin: 2rem 0;
         width: 345px;
         padding: 20px 30px;
     }
@@ -22,7 +24,7 @@
     }
 
     > .content > .header:not(.ui) {
-        font-size: 26px;
+        font-size: 2rem;
         margin-bottom: 0;
     }
 
@@ -31,17 +33,32 @@
         text-align: center;
     }
 
+    .content {
+        overflow: hidden;
+    }
+
+    .content::before {
+        background-image: linear-gradient(to bottom, transparent 75%, white 90%, white);
+        content: "\00a0";
+        height: 100%;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+
     .description {
-        font-family: @headerFont;
-        font-size: 16px;
+        font-family: @fontFamily;
+        font-size: 1rem;
         line-height: normal;
+        text-align: left;
 
         > * {
-            line-height: normal;
+            line-height: 1.25;
         }
 
         @media (min-width: @tabletBreakpoint) {
-            font-size: 18px;
+            font-size: 1.25rem;
         }
     }
 
@@ -59,91 +76,64 @@
         height: @asideHeight;
         margin: @asideMargin;
         padding: @asidePadding;
-        box-shadow: none;
+        box-shadow: @asideBoxShadow;
+
+        @media (min-width: @tabletBreakpoint) {
+            width: 300px;
+        }
 
         &:hover {
-            box-shadow: none;
+            box-shadow: @asideHoverBoxShadow;
         }
 
         .header:not(.ui) {
-            font-size: 26px;
+            font-size: 2rem;
         }
 
         .description {
             margin-bottom: 1em;
-            font-size: 18px;
+            font-size: 1.25rem;
         }
     }
 
     &.post {
-        width: 294px;
-        height: 294px;
-        box-shadow: none;
-        margin: 1em 0;
+        height: @postHeight;
+        padding: 0;
 
         @media (min-width: @tabletBreakpoint) {
-            width: 345px;
-            height: 345px;
+            height: @postLargeHeight;
         }
 
-        @media (min-width: @computerBreakpoint) {
-            width: 360px;
-            height: 360px;
-        }
-
-        &:hover {
-            box-shadow: none;
-        }
-
-        .header,
-        .meta,
+        .top,
         .description {
-            position: absolute;
-            margin-left: auto;
-            margin-right: auto;
-            left: 0;
-            right: 0;
+            margin-top: 1rem;
+            padding: @postPadding;
+
+            @media (min-width: @tabletBreakpoint) {
+                margin-top: 0;
+                padding: 2rem;
+            }
+        }
+
+        .top {
+            border-bottom: 2px solid @postLinkShadowColor;
+        }
+        
+        .header {
+            font-size: 1.8rem;
+            text-align: left;
+            line-height: 1.2;
         }
 
         .meta {
-            z-index: 3;
-            margin-top: 1em;
-
-            @media (min-width: @tabletBreakpoint) {
-                margin-top: 2.5em;
-            }
-
-            @media (min-width: @computerBreakpoint) {
-                margin-top: 3em;
-            }
+            margin-top: 0.5rem;
+            font-size: 1rem;
+            text-align: left;
         }
 
-        .header {
-            z-index: 2;
-            width: @postPageWidth;
-            height: @postPageHeight;
-            padding: @postPagePadding;
-            background-color: @postPageColor;
-            color: @postPageTextColor;
-            box-shadow: @postPageBoxShadow;
-
-            @media (min-width: @tabletBreakpoint) {
-                top: 45px;
-            }
-
-            @media (min-width: @computerBreakpoint) {
-                top: 50px;
-            }
-        }
-
-        .description {
-            top: 0;
-            margin: 0 !important;
-            padding: @postBackgroundPadding;
-            width: 100%;
-            height: 100%;
-            background-color: @postBackgroundColor;
-            color: @postBackgroundTextColor;
+        .description p {
+            line-height: 1.2;
+            font-size: 1.2rem;
         }
     }
 }
@@ -161,15 +151,19 @@ a.ui.card,
     }
 
     &.aside {
-        border-left: @asideLinkBorder;
+        box-shadow: @asideLinkBoxShadow;
 
         &:hover {
-            border-left: @asideLinkHoverBorder;
+            box-shadow: @asideLinkHoverBoxShadow;
         }
     }
 
-    &.post:hover .header {
-        box-shadow: @postLinkHoverBoxShadow;
+    &.post {
+        box-shadow: @postLinkBoxShadow;
+
+        &:hover {
+            box-shadow: @postLinkHoverBoxShadow;
+        }
     }
 
     @media (hover: none) {

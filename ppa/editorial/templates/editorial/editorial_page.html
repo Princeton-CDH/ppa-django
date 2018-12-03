@@ -1,0 +1,14 @@
+{% extends 'pages/content_page.html' %}
+{% load static wagtailcore_tags %}
+
+{% block meta_title %}{% firstof page.seo_title page.title %}{% endblock %}
+{% block meta_description %}{{ page.get_plaintext_description }}{% endblock %}
+{# keywords for meta not yet implemented in wagtail #}
+
+{% block page_header %}
+    {% include 'snippets/header.html' with style='editorial' %}
+{% endblock %}
+
+{% block page_nav %}
+    {% include 'snippets/nav.html' with style="editorial" active="editorial" %}
+{% endblock %}

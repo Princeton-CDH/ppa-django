@@ -1,0 +1,63 @@
+.page {
+    width: 100%;
+    display: flex;
+    // on small screen, wrap text below image
+    @media (max-width: $tablet) {
+        flex-wrap: wrap;
+    }
+
+    &:nth-child(2) {
+        display: none;
+    }
+
+    #search & { // on the search page, allow showing a second preview page
+        @media (min-width: $largeMonitor) {
+            width: 50%;
+
+            &:nth-child(2) {
+                display: flex;
+            }
+        }
+    }
+
+
+    .preview {
+        margin-right: 1rem;
+
+        img {
+            width: 180px;
+        }
+
+        #digitized-work & { // larger size on digitized work page
+            margin-right: 2rem;
+
+            img {
+                width: 225px;
+            }
+        }
+    }
+
+    .snippets {
+        flex: 1 1 auto;
+        margin: 0 1rem;
+
+        .page-number {
+
+          a {
+            font-size: 1rem;
+            font-family: $pageFont;
+          }
+        }
+
+        .snippet {
+            font-size: 1.25rem;
+            color: $darkGrey;
+            line-height: normal;
+        }
+    }
+
+    em {
+        font-style: normal;
+        color: $blue;
+    }
+}
