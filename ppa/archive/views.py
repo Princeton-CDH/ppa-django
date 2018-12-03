@@ -73,6 +73,10 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             sort = search_opts.get("sort", None)
             collections = search_opts.get("collections", None)
 
+            if self.query:
+                # simple keyword search across all configured fields
+                # group to ensure boolean logic applies to all terms
+                text_query = "(%s)" % self.query
 
             work_q = []
             # restrict by collection if specified
@@ -87,7 +91,6 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                     work_q.append('%s:(%s)' % \
                                   (field, search_opts[field]))
 
-
         # use join to ensure we always get the work if any pages match
         # using query syntax as documented at
         # http://comments.gmane.org/gmane.comp.jakarta.lucene.solr.user/95646
@@ -96,7 +99,6 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             # logger.debug("Solr search query: %s", solr_q)
         # else:
             # solr_q = '*:*'
-
 
         range_opts = {
             'facet.range': self.form.range_facets
@@ -139,7 +141,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
 
         # if there are any queries to filter works  or search by text,
         # combine the queries and construct solr query
-        if work_q or self.query:
+        if work_q or text_query:
             query_parts = []
 
             # work-level metadata queries and filters
@@ -151,7 +153,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                 # search for works that match the filters OR for pages that belong
                 # to a work that matches, but only if there is also a text_query.
                 # If there is not text_query, pages are not needed.
-                if self.query:
+                if text_query:
                     query_parts.append(
                         '(%s OR {!join from=id to=srcid v=$work_query})' % work_query
                     )
@@ -159,11 +161,11 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                     query_parts.append(work_query)
 
             # general text query, if there is one
-            if self.query:
+            if text_query:
                 # search for works that match the filter OR for works
                 # associated with pages that match
                 query_parts.append(
-                     '(%s OR {!join from=srcid to=id v=$text_query})' % self.query
+                     '(%s OR {!join from=srcid to=id v=$text_query})' % text_query
                 )
 
             # combine work and text queries together with AND
@@ -197,7 +199,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             'expand': 'true',
             'expand.rows': 2,   # number of items in the collapsed group, i.e pages to display
             # explicitly query pages on text content (join q seems to skip qf)
-            'text_query': 'content:(%s)' % self.query,
+            'text_query': 'content:%s' % text_query,
             'work_query': work_query
         }
 
@@ -233,7 +235,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
         # NOTE 2: using quotes around ids to handle ids that include
         # colons, e.g. ark:/foo/bar .
         solr_pageq = PagedSolrQuery({
-            'q': '%s AND id:(%s)' % \
+            'q': '(%s) AND id:(%s)' % \
                 (self.query, ' '.join('"%s"' % pid for pid in page_ids)),
             # enable highlighting on content field with 3 snippets
             'hl': True,

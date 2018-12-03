@@ -785,9 +785,7 @@ class TestDigitizedWorkListView(TestCase):
             # rows should match # of page ids
             assert solr_opts['rows'] == 4
             # query includes keyword search term
-            # assert 'text:(%s) AND ' % digworkview.query in solr_opts['q']
-            # assert '(%s) AND ' % digworkview.query in solr_opts['q']
-            assert '%s AND ' % digworkview.query in solr_opts['q']
+            assert '(%s) AND ' % digworkview.query in solr_opts['q']
 
             # query also inlcudes page ids
             assert ' AND id:("p1a" "p1b" "p2a" "p2b")' in solr_opts['q']
