@@ -37,7 +37,7 @@
         }
 
         .item {
-            visibility: hidden;
+            display: none;
             margin-left: 1rem;
         }
 
@@ -45,7 +45,7 @@
             padding-bottom: 0 !important;
 
             .item {
-                visibility: visible;
+                display: block;
             }
 
             .icon {
