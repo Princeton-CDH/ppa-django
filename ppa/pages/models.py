@@ -9,7 +9,6 @@ from wagtail.images.blocks import ImageChooserBlock
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.snippets.models import register_snippet
 
-
 from ppa.archive.models import Collection
 
 
