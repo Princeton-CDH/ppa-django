@@ -139,6 +139,10 @@
             display: flex;
         }
 
+        &.about {
+            padding-right: 10px; // avoid placement of triangle over icon
+        }
+
         &.toc,
         &.search {
             display: flex;
