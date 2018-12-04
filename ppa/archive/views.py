@@ -65,7 +65,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
         if not self.form.is_valid():
             return DigitizedWork.objects.none()
 
-        work_query = sort = text_query = None
+        work_query = sort = keyword_query = None
         # components of query to filter digitized works
         if self.form.is_valid():
             search_opts = self.form.cleaned_data
@@ -76,7 +76,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             if self.query:
                 # simple keyword search across all configured fields
                 # group to ensure boolean logic applies to all terms
-                text_query = "(%s)" % self.query
+                keyword_query = "(%s)" % self.query
 
             work_q = []
             # restrict by collection if specified
@@ -141,7 +141,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
 
         # if there are any queries to filter works  or search by text,
         # combine the queries and construct solr query
-        if work_q or text_query:
+        if work_q or keyword_query:
             query_parts = []
 
             # work-level metadata queries and filters
@@ -151,9 +151,9 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                 work_query = '(%s)' % ' AND '.join(work_q)
                 # NOTE: grouping required for work_query to work properly on the join
                 # search for works that match the filters OR for pages that belong
-                # to a work that matches, but only if there is also a text_query.
-                # If there is not text_query, pages are not needed.
-                if text_query:
+                # to a work that matches, but only if there is also a keyword_query.
+                # If there is not keyword_query, pages are not needed.
+                if keyword_query:
                     query_parts.append(
                         '(%s OR {!join from=id to=srcid v=$work_query})' % work_query
                     )
@@ -161,11 +161,11 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                     query_parts.append(work_query)
 
             # general text query, if there is one
-            if text_query:
+            if keyword_query:
                 # search for works that match the filter OR for works
                 # associated with pages that match
                 query_parts.append(
-                     '(%s OR {!join from=srcid to=id v=$text_query})' % text_query
+                     '(%s OR {!join from=srcid to=id v=$keyword_query})' % keyword_query
                 )
 
             # combine work and text queries together with AND
@@ -199,7 +199,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             'expand': 'true',
             'expand.rows': 2,   # number of items in the collapsed group, i.e pages to display
             # explicitly query pages on text content (join q seems to skip qf)
-            'text_query': 'content:%s' % text_query,
+            'keyword_query': 'content:%s' % keyword_query,
             'work_query': work_query
         }
 
