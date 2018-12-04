@@ -12,3 +12,11 @@
 {% block page_nav %}
     {% include 'snippets/nav.html' with style="editorial" active="editorial" %}
 {% endblock %}
+
+{% block attribution %}
+<div>
+    <p>
+{% include 'editorial/snippets/attribution.html' with page=page add_urls=True %}
+    </p>
+</div>
+{% endblock %}

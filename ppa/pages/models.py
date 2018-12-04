@@ -7,8 +7,37 @@ from wagtail.admin.edit_handlers import FieldPanel, PageChooserPanel, \
     StreamFieldPanel
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.documents.blocks import DocumentChooserBlock
+from wagtail.snippets.models import register_snippet
 
 from ppa.archive.models import Collection
+
+
+@register_snippet
+class Person(models.Model):
+    '''Common model for a person, currently used to document authorship for
+    instances of :class:`ppa.editorial.models.EditorialPage`.'''
+
+    #: the display name of an individual
+    name = models.CharField(
+        max_length=255,
+        help_text='Full name for the person as it should appear in the author '
+                  'list.'
+    )
+    #: identifying URI for a person (VIAF, ORCID iD, personal website, etc.)
+    url = models.URLField(
+        blank=True,
+        default='',
+        help_text='Personal website, profile page, or social media profile page '
+                  'for this person.'
+        )
+
+    panels = [
+        FieldPanel('name'),
+        FieldPanel('url'),
+    ]
+
+    def __str__(self):
+        return self.name
 
 
 class HomePage(Page):
@@ -158,6 +187,3 @@ class CollectionPage(Page):
             'stats': Collection.stats(),
         })
         return context
-
-
-
