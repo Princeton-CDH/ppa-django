@@ -140,7 +140,7 @@
     
     .collections-link {
         display: inline-block;
-        border-bottom: 2px solid $darkBlue;
+        border-bottom: 2px solid $french-blue;
         margin: 2rem 0 4rem;
 
         @media (min-width: $tablet) {
@@ -148,7 +148,7 @@
         }
         
         .header {
-            color: $darkBlue;
+            color: $french-blue;
             font-family: $pageFont;
             font-weight: normal;
             text-transform: uppercase;
