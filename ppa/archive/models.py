@@ -9,6 +9,7 @@ from django.db import models
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
 from pairtree import pairtree_path, pairtree_client
+from pairtree.storage_exceptions import ObjectNotFoundException
 from wagtail.core.fields import RichTextField
 from wagtail.admin.edit_handlers import FieldPanel
 from wagtail.snippets.models import register_snippet
@@ -114,7 +115,7 @@ class Collection(TrackChangesModel):
         return stats
 
 
-class DigitizedWork(models.Model, Indexable):
+class DigitizedWork(TrackChangesModel, Indexable):
     '''
     Record to manage digitized works included in PPA and store their basic
     metadata.
@@ -228,6 +229,14 @@ class DigitizedWork(models.Model, Indexable):
     printed_by_re = r'^(Printed)?( and )?(Pub(.|lished|lisht)?)?( and sold)? (by|for|at)( the)? ?'
     # Printed by/for (the); Printed and sold by; Printed and published by;
     # Pub./Published/Publisht at/by/for the
+
+    def save(self, *args, **kwargs):
+        # if status has changed and object is now suppressed, remove data
+        if self.has_changed('status') and self.status == self.SUPPRESSED:
+            self.delete_hathi_pairtree_data()
+
+        super().save(*args, **kwargs)
+
 
     def populate_from_bibdata(self, bibdata):
         '''Update record fields based on Hathi bibdata information.
@@ -433,16 +442,33 @@ class DigitizedWork(models.Model, Indexable):
         # pairtree encoded version of the id
         return pairtree_path.id_encode(self.hathi_pairtree_id)
 
+    def hathi_pairtree_client(self):
+        '''Initialize a pairtree client for the pairtree datastore this
+         object belongs to, based on its Hathi prefix id.'''
+        return pairtree_client.PairtreeStorageClient(
+            self.hathi_prefix,
+            os.path.join(settings.HATHI_DATA, self.hathi_prefix))
+
     def hathi_pairtree_object(self, ptree_client=None):
         '''get a pairtree object for the current work'''
         if ptree_client is None:
             # get pairtree client if not passed in
-            ptree_client = pairtree_client.PairtreeStorageClient(
-                self.hathi_prefix,
-                os.path.join(settings.HATHI_DATA, self.hathi_prefix))
+            ptree_client = self.hathi_pairtree_client()
+
         # return the pairtree object for current work
         return ptree_client.get_object(self.hathi_pairtree_id,
                                        create_if_doesnt_exist=False)
+
+    def delete_hathi_pairtree_data(self):
+        '''Delete pairtree object from the pairtree datastore.'''
+        logger.info('Deleting pairtree data for %s', self.source_id)
+        try:
+            self.hathi_pairtree_client() \
+                .delete_object(self.hathi_pairtree_id)
+        except ObjectNotFoundException:
+            # data is already gone; warn, but not an error
+            logger.warn('Pairtree deletion failed; object not found %s',
+                         self.source_id)
 
     def _hathi_content_path(self, ext, ptree_client=None):
         '''path to zipfile within the hathi contents for this work'''
