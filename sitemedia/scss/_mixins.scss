@@ -56,11 +56,11 @@
     border-bottom: 5px solid $color;
     font-size: 2rem;
     font-weight: normal;
-    margin: 4rem 0 2rem;
+    margin: 6rem 0 2rem;
 
     @media (min-width: $tablet) {
         font-size: 3rem;
-        margin: 3rem 0;
+        margin: 8rem 0 2rem;
     }
 }
 
