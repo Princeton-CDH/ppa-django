@@ -24,9 +24,33 @@ logger = logging.getLogger(__name__)
 #: label to use for items that are not in a collection
 NO_COLLECTION_LABEL = 'Uncategorized'
 
+class TrackChangesModel(models.Model):
+    ''':Model mixin that keeps a copy of initial data in order to check
+    if fields have been changed. Change detection only works on the
+    current instance of an object.'''
+
+    class Meta:
+        abstract = True
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # store a copy of model data to allow for checking if
+        # it has changed
+        self.__initial = self.__dict__.copy()
+
+    def save(self, *args, **kwargs):
+        '''Saves data and reset copy of initial data.'''
+        super().save(*args, **kwargs)
+        # update copy of initial data to reflect saved state
+        self.__initial = self.__dict__.copy()
+
+    def has_changed(self, field):
+        '''check if a field has been changed'''
+        return getattr(self, field) != self.__initial[field]
+
 
 @register_snippet
-class Collection(models.Model):
+class Collection(TrackChangesModel):
     '''A collection of :class:`ppa.archive.models.DigitizedWork` instances.'''
     #: the name of the collection
     name = models.CharField(max_length=255)
@@ -49,24 +73,10 @@ class Collection(models.Model):
     def __str__(self):
         return self.name
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # store a copy of model data to allow for checking if
-        # it has changed
-        self.__initial = self.__dict__.copy()
-
-    def save(self, *args, **kwargs):
-        """
-        Saves model and set initial state.
-        """
-        super().save(*args, **kwargs)
-        # update copy of initial data to reflect saved state
-        self.__initial = self.__dict__.copy()
-
     @property
     def name_changed(self):
         '''check if name has been changed (only works on current instance)'''
-        return self.name != self.__initial['name']
+        return self.has_changed('name')
 
     @staticmethod
     def stats():
@@ -430,7 +440,6 @@ class DigitizedWork(models.Model, Indexable):
             ptree_client = pairtree_client.PairtreeStorageClient(
                 self.hathi_prefix,
                 os.path.join(settings.HATHI_DATA, self.hathi_prefix))
-
         # return the pairtree object for current work
         return ptree_client.get_object(self.hathi_pairtree_id,
                                        create_if_doesnt_exist=False)
