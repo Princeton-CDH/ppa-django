@@ -149,10 +149,11 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                 # combine all work filters from search form input
                 # (input from different fields are combined via *AND*)
                 work_query = '(%s)' % ' AND '.join(work_q)
-                # NOTE: grouping required for work_query to work properly on the join
-                # search for works that match the filters OR for pages that belong
-                # to a work that matches, but only if there is also a keyword_query.
-                # If there is not keyword_query, pages are not needed.
+                # NOTE: grouping required for work_query to work properly
+                # on the join search for works that match the filters OR
+                # for pages that belong to a work that matches, but only
+                # if there is also a keyword_query. If there is not
+                # keyword_query, pages are not needed.
                 if keyword_query:
                     query_parts.append(
                         '(%s OR {!join from=id to=srcid v=$work_query})' % work_query
