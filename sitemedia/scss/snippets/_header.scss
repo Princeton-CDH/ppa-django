@@ -33,9 +33,13 @@ header { // used mostly as space for banner images
         }
     
         #scene { // parallax items
-            margin: 45px auto 0;
+            margin: 20px auto 0;
             width: 300px;
             mask-image: none;
+
+            @media (min-width: $tablet) {
+                margin: $nav-height * 2 auto 0;
+            }
     
             .layer {
                 height: 200px;
