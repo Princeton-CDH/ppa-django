@@ -17,7 +17,7 @@
     }
 },
 {
-    "model": "editorial.person",
+    "model": "pages.person",
     "pk": 2,
     "fields": {
         "name": "Person B",
@@ -25,7 +25,7 @@
     }
 },
 {
-    "model": "editorial.person",
+    "model": "pages.person",
     "pk": 1,
     "fields": {
         "name": "Person A",
@@ -287,7 +287,10 @@
         "title": "Test Page with Authors",
         "draft_title": "Test Page with Authors",
         "slug": "test-page-authors",
-        "content_type": 33,
+        "content_type": [
+            "editorial",
+            "editorialpage"
+        ],
         "live": true,
         "has_unpublished_changes": false,
         "url_path": "/home/editorial/2018/12/test-page-authors/",

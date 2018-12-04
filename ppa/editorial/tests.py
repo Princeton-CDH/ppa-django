@@ -10,7 +10,8 @@ from wagtail.tests.utils.form_data import nested_form_data, \
 import pytest
 
 from ppa.pages.models import HomePage
-from ppa.editorial.models import EditorialIndexPage, EditorialPage, Person
+from ppa.editorial.models import EditorialIndexPage, EditorialPage
+from ppa.pages.models import Person
 
 
 class TestEditorialIndexPage(WagtailPageTests):
@@ -89,6 +90,9 @@ class TestEditorialIndexPage(WagtailPageTests):
         editorial_index_url = index_page.relative_url(site)
         response = self.client.get(editorial_index_url)
         assert response.status_code == 200
+        editorial_with_authors = EditorialPage.objects.get(
+            title__icontains='Test Page with Authors'
+        )
         # basic template/content check
         # NOTE: Should these be refactored into separate template
         # checking test?
@@ -100,6 +104,9 @@ class TestEditorialIndexPage(WagtailPageTests):
         person_b = Person.objects.get(name='Person B')
         self.assertContains(response, person_a.name, count=1)
         self.assertContains(response, person_b.name, count=1)
+        # each should only show the 'By' and 'On' twice (for two dates)
+        self.assertContains(response, 'By', count=1)
+        self.assertContains(response, 'On', count=2)
         # the url for person A should not be present to avoid a
         # link within a link
         self.assertNotContains(
@@ -107,6 +114,20 @@ class TestEditorialIndexPage(WagtailPageTests):
             '<a href="%s"' % person_a.url,
             html=True,
         )
+        # the date of the post's publication should be present with slash
+        self.assertContains(
+            response,
+            '/ On %s' % editorial_with_authors
+                .first_published_at.strftime('%B %-d, %Y'),
+            count=1
+            )
+        # the date of the post without authors should be present, without slash
+        self.assertContains(
+            response,
+            'On %s' % editorial_page
+                .first_published_at.strftime('%B %-d, %Y'),
+            count=1
+            )
 
         # year only should 404
         response = self.client.get(editorial_index_url + '2018/')
@@ -203,6 +224,16 @@ class TestEditorialPage(WagtailPageTests):
         person_b = Person.objects.get(name='Person B')
         self.assertContains(response, person_a.name, count=1)
         self.assertContains(response, person_b.name, count=1)
+        # each should only show the 'By' and 'On' once
+        self.assertContains(response, 'By', count=1)
+        self.assertContains(response, 'On', count=1)
+        # the date of the post's publication should be present with slash
+        self.assertContains(
+            response,
+            '/ On %s' % editorial_page
+                .first_published_at.strftime('%B %-d, %Y'),
+            count=1
+            )
         # the url for person A should be present once
         self.assertContains(response, person_a.url, count=1)
         # check order of authors in the page context
@@ -214,6 +245,22 @@ class TestEditorialPage(WagtailPageTests):
         # order as set in the editorial page should be [B is 2, A is 1]
         assert page.authors.stream_data[0]['value'] == 2
         assert page.authors.stream_data[1]['value'] == 1
+        # delete them
+        editorial_page.authors = None
+        editorial_page.save()
+        response = self.client.get(editorial_url)
+        # each author should be shown once
+        self.assertNotContains(response, person_a.name)
+        self.assertNotContains(response, person_b.name)
+        # each should not show the 'By' and 'On' once with date still
+        # the date of the post's publication should be present
+        # without slash
+        self.assertContains(
+            response,
+            'On %s' % editorial_page
+                .first_published_at.strftime('%B %-d, %Y'),
+            count=1
+            )
 
 
 class TestPerson(TestCase):
