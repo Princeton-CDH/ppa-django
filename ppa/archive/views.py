@@ -373,7 +373,7 @@ class DigitizedWorkCSV(ListView):
         'Database ID', 'Source ID', 'Record ID', 'Title', 'Subtitle',
         'Sort title', 'Author', 'Publication Date', 'Publication Place',
         'Publisher', 'Enumcron', 'Collection', 'Public Notes', 'Notes',
-        'Page Count', 'Date Added', 'Last Updated'
+        'Page Count', 'Status', 'Date Added', 'Last Updated'
     ]
 
     def get_csv_filename(self):
@@ -394,8 +394,8 @@ class DigitizedWorkCSV(ListView):
                  dw.sort_title, dw.author, dw.pub_date, dw.pub_place,
                  dw.publisher, dw.enumcron,
                  ';'.join([coll.name for coll in dw.collections.all()]),
-                 dw.public_notes, dw.notes, dw.page_count, dw.added,
-                 dw.updated
+                 dw.public_notes, dw.notes, dw.page_count,
+                 dw.get_status_display(), dw.added, dw.updated
                  )
                 for dw in self.get_queryset().prefetch_related('collections'))
         # NOTE: prefetch collections so they are retrieved more efficiently
