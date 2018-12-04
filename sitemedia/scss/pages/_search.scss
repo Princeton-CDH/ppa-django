@@ -23,7 +23,7 @@
         }
 
         &:nth-child(2) {
-            border-top: 1px solid $lightGrey;
+            border-top: 1px solid #D8D8D8;
         }
 
         &:last-child {
@@ -41,24 +41,9 @@
         padding-top: 0;
 
         a {
-            color: $secondaryColor;
             margin: auto;
             margin-bottom: 1rem;
             cursor: pointer;
-    
-            &:hover {
-                color: $gold;
-            }
-
-            @media (hover: none) {
-                &:hover {
-                    color: $secondaryColor;
-                }
-                &:active {
-                    color: $gold;
-                }
-            }
-
         }
 
         @media (min-width: $tablet) {
@@ -118,14 +103,9 @@
 
     .clear-selection {
         cursor: pointer;
-        color: $secondaryColor;
         position: absolute;
         bottom: -.5rem;
         left: 1rem;
-
-        &:hover {
-            color: $gold;
-        }
 
         @media (min-width: $tablet) {
             bottom: 1rem;
@@ -200,7 +180,7 @@
     
     .pagination-sort {
         margin: 0 1rem;
-        border-bottom: 2px solid $teal;
+        border-bottom: 2px solid $seafoam-blue;
     }
 
     .pagination-bottom {
