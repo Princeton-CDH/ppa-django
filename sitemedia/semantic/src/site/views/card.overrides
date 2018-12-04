@@ -43,10 +43,6 @@
         line-height: normal;
         text-align: left;
 
-        > * {
-            line-height: 1.25;
-        }
-
         @media (min-width: @tabletBreakpoint) {
             font-size: 1.25rem;
         }
