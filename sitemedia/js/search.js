@@ -38,6 +38,9 @@ $(function(){
     function submitForm(state) {
         if (!validate()) return // don't submit an invalid form
         state = state.filter(field => field.value != '') // filter out empty fields
+        if (state.filter(field => field.name == 'collections').length == 0) { // if the user manually turned off all collections...
+            state.push({ name: "collections", value: "" }) // add a blank value to indicate that specific case
+        }
         if (state.filter(field => $$textInputs.get().map(el => el.name).includes(field.name)).length == 0) { // if no text query,
             $$relevanceOption.addClass('disabled') // disable relevance
             let sort = state.find(field => field.name == 'sort') // check if a sort was set

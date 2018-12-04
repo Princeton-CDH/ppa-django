@@ -1,7 +1,7 @@
 .archive-link {
     display: inline-block;
     padding: 0.8rem;
-    background-color: $darkBlue;
+    background-color: $french-blue;
     border-radius: 3px;
 
     @media (min-width: $tablet) {
@@ -12,7 +12,7 @@
     .ui.header {
         color: white;
         font-size: 1rem;
-        font-weight: normal;
+        font-weight: bold;
         text-transform: uppercase;
         font-family: $pageFont;
 

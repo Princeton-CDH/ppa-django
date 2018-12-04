@@ -15,26 +15,26 @@ header { // used mostly as space for banner images
     }
 
     &.contentpage {
-        @include notes-header($pink);
+        @include notes-header($rosy-pink);
     }
 
     &.collections {
-        @include notes-header($teal);
+        @include notes-header($seafoam-blue);
     }
 
     &.editorial {
-        @include notes-header($purple);
+        @include notes-header($twilight);
     }
 
     &.homepage {
-        @include notes-header($midGrey);
+        @include notes-header($warm-grey);
 
         .banner {
             opacity: 0.5; // darker banner
         }
 
         #scene { // parallax items
-            margin: 45px auto 0;
+            margin: 20px auto 0;
             width: 300px;
             mask-image: none;
 

@@ -9,6 +9,7 @@
     -webkit-mask-position: top;
     -webkit-mask-size: cover;
     -webkit-mask-repeat: no-repeat;
+    z-index: -1;
     
     // small 1x and 2x
     min-height: $banner-height;
@@ -55,11 +56,11 @@
     border-bottom: 5px solid $color;
     font-size: 2rem;
     font-weight: normal;
-    margin: 4rem 0 2rem;
+    margin: 6rem 0 2rem;
 
     @media (min-width: $tablet) {
         font-size: 3rem;
-        margin: 3rem 0;
+        margin: 8rem 0 2rem;
     }
 }
 
@@ -86,8 +87,8 @@
 }
 
 @mixin link() {
-    color: $darkBlue;
-    border-bottom: 2px solid $darkBlue;
+    color: $french-blue;
+    border-bottom: 2px solid $french-blue;
     cursor: pointer;
 }
 
