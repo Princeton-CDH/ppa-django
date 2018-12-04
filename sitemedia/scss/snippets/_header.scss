@@ -11,6 +11,7 @@ header { // used mostly as space for banner images
 
     .banner {
         position: absolute;
+        z-index: -1;
     }
 
     &.contentpage {
@@ -31,16 +32,12 @@ header { // used mostly as space for banner images
         .banner {
             opacity: 0.5; // darker banner
         }
-    
+
         #scene { // parallax items
             margin: 20px auto 0;
             width: 300px;
             mask-image: none;
 
-            @media (min-width: $tablet) {
-                margin: $nav-height * 2 auto 0;
-            }
-    
             .layer {
                 height: 200px;
                 left: 0;
@@ -50,7 +47,7 @@ header { // used mostly as space for banner images
                 user-select: none;
                 -moz-user-select: none;
                 -webkit-user-select: none;
-    
+
                 @media (min-width: $tablet) {
                     height: 300px;
                 }
