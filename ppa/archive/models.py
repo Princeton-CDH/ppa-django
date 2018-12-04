@@ -161,6 +161,19 @@ class DigitizedWork(models.Model, Indexable):
     #: date of last modification of the local record
     updated = models.DateTimeField(auto_now=True)
 
+    PUBLIC = 'P'
+    SUPPRESSED = 'S'
+    STATUS_CHOICES = (
+        (PUBLIC, 'Public'),
+        (SUPPRESSED, 'Suppressed'),
+    )
+    #: status of record; currently choices are public or suppressed
+    status = models.CharField(
+        max_length=2, choices=STATUS_CHOICES, default=PUBLIC,
+        help_text='Changing status to suppressed will remove rsync data ' +
+        'for that volume and remove from the public index. This is ' +
+        'currently not reversible, use with caution.')
+
     class Meta:
         ordering = ('sort_title',)
 
@@ -193,6 +206,13 @@ class DigitizedWork(models.Model, Indexable):
     display_title.short_description = 'title'
     display_title.admin_order_field = 'sort_title'
     display_title.allow_tags = True
+
+    def is_public(self):
+        '''admin display field indicating if record is public or suppressed'''
+        return self.status == self.PUBLIC
+    is_public.short_description = 'Public'
+    is_public.boolean = True
+    is_public.admin_order_field = 'status'
 
     #: regular expresion for cleaning preliminary text from publisher names
     printed_by_re = r'^(Printed)?( and )?(Pub(.|lished|lisht)?)?( and sold)? (by|for|at)( the)? ?'
