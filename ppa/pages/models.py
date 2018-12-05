@@ -123,7 +123,8 @@ class PagePreviewDescriptionMixin(models.Model):
 
     # ('a' is omitted by subsetting and p is added to default ALLOWED_TAGS)
     #: allowed tags for bleach html stripping in description
-    allowed_tags = bleach.sanitizer.ALLOWED_TAGS[1:] + ['p']
+    allowed_tags = list((set(bleach.sanitizer.ALLOWED_TAGS) |
+                        set(['p'])) - set(['a']))
 
     class Meta:
         abstract = True

@@ -158,7 +158,8 @@ class TestContentPage(WagtailPageTests):
         assert desc[:200] == bleach.clean(
             str(content_page.body[0]),
             # omit 'a' from list of allowed tags
-            tags=bleach.sanitizer.ALLOWED_TAGS[1:] + ['p'],
+            tags=list((set(bleach.sanitizer.ALLOWED_TAGS) |
+                       set(['p'])) - set(['a'])),
             strip=True
         )[:200]
         # empty tags in description shouldn't be used
@@ -181,7 +182,8 @@ class TestContentPage(WagtailPageTests):
             bleach.clean(
                 str(content_page2.body[1]),
                 # omit 'a' from list of allowed tags
-                tags=bleach.sanitizer.ALLOWED_TAGS[1:] + ['p'],
+                tags=list((set(bleach.sanitizer.ALLOWED_TAGS) |
+                          set(['p'])) - set(['a'])),
                 strip=True
             )[:200]
 
