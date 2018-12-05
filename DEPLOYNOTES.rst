@@ -6,7 +6,11 @@ Deploy and Upgrade notes
 0.12
 ----
 
-* Updated collection search logic requires reindexing works::
+* Solr field boosting requires an updated ``solrconfig.xml``. Before deploying
+  new code, ``solr_conf/solconfig.xml`` should be copied to the core's
+  `conf` directory and the core reloaded (or Solr restarted).
+
+* Updated collection search logic and field boosting require reindexing works::
 
     python manage.py index --works
 

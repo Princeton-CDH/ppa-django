@@ -38,6 +38,10 @@ header { // used mostly as space for banner images
             width: 300px;
             mask-image: none;
 
+            @media (min-width: $tablet) {
+                margin: 2*$nav-height auto 0;
+            }
+
             .layer {
                 height: 200px;
                 left: 0;
