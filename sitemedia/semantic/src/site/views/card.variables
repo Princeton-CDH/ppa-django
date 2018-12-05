@@ -15,8 +15,9 @@
 /* Card */
 @fontFamily: @pageFont;
 @width: 290px;
-@height: 230px;
+@height: 275px;
 @borderWidth: 0px;
+@padding: 20px;
 
 /*-------------------
        Content
@@ -58,7 +59,7 @@
 /* Aside */
 @asideMargin: 0 0 2rem;
 @asideWidth: 280px;
-@asideHeight: 360px;
+@asideHeight: 400px;
 @asidePadding: 30px;
 @asideShadowDistance: 10px;
 @asideShadowColor: @pink;
@@ -98,16 +99,11 @@
 ;
 
 /* Post */
-@postBackgroundColor: @primaryColor;
-@postBackgroundTextColor: @invertedTextColor;
-@postBackgroundPadding: 4rem 2rem 2rem 2rem;
-
-@postPageWidth: 200px;
-@postPageHeight: 260px;
-@postPageColor: @background;
-@postPageTextColor: @headerColor;
-@postPagePadding: 2rem;
-@postPageBoxShadow: @shadowBoxShadow;
+@postHeight: 430px;
+@postLargeHeight: 330px;
+@postPadding: 1rem;
 
 /* Post Link */
-@postLinkHoverBoxShadow: @linkHoverBoxShadow;
+@postLinkShadowColor: @purple;
+@postLinkBoxShadow: @shadowDistance @shadowDistance 0px 0px @postLinkShadowColor;
+@postLinkHoverBoxShadow: @hoverShadowDistance @hoverShadowDistance 0px 0px @postLinkShadowColor;

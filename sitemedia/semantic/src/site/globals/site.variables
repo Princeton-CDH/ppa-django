@@ -9,14 +9,14 @@
 @fontName              : 'Open Sans';
 @headerFontName        : 'Gentium Book Basic';
 
-@pageFont              : Helvetica, sans-serif;
-@headerFont            : @headerFontName, Palatino, serif;
+@pageFont              : 'Open Sans', Helvetica, sans-serif;
+@headerFont            : @pageFont;
 
-@googleFontSizes       : '600,600i,700,700i';
+@googleFontSizes       : '400,400i,700,700i';
 @googleFontSizesHeader : '400,400i,700,700i';
 @googleFont            : %('%s:@{googleFontSizes}', escape(@fontName));
 @googleFontHeader      : %('%s:@{googleFontSizesHeader}', escape(@headerFontName));
-@googleFontRequest     : '@{googleFontHeader}';
+@googleFontRequest     : '@{googleFont}';
 
 /*-------------------
       Base Sizes
@@ -77,7 +77,9 @@
 @dusk         : #444867;
 @teal         : #57C4C4;
 @darkBlue     : #4661AC;
+@blue         : #0788FC;
 @pink         : #F05B69;
+@purple       : #6252A0;
 
 /*-------------------
        Links

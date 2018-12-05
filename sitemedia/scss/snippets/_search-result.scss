@@ -11,7 +11,7 @@
     }
 
     .result-number {
-        color: $darkestGrey;
+        color: $black;
         font-family: $pageFont;
     }
 
@@ -54,7 +54,7 @@
     .labels,
     .title .header {
         font-size: 1.25rem;
-        color: $darkestGrey;
+        color: $black;
 
         @media (min-width: $tablet) {
             font-size: 1.5rem;
@@ -70,11 +70,11 @@
     .item-detail {
         bottom: 1rem;
         right: 1rem;
-        color: $darkBlue;
+        color: $french-blue;
         margin-left: auto;
 
         .chevron {
-            fill: $darkBlue;
+            fill: $french-blue;
             vertical-align: middle;
             margin-left: -0.5rem;
             width: 2rem;
@@ -109,7 +109,6 @@
 
         > .column {
             padding: 0 1rem;
-            // border-right: 1px solid $midGrey;
             text-align: center;
             
             &:first-child {
@@ -136,6 +135,10 @@
         .pub-date .field-value {
             font-size: 1.2rem;
         }
+    }
+
+    .total-pages {
+        font-weight: bold;
     }
 }
 

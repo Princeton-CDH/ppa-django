@@ -9,6 +9,7 @@
     -webkit-mask-position: top;
     -webkit-mask-size: cover;
     -webkit-mask-repeat: no-repeat;
+    z-index: -1;
     
     // small 1x and 2x
     min-height: $banner-height;
@@ -45,6 +46,29 @@
     }
 }
 
+@mixin notes-header($color) {
+    .banner {
+        @include responsive-banner("/static/img/ppa_pattern_home", $color);
+    }
+}
+
+@mixin underline-headline($color) {
+    border-bottom: 5px solid $color;
+    font-size: 2rem;
+    font-weight: normal;
+    margin: 6rem 0 2rem;
+    padding-bottom: 1rem;
+
+    @media (min-width: $tablet) {
+        font-size: 3rem;
+        margin: 8rem 0 2rem;
+    }
+
+    @media (min-width: $largeMonitor) {
+        width: 1000px;
+    }
+}
+
 @mixin wide-container() {
     width: 100%;
     margin-left: auto !important;
@@ -65,6 +89,12 @@
     border-left: 25px solid transparent;
     z-index: -1;
     opacity: 0.5;
+}
+
+@mixin link() {
+    color: $french-blue;
+    border-bottom: 2px solid $french-blue;
+    cursor: pointer;
 }
 
 @mixin font-smooth() {

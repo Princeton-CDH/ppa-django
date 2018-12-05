@@ -1,12 +1,17 @@
 #search {
-    margin-top: 0;
+
+    .sub.header { // "ARCHIVE" text
+        font-size: 1.5rem;
+        margin: 1rem 0;
+        text-align: center;
+    }
     
-    .container {
+    .container:not(.message) {
         @include wide-container();
     }
 
     .search {
-        padding-bottom: 0;
+        padding: 0;
     }
 
     .form > .vertical.segment { // stacked fieldsets
@@ -18,7 +23,7 @@
         }
 
         &:nth-child(2) {
-            border-top: 1px solid $lightGrey;
+            border-top: 1px solid #D8D8D8;
         }
 
         &:last-child {
@@ -30,37 +35,15 @@
         }
     }
 
-    .clear.times.icon {
-        left: auto;
-        right: 0;
-        cursor: pointer;
-        pointer-events: all;
-    }
-
     .show-advanced {
         background: #fff;
         text-align: center;
         padding-top: 0;
 
         a {
-            color: $secondaryColor;
             margin: auto;
             margin-bottom: 1rem;
             cursor: pointer;
-    
-            &:hover {
-                color: $gold;
-            }
-
-            @media (hover: none) {
-                &:hover {
-                    color: $secondaryColor;
-                }
-                &:active {
-                    color: $gold;
-                }
-            }
-
         }
 
         @media (min-width: $tablet) {
@@ -120,39 +103,12 @@
 
     .clear-selection {
         cursor: pointer;
-        color: $secondaryColor;
         position: absolute;
         bottom: -.5rem;
         left: 1rem;
 
-        &:hover {
-            color: $gold;
-        }
-
         @media (min-width: $tablet) {
             bottom: 1rem;
-        }
-    }
-
-    #histogram {
-        height: 8rem;
-
-        .values {
-            display: none;
-        }
-
-        .visualization {
-            width: 100%;
-            height: 4rem;
-        }
-
-        .min-date,
-        .max-date{
-            color: $midGrey;
-        }
-
-        .max-date {
-            float: right;
         }
     }
 
@@ -182,8 +138,7 @@
     }
 
     .zotero a {
-        color: $darkBlue;
-        border-bottom: 2px solid $darkBlue;
+        @include link;
     }
 
     #booleans {
@@ -210,17 +165,29 @@
     .data {
         display: none;
     }
-
-    .pagination-sort {
+    
+    .pagination-sort,
+    .pagination-bottom {
         display: flex;
         justify-content: center;
         align-items: center;
         flex-wrap: wrap;
-        margin: 0 1rem;
-        border-bottom: 2px solid $teal;
-
+        
         @media (min-width: $tablet) {
             justify-content: space-between;
+        }
+    }
+    
+    .pagination-sort {
+        margin: 0 1rem;
+        border-bottom: 2px solid $seafoam-blue;
+    }
+
+    .pagination-bottom {
+        padding: 0 1rem;
+
+        .page-controls {
+            position: relative;
         }
     }
 
@@ -256,5 +223,9 @@
         @media (min-width: $computer) {
             width: auto;
         }
+    }
+
+    .message {
+        margin-top: 2rem;
     }
 }

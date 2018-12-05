@@ -14,7 +14,7 @@ from django.views.generic.edit import FormView
 from SolrClient.exceptions import SolrError
 
 from ppa.archive.forms import SearchForm, AddToCollectionForm, SearchWithinWorkForm
-from ppa.archive.models import DigitizedWork, Collection
+from ppa.archive.models import DigitizedWork, Collection, NO_COLLECTION_LABEL
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 from ppa.common.views import VaryOnHeadersMixin
 
@@ -48,7 +48,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             if 'sort' in form_opts and form_opts['sort'] == 'relevance':
                 del form_opts['sort']
 
-        for key, val in self.form_class.defaults.items():
+        for key, val in self.form_class.defaults().items():
             # set as list to avoid nested lists
             # follows solution using in derrida-django for InstanceListView
             if isinstance(val, list):
@@ -79,10 +79,18 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                 keyword_query = "(%s)" % self.query
 
             work_q = []
-            # restrict by collection if specified
+
+            # restrict by collection
             if collections:
                 work_q.append('collections_exact:(%s)' % \
                     (' OR '.join(['"%s"' % coll for coll in collections])))
+
+            # For collection exclusion logic to work properly, if no
+            # collections are selected, no items should be returned.
+            # This query should return no items but still provide facet
+            # data to populate the collection filters on the form properly.
+            else:
+                work_q.append('item_type:work AND -collections_exact:[* TO *]')
 
             # filter books by title or author if there is a query
             for field in ['title', 'author']:
@@ -129,14 +137,12 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                 # NOTE: per facet.range.include documentation, default behavior
                 # is to include lower bound and exclude upper bound.
                 # For simplicity, increase range end by one.
-                'f.%s.facet.range.end' % range_facet: end,
+                'f.%s.facet.range.end' % range_facet: end + 1,
                 # calculate gap based start and end & desired number of slices
                 # ideally, generate 24 slices; minimum gap size of 1
                 'f.%s.facet.range.gap' % range_facet: max(1, int((end - start) / 24)),
                 # restrict last range to *actual* maximum value
                 'f.%s.facet.range.hardend' % range_facet: True,
-                # include start and end values in the bins
-                'f.%s.facet.range.include' % range_facet: 'edge'
             })
 
         # if there are any queries to filter works  or search by text,
@@ -267,6 +273,11 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             self.form.set_choices_from_facets(facet_dict)
             # needs to be inside try/catch or it will re-trigger any error
             facet_ranges = self.solrq.facet_ranges
+            # facet ranges are used for display; when sending to solr we
+            # increase the end bound by one so that year is included;
+            # subtract it back so display matches user entered dates
+            facet_ranges['pub_date']['end'] -= 1
+
         except SolrError as solr_err:
             context = {'object_list': []}
             if 'Cannot parse' in str(solr_err):
@@ -285,6 +296,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             'page_highlights': self.get_page_highlights(page_groups),
             # query for use template links to detail view with search
             'query': self.query,
+            'NO_COLLECTION_LABEL': NO_COLLECTION_LABEL
         })
         return context
 

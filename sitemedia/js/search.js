@@ -1,5 +1,6 @@
 import ReactiveForm from './ReactiveForm'
 import Histogram from './Histogram'
+import clearable from './clearable'
 
 $(function(){
 
@@ -9,7 +10,7 @@ $(function(){
 
     /* dom */
     const $$results = $('.ajax-container')
-    const $$paginationTop = $('.pagination').first()
+    const $$paginationTop = $('.page-controls').first()
     const $$resultsCount = $('.workscount .count')
     const $$clearDatesLink = $('.clear-selection')
     const $$minDateInput = $('#id_pub_date_0')
@@ -37,6 +38,9 @@ $(function(){
     function submitForm(state) {
         if (!validate()) return // don't submit an invalid form
         state = state.filter(field => field.value != '') // filter out empty fields
+        if (state.filter(field => field.name == 'collections').length == 0) { // if the user manually turned off all collections...
+            state.push({ name: "collections", value: "" }) // add a blank value to indicate that specific case
+        }
         if (state.filter(field => $$textInputs.get().map(el => el.name).includes(field.name)).length == 0) { // if no text query,
             $$relevanceOption.addClass('disabled') // disable relevance
             let sort = state.find(field => field.name == 'sort') // check if a sort was set
@@ -55,7 +59,7 @@ $(function(){
             }
         })
         req.then(res => res.text()).then(html => { // submit the form and get html back
-            $$paginationTop.html($(html).find('.pagination').html()) // update the top pagination
+            $$paginationTop.html($(html).find('.page-controls').html()) // update the top pagination
             dateHistogram.update(JSON.parse($(html).find('pre.facets').html())) // update the histogram
             $$resultsCount.html($(html).find('pre.count').html()) // update the results count
             $$results.html(html) // update the results
@@ -94,29 +98,11 @@ $(function(){
             onChange: () => $$sortInput[0].dispatchEvent(new Event('input')) // make sure sort changes trigger a submission
         })
         $('.form').keydown(e => { if (e.which === 13) e.preventDefault() }) // don't allow enter key to submit the search
-        $$textInputs.each(addClearButton)
-        $$textInputs.on('input', onTextInput)
+        $$textInputs.each((_, el) => clearable(el)) // make text inputs clearable
         validate()
     }
 
     function toggleAdvancedSearch() {
         $('.advanced').slideToggle()
-    }
-
-    function addClearButton(_, el) {
-        let clearButton = $('<i/>', { class: 'clear times icon' })
-        let clearField = () => { // called when the icon is clicked
-            $(el).val('') // empty the field
-            el.dispatchEvent(new Event('input')) // fake input to trigger resubmit
-        }
-        $(el).val() == '' ? clearButton.hide() : clearButton.show() // if the field is pre-populated, show it
-        clearButton.click(clearField) // clicking it clears the field
-        clearButton.insertAfter(el)
-    }
-
-    function onTextInput(event) {
-        // if the input was cleared out, hide the clear button, otherwise show it
-        let clearButton = $(event.target).parent().find('.clear.icon')
-        $(event.target).val() == '' ? clearButton.hide() : clearButton.show()
     }
 })

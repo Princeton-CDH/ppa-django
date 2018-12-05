@@ -2,7 +2,7 @@
 {% load static wagtailcore_tags %}
 
 {% block meta_title %}{% firstof page.seo_title page.title %}{% endblock %}
-{% block meta_description %}{{ page.search_description }}{% endblock %}
+{% block meta_description %}{{ page.get_plaintext_description }}{% endblock %}
 {# keywords for meta not yet implemented in wagtail #}
 
 {% block page-subtitle %}{% firstof page.seo_title page.title %} · {% endblock %}
@@ -17,9 +17,8 @@
 {% endblock %}
 
 {% block page_header %}
-<header class="ui vertical basic center aligned segment contentpage" id="header">
-    <div class="banner"></div>
-</header>
+{% include 'snippets/header.html' with style='contentpage' %}
+
 {% endblock %}
 
 {# page title displayed in page header snippet ? or only for some content pages #}
@@ -28,6 +27,7 @@
 <article class="ui text container">
     <h1 class="ui header">
         {% firstof page.title page_title object.title %}
+        {% block attribution %}{% endblock %}
     </h1>
     {% for block in page.body %}
         {% include_block block %}

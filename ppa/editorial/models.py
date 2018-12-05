@@ -1,15 +1,13 @@
 from datetime import date
 
-from django.db import models
 from django.http import Http404
-from wagtail.core import blocks
+from wagtail.admin.edit_handlers import FieldPanel, StreamFieldPanel
 from wagtail.core.models import Page
 from wagtail.core.fields import RichTextField, StreamField
-from wagtail.admin.edit_handlers import FieldPanel, StreamFieldPanel
-from wagtail.images.blocks import ImageChooserBlock
-from wagtail.documents.blocks import DocumentChooserBlock
+from wagtail.snippets.blocks import SnippetChooserBlock
 
-from ppa.pages.models import BodyContentBlock
+from ppa.pages.models import BodyContentBlock, PagePreviewDescriptionMixin, \
+    Person
 
 
 class EditorialIndexPage(Page):
@@ -83,14 +81,22 @@ class EditorialIndexPage(Page):
             return super().route(request, path_components)
 
 
-class EditorialPage(Page):
+class EditorialPage(Page, PagePreviewDescriptionMixin):
     '''Editorial page, for scholarly, educational, or other essay-like
     content related to the site'''
 
     # preliminary streamfield; we may need other options for content
     # (maybe a footnotes block?)
     body = StreamField(BodyContentBlock)
+    authors = StreamField(
+        [('author', SnippetChooserBlock(Person))],
+        blank=True,
+        help_text='Select people snippets to add as authors. Use the plus '
+                  'sign to add as many as you like. Drag and drop to order.'
+    )
     content_panels = Page.content_panels + [
+        FieldPanel('description'),
+        StreamFieldPanel('authors'),
         StreamFieldPanel('body'),
     ]
 
@@ -115,4 +121,3 @@ class EditorialPage(Page):
             self.url_path = '/'
 
         return self.url_path
-

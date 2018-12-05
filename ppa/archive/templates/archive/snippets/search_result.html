@@ -55,7 +55,10 @@
                     {% endfor %}
                 {% else %} {# solr object with list of strings #}
                     {% for collection in item.collections %}
+                        {# Don't display collection badge for uncategorized items #}
+                        {% if collection != NO_COLLECTION_LABEL %}
                         <label class="ui basic button">{{ collection }}</label>
+                        {% endif %}
                     {% endfor %}
                 {% endif %}
                 <a class="item-detail" href="{% url 'archive:detail' item.srcid %}">
@@ -65,27 +68,25 @@
             </div>
         </div>
         {% if page_groups and page_highlights %}
-        <div class="pages twelve wide column">
-            {% with results=page_groups|dict_item:item.id %}
+        {% with results=page_groups|dict_item:item.id %}
+            {% if results.numFound > 2 %}
+            <a class="total-pages"
+                href="{% url 'archive:detail' item.srcid %}?query={{ query }}">
+                Total Results: {{ results.numFound|intcomma }} page{{ results.numFound|pluralize }}
+            </a>
+            {% endif %}
+            <div class="pages twelve wide column">
                 {% if page_highlights %}
                 <div class="wrapper">
                     {% for page in results.docs %}
-                      {% with highlights=page_highlights|dict_item:page.id %}
+                    {% with highlights=page_highlights|dict_item:page.id %}
                         {% include 'archive/snippets/page_preview.html' with item_id=item.srcid  %}
-                      {% endwith %}
+                    {% endwith %}
                     {% endfor %}
                 </div>
-                {# link to page with search if there are more than two pages #}
-                    {% if results.numFound > 2 %}
-                    <a class="ui left floated right labeled primary icon button"
-                        href="{% url 'archive:detail' item.srcid %}?query={{ query }}">
-                        View all {{ results.numFound|intcomma }} page{{ results.numFound|pluralize }}
-                        <i class="right arrow icon"></i>
-                    </a>
-                    {% endif %}
                 {% endif %}
-            {% endwith %}
-        </div>
+            </div>
+        {% endwith %}
         {% endif %}
     </div>
 </div>

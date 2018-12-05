@@ -1,23 +1,22 @@
-$nav-height: 50px;
-$nav-breakpoint: 1068px; // point at which we switch to mobile nav
+// monochromatics
+$white-two: #ffffff;
+$white-three: #f7f7f7;
+$white: #e9e9e9;
+$warm-grey: #737373;
+$slate-grey: #5c5c63;
+$black: #363636;
 
-$green        : #254E2E;
-$gold         : #A98f5f;
-$lightGreen   : #07AE79;
-$lightGold    : #CDAD7E;
-$lightestGrey : #E9E9E9;
-$lightGrey    : #D8D8D8;
-$midGrey      : #737373;
-$darkGrey     : #5C5C63;
-$darkestGrey  : #363636;
-$melon        : #FF675D;
-$dusk         : #444867;
-$teal         : #57C4C4;
-$darkBlue     : #4661AC;
-$pink         : #F05B69;
+// hues
+$french-blue: #4661ac;
+$seafoam-blue: #57c4c4;
+$rosy-pink: #f05b69;
+$twilight: #6252a0;
 
-$primaryColor: $darkBlue;
-$secondaryColor: $dusk;
+// tints
+$azure: #0788fc;
+$light-grey-blue: #91d3d3;
+$pig-pink: #ed949c;
+$wisteria: #9c93c0;
 
 // breakpoints
 $mobile: 320px;
@@ -25,6 +24,11 @@ $tablet: 735px;
 $computer: 1068px;
 $largeMonitor: 1440px;
 $widescreenMonitor: 1920px;
+$nav-breakpoint: 1068px; // point at which we switch to mobile nav
+
+// nav
+$nav-height: 55px;
+$nav-height-mobile: 50px;
 
 // banner
 $banner-height: 230px;
@@ -32,5 +36,6 @@ $banner-height-m: 400px;
 $banner-height-l: 570px;
 
 // typography
-$pageFont              : Helvetica, sans-serif;
-$headerFont            : 'Gentium Book Basic', Palatino, serif;
+$pageFont              : 'Open Sans', Helvetica, sans-serif;
+$headerFont            : $pageFont; // evaluate using only sans
+// $headerFont            : 'Gentium Book Basic', Palatino, serif;

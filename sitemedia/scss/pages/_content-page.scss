@@ -1,32 +1,11 @@
-#header.contentpage {
-    margin-bottom: -25rem;
-
-    @media (min-width: $tablet) {
-        margin-bottom: -35rem;
-    }
-
-    @media (min-width: $computer) {
-        margin-bottom: -45rem;
-    }
-
-    .banner {
-        @include responsive-banner("/static/img/ppa_pattern_home", $pink);
-    }
-}
-
 #page {
-    margin: 2*$nav-height 0 $nav-height;
-
     h1 {
-        border-bottom: 5px solid $pink;
-        font-size: 40px;
-        font-weight: normal;
-        margin: 40px 0;
+        @include underline-headline($pig-pink);
     }
 
     h2, h3, p {
         font-family: $headerFont;
-        font-size: 20px;
+        font-size: 1.5rem;
     }
 
     h2 {

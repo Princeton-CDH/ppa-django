@@ -19,26 +19,6 @@
 {% endblock %}
 
 {% block content %}
-<section class="ui basic vertical segment container">
-    <form class="ui form">
-        <fieldset class="ui vertical basic grid segment">
-            <legend class="sr-only">text search fields</legend>
-            <div class="twelve wide column">
-                {% render_field search_form.query %}
-                <span class="question-popup" data-html="{{ search_form.QUESTION_POPUP_TEXT }}" data-position="top center">
-                    <i class="ui question circle icon"></i>
-                </span>
-            </div>
-            <input class="sr-only sr-only-focusable" type="submit" aria-label="submit search">
-        </fieldset>
-    </form>
-</section>
-{% if query %} {# display search result view of record if there is a search term active #}
-<div class="results-list single">
-    {# suppress order and highlighting in search result snippet  #}
-    {% include 'archive/snippets/search_result.html' with item=object page_highlights=0 page_obj=0 %}
-</div>
-{% else %}
 <section class="meta ui basic vertical segment container">
     <h3 class="header">{{ object.title }}</h3>
     <abbr class="unapi-id" title="{{ object.source_id }}"></abbr>
@@ -79,13 +59,9 @@
             </tr>
             {% endif %}
             <tr class="hathi-link">
-                <th scope="row">HathiTrust Volumes</th>
+                <th scope="row">View on HathiTrust</th>
                 <td>
-                    <span>{{ object.source_id }}</span>
-                    <a href="{{ object.source_url }}" target="_blank" class="ui right labeled primary icon button">
-                        HathiTrust
-                        <i class="right arrow icon"></i>
-                    </a>
+                    <a href="{{ object.source_url }}" target="_blank">{{ object.source_id }}</a>
                 </td>
             </tr>
             {% if object.public_notes %}
@@ -117,15 +93,27 @@
         </tbody>
     </table>
 </section>
-{% endif %}
-
+<section class="ui basic vertical segment container">
+    <form class="ui form">
+        <fieldset class="ui vertical basic grid segment">
+            <legend class="sr-only">text search fields</legend>
+            <div class="twelve wide column">
+                {% render_field search_form.query %}
+                <span class="question-popup" data-html="{{ search_form.QUESTION_POPUP_TEXT }}" data-position="top center">
+                    <i class="ui question circle icon"></i>
+                </span>
+            </div>
+            <input class="sr-only sr-only-focusable" type="submit" aria-label="submit search">
+        </fieldset>
+    </form>
+</section>
   {# display matching pages with highlighted text if there is a search active #}
   {% if query or page_highlights %}
     {% if not error %}
     <div class="occurrences ui center aligned text container">
         <p>{{ page_obj.paginator.count }} occurrence{{ page_obj.paginator.count|pluralize }}</p>
     </div>
-    <div class="ui container">
+    <div class="pagination ui container">
         {% include 'archive/snippets/pagination.html' %}
     </div>
     {% endif %}
@@ -148,11 +136,9 @@
         {% endfor %}
     </div>
     {% if not error %}
-    <div class="ui container">
+    <div class="pagination ui container">
         {% include 'archive/snippets/pagination.html' %}
     </div>
     {% endif %}
-
   {% endif %}
-
 {% endblock %}

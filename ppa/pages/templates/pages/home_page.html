@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block page_header %}
-<header class="ui vertical basic center aligned segment homepage" id="header">
+<header class="homepage" id="header">
     <div class="banner"></div>
     <div id="scene">
         <img class="layer one" data-depth="0.20" src="{% static 'img/ppaLogo_Layers_Revised/PPALogo_Blue.svg' %}" alt="">
@@ -23,7 +23,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="ui vertical basic segment container">
+<div class="hero ui vertical basic segment container">
     <div class="intro">
         {{ page.body|richtext }}
     </div>
@@ -33,11 +33,6 @@
             View and search the archive
         </h3>
     </a>
-    <p class="learn-more">
-        Learn more below<br>
-        <img class="chevron icon"
-            src="{% static 'img/icons/RightChevron.svg' %}" alt="">
-    </p>
 </div>
 <div class="asides-collections ui vertical basic segment container">
    <div class="asides ui two cards">
@@ -45,7 +40,7 @@
         <a class="aside card" href="{{ card.url }}">
             <div class="content">
                 <h3 class="header">{{ card.title }}</h3>
-                <div class="description">{{ card.specific.description|richtext }}</div>
+                <div class="description">{{ card.specific.get_description|richtext }}</div>
             </div>
         </a>
         {% endfor %}
