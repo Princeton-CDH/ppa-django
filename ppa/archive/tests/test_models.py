@@ -264,6 +264,18 @@ class TestDigitizedWork(TestCase):
         digwork.collections.clear()
         assert digwork.index_data()['collections'] == [NO_COLLECTION_LABEL]
 
+        # suppressed
+        digwork.status = digwork.SUPPRESSED
+        # don't actually process the data deletion
+        with patch.object(digwork, 'delete_hathi_pairtree_data') \
+          as mock_delete_pairtree_data:
+            digwork.save()
+
+            # should *only* contain id, nothing else
+            index_data = digwork.index_data()
+            assert len(index_data) == 1
+            assert index_data['id'] == digwork.source_id
+
     def test_get_absolute_url(self):
         work = DigitizedWork.objects.first()
         assert work.get_absolute_url() == \
@@ -454,7 +466,8 @@ class TestDigitizedWork(TestCase):
                 .assert_called_with(work.hathi_pairtree_id)
 
             # should not raise an exception if deletion fails
-            mock_pairtree_client.delete_object.side_effect = ObjectNotFoundException
+            mock_pairtree_client.return_value.delete_object.side_effect \
+                 = ObjectNotFoundException
             work.delete_hathi_pairtree_data()
             # not currently testing that warning is logged
 
