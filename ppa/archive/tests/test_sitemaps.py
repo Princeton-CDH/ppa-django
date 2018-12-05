@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.urls import reverse
+from unittest.mock import patch
 
 from ppa.archive.models import DigitizedWork
 from ppa.archive.sitemaps import ArchiveViewsSitemap, DigitizedWorkSitemap
@@ -40,6 +41,16 @@ class TestDigitizedWorkSitemap(TestCase):
 
     def test_items(self):
         assert list(DigitizedWork.objects.all()) == list(self.sitemap.items())
+
+        # should not include suppressed items
+        digwork = DigitizedWork.objects.first()
+        digwork.status = DigitizedWork.SUPPRESSED
+        # don't actually process the data deletion
+        with patch.object(digwork, 'delete_hathi_pairtree_data') \
+          as mock_delete_pairtree_data:
+            digwork.save()
+
+        assert digwork not in list(self.sitemap.items())
 
     def test_lastmod(self):
         digwork = DigitizedWork.objects.first()

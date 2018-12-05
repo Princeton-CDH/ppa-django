@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load static wagtailcore_tags %}
+
+{% block css %}
+<link rel="stylesheet" type="text/x-scss" href="{% static 'scss/page.scss' %}">
+{% endblock %}
+
+{% block page-context-id %}page{% endblock %}
+
+{% block title %}Page has been removed{% endblock %}
+
+{% block content %}
+<div class="ui container">
+    <div class="paper">
+        <h1 class="ui header">Page not Available - 410 Gone</h1>
+        <p>This page is no longer available. Return to <a href="{% slugurl 'home' %}">homepage</a>.</p>
+    </div>
+</div>
+{% endblock %}

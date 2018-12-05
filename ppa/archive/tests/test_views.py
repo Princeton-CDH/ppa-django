@@ -145,6 +145,23 @@ class TestArchiveViews(TestCase):
             '<abbr class="unapi-id" title="%s"></abbr>' % dial.source_id,
             msg_prefix='unapi id should be embedded for each work')
 
+    def test_digitizedwork_detailview_suppressed(self):
+        # suppressed work
+        dial = DigitizedWork.objects.get(source_id='chi.78013704')
+        dial.status = DigitizedWork.SUPPRESSED
+        # don't actually process the data deletion
+        with patch.object(dial, 'delete_hathi_pairtree_data') \
+          as mock_delete_pairtree_data:
+            dial.save()
+
+        response = self.client.get(dial.get_absolute_url())
+        # status code should be 410 Gone
+        assert response.status_code == 410
+        # should use 410 template
+        assert '410.html' in [template.name for template in response.templates]
+        # should not display item details
+        self.assertNotContains(response, dial.title, status_code=410)
+
     @pytest.mark.usefixtures("solr")
     def test_digitizedwork_detailview_query(self):
         '''test digitized work detail page with search query'''
@@ -598,6 +615,7 @@ class TestArchiveViews(TestCase):
             assert '%d' % digwork.page_count in digwork_data
             assert '%s' % digwork.added in digwork_data
             assert '%s' % digwork.updated in digwork_data
+            assert digwork.get_status_display() in digwork_data
 
     def test_digitizedwork_admin_changelist(self):
         # log in as admin to access admin site views
