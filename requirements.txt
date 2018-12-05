@@ -16,3 +16,4 @@ django-compressor-toolkit
 lxml
 eulxml
 wagtail>=2.3
+bleach
