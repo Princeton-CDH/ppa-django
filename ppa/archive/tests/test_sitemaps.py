@@ -41,6 +41,12 @@ class TestDigitizedWorkSitemap(TestCase):
     def test_items(self):
         assert list(DigitizedWork.objects.all()) == list(self.sitemap.items())
 
+        # should not include suppressed items
+        digwork = DigitizedWork.objects.first()
+        digwork.status = DigitizedWork.SUPPRESSED
+        digwork.save()
+        assert digwork not in list(self.sitemap.items())
+
     def test_lastmod(self):
         digwork = DigitizedWork.objects.first()
         assert self.sitemap.lastmod(digwork) == digwork.updated

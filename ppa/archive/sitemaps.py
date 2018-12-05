@@ -24,10 +24,10 @@ class ArchiveViewsSitemap(Sitemap):
 
 class DigitizedWorkSitemap(Sitemap):
     '''Sitemap for :class:`~ppa.archive.models.DigitizedWork` detail
-    pages.'''
+    pages. Does not include suppressed items.'''
 
     def items(self):
-        return DigitizedWork.objects.all()
+        return DigitizedWork.objects.filter(status=DigitizedWork.PUBLIC)
 
     def lastmod(self, obj):
         return obj.updated
