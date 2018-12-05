@@ -1,13 +1,12 @@
 @mixin responsive-banner($src, $color) {
     width: 100%;
     height: 100%;
-    opacity: 0.3;
     background-color: $color;
     mask-position: top;
-    mask-size: cover;
+    mask-size: contain;
     mask-repeat: no-repeat;
     -webkit-mask-position: top;
-    -webkit-mask-size: cover;
+    -webkit-mask-size: contain;
     -webkit-mask-repeat: no-repeat;
     z-index: -1;
     
@@ -49,6 +48,14 @@
 @mixin notes-header($color) {
     .banner {
         @include responsive-banner("/static/img/ppa_pattern_home", $color);
+        opacity: 0.3;
+        mask-size: 768px; // fixed larger size for small screens
+        -webkit-mask-size: 768px;
+
+        @media (min-width: $tablet) {
+            mask-size: contain;
+            -webkit-mask-size: contain;
+        }
     }
 }
 
