@@ -212,6 +212,11 @@ class DigitizedWork(TrackChangesModel, Indexable):
         # hopefully temporary workaround until solr fields made consistent
         return self.source_url
 
+    @property
+    def is_suppressed(self):
+        '''Item has been suppressed (based on :attr:`status`).'''
+        return self.status == self.SUPPRESSED
+
     def display_title(self):
         '''admin display title to allow displaying title but sorting on sort_title'''
         return self.title
@@ -403,6 +408,13 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
     def index_data(self):
         '''data for indexing in Solr'''
+
+        # When an item has been suppressed, return id only.
+        # This will blank out any previously indexed values, and item
+        # will not be findable by any public searchable fields.
+        if self.status == self.SUPPRESSED:
+            return {'id': self.source_id}
+
         return {
             'id': self.source_id,
             'srcid': self.source_id,

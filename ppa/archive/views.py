@@ -302,15 +302,33 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
 
 
 class DigitizedWorkDetailView(DetailView):
-    '''Display details for a single digitized work'''
+    '''Display details for a single digitized work. If a work has been
+    surpressed, returns a 410 Gone response.'''
     model = DigitizedWork
     slug_field = 'source_id'
     slug_url_kwarg = 'source_id'
     form_class = SearchWithinWorkForm
     paginate_by = 50
 
+    def get_template_names(self):
+        if self.object.status == DigitizedWork.SUPPRESSED:
+            return '410.html'
+        return super().get_template_names()
+
+    def get(self, *args, **kwargs):
+        response = super().get(*args, **kwargs)
+        # set status code to 410 gone for suppressed works
+        if self.object.is_suppressed:
+            response.status_code = 410
+        return response
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        digwork = context['object']
+        # if suppressed, don't do any further processing
+        if digwork.is_suppressed:
+            return context
+
         # pull in the query if it exists to use
         query = self.request.GET.get('query', '')
         form_opts = self.request.GET.copy()
@@ -319,7 +337,7 @@ class DigitizedWorkDetailView(DetailView):
         solr_pageq = None
         if query:
             context['query'] = query
-            digwork = context['object']
+
             solr_q = 'text:(%s)' % query
             solr_opts = {
                 'q': solr_q,

@@ -492,6 +492,13 @@ class TestDigitizedWork(TestCase):
         with pytest.raises(ValidationError):
             work.clean()
 
+    def test_is_suppressed(self):
+        work = DigitizedWork(source_id='chi.79279237')
+        assert not work.is_suppressed
+
+        work.status = DigitizedWork.SUPPRESSED
+        assert work.is_suppressed
+
 
 class TestCollection(TestCase):
     fixtures = ['sample_digitized_works']
