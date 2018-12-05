@@ -14,6 +14,10 @@ Deploy and Upgrade notes
 
     python manage.py index --works
 
+* Admin functionality for suppressing digitized works requires that the
+  Django application have permission to **delete** files and directories
+  from the HathiTrust  pairtree data stored in **HATHI_DATA**.
+
 0.11
 ----
 

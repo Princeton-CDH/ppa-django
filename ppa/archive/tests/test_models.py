@@ -6,11 +6,13 @@ from unittest.mock import patch, Mock, DEFAULT
 from zipfile import ZipFile
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db.models.query import QuerySet
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
 from pairtree import pairtree_client, pairtree_path
+from pairtree.storage_exceptions import ObjectNotFoundException
 import pytest
 
 from ppa.archive import hathi
@@ -262,6 +264,18 @@ class TestDigitizedWork(TestCase):
         digwork.collections.clear()
         assert digwork.index_data()['collections'] == [NO_COLLECTION_LABEL]
 
+        # suppressed
+        digwork.status = digwork.SUPPRESSED
+        # don't actually process the data deletion
+        with patch.object(digwork, 'delete_hathi_pairtree_data') \
+          as mock_delete_pairtree_data:
+            digwork.save()
+
+            # should *only* contain id, nothing else
+            index_data = digwork.index_data()
+            assert len(index_data) == 1
+            assert index_data['id'] == digwork.source_id
+
     def test_get_absolute_url(self):
         work = DigitizedWork.objects.first()
         assert work.get_absolute_url() == \
@@ -404,7 +418,6 @@ class TestDigitizedWork(TestCase):
                 assert 'tags' in data
                 assert data['tags'] == mets_page.label.split(', ')
 
-
     def test_index_id(self):
         work = DigitizedWork(source_id='chi.79279237')
         assert work.index_id() == work.source_id
@@ -441,6 +454,68 @@ class TestDigitizedWork(TestCase):
         assert isinstance(args[0], QuerySet)
         assert digwork in args[0]
         assert kwargs['params'] == {'commitWithin': 3000}
+
+    def test_delete_hathi_pairtree_data(self):
+        work = DigitizedWork(source_id='chi.79279237')
+        with patch.object(work, 'hathi_pairtree_client') as mock_pairtree_client:
+            work.delete_hathi_pairtree_data()
+            # should initialize client
+            mock_pairtree_client.assert_called()
+            # should call delete boject
+            mock_pairtree_client.return_value.delete_object \
+                .assert_called_with(work.hathi_pairtree_id)
+
+            # should not raise an exception if deletion fails
+            mock_pairtree_client.return_value.delete_object.side_effect \
+                 = ObjectNotFoundException
+            work.delete_hathi_pairtree_data()
+            # not currently testing that warning is logged
+
+    def test_save(self):
+        work = DigitizedWork(source_id='chi.79279237')
+        with patch.object(work, 'delete_hathi_pairtree_data') \
+          as mock_delete_pairtree_data:
+            # no change in status - nothing should happen
+            work.save()
+            mock_delete_pairtree_data.assert_not_called()
+
+            # change status to suppressed - data should be deleted
+            work.status = work.SUPPRESSED
+            work.save()
+            mock_delete_pairtree_data.assert_called()
+
+            # changing status but not to suppressed - should not be called
+            mock_delete_pairtree_data.reset_mock()
+            work.status = work.PUBLIC
+            work.save()
+            mock_delete_pairtree_data.assert_not_called()
+
+
+    def test_clean(self):
+        work = DigitizedWork(source_id='chi.79279237')
+
+        # no validation error
+        work.clean()
+
+        # change to suppressed - no problem
+        work.status = work.SUPPRESSED
+        work.clean()
+        # don't actually process the data deletion
+        with patch.object(work, 'delete_hathi_pairtree_data') \
+          as mock_delete_pairtree_data:
+            work.save()
+
+        # try to change back - should error
+        work.status = work.PUBLIC
+        with pytest.raises(ValidationError):
+            work.clean()
+
+    def test_is_suppressed(self):
+        work = DigitizedWork(source_id='chi.79279237')
+        assert not work.is_suppressed
+
+        work.status = DigitizedWork.SUPPRESSED
+        assert work.is_suppressed
 
 
 class TestCollection(TestCase):
