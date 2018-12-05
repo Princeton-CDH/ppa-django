@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static wagtailcore_tags %}
+{% load static wagtailcore_tags  %}
 
 {% block meta_title %}{% firstof page.seo_title page.title %}{% endblock %}
 {% block meta_description %}{{ page.get_plaintext_description }}{% endblock %}
@@ -30,7 +30,11 @@
         {% block attribution %}{% endblock %}
     </h1>
     {% for block in page.body %}
-        {% include_block block %}
+        {% if block.block_type == 'image' %}
+            {% include "pages/snippets/responsive_image.html" with img=block.value %}
+        {% else %}
+            {% include_block block %}
+        {% endif %}
     {% endfor %}
 </article>
 {% endblock %}
