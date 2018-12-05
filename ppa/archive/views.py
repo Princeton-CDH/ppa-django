@@ -195,6 +195,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
         solr_opts = {
             'q': solr_q,
             'sort': solr_sort,
+            'pf': self.query,
             'fl': fields,
             'fq': collapse_q,
             # turn on faceting and add any self.form facet_fields
