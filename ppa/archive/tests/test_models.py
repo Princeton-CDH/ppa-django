@@ -476,6 +476,7 @@ class TestDigitizedWork(TestCase):
             work.save()
             mock_delete_pairtree_data.assert_not_called()
 
+
     def test_clean(self):
         work = DigitizedWork(source_id='chi.79279237')
 
@@ -485,7 +486,10 @@ class TestDigitizedWork(TestCase):
         # change to suppressed - no problem
         work.status = work.SUPPRESSED
         work.clean()
-        work.save()
+        # don't actually process the data deletion
+        with patch.object(work, 'delete_hathi_pairtree_data') \
+          as mock_delete_pairtree_data:
+            work.save()
 
         # try to change back - should error
         work.status = work.PUBLIC

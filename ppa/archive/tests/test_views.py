@@ -149,7 +149,11 @@ class TestArchiveViews(TestCase):
         # suppressed work
         dial = DigitizedWork.objects.get(source_id='chi.78013704')
         dial.status = DigitizedWork.SUPPRESSED
-        dial.save()
+        # don't actually process the data deletion
+        with patch.object(dial, 'delete_hathi_pairtree_data') \
+          as mock_delete_pairtree_data:
+            dial.save()
+
         response = self.client.get(dial.get_absolute_url())
         # status code should be 410 Gone
         assert response.status_code == 410
