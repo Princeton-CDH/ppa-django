@@ -468,7 +468,13 @@ class DigitizedWork(TrackChangesModel, Indexable):
             os.path.join(settings.HATHI_DATA, self.hathi_prefix))
 
     def hathi_pairtree_object(self, ptree_client=None):
-        '''get a pairtree object for the current work'''
+        '''get a pairtree object for the current work
+
+        :param ptree_client: optional
+            :class:`pairtree_client.PairtreeStorageClient` if one has
+            already been initialized, to avoid repeated initialization
+            (currently used in hathi_import manage command)
+        '''
         if ptree_client is None:
             # get pairtree client if not passed in
             ptree_client = self.hathi_pairtree_client()
