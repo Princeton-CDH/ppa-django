@@ -763,6 +763,18 @@
           pub_place
           publisher
       </str>
+      <str name="pf">
+          srcid
+          content
+          title^20
+          author^40
+          notes^40
+          pub_date
+          enumcron
+          pub_place
+          publisher
+      </str>
+
     </lst>
     <!-- In addition to defaults, "appends" params can be specified
          to identify values which should be appended to the list of
