@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 #: label to use for items that are not in a collection
 NO_COLLECTION_LABEL = 'Uncategorized'
 
+
 class TrackChangesModel(models.Model):
     ''':Model mixin that keeps a copy of initial data in order to check
     if fields have been changed. Change detection only works on the
@@ -248,7 +249,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
         if someone tries to unsuppress a record that has been suppressed
         (not yet supported).'''
         if self.has_changed('status') and self.status != self.SUPPRESSED:
-            raise ValidationError('Unsuppressing records is not yet supported.')
+            raise ValidationError('Unsuppressing records not yet supported.')
 
     def populate_from_bibdata(self, bibdata):
         '''Update record fields based on Hathi bibdata information.
@@ -485,7 +486,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
         except ObjectNotFoundException:
             # data is already gone; warn, but not an error
             logger.warn('Pairtree deletion failed; object not found %s',
-                         self.source_id)
+                        self.source_id)
 
     def _hathi_content_path(self, ext, ptree_client=None):
         '''path to zipfile within the hathi contents for this work'''
