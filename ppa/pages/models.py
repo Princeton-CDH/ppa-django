@@ -1,3 +1,4 @@
+import bleach
 from django.db import models
 from django.template.defaultfilters import truncatechars_html, striptags
 from wagtail.core import blocks
@@ -103,7 +104,7 @@ class BodyContentBlock(blocks.StreamBlock):
     '''Common set of content blocks to be used on both content pages
     and editorial pages'''
     paragraph = blocks.RichTextBlock()
-    image  =  ImageChooserBlock()
+    image = ImageChooserBlock()
     document = DocumentChooserBlock()
 
 
@@ -119,6 +120,10 @@ class PagePreviewDescriptionMixin(models.Model):
 
     #: maximum length for description to be displayed
     max_length = 250
+
+    # ('a' is omitted by subsetting and p is added to default ALLOWED_TAGS)
+    #: allowed tags for bleach html stripping in description
+    allowed_tags = bleach.sanitizer.ALLOWED_TAGS[1:] + ['p']
 
     class Meta:
         abstract = True
@@ -143,6 +148,11 @@ class PagePreviewDescriptionMixin(models.Model):
                     # break so we stop after the first instead of using last
                     break
 
+        description = bleach.clean(
+            str(description),
+            tags=self.allowed_tags,
+            strip=True
+        )
         # truncate either way
         return truncatechars_html(description, self.max_length)
 
