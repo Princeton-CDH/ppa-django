@@ -46,6 +46,13 @@
                         <span class="field-value">{{ item.enumcron }}</span>
                     </p>
                     {% endif %}
+                    {% if user.is_authenticated %}
+                    <p class="score">
+                        <span class="field-name">Score</span>
+                        <span class="field-value">{{ item.score }}</span>
+                    </p>
+                    {% endif %}
+
                 </div>
             </div>
             <div class="buttons">

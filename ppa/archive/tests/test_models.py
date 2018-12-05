@@ -231,7 +231,8 @@ class TestDigitizedWork(TestCase):
             author='Charles Witcomb', pub_place='Paris',
             publisher='Mesnil-Dramard',
             source_url='https://hdl.handle.net/2027/njp.32101013082597',
-            public_notes='A note field here')
+            public_notes='A note field here',
+            notes='internal notes for curation')
         coll1 = Collection.objects.create(name='Flotsam')
         coll2 = Collection.objects.create(name='Jetsam')
         digwork.collections.add(coll1)
@@ -249,8 +250,8 @@ class TestDigitizedWork(TestCase):
         assert index_data['collections'] == ['Flotsam', 'Jetsam']
         assert index_data['publisher'] == digwork.publisher
         assert index_data['src_url'] == digwork.source_url
-        assert digwork.public_notes in index_data['text']
-        assert digwork.notes not in index_data['text']
+        assert digwork.public_notes in index_data['notes']
+        assert digwork.notes not in index_data['notes']
         assert not index_data['enumcron']
 
         # with enumcron

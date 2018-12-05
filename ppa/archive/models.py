@@ -375,10 +375,8 @@ class DigitizedWork(models.Model, Indexable):
                 [collection.name for collection in self.collections.all()]
                 if self.collections.exists()
                 else [NO_COLLECTION_LABEL],
-            # general purpose multivalued field, currently only
-            # includes public notes in this method, other fields
-            # copied in Solr schema.
-            'text': [self.public_notes],
+            # public notes field for display on site_name
+            'notes': self.public_notes,
             # hard-coded to distinguish from & sort with pages
             'item_type': 'work',
             'order': '0',

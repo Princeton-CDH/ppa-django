@@ -92,7 +92,7 @@ class EditorialPage(Page, PagePreviewDescriptionMixin):
         [('author', SnippetChooserBlock(Person))],
         blank=True,
         help_text='Select people snippets to add as authors. Use the plus '
-                  'sign to add as many as you like. Drag and drop to order.'
+                  'sign to add as many as you like. User arrows to order.'
     )
     content_panels = Page.content_panels + [
         FieldPanel('description'),
