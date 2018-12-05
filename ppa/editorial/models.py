@@ -91,8 +91,7 @@ class EditorialPage(Page, PagePreviewDescriptionMixin):
     authors = StreamField(
         [('author', SnippetChooserBlock(Person))],
         blank=True,
-        help_text='Select people snippets to add as authors. Use the plus '
-                  'sign to add as many as you like. User arrows to order.'
+        help_text='Select or create people snippets to add as authors.'
     )
     content_panels = Page.content_panels + [
         FieldPanel('description'),
