@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='digitizedwork',
             name='status',
-            field=models.CharField(choices=[('P', 'Public'), ('S', 'Suppressed')], default='P', help_text='Changing status to suppressed will remove rsync data for that volume and remove from the public index. This is currently not reversible, use with caution.', max_length=2),
+            field=models.CharField(choices=[('P', 'Public'), ('S', 'Suppressed')], default='P', help_text='Changing status to suppressed will remove rsync data for that volume and remove from the public index. This is currently not reversible; use with caution.', max_length=2),
         ),
     ]

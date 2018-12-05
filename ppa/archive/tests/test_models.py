@@ -6,6 +6,7 @@ from unittest.mock import patch, Mock, DEFAULT
 from zipfile import ZipFile
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db.models.query import QuerySet
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -474,6 +475,22 @@ class TestDigitizedWork(TestCase):
             work.status = work.PUBLIC
             work.save()
             mock_delete_pairtree_data.assert_not_called()
+
+    def test_clean(self):
+        work = DigitizedWork(source_id='chi.79279237')
+
+        # no validation error
+        work.clean()
+
+        # change to suppressed - no problem
+        work.status = work.SUPPRESSED
+        work.clean()
+        work.save()
+
+        # try to change back - should error
+        work.status = work.PUBLIC
+        with pytest.raises(ValidationError):
+            work.clean()
 
 
 class TestCollection(TestCase):

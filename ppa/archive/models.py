@@ -5,6 +5,7 @@ from zipfile import ZipFile
 
 from cached_property import cached_property
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
@@ -183,7 +184,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
         max_length=2, choices=STATUS_CHOICES, default=PUBLIC,
         help_text='Changing status to suppressed will remove rsync data ' +
         'for that volume and remove from the public index. This is ' +
-        'currently not reversible, use with caution.')
+        'currently not reversible; use with caution.')
 
     class Meta:
         ordering = ('sort_title',)
@@ -237,6 +238,12 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
         super().save(*args, **kwargs)
 
+    def clean(self):
+        '''Add custom validation to trigger a save error in the admin
+        if someone tries to unsuppress a record that has been suppressed
+        (not yet supported).'''
+        if self.has_changed('status') and self.status != self.SUPPRESSED:
+            raise ValidationError('Unsuppressing records is not yet supported.')
 
     def populate_from_bibdata(self, bibdata):
         '''Update record fields based on Hathi bibdata information.
