@@ -237,10 +237,10 @@ class TestArchiveViews(TestCase):
             msg_prefix='should include a link to HathiTrust'
         )
 
-
         # bad syntax
-        response = self.client.get(url, {'query': '"incomplete phrase'})
-        self.assertContains(response, 'Unable to parse search query')
+        # no longer a problem with edismax
+        # response = self.client.get(url, {'query': '"incomplete phrase'})
+        # self.assertContains(response, 'Unable to parse search query')
 
         # test raising a generic solr error
         with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
@@ -298,6 +298,13 @@ class TestArchiveViews(TestCase):
             response, '''<link rel="unapi-server" type="application/xml"
             title="unAPI" href="%s" />''' % reverse('unapi'),
             msg_prefix='unapi server link should be set', html=True)
+
+        # should not have scores for all results, as not logged in
+        self.assertNotContains(response, 'score')
+        # log in a user and then should have them displayed
+        self.client.force_login(get_user_model().objects.create(username='foo'))
+        response = self.client.get(url)
+        self.assertContains(response, 'score')
 
         # search form should be set in context for display
         assert isinstance(response.context['search_form'], SearchForm)
@@ -421,8 +428,11 @@ class TestArchiveViews(TestCase):
         self.assertContains(response, 'No matching works.')
 
         # bad syntax
-        response = self.client.get(url, {'query': '"incomplete phrase'})
-        self.assertContains(response, 'Unable to parse search query')
+        # NOTE: According to Solr docs, edismax query parser
+        # "includes improved smart partial escaping in the case of syntax
+        # errors"; not sure how to trigger this error anymore!
+        # response = self.client.get(url, {'query': '"incomplete phrase'})
+        # self.assertContains(response, 'Unable to parse search query')
 
         # add a sort term - pub date
         response = self.client.get(url, {'query': '', 'sort': 'pub_date_asc'})
@@ -808,7 +818,8 @@ class TestDigitizedWorkListView(TestCase):
             # rows should match # of page ids
             assert solr_opts['rows'] == 4
             # query includes keyword search term
-            assert 'text:(%s) AND ' % digworkview.query in solr_opts['q']
+            assert '(%s) AND ' % digworkview.query in solr_opts['q']
+
             # query also inlcudes page ids
             assert ' AND id:("p1a" "p1b" "p2a" "p2b")' in solr_opts['q']
 

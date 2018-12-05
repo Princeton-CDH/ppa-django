@@ -750,7 +750,28 @@
     <lst name="defaults">
       <str name="echoParams">explicit</str>
       <int name="rows">10</int>
+      <str name="defType">edismax</str>
       <!-- <str name="df">text</str> -->
+      <str name="qf">
+          srcid
+          content
+          title^10
+          author^20
+          notes^20
+          pub_date
+          enumcron
+          pub_place
+          publisher
+      </str>
+      <str name="pf">
+          content
+          title^20
+          author^40
+          notes^40
+          pub_place
+          publisher
+      </str>
+
     </lst>
     <!-- In addition to defaults, "appends" params can be specified
          to identify values which should be appended to the list of
