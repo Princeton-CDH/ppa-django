@@ -299,6 +299,13 @@ class TestArchiveViews(TestCase):
             title="unAPI" href="%s" />''' % reverse('unapi'),
             msg_prefix='unapi server link should be set', html=True)
 
+        # should not have scores for all results, as not logged in
+        self.assertNotContains(response, 'score')
+        # log in a user and then should have them displayed
+        self.client.force_login(get_user_model().objects.create(username='foo'))
+        response = self.client.get(url)
+        self.assertContains(response, 'score')
+
         # search form should be set in context for display
         assert isinstance(response.context['search_form'], SearchForm)
         # page group details from expanded part of collapsed query
