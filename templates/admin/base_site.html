@@ -27,6 +27,8 @@
 
 {% block extrahead %}
     {{ block.super }}
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}" />
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon-16x16.png' %}" />
     {# csrf adapted from mezzanine admin base site template #}
     <script>
     window.__csrf_token = '{{ csrf_token }}';

@@ -9,13 +9,13 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
     list_display = (
         'display_title', 'subtitle', 'source_link', 'record_id', 'author',
         'list_collections', 'enumcron', 'pub_place', 'publisher', 'pub_date',
-        'page_count', 'added', 'updated'
+        'page_count', 'is_public', 'added', 'updated'
     )
     fields = (
         'source_link', 'title', 'subtitle', 'sort_title', 'enumcron',
         'author', 'pub_place', 'publisher', 'pub_date', 'page_count',
         'public_notes', 'notes', 'record_id', 'collections',
-        'added', 'updated'
+        'status', 'added', 'updated'
     )
     readonly_fields = (
         'source_link', 'page_count', 'added', 'updated', 'record_id',
@@ -26,7 +26,7 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
     )
     filter_horizontal = ('collections',)
     # date_hierarchy = 'added'  # is this useful?
-    list_filter = ['collections']
+    list_filter = ['collections', 'status']
     actions = ['bulk_add_collection']
 
     def list_collections(self, obj):
@@ -75,5 +75,10 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
                                              'to collections')
 
 
+class CollectionAdmin(admin.ModelAdmin):
+    list_display = ('name', 'exclude')
+    list_editable = ('exclude', )
+
+
 admin.site.register(DigitizedWork, DigitizedWorkAdmin)
-admin.site.register(Collection)
+admin.site.register(Collection, CollectionAdmin)

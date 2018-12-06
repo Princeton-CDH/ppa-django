@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Deploy and Upgrade notes &#8212; Princeton Prosody Archive 0.9.0 documentation</title>
+    <title>Deploy and Upgrade notes &#8212; Princeton Prosody Archive 0.11.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -36,7 +36,54 @@
   <div class="section" id="deploy-and-upgrade-notes">
 <span id="deploynotes"></span><h1>Deploy and Upgrade notes<a class="headerlink" href="#deploy-and-upgrade-notes" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="id1">
-<h2>0.9<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<h2>0.11<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">GTAGS_ANALYTICS_ID</span></code> should include the property ID for the site, in order</dt>
+<dd>to enable Google Analytics on non-preview pages.</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h2>0.10<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">Switching from Mezzanine to Wagtail requires a manual migration <em>before</em>
+installing the new version to avoid migration dependency conflicts:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">migrate</span> <span class="n">pages</span> <span class="n">zero</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Wagtail provides predefined groups for <em>Editor</em> and <em>Moderator</em>. Users
+who were previously in the <em>Content Editor</em> group should be added
+to one of these, and the <em>Content Editor</em> group should be removed.</p>
+</li>
+<li><p class="first">To benefit from new logic for cleaning metadata fields on import, the
+HathiTrust import should be run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">hathi_import</span> <span class="o">-</span><span class="n">v</span> <span class="mi">0</span> <span class="o">--</span><span class="n">progress</span> <span class="o">--</span><span class="n">update</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Solr schema changes for this release require an updated <code class="docutils literal notranslate"><span class="pre">solrconfig.xml</span></code>
+with additional <code class="docutils literal notranslate"><span class="pre">&lt;lib/&gt;</span></code> declarations. Copy <code class="docutils literal notranslate"><span class="pre">solr_conf/solrconfig.xml</span></code>
+to the Solr core’s <cite>conf</cite> directory, and then restart the Solr server
+to enable the new library paths.</p>
+<p>Because this includes a Solr schema field type change that cannot be converted
+automatically, the index must be cleared before changing the schema,
+and then all content must be reindexed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">index</span> <span class="o">--</span><span class="n">clear</span> <span class="nb">all</span> <span class="o">--</span><span class="n">index</span> <span class="n">none</span>
+<span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">solr_schema</span>
+<span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">index</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">manage.py</span> <span class="pre">setup_site_pages</span></code> to create stub pages for all
+site content needed for main site navigation.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="id3">
+<h2>0.9<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <ul>
 <li><p class="first">Configure a <strong>TECHNICAL_CONTACT</strong> email address in local settings
 to set a <strong>From</strong> header on requests made against the HathiTrust API.</p>
@@ -47,9 +94,10 @@ need to be updated:</p>
 </pre></div>
 </div>
 </li>
-<li><p class="first">This update requires a full reindex; due to changes in page indexing, pages
-must be cleared from the Solr index:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">index</span> <span class="o">--</span><span class="n">clear</span> <span class="n">pages</span>
+<li><p class="first">This update requires a Solr schema update and a full reindex; due to changes
+in page indexing, pages must also be cleared from the Solr index:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">solr_schema</span>
+<span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">index</span> <span class="o">--</span><span class="n">clear</span> <span class="n">pages</span>
 </pre></div>
 </div>
 </li>
@@ -179,7 +227,9 @@ progress bar):</p>
   <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Deploy and Upgrade notes</a><ul>
-<li><a class="reference internal" href="#id1">0.9</a></li>
+<li><a class="reference internal" href="#id1">0.11</a></li>
+<li><a class="reference internal" href="#id2">0.10</a></li>
+<li><a class="reference internal" href="#id3">0.9</a></li>
 <li><a class="reference internal" href="#search-filtering-and-highlighting">0.8 Search filtering and highlighting</a></li>
 <li><a class="reference internal" href="#bulk-import-and-simple-search">0.5 Bulk Import and Simple Search</a></li>
 </ul>

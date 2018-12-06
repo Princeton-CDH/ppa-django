@@ -3,6 +3,56 @@
 CHANGELOG
 =========
 
+0.11.0
+------
+
+* As a content editor, I want to control how the description of my editorial content is displayed when on PPA, when shared, and when searched.
+* As a content editor, I want to add new or edit existing editorial content so that I can publish and promote scholarly work related to the project.
+* As an admin, I should not be able to edit wagtail content in the Django admin so that I don't uninintentionally break content by editing it in the wrong place.
+
+Bugs/chores
+^^^^^^^^^^^
+
+* Constrains image sizes in editorial posts
+* Sets up Google Analytics
+* Fixes an issue with incorrect facet data from Solr for certain date ranges
+* Switches to sans-serif font (Open Sans) sitewide
+* Adds tzinfo to mysql to fix failing tests in CI
+
+Design updates
+^^^^^^^^^^^^^^
+
+* Homepage
+* Top navigation menu
+* Content pages
+* Collections list page
+* Search sorting and pagination
+* Archive search page
+* Digitized work detail page
+* Editorial post list page
+
+0.10.0
+------
+
+* As a content editor, I want unneeded punctuation removed when importing or updating records from HathiTrust metadata, so that records are easier to search and browse.
+* As a user, I want item titles to be case-insensitive when sorting, so that I can find content alphabetically.
+* As a user, I want my search input for publication year to be validated in the browser so that I can't enter invalid dates.
+
+Content management updates
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* As a content editor, I want to arrange content pages on the site so that I can update site navigation when information changes.
+* As an admin, I want the site to provide XML sitemaps for content pages, collection and archive pages, and digitized works so that site content will be findable by search engines.
+* Replace Mezzanine with Wagtail as content management system.
+* Add built-in fixtures to create default page structure within Wagtail.
+
+Design updates
+^^^^^^^^^^^^^^
+
+* Refactor SCSS and media queries.
+* Fixes issues with histogram and pub date display on Chrome.
+* Fixes an issue where hitting back on a search could result in unformatted JSON being displayed.
+
 0.9.0
 -----
 

@@ -1,13 +1,16 @@
 import logging
 import os.path
+import re
 from zipfile import ZipFile
 
 from cached_property import cached_property
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
 from pairtree import pairtree_path, pairtree_client
+from pairtree.storage_exceptions import ObjectNotFoundException
 from wagtail.core.fields import RichTextField
 from wagtail.admin.edit_handlers import FieldPanel
 from wagtail.snippets.models import register_snippet
@@ -20,36 +23,17 @@ from ppa.archive.solr import PagedSolrQuery
 logger = logging.getLogger(__name__)
 
 
-class CollectionQuerySet(models.QuerySet):
-
-    # collections not meant to be featured on the home page
-    # or collection list - hard-coded for now, until we
-    # add a flag or something for admins to determine this.
-    exclude_from_public = ['Dictionary', 'Pronunciation Guide']
-
-    def public(self):
-        '''Collections that are meant to be displayed publicly'''
-        return self.exclude(name__in=self.exclude_from_public)
+#: label to use for items that are not in a collection
+NO_COLLECTION_LABEL = 'Uncategorized'
 
 
-@register_snippet
-class Collection(models.Model):
-    '''A collection of :class:`ppa.archive.models.DigitizedWork` instances.'''
-    #: the name of the collection
-    name = models.CharField(max_length=255)
-    #: a RichText description of the collection
-    description = RichTextField(blank=True)
+class TrackChangesModel(models.Model):
+    ''':Model mixin that keeps a copy of initial data in order to check
+    if fields have been changed. Change detection only works on the
+    current instance of an object.'''
 
-    objects = CollectionQuerySet.as_manager()
-
-    # configure for editing in wagtail admin
-    panels = [
-        FieldPanel('name'),
-        FieldPanel('description'),
-    ]
-
-    def __str__(self):
-        return self.name
+    class Meta:
+        abstract = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -58,17 +42,44 @@ class Collection(models.Model):
         self.__initial = self.__dict__.copy()
 
     def save(self, *args, **kwargs):
-        """
-        Saves model and set initial state.
-        """
+        '''Saves data and reset copy of initial data.'''
         super().save(*args, **kwargs)
         # update copy of initial data to reflect saved state
         self.__initial = self.__dict__.copy()
 
+    def has_changed(self, field):
+        '''check if a field has been changed'''
+        return getattr(self, field) != self.__initial[field]
+
+
+@register_snippet
+class Collection(TrackChangesModel):
+    '''A collection of :class:`ppa.archive.models.DigitizedWork` instances.'''
+    #: the name of the collection
+    name = models.CharField(max_length=255)
+    #: a RichText description of the collection
+    description = RichTextField(blank=True)
+    #: flag to indicate collections to be excluded by default in
+    #: public search
+    exclude = models.BooleanField(default=False,
+        help_text='Exclude by default on public search.')
+
+    # configure for editing in wagtail admin
+    panels = [
+        FieldPanel('name'),
+        FieldPanel('description'),
+    ]
+
+    class Meta:
+        ordering = ('name',)
+
+    def __str__(self):
+        return self.name
+
     @property
     def name_changed(self):
         '''check if name has been changed (only works on current instance)'''
-        return self.name != self.__initial['name']
+        return self.has_changed('name')
 
     @staticmethod
     def stats():
@@ -106,7 +117,7 @@ class Collection(models.Model):
         return stats
 
 
-class DigitizedWork(models.Model, Indexable):
+class DigitizedWork(TrackChangesModel, Indexable):
     '''
     Record to manage digitized works included in PPA and store their basic
     metadata.
@@ -163,6 +174,19 @@ class DigitizedWork(models.Model, Indexable):
     #: date of last modification of the local record
     updated = models.DateTimeField(auto_now=True)
 
+    PUBLIC = 'P'
+    SUPPRESSED = 'S'
+    STATUS_CHOICES = (
+        (PUBLIC, 'Public'),
+        (SUPPRESSED, 'Suppressed'),
+    )
+    #: status of record; currently choices are public or suppressed
+    status = models.CharField(
+        max_length=2, choices=STATUS_CHOICES, default=PUBLIC,
+        help_text='Changing status to suppressed will remove rsync data ' +
+        'for that volume and remove from the public index. This is ' +
+        'currently not reversible; use with caution.')
+
     class Meta:
         ordering = ('sort_title',)
 
@@ -189,12 +213,43 @@ class DigitizedWork(models.Model, Indexable):
         # hopefully temporary workaround until solr fields made consistent
         return self.source_url
 
+    @property
+    def is_suppressed(self):
+        '''Item has been suppressed (based on :attr:`status`).'''
+        return self.status == self.SUPPRESSED
+
     def display_title(self):
         '''admin display title to allow displaying title but sorting on sort_title'''
         return self.title
     display_title.short_description = 'title'
     display_title.admin_order_field = 'sort_title'
     display_title.allow_tags = True
+
+    def is_public(self):
+        '''admin display field indicating if record is public or suppressed'''
+        return self.status == self.PUBLIC
+    is_public.short_description = 'Public'
+    is_public.boolean = True
+    is_public.admin_order_field = 'status'
+
+    #: regular expresion for cleaning preliminary text from publisher names
+    printed_by_re = r'^(Printed)?( and )?(Pub(.|lished|lisht)?)?( and sold)? (by|for|at)( the)? ?'
+    # Printed by/for (the); Printed and sold by; Printed and published by;
+    # Pub./Published/Publisht at/by/for the
+
+    def save(self, *args, **kwargs):
+        # if status has changed and object is now suppressed, remove data
+        if self.has_changed('status') and self.status == self.SUPPRESSED:
+            self.delete_hathi_pairtree_data()
+
+        super().save(*args, **kwargs)
+
+    def clean(self):
+        '''Add custom validation to trigger a save error in the admin
+        if someone tries to unsuppress a record that has been suppressed
+        (not yet supported).'''
+        if self.has_changed('status') and self.status != self.SUPPRESSED:
+            raise ValidationError('Unsuppressing records not yet supported.')
 
     def populate_from_bibdata(self, bibdata):
         '''Update record fields based on Hathi bibdata information.
@@ -210,7 +265,9 @@ class DigitizedWork(models.Model, Indexable):
         # set fields from marc if available, since it has more details
         if bibdata.marcxml:
             # set title and subtitle from marc if possible
-            self.title = bibdata.marcxml['245']['a']
+            # - clean title: strip trailing space & slash and initial bracket
+            self.title = bibdata.marcxml['245']['a'].rstrip(' /') \
+                .lstrip('[')
 
             # according to PUL CAMS,
             # 245 subfield contains the subtitle *if* the preceding field
@@ -232,6 +289,8 @@ class DigitizedWork(models.Model, Indexable):
 
             # NOTE: skipping preceding character check for now
             self.subtitle = bibdata.marcxml['245']['b'] or ''
+            # strip trailing space & slash from subtitle
+            self.subtitle = self.subtitle.rstrip(' /')
 
             # indicator 2 provides the number of characters to be
             # skipped when sorting (could be 0)
@@ -245,16 +304,42 @@ class DigitizedWork(models.Model, Indexable):
 
             # strip whitespace, since a small number of records have a
             # nonsort value that doesn't include a space after a
-            # definite article
-            self.sort_title = bibdata.marcxml.title()[non_sort:].strip()
+            # definite article.
+            # Also strip punctuation, since MARC only includes it in
+            # non-sort count when there is a definite article.
+            self.sort_title = bibdata.marcxml.title()[non_sort:].strip(' "[')
 
             self.author = bibdata.marcxml.author() or ''
+            # remove a note present on some records and strip whitespace
+            self.author = self.author.replace('[from old catalog]', '').strip()
+            # removing trailing period, except when it is part of an
+            # initial or known abbreviation (i.e, Esq.)
+            # Look for single initial, but support initials with no spaces
+            if self.author.endswith('.') and not \
+              re.search(r'( ([A-Z]\.)*[A-Z]| Esq)\.$', self.author):
+                self.author = self.author.rstrip('.')
+
             # field 260 includes publication information
             if '260' in bibdata.marcxml:
+                # strip trailing punctuation from publisher and pub place
+
                 # subfield $a is place of publication
                 self.pub_place = bibdata.marcxml['260']['a'] or ''
+                self.pub_place = self.pub_place.rstrip(';:,')
+                # if place is marked as unknown ("sine loco"), leave empty
+                if self.pub_place.lower() == '[s.l.]':
+                    self.pub_place = ''
+
                 # subfield $b is name of publisher
                 self.publisher = bibdata.marcxml['260']['b'] or ''
+                self.publisher = self.publisher.rstrip(';:,')
+                # if publisher is marked as unknown ("sine nomine"), leave empty
+                if self.publisher.lower() == '[s.n.]':
+                    self.publisher = ''
+
+            # remove printed by statement before publisher name
+            self.publisher = re.sub(self.printed_by_re, '', self.publisher,
+                flags=re.IGNORECASE)
 
             # maybe: consider getting volume & series directly from
             # marc rather than relying on hathi enumcron ()
@@ -275,6 +360,11 @@ class DigitizedWork(models.Model, Indexable):
         # hathi source url can currently be inferred from htid, but is
         # included in the bibdata in case it changes - so let's just store it
         self.source_url = copy_details['itemURL']
+
+        # remove brackets around inferred publishers, place of publication
+        # *only* if they wrap the whole text
+        self.publisher = re.sub(r'^\[(.*)\]$', r'\1', self.publisher)
+        self.pub_place = re.sub(r'^\[(.*)\]$', r'\1', self.pub_place)
 
         # should also consider storing:
         # - last update, rights code / rights string, item url
@@ -319,6 +409,13 @@ class DigitizedWork(models.Model, Indexable):
 
     def index_data(self):
         '''data for indexing in Solr'''
+
+        # When an item has been suppressed, return id only.
+        # This will blank out any previously indexed values, and item
+        # will not be findable by any public searchable fields.
+        if self.status == self.SUPPRESSED:
+            return {'id': self.source_id}
+
         return {
             'id': self.source_id,
             'srcid': self.source_id,
@@ -331,12 +428,14 @@ class DigitizedWork(models.Model, Indexable):
             'publisher': self.publisher,
             'enumcron': self.enumcron,
             'author': self.author,
-            'collections': [collection.name for collection
-                            in self.collections.all()],
-            # general purpose multivalued field, currently only
-            # includes public notes in this method, other fields
-            # copied in Solr schema.
-            'text': [self.public_notes],
+            # set default value to simplify queries to find uncollected items
+            # (not set in Solr schema because needs to be works only)
+            'collections':
+                [collection.name for collection in self.collections.all()]
+                if self.collections.exists()
+                else [NO_COLLECTION_LABEL],
+            # public notes field for display on site_name
+            'notes': self.public_notes,
             # hard-coded to distinguish from & sort with pages
             'item_type': 'work',
             'order': '0',
@@ -361,17 +460,39 @@ class DigitizedWork(models.Model, Indexable):
         # pairtree encoded version of the id
         return pairtree_path.id_encode(self.hathi_pairtree_id)
 
+    def hathi_pairtree_client(self):
+        '''Initialize a pairtree client for the pairtree datastore this
+         object belongs to, based on its Hathi prefix id.'''
+        return pairtree_client.PairtreeStorageClient(
+            self.hathi_prefix,
+            os.path.join(settings.HATHI_DATA, self.hathi_prefix))
+
     def hathi_pairtree_object(self, ptree_client=None):
-        '''get a pairtree object for the current work'''
+        '''get a pairtree object for the current work
+
+        :param ptree_client: optional
+            :class:`pairtree_client.PairtreeStorageClient` if one has
+            already been initialized, to avoid repeated initialization
+            (currently used in hathi_import manage command)
+        '''
         if ptree_client is None:
             # get pairtree client if not passed in
-            ptree_client = pairtree_client.PairtreeStorageClient(
-                self.hathi_prefix,
-                os.path.join(settings.HATHI_DATA, self.hathi_prefix))
+            ptree_client = self.hathi_pairtree_client()
 
         # return the pairtree object for current work
         return ptree_client.get_object(self.hathi_pairtree_id,
                                        create_if_doesnt_exist=False)
+
+    def delete_hathi_pairtree_data(self):
+        '''Delete pairtree object from the pairtree datastore.'''
+        logger.info('Deleting pairtree data for %s', self.source_id)
+        try:
+            self.hathi_pairtree_client() \
+                .delete_object(self.hathi_pairtree_id)
+        except ObjectNotFoundException:
+            # data is already gone; warn, but not an error
+            logger.warn('Pairtree deletion failed; object not found %s',
+                        self.source_id)
 
     def _hathi_content_path(self, ext, ptree_client=None):
         '''path to zipfile within the hathi contents for this work'''

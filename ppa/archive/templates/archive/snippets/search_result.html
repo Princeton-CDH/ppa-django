@@ -1,84 +1,97 @@
-{% load humanize %}
-<div class="item">
-    <abbr class="unapi-id" title="{{ item.srcid }}"></abbr>
-    <div class="ui stackable grid">
-        <div class="six wide column">
-            <div class="labels">
-                {% if page_obj %}
-                <p class="result-number">{{ page_obj.start_index|add:forloop.counter0 }}</p>
-                <!-- <i class="ui flag icon"></i> -->
-                {% endif %}
-            </div>
-            <div class="title">
-                <a href="{% url 'archive:detail' item.srcid %}">
-                    <p>
-                        <span class="ui header">{{ item.title }}</span>
-                        <span class="ui sub header">{{ item.subtitle}}</span>
-                    </p>
-                </a>
-            </div>
-        </div>
-        <div class="metadata six wide column">
-            {% if item.author %}
-                <p class="author ui header">{{ item.author }}</p>
-            {% endif %}
-            <div class="publication ui grid">
-                <div class="eight wide column">
-                    {% if item.publisher %}
-                        <span class="publisher">{{ item.publisher }}</span><br>
-                    {% endif %}
-                    {% if item.pub_place %}
-                        <span class="pub_place">{{ item.pub_place }}</span><br>
+{% load static humanize %}
+
+<li class="item">
+    <abbr class="unapi-id" title="{{ item.srcid }}" hidden></abbr>
+    <a href="{% url 'archive:detail' item.srcid %}" class="detail">
+        <div class="brief-result container">
+            <div class="title column">
+                <div class="labels">
+                    {% if page_obj %}
+                        <p class="result-number">
+                            {{ page_obj.start_index|add:forloop.counter0 }}
+                        </p>
                     {% endif %}
                 </div>
-                <div class="four wide column">
+                <p>
+                    <span class="ui header">{{ item.title }}</span>
+                    <span class="ui sub header">{{ item.subtitle}}</span>
+                </p>
+            </div>
+            <div class="metadata column">
+                <dl class="grid">
+                    {% if item.author %}
+                    <div class="author">
+                        <dt>Author</dt>
+                        <dd>{{ item.author }}</dd>
+                    </div>
+                    {% endif %}
                     {% if item.pub_date %}
-                        <span class="pub_date">{{ item.pub_date }}</span><br>
+                    <div class="pub-date">
+                        <dt>Pub. Date</dt>
+                        <dd>{{ item.pub_date }}</dd>
+                    </div>
+                    {% endif %}
+                    {% if item.publisher %}
+                    <div class="publisher">
+                        <dt>Publisher</dt>
+                        <dd>{{ item.publisher }}</dd>
+                    </div>
                     {% endif %}
                     {% if item.enumcron %}
-                        <span class="enumcron">{{ item.enumcron }}</span><br>
+                    <div class="volume">
+                        <dt>Volume</dt>
+                        <dd>{{ item.enumcron }}</dd>
+                    </div>
                     {% endif %}
+                    {% if user.is_authenticated %}
+                    <div class="score">
+                        <dt>Score</dt>
+                        <dd>{{ item.score }}</dd>
+                    </div>
+                    {% endif %}
+                </dl>
+                <div class="buttons">
+                    {% if item.pk %} {# database object with many-to-many #}
+                        {% for collection in item.collections.all %}
+                            <label class="ui basic button">{{ collection }}</label>
+                        {% endfor %}
+                    {% else %} {# solr object with list of strings #}
+                        {% for collection in item.collections %}
+                            {# Don't display collection badge for uncategorized items #}
+                            {% if collection != NO_COLLECTION_LABEL %}
+                            <label class="ui basic button">{{ collection }}</label>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                    <div class="item-detail">
+                        <span>See more details</span>
+                        {% include 'snippets/chevron.svg' %}
+                    </div>
                 </div>
             </div>
-            <div class="buttons">
-                {% if item.pk %} {# database object with many-to-many #}
-                    {% for collection in item.collections.all %}
-                        <label class="ui basic button">{{ collection }}</label>
-                    {% endfor %}
-                {% else %} {# solr object with list of strings #}
-                    {% for collection in item.collections %}
-                        <label class="ui basic button">{{ collection }}</label>
-                    {% endfor %}
-                {% endif %}
-                <a class="ui right floated right labeled primary icon button" href="{{ item.src_url }}" target="_blank">
-                    HathiTrust
-                    <i class="right arrow icon"></i>
-                </a>
-            </div>
         </div>
+    </a>
+    <div class="page-previews">
         {% if page_groups and page_highlights %}
-        <div class="pages twelve wide column">
-            {% with results=page_groups|dict_item:item.id %}
+        {% with results=page_groups|dict_item:item.id %}
+            {% if results.numFound > 2 %}
+            <a class="total-pages"
+                href="{% url 'archive:detail' item.srcid %}?query={{ query }}">
+                Total Results: {{ results.numFound|intcomma }} page{{ results.numFound|pluralize }}
+            </a>
+            {% endif %}
+            <div class="pages twelve wide column">
                 {% if page_highlights %}
                 <div class="wrapper">
                     {% for page in results.docs %}
-                      {% with highlights=page_highlights|dict_item:page.id %}
+                    {% with highlights=page_highlights|dict_item:page.id %}
                         {% include 'archive/snippets/page_preview.html' with item_id=item.srcid  %}
-                      {% endwith %}
+                    {% endwith %}
                     {% endfor %}
                 </div>
-                {# link to page with search if there are more than two pages #}
-                    {% if results.numFound > 2 %}
-                    <a class="ui left floated right labeled primary icon button"
-                        href="{% url 'archive:detail' item.srcid %}?query={{ query }}">
-                        View all {{ results.numFound|intcomma }} page{{ results.numFound|pluralize }}
-                        <i class="right arrow icon"></i>
-                    </a>
-                    {% endif %}
                 {% endif %}
-            {% endwith %}
-            <!--<p>{{ item.enumcron }}</p>-->
-        </div>
+            </div>
+        {% endwith %}
         {% endif %}
     </div>
-</div>
+</li>

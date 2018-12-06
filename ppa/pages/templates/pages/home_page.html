@@ -7,18 +7,23 @@
 
 {% block page-context-id %}homepage{% endblock %}
 
+{% block page_nav %}
+    {% include 'snippets/nav.html' with style="homepage" %}
+{% endblock %}
+
 {% block page_header %}
-<header class="ui vertical basic center aligned segment homepage" id="header">
+<header class="homepage" id="header">
+    <div class="banner"></div>
     <div id="scene">
-        <img class="layer one" data-depth="0.20" src="{% static 'img/ppa-logo-separated-shape/layer1.svg' %}" alt="">
-        <img class="layer two" data-depth="0.40" src="{% static 'img/ppa-logo-separated-shape/layer2.svg' %}" alt="">
-        <img class="layer three" data-depth="0.60" src="{% static 'img/ppa-logo-separated-shape/layer3.svg' %}" alt="">
+        <img class="layer one" data-depth="0.20" src="{% static 'img/ppaLogo_Layers_Revised/PPALogo_Blue.svg' %}" alt="">
+        <img class="layer two" data-depth="0.40" src="{% static 'img/ppaLogo_Layers_Revised/PPALogo_Teal.svg' %}" alt="">
+        <img class="layer three" data-depth="0.60" src="{% static 'img/ppaLogo_Layers_Revised/PPALogo_Red.svg' %}" alt="">
     </div>
 </header>
 {% endblock %}
 
 {% block content %}
-<div class="ui vertical basic segment text container">
+<div class="hero ui vertical basic segment container">
     <div class="intro">
         {{ page.body|richtext }}
     </div>
@@ -30,28 +35,23 @@
     </a>
 </div>
 <div class="asides-collections ui vertical basic segment container">
-    <div class="asides ui two cards">
+   <div class="asides ui two cards">
         {% for card in preview_pages %}
         <a class="aside card" href="{{ card.url }}">
             <div class="content">
                 <h3 class="header">{{ card.title }}</h3>
-                <div class="description">{{ card.specific.description|richtext }}</div>
+                <div class="description">{{ card.specific.get_description|richtext }}</div>
             </div>
         </a>
         {% endfor %}
     </div>
+    {% if collection_page %}  {# page content pulled in from wagtail #}
     <div class="collections">
-            {# TODO: pull in page content/blurb from wagtail #}
-        <h3 class="ui header about-header">About the Collections</h3>
-        <div class="description">The Archive builds on bibliographic data from
-            several sources as well as library catalog data from the HathiTrust
-            Research Center. It is divided into four collections. Users are
-            able to search across collections or within any combination
-            of collections.
-        </div>
+        <h3 class="ui header about-header">{{ collection_page.title }}</h3>
+        <div class="description">{{ collection_page.body|richtext }}</div>
         <div class="ui cards">
             {% for item in collections %}
-            <a class="ui card" href="{% url 'archive:list' %}?collections={{ item.name|urlencode }}">
+            <a class="ui card" href="{% url 'archive:list' %}?collections={{ item.pk }}">
                 <div class="content">
                     <h3 class="header">{{ item.name }}</h3>
                     {% with coll_stats=stats|dict_item:item.name %}
@@ -71,41 +71,13 @@
             </a>
             {% endfor %}
         </div>
-        <a class="collections-link" href="{% url 'archive:list-collections' %}">
+        <a class="collections-link" href="{% pageurl collection_page %}">
             <h3 class="ui header">
                 {% include 'snippets/fermata.svg' %}
                 View All Collections
             </h3>
         </a>
     </div>
-</div>
-{# TODO: pull in recent editorial posts dynamically #}
-<div class="ui vertical basic segment container">
-    <div class="updates ui two cards">
-        <a class="ui post card">
-            <div class="content">
-                <div class="header">Updates Post Title</div>
-                <div class="meta">Oct 10 2017</div>
-                <div class="description">
-                    {% lorem 30 w random %}
-                </div>
-            </div>
-        </a>
-        <a class="ui post card">
-            <div class="content">
-                <div class="header">Updates Post Title</div>
-                <div class="meta">Oct 10 2017</div>
-                <div class="description">
-                    {% lorem 30 w random %}
-                </div>
-            </div>
-        </a>
-    </div>
-    <a class="archive-link" href="{% url 'archive:list' %}">
-        <h3 class="ui header">
-            {% include 'snippets/fermata.svg' %}
-            View and search the archive
-        </h3>
-    </a>
+    {% endif %}
 </div>
 {% endblock %}

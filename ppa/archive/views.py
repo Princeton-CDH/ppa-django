@@ -14,7 +14,7 @@ from django.views.generic.edit import FormView
 from SolrClient.exceptions import SolrError
 
 from ppa.archive.forms import SearchForm, AddToCollectionForm, SearchWithinWorkForm
-from ppa.archive.models import DigitizedWork, Collection
+from ppa.archive.models import DigitizedWork, Collection, NO_COLLECTION_LABEL
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 from ppa.common.views import VaryOnHeadersMixin
 
@@ -48,7 +48,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             if 'sort' in form_opts and form_opts['sort'] == 'relevance':
                 del form_opts['sort']
 
-        for key, val in self.form_class.defaults.items():
+        for key, val in self.form_class.defaults().items():
             # set as list to avoid nested lists
             # follows solution using in derrida-django for InstanceListView
             if isinstance(val, list):
@@ -65,7 +65,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
         if not self.form.is_valid():
             return DigitizedWork.objects.none()
 
-        work_query = sort = text_query = None
+        work_query = sort = keyword_query = None
         # components of query to filter digitized works
         if self.form.is_valid():
             search_opts = self.form.cleaned_data
@@ -74,15 +74,23 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             collections = search_opts.get("collections", None)
 
             if self.query:
-                # simple keyword search across all text content
-                text_query = "text:(%s)" % self.query
-                # work_q.append(text_query)
+                # simple keyword search across all configured fields
+                # group to ensure boolean logic applies to all terms
+                keyword_query = "(%s)" % self.query
 
             work_q = []
-            # restrict by collection if specified
+
+            # restrict by collection
             if collections:
                 work_q.append('collections_exact:(%s)' % \
                     (' OR '.join(['"%s"' % coll for coll in collections])))
+
+            # For collection exclusion logic to work properly, if no
+            # collections are selected, no items should be returned.
+            # This query should return no items but still provide facet
+            # data to populate the collection filters on the form properly.
+            else:
+                work_q.append('item_type:work AND -collections_exact:[* TO *]')
 
             # filter books by title or author if there is a query
             for field in ['title', 'author']:
@@ -90,7 +98,6 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                     # filter by title/author keyword or phrase
                     work_q.append('%s:(%s)' % \
                                   (field, search_opts[field]))
-
 
         # use join to ensure we always get the work if any pages match
         # using query syntax as documented at
@@ -100,7 +107,6 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             # logger.debug("Solr search query: %s", solr_q)
         # else:
             # solr_q = '*:*'
-
 
         range_opts = {
             'facet.range': self.form.range_facets
@@ -131,19 +137,17 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                 # NOTE: per facet.range.include documentation, default behavior
                 # is to include lower bound and exclude upper bound.
                 # For simplicity, increase range end by one.
-                'f.%s.facet.range.end' % range_facet: end,
+                'f.%s.facet.range.end' % range_facet: end + 1,
                 # calculate gap based start and end & desired number of slices
                 # ideally, generate 24 slices; minimum gap size of 1
                 'f.%s.facet.range.gap' % range_facet: max(1, int((end - start) / 24)),
                 # restrict last range to *actual* maximum value
                 'f.%s.facet.range.hardend' % range_facet: True,
-                # include start and end values in the bins
-                'f.%s.facet.range.include' % range_facet: 'edge'
             })
 
         # if there are any queries to filter works  or search by text,
         # combine the queries and construct solr query
-        if work_q or text_query:
+        if work_q or keyword_query:
             query_parts = []
 
             # work-level metadata queries and filters
@@ -151,11 +155,12 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                 # combine all work filters from search form input
                 # (input from different fields are combined via *AND*)
                 work_query = '(%s)' % ' AND '.join(work_q)
-                # NOTE: grouping required for work_query to work properly on the join
-                # search for works that match the filters OR for pages that belong
-                # to a work that matches, but only if there is also a text_query.
-                # If there is not text_query, pages are not needed.
-                if text_query:
+                # NOTE: grouping required for work_query to work properly
+                # on the join search for works that match the filters OR
+                # for pages that belong to a work that matches, but only
+                # if there is also a keyword_query. If there is not
+                # keyword_query, pages are not needed.
+                if keyword_query:
                     query_parts.append(
                         '(%s OR {!join from=id to=srcid v=$work_query})' % work_query
                     )
@@ -163,11 +168,11 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                     query_parts.append(work_query)
 
             # general text query, if there is one
-            if text_query:
+            if keyword_query:
                 # search for works that match the filter OR for works
                 # associated with pages that match
                 query_parts.append(
-                     '(%s OR {!join from=srcid to=id v=$text_query})' % text_query
+                     '(%s OR {!join from=srcid to=id v=$keyword_query})' % keyword_query
                 )
 
             # combine work and text queries together with AND
@@ -190,6 +195,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
         solr_opts = {
             'q': solr_q,
             'sort': solr_sort,
+            'pf': self.query,
             'fl': fields,
             'fq': collapse_q,
             # turn on faceting and add any self.form facet_fields
@@ -200,7 +206,8 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             # default expand sort is score desc
             'expand': 'true',
             'expand.rows': 2,   # number of items in the collapsed group, i.e pages to display
-            'text_query': text_query,
+            # explicitly query pages on text content (join q seems to skip qf)
+            'keyword_query': 'content:%s' % keyword_query,
             'work_query': work_query
         }
 
@@ -236,7 +243,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
         # NOTE 2: using quotes around ids to handle ids that include
         # colons, e.g. ark:/foo/bar .
         solr_pageq = PagedSolrQuery({
-            'q': 'text:(%s) AND id:(%s)' % \
+            'q': '(%s) AND id:(%s)' % \
                 (self.query, ' '.join('"%s"' % pid for pid in page_ids)),
             # enable highlighting on content field with 3 snippets
             'hl': True,
@@ -267,6 +274,11 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             self.form.set_choices_from_facets(facet_dict)
             # needs to be inside try/catch or it will re-trigger any error
             facet_ranges = self.solrq.facet_ranges
+            # facet ranges are used for display; when sending to solr we
+            # increase the end bound by one so that year is included;
+            # subtract it back so display matches user entered dates
+            facet_ranges['pub_date']['end'] -= 1
+
         except SolrError as solr_err:
             context = {'object_list': []}
             if 'Cannot parse' in str(solr_err):
@@ -285,20 +297,39 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             'page_highlights': self.get_page_highlights(page_groups),
             # query for use template links to detail view with search
             'query': self.query,
+            'NO_COLLECTION_LABEL': NO_COLLECTION_LABEL
         })
         return context
 
 
 class DigitizedWorkDetailView(DetailView):
-    '''Display details for a single digitized work'''
+    '''Display details for a single digitized work. If a work has been
+    surpressed, returns a 410 Gone response.'''
     model = DigitizedWork
     slug_field = 'source_id'
     slug_url_kwarg = 'source_id'
     form_class = SearchWithinWorkForm
     paginate_by = 50
 
+    def get_template_names(self):
+        if self.object.status == DigitizedWork.SUPPRESSED:
+            return '410.html'
+        return super().get_template_names()
+
+    def get(self, *args, **kwargs):
+        response = super().get(*args, **kwargs)
+        # set status code to 410 gone for suppressed works
+        if self.object.is_suppressed:
+            response.status_code = 410
+        return response
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        digwork = context['object']
+        # if suppressed, don't do any further processing
+        if digwork.is_suppressed:
+            return context
+
         # pull in the query if it exists to use
         query = self.request.GET.get('query', '')
         form_opts = self.request.GET.copy()
@@ -307,8 +338,7 @@ class DigitizedWorkDetailView(DetailView):
         solr_pageq = None
         if query:
             context['query'] = query
-            digwork = context['object']
-            solr_q = 'text:(%s)' % query
+            solr_q = query
             solr_opts = {
                 'q': solr_q,
                 # sort by page order by default
@@ -351,34 +381,18 @@ class DigitizedWorkDetailView(DetailView):
         return context
 
 
-class CollectionListView(ListView):
-    '''Display list of :class:`ppa.archive.models.Collection`
-    with description and summary statistics.
-    '''
-    model = Collection
-    # NOTE: For consistency with DigitizedWork's list view
-    template_name = 'archive/list_collections.html'
-    ordering = ('name',)
-
-    def get_queryset(self):
-        return super().get_queryset().public()
-
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-        context['stats'] = Collection.stats()
-        return context
-
-
 class DigitizedWorkCSV(ListView):
     '''Export of digitized work details as CSV download.'''
     # NOTE: csv logic could be extracted as a view mixin for reuse
     model = DigitizedWork
     # order by id for now, for simplicity
     ordering = 'id'
-    header_row = ['Database ID', 'Source ID', 'Record ID', 'Title', 'Author',
-                  'Publication Date', 'Publication Place', 'Publisher',
-                  'Enumcron', 'Collection', 'Public Notes', 'Notes',
-                  'Page Count', 'Date Added', 'Last Updated']
+    header_row = [
+        'Database ID', 'Source ID', 'Record ID', 'Title', 'Subtitle',
+        'Sort title', 'Author', 'Publication Date', 'Publication Place',
+        'Publisher', 'Enumcron', 'Collection', 'Public Notes', 'Notes',
+        'Page Count', 'Status', 'Date Added', 'Last Updated'
+    ]
 
     def get_csv_filename(self):
         '''Return the CSV file name based on the current datetime.
@@ -394,11 +408,12 @@ class DigitizedWorkCSV(ListView):
         :returns: rows for CSV columns
         :rtype: tuple
         '''
-        return ((dw.id, dw.source_id, dw.record_id, dw.title, dw.author,
-                 dw.pub_date, dw.pub_place, dw.publisher, dw.enumcron,
+        return ((dw.id, dw.source_id, dw.record_id, dw.title, dw.subtitle,
+                 dw.sort_title, dw.author, dw.pub_date, dw.pub_place,
+                 dw.publisher, dw.enumcron,
                  ';'.join([coll.name for coll in dw.collections.all()]),
-                 dw.public_notes, dw.notes, dw.page_count, dw.added,
-                 dw.updated
+                 dw.public_notes, dw.notes, dw.page_count,
+                 dw.get_status_display(), dw.added, dw.updated
                  )
                 for dw in self.get_queryset().prefetch_related('collections'))
         # NOTE: prefetch collections so they are retrieved more efficiently
@@ -512,4 +527,3 @@ class AddToCollection(ListView, FormView):
         # doesn't pass the form with error set
         self.object_list = self.get_queryset()
         return self.render_to_response(self.get_context_data(form=form))
-

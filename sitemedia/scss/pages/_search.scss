@@ -1,25 +1,30 @@
 #search {
-    margin-top: 0;
+
+    .sub.header { // "ARCHIVE" text
+        font-size: 1.5rem;
+        margin: 1rem 0;
+        text-align: center;
+        font-weight: normal;
+    }
     
-    .container {
+    .container:not(.message) {
         @include wide-container();
     }
 
     .search {
-        padding-bottom: 0;
+        padding: 0;
     }
 
-    .form > fieldset.vertical.segment { // stacked fieldsets
+    .form > .vertical.segment { // stacked fieldsets
         margin-bottom: 0;
         margin-top: 0;
 
         &:first-child {
-            margin-top: 1em;
             border-bottom: none;
         }
 
         &:nth-child(2) {
-            border-top: 1px solid $lightGrey;
+            border-top: 1px solid #D8D8D8;
         }
 
         &:last-child {
@@ -31,37 +36,15 @@
         }
     }
 
-    .clear.times.icon {
-        left: auto;
-        right: 0;
-        cursor: pointer;
-        pointer-events: all;
-    }
-
     .show-advanced {
-        background: #fff;
+        background: $white-two;
         text-align: center;
         padding-top: 0;
 
         a {
-            color: $secondaryColor;
             margin: auto;
             margin-bottom: 1rem;
             cursor: pointer;
-    
-            &:hover {
-                color: $gold;
-            }
-
-            @media (hover: none) {
-                &:hover {
-                    color: $secondaryColor;
-                }
-                &:active {
-                    color: $gold;
-                }
-            }
-
         }
 
         @media (min-width: $tablet) {
@@ -121,39 +104,12 @@
 
     .clear-selection {
         cursor: pointer;
-        color: $secondaryColor;
         position: absolute;
         bottom: -.5rem;
         left: 1rem;
 
-        &:hover {
-            color: $gold;
-        }
-
         @media (min-width: $tablet) {
             bottom: 1rem;
-        }
-    }
-
-    #histogram {
-        height: 8rem;
-
-        .values {
-            display: none;
-        }
-
-        .visualization {
-            width: 100%;
-            height: 4rem;
-        }
-
-        .min-date,
-        .max-date{
-            color: $midGrey;
-        }
-
-        .max-date {
-            float: right;
         }
     }
 
@@ -183,11 +139,7 @@
     }
 
     .zotero a {
-        color: $secondaryColor;
-
-        &:hover {
-            color: $gold;
-        }
+        @include link;
     }
 
     #booleans {
@@ -197,76 +149,8 @@
         }
     }
 
-    /* sorting */
-    .sort {
-        margin: 2rem 1rem 0;
-
-        .menu {
-            display: none;
-            justify-content: space-between;
-            flex-direction: column;
-
-            @media (min-width: $computer) {
-                display: flex;
-                flex-direction: row;
-            }
-
-            .item {
-                padding: 0;
-                margin: 0;
-                text-transform: none;
-                border: none;
-                cursor: pointer;
-
-                @media (min-width: $computer) {
-                    margin: 1rem;
-                }
-            }
-
-            .item > input {
-                display: none; // hide checkboxes
-            }
-
-            span.item { // "SORT BY" text
-                margin-left: 0;
-                text-transform: uppercase;
-                cursor: initial;
-            }
-        }
-    }
-
-    .mobile-sort {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 2px solid $gold;
-        padding-bottom: .5rem;
-
-        @media (min-width: $computer) {
-            display: none;
-        }
-
-        label { // "SORT BY" text
-            text-transform: uppercase;
-        }
-
-        .chevron.down.icon {
-            transition: all 0.2s ease;
-            position: absolute;
-            right: .5rem;
-            color: black;
-            opacity: 0.9;
-        }
-        
-        .active.dropdown .chevron.down.icon {
-            transform: rotate(180deg);
-        }
-    }
-
-
     .workscount {
         margin: 2rem auto;
-        color: $midGrey;
         font-size: 1rem;
 
         p:first-child {
@@ -277,9 +161,74 @@
     /* results */
     .results-list {
         padding-bottom: 2rem;
+        padding-left: 0;
+        list-style: none;
     }
 
     .data {
         display: none;
+    }
+    
+    .pagination-sort,
+    .pagination-bottom {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        
+        @media (min-width: $tablet) {
+            justify-content: space-between;
+        }
+    }
+    
+    .pagination-sort {
+        margin: 0 1rem;
+        border-bottom: 2px solid $seafoam-blue;
+    }
+
+    .pagination-bottom {
+        padding: 0 1rem;
+
+        .page-controls {
+            position: relative;
+        }
+    }
+
+    .page-controls {
+        width: 100%;
+        text-align: center;
+        margin-top: 1rem;
+ 
+        @media (min-width: $tablet) {
+            width: auto;
+            margin: 0;
+        }
+
+        @media (min-width: $computer) {
+            position: absolute;
+            right: 0;
+            left: 0;
+            text-align: center;
+        }
+    }
+
+    .sort {
+        width: 100%;
+        margin: 1rem 0;
+
+        @media (min-width: $tablet) {
+            label {
+                margin-left: auto;
+                margin-right: 1rem;
+            }
+        }
+
+        @media (min-width: $computer) {
+            width: auto;
+        }
+    }
+
+    .message {
+        margin-top: 2rem;
     }
 }

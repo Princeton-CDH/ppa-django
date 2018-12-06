@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Architecture &#8212; Princeton Prosody Archive 0.9.0 documentation</title>
+    <title>Architecture &#8212; Princeton Prosody Archive 0.11.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -44,6 +44,15 @@ and a Solr index for search and browse on Digitized Work metadata and
 page content.</p>
 <div class="section" id="database">
 <h2>Database<a class="headerlink" href="#database" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="wagtail-release-0-10">
+<h3>Wagtail (Release 0.10)<a class="headerlink" href="#wagtail-release-0-10" title="Permalink to this headline">¶</a></h3>
+<a class="reference external image-reference" href="_static/ppa-schema-v10.png"><img alt="PPA Databse Schema, version 0.10" src="_images/ppa-schema-v10.png" /></a>
+<p>The primary purpose of this database revision is to remove Mezzanine and add
+Wagtail as the CMS employed by the project. The pages module represents the
+various page types (constituting separate Django apps) that are all subclasses
+of Wagtail’s base page model (expanded for detail with one example of the
+subclassed types).</p>
+</div>
 <div class="section" id="collections-release-0-6">
 <h3>Collections (Release 0.6)<a class="headerlink" href="#collections-release-0-6" title="Permalink to this headline">¶</a></h3>
 <a class="reference external image-reference" href="_static/ppa-schema-v06.png"><img alt="PPA Database Schema, version 0.6" src="_images/ppa-schema-v06.png" /></a>
@@ -131,6 +140,7 @@ grouping work and pages together in search results.</p>
   <ul>
 <li><a class="reference internal" href="#">Architecture</a><ul>
 <li><a class="reference internal" href="#database">Database</a><ul>
+<li><a class="reference internal" href="#wagtail-release-0-10">Wagtail (Release 0.10)</a></li>
 <li><a class="reference internal" href="#collections-release-0-6">Collections (Release 0.6)</a></li>
 <li><a class="reference internal" href="#initial-schema-release-0-5">Initial Schema (Release 0.5)</a></li>
 </ul>

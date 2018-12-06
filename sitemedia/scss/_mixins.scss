@@ -1,35 +1,78 @@
-@mixin responsive-banner($src) {
-    background-position: top;
-    background-repeat: no-repeat;
+@mixin responsive-banner($src, $color) {
+    width: 100%;
+    height: 100%;
+    background-color: $color;
+    mask-position: top;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: top;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    z-index: -1;
     
     // small 1x and 2x
     min-height: $banner-height;
-    background-image: url("#{$src}_S@1x.png");
-    @media (-webkit-min-device-pixel-ratio: 2),
-            (min-resolution: 192dpi) {
-        background-image: url("#{$src}_S@2x.png");
+    mask-image: url("#{$src}_S@1x.png");
+    -webkit-mask-image: url("#{$src}_S@1x.png");
+    
+    @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+        mask-image: url("#{$src}_S@2x.png");
+	    -webkit-mask-image: url("#{$src}_S@2x.png");
     }
 
     // medium 1x and 2x
     @media (min-width: $tablet) {
         min-height: $banner-height-m;
-        margin-bottom: -30px;
-        background-image: url("#{$src}_M@1x.png");
-        @media (-webkit-min-device-pixel-ratio: 2),
-            (min-resolution: 192dpi) {
-            background-image: url("#{$src}_M@2x.png");
+        mask-image: url("#{$src}_M@1x.png");
+        -webkit-mask-image: url("#{$src}_M@1x.png");
+        
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            mask-image: url("#{$src}_M@2x.png");
+	        -webkit-mask-image: url("#{$src}_M@2x.png");
         }
     }
 
     // large 1x and 2x
     @media (min-width: $computer) {
-        margin-bottom: -140px;
         min-height: $banner-height-l;
-        background-image: url("#{$src}@1x.png");
-        @media (-webkit-min-device-pixel-ratio: 2),
-            (min-resolution: 192dpi) {
-            background-image: url("#{$src}@2x.png");
+        mask-image: url("#{$src}@1x.png");
+        -webkit-mask-image: url("#{$src}@1x.png");
+        
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            mask-image: url("#{$src}@2x.png");
+	        -webkit-mask-image: url("#{$src}@2x.png");
         }
+    }
+}
+
+@mixin notes-header($color) {
+    .banner {
+        @include responsive-banner("/static/img/ppa_pattern_home", $color);
+        opacity: 0.3;
+        mask-size: 768px; // fixed larger size for small screens
+        -webkit-mask-size: 768px;
+
+        @media (min-width: $tablet) {
+            mask-size: contain;
+            -webkit-mask-size: contain;
+        }
+    }
+}
+
+@mixin underline-headline($color) {
+    border-bottom: 5px solid $color;
+    font-size: 2rem;
+    font-weight: normal;
+    margin: 6rem 0 2rem;
+    padding-bottom: 1rem;
+
+    @media (min-width: $tablet) {
+        font-size: 3rem;
+        margin: 8rem 0 2rem;
+    }
+
+    @media (min-width: $largeMonitor) {
+        width: 1000px;
     }
 }
 
@@ -41,6 +84,24 @@
     @media (min-width: $computer) {
         width: 1020px;
     }
+}
+
+@mixin triangle-overlay($color) {
+    height: 0;
+    width: 0;
+    left: calc(100% - 50px);
+    border-right: 25px solid $color;
+    border-bottom: 25px solid $color;
+    border-top: 25px solid transparent;
+    border-left: 25px solid transparent;
+    z-index: -1;
+    opacity: 0.5;
+}
+
+@mixin link() {
+    color: $french-blue;
+    border-bottom: 2px solid $french-blue;
+    cursor: pointer;
 }
 
 @mixin font-smooth() {
