@@ -1,3 +1,11 @@
 /*******************************
          Site Overrides
 *******************************/
+
+.ui.menu .dropdown.item .inverted.menu {
+    background: @invertedBackground;
+}
+
+.ui.menu .dropdown.item .menu {
+    border: none;
+}

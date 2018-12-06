@@ -1,0 +1,52 @@
+{% extends "pages/content_page.html" %}
+{% load humanize wagtailcore_tags %}
+
+{% block page-context-id %}collections{% endblock %}
+
+{% block page_nav %}
+    {% include 'snippets/nav.html' with style="archive" active="collections" %}
+{% endblock %}
+
+{% block page_header %}
+    {% include 'snippets/header.html' with style='collections' %}
+{% endblock %}
+
+{% block content %}
+<div class="ui text container">
+    <h1 class="ui header">
+        {% firstof page.title page_title object.title %}
+    </h1>
+    <div class="page-description">{{ page.body|richtext }}</div>
+    <section class="collection-cards ui cards">
+        {% for item in collections %}
+        {% with coll_stats=stats|dict_item:item.name %}
+            {% with coll_stats.count|yesno:"a,span" as tag %}
+        {# collections with no items are displayed but do not link to search #}
+        <{{ tag }} class="ui card" {% if coll_stats.count %}href="{% url 'archive:list' %}?collections={{ item.id }}"{% endif %}>
+            <div class="content">
+                <h3 class="header">{{ item.name }}</h3>
+                    <div class="meta">
+                        {% firstof coll_stats.count "0" as count %}
+                        <p>{{ count|intcomma }} digitized work{{ count|pluralize }}
+                            {% if coll_stats.dates %} &middot; {{ coll_stats.dates }}{% endif %}
+                        </p>
+                    </div>
+                {% if item.description %}
+                <div class="description">
+                    {{ item.description|safe }}
+                </div>
+                {% endif %}
+            </div>
+        </{{ tag }}>
+        {% endwith %} {% endwith %}
+        {% endfor %}
+        <a class="archive-link" href="{% url 'archive:list' %}">
+            <h3 class="ui header">
+                {% include 'snippets/fermata.svg' %}
+                View and search the archive
+            </h3>
+        </a>
+    </section>
+</div>
+{% endblock %}
+

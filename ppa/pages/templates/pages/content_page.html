@@ -1,21 +1,40 @@
 {% extends "base.html" %}
-{% load static wagtailcore_tags %}
+{% load static wagtailcore_tags  %}
 
 {% block meta_title %}{% firstof page.seo_title page.title %}{% endblock %}
-{% block meta_description %}{{ page.search_description }}{% endblock %}
-{# keywords for meta not currently implemented in wagtail #}
+{% block meta_description %}{{ page.get_plaintext_description }}{% endblock %}
+{# keywords for meta not yet implemented in wagtail #}
 
+{% block page-subtitle %}{% firstof page.seo_title page.title %} · {% endblock %}
 {% block page-context-id %}page{% endblock %}
 
-{# page title displayed in page header snippet #}
+{% block page_nav %}
+    {% if page in request.site.root_page.get_chidren.live.in_menu %}
+        {% include 'snippets/nav.html' %}
+    {% else %}
+        {% include 'snippets/nav.html' with active="about" %}
+    {% endif %}
+{% endblock %}
+
+{% block page_header %}
+{% include 'snippets/header.html' with style='contentpage' %}
+
+{% endblock %}
+
+{# page title displayed in page header snippet ? or only for some content pages #}
 
 {% block content %}
-<div class="ui container">
-    <div class="paper">
-        <h1 class="ui header">
-            {% firstof page.title page_title object.title %}
-        </h1>
-         {{ page.body|richtext }}
-    </div>
-</div>
+<article class="ui text container">
+    <h1 class="ui header">
+        {% firstof page.title page_title object.title %}
+        {% block attribution %}{% endblock %}
+    </h1>
+    {% for block in page.body %}
+        {% if block.block_type == 'image' %}
+            {% include "pages/snippets/responsive_image.html" with img=block.value %}
+        {% else %}
+            {% include_block block %}
+        {% endif %}
+    {% endfor %}
+</article>
 {% endblock %}

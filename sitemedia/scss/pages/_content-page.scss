@@ -1,23 +1,11 @@
 #page {
-    color: $dusk;
-    margin: 2*$nav-height 0 $nav-height;
-
-    .paper {
-        margin-top: $nav-height;
-        padding: 40px 60px 80px 60px;
-        background: white;
-    }
-
     h1 {
-        text-align: center;
-        font-size: 40px;
-        font-weight: normal;
-        margin: 40px 0;
+        @include underline-headline($pig-pink);
     }
 
     h2, h3, p {
         font-family: $headerFont;
-        font-size: 20px;
+        font-size: 1.5rem;
     }
 
     h2 {
@@ -27,5 +15,18 @@
     h3 {
         font-weight: normal;
         font-style: italic;
+    }
+
+    img {
+        text-align: center;
+        object-fit: cover;
+        height: unset;
+        max-width: 100%;
+    }
+
+    img,
+    .rich-text {
+        margin: auto auto 1rem;
+        display: block;
     }
 }

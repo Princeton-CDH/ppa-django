@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Code Documentation &#8212; Princeton Prosody Archive 0.9.0 documentation</title>
+    <title>Code Documentation &#8212; Princeton Prosody Archive 0.11.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -63,6 +63,12 @@
 <dd><p>a RichText description of the collection</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="ppa.archive.models.Collection.get_usage">
+<code class="descname">get_usage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ppa.archive.models.Collection.get_usage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a queryset of pages that link to a particular object</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="ppa.archive.models.Collection.name">
 <code class="descname">name</code><a class="headerlink" href="#ppa.archive.models.Collection.name" title="Permalink to this definition">¶</a></dt>
@@ -79,6 +85,14 @@
 <dt id="ppa.archive.models.Collection.save">
 <code class="descname">save</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#Collection.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.Collection.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Saves model and set initial state.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="ppa.archive.models.Collection.stats">
+<em class="property">static </em><code class="descname">stats</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#Collection.stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.Collection.stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collection counts and date ranges, based on what is in Solr.
+Returns a dictionary where they keys are collection names and
+values are a dictionary with count and dates.</p>
 </dd></dl>
 
 </dd></dl>
@@ -235,6 +249,12 @@ as instance of <a class="reference internal" href="#ppa.archive.hathi.HathiBibli
 </dd></dl>
 
 <dl class="attribute">
+<dt id="ppa.archive.models.DigitizedWork.printed_by_re">
+<code class="descname">printed_by_re</code><em class="property"> = '^(Printed)?( and )?(Pub(.|lished|lisht)?)?( and sold)? (by|for|at)( the)? ?'</em><a class="headerlink" href="#ppa.archive.models.DigitizedWork.printed_by_re" title="Permalink to this definition">¶</a></dt>
+<dd><p>regular expresion for cleaning preliminary text from publisher names</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="ppa.archive.models.DigitizedWork.pub_place">
 <code class="descname">pub_place</code><a class="headerlink" href="#ppa.archive.models.DigitizedWork.pub_place" title="Permalink to this definition">¶</a></dt>
 <dd><p>place of publication</p>
@@ -353,33 +373,6 @@ session.</p>
 data to selected instances of <a class="reference internal" href="#ppa.archive.models.Collection" title="ppa.archive.models.Collection"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.models.Collection</span></code></a>,
 then return to change_list view.</p>
 <p>Expects a list of DigitizedWork ids to be set in the request session.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="ppa.archive.views.CollectionListView">
-<em class="property">class </em><code class="descclassname">ppa.archive.views.</code><code class="descname">CollectionListView</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#CollectionListView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.CollectionListView" title="Permalink to this definition">¶</a></dt>
-<dd><p>Display list of <a class="reference internal" href="#ppa.archive.models.Collection" title="ppa.archive.models.Collection"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.models.Collection</span></code></a>
-with description and summary statistics.</p>
-<dl class="method">
-<dt id="ppa.archive.views.CollectionListView.get_context_data">
-<code class="descname">get_context_data</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#CollectionListView.get_context_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.CollectionListView.get_context_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the context for this view.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="ppa.archive.views.CollectionListView.get_queryset">
-<code class="descname">get_queryset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#CollectionListView.get_queryset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.CollectionListView.get_queryset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the list of items for this view.</p>
-<p>The return value must be an iterable and may be an instance of
-<cite>QuerySet</cite> in which case <cite>QuerySet</cite> specific behavior will be enabled.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ppa.archive.views.CollectionListView.model">
-<code class="descname">model</code><a class="headerlink" href="#ppa.archive.views.CollectionListView.model" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="#ppa.archive.models.Collection" title="ppa.archive.models.Collection"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.models.Collection</span></code></a></p>
 </dd></dl>
 
 </dd></dl>
@@ -511,27 +504,6 @@ collapsed items.</p>
 <code class="descname">get_template_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#DigitizedWorkListView.get_template_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.DigitizedWorkListView.get_template_names" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a list of template names to be used for the request. Must return
 a list. May not be called if render_to_response is overridden.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="ppa.archive.views.IndexView">
-<em class="property">class </em><code class="descclassname">ppa.archive.views.</code><code class="descname">IndexView</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#IndexView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.IndexView" title="Permalink to this definition">¶</a></dt>
-<dd><p>A homepage view that uses collection data, but renders it in a template
-with additional information.</p>
-<dl class="method">
-<dt id="ppa.archive.views.IndexView.get_queryset">
-<code class="descname">get_queryset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#IndexView.get_queryset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.IndexView.get_queryset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the list of items for this view.</p>
-<p>The return value must be an iterable and may be an instance of
-<cite>QuerySet</cite> in which case <cite>QuerySet</cite> specific behavior will be enabled.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ppa.archive.views.IndexView.model">
-<code class="descname">model</code><a class="headerlink" href="#ppa.archive.views.IndexView.model" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="#ppa.archive.models.Collection" title="ppa.archive.models.Collection"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.models.Collection</span></code></a></p>
 </dd></dl>
 
 </dd></dl>
@@ -705,7 +677,7 @@ project collection/core.</p>
 <dd><p>Mixin for objects that are indexed in Solr.  Subclasses must implement
 <cite>index_id</cite> and <cite>index</cite> methods.</p>
 <p>Subclasses may include an <cite>index_depends_on</cite> property which is used
-by <code class="xref py py-meth docutils literal notranslate"><span class="pre">identify_index_dependencies()</span></code> to determine index dependencies
+by <a class="reference internal" href="#ppa.archive.solr.Indexable.identify_index_dependencies" title="ppa.archive.solr.Indexable.identify_index_dependencies"><code class="xref py py-meth docutils literal notranslate"><span class="pre">identify_index_dependencies()</span></code></a> to determine index dependencies
 on related objects, including many-to-many relationships.  This property
 should be structured like this:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">index_depends_on</span> <span class="o">=</span> <span class="p">{</span>
@@ -720,6 +692,13 @@ should be structured like this:</p>
 the model when the based on relationship changes (a signal handler will
 listen for <code class="xref py py-class docutils literal notranslate"><span class="pre">models.signals.m2m_changed</span></code> on the through model).
 Signal handler methods for save and delete are optional.</p>
+<dl class="classmethod">
+<dt id="ppa.archive.solr.Indexable.identify_index_dependencies">
+<em class="property">classmethod </em><code class="descname">identify_index_dependencies</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/solr.html#Indexable.identify_index_dependencies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.solr.Indexable.identify_index_dependencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identify and set lists of index dependencies for the subclass
+of <a class="reference internal" href="#ppa.archive.solr.Indexable" title="ppa.archive.solr.Indexable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Indexable</span></code></a>.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="ppa.archive.solr.Indexable.index">
 <code class="descname">index</code><span class="sig-paren">(</span><em>params=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/solr.html#Indexable.index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.solr.Indexable.index" title="Permalink to this definition">¶</a></dt>
@@ -857,8 +836,14 @@ methods to update configured Solr instance.</p>
 
 <dl class="attribute">
 <dt id="ppa.archive.solr.SolrSchema.fields">
-<code class="descname">fields</code><em class="property"> = [{'required': False, 'type': 'string', 'name': 'srcid'}, {'required': False, 'type': 'text_en', 'name': 'content'}, {'required': False, 'type': 'string', 'name': 'item_type'}, {'required': False, 'type': 'text_en', 'name': 'title'}, {'required': False, 'type': 'text_en', 'name': 'subtitle'}, {'required': False, 'type': 'string', 'name': 'sort_title'}, {'required': False, 'type': 'string', 'name': 'enumcron'}, {'required': False, 'type': 'text_en', 'name': 'author'}, {'required': False, 'type': 'int', 'name': 'pub_date'}, {'required': False, 'type': 'text_en', 'name': 'pub_place'}, {'required': False, 'type': 'text_en', 'name': 'publisher'}, {'required': False, 'type': 'string', 'name': 'src_url'}, {'required': False, 'type': 'string', 'name': 'order'}, {'required': False, 'multiValued': True, 'type': 'text_en', 'name': 'collections'}, {'required': False, 'multiValued': True, 'type': 'text_en', 'stored': False, 'name': 'text'}, {'required': False, 'type': 'text_en', 'name': 'label'}, {'required': False, 'multiValued': True, 'type': 'string', 'name': 'tags'}, {'required': False, 'type': 'string', 'name': 'author_exact'}, {'required': False, 'multiValued': True, 'type': 'string', 'name': 'collections_exact'}]</em><a class="headerlink" href="#ppa.archive.solr.SolrSchema.fields" title="Permalink to this definition">¶</a></dt>
+<code class="descname">fields</code><em class="property"> = [{'required': False, 'type': 'string', 'name': 'srcid'}, {'required': False, 'type': 'text_en', 'name': 'content'}, {'required': False, 'type': 'string', 'name': 'item_type'}, {'required': False, 'type': 'text_en', 'name': 'title'}, {'required': False, 'type': 'text_en', 'name': 'subtitle'}, {'required': False, 'type': 'string_i', 'name': 'sort_title'}, {'required': False, 'type': 'string', 'name': 'enumcron'}, {'required': False, 'type': 'text_en', 'name': 'author'}, {'required': False, 'type': 'int', 'name': 'pub_date'}, {'required': False, 'type': 'text_en', 'name': 'pub_place'}, {'required': False, 'type': 'text_en', 'name': 'publisher'}, {'required': False, 'type': 'string', 'name': 'src_url'}, {'required': False, 'type': 'string', 'name': 'order'}, {'required': False, 'multiValued': True, 'type': 'text_en', 'name': 'collections'}, {'required': False, 'stored': False, 'type': 'text_en', 'name': 'text', 'multiValued': True}, {'required': False, 'type': 'text_en', 'name': 'label'}, {'required': False, 'multiValued': True, 'type': 'string', 'name': 'tags'}, {'required': False, 'type': 'string', 'name': 'author_exact'}, {'required': False, 'multiValued': True, 'type': 'string', 'name': 'collections_exact'}]</em><a class="headerlink" href="#ppa.archive.solr.SolrSchema.fields" title="Permalink to this definition">¶</a></dt>
 <dd><p>solr schema field definitions</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.solr.SolrSchema.solr_schema_field_types">
+<code class="descname">solr_schema_field_types</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/solr.html#SolrSchema.solr_schema_field_types"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.solr.SolrSchema.solr_schema_field_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of currently configured Solr schema fields</p>
 </dd></dl>
 
 <dl class="method">
@@ -1150,9 +1135,273 @@ previous versions need to be removed.</p>
 <span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">index</span> <span class="o">--</span><span class="n">clear</span> <span class="nb">all</span>
 <span class="c1"># clear works only, then index works</span>
 <span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">index</span> <span class="o">--</span><span class="n">clear</span> <span class="n">works</span> <span class="o">--</span><span class="n">index</span> <span class="n">works</span>
+<span class="c1"># clear everything, index nothing</span>
+<span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">index</span> <span class="o">--</span><span class="n">clear</span> <span class="nb">all</span> <span class="o">--</span><span class="n">index</span> <span class="n">none</span>
 </pre></div>
 </div>
 </div>
+</div>
+</div>
+<div class="section" id="module-ppa.common">
+<span id="common"></span><h2>Common<a class="headerlink" href="#module-ppa.common" title="Permalink to this headline">¶</a></h2>
+<p>Django app for common functionality that doesn’t have an obvious home</p>
+<div class="section" id="module-ppa.common.admin">
+<span id="admin"></span><h3>Admin<a class="headerlink" href="#module-ppa.common.admin" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="ppa.common.admin.LocalUserAdmin">
+<em class="property">class </em><code class="descclassname">ppa.common.admin.</code><code class="descname">LocalUserAdmin</code><span class="sig-paren">(</span><em>model</em>, <em>admin_site</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/common/admin.html#LocalUserAdmin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.common.admin.LocalUserAdmin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extends <code class="xref py py-class docutils literal notranslate"><span class="pre">django.contribut.auth.admin.UserAdmin</span></code>
+to provide additional detail for user administration.</p>
+<dl class="method">
+<dt id="ppa.common.admin.LocalUserAdmin.group_names">
+<code class="descname">group_names</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/common/admin.html#LocalUserAdmin.group_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.common.admin.LocalUserAdmin.group_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom property to display group membership.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="id1">
+<h3>Views<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-ppa.common.views"></span><dl class="class">
+<dt id="ppa.common.views.VaryOnHeadersMixin">
+<em class="property">class </em><code class="descclassname">ppa.common.views.</code><code class="descname">VaryOnHeadersMixin</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/common/views.html#VaryOnHeadersMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.common.views.VaryOnHeadersMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>View mixin to set Vary header - class-based view equivalent to
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">django.views.decorators.vary.vary_on_headers()</span></code>, adapted from
+winthrop-django.</p>
+<p>Define <code class="xref py py-attr docutils literal notranslate"><span class="pre">vary_headers</span></code> with the list of headers.</p>
+<dl class="method">
+<dt id="ppa.common.views.VaryOnHeadersMixin.dispatch">
+<code class="descname">dispatch</code><span class="sig-paren">(</span><em>request</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/common/views.html#VaryOnHeadersMixin.dispatch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.common.views.VaryOnHeadersMixin.dispatch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrap default dispatch method to patch haeders on the response.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-ppa.editorial">
+<span id="editorial"></span><h2>Editorial<a class="headerlink" href="#module-ppa.editorial" title="Permalink to this headline">¶</a></h2>
+<p>Django app for editorial content</p>
+<div class="section" id="id2">
+<h3>Models<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-ppa.editorial.models"></span><dl class="class">
+<dt id="ppa.editorial.models.EditorialIndexPage">
+<em class="property">class </em><code class="descclassname">ppa.editorial.models.</code><code class="descname">EditorialIndexPage</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/editorial/models.html#EditorialIndexPage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.editorial.models.EditorialIndexPage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Editorial index page; list recent editorial articles.</p>
+<dl class="exception">
+<dt id="ppa.editorial.models.EditorialIndexPage.DoesNotExist">
+<em class="property">exception </em><code class="descname">DoesNotExist</code><a class="headerlink" href="#ppa.editorial.models.EditorialIndexPage.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="ppa.editorial.models.EditorialIndexPage.MultipleObjectsReturned">
+<em class="property">exception </em><code class="descname">MultipleObjectsReturned</code><a class="headerlink" href="#ppa.editorial.models.EditorialIndexPage.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ppa.editorial.models.EditorialIndexPage.route">
+<code class="descname">route</code><span class="sig-paren">(</span><em>request</em>, <em>path_components</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/editorial/models.html#EditorialIndexPage.route"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.editorial.models.EditorialIndexPage.route" title="Permalink to this definition">¶</a></dt>
+<dd><p>Customize editorial page routing to serve editorial pages
+by year/month/slug.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="ppa.editorial.models.EditorialPage">
+<em class="property">class </em><code class="descclassname">ppa.editorial.models.</code><code class="descname">EditorialPage</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/editorial/models.html#EditorialPage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.editorial.models.EditorialPage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Editorial page, for scholarly, educational, or other essay-like
+content related to the site</p>
+<dl class="exception">
+<dt id="ppa.editorial.models.EditorialPage.DoesNotExist">
+<em class="property">exception </em><code class="descname">DoesNotExist</code><a class="headerlink" href="#ppa.editorial.models.EditorialPage.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="ppa.editorial.models.EditorialPage.MultipleObjectsReturned">
+<em class="property">exception </em><code class="descname">MultipleObjectsReturned</code><a class="headerlink" href="#ppa.editorial.models.EditorialPage.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ppa.editorial.models.EditorialPage.set_url_path">
+<code class="descname">set_url_path</code><span class="sig-paren">(</span><em>parent</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/editorial/models.html#EditorialPage.set_url_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.editorial.models.EditorialPage.set_url_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the url_path field based on this page’s slug, first publication date,
+and the specified parent page. Adapted from default logic to include
+publication date.
+(Parent is passed in for previewing unsaved pages)</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-ppa.pages">
+<span id="pages"></span><h2>Pages<a class="headerlink" href="#module-ppa.pages" title="Permalink to this headline">¶</a></h2>
+<p>Django app for home page and content pages.</p>
+<div class="section" id="id3">
+<h3>Models<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-ppa.pages.models"></span><dl class="class">
+<dt id="ppa.pages.models.BodyContentBlock">
+<em class="property">class </em><code class="descclassname">ppa.pages.models.</code><code class="descname">BodyContentBlock</code><span class="sig-paren">(</span><em>local_blocks=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/pages/models.html#BodyContentBlock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.pages.models.BodyContentBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Common set of content blocks to be used on both content pages
+and editorial pages</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="ppa.pages.models.CollectionPage">
+<em class="property">class </em><code class="descclassname">ppa.pages.models.</code><code class="descname">CollectionPage</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/pages/models.html#CollectionPage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.pages.models.CollectionPage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collection list page, with editable text content</p>
+<dl class="exception">
+<dt id="ppa.pages.models.CollectionPage.DoesNotExist">
+<em class="property">exception </em><code class="descname">DoesNotExist</code><a class="headerlink" href="#ppa.pages.models.CollectionPage.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="ppa.pages.models.CollectionPage.MultipleObjectsReturned">
+<em class="property">exception </em><code class="descname">MultipleObjectsReturned</code><a class="headerlink" href="#ppa.pages.models.CollectionPage.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="ppa.pages.models.ContentPage">
+<em class="property">class </em><code class="descclassname">ppa.pages.models.</code><code class="descname">ContentPage</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/pages/models.html#ContentPage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.pages.models.ContentPage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Basic content page model.</p>
+<dl class="exception">
+<dt id="ppa.pages.models.ContentPage.DoesNotExist">
+<em class="property">exception </em><code class="descname">DoesNotExist</code><a class="headerlink" href="#ppa.pages.models.ContentPage.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="ppa.pages.models.ContentPage.MultipleObjectsReturned">
+<em class="property">exception </em><code class="descname">MultipleObjectsReturned</code><a class="headerlink" href="#ppa.pages.models.ContentPage.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="ppa.pages.models.HomePage">
+<em class="property">class </em><code class="descclassname">ppa.pages.models.</code><code class="descname">HomePage</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/pages/models.html#HomePage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.pages.models.HomePage" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">wagtail.core.models.Page</span></code> model for PPA home page</p>
+<dl class="exception">
+<dt id="ppa.pages.models.HomePage.DoesNotExist">
+<em class="property">exception </em><code class="descname">DoesNotExist</code><a class="headerlink" href="#ppa.pages.models.HomePage.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="ppa.pages.models.HomePage.MultipleObjectsReturned">
+<em class="property">exception </em><code class="descname">MultipleObjectsReturned</code><a class="headerlink" href="#ppa.pages.models.HomePage.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="ppa.pages.models.PagePreviewDescriptionMixin">
+<em class="property">class </em><code class="descclassname">ppa.pages.models.</code><code class="descname">PagePreviewDescriptionMixin</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/pages/models.html#PagePreviewDescriptionMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Page mixin with logic for page preview content. Adds an optional
+richtext description field, and methods to get description and plain-text
+description, for use in previews on the site and plain-text metadata
+previews.</p>
+<dl class="method">
+<dt id="ppa.pages.models.PagePreviewDescriptionMixin.get_description">
+<code class="descname">get_description</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/pages/models.html#PagePreviewDescriptionMixin.get_description"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.get_description" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get formatted description for preview. Uses description field
+if there is content, otherwise uses the beginning of the body content.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.pages.models.PagePreviewDescriptionMixin.get_plaintext_description">
+<code class="descname">get_plaintext_description</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/pages/models.html#PagePreviewDescriptionMixin.get_plaintext_description"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.get_plaintext_description" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get plain-text description for use in metadata. Uses
+search_description field if set; otherwise uses the result of
+<a class="reference internal" href="#ppa.pages.models.PagePreviewDescriptionMixin.get_description" title="ppa.pages.models.PagePreviewDescriptionMixin.get_description"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_description()</span></code></a> with tags stripped.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.pages.models.PagePreviewDescriptionMixin.max_length">
+<code class="descname">max_length</code><em class="property"> = 250</em><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.max_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>maximum length for description to be displayed</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="id4">
+<h3>Manage Commands<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="module-ppa.pages.management.commands.setup_site_pages">
+<span id="setup-site-pages"></span><h4>Setup Site Pages<a class="headerlink" href="#module-ppa.pages.management.commands.setup_site_pages" title="Permalink to this headline">¶</a></h4>
+<p><strong>setup_site_pages</strong> is a custom manage command to install
+a default set of pages and menus for the Wagtail CMS. It is designed not to
+touch other content.</p>
+<p>Example usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">setup_site_pages</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="module-ppa.unapi">
+<span id="unapi"></span><h2>Unapi<a class="headerlink" href="#module-ppa.unapi" title="Permalink to this headline">¶</a></h2>
+<p>Django app for unAPI service</p>
+<div class="section" id="id5">
+<h3>Views<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-ppa.unapi.views"></span><dl class="class">
+<dt id="ppa.unapi.views.UnAPIView">
+<em class="property">class </em><code class="descclassname">ppa.unapi.views.</code><code class="descname">UnAPIView</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/unapi/views.html#UnAPIView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.unapi.views.UnAPIView" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simple unAPI service endpoint.  With no parameters or only id,
+provides a list of available metadata formats.  If id and
+format are specified, returns the metadata for the specified item
+in the requested format.</p>
+<p>See archived unAPI website for more details.
+<a class="reference external" href="https://web.archive.org/web/20140331070802/http://unapi.info/specs/">https://web.archive.org/web/20140331070802/http://unapi.info/specs/</a></p>
+<dl class="attribute">
+<dt id="ppa.unapi.views.UnAPIView.content_type">
+<code class="descname">content_type</code><em class="property"> = 'application/xml'</em><a class="headerlink" href="#ppa.unapi.views.UnAPIView.content_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>default content type, when serving format information</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.unapi.views.UnAPIView.file_extension">
+<code class="descname">file_extension</code><em class="property"> = {'marc': 'mrc'}</em><a class="headerlink" href="#ppa.unapi.views.UnAPIView.file_extension" title="Permalink to this definition">¶</a></dt>
+<dd><p>file extension for metadata formats, as a convenience to set
+download filename extension</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.unapi.views.UnAPIView.formats">
+<code class="descname">formats</code><em class="property"> = {'marc': {'type': 'application/marc'}}</em><a class="headerlink" href="#ppa.unapi.views.UnAPIView.formats" title="Permalink to this definition">¶</a></dt>
+<dd><p>available metadata formats</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.unapi.views.UnAPIView.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/unapi/views.html#UnAPIView.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.unapi.views.UnAPIView.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override get to check if id and format are specified; if they
+are, return the requested metadata.  Otherwise, falls back
+to normal template view behavior and displays format information.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.unapi.views.UnAPIView.get_context_data">
+<code class="descname">get_context_data</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/unapi/views.html#UnAPIView.get_context_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.unapi.views.UnAPIView.get_context_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>pass formats and id to template context</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.unapi.views.UnAPIView.get_metadata">
+<code class="descname">get_metadata</code><span class="sig-paren">(</span><em>item_id</em>, <em>data_format</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/unapi/views.html#UnAPIView.get_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.unapi.views.UnAPIView.get_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>get item and requested metadata</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.unapi.views.UnAPIView.template_name">
+<code class="descname">template_name</code><em class="property"> = 'unapi/formats.xml'</em><a class="headerlink" href="#ppa.unapi.views.UnAPIView.template_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>template for format information</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 </div>
 </div>
@@ -1231,6 +1480,27 @@ previous versions need to be removed.</p>
 <li><a class="reference internal" href="#module-ppa.archive.management.commands.index">Index</a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-ppa.common">Common</a><ul>
+<li><a class="reference internal" href="#module-ppa.common.admin">Admin</a></li>
+<li><a class="reference internal" href="#id1">Views</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-ppa.editorial">Editorial</a><ul>
+<li><a class="reference internal" href="#id2">Models</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-ppa.pages">Pages</a><ul>
+<li><a class="reference internal" href="#id3">Models</a></li>
+<li><a class="reference internal" href="#id4">Manage Commands</a><ul>
+<li><a class="reference internal" href="#module-ppa.pages.management.commands.setup_site_pages">Setup Site Pages</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-ppa.unapi">Unapi</a><ul>
+<li><a class="reference internal" href="#id5">Views</a></li>
 </ul>
 </li>
 </ul>

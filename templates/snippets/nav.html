@@ -1,31 +1,48 @@
+{% load static wagtailcore_tags %}
+
 <!-- mobile navigation -->
-<nav class="ui top sidebar inverted vertical borderless menu" id="mobile-nav">
-    <a class="item" href="/history-of-the-archive/">History of the Archive</a>
-    <a class="item" href="/what-is-prosody/">What is Prosody</a>
-    <a class="item" href="{% url 'archive:list-collections'%}">About the Collections</a>
-    <a class="item" href="#">Editorial</a>
-    <a class="item" href="{% url 'archive:list' %}">View the Archive</a>
-</nav>
-<!-- main navigation -->
-<nav class="ui top fixed inverted borderless menu" id="main-nav">
-    <a class="toc item" id="toc">
-        <i class="sidebar icon"></i>
-        <i class="times icon" style="display:none;"></i>
+<nav class="ui top sidebar vertical borderless menu {{ style }}" id="mobile-nav">
+    {% include 'snippets/about.html' %}
+    <a class="item" href="{% slugurl 'editorial' %}">Editorial</a>
+    <a class="item" href="{% slugurl 'collections'%}">Collections</a>
+    <a class="item" href="{% url 'archive:list' %}">
+        Archive
+        <img class="search icon"
+            src="{% static 'img/icons/Search.svg' %}" alt="">
     </a>
-    <a class="item" href="/history-of-the-archive/">History of the Archive</a>
-    <a class="item" href="/what-is-prosody/">What is Prosody</a>
+</nav>
+
+<!-- main navigation -->
+<nav class="ui top fixed borderless menu {{ style }}" id="main-nav">
+    <a class="toc item" id="toc">
+        <img class="menu icon" src="{% static 'img/icons/Menu.svg' %}"
+            alt="open menu">
+        <img class="close icon" src="{% static 'img/icons/Delete.svg' %}"
+            alt="close menu">
+    </a>
+    {% include 'snippets/about.html' %}
+    <a href="{% slugurl 'editorial' %}"
+        class="editorial item{% if active == 'editorial' %} active{% endif %}">
+        Editorial
+    </a>
     <div class="ui header brand">
-        <a class="item" href="/">PPA</a>
+        <a class="item" href="{% slugurl 'home' %}">
+            <img src="{% static 'img/ppaLogoType_NavBar_Revised.svg' %}" alt="home">
+        </a>
     </div>
     <div class="right menu">
-        <a class="item" href="{% url 'archive:list-collections'%}">About the Collections</a>
-        <a class="item">Editorial</a>
-        <a class="item" href="{% url 'archive:list' %}">
-            View the Archive
-            <i class="search icon"></i>
+        <a class="collections item{% if active == 'collections' %} active{% endif %}"
+            href="{% slugurl 'collections' %}">Collections
         </a>
-        <a class="search item" href="{% url 'archive:list' %}" title="search">
-            <i class="search icon"></i>
+        <a class="archive item{% if active == 'archive' %} active{% endif %}"
+            href="{% url 'archive:list' %}">
+            Archive
+            <img class="search icon"
+                src="{% static 'img/icons/Search.svg' %}" alt="">
+        </a>
+        <a class="search item" href="{% url 'archive:list' %}">
+            <img class="search icon"
+                src="{% static 'img/icons/Search.svg' %}" alt="search">
         </a>
     </div>
 </nav>

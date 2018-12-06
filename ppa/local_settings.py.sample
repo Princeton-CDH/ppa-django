@@ -85,6 +85,9 @@ STATIC_ROOT = os.path.join(BASE_DIR, STATIC_URL.strip("/"))
 # Email configuration for sending messages
 # EMAIL_SUBJECT_PREFIX = '[PPA] '
 
+# Turn on Google Analytics (or not) via property id
+# GTAGS_ANALYTICS_ID = 'UA-property-id'
+
 # Solution following https://stackoverflow.com/a/9541647
 # Sends a logging email even when DEBUG is on
 LOGGING = {
@@ -110,4 +113,3 @@ LOGGING = {
 
     }
 }
-

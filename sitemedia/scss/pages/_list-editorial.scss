@@ -1,0 +1,32 @@
+#list-editorial {
+    h1 {
+        @include underline-headline($wisteria);
+    }
+
+    .updates {
+        margin: 2rem 0 4rem;
+        flex-flow: column nowrap;
+        align-items: center;
+
+        @media (min-width: $tablet) {
+            flex-flow: row wrap;
+            justify-content: space-between;
+            align-items: initial;
+
+            .card:last-child {
+                margin-left: auto;
+            }
+        }
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        
+        @media (min-width: $tablet) {
+            justify-content: space-between;
+        }
+    }
+}
