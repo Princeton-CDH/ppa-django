@@ -5,10 +5,12 @@ from zipfile import ZipFile
 
 from cached_property import cached_property
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
 from pairtree import pairtree_path, pairtree_client
+from pairtree.storage_exceptions import ObjectNotFoundException
 from wagtail.core.fields import RichTextField
 from wagtail.admin.edit_handlers import FieldPanel
 from wagtail.snippets.models import register_snippet
@@ -21,13 +23,46 @@ from ppa.archive.solr import PagedSolrQuery
 logger = logging.getLogger(__name__)
 
 
+#: label to use for items that are not in a collection
+NO_COLLECTION_LABEL = 'Uncategorized'
+
+
+class TrackChangesModel(models.Model):
+    ''':Model mixin that keeps a copy of initial data in order to check
+    if fields have been changed. Change detection only works on the
+    current instance of an object.'''
+
+    class Meta:
+        abstract = True
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # store a copy of model data to allow for checking if
+        # it has changed
+        self.__initial = self.__dict__.copy()
+
+    def save(self, *args, **kwargs):
+        '''Saves data and reset copy of initial data.'''
+        super().save(*args, **kwargs)
+        # update copy of initial data to reflect saved state
+        self.__initial = self.__dict__.copy()
+
+    def has_changed(self, field):
+        '''check if a field has been changed'''
+        return getattr(self, field) != self.__initial[field]
+
+
 @register_snippet
-class Collection(models.Model):
+class Collection(TrackChangesModel):
     '''A collection of :class:`ppa.archive.models.DigitizedWork` instances.'''
     #: the name of the collection
     name = models.CharField(max_length=255)
     #: a RichText description of the collection
     description = RichTextField(blank=True)
+    #: flag to indicate collections to be excluded by default in
+    #: public search
+    exclude = models.BooleanField(default=False,
+        help_text='Exclude by default on public search.')
 
     # configure for editing in wagtail admin
     panels = [
@@ -41,24 +76,10 @@ class Collection(models.Model):
     def __str__(self):
         return self.name
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # store a copy of model data to allow for checking if
-        # it has changed
-        self.__initial = self.__dict__.copy()
-
-    def save(self, *args, **kwargs):
-        """
-        Saves model and set initial state.
-        """
-        super().save(*args, **kwargs)
-        # update copy of initial data to reflect saved state
-        self.__initial = self.__dict__.copy()
-
     @property
     def name_changed(self):
         '''check if name has been changed (only works on current instance)'''
-        return self.name != self.__initial['name']
+        return self.has_changed('name')
 
     @staticmethod
     def stats():
@@ -96,7 +117,7 @@ class Collection(models.Model):
         return stats
 
 
-class DigitizedWork(models.Model, Indexable):
+class DigitizedWork(TrackChangesModel, Indexable):
     '''
     Record to manage digitized works included in PPA and store their basic
     metadata.
@@ -153,6 +174,19 @@ class DigitizedWork(models.Model, Indexable):
     #: date of last modification of the local record
     updated = models.DateTimeField(auto_now=True)
 
+    PUBLIC = 'P'
+    SUPPRESSED = 'S'
+    STATUS_CHOICES = (
+        (PUBLIC, 'Public'),
+        (SUPPRESSED, 'Suppressed'),
+    )
+    #: status of record; currently choices are public or suppressed
+    status = models.CharField(
+        max_length=2, choices=STATUS_CHOICES, default=PUBLIC,
+        help_text='Changing status to suppressed will remove rsync data ' +
+        'for that volume and remove from the public index. This is ' +
+        'currently not reversible; use with caution.')
+
     class Meta:
         ordering = ('sort_title',)
 
@@ -179,6 +213,11 @@ class DigitizedWork(models.Model, Indexable):
         # hopefully temporary workaround until solr fields made consistent
         return self.source_url
 
+    @property
+    def is_suppressed(self):
+        '''Item has been suppressed (based on :attr:`status`).'''
+        return self.status == self.SUPPRESSED
+
     def display_title(self):
         '''admin display title to allow displaying title but sorting on sort_title'''
         return self.title
@@ -186,10 +225,31 @@ class DigitizedWork(models.Model, Indexable):
     display_title.admin_order_field = 'sort_title'
     display_title.allow_tags = True
 
+    def is_public(self):
+        '''admin display field indicating if record is public or suppressed'''
+        return self.status == self.PUBLIC
+    is_public.short_description = 'Public'
+    is_public.boolean = True
+    is_public.admin_order_field = 'status'
+
     #: regular expresion for cleaning preliminary text from publisher names
     printed_by_re = r'^(Printed)?( and )?(Pub(.|lished|lisht)?)?( and sold)? (by|for|at)( the)? ?'
     # Printed by/for (the); Printed and sold by; Printed and published by;
     # Pub./Published/Publisht at/by/for the
+
+    def save(self, *args, **kwargs):
+        # if status has changed and object is now suppressed, remove data
+        if self.has_changed('status') and self.status == self.SUPPRESSED:
+            self.delete_hathi_pairtree_data()
+
+        super().save(*args, **kwargs)
+
+    def clean(self):
+        '''Add custom validation to trigger a save error in the admin
+        if someone tries to unsuppress a record that has been suppressed
+        (not yet supported).'''
+        if self.has_changed('status') and self.status != self.SUPPRESSED:
+            raise ValidationError('Unsuppressing records not yet supported.')
 
     def populate_from_bibdata(self, bibdata):
         '''Update record fields based on Hathi bibdata information.
@@ -349,6 +409,13 @@ class DigitizedWork(models.Model, Indexable):
 
     def index_data(self):
         '''data for indexing in Solr'''
+
+        # When an item has been suppressed, return id only.
+        # This will blank out any previously indexed values, and item
+        # will not be findable by any public searchable fields.
+        if self.status == self.SUPPRESSED:
+            return {'id': self.source_id}
+
         return {
             'id': self.source_id,
             'srcid': self.source_id,
@@ -361,12 +428,14 @@ class DigitizedWork(models.Model, Indexable):
             'publisher': self.publisher,
             'enumcron': self.enumcron,
             'author': self.author,
-            'collections': [collection.name for collection
-                            in self.collections.all()],
-            # general purpose multivalued field, currently only
-            # includes public notes in this method, other fields
-            # copied in Solr schema.
-            'text': [self.public_notes],
+            # set default value to simplify queries to find uncollected items
+            # (not set in Solr schema because needs to be works only)
+            'collections':
+                [collection.name for collection in self.collections.all()]
+                if self.collections.exists()
+                else [NO_COLLECTION_LABEL],
+            # public notes field for display on site_name
+            'notes': self.public_notes,
             # hard-coded to distinguish from & sort with pages
             'item_type': 'work',
             'order': '0',
@@ -391,17 +460,39 @@ class DigitizedWork(models.Model, Indexable):
         # pairtree encoded version of the id
         return pairtree_path.id_encode(self.hathi_pairtree_id)
 
+    def hathi_pairtree_client(self):
+        '''Initialize a pairtree client for the pairtree datastore this
+         object belongs to, based on its Hathi prefix id.'''
+        return pairtree_client.PairtreeStorageClient(
+            self.hathi_prefix,
+            os.path.join(settings.HATHI_DATA, self.hathi_prefix))
+
     def hathi_pairtree_object(self, ptree_client=None):
-        '''get a pairtree object for the current work'''
+        '''get a pairtree object for the current work
+
+        :param ptree_client: optional
+            :class:`pairtree_client.PairtreeStorageClient` if one has
+            already been initialized, to avoid repeated initialization
+            (currently used in hathi_import manage command)
+        '''
         if ptree_client is None:
             # get pairtree client if not passed in
-            ptree_client = pairtree_client.PairtreeStorageClient(
-                self.hathi_prefix,
-                os.path.join(settings.HATHI_DATA, self.hathi_prefix))
+            ptree_client = self.hathi_pairtree_client()
 
         # return the pairtree object for current work
         return ptree_client.get_object(self.hathi_pairtree_id,
                                        create_if_doesnt_exist=False)
+
+    def delete_hathi_pairtree_data(self):
+        '''Delete pairtree object from the pairtree datastore.'''
+        logger.info('Deleting pairtree data for %s', self.source_id)
+        try:
+            self.hathi_pairtree_client() \
+                .delete_object(self.hathi_pairtree_id)
+        except ObjectNotFoundException:
+            # data is already gone; warn, but not an error
+            logger.warn('Pairtree deletion failed; object not found %s',
+                        self.source_id)
 
     def _hathi_content_path(self, ext, ptree_client=None):
         '''path to zipfile within the hathi contents for this work'''

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static wagtailcore_tags %}
+{% load static wagtailcore_tags  %}
 
 {% block meta_title %}{% firstof page.seo_title page.title %}{% endblock %}
 {% block meta_description %}{{ page.get_plaintext_description }}{% endblock %}
@@ -17,7 +17,8 @@
 {% endblock %}
 
 {% block page_header %}
-    {% include 'snippets/header.html' with style='contentpage' %}
+{% include 'snippets/header.html' with style='contentpage' %}
+
 {% endblock %}
 
 {# page title displayed in page header snippet ? or only for some content pages #}
@@ -26,9 +27,14 @@
 <article class="ui text container">
     <h1 class="ui header">
         {% firstof page.title page_title object.title %}
+        {% block attribution %}{% endblock %}
     </h1>
     {% for block in page.body %}
-        {% include_block block %}
+        {% if block.block_type == 'image' %}
+            {% include "pages/snippets/responsive_image.html" with img=block.value %}
+        {% else %}
+            {% include_block block %}
+        {% endif %}
     {% endfor %}
 </article>
 {% endblock %}

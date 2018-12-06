@@ -4,6 +4,7 @@
         font-size: 1.5rem;
         margin: 1rem 0;
         text-align: center;
+        font-weight: normal;
     }
     
     .container:not(.message) {
@@ -23,7 +24,7 @@
         }
 
         &:nth-child(2) {
-            border-top: 1px solid $lightGrey;
+            border-top: 1px solid #D8D8D8;
         }
 
         &:last-child {
@@ -36,29 +37,14 @@
     }
 
     .show-advanced {
-        background: #fff;
+        background: $white-two;
         text-align: center;
         padding-top: 0;
 
         a {
-            color: $secondaryColor;
             margin: auto;
             margin-bottom: 1rem;
             cursor: pointer;
-    
-            &:hover {
-                color: $gold;
-            }
-
-            @media (hover: none) {
-                &:hover {
-                    color: $secondaryColor;
-                }
-                &:active {
-                    color: $gold;
-                }
-            }
-
         }
 
         @media (min-width: $tablet) {
@@ -118,14 +104,9 @@
 
     .clear-selection {
         cursor: pointer;
-        color: $secondaryColor;
         position: absolute;
         bottom: -.5rem;
         left: 1rem;
-
-        &:hover {
-            color: $gold;
-        }
 
         @media (min-width: $tablet) {
             bottom: 1rem;
@@ -180,6 +161,8 @@
     /* results */
     .results-list {
         padding-bottom: 2rem;
+        padding-left: 0;
+        list-style: none;
     }
 
     .data {
@@ -200,7 +183,7 @@
     
     .pagination-sort {
         margin: 0 1rem;
-        border-bottom: 2px solid $teal;
+        border-bottom: 2px solid $seafoam-blue;
     }
 
     .pagination-bottom {

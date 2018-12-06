@@ -1,0 +1,14 @@
+{% load static %}
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ GTAGS_ANALYTICS_ID }}"></script>
+<script>
+    /*
+      Google Analytics gtags snippet to be included if analytics are enabled.
+    */
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', '{{ GTAGS_ANALYTICS_ID }}');
+
+</script>

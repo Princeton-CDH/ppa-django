@@ -37,25 +37,11 @@
         overflow: hidden;
     }
 
-    .content::before {
-        background-image: linear-gradient(to bottom, transparent 75%, white 90%, white);
-        content: "\00a0";
-        height: 100%;
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-    }
-
     .description {
         font-family: @fontFamily;
         font-size: 1rem;
         line-height: normal;
         text-align: left;
-
-        > * {
-            line-height: 1.25;
-        }
 
         @media (min-width: @tabletBreakpoint) {
             font-size: 1.25rem;

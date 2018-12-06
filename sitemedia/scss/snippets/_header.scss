@@ -11,32 +11,37 @@ header { // used mostly as space for banner images
 
     .banner {
         position: absolute;
+        z-index: -1;
     }
 
     &.contentpage {
-        @include notes-header($pink);
+        @include notes-header($rosy-pink);
     }
 
     &.collections {
-        @include notes-header($teal);
+        @include notes-header($seafoam-blue);
     }
 
     &.editorial {
-        @include notes-header($purple);
+        @include notes-header($twilight);
     }
 
     &.homepage {
-        @include notes-header($midGrey);
+        @include notes-header($warm-grey);
 
         .banner {
-            opacity: 0.5; // darker banner
+            opacity: 0.54; // darker banner
         }
-    
+
         #scene { // parallax items
-            margin: 45px auto 0;
+            margin: 20px auto 0;
             width: 300px;
             mask-image: none;
-    
+
+            @media (min-width: $tablet) {
+                margin: 2*$nav-height auto 0;
+            }
+
             .layer {
                 height: 200px;
                 left: 0;
@@ -46,7 +51,7 @@ header { // used mostly as space for banner images
                 user-select: none;
                 -moz-user-select: none;
                 -webkit-user-select: none;
-    
+
                 @media (min-width: $tablet) {
                     height: 300px;
                 }

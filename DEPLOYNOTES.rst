@@ -3,6 +3,27 @@
 Deploy and Upgrade notes
 ========================
 
+0.12
+----
+
+* Solr field boosting requires an updated ``solrconfig.xml``. Before deploying
+  new code, ``solr_conf/solconfig.xml`` should be copied to the core's
+  `conf` directory and the core reloaded (or Solr restarted).
+
+* Updated collection search logic and field boosting require reindexing works::
+
+    python manage.py index --works
+
+* Admin functionality for suppressing digitized works requires that the
+  Django application have permission to **delete** files and directories
+  from the HathiTrust  pairtree data stored in **HATHI_DATA**.
+
+0.11
+----
+
+* ``GTAGS_ANALYTICS_ID`` should include the property ID for the site, in order
+    to enable Google Analytics on non-preview pages.
+
 0.10
 ----
 

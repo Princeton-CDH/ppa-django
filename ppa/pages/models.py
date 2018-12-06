@@ -1,3 +1,4 @@
+import bleach
 from django.db import models
 from django.template.defaultfilters import truncatechars_html, striptags
 from wagtail.core import blocks
@@ -7,8 +8,37 @@ from wagtail.admin.edit_handlers import FieldPanel, PageChooserPanel, \
     StreamFieldPanel
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.documents.blocks import DocumentChooserBlock
+from wagtail.snippets.models import register_snippet
 
 from ppa.archive.models import Collection
+
+
+@register_snippet
+class Person(models.Model):
+    '''Common model for a person, currently used to document authorship for
+    instances of :class:`ppa.editorial.models.EditorialPage`.'''
+
+    #: the display name of an individual
+    name = models.CharField(
+        max_length=255,
+        help_text='Full name for the person as it should appear in the author '
+                  'list.'
+    )
+    #: identifying URI for a person (VIAF, ORCID iD, personal website, etc.)
+    url = models.URLField(
+        blank=True,
+        default='',
+        help_text='Personal website, profile page, or social media profile page '
+                  'for this person.'
+        )
+
+    panels = [
+        FieldPanel('name'),
+        FieldPanel('url'),
+    ]
+
+    def __str__(self):
+        return self.name
 
 
 class HomePage(Page):
@@ -74,7 +104,7 @@ class BodyContentBlock(blocks.StreamBlock):
     '''Common set of content blocks to be used on both content pages
     and editorial pages'''
     paragraph = blocks.RichTextBlock()
-    image  =  ImageChooserBlock()
+    image = ImageChooserBlock()
     document = DocumentChooserBlock()
 
 
@@ -91,6 +121,11 @@ class PagePreviewDescriptionMixin(models.Model):
     #: maximum length for description to be displayed
     max_length = 250
 
+    # ('a' is omitted by subsetting and p is added to default ALLOWED_TAGS)
+    #: allowed tags for bleach html stripping in description
+    allowed_tags = list((set(bleach.sanitizer.ALLOWED_TAGS) |
+                        set(['p'])) - set(['a']))
+
     class Meta:
         abstract = True
 
@@ -98,16 +133,27 @@ class PagePreviewDescriptionMixin(models.Model):
         '''Get formatted description for preview. Uses description field
         if there is content, otherwise uses the beginning of the body content.'''
 
+        description = ''
+
         # use description field if set
-        description = self.description.strip()
+        # use striptags to check for empty paragraph)
+        if striptags(self.description):
+            description = self.description
 
         # if not, use beginning of body content
-        if not description:
+        else:
             # Iterate over blocks and use content from the first paragraph content
             for block in self.body:
                 if block.block_type == 'paragraph':
                     description = block
+                    # break so we stop after the first instead of using last
+                    break
 
+        description = bleach.clean(
+            str(description),
+            tags=self.allowed_tags,
+            strip=True
+        )
         # truncate either way
         return truncatechars_html(description, self.max_length)
 
@@ -152,6 +198,3 @@ class CollectionPage(Page):
             'stats': Collection.stats(),
         })
         return context
-
-
-

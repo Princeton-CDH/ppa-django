@@ -15,8 +15,8 @@ from django.utils.timezone import now
 import pytest
 from SolrClient.exceptions import SolrError
 
-from ppa.archive.forms import SearchForm
-from ppa.archive.models import DigitizedWork, Collection
+from ppa.archive.forms import SearchForm, ModelMultipleChoiceFieldWithEmpty
+from ppa.archive.models import DigitizedWork, Collection, NO_COLLECTION_LABEL
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView
 from ppa.archive.templatetags.ppa_tags import page_image_url, page_url
@@ -145,6 +145,23 @@ class TestArchiveViews(TestCase):
             '<abbr class="unapi-id" title="%s"></abbr>' % dial.source_id,
             msg_prefix='unapi id should be embedded for each work')
 
+    def test_digitizedwork_detailview_suppressed(self):
+        # suppressed work
+        dial = DigitizedWork.objects.get(source_id='chi.78013704')
+        dial.status = DigitizedWork.SUPPRESSED
+        # don't actually process the data deletion
+        with patch.object(dial, 'delete_hathi_pairtree_data') \
+          as mock_delete_pairtree_data:
+            dial.save()
+
+        response = self.client.get(dial.get_absolute_url())
+        # status code should be 410 Gone
+        assert response.status_code == 410
+        # should use 410 template
+        assert '410.html' in [template.name for template in response.templates]
+        # should not display item details
+        self.assertNotContains(response, dial.title, status_code=410)
+
     @pytest.mark.usefixtures("solr")
     def test_digitizedwork_detailview_query(self):
         '''test digitized work detail page with search query'''
@@ -237,10 +254,10 @@ class TestArchiveViews(TestCase):
             msg_prefix='should include a link to HathiTrust'
         )
 
-
         # bad syntax
-        response = self.client.get(url, {'query': '"incomplete phrase'})
-        self.assertContains(response, 'Unable to parse search query')
+        # no longer a problem with edismax
+        # response = self.client.get(url, {'query': '"incomplete phrase'})
+        # self.assertContains(response, 'Unable to parse search query')
 
         # test raising a generic solr error
         with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
@@ -299,6 +316,13 @@ class TestArchiveViews(TestCase):
             title="unAPI" href="%s" />''' % reverse('unapi'),
             msg_prefix='unapi server link should be set', html=True)
 
+        # should not have scores for all results, as not logged in
+        self.assertNotContains(response, 'score')
+        # log in a user and then should have them displayed
+        self.client.force_login(get_user_model().objects.create(username='foo'))
+        response = self.client.get(url)
+        self.assertContains(response, 'score')
+
         # search form should be set in context for display
         assert isinstance(response.context['search_form'], SearchForm)
         # page group details from expanded part of collapsed query
@@ -307,6 +331,11 @@ class TestArchiveViews(TestCase):
         assert 'facet_ranges' in response.context
 
         for digwork in digitized_works:
+
+            # temporarily skip until uncategorized collection support is added
+            if not digwork.collections.count():
+                continue
+
             # basic metadata for each work
             self.assertContains(response, digwork.title)
             self.assertContains(response, digwork.subtitle)
@@ -322,13 +351,17 @@ class TestArchiveViews(TestCase):
             # unapi identifier for each work
             self.assertContains(
                 response,
-                '<abbr class="unapi-id" title="%s"></abbr>' % digwork.source_id,
+                '<abbr class="unapi-id" title="%s"' % digwork.source_id,
                 msg_prefix='unapi id should be embedded for each work')
 
         # no page images or highlights displayed without search term
         self.assertNotContains(
             response, 'babel.hathitrust.org/cgi/imgsrv/image',
             msg_prefix='no page images displayed without keyword search')
+
+        # no collection label should only display once
+        # (for collection selection badge, not for result display)
+        self.assertContains(response, NO_COLLECTION_LABEL, count=1)
 
         # search term in title
         response = self.client.get(url, {'query': 'wintry'})
@@ -412,8 +445,11 @@ class TestArchiveViews(TestCase):
         self.assertContains(response, 'No matching works.')
 
         # bad syntax
-        response = self.client.get(url, {'query': '"incomplete phrase'})
-        self.assertContains(response, 'Unable to parse search query')
+        # NOTE: According to Solr docs, edismax query parser
+        # "includes improved smart partial escaping in the case of syntax
+        # errors"; not sure how to trigger this error anymore!
+        # response = self.client.get(url, {'query': '"incomplete phrase'})
+        # self.assertContains(response, 'Unable to parse search query')
 
         # add a sort term - pub date
         response = self.client.get(url, {'query': '', 'sort': 'pub_date_asc'})
@@ -437,6 +473,7 @@ class TestArchiveViews(TestCase):
         # the list of ids should match exactly
         assert list(sorted_work_ids) == \
             [work['srcid'] for work in response.context['object_list']]
+
         # - check that a query allows relevance as sort order toggle in form
         response = self.client.get(url, {'query': 'foo', 'sort': 'title_asc'})
         enabled_input = \
@@ -457,6 +494,10 @@ class TestArchiveViews(TestCase):
         # default sort should be title if no keyword search and no sort specified
         response = self.client.get(url)
         assert response.context['search_form'].cleaned_data['sort'] == 'title_asc'
+        # default collections should be set based on exclude option
+        assert set(response.context['search_form'].cleaned_data['collections']) == \
+            set([NO_COLLECTION_LABEL]).union((set(Collection.objects.filter(exclude=False))))
+
         # if relevance sort is requested but no keyword, switch to default sort
         response = self.client.get(url, {'sort': 'relevance'})
         assert response.context['search_form'].cleaned_data['sort'] == 'title_asc'
@@ -477,6 +518,18 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url, {'pub_date_0': 1900, 'pub_date_1': 1800})
         assert not response.context['object_list'].count()
         self.assertContains(response, 'Invalid range')
+
+        # no collections = no items (but not an error)
+        response = self.client.get(url, {'collections': ''})
+        assert response.status_code == 200
+        assert not response.context['object_list']
+
+        # special 'uncategorized' collection
+        response = self.client.get(url, {'collections': ModelMultipleChoiceFieldWithEmpty.EMPTY_ID})
+        print(response.context['object_list'])
+
+        assert len(response.context['object_list']) == \
+            DigitizedWork.objects.filter(collections__isnull=True).count()
 
         # ajax request for search results
         response = self.client.get(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -562,6 +615,7 @@ class TestArchiveViews(TestCase):
             assert '%d' % digwork.page_count in digwork_data
             assert '%s' % digwork.added in digwork_data
             assert '%s' % digwork.updated in digwork_data
+            assert digwork.get_status_display() in digwork_data
 
     def test_digitizedwork_admin_changelist(self):
         # log in as admin to access admin site views
@@ -782,7 +836,8 @@ class TestDigitizedWorkListView(TestCase):
             # rows should match # of page ids
             assert solr_opts['rows'] == 4
             # query includes keyword search term
-            assert 'text:(%s) AND ' % digworkview.query in solr_opts['q']
+            assert '(%s) AND ' % digworkview.query in solr_opts['q']
+
             # query also inlcudes page ids
             assert ' AND id:("p1a" "p1b" "p2a" "p2b")' in solr_opts['q']
 

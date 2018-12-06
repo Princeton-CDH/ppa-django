@@ -15,7 +15,7 @@
 /* Card */
 @fontFamily: @pageFont;
 @width: 290px;
-@height: 230px;
+@height: 275px;
 @borderWidth: 0px;
 @padding: 20px;
 
@@ -59,7 +59,7 @@
 /* Aside */
 @asideMargin: 0 0 2rem;
 @asideWidth: 280px;
-@asideHeight: 360px;
+@asideHeight: 400px;
 @asidePadding: 30px;
 @asideShadowDistance: 10px;
 @asideShadowColor: @pink;
