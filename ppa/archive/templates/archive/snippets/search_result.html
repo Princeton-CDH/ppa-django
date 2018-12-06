@@ -1,15 +1,13 @@
 {% load static humanize %}
 
 <li class="item">
-    <abbr class="unapi-id" title="{{ item.srcid }}" hidden></abbr>
+    <abbr class="unapi-id" title="{{ item.srcid }}" aria-hidden="true"></abbr>
     <a href="{% url 'archive:detail' item.srcid %}" class="detail">
         <div class="brief-result container">
             <div class="title column">
                 <div class="labels">
                     {% if page_obj %}
-                        <p class="result-number">
-                            {{ page_obj.start_index|add:forloop.counter0 }}
-                        </p>
+                        <p class="result-number">{{ page_obj.start_index|add:forloop.counter0 }}</p>
                     {% endif %}
                 </div>
                 <p>
