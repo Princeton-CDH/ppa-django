@@ -69,7 +69,7 @@
             </div>
         </div>
     </a>
-    <div class="page-previews">
+    <div class="page-previews container">
         {% if page_groups and page_highlights %}
         {% with results=page_groups|dict_item:item.id %}
             {% if results.numFound > 2 %}
@@ -78,7 +78,7 @@
                 Total Results: {{ results.numFound|intcomma }} page{{ results.numFound|pluralize }}
             </a>
             {% endif %}
-            <div class="pages twelve wide column">
+            <div class="pages">
                 {% if page_highlights %}
                 <div class="wrapper">
                     {% for page in results.docs %}
