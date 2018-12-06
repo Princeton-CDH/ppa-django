@@ -15,21 +15,6 @@
     {% include 'snippets/nav.html' with style="editorial" active="editorial" %}
 {% endblock %}
 
-{% block content %}
-<article class="ui text container">
-    <h1 class="ui header">
-        {% firstof page.title page_title object.title %}<br/>
-        <span class="meta">By {{ post.author }} / On {{ post.post_date }}</span>
-    </h1>
-    {% for block in page.body %}
-        {% include_block block %}
-    {% endfor %}
-</article>
-{% endblock %}
 {% block attribution %}
-<div>
-    <p>
-{% include 'editorial/snippets/attribution.html' with page=page add_urls=True %}
-    </p>
-</div>
+    {% include 'editorial/snippets/attribution.html' with page=page add_urls=True %}
 {% endblock %}

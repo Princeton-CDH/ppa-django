@@ -2,15 +2,6 @@
     @include content-page();
 
     h1 {
-        @include underline-headline($purple);
-        padding-bottom: 1rem;
-
-        .meta {
-            font-size: 1rem;
-
-            @media (min-width: $tablet) {
-                font-size: 1.5rem;
-            }
-        }
+        @include underline-headline($wisteria);
     }
 }
