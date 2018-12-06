@@ -11,7 +11,7 @@ via ajax, e.g. to update the search results.
         {{ facet_ranges.pub_date|json }}
     </pre>
 </div>
-<div class="results-list">
+<ol class="results-list">
     {% for item in object_list %}
         {% include 'archive/snippets/search_result.html' %}
     {% empty %}
@@ -19,7 +19,7 @@ via ajax, e.g. to update the search results.
             <p>{% firstof error "No matching works." %}</p>
         </div>
     {% endfor %}
-</div>
+</ol>
 <div class="pagination-bottom ui container">
     {% include 'archive/snippets/pagination.html' %}
 </div>

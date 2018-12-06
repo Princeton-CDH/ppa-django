@@ -1,31 +1,104 @@
 .results-list .item {
-    margin: 1rem 0;
-
-    > .grid {
-        @include wide-container();
-        padding: .5rem 0;
-    }
 
     &:nth-child(even) {
-        background-color: #fff;
+        background-color: $white-two;
     }
 
-    .result-number {
-        color: $black;
-        font-family: $pageFont;
+    a.detail {
+        display: block;
     }
 
-    .unapi-id {
-        display: none;
-    }
-
-    .buttons {
-        margin-top: 1rem;
+    .brief-result.container {
+        @include wide-container();
         display: flex;
         flex-flow: row wrap;
+        padding: 2rem 1rem;
+    }
 
-        .button {
+    .title.column,
+    .metadata.column {
+        width: 100%;
+        
+        @media (min-width: $tablet) {
+            width: 50%;
+        }
+    }
+    
+    .title.column {
+        display: flex;
+        flex-direction: row;
+
+        @media (min-width: $tablet) {
+            padding-right: 2rem;
+        }
+
+        .labels {
+            width: 3rem;
             flex: none;
+        }
+
+        .labels,
+        .header {
+            font-size: 1.25rem;
+            color: $black;
+    
+            @media (min-width: $tablet) {
+                font-size: 1.5rem;
+            }
+        }
+    
+        .sub.header {
+            font-weight: normal;
+            font-style: italic;
+            text-transform: none;
+        }
+    }
+
+    .metadata.column {
+        position: relative; // reference for the "details" link to position on
+
+        .grid {
+            margin: 0;
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            grid-gap: 2rem;
+            
+            .author,
+            .publisher {
+                grid-column: 1;
+            }
+    
+            .pub-date,
+            .volume,
+            .score {
+                grid-column: 2;
+                text-align: right;
+            }
+
+            dt {
+                font-weight: bold;
+            }
+
+            dd {
+                margin: 0;
+            }
+    
+            .author dd,
+            .pub-date dd {
+                font-size: 1.2rem;
+            }
+        }
+
+        .buttons {
+            margin-top: 2rem;
+            width: 100%;
+            display: flex;
+            flex-flow: row wrap;
+
+            .button {
+                flex: none;
+                margin-bottom: 1rem;
+            }
         }
     }
 
@@ -34,44 +107,14 @@
         margin-bottom: 1rem;
     }
 
-    .labels {
-        position: absolute;
-        top: 1rem;
-        left: 1rem;
-    }
-
-    .title {
-        margin-left: 0;
-        margin-top: 2.5rem;
-        font-family: $headerFont;
-
-        @media (min-width: $tablet) {
-            margin-left: 3rem;
-            margin-top: 0;
-        }
-    }
-
-    .labels,
-    .title .header {
-        font-size: 1.25rem;
-        color: $black;
-
-        @media (min-width: $tablet) {
-            font-size: 1.5rem;
-        }
-    }
-
-    .title .sub.header {
-        font-weight: normal;
-        font-style: italic;
-        text-transform: none;
+    .total-pages {
+        font-weight: bold;
     }
 
     .item-detail {
-        bottom: 1rem;
-        right: 1rem;
         color: $french-blue;
         margin-left: auto;
+        margin-right: -0.5rem;
 
         .chevron {
             fill: $french-blue;
@@ -88,7 +131,7 @@
         @media (min-width: $largeMonitor) {
             position: absolute;
             right: -12rem;
-            top: 6rem;
+            top: calc(50% - 1rem); // middle of metadata column
             bottom: 0;
             margin: auto 0;
             height: 4rem;
@@ -103,46 +146,9 @@
             }
         }
     }
-
-    .metadata .grid {
-        margin: 0;
-
-        > .column {
-            padding: 0 1rem;
-            text-align: center;
-            
-            &:first-child {
-                text-align: left;
-                padding-left: 0;
-            }
-            
-            &:last-child {
-                border: 0;
-                padding-right: 0;
-                text-align: right;
-            }
-        }
-
-        .field-name {
-            font-weight: bold;
-        }
-
-        p span {
-            display: block;
-        }
-
-        .author .field-value,
-        .pub-date .field-value {
-            font-size: 1.2rem;
-        }
-    }
-
-    .total-pages {
-        font-weight: bold;
-    }
 }
 
-.results-list .item:hover {
+.results-list a.detail:hover {
     .item-detail {
         visibility: visible;
     }

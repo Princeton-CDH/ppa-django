@@ -4,6 +4,7 @@
         font-size: 1.5rem;
         margin: 1rem 0;
         text-align: center;
+        font-weight: normal;
     }
     
     .container:not(.message) {
@@ -36,7 +37,7 @@
     }
 
     .show-advanced {
-        background: #fff;
+        background: $white-two;
         text-align: center;
         padding-top: 0;
 
@@ -160,6 +161,8 @@
     /* results */
     .results-list {
         padding-bottom: 2rem;
+        padding-left: 0;
+        list-style: none;
     }
 
     .data {
