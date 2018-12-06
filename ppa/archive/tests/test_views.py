@@ -351,7 +351,7 @@ class TestArchiveViews(TestCase):
             # unapi identifier for each work
             self.assertContains(
                 response,
-                '<abbr class="unapi-id" title="%s"></abbr>' % digwork.source_id,
+                '<abbr class="unapi-id" title="%s"' % digwork.source_id,
                 msg_prefix='unapi id should be embedded for each work')
 
         # no page images or highlights displayed without search term
