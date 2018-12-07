@@ -6,6 +6,7 @@
 {% endblock %}
 
 {% block page-context-id %}homepage{% endblock %}
+{% block meta_description %}{{ page.search_description }}{% endblock %}
 
 {% block page_nav %}
     {% include 'snippets/nav.html' with style="homepage" %}
