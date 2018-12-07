@@ -17,3 +17,4 @@ lxml
 eulxml
 wagtail>=2.3
 bleach
+django-fullurl
