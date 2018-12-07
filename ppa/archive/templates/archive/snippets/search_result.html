@@ -2,7 +2,7 @@
 
 <li class="item">
     <abbr class="unapi-id" title="{{ item.srcid }}" aria-hidden="true"></abbr>
-    <a href="{% url 'archive:detail' item.srcid %}" class="detail">
+    <a href="{% url 'archive:detail' item.srcid %}{% if query %}?query={{ query }}{% endif %}" class="detail">
         <div class="brief-result container">
             <div class="title column">
                 <div class="labels">
