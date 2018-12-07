@@ -280,11 +280,15 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             facet_ranges['pub_date']['end'] -= 1
 
         except SolrError as solr_err:
-            context = {'object_list': []}
+            # override object list with an empty list that can be paginated
+            # so that template display will still work properly
+            self.object_list = DigitizedWork.objects.none()
+            context = super().get_context_data(**kwargs)
             if 'Cannot parse' in str(solr_err):
                 error_msg = 'Unable to parse search query; please revise and try again.'
             else:
                 # NOTE: this error should possibly be raised; 500 error?
+                # or set status on the response?
                 error_msg = 'Something went wrong.'
             context['error'] = error_msg
 

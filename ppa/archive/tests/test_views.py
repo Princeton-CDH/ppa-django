@@ -567,6 +567,9 @@ class TestArchiveViews(TestCase):
             # count needed for paginator
             mockpsq.return_value.count = 0
             response = self.client.get(url, {'query': 'something'})
+            # paginator variables should still be set
+            assert 'object_list' in response.context
+            assert 'paginator' in response.context
             self.assertContains(response, 'Something went wrong.')
 
     def test_digitizedwork_csv(self):
