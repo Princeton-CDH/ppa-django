@@ -1,0 +1,7 @@
+#editorial {
+    @include content-page();
+
+    h1 {
+        @include underline-headline($wisteria);
+    }
+}

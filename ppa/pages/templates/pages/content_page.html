@@ -27,7 +27,9 @@
 <article class="ui text container">
     <h1 class="ui header">
         {% firstof page.title page_title object.title %}
-        {% block attribution %}{% endblock %}
+        <span class="meta">
+            {% block attribution %}{% endblock %}
+        </span>
     </h1>
     {% for block in page.body %}
         {% if block.block_type == 'image' %}
