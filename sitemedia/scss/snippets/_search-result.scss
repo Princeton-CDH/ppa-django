@@ -35,11 +35,16 @@
         .labels {
             width: 3rem;
             flex: none;
+
+            .result-number {
+                line-height: normal;
+            }
         }
 
         .labels,
         .header {
             font-size: 1.25rem;
+            font-family: $headerFont;
             color: $black;
     
             @media (min-width: $tablet) {

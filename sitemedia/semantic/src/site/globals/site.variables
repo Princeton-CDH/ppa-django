@@ -16,7 +16,7 @@
 @googleFontSizesHeader : '400,400i,700,700i';
 @googleFont            : %('%s:@{googleFontSizes}', escape(@fontName));
 @googleFontHeader      : %('%s:@{googleFontSizesHeader}', escape(@headerFontName));
-@googleFontRequest     : '@{googleFont}';
+@googleFontRequest     : '@{googleFont}|@{googleFontHeader}';
 
 /*-------------------
       Base Sizes
