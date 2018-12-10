@@ -29,14 +29,6 @@
 
     .advanced {
         display: none;
-
-        @media (min-width: $tablet) {
-            display: flex;
-
-            &.column {
-                display: inline-block;
-            }
-        }
     }
 
     input[type=number] { // publication date min/max

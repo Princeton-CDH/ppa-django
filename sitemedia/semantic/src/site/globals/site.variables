@@ -105,5 +105,5 @@
     Focused Input
 --------------------*/
 
-@focusedFormBorderColor: @lightSecondaryColor;
-@focusedFormMutedBorderColor: @lightSecondaryColor;
+@focusedFormBorderColor: @primaryColor;
+@focusedFormMutedBorderColor: @primaryColor;
