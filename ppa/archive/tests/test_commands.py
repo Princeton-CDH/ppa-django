@@ -15,7 +15,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
-from pairtree import pairtree_client, pairtree_path
+from pairtree import pairtree_client, pairtree_path, storage_exceptions
 import pytest
 from SolrClient import SolrClient
 
@@ -218,7 +218,7 @@ class TestHathiImportCommand(TestCase):
 
     @patch('ppa.archive.management.commands.hathi_import.ZipFile', spec=ZipFile)
     def test_count_pages(self, mockzipfile):
-        cmd = hathi_import.Command(stdout=StringIO())
+        cmd = hathi_import.Command(stdout=StringIO(), stderr=StringIO())
         cmd.stats = defaultdict(int)
         prefix, pt_id = ('ab', '12345:6')
         mock_pairtree_client = Mock(spec=pairtree_client.PairtreeStorageClient)
@@ -260,6 +260,13 @@ class TestHathiImportCommand(TestCase):
         digwork = DigitizedWork.objects.get(source_id=digwork.source_id)
         assert digwork.page_count == 2
 
+        # object not found in pairtree data
+        mock_pairtree_client.get_object.side_effect = \
+            storage_exceptions.ObjectNotFoundException
+        # should not error; should report not found
+        cmd.count_pages(digwork)
+        output = cmd.stderr.getvalue()
+        assert '%s not found' % digwork.source_id in output
 
     @patch('ppa.archive.management.commands.hathi_import.HathiBibliographicAPI')
     @patch('ppa.archive.management.commands.hathi_import.progressbar')

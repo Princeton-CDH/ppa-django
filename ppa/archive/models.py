@@ -519,6 +519,10 @@ class DigitizedWork(TrackChangesModel, Indexable):
         '''Get page content for this work from Hathi pairtree and return
         data to be indexed in solr.'''
 
+        # If an item has been suppressed, bail out. No pages to index.
+        if self.is_suppressed:
+            return
+
         # load mets record to pull metadata about the images
         mmets = load_xmlobject_from_file(self.hathi_metsfile_path(),
                                          MinimalMETS)

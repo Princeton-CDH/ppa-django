@@ -418,6 +418,10 @@ class TestDigitizedWork(TestCase):
                 assert 'tags' in data
                 assert data['tags'] == mets_page.label.split(', ')
 
+            # if item is suppressed - no page data
+            work.status = DigitizedWork.SUPPRESSED
+            assert not list(work.page_index_data())
+
     def test_index_id(self):
         work = DigitizedWork(source_id='chi.79279237')
         assert work.index_id() == work.source_id
