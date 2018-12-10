@@ -48,7 +48,9 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             if 'sort' in form_opts and form_opts['sort'] == 'relevance':
                 del form_opts['sort']
 
-        for key, val in self.form_class.defaults().items():
+        searchform_defaults = self.form_class.defaults()
+
+        for key, val in searchform_defaults.items():
             # set as list to avoid nested lists
             # follows solution using in derrida-django for InstanceListView
             if isinstance(val, list):
@@ -82,8 +84,11 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
 
             # restrict by collection
             if collections:
-                work_q.append('collections_exact:(%s)' % \
-                    (' OR '.join(['"%s"' % coll for coll in collections])))
+                # if *all* collections are selected, no need to filter
+                # (will return everything either way; keep the query simpler)
+                if len(collections) != len(searchform_defaults['collections']):
+                    work_q.append('collections_exact:(%s)' % \
+                        (' OR '.join(['"%s"' % coll for coll in collections])))
 
             # For collection exclusion logic to work properly, if no
             # collections are selected, no items should be returned.
