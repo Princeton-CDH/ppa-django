@@ -15,27 +15,6 @@
         padding: 0;
     }
 
-    .form > .vertical.segment { // stacked fieldsets
-        margin-bottom: 0;
-        margin-top: 0;
-
-        &:first-child {
-            border-bottom: none;
-        }
-
-        &:nth-child(2) {
-            border-top: 1px solid #D8D8D8;
-        }
-
-        &:last-child {
-            margin-bottom: 1em;
-        }
-
-        > .twelve.wide.column:not(:nth-of-type(1)) {
-            padding-top: 0 !important;
-        }
-    }
-
     .show-advanced {
         background: $white-two;
         text-align: center;
@@ -45,10 +24,6 @@
             margin: auto;
             margin-bottom: 1rem;
             cursor: pointer;
-        }
-
-        @media (min-width: $tablet) {
-            display: none;
         }
     }
 
@@ -121,7 +96,9 @@
         .button {
             margin-bottom: 5px;
             margin-right: 8px;
+            transition: padding 0.2s;
         }
+
         .ui.button {
             display: inline-block;
         }
@@ -131,10 +108,35 @@
         }
 
         input[type=checkbox] { // hide checkboxes
-            width: 0;
-            height: 0;
+            // width: 0;
+            // height: 0;
+            // opacity: 0;
+            // margin-left: -.49rem; // don't affect button width
+            position: relative;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+
+            &::-ms-check {
+                display: none;
+            }
+        }
+
+        input[type=checkbox]::after {
+            content: "×";
+            position: absolute;
+            font-size: 1rem;
+            left: 0;
+            top: -1px;
             opacity: 0;
-            margin-left: -.49rem; // don't affect button width
+            transition: opacity 0.2s;
+        }
+
+        input[type=checkbox]:checked::after {
+            opacity: 1;
+        }
+
+        .button.active {
+            padding-right: 1rem;
         }
     }
 
