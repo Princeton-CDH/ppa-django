@@ -100,10 +100,6 @@
         }
 
         input[type=checkbox] { // hide checkboxes
-            // width: 0;
-            // height: 0;
-            // opacity: 0;
-            // margin-left: -.49rem; // don't affect button width
             position: relative;
             -webkit-appearance: none;
             -moz-appearance: none;
