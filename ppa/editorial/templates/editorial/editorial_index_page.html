@@ -29,10 +29,8 @@
             {% for post in posts %}
             <a class="ui post card" href="{{ post.url }}">
                 <div class="content">
-                    <div class="top">
-                        <div class="header">{{ post.title }}</div>
-                        <div class="meta">{% include 'editorial/snippets/attribution.html' with page=post %}</div>
-                    </div>
+                    <div class="header">{{ post.title }}</div>
+                    <div class="meta">{% include 'editorial/snippets/attribution.html' with page=post %}</div>
                     <div class="description">
                         {{ post.get_description|richtext }}
                     </div>
