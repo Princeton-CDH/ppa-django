@@ -42,7 +42,8 @@ class SolrSchema(object):
                     "class": "solr.StandardTokenizerFactory",
                 },
                 "filters": [
-                    {"class": "solr.StopFilterFactory"},
+                    {"class": "solr.StopFilterFactory", "ignoreCase": True,
+                     "words": "lang/stopwords_en.txt"},
                     {"class": "solr.LowerCaseFilterFactory"},
                     {"class": "solr.EnglishPossessiveFilterFactory"},
                     {"class": "solr.KeywordMarkerFilterFactory"},
