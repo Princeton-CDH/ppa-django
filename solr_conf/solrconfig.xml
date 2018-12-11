@@ -753,8 +753,8 @@
       <str name="defType">edismax</str>
       <!-- <str name="df">text</str> -->
       <str name="qf">
-          sort_title^40
-          author_exact^40
+          title_nostem^40
+          subtitle_nostem^40
           title^20
           author^20
           notes^20
@@ -766,10 +766,12 @@
           content
       </str>
       <str name="pf">
-          title^200
-          author^200
-          notes^200
-          content^100
+          title_nostem^100
+          subtitle_nostem^00
+          title^50
+          author^50
+          notes^50
+          content^20
           pub_place
           publisher
       </str>

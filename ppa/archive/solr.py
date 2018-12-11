@@ -30,7 +30,6 @@ class SolrSchema(object):
 
     # ported from winthrop-django
     field_types = [
-
         {
             'name': 'text_en',
             "class":"solr.TextField",
@@ -48,6 +47,27 @@ class SolrSchema(object):
                     {"class": "solr.EnglishPossessiveFilterFactory"},
                     {"class": "solr.KeywordMarkerFilterFactory"},
                     {"class": "solr.PorterStemFilterFactory"},
+                    {"class": "solr.ICUFoldingFilterFactory"},
+                ]
+            }
+        },
+        # text with no stemming, so exact matches can be prioritized
+        {
+            'name': 'text_nostem',
+            "class":"solr.TextField",
+            # for now, configuring index and query analyzers the same
+            # if we want synonyms, query must be separate
+            "analyzer": {
+                # "charFilters": [],
+                "tokenizer": {
+                    "class": "solr.StandardTokenizerFactory",
+                },
+                "filters": [
+                    {"class": "solr.StopFilterFactory", "ignoreCase": True,
+                     "words": "lang/stopwords_en.txt"},
+                    {"class": "solr.LowerCaseFilterFactory"},
+                    {"class": "solr.EnglishPossessiveFilterFactory"},
+                    {"class": "solr.KeywordMarkerFilterFactory"},
                     {"class": "solr.ICUFoldingFilterFactory"},
                 ]
             }
@@ -100,7 +120,11 @@ class SolrSchema(object):
         # sort/facet copy fields
         {'name': 'author_exact', 'type': 'string', 'required': False},
         {'name': 'collections_exact', 'type': 'string', 'required': False,
-         'multiValued': True}
+         'multiValued': True},
+
+        # fields without stemming for search boosting
+        {'name': 'title_nostem', 'type': 'text_nostem', 'required': False},
+        {'name': 'subtitle_nostem', 'type': 'text_nostem', 'required': False},
     ]
     #: fields to be copied into general purpose text field for searching
     text_fields = []
@@ -110,6 +134,8 @@ class SolrSchema(object):
     copy_fields = [
         ('author', 'author_exact'),
         ('collections', 'collections_exact'),
+        ('title', 'title_nostem'),
+        ('subtitle', 'subtitle_nostem'),
     ]
 
     def __init__(self):
