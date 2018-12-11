@@ -200,7 +200,6 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
         solr_opts = {
             'q': solr_q,
             'sort': solr_sort,
-            'pf': self.query,
             'fl': fields,
             'fq': collapse_q,
             # turn on faceting and add any self.form facet_fields
@@ -248,7 +247,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
         # NOTE 2: using quotes around ids to handle ids that include
         # colons, e.g. ark:/foo/bar .
         solr_pageq = PagedSolrQuery({
-            'q': '(%s) AND id:(%s)' % \
+            'q': 'content:(%s) AND id:(%s)' % \
                 (self.query, ' '.join('"%s"' % pid for pid in page_ids)),
             # enable highlighting on content field with 3 snippets
             'hl': True,
@@ -349,7 +348,7 @@ class DigitizedWorkDetailView(DetailView):
             context['query'] = query
             solr_q = query
             solr_opts = {
-                'q': solr_q,
+                'q': 'content:(%s)' % solr_q,
                 # sort by page order by default
                 'sort': 'order asc',
                 # 'fl': '*',
