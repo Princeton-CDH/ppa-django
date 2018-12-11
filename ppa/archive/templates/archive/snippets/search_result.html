@@ -73,10 +73,9 @@
         {% if page_groups and page_highlights %}
         {% with results=page_groups|dict_item:item.id %}
             {% if results.numFound > 2 %}
-            <a class="total-pages"
-                href="{% url 'archive:detail' item.srcid %}?query={{ query }}">
-                Total Results: {{ results.numFound|intcomma }} page{{ results.numFound|pluralize }}
-            </a>
+            <span class="total-pages">
+                {{ results.numFound|intcomma }} matching page{{ results.numFound|pluralize }}
+            </span>
             {% endif %}
             <div class="pages">
                 {% if page_highlights %}
