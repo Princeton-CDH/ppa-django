@@ -1,0 +1,61 @@
+header { // used mostly as space for banner images
+    position: absolute;
+    top: $nav-height-mobile;
+    width: 100%;
+    padding-top: 50px;
+
+    @media (min-width: $computer) {
+        top: $nav-height;
+        padding-top: 45px;
+    }
+
+    .banner {
+        position: absolute;
+        z-index: -1;
+    }
+
+    &.contentpage {
+        @include notes-header($rosy-pink);
+    }
+
+    &.collections {
+        @include notes-header($seafoam-blue);
+    }
+
+    &.editorial {
+        @include notes-header($twilight);
+    }
+
+    &.homepage {
+        @include notes-header($warm-grey);
+
+        .banner {
+            opacity: 0.54; // darker banner
+        }
+
+        #scene { // parallax items
+            margin: 20px auto 0;
+            width: 300px;
+            mask-image: none;
+
+            @media (min-width: $tablet) {
+                margin: 2*$nav-height auto 0;
+            }
+
+            .layer {
+                height: 200px;
+                left: 0;
+                top: 0;
+                right: 0;
+                margin: 0 auto;
+                user-select: none;
+                -moz-user-select: none;
+                -webkit-user-select: none;
+
+                @media (min-width: $tablet) {
+                    height: 300px;
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,36 @@
+#collections {
+    h1 {
+        @include underline-headline($light-grey-blue);
+    }
+
+    .page-description {
+        font-size: 1.2rem;
+        max-width: 667px;
+        width: 100%;
+        margin-bottom: 1rem;
+ 
+        @media (min-width: $tablet) {
+            font-size: 1.5rem;
+        }
+    }
+
+    .archive-link {
+        margin: 2rem auto;
+    }
+
+    .collection-cards {
+        margin: 0;
+        flex-flow: column nowrap;
+        align-items: center;
+
+        @media (min-width: $tablet) {
+            flex-flow: row wrap;
+            justify-content: space-between;
+            align-items: initial;
+
+            .card:last-child {
+                margin-left: auto;
+            }
+        }
+    }
+}

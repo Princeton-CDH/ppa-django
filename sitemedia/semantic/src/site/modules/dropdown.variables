@@ -25,7 +25,7 @@
 @selectionFocusMenuBoxShadow: none;
 
 /* Visible */
-@selectionVisibleBorderColor: 
+@selectionVisibleBorderColor: none;
 @selectionVisibleBoxShadow: none;
 @selectionVisibleMenuBoxShadow: none;
 @selectionVisibleTextColor: @primaryColor;

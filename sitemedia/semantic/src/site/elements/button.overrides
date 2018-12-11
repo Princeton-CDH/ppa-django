@@ -24,14 +24,15 @@
             padding: @verticalPadding @horizontalPadding;
             box-shadow: none;
             cursor: default;
-            color: @midGrey !important;
-            border: @borderWeight solid @midGrey;
+            color: @darkestGrey !important;
+            border: @borderWeight solid @darkestGrey;
             background: transparent !important;
 
             &:hover,
             &:active {
                 background: transparent !important;
-                color: @midGrey !important;
+                color: @darkestGrey !important;
+                box-shadow: none !important;
             }
         }
     }

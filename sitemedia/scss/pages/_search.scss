@@ -1,0 +1,228 @@
+#search {
+    padding-top: 100px;
+
+    .sub.header { // "ARCHIVE" text
+        font-size: 1.5rem;
+        margin: 1rem 0;
+        text-align: center;
+        font-weight: normal;
+    }
+    
+    .container:not(.message) {
+        @include wide-container();
+    }
+
+    .search {
+        padding: 0;
+    }
+
+    .show-advanced {
+        background: $white-two;
+        text-align: center;
+        padding-top: 0;
+
+        a {
+            margin: auto;
+            margin-bottom: 1rem;
+            cursor: pointer;
+        }
+    }
+
+    .advanced {
+        display: none;
+    }
+
+    input[type=number] { // pubdate min/max
+        width: 4rem;
+        padding: 0.5rem;
+        appearance: textfield;
+        -moz-appearance: textfield;
+        -webkit-appearance: textfield;
+    }
+
+    
+    #publication {
+        label[for=id_pub_date] { // "Publication Year" text
+            @media (min-width: $tablet) {
+                display: block;
+                margin-bottom: .25rem;
+            }
+
+            @media (min-width: $computer) {
+                display: inline-block;
+                margin-bottom: 0;
+            }
+        }
+
+        label:nth-child(3) { // "to" in between dates
+            margin: 0 .5rem;
+            
+            @media (min-width: $tablet) {
+                margin: 0 1rem;
+            }
+        }
+
+        input:invalid {
+            border-color: red;
+            box-shadow: 0 0 4px 0 red;
+        }
+
+        .validation {
+            visibility: hidden;
+            color: red;
+        }
+    }
+
+    .clear-selection {
+        cursor: pointer;
+        position: absolute;
+        bottom: -.5rem;
+        left: 1rem;
+
+        @media (min-width: $tablet) {
+            bottom: 1rem;
+        }
+    }
+
+    #collections {
+        .field {
+            margin-bottom: -5px;
+        }
+
+        .button {
+            margin-bottom: 5px;
+            margin-right: 8px;
+            transition: padding 0.2s;
+        }
+
+        .ui.button {
+            display: inline-block;
+        }
+
+        .button > span { // hide counts
+            display: none;
+        }
+
+        input[type=checkbox] { // hide checkboxes
+            position: relative;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+
+            &::-ms-check {
+                display: none;
+            }
+        }
+
+        input[type=checkbox]::after {
+            content: "×";
+            position: absolute;
+            font-size: 1rem;
+            left: 0;
+            top: -1px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        input[type=checkbox]:checked::after {
+            opacity: 1;
+        }
+
+        .button.active {
+            padding-right: 1rem;
+        }
+    }
+
+    .zotero a {
+        @include link;
+    }
+
+    #booleans {
+        .inline.field:nth-child(2) .checkbox {
+            margin-top: .25rem;
+            margin-bottom: .75rem;
+        }
+    }
+
+    .workscount {
+        margin: 2rem auto;
+        font-size: 1rem;
+
+        p:first-child {
+            margin-bottom: .5rem;
+        }
+    }
+
+    /* results */
+    .results-list {
+        padding-bottom: 2rem;
+        padding-left: 0;
+        list-style: none;
+    }
+
+    .data {
+        display: none;
+    }
+    
+    .pagination-sort,
+    .pagination-bottom {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        
+        @media (min-width: $tablet) {
+            justify-content: space-between;
+        }
+    }
+    
+    .pagination-sort {
+        margin: 0 1rem;
+        border-bottom: 2px solid $seafoam-blue;
+    }
+
+    .pagination-bottom {
+        padding: 0 1rem;
+
+        .page-controls {
+            position: relative;
+        }
+    }
+
+    .page-controls {
+        width: 100%;
+        text-align: center;
+        margin-top: 1rem;
+ 
+        @media (min-width: $tablet) {
+            width: auto;
+            margin: 0;
+        }
+
+        @media (min-width: $computer) {
+            position: absolute;
+            right: 0;
+            left: 0;
+            text-align: center;
+        }
+    }
+
+    .sort {
+        width: 100%;
+        margin: 1rem 0;
+
+        @media (min-width: $tablet) {
+            label {
+                margin-left: auto;
+                margin-right: 1rem;
+            }
+        }
+
+        @media (min-width: $computer) {
+            width: auto;
+        }
+    }
+
+    .message {
+        margin-top: 2rem;
+    }
+}

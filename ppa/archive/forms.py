@@ -5,8 +5,7 @@ from django.core.validators import RegexValidator
 from django.db.models import Max, Min
 from django.utils.safestring import mark_safe
 
-
-from ppa.archive.models import Collection, DigitizedWork
+from ppa.archive.models import Collection, DigitizedWork, NO_COLLECTION_LABEL
 
 
 class SelectDisabledMixin(object):
@@ -25,7 +24,7 @@ class SelectDisabledMixin(object):
         disabled = None
 
         if isinstance(label, dict):
-            label, disabled = label['label'], label['disabled']
+            label, disabled = label['label'], label.get('disabled', False)
         option_dict = super().create_option(
             name, value, label, selected, index,
             subindex=subindex, attrs=attrs
@@ -125,6 +124,25 @@ class RangeField(forms.MultiValueField):
         return self.widget.sep.join(['%d' % val if val else '' for val in data_list])
 
 
+class ModelMultipleChoiceFieldWithEmpty(forms.ModelMultipleChoiceField):
+    '''Extend :class:`django.forms.ModelMultipleChoiceField` to add an
+    option for an unset or empty choice (i.e. no relationship in a
+    many-to-many relationship such as collection membership).
+    '''
+
+    EMPTY_VALUE = NO_COLLECTION_LABEL
+    EMPTY_ID = 0
+
+    def clean(self, value):
+        '''Extend clean to use default validation on all values but
+        the empty id.'''
+        pk_values = [val for val in value if val and int(val) != self.EMPTY_ID]
+        qs = super()._check_values(pk_values)
+        if self.EMPTY_ID in value or str(self.EMPTY_ID) in value:
+            return [self.EMPTY_VALUE] + list(qs)
+        return qs
+
+
 class SearchForm(forms.Form):
     '''Simple search form for digitized works.'''
 
@@ -138,14 +156,11 @@ class SearchForm(forms.Form):
         ('author_desc', 'Author Z-A'),
     ]
 
-    defaults = {
-        'sort': 'title_asc',
-    }
-
-    # this appears when you hover over the question mark icon
-    QUESTION_POPUP_TEXT = mark_safe('''
+    #: help text to be shown with the form
+    #: (appears when you hover over the question mark icon)
+    QUESTION_POPUP_TEXT = '''
     Boolean search within a field is supported. Operators must be capitalized (AND, OR).
-    ''')
+    '''
 
     # text inputs
     query = forms.CharField(label='Keyword or Phrase', required=False,
@@ -171,13 +186,13 @@ class SearchForm(forms.Form):
     # collections = FacetChoiceField(label='Collection')
     # NOTE: using model choice field to list all collections in the database,
     # even if they have no assocaited works in Solr
-    collections = forms.ModelMultipleChoiceField(
+    collections = ModelMultipleChoiceFieldWithEmpty(
         queryset=Collection.objects.order_by('name'), label='Collection',
         widget=CheckboxSelectMultipleWithDisabled, required=False)
-    pub_date = RangeField(label='Publication Year', required=False,
+    pub_date = RangeField(label='Publication Date', required=False,
         widget=RangeWidget(attrs={
             'size': 4,
-            'title': 'publication year',
+            'title': 'publication date',
             '_inline': True
         }))
 
@@ -206,6 +221,18 @@ class SearchForm(forms.Form):
         'collections_exact': 'collections'
     }
 
+    @staticmethod
+    def defaults():
+        '''Default values when initializing the form.  Sort by title,
+        pre-select collections based exclude property.'''
+        return {
+            'sort': 'title_asc',
+            # always include uncategorized collections; no harm if not present
+            'collections': [ModelMultipleChoiceFieldWithEmpty.EMPTY_ID] + \
+                            list(Collection.objects.filter(exclude=False) \
+                                           .values_list('id', flat=True)),
+    }
+
     def __init__(self, data=None, *args, **kwargs):
         '''
         Set choices dynamically based on form kwargs and presence of keywords.
@@ -213,15 +240,21 @@ class SearchForm(forms.Form):
         super().__init__(data=data, *args, **kwargs)
 
         pubdate_range = self.pub_date_minmax()
+        self.pubdate_validation_msg = \
+            "Enter sequential years between {} and {}." .format(
+                pubdate_range[0], pubdate_range[1])
         # because pubdate is a multifield/multiwidget, access the widgets
         # under the multiwidgets
         pubdate_widgets = self.fields['pub_date'].widget.widgets
         for idx, val in enumerate(pubdate_range):
             # don't set None as placeholder (only possible if db is empty)
             if val:
-                # set placeholder and max/min values
-                pubdate_widgets[idx].attrs.update({'placeholder': val,
-                    'min': pubdate_range[0], 'max': pubdate_range[1]})
+                # set max/min and initial values
+                pubdate_widgets[idx].attrs.update({
+                    'placeholder': pubdate_range[idx],
+                    'min': pubdate_range[0],
+                    'max': pubdate_range[1]
+                })
 
         # relevance is disabled unless we have a keyword query present
         if not data or not self.has_keyword_query(data):
@@ -277,6 +310,13 @@ class SearchForm(forms.Form):
                     else:
                         new_choice.append(choice)
 
+                # if there are items not in a collection, add an option
+                # so they will be findable
+                if NO_COLLECTION_LABEL in facet_dict:
+                    new_choice.append(
+                        (ModelMultipleChoiceFieldWithEmpty.EMPTY_ID,
+                         {'label': NO_COLLECTION_LABEL}))
+
                 # replace choices with new version
                 self.fields[formfield].widget.choices = new_choice
 
@@ -322,10 +362,11 @@ class SearchWithinWorkForm(forms.Form):
     of a digitized work.
     '''
 
-    # this appears when you hover over the question mark icon
-    QUESTION_POPUP_TEXT = mark_safe('''
+    #: help text to be shown with the form
+    #: (appears when you hover over the question mark icon)
+    QUESTION_POPUP_TEXT = '''
     Boolean search is supported. Operators must be capitalized (AND, OR).
-    ''')
+    '''
 
     # single text input
     query = forms.CharField(label='Search within the Volume', required=False,

@@ -1,6 +1,6 @@
 {% load semanticui humanize %}
 <form class="ui form{% if error %} error{% endif %}">
-    <fieldset class="ui vertical stackable grid segment">
+    <div class="ui vertical stackable grid segment" role="group">
         <legend class="sr-only">text search fields</legend>
         <div class="twelve wide column">
             {% render_field search_form.query %}
@@ -14,11 +14,14 @@
                 {% render_field search_form.author %}
             </div>
         </div>
-    </fieldset>
-    <fieldset class="ui vertical stackable grid segment advanced">
+    </div>
+    <div class="ui vertical stackable grid segment advanced" role="group">
         <legend class="sr-only">publication date fields</legend>
         <div class="four wide column" id="publication">
             {% render_field search_form.pub_date %}
+            <span class="validation">
+                {{ search_form.pubdate_validation_msg }}
+            </span>
             <a class="clear-selection" role="button">Clear Selection</a>
         </div>
         <div class="eight wide column" id="histogram">
@@ -26,8 +29,8 @@
             <span class="min-date"></span>
             <span class="max-date"></span>
         </div>
-    </fieldset>
-    <fieldset class="ui vertical stackable basic grid segment advanced">
+    </div>
+    <div class="ui vertical stackable basic grid segment" role="group">
         <legend class="sr-only">search filters</legend>
         <div class="twelve wide column" id="collections">
             <div class="field">
@@ -56,7 +59,7 @@
             </div>
         </div>
         -->
-    </fieldset>
+    </div>
     <div class="ui vertical basic segment show-advanced">
         <a>Advanced Search</a>
     </div>
@@ -65,26 +68,8 @@
         <p class="count">Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}</p>
         <p class="zotero">Work citations can be exported to <a href="https://www.zotero.org/support/getting_stuff_into_your_library">Zotero</a></p>
     </div>
-    {% include 'archive/snippets/pagination.html' %}
-    <div class="sort">
-        <div class="ui secondary pointing stackable menu">
-            <span class="item">Sort By</span>
-            {% for sort in search_form.sort %}
-            <label class="item {% if sort.data.selected %}active{% endif %}" for="{{ sort.id_for_label }}" role="radio">
-                {{ sort.choice_label }}
-                {{ sort.tag }}
-            </label>
-            {% endfor %}
-        </div>
-        <div class="mobile-sort">
-            <label>Sort By</label>
-            <select class="ui dropdown" name="sort">
-                {% for sort in search_form.sort %}
-                <option value="{{ sort.data.value }}">
-                    {{ sort.choice_label }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
+    <div class="pagination-sort">
+        {% include 'archive/snippets/pagination.html' %}
+        {% include 'archive/snippets/sort.html' %}
     </div>
 </form>

@@ -4,25 +4,25 @@ ppa-django
 .. sphinx-start-marker-do-not-remove
 
 Django web application for the new `Princeton Prosody Archive
-<https://cdh.princeton.edu/princeton-prosody-archive/>`_.
+<https://cdh.princeton.edu/projects/princeton-prosody-archive/>`_.
 
 Code and architecture documentation for the current release available
 at `<https://princeton-cdh.github.io/ppa-django/>`_.
 
-.. image:: https://travis-ci.org/Princeton-CDH/ppa-django.svg?branch=develop
+.. image:: https://travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master
    :target: https://travis-ci.org/Princeton-CDH/ppa-django
    :alt: Build status
 
-.. image:: https://landscape.io/github/Princeton-CDH/ppa-django/develop/landscape.svg?style=flat
-   :target: https://landscape.io/github/Princeton-CDH/ppa-django/develop
+.. image:: https://landscape.io/github/Princeton-CDH/ppa-django/master/landscape.svg?style=flat
+   :target: https://landscape.io/github/Princeton-CDH/ppa-django/master
    :alt: Code Health
 
-.. image:: https://codecov.io/gh/Princeton-CDH/ppa-django/branch/develop/graph/badge.svg
+.. image:: https://codecov.io/gh/Princeton-CDH/ppa-django/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/Princeton-CDH/ppa-django
    :alt: Code coverage
 
-.. image:: https://requires.io/github/Princeton-CDH/ppa-django/requirements.svg?branch=develop
-   :target: https://requires.io/github/Princeton-CDH/ppa-django/requirements/?branch=develop
+.. image:: https://requires.io/github/Princeton-CDH/ppa-django/requirements.svg?branch=master
+   :target: https://requires.io/github/Princeton-CDH/ppa-django/requirements/?branch=master
    :alt: Requirements Status
 
 This repo uses `git-flow <https://github.com/nvie/gitflow>`_ conventions; **master**

@@ -1,0 +1,21 @@
+{% load wagtailimages_tags %}
+{# Generate responsive image using wagtail image template tag #}
+{# sizes per design spec #}
+
+{% image img max-291x438 as mobile_1x %}
+{% image img max-582x876 as mobile_2x %}
+{% image img max-718x1079 as tablet_1x %}
+{% image img max-1436x2158 as tablet_2x %}
+{% image img max-700x1051 as desktop_1x %}
+{% image img max-1400x2102 as desktop_2x %}
+<img srcset="{{ mobile_1x.url }} {{ mobile_1x.width }}w,
+             {{ mobile_2x.url }} {{ mobile_2x.width }}w,
+             {{ tablet_1x.url }} {{ tablet_1x.width }}w,
+             {{ tablet_2x.url }} {{ tablet_2x.width }}w,
+             {{ desktop_1x.url }} {{ desktop_1x.width }}w,
+             {{ desktop_2x.url }} {{ desktop_2x.width }}w"
+    sizes="(max-width: 320px) {{ mobile_1x.width }}px,
+           (max-width: 735px) {{ tablet_1x.width }}px,
+           {{ desktop_1x.width }}px"
+    src="{{ desktop_1x.url }}"
+    alt="{{ desktop_1x.alt }}" title="{{ desktop_1x.alt }}"/>

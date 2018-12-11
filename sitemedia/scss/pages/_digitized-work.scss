@@ -1,0 +1,100 @@
+#digitized-work {
+    padding-top: 100px;
+    
+    .container:not(.message) {
+        @include wide-container();
+    }
+
+    .meta {
+        padding: 0 1rem;
+
+        @media (min-width: $tablet) {
+            padding: 0 2rem;
+        }
+
+        .header {
+            font-size: 1.5rem;
+            font-family: $headerFont;
+        }
+    }
+
+    .metadata.table {
+        table-layout: fixed;
+        border-bottom: 2px solid $seafoam-blue;
+        padding-bottom: 1rem;
+
+        td {
+            border: 0;
+        }
+    
+        th {
+            padding: 1rem 0;
+            vertical-align: top;
+            width: 25%;
+        }
+
+        th,
+        td {
+            padding-left: 0 !important;
+        }
+
+        tr {
+            padding: .5rem 0;
+            border: 0;
+            box-shadow: none !important;
+
+            @media (min-width: $tablet) {
+                padding: 1rem;
+            }
+        }
+
+        .secondary-title td {
+            font-size: 20px;
+            font-style: italic;
+            font-family: $headerFont;
+        }
+
+        .hathi-link a {
+            @include link;
+        }
+    }
+
+    .pagination {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 1rem;
+
+        .page-controls {
+            margin-top: 1rem;
+        }
+
+        @media (min-width: $tablet) {
+            justify-content: space-between;
+            flex-direction: row;
+
+            .page-controls {
+                margin-top: 0;
+            }
+        }
+    }
+
+    .results-list .item {
+        background-color: initial; // don't "stripe" the results
+
+        &.page {
+            margin: 1rem 0;
+        }
+    }
+
+    .results-list.container { // container for actual page results
+        margin-top: 3rem;
+        padding: 0 1rem;
+    }
+
+    .occurrences {
+        margin: 0 auto 2rem;
+        color: $warm-grey;
+        font-size: 1rem;
+    }
+}

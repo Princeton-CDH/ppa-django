@@ -1,0 +1,15 @@
+main {
+    flex: 1;
+    margin-top: $nav-height-mobile;
+    margin-bottom: 2rem;
+    padding-top: 50px;
+
+    @media (min-width: $tablet) {
+        margin-bottom: 100px;
+    }
+
+    @media (min-width: $computer) {
+        margin-top: $nav-height;
+        padding-top: 45px;
+    }
+}

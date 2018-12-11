@@ -3,6 +3,78 @@
 CHANGELOG
 =========
 
+0.11.0
+------
+
+* As a content editor, I want to control how the description of my editorial content is displayed when on PPA, when shared, and when searched.
+* As a content editor, I want to add new or edit existing editorial content so that I can publish and promote scholarly work related to the project.
+* As an admin, I should not be able to edit wagtail content in the Django admin so that I don't uninintentionally break content by editing it in the wrong place.
+
+Bugs/chores
+^^^^^^^^^^^
+
+* Constrains image sizes in editorial posts
+* Sets up Google Analytics
+* Fixes an issue with incorrect facet data from Solr for certain date ranges
+* Switches to sans-serif font (Open Sans) sitewide
+* Adds tzinfo to mysql to fix failing tests in CI
+
+Design updates
+^^^^^^^^^^^^^^
+
+* Homepage
+* Top navigation menu
+* Content pages
+* Collections list page
+* Search sorting and pagination
+* Archive search page
+* Digitized work detail page
+* Editorial post list page
+
+0.10.0
+------
+
+* As a content editor, I want unneeded punctuation removed when importing or updating records from HathiTrust metadata, so that records are easier to search and browse.
+* As a user, I want item titles to be case-insensitive when sorting, so that I can find content alphabetically.
+* As a user, I want my search input for publication year to be validated in the browser so that I can't enter invalid dates.
+
+Content management updates
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* As a content editor, I want to arrange content pages on the site so that I can update site navigation when information changes.
+* As an admin, I want the site to provide XML sitemaps for content pages, collection and archive pages, and digitized works so that site content will be findable by search engines.
+* Replace Mezzanine with Wagtail as content management system.
+* Add built-in fixtures to create default page structure within Wagtail.
+
+Design updates
+^^^^^^^^^^^^^^
+
+* Refactor SCSS and media queries.
+* Fixes issues with histogram and pub date display on Chrome.
+* Fixes an issue where hitting back on a search could result in unformatted JSON being displayed.
+
+0.9.0
+-----
+
+* As an admin, I would like to be able to see the Hathi Catalog IDs for a volume so that I can see how individual volumes are grouped together within the HathiTrust.
+* As an admin, I want the CSV report of materials on the site to include items' Hathi catalog ID so that I can identify duplicates and multi-volume works.
+* As an admin, I want changes made to digitized works and collections in the admin interface to automatically update the public search, so that content in the search and admin interface stay in sync.
+* As an admin, I want subtitle and sort title populated from HathiTrust MARCXML so that the records can be displayed and sorted better.
+* As a content editor, I want to add edition notes so that I can document the copy of an item that's in the archive.
+* As a user, I want to see notes on a digitized work's edition so that I'm aware of the specifics of the copy in PPA.
+* As a user, I want to be able to view a page in Hathitrust by clicking its thumbnail or page number in a search result so that I can quickly and easily see my search result in its full context.
+* As a user, I want different styles for the main title and subtitle on search results so that I can visually distinguish titles.
+* As a user, I want item titles to ignore definite articles and punctuation when sorting, so that I can find the most relevant content first.
+
+Design updates
+^^^^^^^^^^^^^^
+
+* Updates styles site-wide to match new designs for most pages
+* Fixes some issues with min/max date display on publication date histogram
+* Mutes the look of collection "badges" on search results
+* Adjusts the interactive area and cursor used for search sorting
+* Fixes an issue with sizing of the footer in WebKit browsers
+
 0.8.1
 -----
 
@@ -28,7 +100,7 @@ Search filters and highlighting
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * As a user viewing keyword search results, I want to see a few text snippets from the full text of a work so that I can get an idea how my search terms are used in the work.
-*  As a user viewing an individual item from a keyword search, I want to see page image thumbnails and text snippets that match my search terms so I can see how many and what kind of pages match my search terms.
+* As a user viewing an individual item from a keyword search, I want to see page image thumbnails and text snippets that match my search terms so I can see how many and what kind of pages match my search terms.
 * As a user, I want to search digitized volumes by keyword in author names in a clearly marked author search field so that I can see what materials are in the archive by a certain author.
 * As a user, I want to search digitized volumes by title keywords in a clearly marked title field so that I can see what materials are in the archive with a certain title.
 * As a user, I want to change how my results are sorted so I can browse the results in multiple ways.

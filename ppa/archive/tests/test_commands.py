@@ -15,7 +15,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
-from pairtree import pairtree_client, pairtree_path
+from pairtree import pairtree_client, pairtree_path, storage_exceptions
 import pytest
 from SolrClient import SolrClient
 
@@ -218,7 +218,7 @@ class TestHathiImportCommand(TestCase):
 
     @patch('ppa.archive.management.commands.hathi_import.ZipFile', spec=ZipFile)
     def test_count_pages(self, mockzipfile):
-        cmd = hathi_import.Command(stdout=StringIO())
+        cmd = hathi_import.Command(stdout=StringIO(), stderr=StringIO())
         cmd.stats = defaultdict(int)
         prefix, pt_id = ('ab', '12345:6')
         mock_pairtree_client = Mock(spec=pairtree_client.PairtreeStorageClient)
@@ -260,6 +260,13 @@ class TestHathiImportCommand(TestCase):
         digwork = DigitizedWork.objects.get(source_id=digwork.source_id)
         assert digwork.page_count == 2
 
+        # object not found in pairtree data
+        mock_pairtree_client.get_object.side_effect = \
+            storage_exceptions.ObjectNotFoundException
+        # should not error; should report not found
+        cmd.count_pages(digwork)
+        output = cmd.stderr.getvalue()
+        assert '%s not found' % digwork.source_id in output
 
     @patch('ppa.archive.management.commands.hathi_import.HathiBibliographicAPI')
     @patch('ppa.archive.management.commands.hathi_import.progressbar')
@@ -339,6 +346,11 @@ class TestIndexCommand(TestCase):
         cmd.clear('foo')
         cmd.solr.delete_doc_by_query.assert_not_called()
 
+        cmd.stdout = StringIO()
+        cmd.verbosity = 3
+        cmd.clear('works')
+        assert cmd.stdout.getvalue() == 'Clearing works from the index'
+
     @patch('ppa.archive.management.commands.index.get_solr_connection')
     @patch('ppa.archive.management.commands.index.progressbar')
     @patch.object(index.Command, 'index')
@@ -361,7 +373,7 @@ class TestIndexCommand(TestCase):
         # not enough data to run progress bar
         mockprogbar.ProgressBar.assert_not_called()
         # commit called after works are indexed
-        mocksolr.commit.assert_called_with(test_coll)
+        mocksolr.commit.assert_called_with(test_coll, openSearcher=True)
         # only called once (no pages)
         assert mock_cmd_index_method.call_count == 1
 
@@ -418,3 +430,11 @@ class TestIndexCommand(TestCase):
             assert mock_cmd_index_method.call_count == 2
             # page index data called once only
             assert mock_page_index_data.call_count == 1
+
+            # index nothing
+            mock_cmd_index_method.reset_mock()
+            mock_page_index_data.reset_mock()
+            call_command('index', index='none', stdout=stdout)
+            assert not mock_cmd_index_method.call_count
+            assert not mock_page_index_data.call_count
+
