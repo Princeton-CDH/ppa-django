@@ -86,26 +86,17 @@
         height: @postHeight;
         padding: 0;
 
+        .content {
+            padding: @postPadding;
+        }
+
         @media (min-width: @tabletBreakpoint) {
             height: @postLargeHeight;
         }
-
-        .top,
-        .description {
-            margin-top: 1rem;
-            padding: @postPadding;
-
-            @media (min-width: @tabletBreakpoint) {
-                margin-top: 0;
-                padding: 2rem;
-            }
-        }
-
-        .top {
-            border-bottom: 2px solid @postLinkShadowColor;
-        }
         
-        .header {
+        .header:not(.ui) {
+            font-family: @pageFont;
+            font-weight: normal;
             font-size: 1.8rem;
             text-align: left;
             line-height: 1.2;

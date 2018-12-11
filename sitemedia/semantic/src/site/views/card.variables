@@ -101,7 +101,7 @@
 /* Post */
 @postHeight: 430px;
 @postLargeHeight: 330px;
-@postPadding: 1rem;
+@postPadding: 2rem;
 
 /* Post Link */
 @postLinkShadowColor: @purple;
