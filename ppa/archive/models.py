@@ -9,8 +9,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
-from pairtree import pairtree_path, pairtree_client
-from pairtree.storage_exceptions import ObjectNotFoundException
+from pairtree import pairtree_path, pairtree_client, storage_exceptions
 from wagtail.core.fields import RichTextField
 from wagtail.admin.edit_handlers import FieldPanel
 from wagtail.snippets.models import register_snippet
@@ -489,7 +488,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
         try:
             self.hathi_pairtree_client() \
                 .delete_object(self.hathi_pairtree_id)
-        except ObjectNotFoundException:
+        except storage_exceptions.ObjectNotFoundException:
             # data is already gone; warn, but not an error
             logger.warn('Pairtree deletion failed; object not found %s',
                         self.source_id)
@@ -524,8 +523,13 @@ class DigitizedWork(TrackChangesModel, Indexable):
             return
 
         # load mets record to pull metadata about the images
-        mmets = load_xmlobject_from_file(self.hathi_metsfile_path(),
-                                         MinimalMETS)
+        try:
+            mmets = load_xmlobject_from_file(self.hathi_metsfile_path(),
+                                             MinimalMETS)
+        except storage_exceptions.ObjectNotFoundException:
+            logger.error('Pairtree data for %s not found but status is %s',
+                         self.source_id, self.get_status_display())
+            return
 
         # read zipfile contents in place, without unzipping
         with ZipFile(self.hathi_zipfile_path()) as ht_zip:
