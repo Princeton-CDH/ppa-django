@@ -10,7 +10,7 @@
 @headerFontName        : 'Gentium Book Basic';
 
 @pageFont              : 'Open Sans', Helvetica, sans-serif;
-@headerFont            : @pageFont;
+@headerFont            : 'Gentium Book Basic', Palatino, serif;
 
 @googleFontSizes       : '400,400i,700,700i';
 @googleFontSizesHeader : '400,400i,700,700i';
