@@ -189,10 +189,10 @@ class SearchForm(forms.Form):
     collections = ModelMultipleChoiceFieldWithEmpty(
         queryset=Collection.objects.order_by('name'), label='Collection',
         widget=CheckboxSelectMultipleWithDisabled, required=False)
-    pub_date = RangeField(label='Publication Year', required=False,
+    pub_date = RangeField(label='Publication Date', required=False,
         widget=RangeWidget(attrs={
             'size': 4,
-            'title': 'publication year',
+            'title': 'publication date',
             '_inline': True
         }))
 
