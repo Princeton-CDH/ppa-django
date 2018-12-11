@@ -141,6 +141,10 @@
             left: -2rem;
         }
     }
+
+     a {
+         text-decoration: underline;
+     }
 }
 
 @mixin wide-container() {
