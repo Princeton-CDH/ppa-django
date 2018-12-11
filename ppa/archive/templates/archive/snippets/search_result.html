@@ -45,6 +45,12 @@
                     <div class="score">
                         <dt>Relevance</dt>
                         <dd>{{ item.score }}</dd>
+                        {% if page_groups and page_highlights %}
+                            {% with results=page_groups|dict_item:item.id %}
+                            <dt>Max relevance</dt>
+                            <dd>{{ results.maxScore }}</dd>
+                        {% endwith %}
+                        {% endif %}
                     </div>
                     {% endif %}
                 </dl>
@@ -72,6 +78,13 @@
     <div class="page-previews container">
         {% if page_groups and page_highlights %}
         {% with results=page_groups|dict_item:item.id %}
+                {% if user.is_authenticated %}
+                <div class="score">
+                    <dt>Max relevance</dt>
+                    <dd>{{ results.maxScore }}</dd>
+                </div>
+                {% endif %}
+
             {% if results.numFound > 2 %}
             <span class="total-pages">
                 {{ results.numFound|intcomma }} matching page{{ results.numFound|pluralize }}
