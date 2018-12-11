@@ -103,14 +103,13 @@ $(function(){
     }
 
     function toggleAdvancedSearch() {
-        if($('.advanced').is(":hidden")) {
-            $('.advanced.segment').css('display', 'flex')
-            $('.advanced.column').css('display', 'block')
-            $('.advanced').css('height', 'auto')
+        if ($('.advanced').is(":hidden")) {
+            $('.advanced.segment').css('display', 'flex') // if we don't manually set flex here, jQuery can't infer it
+            $('.advanced.column').css('display', 'block') // column shouldn't be flex
+            $('.advanced').hide().slideDown() // hide sets display to none while animating
         }
         else {
-            $('.advanced').css('height', 0)
-            $('.advanced').css('display', 'none')
+            $('.advanced').slideUp()
         }
     }
 })
