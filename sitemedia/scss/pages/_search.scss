@@ -1,4 +1,5 @@
 #search {
+    padding-top: 100px;
 
     .sub.header { // "ARCHIVE" text
         font-size: 1.5rem;
@@ -31,9 +32,12 @@
         display: none;
     }
 
-    input[type=number] { // publication date min/max
-        width: 5rem;
+    input[type=number] { // pubdate min/max
+        width: 4rem;
         padding: 0.5rem;
+        appearance: textfield;
+        -moz-appearance: textfield;
+        -webkit-appearance: textfield;
     }
 
     

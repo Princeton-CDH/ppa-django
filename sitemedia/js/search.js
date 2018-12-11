@@ -75,6 +75,7 @@ $(function(){
             $('.validation').css('visibility', 'visible')
             return false
         }
+        if ($$minDateInput.val() > $$maxDateInput.val()) return false // validate that min occurs before max
         $('.validation').css('visibility', 'hidden')
         return true
     }
@@ -105,7 +106,7 @@ $(function(){
     function toggleAdvancedSearch() {
         if ($('.advanced').is(":hidden")) {
             $('.advanced.segment').css('display', 'flex') // if we don't manually set flex here, jQuery can't infer it
-            $('.advanced.column').css('display', 'block') // column shouldn't be flex
+            $('.advanced.column').css('display', 'inline-block') // column shouldn't be flex
             $('.advanced').hide().slideDown() // hide sets display to none while animating
         }
         else {
