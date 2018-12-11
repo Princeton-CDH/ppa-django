@@ -83,6 +83,7 @@
         .meta {
             font-size: 1rem;
             display: inherit;
+            font-family: $pageFont;
 
             @media (min-width: $tablet) {
                 font-size: 1.5rem;
@@ -91,7 +92,7 @@
     }
 
     h2, h3, p {
-        // font-family: $headerFont;
+        font-family: $pageFont;
         font-size: 1.5rem;
     }
 
@@ -133,7 +134,7 @@
         li::before { // create purple bullets
             width: 20px;
             height: 5px;
-            background-color: $wisteria;
+            background-color: $pig-pink;
             position: absolute;
             content: "";
             top: 1rem;
