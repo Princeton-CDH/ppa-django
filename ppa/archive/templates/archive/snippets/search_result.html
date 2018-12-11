@@ -78,13 +78,6 @@
     <div class="page-previews container">
         {% if page_groups and page_highlights %}
         {% with results=page_groups|dict_item:item.id %}
-                {% if user.is_authenticated %}
-                <div class="score">
-                    <dt>Max relevance</dt>
-                    <dd>{{ results.maxScore }}</dd>
-                </div>
-                {% endif %}
-
             {% if results.numFound > 2 %}
             <span class="total-pages">
                 {{ results.numFound|intcomma }} matching page{{ results.numFound|pluralize }}
