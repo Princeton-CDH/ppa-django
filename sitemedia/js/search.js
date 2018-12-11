@@ -103,6 +103,14 @@ $(function(){
     }
 
     function toggleAdvancedSearch() {
-        $('.advanced').slideToggle()
+        if($('.advanced').is(":hidden")) {
+            $('.advanced.segment').css('display', 'flex')
+            $('.advanced.column').css('display', 'block')
+            $('.advanced').css('height', 'auto')
+        }
+        else {
+            $('.advanced').css('height', 0)
+            $('.advanced').css('display', 'none')
+        }
     }
 })
