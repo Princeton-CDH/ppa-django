@@ -240,8 +240,9 @@ class SearchForm(forms.Form):
         super().__init__(data=data, *args, **kwargs)
 
         pubdate_range = self.pub_date_minmax()
-        self.pubdate_validation_msg = "Enter sequential years between {} and {}." \
-            .format(pubdate_range[0], pubdate_range[1])
+        self.pubdate_validation_msg = \
+        "Enter sequential years between {} and {}." .format(
+            pubdate_range[0], pubdate_range[1])
         # because pubdate is a multifield/multiwidget, access the widgets
         # under the multiwidgets
         pubdate_widgets = self.fields['pub_date'].widget.widgets
@@ -249,8 +250,11 @@ class SearchForm(forms.Form):
             # don't set None as placeholder (only possible if db is empty)
             if val:
                 # set max/min and initial values
-                pubdate_widgets[idx].attrs.update({'placeholder': pubdate_range[idx],
-                    'min': pubdate_range[0], 'max': pubdate_range[1]})
+                pubdate_widgets[idx].attrs.update({
+                    'placeholder': pubdate_range[idx],
+                    'min': pubdate_range[0],
+                    'max': pubdate_range[1]
+                })
 
         # relevance is disabled unless we have a keyword query present
         if not data or not self.has_keyword_query(data):
