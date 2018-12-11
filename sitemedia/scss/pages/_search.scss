@@ -107,6 +107,7 @@
             position: relative;
             -webkit-appearance: none;
             -moz-appearance: none;
+            outline: none;
 
             &::-ms-check {
                 display: none;
@@ -115,6 +116,7 @@
 
         input[type=checkbox]::after {
             content: "×";
+            color: $white-two;
             position: absolute;
             font-size: 1rem;
             left: 0;
