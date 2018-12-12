@@ -21,7 +21,9 @@
     "pk": 2,
     "fields": {
         "name": "Person B",
-        "url": ""
+        "url": "",
+        "project_role": "not on the project",
+        "description": "Professor of Prosody, Versification U"
     }
 },
 {
@@ -29,7 +31,9 @@
     "pk": 1,
     "fields": {
         "name": "Person A",
-        "url": "http://example.com"
+        "url": "http://example.com",
+        "project_role": "Developer",
+        "description": "DH Developer, CDH"
     }
 },
 {
