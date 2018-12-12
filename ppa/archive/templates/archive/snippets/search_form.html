@@ -35,12 +35,13 @@
         <div class="twelve wide column" id="collections">
             <div class="field">
                 <label for="collections">Collections</label>
-                {% for collection in search_form.collections %}
-                <label class="ui button{% if collection.data.selected %} active{% endif %}" for="{{ collection.id_for_label }}" role="checkbox">
-                    {{ collection.choice_label }}
-                    {{ collection.tag }}
-                </label>
-                {% endfor %}
+                    {% for collection in search_form.collections %}
+                    <label class="ui button{% if collection.data.selected %} active{% endif %}" for="{{ collection.id_for_label }}" role="checkbox">
+                        {{ collection.choice_label }}
+                        {{ collection.tag }}
+                    </label>
+                    <div class="spacer"></div>
+                    {% endfor %}
             </div>
         </div>
         <!--

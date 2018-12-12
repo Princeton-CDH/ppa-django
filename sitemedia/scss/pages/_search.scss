@@ -91,13 +91,19 @@
 
     #collections {
         .field {
-            margin-bottom: -5px;
+            display: flex;
+            flex-flow: row wrap;
+        }
+
+        label[for=collections] {
+            width: 100%;
         }
 
         .button {
-            margin-bottom: 5px;
-            margin-right: 8px;
+            margin-bottom: 10px;
+            margin-right: 5px;
             transition: padding 0.2s;
+            flex: none;
         }
 
         .ui.button {
@@ -106,6 +112,23 @@
 
         .button > span { // hide counts
             display: none;
+        }
+
+        .button.active {
+            order: 1;
+        }
+
+        .button:not(.active) {
+            order: 3;
+        }
+
+        .button.disabled {
+            order: 4;
+        }
+
+        .spacer {
+            order: 2;
+            width: 100%;
         }
 
         input[type=checkbox] { // hide checkboxes
@@ -121,6 +144,7 @@
 
         input[type=checkbox]::after {
             content: "×";
+            cursor: pointer;
             color: $white-two;
             position: absolute;
             font-size: 1rem;
