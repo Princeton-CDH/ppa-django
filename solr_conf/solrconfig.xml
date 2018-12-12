@@ -763,7 +763,7 @@
           enumcron
           pub_place
           publisher
-          srcid^10
+          source_id^10
           content
       </str>
       <str name="pf">
