@@ -106,6 +106,7 @@
             <input class="sr-only sr-only-focusable" type="submit" aria-label="submit search">
         </fieldset>
     </form>
+    {% include 'archive/snippets/jump_top.html' with anchor='digitized-work' %}
 </section>
   {# display matching pages with highlighted text if there is a search active #}
   {% if query or page_highlights %}
