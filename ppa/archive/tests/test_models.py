@@ -241,7 +241,7 @@ class TestDigitizedWork(TestCase):
         digwork.collections.add(coll2)
         index_data = digwork.index_data()
         assert index_data['id'] == digwork.source_id
-        assert index_data['srcid'] == digwork.source_id
+        assert index_data['source_id'] == digwork.source_id
         assert index_data['item_type'] == 'work'
         assert index_data['title'] == digwork.title
         assert index_data['subtitle'] == digwork.subtitle
@@ -251,7 +251,7 @@ class TestDigitizedWork(TestCase):
         assert index_data['pub_date'] == digwork.pub_date
         assert index_data['collections'] == ['Flotsam', 'Jetsam']
         assert index_data['publisher'] == digwork.publisher
-        assert index_data['src_url'] == digwork.source_url
+        assert index_data['source_url'] == digwork.source_url
         assert digwork.public_notes in index_data['notes']
         assert digwork.notes not in index_data['notes']
         assert not index_data['enumcron']
@@ -410,7 +410,7 @@ class TestDigitizedWork(TestCase):
             for i, data in enumerate(page_data):
                 mets_page = mets.structmap_pages[i]
                 assert data['id'] == '.'.join([work.source_id, mets_page.text_file.sequence])
-                assert data['srcid'] == work.source_id
+                assert data['source_id'] == work.source_id
                 assert data['content'] == contents[i]
                 assert data['order'] == mets_page.order
                 assert data['item_type'] == 'page'

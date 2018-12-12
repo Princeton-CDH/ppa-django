@@ -201,18 +201,6 @@ class DigitizedWork(TrackChangesModel, Indexable):
         return self.source_id
 
     @property
-    def srcid(self):
-        '''alias for :attr:`source_id` for consistency with solr attributes'''
-        # hopefully temporary workaround until solr fields made consistent
-        return self.source_id
-
-    @property
-    def src_url(self):
-        '''alias for :attr:`source_url` for consistency with solr attributes'''
-        # hopefully temporary workaround until solr fields made consistent
-        return self.source_url
-
-    @property
     def is_suppressed(self):
         '''Item has been suppressed (based on :attr:`status`).'''
         return self.status == self.SUPPRESSED
@@ -417,8 +405,8 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
         return {
             'id': self.source_id,
-            'srcid': self.source_id,
-            'src_url': self.source_url,
+            'source_id': self.source_id,
+            'source_url': self.source_url,
             'title': self.title,
             'subtitle': self.subtitle,
             'sort_title': self.sort_title,
@@ -543,7 +531,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
                     try:
                         yield {
                             'id': '%s.%s' % (self.source_id, page.text_file.sequence),
-                            'srcid': self.source_id,   # for grouping with work record
+                            'source_id': self.source_id,   # for grouping with work record
                             'content': pagefile.read().decode('utf-8'),
                             'order': page.order,
                             'label': page.display_label,

@@ -179,7 +179,7 @@ class TestArchiveViews(TestCase):
         htid = 'chi.78013704'
         solr_page_docs = [
             {'content': content, 'order': i+1, 'item_type': 'page',
-             'srcid': htid, 'id': '%s.%s' % (htid, i), 'label': i}
+             'source_id': htid, 'id': '%s.%s' % (htid, i), 'label': i}
              for i, content in enumerate(sample_page_content)]
         dial = DigitizedWork.objects.get(source_id='chi.78013704')
         solr_work_docs = [dial.index_data()]
@@ -235,13 +235,13 @@ class TestArchiveViews(TestCase):
         # image url should appear twice for src and srcset
         self.assertContains(
             response,
-            page_image_url(result['srcid'], result['order'], 225),
+            page_image_url(result['source_id'], result['order'], 225),
             count=1,
             msg_prefix='has img src url'
         )
         self.assertContains(
             response,
-            page_image_url(result['srcid'], result['order'], 450),
+            page_image_url(result['source_id'], result['order'], 450),
             count=1,
             msg_prefix='has imgset src url'
         )
@@ -249,7 +249,7 @@ class TestArchiveViews(TestCase):
         # image should have a link to hathitrust as should the page number
         self.assertContains(
             response,
-            page_url(result['srcid'], result['order']),
+            page_url(result['source_id'], result['order']),
             count=2,
             msg_prefix='should include a link to HathiTrust'
         )
@@ -280,7 +280,7 @@ class TestArchiveViews(TestCase):
         htid = 'chi.13880510'
         solr_page_docs = [
             {'content': content, 'order': i, 'item_type': 'page',
-             'srcid': htid, 'id': '%s.%s' % (htid, i)}
+             'source_id': htid, 'id': '%s.%s' % (htid, i)}
             for i, content in enumerate(sample_page_content)]
         # Contrive a sort title such that tests below for title_asc will fail
         # if case insensitive sorting is not working
@@ -396,6 +396,7 @@ class TestArchiveViews(TestCase):
         # match in page content but not in book metadata should pull back title
         response = self.client.get(url, {'query': 'blood'})
         self.assertContains(response, '1 digitized work')
+
         self.assertContains(response, wintry.source_id)
         self.assertContains(response, wintry.title)
 
@@ -415,7 +416,7 @@ class TestArchiveViews(TestCase):
             response = self.client.get(url, {'author': 'Robert'})
             # the call args are very long and not all relevant, cast as
             # string and look for the offending join
-            assert 'OR {!join from=id to=srcid v=$work_query})' \
+            assert 'OR {!join from=id to=source_id v=$work_query})' \
                 not in str(mockpsq.call_args)
 
         # search title using the title field
@@ -472,7 +473,7 @@ class TestArchiveViews(TestCase):
                                        .values_list('source_id', flat=True)
         # the list of ids should match exactly
         assert list(sorted_work_ids) == \
-            [work['srcid'] for work in response.context['object_list']]
+            [work['source_id'] for work in response.context['object_list']]
 
         # - check that a query allows relevance as sort order toggle in form
         response = self.client.get(url, {'query': 'foo', 'sort': 'title_asc'})

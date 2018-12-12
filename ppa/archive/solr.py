@@ -95,9 +95,9 @@ class SolrSchema(object):
 
     #: solr schema field definitions
     fields = [
-        # srcid cannot be string_i, as Textfield cannot be used in
+        # source_id cannot be string_i because Textfield cannot be used in
         # collapse query
-        {'name': 'srcid', 'type': 'string', 'required': False},
+        {'name': 'source_id', 'type': 'string', 'required': False},
         {'name': 'content', 'type': 'text_en', 'required': False},
         {'name': 'item_type', 'type': 'string', 'required': False},
         {'name': 'title', 'type': 'text_en', 'required': False},
@@ -108,7 +108,7 @@ class SolrSchema(object):
         {'name': 'pub_date', 'type': 'int', 'required': False},
         {'name': 'pub_place', 'type': 'text_en', 'required': False},
         {'name': 'publisher', 'type': 'text_en', 'required': False},
-        {'name': 'src_url', 'type': 'string', 'required': False},
+        {'name': 'source_url', 'type': 'string', 'required': False},
         {'name': 'order', 'type': 'string', 'required': False},
         {'name': 'collections', 'type': 'text_en', 'required': False,
          'multiValued': True},
