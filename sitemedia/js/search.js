@@ -75,7 +75,10 @@ $(function(){
             $('.validation').css('visibility', 'visible')
             return false
         }
-        if ($$minDateInput.val() > $$maxDateInput.val()) return false // validate that min occurs before max
+        if ($$minDateInput.val() > $$maxDateInput.val()) { // validate that min occurs before max
+            $('.validation').css('visibility', 'visible')
+            return false
+        }
         $('.validation').css('visibility', 'hidden')
         return true
     }
