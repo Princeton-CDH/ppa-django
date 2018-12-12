@@ -754,9 +754,10 @@
       <!-- <str name="df">text</str> -->
       <str name="qf">
           title_nostem^40
-          subtitle_nostem^40
+          subtitle_nostem^30
           title^20
-          author^20
+          subtitle^15
+          author^80
           notes^20
           pub_date
           enumcron
@@ -766,10 +767,11 @@
           content
       </str>
       <str name="pf">
-          title_nostem^100
-          subtitle_nostem^00
+          title_nostem^70
+          subtitle_nostem^60
           title^50
-          author^50
+          subtitle^35
+          author^100
           notes^50
           content^20
           pub_place
