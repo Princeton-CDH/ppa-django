@@ -1,6 +1,5 @@
 {# Snippet to include authors and date attribution to editorial posts #}
 {% if page.authors %}
-    By
     {% if add_urls %}
         {% for block in page.authors %}
             {% with block.value.url|yesno:"a,span" as tag %}
