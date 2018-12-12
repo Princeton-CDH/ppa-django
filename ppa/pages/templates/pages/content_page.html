@@ -31,6 +31,7 @@
             {% block attribution %}{% endblock %}
         </span>
     </h1>
+    {% block page_body %}
     {% for block in page.body %}
         {% if block.block_type == 'image' %}
             {% include "pages/snippets/responsive_image.html" with img=block.value %}
@@ -38,5 +39,6 @@
             {% include_block block %}
         {% endif %}
     {% endfor %}
+    {% endblock %}
 </article>
 {% endblock %}

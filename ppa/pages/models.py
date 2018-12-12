@@ -8,6 +8,7 @@ from wagtail.admin.edit_handlers import FieldPanel, PageChooserPanel, \
     StreamFieldPanel
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.documents.blocks import DocumentChooserBlock
+from wagtail.snippets.blocks import SnippetChooserBlock
 from wagtail.snippets.models import register_snippet
 
 from ppa.archive.models import Collection
@@ -31,10 +32,21 @@ class Person(models.Model):
         help_text='Personal website, profile page, or social media profile page '
                   'for this person.'
         )
+    #: description (affiliation, etc.)
+    description = RichTextField(
+        blank=True, features=['bold', 'italic'],
+        help_text='Title & affiliation, or other relevant context.')
+
+    #: project role
+    project_role = models.CharField(
+        max_length=255, blank=True,
+        help_text='Project role, if any, for display on contributor list.')
 
     panels = [
         FieldPanel('name'),
         FieldPanel('url'),
+        FieldPanel('description'),
+        FieldPanel('project_role'),
     ]
 
     def __str__(self):
@@ -176,6 +188,7 @@ class ContentPage(Page, PagePreviewDescriptionMixin):
         StreamFieldPanel('body'),
     ]
 
+
 class CollectionPage(Page):
     '''Collection list page, with editable text content'''
     body = RichTextField(blank=True)
@@ -198,3 +211,32 @@ class CollectionPage(Page):
             'stats': Collection.stats(),
         })
         return context
+
+
+class ContributorPage(Page, PagePreviewDescriptionMixin):
+    '''Project contributor and advisory board page.'''
+    contributors = StreamField(
+        [('person', SnippetChooserBlock(Person))],
+        blank=True,
+        help_text='Select and order people to be listed as project contributors.'
+    )
+    board = StreamField(
+        [('person', SnippetChooserBlock(Person))],
+        blank=True,
+        help_text='Select and order people to be listed as board members.'
+    )
+
+    body = StreamField(BodyContentBlock)
+
+    content_panels = Page.content_panels + [
+        FieldPanel('description'),
+        StreamFieldPanel('contributors'),
+        StreamFieldPanel('board'),
+        StreamFieldPanel('body'),
+    ]
+
+    # only allow creating directly under home page
+    parent_page_types = [HomePage]
+    # not allowed to have sub pages
+    subpage_types = []
+
