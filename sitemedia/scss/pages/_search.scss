@@ -40,6 +40,11 @@
         -webkit-appearance: textfield;
     }
 
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+        -webkit-appearance: none; 
+        margin: 0; 
+    }
     
     #publication {
         label[for=id_pub_date] { // "Publication Year" text
