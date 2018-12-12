@@ -57,7 +57,8 @@ class TestHomePage(WagtailPageTests):
 
     def test_subpages(self):
         self.assertAllowedSubpageTypes(
-            HomePage, [ContentPage, EditorialIndexPage, CollectionPage, Page])
+            HomePage, [ContentPage, EditorialIndexPage, CollectionPage,
+                       ContributorPage, Page])
 
     @pytest.mark.usefixtures("solr")
     def test_get_context(self):
