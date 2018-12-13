@@ -298,6 +298,11 @@ class TestDigitizedWork(TestCase):
         mock_bibdata.marcxml.as_marc.assert_any_call()
         assert mdata == mock_bibdata.marcxml.as_marc.return_value
 
+        # non-hathi record: for now, not supported
+        nonhathi_work = DigitizedWork(source=DigitizedWork.OTHER, source_id='788423659')
+        # should not error, but nothing to return
+        assert not nonhathi_work.get_metadata('marc')
+
     def test_hathi_prefix(self):
         work = DigitizedWork(source_id='uva.1234')
         assert work.hathi_prefix == 'uva'

@@ -10,6 +10,7 @@ from django.db import models
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
 from pairtree import pairtree_path, pairtree_client, storage_exceptions
+import requests
 from wagtail.core.fields import RichTextField
 from wagtail.admin.edit_handlers import FieldPanel
 from wagtail.snippets.models import register_snippet
@@ -559,13 +560,18 @@ class DigitizedWork(TrackChangesModel, Indexable):
     def get_metadata(self, metadata_format):
         '''Get metadata for this item in the specified format.
         Currently only supports marc.'''
-
         if metadata_format == 'marc':
             # get metadata from hathi bib api and serialize
             # as binary marc
-            bib_api = HathiBibliographicAPI()
-            bibdata = bib_api.record('htid', self.source_id)
-            return bibdata.marcxml.as_marc()
+            if self.source == DigitizedWork.HATHI:
+                bib_api = HathiBibliographicAPI()
+                bibdata = bib_api.record('htid', self.source_id)
+                return bibdata.marcxml.as_marc()
+
+            # TBD: can we get MARC records from oclc?
+            # or should we generate dublin core from db metadata?
+
+            return ''
 
         # error for unknown
         raise ValueError('Unsupported format %s' % metadata_format)
