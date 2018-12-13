@@ -175,15 +175,26 @@
     }
 
     .workscount {
+        position: relative;
         margin: 2rem auto;
         font-size: 1rem;
+
+        p {
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
 
         p:first-child {
             margin-bottom: .5rem;
         }
     }
 
+    .workscount.loading p {
+        opacity: 0;
+    }
+
     /* results */
+
     .results-list {
         padding-bottom: 2rem;
         padding-left: 0;

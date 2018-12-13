@@ -68,6 +68,10 @@
     <div class="workscount ui center aligned text container">
         <p class="count">Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}</p>
         <p class="zotero">Work citations can be exported to <a href="https://www.zotero.org/support/getting_stuff_into_your_library">Zotero</a></p>
+        <div class="loader">
+            <div id="bm"></div>
+            <span>Results are loading</span>
+        </div>
     </div>
     <div class="pagination-sort">
         {% include 'archive/snippets/pagination.html' %}
