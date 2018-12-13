@@ -1,19 +1,16 @@
-{% extends "base.html" %}
-{% load static wagtailcore_tags %}
+{% extends "error.html" %}
+{% load static %}
 
-{% block css %}
-<link rel="stylesheet" type="text/x-scss" href="{% static 'scss/page.scss' %}">
+{% block title %}Page not found{% endblock %}
+
+{% block error_name %}Not Found{%endblock %}
+
+{% block error_code %}404{%endblock %}
+
+{% block image %}
+<img src="{% static 'img/errors/404error_logo_' %}{{ 'abc'|random|add:'.png' }}">
 {% endblock %}
 
-{% block page-context-id %}page{% endblock %}
-
-{% block title %}Page not Found{% endblock %}
-
-{% block content %}
-<div class="ui container">
-    <div class="paper">
-        <h1 class="ui header">404 Error</h1>
-        <p>Page not found. Return to <a href="{% slugurl 'home' %}">homepage</a>.</p>
-    </div>
-</div>
+{% block error_message %}
+Oh no! We've scanned six different ways and can't find this page.
 {% endblock %}

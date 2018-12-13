@@ -1,19 +1,16 @@
-{% extends "base.html" %}
-{% load static wagtailcore_tags %}
+{% extends "error.html" %}
+{% load static %}
 
-{% block css %}
-<link rel="stylesheet" type="text/x-scss" href="{% static 'scss/page.scss' %}">
+{% block title %}Page removed{% endblock %}
+
+{% block error_name %}Gone{%endblock %}
+
+{% block error_code %}410{%endblock %}
+
+{% block image %}
+<img src="{% static 'img/errors/404error_logo_' %}{{ 'abc'|random|add:'.png' }}">
 {% endblock %}
 
-{% block page-context-id %}page{% endblock %}
-
-{% block title %}Page has been removed{% endblock %}
-
-{% block content %}
-<div class="ui container">
-    <div class="paper">
-        <h1 class="ui header">Page not Available - 410 Gone</h1>
-        <p>This page is no longer available. Return to <a href="{% slugurl 'home' %}">homepage</a>.</p>
-    </div>
-</div>
+{% block error_message %}
+Oh no! This page is no longer available.
 {% endblock %}

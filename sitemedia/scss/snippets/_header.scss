@@ -26,6 +26,10 @@ header { // used mostly as space for banner images
         @include notes-header($twilight);
     }
 
+    &.error {
+        @include notes-header($warm-grey);
+    }
+
     &.homepage {
         @include notes-header($warm-grey);
 
