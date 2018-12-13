@@ -418,9 +418,13 @@ class TestDigitizedWork(TestCase):
                 assert 'tags' in data
                 assert data['tags'] == mets_page.label.split(', ')
 
-            # if item is suppressed - no page data
-            work.status = DigitizedWork.SUPPRESSED
-            assert not list(work.page_index_data())
+        # if item is suppressed - no page data
+        work.status = DigitizedWork.SUPPRESSED
+        assert not list(work.page_index_data())
+
+        # non hathi item - no page data
+        nonhathi_work = DigitizedWork(source=DigitizedWork.OTHER)
+        assert not list(nonhathi_work.page_index_data())
 
     def test_index_id(self):
         work = DigitizedWork(source_id='chi.79279237')
@@ -494,6 +498,12 @@ class TestDigitizedWork(TestCase):
             work.save()
             mock_delete_pairtree_data.assert_not_called()
 
+            # non-hathi record - should not try to delete hathi data
+            work = DigitizedWork(source=DigitizedWork.OTHER)
+            work.save()
+            work.status = work.SUPPRESSED
+            work.save()
+            mock_delete_pairtree_data.assert_not_called()
 
     def test_clean(self):
         work = DigitizedWork(source_id='chi.79279237')
