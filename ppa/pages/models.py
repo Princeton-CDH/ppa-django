@@ -117,7 +117,8 @@ class BodyContentBlock(blocks.StreamBlock):
     image = ImageWithCaption()
     footnotes = blocks.RichTextBlock(
         features=['ol', 'ul', 'bold', 'italic', 'link'],
-        classname='footnotes')
+        classname='footnotes'
+    )
     document = DocumentChooserBlock()
 
 
