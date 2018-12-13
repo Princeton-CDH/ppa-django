@@ -18,6 +18,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='editorialpage',
             name='authors',
-            field=wagtail.core.fields.StreamField([('author', wagtail.snippets.blocks.SnippetChooserBlock(ppa.pages.models.Person))], blank=True, help_text='Select people snippets to add as authors. Use the plus sign to add as many as you like. Drag and drop to order.'),
+            field=wagtail.core.fields.StreamField([('author', wagtail.snippets.blocks.SnippetChooserBlock(ppa.pages.models.Person))], blank=True, help_text='Optional. Brief description for preview display. Will also be used for search description without tags, if none is entered'),
         ),
     ]

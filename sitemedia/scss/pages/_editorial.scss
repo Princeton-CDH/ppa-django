@@ -8,4 +8,27 @@
     h1 {
         @include underline-headline($wisteria);
     }
+
+    .footnotes {
+        margin-top: 2rem;
+        border-top: 2px solid $wisteria;
+        
+        * {
+            color: $slate-grey;
+            @include small-font-scale();
+        }
+    }
+
+    figure {
+        margin: 2rem 0 0;
+    }
+
+    figcaption {
+        margin-bottom: 4rem;
+
+        * {
+            color: $slate-grey;
+            @include small-font-scale();
+        }
+    }
 }

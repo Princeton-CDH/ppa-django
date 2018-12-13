@@ -100,11 +100,25 @@ class HomePage(Page):
         return context
 
 
+class ImageWithCaption(blocks.StructBlock):
+    ''':class:`~wagtail.core.blocks.StructBlock` for an image with
+    a formatted caption, so caption can be context-specific.'''
+    image = ImageChooserBlock()
+    caption = blocks.RichTextBlock(features=['bold', 'italic', 'link'])
+
+    class Meta:
+        icon = 'image'
+
+
 class BodyContentBlock(blocks.StreamBlock):
     '''Common set of content blocks to be used on both content pages
     and editorial pages'''
     paragraph = blocks.RichTextBlock()
-    image = ImageChooserBlock()
+    image = ImageWithCaption()
+    footnotes = blocks.RichTextBlock(
+        features=['ol', 'ul', 'bold', 'italic', 'link'],
+        classname='footnotes'
+    )
     document = DocumentChooserBlock()
 
 
@@ -116,7 +130,8 @@ class PagePreviewDescriptionMixin(models.Model):
 
     description = RichTextField(blank=True,
         help_text='Optional. Brief description for preview display. Will ' +
-        'also be used for search description (without tags), if one is not entered.')
+        'also be used for search description (without tags), if one is not entered.',
+        features=['bold', 'italic'])
 
     #: maximum length for description to be displayed
     max_length = 250
