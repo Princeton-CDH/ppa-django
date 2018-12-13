@@ -27,6 +27,7 @@ $(function(){
     $$clearDatesLink.click(onClearDates)
     $$collectionInputs.change(onCollectionChange)
     $$advancedSearchButton.click(toggleAdvancedSearch)
+    $$textInputs.keyup(onTextInputChange)
     onPageLoad() // misc functions that run once on page load
 
     $$collectionInputs
@@ -40,16 +41,6 @@ $(function(){
         state = state.filter(field => field.value != '') // filter out empty fields
         if (state.filter(field => field.name == 'collections').length == 0) { // if the user manually turned off all collections...
             state.push({ name: "collections", value: "" }) // add a blank value to indicate that specific case
-        }
-        if (state.filter(field => $$textInputs.get().map(el => el.name).includes(field.name)).length == 0) { // if no text query,
-            $$relevanceOption.addClass('disabled') // disable relevance
-            let sort = state.find(field => field.name == 'sort') // check if a sort was set
-            if (sort && sort.value == 'relevance') { // and if it was relevance,
-                $$sortDropdown.dropdown('set selected', 'title_asc') // set to title A-Z
-            }
-        }
-        else {
-            $$relevanceOption.removeClass('disabled') // enable relevance sort
         }
         let url = `?${$.param(state)}` // serialize state using $.param to make querystring
         window.history.pushState(state, 'PPA Archive Search', url) // update the URL bar
@@ -94,6 +85,27 @@ $(function(){
 
     function onCollectionChange(event) {
         $(event.currentTarget).parent().toggleClass('active')
+    }
+
+    function onTextInputChange(event) {
+        // update sort options based on changes to text input fields
+
+        // if any text inputs now have content
+        if ($$textInputs.get().filter(el => $.trim($(el).val()) != '').length) {
+            // enable and select relevance sort
+            $$relevanceOption.removeClass('disabled')
+            $$sortDropdown.dropdown('set selected', 'relevance')
+
+        // no text inputs have content now
+        } else {
+            // disable relevance sort option
+            $$relevanceOption.addClass('disabled')
+            // if relevance sort was selected, set back to title
+            let sort = archiveSearchForm.state.find(field => field.name == 'sort')
+            if (sort && sort.value == 'relevance') {
+                $$sortDropdown.dropdown('set selected', 'title_asc')
+            }
+        }
     }
 
     function onPageLoad() {
