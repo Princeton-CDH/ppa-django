@@ -31,9 +31,9 @@ $(function(){
 
     $$collectionInputs
         .focus(e => $(e.target).parent().addClass('focus')) // make collection buttons focusable
-        .blur(e => $(e.target).parent().removeClass('focus')) 
+        .blur(e => $(e.target).parent().removeClass('focus'))
         .keypress(e => { if (e.which == 13) $(e.target).click() }) // pressing enter "clicks" them
-    
+
     /* functions */
     function submitForm(state) {
         if (!validate()) return // don't submit an invalid form
@@ -75,7 +75,9 @@ $(function(){
             $('.validation').css('visibility', 'visible')
             return false
         }
-        if ($$minDateInput.val() > $$maxDateInput.val()) { // validate that min occurs before max
+        // validate that min occurs before max when both are set
+        if ($$minDateInput.val() && $$maxDateInput.val() &&
+            $$minDateInput.val() > $$maxDateInput.val()) {
             $('.validation').css('visibility', 'visible')
             return false
         }
