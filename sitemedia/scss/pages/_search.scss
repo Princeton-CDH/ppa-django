@@ -7,7 +7,7 @@
         text-align: center;
         font-weight: normal;
     }
-    
+
     .container:not(.message) {
         @include wide-container();
     }
@@ -40,12 +40,12 @@
         -webkit-appearance: textfield;
     }
 
-    input[type=number]::-webkit-inner-spin-button, 
-    input[type=number]::-webkit-outer-spin-button { 
-        -webkit-appearance: none; 
-        margin: 0; 
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
     }
-    
+
     #publication {
         label[for=id_pub_date] { // "Publication Year" text
             @media (min-width: $tablet) {
@@ -61,7 +61,7 @@
 
         label:nth-child(3) { // "to" in between dates
             margin: 0 .5rem;
-            
+
             @media (min-width: $tablet) {
                 margin: 0 1rem;
             }
@@ -204,19 +204,19 @@
     .data {
         display: none;
     }
-    
+
     .pagination-sort,
     .pagination-bottom {
         display: flex;
         justify-content: center;
         align-items: center;
         flex-wrap: wrap;
-        
+
         @media (min-width: $tablet) {
             justify-content: space-between;
         }
     }
-    
+
     .pagination-sort {
         margin: 0 1rem;
         border-bottom: 2px solid $seafoam-blue;
@@ -234,7 +234,7 @@
         width: 100%;
         text-align: center;
         margin-top: 1rem;
- 
+
         @media (min-width: $tablet) {
             width: auto;
             margin: 0;
@@ -266,5 +266,20 @@
 
     .message {
         margin-top: 2rem;
+    }
+
+    /* adjust display to make search form usable with no javascript */
+    .no-js {
+
+        .advanced {
+            display: block;
+        }
+        .sort .dropdown, .clear-selection, .show-advanced, #histogram {
+            display: none;
+        }
+        input[type=submit] {
+            float: right;
+        }
+
     }
 }

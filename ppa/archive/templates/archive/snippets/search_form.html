@@ -1,5 +1,5 @@
 {% load semanticui humanize %}
-<form class="ui form{% if error %} error{% endif %}">
+<form class="ui form{% if error %} error{% endif %} no-js">
     <div class="ui vertical stackable grid segment" role="group">
         <legend class="sr-only">text search fields</legend>
         <div class="twelve wide column">
@@ -43,8 +43,11 @@
                     <div class="spacer"></div>
                     {% endfor %}
             </div>
+            <noscript>
+                <input class="ui primary button" type="submit" value="Submit"/>
+            </noscript>
         </div>
-        <!--
+        {% comment %}
         <div class="six wide column" id="booleans">
             <div class="two fields">
                 <div class="field">
@@ -59,7 +62,7 @@
                 </div>
             </div>
         </div>
-        -->
+        {% endcomment %}
     </div>
     <div class="ui vertical basic segment show-advanced">
         <a>Advanced Search</a>
