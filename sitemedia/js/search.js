@@ -38,6 +38,8 @@ $(function(){
     /* functions */
     function submitForm(state) {
         if (!validate()) return // don't submit an invalid form
+        $('.workscount').toggleClass('loading') // turn on the loader
+        $('.ajax-container').toggleClass('loading')
         state = state.filter(field => field.value != '') // filter out empty fields
         if (state.filter(field => field.name == 'collections').length == 0) { // if the user manually turned off all collections...
             state.push({ name: "collections", value: "" }) // add a blank value to indicate that specific case
@@ -58,6 +60,8 @@ $(function(){
                 bubbles: true,
                 cancelable: true
             }))
+            $('.workscount').toggleClass('loading') // turn off the loader
+            $('.ajax-container').toggleClass('loading')
         })
     }
 
@@ -121,7 +125,7 @@ $(function(){
     }
 
     function toggleAdvancedSearch() {
-        if ($('.advanced').is(":hidden")) {
+        if ($('.advanced').is(':hidden')) {
             $('.advanced.segment').css('display', 'flex') // if we don't manually set flex here, jQuery can't infer it
             $('.advanced.column').css('display', 'inline-block') // column shouldn't be flex
             $('.advanced').hide().slideDown() // hide sets display to none while animating
@@ -130,4 +134,12 @@ $(function(){
             $('.advanced').slideUp()
         }
     }
+
+    bodymovin.loadAnimation({
+        container: document.getElementById('bm'),
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: '/static/img/loader/searchLoading.json'
+    })
 })
