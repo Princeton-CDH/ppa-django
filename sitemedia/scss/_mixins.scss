@@ -77,6 +77,8 @@
 }
 
 @mixin content-page() {
+    @include font-scale();
+
     h1 {
         padding-bottom: 1rem;
 
@@ -93,7 +95,7 @@
 
     h2, h3, p {
         font-family: $pageFont;
-        font-size: 1.5rem;
+        @include font-scale();
     }
 
     h2 {
@@ -120,7 +122,6 @@
 
     ul,
     ol {
-        font-size: 1.5rem;
         padding-left: 2rem;
     }
 
@@ -145,6 +146,22 @@
      a {
          text-decoration: underline;
      }
+}
+
+@mixin font-scale() {
+    font-size: 1.2rem;
+
+    @media (min-width: $tablet) {
+        font-size: 1.5rem;
+    }
+}
+
+@mixin small-font-scale() {
+    font-size: 1rem;
+
+    @media (min-width: $tablet) {
+        font-size: 1.2rem;
+    }
 }
 
 @mixin wide-container() {

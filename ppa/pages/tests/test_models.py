@@ -12,7 +12,8 @@ import pytest
 
 from ppa.archive.models import Collection, DigitizedWork
 from ppa.archive.solr import get_solr_connection
-from ppa.pages.models import HomePage, ContentPage, CollectionPage
+from ppa.pages.models import HomePage, ContentPage, CollectionPage, \
+    ImageWithCaption
 from ppa.editorial.models import EditorialIndexPage
 
 
@@ -148,7 +149,6 @@ class TestContentPage(WagtailPageTests):
 
         assert not content_page.description
         desc = content_page.get_description()
-        print(desc)
         # length excluding tags should be truncated to max length or less
         assert len(striptags(desc)) <= content_page.max_length
         # beginning of text should match exactly the *first* block
@@ -199,9 +199,6 @@ class TestContentPage(WagtailPageTests):
         assert len(striptags(content_page.get_description())) \
             <= content_page.max_length
 
-
-
-
     def test_get_plaintext_description(self):
         # description set but no search description
         content_page = ContentPage(
@@ -215,6 +212,31 @@ class TestContentPage(WagtailPageTests):
         content_page.search_description = 'A different description for meta text.'
         assert content_page.get_plaintext_description() == \
             content_page.search_description
+
+    def test_template(self):
+        # test fixture display
+        site = Site.objects.first()
+        content_page = ContentPage.objects.first()
+        response = self.client.get(content_page.relative_url(site))
+        self.assertTemplateUsed(response, 'pages/content_page.html')
+        self.assertContains(response, 'class="footnotes"',
+            msg_prefix='footnotes block should get footnotes class')
+
+        # add image + caption to check template
+        caption_text = 'a very detailed caption'
+        content_page.body.stream_data.append({
+            'type': 'image',
+            # pseudo data, not a real image object
+            'value': {'image': 1, 'caption': caption_text},
+            'id': 'imgcapt1'
+        })
+        content_page.save()
+        response = self.client.get(content_page.relative_url(site))
+        self.assertTemplateUsed(response, 'pages/snippets/responsive_image.html')
+        self.assertContains(response, '<figure>')
+        self.assertContains(
+            response, '<figcaption><div class="rich-text">%s</div></figcaption>' % caption_text)
+        # NOTE: not currently testing image srcset logic
 
 
 class TestCollectionPage(WagtailPageTests):
