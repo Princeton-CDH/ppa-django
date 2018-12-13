@@ -121,19 +121,28 @@ class DigitizedWork(TrackChangesModel, Indexable):
     Record to manage digitized works included in PPA and store their basic
     metadata.
     '''
-    # stub record to manage digitized works included in PPA
-    # basic metadata
-    # - title, author, place of publication, date
-    # added, updated
-    # original id / url?
+    HATHI = 'HT'
+    OTHER = 'O'
+    SOURCE_CHOICES = (
+        (HATHI, 'HathiTrust'),
+        (OTHER, 'Other'),
+    )
+    #: source of the record, HathiTrust or elsewhere
+    source = models.CharField(
+        max_length=2, choices=SOURCE_CHOICES, default=HATHI,
+        help_text='Source of the record.')
     #: source identifier; hathi id for HathiTrust materials
-    source_id = models.CharField(max_length=255, unique=True)
+    source_id = models.CharField(
+        max_length=255, unique=True, verbose_name='Source ID',
+        help_text='Source identifier; HT id for HathiTrust materials')
     #: source url where the original can be accessed
-    source_url = models.URLField(max_length=255)
+    source_url = models.URLField(
+        max_length=255, verbose_name='Source URL',
+        help_text='URL where the source item can be accessd')
     #: record id; for Hathi materials, used for different copies of
     #: the same work or for different editions/volumes of a work
     record_id = models.CharField(
-        max_length=255,
+        max_length=255, blank=True,
         help_text='For HathiTrust materials, record id (use to aggregate ' + \
                   'copies or volumes).')
     #: title of the work; using TextField to allow for long titles
@@ -142,15 +151,18 @@ class DigitizedWork(TrackChangesModel, Indexable):
     subtitle = models.TextField(blank=True, default='',
                                 help_text='Subtitle, if any (optional)')
     #: sort title: title without leading non-sort characters, from marc
-    sort_title = models.TextField(default='',
-                                  help_text='Sort title from MARC record')
+    sort_title = models.TextField(
+        default='',
+        help_text='Sort title from MARC record or title without leading article')
     #: enumeration/chronology (hathi-specific)
     enumcron = models.CharField('Enumeration/Chronology', max_length=255,
                                 blank=True)
     # TODO: what is the generic/non-hathi name for this? volume/version?
 
     # NOTE: may eventually to convert to foreign key
-    author = models.CharField(max_length=255, blank=True)
+    author = models.CharField(
+        max_length=255, blank=True,
+        help_text='Authorized name of the author, last name first.')
     #: place of publication
     pub_place = models.CharField('Place of Publication', max_length=255,
                                  blank=True)
@@ -225,8 +237,10 @@ class DigitizedWork(TrackChangesModel, Indexable):
     # Pub./Published/Publisht at/by/for the
 
     def save(self, *args, **kwargs):
-        # if status has changed and object is now suppressed, remove data
-        if self.has_changed('status') and self.status == self.SUPPRESSED:
+        # if status has changed so that object is now suppressed and this
+        # is a HathiTrust item, remove pairtree data
+        if self.has_changed('status') and self.status == self.SUPPRESSED \
+          and self.source == DigitizedWork.HATHI:
             self.delete_hathi_pairtree_data()
 
         super().save(*args, **kwargs)
@@ -506,8 +520,9 @@ class DigitizedWork(TrackChangesModel, Indexable):
         '''Get page content for this work from Hathi pairtree and return
         data to be indexed in solr.'''
 
-        # If an item has been suppressed, bail out. No pages to index.
-        if self.is_suppressed:
+        # If an item has been suppressed or is from a source other than
+        # hathi, bail out. No pages to index.
+        if self.is_suppressed or self.source != self.HATHI:
             return
 
         # load mets record to pull metadata about the images
