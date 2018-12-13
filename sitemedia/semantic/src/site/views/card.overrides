@@ -95,7 +95,6 @@
         }
         
         .header:not(.ui) {
-            font-family: @pageFont;
             font-weight: normal;
             font-size: 1.8rem;
             text-align: left;

@@ -30,7 +30,7 @@ fi
 
 # Try to make a core
 echo "Creating solr core with managed schema"
-$bin create -c $SOLR_CORE -n basic_configs
+$bin create -c $SOLR_CORE -d ../solr_conf
 
 if [ $? -ne 0 ];
 then
@@ -39,9 +39,3 @@ then
 fi
 
 echo "Core created and Solr running on default port of 8983..."
-
-echo "Copying configuration to load analysis and ICU jars..."
-cp ../solr_conf/solrconfig.xml "solr-${version}/server/solr/${SOLR_CORE}/conf/"
-
-echo "Restarting solr to load new jars..."
-$bin restart

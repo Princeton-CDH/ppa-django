@@ -30,7 +30,6 @@ class SolrSchema(object):
 
     # ported from winthrop-django
     field_types = [
-
         {
             'name': 'text_en',
             "class":"solr.TextField",
@@ -42,11 +41,33 @@ class SolrSchema(object):
                     "class": "solr.StandardTokenizerFactory",
                 },
                 "filters": [
-                    {"class": "solr.StopFilterFactory"},
+                    {"class": "solr.StopFilterFactory", "ignoreCase": True,
+                     "words": "lang/stopwords_en.txt"},
                     {"class": "solr.LowerCaseFilterFactory"},
                     {"class": "solr.EnglishPossessiveFilterFactory"},
                     {"class": "solr.KeywordMarkerFilterFactory"},
                     {"class": "solr.PorterStemFilterFactory"},
+                    {"class": "solr.ICUFoldingFilterFactory"},
+                ]
+            }
+        },
+        # text with no stemming, so exact matches can be prioritized
+        {
+            'name': 'text_nostem',
+            "class":"solr.TextField",
+            # for now, configuring index and query analyzers the same
+            # if we want synonyms, query must be separate
+            "analyzer": {
+                # "charFilters": [],
+                "tokenizer": {
+                    "class": "solr.StandardTokenizerFactory",
+                },
+                "filters": [
+                    {"class": "solr.StopFilterFactory", "ignoreCase": True,
+                     "words": "lang/stopwords_en.txt"},
+                    {"class": "solr.LowerCaseFilterFactory"},
+                    {"class": "solr.EnglishPossessiveFilterFactory"},
+                    {"class": "solr.KeywordMarkerFilterFactory"},
                     {"class": "solr.ICUFoldingFilterFactory"},
                 ]
             }
@@ -74,9 +95,9 @@ class SolrSchema(object):
 
     #: solr schema field definitions
     fields = [
-        # srcid cannot be string_i, as Textfield cannot be used in
+        # source_id cannot be string_i because Textfield cannot be used in
         # collapse query
-        {'name': 'srcid', 'type': 'string', 'required': False},
+        {'name': 'source_id', 'type': 'string', 'required': False},
         {'name': 'content', 'type': 'text_en', 'required': False},
         {'name': 'item_type', 'type': 'string', 'required': False},
         {'name': 'title', 'type': 'text_en', 'required': False},
@@ -87,7 +108,7 @@ class SolrSchema(object):
         {'name': 'pub_date', 'type': 'int', 'required': False},
         {'name': 'pub_place', 'type': 'text_en', 'required': False},
         {'name': 'publisher', 'type': 'text_en', 'required': False},
-        {'name': 'src_url', 'type': 'string', 'required': False},
+        {'name': 'source_url', 'type': 'string', 'required': False},
         {'name': 'order', 'type': 'string', 'required': False},
         {'name': 'collections', 'type': 'text_en', 'required': False,
          'multiValued': True},
@@ -99,7 +120,11 @@ class SolrSchema(object):
         # sort/facet copy fields
         {'name': 'author_exact', 'type': 'string', 'required': False},
         {'name': 'collections_exact', 'type': 'string', 'required': False,
-         'multiValued': True}
+         'multiValued': True},
+
+        # fields without stemming for search boosting
+        {'name': 'title_nostem', 'type': 'text_nostem', 'required': False},
+        {'name': 'subtitle_nostem', 'type': 'text_nostem', 'required': False},
     ]
     #: fields to be copied into general purpose text field for searching
     text_fields = []
@@ -109,6 +134,8 @@ class SolrSchema(object):
     copy_fields = [
         ('author', 'author_exact'),
         ('collections', 'collections_exact'),
+        ('title', 'title_nostem'),
+        ('subtitle', 'subtitle_nostem'),
     ]
 
     def __init__(self):

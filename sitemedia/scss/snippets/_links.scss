@@ -1,4 +1,4 @@
-.archive-link {
+.archive-link { // "view the archive" button
     display: inline-block;
     padding: 0.8rem;
     background-color: $french-blue;
@@ -10,7 +10,7 @@
     }
     
     .ui.header {
-        color: white;
+        color: $white-two;
         font-size: 1rem;
         font-weight: bold;
         text-transform: uppercase;
@@ -22,6 +22,38 @@
     }
 
     .fermata {
-        fill: white;
+        fill: $white-two;
+    }
+}
+
+
+#jump-top { // "jump to top" button
+    position: fixed;
+    right: 1rem;
+    top: 75%;
+    width: 30px;
+    box-shadow: 0 0 6px 0 $french-blue;
+    z-index: 10;
+
+    @media (min-width: $largeMonitor) {
+        left: calc(50% + #{$largeMonitor} / 2 - 4rem);
+        right: 0;
+    }
+
+    &:active {
+        background: $french-blue !important; // override sui
+    }
+
+    .icon {
+        color: $french-blue;
+
+        &::before {
+            margin-left: -0.5rem;
+        }
+    }
+
+    &:hover .icon,
+    &:active .icon {
+        color: $white-two;
     }
 }

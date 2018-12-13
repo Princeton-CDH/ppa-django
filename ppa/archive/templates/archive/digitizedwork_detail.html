@@ -31,7 +31,7 @@
             </tr>
             {% endif %}
             <tr>
-                <th scope="row">Year of Publication</th>
+                <th scope="row">Publication Date</th>
                 <td>{{ object.pub_date }}</td>
             </tr>
             {% if object.author %}
@@ -106,6 +106,7 @@
             <input class="sr-only sr-only-focusable" type="submit" aria-label="submit search">
         </fieldset>
     </form>
+    {% include 'archive/snippets/jump_top.html' with anchor='digitized-work' %}
 </section>
   {# display matching pages with highlighted text if there is a search active #}
   {% if query or page_highlights %}
@@ -123,7 +124,7 @@
           <div class="ui page item">
               <div class="pages ui twelve wide column">
                   <div class="wrapper">
-                      {% include 'archive/snippets/page_preview.html' with item_id=page.srcid  %}
+                      {% include 'archive/snippets/page_preview.html' with item_id=page.source_id  %}
                   </div>
               </div>
           </div>

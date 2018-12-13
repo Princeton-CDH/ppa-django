@@ -20,6 +20,7 @@ href="{% url 'unapi' %}" />
 {% block content %}
 <section class="ui search basic vertical segment container">
     {% include 'archive/snippets/search_form.html' %}
+    {% include 'archive/snippets/jump_top.html' with anchor='search' %}
 </section>
 <div class="ajax-container">
     {% include 'archive/snippets/results_list.html' %}

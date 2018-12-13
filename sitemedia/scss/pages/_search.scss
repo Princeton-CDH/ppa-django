@@ -40,6 +40,11 @@
         -webkit-appearance: textfield;
     }
 
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+        -webkit-appearance: none; 
+        margin: 0; 
+    }
     
     #publication {
         label[for=id_pub_date] { // "Publication Year" text
@@ -86,13 +91,19 @@
 
     #collections {
         .field {
-            margin-bottom: -5px;
+            display: flex;
+            flex-flow: row wrap;
+        }
+
+        label[for=collections] {
+            width: 100%;
         }
 
         .button {
-            margin-bottom: 5px;
-            margin-right: 8px;
+            margin-bottom: 10px;
+            margin-right: 5px;
             transition: padding 0.2s;
+            flex: none;
         }
 
         .ui.button {
@@ -103,10 +114,28 @@
             display: none;
         }
 
+        .button.active {
+            order: 1;
+        }
+
+        .button:not(.active) {
+            order: 3;
+        }
+
+        .button.disabled {
+            order: 4;
+        }
+
+        .spacer {
+            order: 2;
+            width: 100%;
+        }
+
         input[type=checkbox] { // hide checkboxes
             position: relative;
             -webkit-appearance: none;
             -moz-appearance: none;
+            outline: none;
 
             &::-ms-check {
                 display: none;
@@ -115,6 +144,8 @@
 
         input[type=checkbox]::after {
             content: "×";
+            cursor: pointer;
+            color: $white-two;
             position: absolute;
             font-size: 1rem;
             left: 0;
@@ -144,15 +175,26 @@
     }
 
     .workscount {
+        position: relative;
         margin: 2rem auto;
         font-size: 1rem;
+
+        p {
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
 
         p:first-child {
             margin-bottom: .5rem;
         }
     }
 
+    .workscount.loading p {
+        opacity: 0;
+    }
+
     /* results */
+
     .results-list {
         padding-bottom: 2rem;
         padding-left: 0;

@@ -1,8 +1,8 @@
 {% load static humanize %}
 
 <li class="item">
-    <abbr class="unapi-id" title="{{ item.srcid }}" aria-hidden="true"></abbr>
-    <a href="{% url 'archive:detail' item.srcid %}{% if query %}?query={{ query }}{% endif %}" class="detail">
+    <abbr class="unapi-id" title="{{ item.source_id }}" aria-hidden="true"></abbr>
+    <a href="{% url 'archive:detail' item.source_id %}{% if query %}?query={{ query }}{% endif %}" class="detail">
         <div class="brief-result container">
             <div class="title column">
                 <div class="labels">
@@ -25,7 +25,7 @@
                     {% endif %}
                     {% if item.pub_date %}
                     <div class="pub-date">
-                        <dt>Pub. Date</dt>
+                        <dt>Publication Date</dt>
                         <dd>{{ item.pub_date }}</dd>
                     </div>
                     {% endif %}
@@ -45,6 +45,12 @@
                     <div class="score">
                         <dt>Relevance</dt>
                         <dd>{{ item.score }}</dd>
+                        {% if page_groups and page_highlights %}
+                            {% with results=page_groups|dict_item:item.id %}
+                            <dt>Max relevance</dt>
+                            <dd>{{ results.maxScore }}</dd>
+                        {% endwith %}
+                        {% endif %}
                     </div>
                     {% endif %}
                 </dl>
@@ -82,7 +88,7 @@
                 <div class="wrapper">
                     {% for page in results.docs %}
                     {% with highlights=page_highlights|dict_item:page.id %}
-                        {% include 'archive/snippets/page_preview.html' with item_id=item.srcid  %}
+                        {% include 'archive/snippets/page_preview.html' with item_id=item.source_id  %}
                     {% endwith %}
                     {% endfor %}
                 </div>
