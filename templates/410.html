@@ -8,7 +8,7 @@
 {% block error_code %}410{%endblock %}
 
 {% block image %}
-<img src="{% static 'img/errors/404error_logo_' %}{{ 'abc'|random|add:'.png' }}">
+<img src="{% static 'img/errors/404error_logo_' %}{{ 'abc'|random|add:'.png' }}" alt="missing page">
 {% endblock %}
 
 {% block error_message %}
