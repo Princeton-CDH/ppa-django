@@ -2,6 +2,10 @@
 
 {% block page-context-id %}error{% endblock %}
 
+{% block page_nav %}
+    {% include 'snippets/nav.html' with style="error" %}
+{% endblock %}
+
 {% block page_header %}
     {% include 'snippets/header.html' with style='error' %}
 {% endblock %}
