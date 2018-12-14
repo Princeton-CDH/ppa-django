@@ -114,7 +114,8 @@ class BodyContentBlock(blocks.StreamBlock):
     '''Common set of content blocks to be used on both content pages
     and editorial pages'''
     paragraph = blocks.RichTextBlock()
-    image = ImageWithCaption()
+    image = ImageChooserBlock()
+    captioned_image = ImageWithCaption()
     footnotes = blocks.RichTextBlock(
         features=['ol', 'ul', 'bold', 'italic', 'link'],
         classname='footnotes'
