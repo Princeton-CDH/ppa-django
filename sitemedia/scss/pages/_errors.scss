@@ -24,6 +24,9 @@
     img {
         flex: 1;
         margin: 0;
+        width: 100%; // needed for chrome?
+        height: 100%; // needed for chrome?
+        min-width: 0; // needed for chrome?
 
         &.large {
             flex: 2;
