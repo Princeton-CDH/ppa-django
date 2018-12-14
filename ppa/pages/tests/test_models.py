@@ -222,21 +222,35 @@ class TestContentPage(WagtailPageTests):
         self.assertContains(response, 'class="footnotes"',
             msg_prefix='footnotes block should get footnotes class')
 
+        # add image (without caption) + check template
+        content_page.body.stream_data.append({
+            'type': 'image',
+            'value': 1,
+            'id': 'img1'
+        })
+        content_page.save()
+        response = self.client.get(content_page.relative_url(site))
+        self.assertTemplateNotUsed(response, 'pages/snippets/figure.html')
+        self.assertTemplateUsed(response, 'pages/snippets/responsive_image.html')
+        self.assertContains(response, '<img')
+        self.assertContains(response, 'srcset')
+        # NOTE: not currently testing image srcset logic
+
         # add image + caption to check template
         caption_text = 'a very detailed caption'
         content_page.body.stream_data.append({
-            'type': 'image',
+            'type': 'captioned_image',
             # pseudo data, not a real image object
             'value': {'image': 1, 'caption': caption_text},
             'id': 'imgcapt1'
         })
         content_page.save()
         response = self.client.get(content_page.relative_url(site))
+        self.assertTemplateUsed(response, 'pages/snippets/figure.html')
         self.assertTemplateUsed(response, 'pages/snippets/responsive_image.html')
         self.assertContains(response, '<figure>')
         self.assertContains(
             response, '<figcaption><div class="rich-text">%s</div></figcaption>' % caption_text)
-        # NOTE: not currently testing image srcset logic
 
 
 class TestCollectionPage(WagtailPageTests):
