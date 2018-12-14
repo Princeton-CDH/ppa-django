@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block page-context-id %}error{% endblock %}
+
+{% block page_header %}
+    {% include 'snippets/header.html' with style='error' %}
+{% endblock %}
+
+{% block content %}
+<div class="ui container">
+    <h1 class="ui header">
+        {% block error_name %}{%endblock %} - 
+        <span class="code">
+            {% block error_code %}{%endblock %} Error
+        </span>
+    </h1>
+    <div class="content">
+        {% block image %}{% endblock %}
+        <p>{% block error_message %}{% endblock %}</p>
+    </div>
+</div>
+{% endblock %}
