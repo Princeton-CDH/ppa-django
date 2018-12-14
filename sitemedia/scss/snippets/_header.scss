@@ -83,20 +83,25 @@ header { // used mostly as space for banner images
     &.error .lower {
         width: 100%;
         background: url('/static/img/errors/FallingHeader_Grey.png');
-        background-size: cover;
+        background-size: 150%;
         background-position: bottom;
         background-repeat: no-repeat;
         z-index: -1;
         min-height: $banner-height;
         opacity: 0.7;
+        top: 30vw;
+        position: relative;
 
         @media (min-width: $tablet) {
             min-height: $banner-height-m;
+            top: 25vw;
+            background-size: 100%;
         }
 
         @media (min-width: $computer) {
             min-height: $banner-height-l;
             background-size: contain;
+            top: 5vw;
         }
     }
 }

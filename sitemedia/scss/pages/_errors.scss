@@ -1,5 +1,6 @@
 #error {
     @include content-page();
+    padding-bottom: 4rem;
 
     h1 {
         @include underline-headline($black);
@@ -23,6 +24,10 @@
     img {
         flex: 1;
         margin: 0;
+
+        &.large {
+            flex: 2;
+        }
     }
 
     p {
