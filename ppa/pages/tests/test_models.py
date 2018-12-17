@@ -1,20 +1,20 @@
-import bleach
 from time import sleep
 
+import bleach
+import pytest
 from django.contrib.contenttypes.models import ContentType
-from django.urls import reverse
 from django.template.defaultfilters import striptags
+from django.urls import reverse
 from wagtail.core.models import Page, Site
 from wagtail.tests.utils import WagtailPageTests
-from wagtail.tests.utils.form_data import nested_form_data, streamfield, \
-    rich_text
-import pytest
+from wagtail.tests.utils.form_data import (nested_form_data, rich_text,
+                                           streamfield)
 
 from ppa.archive.models import Collection, DigitizedWork
 from ppa.archive.solr import get_solr_connection
-from ppa.pages.models import HomePage, ContentPage, CollectionPage, \
-    ContributorPage, Person
 from ppa.editorial.models import EditorialIndexPage
+from ppa.pages.models import (CollectionPage, ContentPage, ContributorPage,
+                              HomePage, Person)
 
 
 class TestHomePage(WagtailPageTests):
@@ -150,7 +150,6 @@ class TestContentPage(WagtailPageTests):
 
         assert not content_page.description
         desc = content_page.get_description()
-        print(desc)
         # length excluding tags should be truncated to max length or less
         assert len(striptags(desc)) <= content_page.max_length
         # beginning of text should match exactly the *first* block
@@ -214,6 +213,45 @@ class TestContentPage(WagtailPageTests):
         content_page.search_description = 'A different description for meta text.'
         assert content_page.get_plaintext_description() == \
             content_page.search_description
+
+    def test_template(self):
+        # test fixture display
+        site = Site.objects.first()
+        content_page = ContentPage.objects.first()
+        response = self.client.get(content_page.relative_url(site))
+        self.assertTemplateUsed(response, 'pages/content_page.html')
+        self.assertContains(response, 'class="footnotes"',
+            msg_prefix='footnotes block should get footnotes class')
+
+        # add image (without caption) + check template
+        content_page.body.stream_data.append({
+            'type': 'image',
+            'value': 1,
+            'id': 'img1'
+        })
+        content_page.save()
+        response = self.client.get(content_page.relative_url(site))
+        self.assertTemplateNotUsed(response, 'pages/snippets/figure.html')
+        self.assertTemplateUsed(response, 'pages/snippets/responsive_image.html')
+        self.assertContains(response, '<img')
+        self.assertContains(response, 'srcset')
+        # NOTE: not currently testing image srcset logic
+
+        # add image + caption to check template
+        caption_text = 'a very detailed caption'
+        content_page.body.stream_data.append({
+            'type': 'captioned_image',
+            # pseudo data, not a real image object
+            'value': {'image': 1, 'caption': caption_text},
+            'id': 'imgcapt1'
+        })
+        content_page.save()
+        response = self.client.get(content_page.relative_url(site))
+        self.assertTemplateUsed(response, 'pages/snippets/figure.html')
+        self.assertTemplateUsed(response, 'pages/snippets/responsive_image.html')
+        self.assertContains(response, '<figure>')
+        self.assertContains(
+            response, '<figcaption><div class="rich-text">%s</div></figcaption>' % caption_text)
 
 
 class TestCollectionPage(WagtailPageTests):
@@ -388,7 +426,3 @@ class TestContributorPage(WagtailPageTests):
         self.assertContains(response, person_b.name)
         self.assertContains(response, person_b.description)
         self.assertNotContains(response, person_b.project_role)
-
-
-
-

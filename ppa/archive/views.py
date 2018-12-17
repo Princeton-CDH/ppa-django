@@ -104,15 +104,6 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                     work_q.append('%s:(%s)' % \
                                   (field, search_opts[field]))
 
-        # use join to ensure we always get the work if any pages match
-        # using query syntax as documented at
-        # http://comments.gmane.org/gmane.comp.jakarta.lucene.solr.user/95646
-        # to support exact phrase searches
-        # solr_q = 'text:(%s) OR {!join from=srcid to=id v=$join_query}' % self.query
-            # logger.debug("Solr search query: %s", solr_q)
-        # else:
-            # solr_q = '*:*'
-
         range_opts = {
             'facet.range': self.form.range_facets
         }
@@ -167,7 +158,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                 # keyword_query, pages are not needed.
                 if keyword_query:
                     query_parts.append(
-                        '(%s OR {!join from=id to=srcid v=$work_query})' % work_query
+                        '(%s OR {!join from=id to=source_id v=$work_query})' % work_query
                     )
                 else:
                     query_parts.append(work_query)
@@ -177,7 +168,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                 # search for works that match the filter OR for works
                 # associated with pages that match
                 query_parts.append(
-                     '(%s OR {!join from=srcid to=id v=$keyword_query})' % keyword_query
+                     '(%s OR {!join from=source_id to=id v=$keyword_query})' % keyword_query
                 )
 
             # combine work and text queries together with AND
@@ -194,7 +185,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
 
         # use filter query to collapse works and pages into groups
         # sort so work is first, then by page order
-        collapse_q = '{!collapse field=srcid sort="order asc"}'
+        collapse_q = '{!collapse field=source_id sort="order asc"}'
 
         # basic solr options, including filter query
         solr_opts = {
@@ -344,7 +335,9 @@ class DigitizedWorkDetailView(DetailView):
         form = self.form_class(form_opts)
         context['search_form'] = form
         solr_pageq = None
-        if query:
+
+        # search within a volume currently only supported for hathi content
+        if query and digwork.source == DigitizedWork.HATHI:
             context['query'] = query
             solr_q = query
             solr_opts = {
@@ -352,8 +345,8 @@ class DigitizedWorkDetailView(DetailView):
                 # sort by page order by default
                 'sort': 'order asc',
                 # 'fl': '*',
-                'fl': 'id,srcid,order,title,label',  # Limiting only to needed fields
-                'fq': 'srcid:("%s") AND item_type:page' % digwork.source_id,
+                'fl': 'id,source_id,order,title,label',  # Limiting only to needed fields
+                'fq': 'source_id:("%s") AND item_type:page' % digwork.source_id,
                 # configure highlighting on page text content
                 'hl': True,
                 'hl.fl': 'content',

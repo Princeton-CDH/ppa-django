@@ -17,8 +17,7 @@
 {% endblock %}
 
 {% block page_header %}
-{% include 'snippets/header.html' with style='contentpage' %}
-
+    {% include 'snippets/header.html' with style='contentpage' %}
 {% endblock %}
 
 {# page title displayed in page header snippet ? or only for some content pages #}
@@ -33,10 +32,14 @@
     </h1>
     {% block page_body %}
     {% for block in page.body %}
-        {% if block.block_type == 'image' %}
+        {% if block.block_type == 'captioned_image' %}
+            {% include "pages/snippets/figure.html" with captioned_img=block.value %}
+        {% elif block.block_type == 'image' %}
             {% include "pages/snippets/responsive_image.html" with img=block.value %}
         {% else %}
-            {% include_block block %}
+            <div class="{{ block.block_type }}">
+                {% include_block block %}
+            </div>
         {% endif %}
     {% endfor %}
     {% endblock %}

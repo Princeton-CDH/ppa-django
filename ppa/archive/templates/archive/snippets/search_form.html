@@ -1,5 +1,5 @@
 {% load semanticui humanize %}
-<form class="ui form{% if error %} error{% endif %}">
+<form class="ui form{% if error %} error{% endif %} no-js">
     <div class="ui vertical stackable grid segment" role="group">
         <legend class="sr-only">text search fields</legend>
         <div class="twelve wide column">
@@ -43,8 +43,11 @@
                     <div class="spacer"></div>
                     {% endfor %}
             </div>
+            <noscript>
+                <input class="ui primary button" type="submit" value="Submit"/>
+            </noscript>
         </div>
-        <!--
+        {% comment %}
         <div class="six wide column" id="booleans">
             <div class="two fields">
                 <div class="field">
@@ -59,7 +62,7 @@
                 </div>
             </div>
         </div>
-        -->
+        {% endcomment %}
     </div>
     <div class="ui vertical basic segment show-advanced">
         <a>Advanced Search</a>
@@ -68,6 +71,10 @@
     <div class="workscount ui center aligned text container">
         <p class="count">Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}</p>
         <p class="zotero">Work citations can be exported to <a href="https://www.zotero.org/support/getting_stuff_into_your_library">Zotero</a></p>
+        <div class="loader">
+            <div id="bm"></div>
+            <span>Results are loading</span>
+        </div>
     </div>
     <div class="pagination-sort">
         {% include 'archive/snippets/pagination.html' %}

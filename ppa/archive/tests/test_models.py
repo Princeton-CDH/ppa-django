@@ -241,7 +241,7 @@ class TestDigitizedWork(TestCase):
         digwork.collections.add(coll2)
         index_data = digwork.index_data()
         assert index_data['id'] == digwork.source_id
-        assert index_data['srcid'] == digwork.source_id
+        assert index_data['source_id'] == digwork.source_id
         assert index_data['item_type'] == 'work'
         assert index_data['title'] == digwork.title
         assert index_data['subtitle'] == digwork.subtitle
@@ -251,7 +251,7 @@ class TestDigitizedWork(TestCase):
         assert index_data['pub_date'] == digwork.pub_date
         assert index_data['collections'] == ['Flotsam', 'Jetsam']
         assert index_data['publisher'] == digwork.publisher
-        assert index_data['src_url'] == digwork.source_url
+        assert index_data['source_url'] == digwork.source_url
         assert digwork.public_notes in index_data['notes']
         assert digwork.notes not in index_data['notes']
         assert not index_data['enumcron']
@@ -297,6 +297,11 @@ class TestDigitizedWork(TestCase):
         mock_bibdata = mock_bibapi.record.return_value
         mock_bibdata.marcxml.as_marc.assert_any_call()
         assert mdata == mock_bibdata.marcxml.as_marc.return_value
+
+        # non-hathi record: for now, not supported
+        nonhathi_work = DigitizedWork(source=DigitizedWork.OTHER, source_id='788423659')
+        # should not error, but nothing to return
+        assert not nonhathi_work.get_metadata('marc')
 
     def test_hathi_prefix(self):
         work = DigitizedWork(source_id='uva.1234')
@@ -410,7 +415,7 @@ class TestDigitizedWork(TestCase):
             for i, data in enumerate(page_data):
                 mets_page = mets.structmap_pages[i]
                 assert data['id'] == '.'.join([work.source_id, mets_page.text_file.sequence])
-                assert data['srcid'] == work.source_id
+                assert data['source_id'] == work.source_id
                 assert data['content'] == contents[i]
                 assert data['order'] == mets_page.order
                 assert data['item_type'] == 'page'
@@ -418,9 +423,13 @@ class TestDigitizedWork(TestCase):
                 assert 'tags' in data
                 assert data['tags'] == mets_page.label.split(', ')
 
-            # if item is suppressed - no page data
-            work.status = DigitizedWork.SUPPRESSED
-            assert not list(work.page_index_data())
+        # if item is suppressed - no page data
+        work.status = DigitizedWork.SUPPRESSED
+        assert not list(work.page_index_data())
+
+        # non hathi item - no page data
+        nonhathi_work = DigitizedWork(source=DigitizedWork.OTHER)
+        assert not list(nonhathi_work.page_index_data())
 
     def test_index_id(self):
         work = DigitizedWork(source_id='chi.79279237')
@@ -494,6 +503,12 @@ class TestDigitizedWork(TestCase):
             work.save()
             mock_delete_pairtree_data.assert_not_called()
 
+            # non-hathi record - should not try to delete hathi data
+            work = DigitizedWork(source=DigitizedWork.OTHER)
+            work.save()
+            work.status = work.SUPPRESSED
+            work.save()
+            mock_delete_pairtree_data.assert_not_called()
 
     def test_clean(self):
         work = DigitizedWork(source_id='chi.79279237')

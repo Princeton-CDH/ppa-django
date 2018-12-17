@@ -27,17 +27,19 @@ by default; use page_rdf_type to override with a webpage subclass.
     {# open graph metadata #}
     <meta property="og:title" content="{{ page.meta_title }}" />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="{{ request.build_absolute_uri }}" />
-    <meta property="og:image" content="{% fullstatic preview_image %}" />
     {# <meta property="og:description" content="{% block meta_description %}{% endblock %}"/> #}
     <meta property="og:site_name" content="Princeton Prosody Archive"/>
     {# twitter card #}
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:domain" content="{{ request.get_host }}" />
     <meta name="twitter:title" content="{% block meta_title %}{% endblock %}"/>
     {# <meta name="twitter:description" content="{% block meta_description %}{% endblock %}" /> #}
+    {% if request %}
+    <meta property="og:image" content="{% fullstatic preview_image %}" />
     <meta name="twitter:image" content="{% fullstatic preview_image %}" />
+    <meta property="og:url" content="{{ request.build_absolute_uri }}" />
     <meta name="twitter:url" content="{{ request.build_absolute_uri }}" />
+    <meta name="twitter:domain" content="{{ request.get_host }}" />
+    {% endif %}
     {% block metadata %}{% endblock %}
 
     <!-- styles -->
@@ -53,6 +55,7 @@ by default; use page_rdf_type to override with a webpage subclass.
     src="https://code.jquery.com/jquery-3.1.1.min.js"
     integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
     crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.4.2/lottie_light.min.js"></script>
     <script src="{% static 'semantic/dist/semantic.min.js' %}"></script>
     {% if not request.is_preview and GTAGS_ANALYTICS_ID %}
         {% include 'snippets/analytics.html' %}

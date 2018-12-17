@@ -41,6 +41,13 @@ class RadioSelectWithDisabled(SelectDisabledMixin, forms.RadioSelect):
     '''
 
 
+class SelectWithDisabled(SelectDisabledMixin, forms.Select):
+    '''
+    Subclass of :class:`django.forms.Select` with option to mark
+    a choice as disabled.
+    '''
+
+
 class CheckboxSelectMultipleWithDisabled(SelectDisabledMixin, forms.CheckboxSelectMultiple):
     '''
     Subclass of :class:`django.forms.CheckboxSelectMultiple` with option to mark
@@ -196,7 +203,7 @@ class SearchForm(forms.Form):
             '_inline': True
         }))
 
-    sort = forms.ChoiceField(widget=RadioSelectWithDisabled, choices=SORT_CHOICES,
+    sort = forms.ChoiceField(widget=SelectWithDisabled, choices=SORT_CHOICES,
         required=False)
 
     # booleans

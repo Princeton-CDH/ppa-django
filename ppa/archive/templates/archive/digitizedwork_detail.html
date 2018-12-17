@@ -48,6 +48,12 @@
                 <th scope="row">City</th>
                 <td>{{ object.pub_place }}</td>
             </tr>
+            {% if object.page_count %}
+            <tr>
+                <th scope="row">Page count</th>
+                <td>{{ object.page_count }}</td>
+            </tr>
+            {% endif %}
             {% if object.collections.exists %}
             <tr>
                 <th scope="row">PPA Collection{{ object.collections.count|pluralize }}</th>
@@ -59,7 +65,8 @@
             </tr>
             {% endif %}
             <tr class="hathi-link">
-                <th scope="row">View on HathiTrust</th>
+                <th scope="row">View{% if object.source == object.OTHER %} external record
+                    {% else %} on {{ object.get_source_display }}{% endif %}</th>
                 <td>
                     <a href="{{ object.source_url }}" target="_blank">{{ object.source_id }}</a>
                 </td>
@@ -93,6 +100,8 @@
         </tbody>
     </table>
 </section>
+{# search within a volume currently only supported for hathi content #}
+{% if object.source == object.HATHI %}
 <section class="ui basic vertical segment container">
     <form class="ui form">
         <fieldset class="ui vertical basic grid segment">
@@ -124,7 +133,7 @@
           <div class="ui page item">
               <div class="pages ui twelve wide column">
                   <div class="wrapper">
-                      {% include 'archive/snippets/page_preview.html' with item_id=page.srcid  %}
+                      {% include 'archive/snippets/page_preview.html' with item_id=page.source_id  %}
                   </div>
               </div>
           </div>
@@ -142,4 +151,5 @@
     </div>
     {% endif %}
   {% endif %}
+{% endif %}
 {% endblock %}
