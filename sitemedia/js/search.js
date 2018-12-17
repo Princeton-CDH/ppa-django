@@ -38,8 +38,6 @@ $(function(){
     /* functions */
     function submitForm(state) {
         if (!validate()) return // don't submit an invalid form
-        $('.workscount').toggleClass('loading') // turn on the loader
-        $('.ajax-container').toggleClass('loading')
         state = state.filter(field => field.value != '') // filter out empty fields
         if (state.filter(field => field.name == 'collections').length == 0) { // if the user manually turned off all collections...
             state.push({ name: "collections", value: "" }) // add a blank value to indicate that specific case
@@ -51,6 +49,7 @@ $(function(){
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
+        $('.workscount').addClass('loading') // turn on the loader
         req.then(res => res.text()).then(html => { // submit the form and get html back
             $$paginationTop.html($(html).find('.page-controls').html()) // update the top pagination
             dateHistogram.update(JSON.parse($(html).find('pre.facets').html())) // update the histogram
@@ -60,8 +59,7 @@ $(function(){
                 bubbles: true,
                 cancelable: true
             }))
-            $('.workscount').toggleClass('loading') // turn off the loader
-            $('.ajax-container').toggleClass('loading')
+            $('.workscount').removeClass('loading') // turn off the loader
         })
     }
 
