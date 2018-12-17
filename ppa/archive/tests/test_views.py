@@ -177,11 +177,18 @@ class TestArchiveViews(TestCase):
         self.assertContains(response, thesis.title)
         self.assertContains(response, thesis.author)
         self.assertContains(response, thesis.source_id)
+        self.assertContains(response, 'View external record')
         self.assertContains(response, thesis.source_url)
         self.assertContains(response, thesis.pub_date)
         self.assertContains(response, thesis.page_count)
         self.assertNotContains(response, 'HathiTrust')
         self.assertNotContains(response, 'Search within the Volume')
+
+        # no source url - should not display link
+        thesis.source_url = ''
+        thesis.save()
+        response = self.client.get(thesis.get_absolute_url())
+        self.assertNotContains(response, 'View external record')
 
         # search term should be ignored for items without fulltext
         with patch('ppa.archive.views.PagedSolrQuery') as mock_paged_solrq:
