@@ -60,6 +60,17 @@ class TestDigitizedWorkAdmin(TestCase):
         assert snippet == \
             '<a href="%s" target="_blank">njp.32101013082597</a>' % fake_url
 
+    def test_readonly_fields(self):
+        site = AdminSite()
+        digadmin = DigitizedWorkAdmin(DigitizedWork, site)
+
+        assert digadmin.get_readonly_fields(Mock()) == digadmin.readonly_fields
+
+        # hathi record
+        hathi_work = DigitizedWork.objects.first()
+        assert set(digadmin.get_readonly_fields(Mock(), hathi_work)) == \
+            set(digadmin.readonly_fields + digadmin.hathi_readonly_fields)
+
 
     @override_settings(SOLR_CONNECTIONS=TEST_SOLR_CONNECTIONS)
     @patch('ppa.archive.solr.get_solr_connection')

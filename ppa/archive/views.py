@@ -335,7 +335,9 @@ class DigitizedWorkDetailView(DetailView):
         form = self.form_class(form_opts)
         context['search_form'] = form
         solr_pageq = None
-        if query:
+
+        # search within a volume currently only supported for hathi content
+        if query and digwork.source == DigitizedWork.HATHI:
             context['query'] = query
             solr_q = query
             solr_opts = {
