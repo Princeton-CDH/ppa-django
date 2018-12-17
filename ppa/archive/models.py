@@ -51,6 +51,10 @@ class TrackChangesModel(models.Model):
         '''check if a field has been changed'''
         return getattr(self, field) != self.__initial[field]
 
+    def initial_value(self, field):
+        '''return the initial value for a field'''
+        return self.__initial[field]
+
 
 @register_snippet
 class Collection(TrackChangesModel):
@@ -244,6 +248,16 @@ class DigitizedWork(TrackChangesModel, Indexable):
           and self.source == DigitizedWork.HATHI:
             self.delete_hathi_pairtree_data()
 
+        # source id is used as Solr identifier; if it changes, remove
+        # the old record from Solr before saving with the new identifier
+        # NOTE: source id edit only supported for non-hathi content; should
+        # be prevented by validation in clean method
+        if self.has_changed('source_id'):
+            new_source_id = self.source_id
+            self.source_id = self.initial_value('source_id')
+            self.remove_from_index()
+            self.source_id = new_source_id
+
         super().save(*args, **kwargs)
 
     def clean(self):
@@ -252,6 +266,11 @@ class DigitizedWork(TrackChangesModel, Indexable):
         (not yet supported).'''
         if self.has_changed('status') and self.status != self.SUPPRESSED:
             raise ValidationError('Unsuppressing records not yet supported.')
+
+        # should not be editable in admin, but add a validation check
+        # just in case
+        if self.has_changed('source_id') and self.source == self.HATHI:
+            raise ValidationError('Changing source ID for HathiTrust records is not supported')
 
     def populate_from_bibdata(self, bibdata):
         '''Update record fields based on Hathi bibdata information.

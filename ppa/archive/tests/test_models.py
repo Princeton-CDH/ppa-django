@@ -510,6 +510,15 @@ class TestDigitizedWork(TestCase):
             work.save()
             mock_delete_pairtree_data.assert_not_called()
 
+        # if source_id changes, old id should be removed from solr index
+        work = DigitizedWork.objects.create(source=DigitizedWork.OTHER,
+                                            source_id='12345')
+        with patch.object(work, 'remove_from_index') as mock_rm_from_index:
+            work.source_id = 'abcdef'
+            work.save()
+            mock_rm_from_index.assert_called()
+
+
     def test_clean(self):
         work = DigitizedWork(source_id='chi.79279237')
 
@@ -520,14 +529,22 @@ class TestDigitizedWork(TestCase):
         work.status = work.SUPPRESSED
         work.clean()
         # don't actually process the data deletion
-        with patch.object(work, 'delete_hathi_pairtree_data') \
-          as mock_delete_pairtree_data:
+        with patch.object(work, 'delete_hathi_pairtree_data'):
             work.save()
 
         # try to change back - should error
         work.status = work.PUBLIC
         with pytest.raises(ValidationError):
             work.clean()
+
+        # trying to change source id for hathi record should error
+        work.source_id = '123456a'
+        with pytest.raises(ValidationError):
+            work.clean()
+
+        # not an error for non-hathi
+        work.source = DigitizedWork.HATHI
+        work.clean()
 
     def test_is_suppressed(self):
         work = DigitizedWork(source_id='chi.79279237')
