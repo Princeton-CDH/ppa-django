@@ -234,7 +234,8 @@ class ContributorPage(Page, PagePreviewDescriptionMixin):
     contributors = StreamField(
         [('person', SnippetChooserBlock(Person))],
         blank=True,
-        help_text='Select and order people to be listed as project contributors.'
+        help_text='Select and order people to be listed as project \
+        contributors.'
     )
     board = StreamField(
         [('person', SnippetChooserBlock(Person))],
@@ -255,4 +256,3 @@ class ContributorPage(Page, PagePreviewDescriptionMixin):
     parent_page_types = [HomePage]
     # not allowed to have sub pages
     subpage_types = []
-
