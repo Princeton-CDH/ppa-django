@@ -446,6 +446,7 @@ class Indexable(object):
         solr, solr_collection = get_solr_connection()
         # NOTE: using quotes on id to handle ids that include colons or other
         # characters that have meaning in Solr/lucene queries
+        logger.debug('Delecting document from index with id %s', self.index_id())
         solr.delete_doc_by_id(solr_collection, '"%s"' % self.index_id(), params=params)
 
     related = None
