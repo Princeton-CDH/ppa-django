@@ -113,7 +113,7 @@ $(function(){
     }
 
     function onPageLoad() {
-        // remove no-js styles for CSS
+        // remove no-js styles for CSS since Javascript is running
         $('.form').removeClass('no-js')
         dateHistogram.update(JSON.parse($('.ajax-container pre.facets').html())) // render the histogram initially
         $$collectionInputs.filter(':disabled').parent().addClass('disabled') // disable empty collections
