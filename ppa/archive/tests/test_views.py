@@ -162,6 +162,32 @@ class TestArchiveViews(TestCase):
         # should not display item details
         self.assertNotContains(response, dial.title, status_code=410)
 
+    def test_digitizedwork_detailview_nonhathi(self):
+        # non-hathi work
+        thesis = DigitizedWork.objects.create(
+            source=DigitizedWork.OTHER, source_id='788423659',
+            source_url='http://www.worldcat.org/title/study-of-the-accentual-structure-of-caesural-phrases-in-the-lady-of-the-lake/oclc/788423659',
+            title='A study of the accentual structure of caesural phrases in The lady of the lake',
+            sort_title='study of the accentual structure of caesural phrases in The lady of the lake',
+            author='Farley, Odessa', publisher='University of Iowa',
+            pub_date=1924, page_count=81)
+
+        response = self.client.get(thesis.get_absolute_url())
+        # should display item details
+        self.assertContains(response, thesis.title)
+        self.assertContains(response, thesis.author)
+        self.assertContains(response, thesis.source_id)
+        self.assertContains(response, thesis.source_url)
+        self.assertContains(response, thesis.pub_date)
+        self.assertContains(response, thesis.page_count)
+        self.assertNotContains(response, 'HathiTrust')
+        self.assertNotContains(response, 'Search within the Volume')
+
+        # search term should be ignored for items without fulltext
+        with patch('ppa.archive.views.PagedSolrQuery') as mock_paged_solrq:
+            response = self.client.get(thesis.get_absolute_url(), {'query': 'lady'})
+            mock_paged_solrq.assert_not_called()
+
     @pytest.mark.usefixtures("solr")
     def test_digitizedwork_detailview_query(self):
         '''test digitized work detail page with search query'''

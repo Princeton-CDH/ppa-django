@@ -12,22 +12,37 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         'page_count', 'is_public', 'added', 'updated'
     )
     fields = (
-        'source_link', 'title', 'subtitle', 'sort_title', 'enumcron',
-        'author', 'pub_place', 'publisher', 'pub_date', 'page_count',
-        'public_notes', 'notes', 'record_id', 'collections',
-        'status', 'added', 'updated'
+        'source', 'source_id', 'source_url', 'title', 'subtitle',
+        'sort_title', 'enumcron', 'author', 'pub_place', 'publisher',
+        'pub_date', 'page_count', 'public_notes', 'notes', 'record_id',
+        'collections', 'status', 'added', 'updated'
     )
+    # fields that are always read only
     readonly_fields = (
-        'source_link', 'page_count', 'added', 'updated', 'record_id',
+        'added', 'updated'
     )
+    # fields that are read only for HathiTrust records
+    hathi_readonly_fields = (
+        'source', 'source_id', 'source_url', 'page_count', 'record_id',
+    )
+
     search_fields = (
         'source_id', 'title', 'subtitle', 'author', 'enumcron', 'pub_date',
         'publisher', 'public_notes', 'notes', 'record_id'
     )
     filter_horizontal = ('collections',)
     # date_hierarchy = 'added'  # is this useful?
-    list_filter = ['collections', 'status']
+    list_filter = ['collections', 'status', 'source']
     actions = ['bulk_add_collection']
+
+    def get_readonly_fields(self, request, obj=None):
+        """
+        Determine read only fields based on item source, to prevent
+        editing of HathiTrust fields that should not be changed.
+        """
+        if obj and obj.source == DigitizedWork.HATHI:
+            return self.hathi_readonly_fields + self.readonly_fields
+        return self.readonly_fields
 
     def list_collections(self, obj):
         '''Return a list of :class:ppa.archive.models.Collection object names
