@@ -138,8 +138,8 @@ class DigitizedWork(TrackChangesModel, Indexable):
         help_text='Source identifier; HT id for HathiTrust materials')
     #: source url where the original can be accessed
     source_url = models.URLField(
-        max_length=255, verbose_name='Source URL',
-        help_text='URL where the source item can be accessd')
+        max_length=255, verbose_name='Source URL', blank=True,
+        help_text='URL where the source item can be accessed')
     #: record id; for Hathi materials, used for different copies of
     #: the same work or for different editions/volumes of a work
     record_id = models.CharField(
