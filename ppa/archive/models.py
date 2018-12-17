@@ -139,7 +139,8 @@ class DigitizedWork(TrackChangesModel, Indexable):
     #: source identifier; hathi id for HathiTrust materials
     source_id = models.CharField(
         max_length=255, unique=True, verbose_name='Source ID',
-        help_text='Source identifier; HT id for HathiTrust materials')
+        help_text='Source identifier. Unique identifier without spaces; ' +
+                  'used for site URL. (HT id for HathiTrust materials.)')
     #: source url where the original can be accessed
     source_url = models.URLField(
         max_length=255, verbose_name='Source URL', blank=True,
