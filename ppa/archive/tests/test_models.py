@@ -539,11 +539,12 @@ class TestDigitizedWork(TestCase):
 
         # trying to change source id for hathi record should error
         work.source_id = '123456a'
+        work.status = work.SUPPRESSED
         with pytest.raises(ValidationError):
             work.clean()
 
         # not an error for non-hathi
-        work.source = DigitizedWork.HATHI
+        work.source = DigitizedWork.OTHER
         work.clean()
 
     def test_is_suppressed(self):
