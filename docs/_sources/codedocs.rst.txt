@@ -35,6 +35,30 @@ Hathi
     :members:
 
 
+Pages
+-----
+
+.. automodule:: ppa.pages
+    :members:
+
+Models
+^^^^^^
+.. automodule:: ppa.pages.models
+    :members:
+
+
+Editorial
+---------
+
+.. automodule:: ppa.editorial
+    :members:
+
+Models
+^^^^^^
+.. automodule:: ppa.editorial.models
+    :members:
+
+
 Manage Commands
 ^^^^^^^^^^^^^^^
 
@@ -78,7 +102,7 @@ Editorial
 Models
 ^^^^^^
 .. automodule:: ppa.editorial.models
-    :members: 
+    :members:
 
 Pages
 -----
