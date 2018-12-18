@@ -11,8 +11,7 @@ from django.db.models.query import QuerySet
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
-from pairtree import pairtree_client, pairtree_path
-from pairtree.storage_exceptions import ObjectNotFoundException
+from pairtree import pairtree_client, pairtree_path, storage_exceptions
 import pytest
 
 from ppa.archive import hathi
@@ -423,6 +422,12 @@ class TestDigitizedWork(TestCase):
                 assert 'tags' in data
                 assert data['tags'] == mets_page.label.split(', ')
 
+            # not suppressed by no data
+            mock_methods['hathi_metsfile_path'].side_effect = \
+                storage_exceptions.ObjectNotFoundException
+            # should log an error, not currently tested
+            assert not list(work.page_index_data())
+
         # if item is suppressed - no page data
         work.status = DigitizedWork.SUPPRESSED
         assert not list(work.page_index_data())
@@ -480,7 +485,7 @@ class TestDigitizedWork(TestCase):
 
             # should not raise an exception if deletion fails
             mock_pairtree_client.return_value.delete_object.side_effect \
-                 = ObjectNotFoundException
+                 = storage_exceptions.ObjectNotFoundException
             work.delete_hathi_pairtree_data()
             # not currently testing that warning is logged
 
