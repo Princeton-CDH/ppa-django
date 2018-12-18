@@ -61,7 +61,7 @@ header { // used mostly as space for banner images
 
     &.error .banner {
         width: 100%;
-        background: url('/static/img/errors/Header_Grey.png');
+        background: url('/static/img/headers/error/error-header-grey.png');
         background-size: cover;
         background-position: center 1rem;
         background-repeat: no-repeat;
@@ -82,7 +82,7 @@ header { // used mostly as space for banner images
 
     &.error .lower {
         width: 100%;
-        background: url('/static/img/errors/FallingHeader_Grey.png');
+        background: url('/static/img/headers/error/falling-header-grey.png');
         background-size: 150%;
         background-position: bottom;
         background-repeat: no-repeat;

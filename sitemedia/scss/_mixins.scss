@@ -12,23 +12,23 @@
     
     // small 1x and 2x
     min-height: $banner-height;
-    mask-image: url("#{$src}_S@1x.png");
-    -webkit-mask-image: url("#{$src}_S@1x.png");
+    mask-image: url("#{$src}-S@1x.png");
+    -webkit-mask-image: url("#{$src}-S@1x.png");
     
     @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-        mask-image: url("#{$src}_S@2x.png");
-	    -webkit-mask-image: url("#{$src}_S@2x.png");
+        mask-image: url("#{$src}-S@2x.png");
+	    -webkit-mask-image: url("#{$src}-S@2x.png");
     }
 
     // medium 1x and 2x
     @media (min-width: $tablet) {
         min-height: $banner-height-m;
-        mask-image: url("#{$src}_M@1x.png");
-        -webkit-mask-image: url("#{$src}_M@1x.png");
+        mask-image: url("#{$src}-M@1x.png");
+        -webkit-mask-image: url("#{$src}-M@1x.png");
         
         @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-            mask-image: url("#{$src}_M@2x.png");
-	        -webkit-mask-image: url("#{$src}_M@2x.png");
+            mask-image: url("#{$src}-M@2x.png");
+	        -webkit-mask-image: url("#{$src}-M@2x.png");
         }
     }
 
@@ -47,7 +47,7 @@
 
 @mixin notes-header($color) {
     .banner {
-        @include responsive-banner("/static/img/ppa_pattern_home", $color);
+        @include responsive-banner("/static/img/headers/notes/notes-header", $color);
         opacity: 0.3;
         mask-size: 768px; // fixed larger size for small screens
         -webkit-mask-size: 768px;
