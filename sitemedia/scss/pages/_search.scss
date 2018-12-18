@@ -162,10 +162,7 @@
 
         input[type=checkbox] { // hide checkboxes
             position: absolute;
-            z-index: -1;
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
+            opacity: 0;
             outline: none;
 
             &::-ms-check {
