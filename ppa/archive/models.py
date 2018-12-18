@@ -28,9 +28,9 @@ NO_COLLECTION_LABEL = 'Uncategorized'
 
 
 class TrackChangesModel(models.Model):
-    ''':Model mixin that keeps a copy of initial data in order to check
-    if fields have been changed. Change detection only works on the
-    current instance of an object.'''
+    ''':class:`~django.modles.Model` mixin that keeps a copy of initial
+    data in order to check if fields have been changed. Change detection
+    only works on the current instance of an object.'''
 
     class Meta:
         abstract = True
@@ -552,7 +552,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
                                              MinimalMETS)
         except storage_exceptions.ObjectNotFoundException:
             logger.error('Pairtree data for %s not found but status is %s',
-                         self.source_id, self.get_status_display())
+                         self.source_id, self.gpet_status_display())
             return
 
         # read zipfile contents in place, without unzipping
