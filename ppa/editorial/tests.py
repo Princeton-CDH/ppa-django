@@ -66,9 +66,9 @@ class TestEditorialIndexPage(WagtailPageTests):
 
         # non-numeric year/month should 404
         with pytest.raises(Http404):
-            index_page.route({}, ['two'])
+            index_page.route({}, ['twos'])
         with pytest.raises(Http404):
-            index_page.route({}, ['2018', 'one'])
+            index_page.route({}, ['2018', 'on'])
 
         # non-existent slug should 404
         with pytest.raises(Http404):
