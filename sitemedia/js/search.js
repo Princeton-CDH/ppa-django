@@ -20,7 +20,7 @@ $(function(){
     const $$collectionInputs = $('#collections input')
     const $$textInputs = $('input[type="text"]')
     const $$relevanceOption = $('#sort .item[data-value="relevance"]')
-    const $$advancedSearchButton = $('.show-advanced')
+    const $$advancedSearchButton = $('.show-advanced button')
 
     /* bindings */
     archiveSearchForm.onStateChange(submitForm)
@@ -122,20 +122,34 @@ $(function(){
         $('.form').keydown(e => { if (e.which === 13) e.preventDefault() }) // don't allow enter key to submit the search
         $$textInputs.each((_, el) => clearable(el)) // make text inputs clearable
         validate()
+        let advSearchState = sessionStorage.getItem('ppa-adv-search')
+        switch (advSearchState) {
+            case 'open':
+                advancedSearchOn()
+                break;
+            case 'closed': // default to off
+            case undefined:
+                advancedSearchOff()
+        }
+    }
+
+    function advancedSearchOn() {
+        $('.advanced.segment').css('display', 'flex') // if we don't manually set flex here, jQuery can't infer it
+        $('.advanced.column').css('display', 'inline-block') // column shouldn't be flex
+        $('.advanced').hide().slideDown() // hide sets display to none while animating
+        sessionStorage.setItem('ppa-adv-search', 'open') // remember the value for this session
+    }
+
+    function advancedSearchOff() {
+        $('.advanced').slideUp()
+        sessionStorage.setItem('ppa-adv-search', 'closed')
     }
 
     function toggleAdvancedSearch() {
-        if ($('.advanced').is(':hidden')) {
-            $('.advanced.segment').css('display', 'flex') // if we don't manually set flex here, jQuery can't infer it
-            $('.advanced.column').css('display', 'inline-block') // column shouldn't be flex
-            $('.advanced').hide().slideDown() // hide sets display to none while animating
-        }
-        else {
-            $('.advanced').slideUp()
-        }
+        $('.advanced').is(':hidden') ? advancedSearchOn() : advancedSearchOff()
     }
 
-    bodymovin.loadAnimation({
+    bodymovin.loadAnimation({ // set up the loader animation
         container: document.getElementById('bm'),
         renderer: 'svg',
         loop: true,
