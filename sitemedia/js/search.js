@@ -119,14 +119,10 @@ $(function(){
         $('.form').keydown(e => { if (e.which === 13) e.preventDefault() }) // don't allow enter key to submit the search
         $$textInputs.each((_, el) => clearable(el)) // make text inputs clearable
         validate()
-        let advSearchState = sessionStorage.getItem('ppa-adv-search')
-        switch (advSearchState) {
-            case 'open':
-                advancedSearchOn()
-                break;
-            case 'closed': // default to off
-            case undefined:
-                advancedSearchOff()
+        if (sessionStorage.getItem('ppa-adv-search') == 'open') { // open advanced search without animating it
+            $('.show-advanced').addClass('active')
+            $('.advanced.segment').css('display', 'flex')
+            $('.advanced.column').css('display', 'inline-block')
         }
         advancedSearchIndicator()
     }
