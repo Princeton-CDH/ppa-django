@@ -20,6 +20,7 @@ export default class ReactiveForm {
         switch($element.type) { // decide what we need to monitor to determine if there was a change
             case 'checkbox':
             case 'radio':
+                observable = fromEvent($element, 'change') // safari doesn't use input events for these
                 return observable.pluck('target', 'checked') // returns boolean immediately
             case 'select':
                 return observable.pluck('target', 'value') // return string immediately

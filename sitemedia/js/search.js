@@ -25,7 +25,6 @@ $(function(){
     /* bindings */
     archiveSearchForm.onStateChange(submitForm)
     $$clearDatesLink.click(onClearDates)
-    $$collectionInputs.change(onCollectionChange)
     $$advancedSearchButton.click(toggleAdvancedSearch)
     $$textInputs.keyup(onTextInputChange)
     onPageLoad() // misc functions that run once on page load
@@ -33,6 +32,7 @@ $(function(){
     $$collectionInputs
         .focus(e => $(e.target).parent().addClass('focus')) // make collection buttons focusable
         .blur(e => $(e.target).parent().removeClass('focus'))
+        .change(e => $(e.target).parent().toggleClass('active'))
         .keypress(e => { if (e.which == 13) $(e.target).click() }) // pressing enter "clicks" them
 
     /* functions */
@@ -84,10 +84,6 @@ $(function(){
         $$maxDateInput.val('')
         $$minDateInput[0].dispatchEvent(new Event('input')) // fake input events to trigger resubmit
         $$maxDateInput[0].dispatchEvent(new Event('input'))
-    }
-
-    function onCollectionChange(event) {
-        $(event.currentTarget).parent().toggleClass('active')
     }
 
     function onTextInputChange(event) {
