@@ -12,7 +12,7 @@ import wagtail.images.blocks
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pages', '0007_add_person_snippet'),
+        ('pages', '0008_contributor_page'),
     ]
 
     operations = [
