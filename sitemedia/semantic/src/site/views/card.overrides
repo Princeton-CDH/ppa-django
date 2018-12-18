@@ -2,8 +2,12 @@
     User Variable Overrides
 *******************************/
 
+.ui.cards {
+    margin: 0;
+}
+
 .ui.card,
-.ui.cards > .card
+.ui.cards .card
 {
     padding: @padding;
     margin: 1rem 0;
@@ -112,10 +116,30 @@
             font-size: 1.2rem;
         }
     }
+
+    &.profile {
+        height: @profileHeight;
+        width: @profileWidth;
+        padding: @profilePadding;
+        margin: 0 0 3rem;
+
+        .header,
+        .description {
+            text-align: left;
+        }
+
+        .header {
+            font-size: 1.5rem;
+        }
+
+        @media (min-width: @tabletBreakpoint) {
+            width: @profileLargeWidth;
+        }
+    }
 }
 
 a.ui.card,
-.ui.cards > a.card {
+.ui.cards a.card {
     box-shadow: @linkBoxShadow;
 
     &.stack {
@@ -139,6 +163,14 @@ a.ui.card,
 
         &:hover {
             box-shadow: @postLinkHoverBoxShadow;
+        }
+    }
+
+    &.profile {
+        box-shadow: @profileLinkBoxShadow;
+
+        &:hover {
+            box-shadow: @profileLinkHoverBoxShadow;
         }
     }
 

@@ -30,6 +30,7 @@
             {% block attribution %}{% endblock %}
         </span>
     </h1>
+    {% block page_body %}
     {% for block in page.body %}
         {% if block.block_type == 'captioned_image' %}
             {% include "pages/snippets/figure.html" with captioned_img=block.value %}
@@ -41,5 +42,6 @@
             </div>
         {% endif %}
     {% endfor %}
+    {% endblock %}
 </article>
 {% endblock %}
