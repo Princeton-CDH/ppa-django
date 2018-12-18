@@ -6,13 +6,15 @@ from ppa.archive import views
 
 urlpatterns = [
     url(
-        '^add-to-collection/$',
+        r'^add-to-collection/$',
         staff_member_required(views.AddToCollection.as_view()),
         name='add-to-collection'
     ),
-    url('^csv/$', views.DigitizedWorkCSV.as_view(), name='csv'),
-    url('^(?P<source_id>.+)/$',
+    url(r'^csv/$', views.DigitizedWorkCSV.as_view(), name='csv'),
+    url(r'^record/(?P<record_id>\d+)/$',
+        views.DigitizedWorkByRecordId.as_view(), name='record-id'),
+    url(r'^(?P<source_id>.+)/$',
         views.DigitizedWorkDetailView.as_view(), name='detail'),
-    url('^$', views.DigitizedWorkListView.as_view(), name='list'),
+    url(r'^$', views.DigitizedWorkListView.as_view(), name='list'),
 
 ]
