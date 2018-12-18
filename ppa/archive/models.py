@@ -552,7 +552,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
                                              MinimalMETS)
         except storage_exceptions.ObjectNotFoundException:
             logger.error('Pairtree data for %s not found but status is %s',
-                         self.source_id, self.gpet_status_display())
+                         self.source_id, self.get_status_display())
             return
 
         # read zipfile contents in place, without unzipping
