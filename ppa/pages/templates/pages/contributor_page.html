@@ -12,7 +12,7 @@
             {% with person.url|yesno:"a,div" as tag %}
             <div class="person with-title">
                 <h2 class="title">{{ person.project_role }}</h2>
-                <{{ tag }} class="ui profile card"{% if person.url %} href="{{ person.url }}"{% endif %}>
+                <{{ tag }} class="ui profile card"{% if person.url %} href="{{ person.url }}" target="_blank" rel="noreferrer"{% endif %}>
                 <h3 class="header">{{ person.name }}</h3>
                 {{ person.description|richtext }}
                 </{{ tag }}>
@@ -31,7 +31,7 @@
             {% with person=block.value %}
             {% with person.url|yesno:"a,div" as tag %}
                 <div class="person">
-                    <{{ tag }} class="ui profile card"{% if person.url %} href="{{ person.url }}"{% endif %}>
+                    <{{ tag }} class="ui profile card"{% if person.url %} href="{{ person.url }}" target="_blank" rel="noreferrer"{% endif %}>
                     <h3 class="header">{{ person.name }}</h3>
                     {{ person.description|richtext }}
                     </{{ tag }}>
