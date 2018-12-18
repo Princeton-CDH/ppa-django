@@ -22,7 +22,7 @@
             <span class="validation">
                 {{ search_form.pubdate_validation_msg }}
             </span>
-            <a class="clear-selection" role="button">Clear Selection</a>
+            <button class="clear-selection" type="button">Clear Selection</button>
         </div>
         <div class="eight wide column" id="histogram">
             <canvas class="visualization" height="60" width="600"></canvas>
@@ -65,7 +65,7 @@
         {% endcomment %}
     </div>
     <div class="ui vertical basic segment show-advanced">
-        <button>Advanced Search</button>
+        <button type="button">Advanced Search</button>
     </div>
     <input type="submit" class="sr-only sr-only-focusable" aria-label="submit search">
     <div class="workscount ui center aligned text container">
