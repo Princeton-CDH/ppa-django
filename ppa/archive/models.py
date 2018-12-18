@@ -256,7 +256,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
         if self.has_changed('source_id'):
             new_source_id = self.source_id
             self.source_id = self.initial_value('source_id')
-            self.remove_from_index()
+            self.remove_from_index(params={"commitWithin": 3000})
             self.source_id = new_source_id
 
         super().save(*args, **kwargs)
