@@ -2,19 +2,20 @@ import csv
 import logging
 
 from django.contrib import messages
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, MultipleObjectsReturned
 from django.core.paginator import Paginator
-from django.http import HttpResponse
-from django.shortcuts import redirect
+from django.http import HttpResponse, Http404
+from django.shortcuts import redirect, get_object_or_404
 from django.utils.http import urlencode
 from django.utils.timezone import now
 from django.urls import reverse
 from django.views.generic import ListView, DetailView
+from django.views.generic.base import RedirectView
 from django.views.generic.edit import FormView
 from SolrClient.exceptions import SolrError
 
 from ppa.archive.forms import SearchForm, AddToCollectionForm, SearchWithinWorkForm
-from ppa.archive.models import DigitizedWork, Collection, NO_COLLECTION_LABEL
+from ppa.archive.models import DigitizedWork, NO_COLLECTION_LABEL
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 from ppa.common.views import VaryOnHeadersMixin
 
@@ -168,7 +169,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
                 # search for works that match the filter OR for works
                 # associated with pages that match
                 query_parts.append(
-                     '(%s OR {!join from=source_id to=id v=$keyword_query})' % keyword_query
+                    '(%s OR {!join from=source_id to=id v=$keyword_query})' % keyword_query
                 )
 
             # combine work and text queries together with AND
@@ -380,6 +381,20 @@ class DigitizedWorkDetailView(DetailView):
                 context['error'] = error_msg
 
         return context
+
+
+class DigitizedWorkByRecordId(RedirectView):
+    '''Redirect from DigitizedWork record id to detail view when possible.
+    If there is only one record found, redirect. If multiple are found, 404.'''
+    permanent = False
+    query_string = False
+
+    def get_redirect_url(self, *args, **kwargs):
+        try:
+            work = get_object_or_404(DigitizedWork, record_id=kwargs['record_id'])
+            return work.get_absolute_url()
+        except MultipleObjectsReturned:
+            raise Http404
 
 
 class DigitizedWorkCSV(ListView):

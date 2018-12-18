@@ -670,6 +670,23 @@ class TestArchiveViews(TestCase):
         self.assertNotContains(response, reverse('archive:csv'),
             msg_prefix='CSV download link should only be on digitized work list')
 
+    def test_digitizedwork_by_recordid(self):
+        # single item: should redirect
+        dial = DigitizedWork.objects.get(source_id='chi.78013704')
+        record_url = reverse('archive:record-id', args=[dial.record_id])
+        response = self.client.get(record_url)
+        assert response.status_code == 302
+        assert response['Location'] == dial.get_absolute_url()
+
+        # multiple works with the same record id: should 404
+        # set all the test records to the same record id
+        DigitizedWork.objects.update(record_id=dial.record_id)
+        assert self.client.get(record_url).status_code == 404
+
+        # bogus id should 404
+        record_url = reverse('archive:record-id', args=['012334567'])
+        assert self.client.get(record_url).status_code == 404
+
 
 class TestAddToCollection(TestCase):
 
