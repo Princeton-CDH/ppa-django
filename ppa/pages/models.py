@@ -243,7 +243,7 @@ class ContributorPage(Page, PagePreviewDescriptionMixin):
         help_text='Select and order people to be listed as board members.'
     )
 
-    body = StreamField(BodyContentBlock)
+    body = StreamField(BodyContentBlock, blank=True)
 
     content_panels = Page.content_panels + [
         FieldPanel('description'),
