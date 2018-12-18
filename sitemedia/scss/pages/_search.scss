@@ -104,6 +104,7 @@
             margin-right: 5px;
             transition: padding 0.2s;
             flex: none;
+            position: relative;
         }
 
         .ui.button {
@@ -132,7 +133,9 @@
         }
 
         input[type=checkbox] { // hide checkboxes
-            position: relative;
+            position: absolute;
+            z-index: -1;
+            appearance: none;
             -webkit-appearance: none;
             -moz-appearance: none;
             outline: none;
@@ -142,24 +145,24 @@
             }
         }
 
-        input[type=checkbox]::after {
+        .button::after {
             content: "×";
             cursor: pointer;
             color: $white-two;
             position: absolute;
             font-size: 1rem;
-            left: 0;
-            top: -1px;
+            right: 5px;
+            top: 5px;
             opacity: 0;
             transition: opacity 0.2s;
         }
 
-        input[type=checkbox]:checked::after {
+        .button.active::after {
             opacity: 1;
         }
 
         .button.active {
-            padding-right: 1rem;
+            padding-right: 1.25rem;
         }
     }
 
