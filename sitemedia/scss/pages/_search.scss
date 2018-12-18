@@ -21,10 +21,15 @@
         text-align: center;
         padding-top: 0;
 
-        a {
-            margin: auto;
-            margin-bottom: 1rem;
+        button {
+            font-family: $pageFont;
             cursor: pointer;
+            appearance: none;
+            -moz-appearance: none;
+            -webkit-appearance: none;
+            border: none;
+            padding: none;
+            background: none;
         }
     }
 
