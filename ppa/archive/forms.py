@@ -289,7 +289,7 @@ class SearchForm(forms.Form):
             'author_desc': 'author_exact desc',
         }
         # return solr field for requested sort option
-        return solr_mapping[sort]
+        return solr_mapping.get(sort, None)
 
     def set_choices_from_facets(self, facets):
         '''Set choices on field from a dictionary of facets'''
