@@ -1,6 +1,6 @@
 {% load semanticui humanize static %}
 <form class="ui form{% if error %} error{% endif %} no-js">
-    <div class="ui vertical stackable grid segment" role="group">
+    <div class="ui vertical stackable grid segment">
         <legend class="sr-only">text search fields</legend>
         <div class="twelve wide column">
             {% render_field search_form.query %}
@@ -15,7 +15,7 @@
             </div>
         </div>
     </div>
-    <div class="ui vertical stackable grid segment advanced" role="group">
+    <div class="ui vertical stackable grid segment advanced">
         <legend class="sr-only">publication date fields</legend>
         <div class="four wide column" id="publication">
             {% render_field search_form.pub_date %}
@@ -30,18 +30,18 @@
             <span class="max-date"></span>
         </div>
     </div>
-    <div class="ui vertical stackable basic grid segment" role="group">
+    <div class="ui vertical stackable basic grid segment">
         <legend class="sr-only">search filters</legend>
         <div class="twelve wide column" id="collections">
             <div class="field">
                 <label for="collections">Collections</label>
                     {% for collection in search_form.collections %}
-                    <label class="ui button{% if collection.data.selected %} active{% endif %}" for="{{ collection.id_for_label }}" role="checkbox">
-                        {{ collection.tag }}
+                    <label class="ui button{% if collection.data.selected %} active{% endif %}">
                         {{ collection.choice_label }}
+                        {{ collection.tag }}
                     </label>
-                    <div class="spacer"></div>
                     {% endfor %}
+                    <div class="spacer"></div>
             </div>
             <noscript>
                 <input class="ui primary button" type="submit" value="Submit"/>
