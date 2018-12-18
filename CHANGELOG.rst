@@ -21,6 +21,7 @@ Search improvements
 * As a user, I want keyword searches to prioritize matches in the author, title and public notes fields so that I can easily find works using keywords.
 * As a user, I should not see suppressed items in search results or item display so that my results are not cluttered by items not meant to be part of the archive.
 * As a user, I want to exclude or include items from any of the collections in PPA so that I can refine my search to include relevant items.
+* As a user, I want the advanced search pulldown state that I have selected to be preserved when I reload the page so that my view of the search form is stable and consistent without having to continually modify my selection.
 * Automatically change default sort to Relevance for keyword searches
 * Change `srcid` to `source_id` for fielded search
 * bugfix: non-sequential publication dates break search validation
@@ -34,11 +35,16 @@ Content management
 
 UI/UX/Design updates
 ^^^^^^^^^^^^^^^^^^^^
+* Refinements to the search form
+  - collapsible advanced search, hidden by default
+  - visual indicator if filters are active in the advanced search
+  - revised styles for collection filters
+* Indicator for search in-progress
+* Add a "jump to top" button on search results
 * Styles for editorial list page, editorial post including image captions
   and footnotes
-* Indicator for search in-progress
 * Updated error pages
-* Add a "jump to top" button on search results
+
 
 0.11.0
 ------
