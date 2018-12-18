@@ -79,6 +79,10 @@
 @mixin content-page() {
     @include font-scale();
 
+    .ui.text.container {
+        font-size: inherit;
+    }
+
     h1 {
         padding-bottom: 1rem;
 

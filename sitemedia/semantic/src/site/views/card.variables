@@ -107,3 +107,14 @@
 @postLinkShadowColor: @purple;
 @postLinkBoxShadow: @shadowDistance @shadowDistance 0px 0px @postLinkShadowColor;
 @postLinkHoverBoxShadow: @hoverShadowDistance @hoverShadowDistance 0px 0px @postLinkShadowColor;
+
+/* Profile */
+@profileWidth: 287px;
+@profileLargeWidth: 230px;
+@profileHeight: 173px;
+@profilePadding: 2rem 1rem;
+
+/* Profile Link */
+@profileLinkShadowColor: @pink;
+@profileLinkBoxShadow: @shadowDistance @shadowDistance 0px 0px @profileLinkShadowColor;
+@profileLinkHoverBoxShadow: @hoverShadowDistance @hoverShadowDistance 0px 0px @profileLinkShadowColor;
