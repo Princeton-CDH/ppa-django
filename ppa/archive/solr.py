@@ -272,11 +272,6 @@ class PagedSolrQuery(object):
                 val['counts'] = OrderedDict(zip(val['counts'][::2], val['counts'][1::2]))
             return facet_ranges
 
-    def get_facets_ranges(self):
-        '''Wrap SolrClient.SolrResponse.get_facets() to get query facets as a dict
-        of dicts.'''
-        return self.result.get_facets_ranges()
-
     def get_results(self):
         '''
         Return results of the Solr query.
