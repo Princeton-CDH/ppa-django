@@ -1,19 +1,16 @@
-{% extends "base.html" %}
+{% extends "error.html" %}
 {% load static %}
-
-{% block css %}
-<link rel="stylesheet" type="text/x-scss" href="{% static 'scss/page.scss' %}">
-{% endblock %}
-
-{% block page-context-id %}page{% endblock %}
 
 {% block title %}Server error{% endblock %}
 
-{% block content %}
-<div class="ui container">
-    <div class="paper">
-        <h1 class="ui header">500 Error</h1>
-        <p>This page doesn’t scan correctly. Try trochees.</p>
-    </div>
-</div>
+{% block error_name %}Server Error{%endblock %}
+
+{% block error_code %}500{%endblock %}
+
+{% block image %}
+<img src="{% static 'img/errors/500error_logo.png' %}" class="large" alt="collapsed pages">
+{% endblock %}
+
+{% block error_message %}
+Oh no! It looks like our metrical system has collapsed. Our team of prosody experts will repair it soon.
 {% endblock %}

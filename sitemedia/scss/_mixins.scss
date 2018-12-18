@@ -1,34 +1,34 @@
 @mixin responsive-banner($src, $color) {
     width: 100%;
     height: 100%;
-    opacity: 0.3;
     background-color: $color;
     mask-position: top;
-    mask-size: cover;
+    mask-size: contain;
     mask-repeat: no-repeat;
     -webkit-mask-position: top;
-    -webkit-mask-size: cover;
+    -webkit-mask-size: contain;
     -webkit-mask-repeat: no-repeat;
+    z-index: -1;
     
     // small 1x and 2x
     min-height: $banner-height;
-    mask-image: url("#{$src}_S@1x.png");
-    -webkit-mask-image: url("#{$src}_S@1x.png");
+    mask-image: url("#{$src}-S@1x.png");
+    -webkit-mask-image: url("#{$src}-S@1x.png");
     
     @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-        mask-image: url("#{$src}_S@2x.png");
-	    -webkit-mask-image: url("#{$src}_S@2x.png");
+        mask-image: url("#{$src}-S@2x.png");
+	    -webkit-mask-image: url("#{$src}-S@2x.png");
     }
 
     // medium 1x and 2x
     @media (min-width: $tablet) {
         min-height: $banner-height-m;
-        mask-image: url("#{$src}_M@1x.png");
-        -webkit-mask-image: url("#{$src}_M@1x.png");
+        mask-image: url("#{$src}-M@1x.png");
+        -webkit-mask-image: url("#{$src}-M@1x.png");
         
         @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-            mask-image: url("#{$src}_M@2x.png");
-	        -webkit-mask-image: url("#{$src}_M@2x.png");
+            mask-image: url("#{$src}-M@2x.png");
+	        -webkit-mask-image: url("#{$src}-M@2x.png");
         }
     }
 
@@ -47,7 +47,15 @@
 
 @mixin notes-header($color) {
     .banner {
-        @include responsive-banner("/static/img/ppa_pattern_home", $color);
+        @include responsive-banner("/static/img/headers/notes/notes-header", $color);
+        opacity: 0.3;
+        mask-size: 768px; // fixed larger size for small screens
+        -webkit-mask-size: 768px;
+
+        @media (min-width: $tablet) {
+            mask-size: contain;
+            -webkit-mask-size: contain;
+        }
     }
 }
 
@@ -56,10 +64,107 @@
     font-size: 2rem;
     font-weight: normal;
     margin: 4rem 0 2rem;
+    padding-bottom: 1rem;
 
     @media (min-width: $tablet) {
         font-size: 3rem;
-        margin: 3rem 0;
+        margin: 8rem 0 2rem;
+    }
+
+    @media (min-width: $largeMonitor) {
+        width: 1000px;
+    }
+}
+
+@mixin content-page() {
+    @include font-scale();
+
+    .ui.text.container {
+        font-size: inherit;
+    }
+
+    h1 {
+        padding-bottom: 1rem;
+
+        .meta {
+            font-size: 1rem;
+            display: inherit;
+            font-family: $pageFont;
+
+            @media (min-width: $tablet) {
+                font-size: 1.5rem;
+            }
+        }
+    }
+
+    h2, h3, p {
+        font-family: $pageFont;
+        @include font-scale();
+    }
+
+    h2 {
+        font-weight: bold;
+    }
+
+    h3 {
+        font-weight: normal;
+        font-style: italic;
+    }
+
+    img {
+        text-align: center;
+        object-fit: cover;
+        height: unset;
+        max-width: 100%;
+    }
+
+    img,
+    .rich-text {
+        margin: auto auto 1rem;
+        display: block;
+    }
+
+    ul,
+    ol {
+        padding-left: 2rem;
+    }
+
+    ul {
+        list-style: none;
+
+        li {
+            position: relative; // to allow rel. abs. positioning of bullets
+        }
+
+        li::before { // create purple bullets
+            width: 20px;
+            height: 5px;
+            background-color: $pig-pink;
+            position: absolute;
+            content: "";
+            top: 1rem;
+            left: -2rem;
+        }
+    }
+
+     a {
+         text-decoration: underline;
+     }
+}
+
+@mixin font-scale() {
+    font-size: 1.2rem;
+
+    @media (min-width: $tablet) {
+        font-size: 1.5rem;
+    }
+}
+
+@mixin small-font-scale() {
+    font-size: 1rem;
+
+    @media (min-width: $tablet) {
+        font-size: 1.2rem;
     }
 }
 
@@ -86,8 +191,8 @@
 }
 
 @mixin link() {
-    color: $darkBlue;
-    border-bottom: 2px solid $darkBlue;
+    color: $french-blue;
+    border-bottom: 2px solid $french-blue;
     cursor: pointer;
 }
 

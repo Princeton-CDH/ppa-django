@@ -53,12 +53,12 @@ Initial setup and installation:
 
     python manage.py migrate
 
-- Create two new Solr cores with a basic configuration and managed schema,
-  using the core/collection names for development and testing that you
-  configured in local settings::
+- Create two new Solr cores using project specific managed schema and
+  solr config, using the core/collection names for development and
+  testing that you configured in local settings::
 
-    solr create -c SOLR_CORE -n basic_configs
-    solr create -c SOLR_TEST_CORE -n basic_configs
+    solr create -c SOLR_CORE -d solr_conf
+    solr create -c SOLR_TEST_CORE -d solr_conf
 
 - Run the manage command to configure the schema::
 

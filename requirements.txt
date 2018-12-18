@@ -1,10 +1,11 @@
 django>=1.11.16,<2.0
 mysqlclient
-django-cas-ng==3.5.10
+# pin to 3.5.x for django 1.11 compatibility
+django-cas-ng<3.6
 pucas
 django-grappelli
 # unreleased version of SolrClient with schema field-type management
-git+https://github.com/rlskoeser/SolrClient.git@6cf9e60bbcca0398f7f43ed2f4ffeab062220b16#egg=SolrClient
+git+https://github.com/rlskoeser/SolrClient.git@9d0493b#egg=SolrClient
 pairtree
 pymarc
 cached_property
@@ -16,3 +17,5 @@ django-compressor-toolkit
 lxml
 eulxml
 wagtail>=2.3
+bleach
+django-fullurl

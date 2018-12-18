@@ -1,0 +1,46 @@
+{% extends "pages/content_page.html" %}
+{% load wagtailcore_tags %}
+
+{% block page-context-id %}contributors{% endblock %}
+
+{% block page_body %}
+    {# project contributors #}
+    <div class="contributors">
+        <div class="ui cards">
+        {% for block in page.specific.contributors %}
+            {% with person=block.value %}
+            {% with person.url|yesno:"a,div" as tag %}
+            <div class="person with-title">
+                <h2 class="title">{{ person.project_role }}</h2>
+                <{{ tag }} class="ui profile card"{% if person.url %} href="{{ person.url }}" target="_blank" rel="noreferrer"{% endif %}>
+                <h3 class="header">{{ person.name }}</h3>
+                {{ person.description|richtext }}
+                </{{ tag }}>
+            </div>
+        {% endwith %}{% endwith %}
+        {% endfor %}
+        </div>
+    </div>
+
+    {# advisory board members #}
+
+    <div class="board">
+        <h2>Advisory Board</h2>
+        <div class="ui cards">
+        {% for block in page.specific.board %}
+            {% with person=block.value %}
+            {% with person.url|yesno:"a,div" as tag %}
+                <div class="person">
+                    <{{ tag }} class="ui profile card"{% if person.url %} href="{{ person.url }}" target="_blank" rel="noreferrer"{% endif %}>
+                    <h3 class="header">{{ person.name }}</h3>
+                    {{ person.description|richtext }}
+                    </{{ tag }}>
+                </div>
+            {% endwith %}{% endwith %}
+        {% endfor %}
+        </div> {# end cards #}
+    </div>
+
+    {# regular body content, as for any other content page #}
+    {{ block.super }}
+{% endblock %}

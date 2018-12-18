@@ -1,83 +1,94 @@
 {% load static humanize %}
 
-<div class="item">
-    <abbr class="unapi-id" title="{{ item.srcid }}"></abbr>
-    <div class="ui stackable grid">
-        <div class="six wide column">
-            <div class="labels">
-                {% if page_obj %}
-                <p class="result-number">{{ page_obj.start_index|add:forloop.counter0 }}</p>
-                <!-- <i class="ui flag icon"></i> -->
-                {% endif %}
-            </div>
-            <div class="title">
+<li class="item">
+    <abbr class="unapi-id" title="{{ item.source_id }}" aria-hidden="true"></abbr>
+    <a href="{% url 'archive:detail' item.source_id %}{% if query %}?query={{ query }}{% endif %}" class="detail">
+        <div class="brief-result container">
+            <div class="title column">
+                <div class="labels">
+                    {% if page_obj %}
+                        <p class="result-number">{{ page_obj.start_index|add:forloop.counter0 }}</p>
+                    {% endif %}
+                </div>
                 <p>
                     <span class="ui header">{{ item.title }}</span>
                     <span class="ui sub header">{{ item.subtitle}}</span>
                 </p>
             </div>
-        </div>
-        <div class="metadata six wide column">
-            <div class="ui grid">
-                <div class="eight wide column">
+            <div class="metadata column">
+                <dl class="grid">
                     {% if item.author %}
-                    <p class="author">
-                        <span class="field-name">Author</span>
-                        <span class="field-value">{{ item.author }}</span>
-                    </p>
+                    <div class="author">
+                        <dt>Author</dt>
+                        <dd>{{ item.author }}</dd>
+                    </div>
+                    {% endif %}
+                    {% if item.pub_date %}
+                    <div class="pub-date">
+                        <dt>Publication Date</dt>
+                        <dd>{{ item.pub_date }}</dd>
+                    </div>
                     {% endif %}
                     {% if item.publisher %}
-                    <p class="publisher">
-                        <span class="field-name">Publisher</span>
-                            <span class="field-value">{{ item.publisher }}</span>
-                    </p>
-                    {% endif %}
-                </div>
-                <div class="four wide column">
-                    {% if item.pub_date %}
-                    <p class="pub-date">
-                        <span class="field-name">Pub. Date</span>
-                        <span class="field-value">{{ item.pub_date }}</span>
-                    </p>
+                    <div class="publisher">
+                        <dt>Publisher</dt>
+                        <dd>{{ item.publisher }}</dd>
+                    </div>
                     {% endif %}
                     {% if item.enumcron %}
-                    <p class="volume">
-                        <span class="field-name">Volume</span>
-                        <span class="field-value">{{ item.enumcron }}</span>
-                    </p>
+                    <div class="volume">
+                        <dt>Volume</dt>
+                        <dd>{{ item.enumcron }}</dd>
+                    </div>
                     {% endif %}
+                    {% if user.is_authenticated %}
+                    <div class="score">
+                        <dt>Relevance</dt>
+                        <dd>{{ item.score }}</dd>
+                        {% if page_groups and page_highlights %}
+                            {% with results=page_groups|dict_item:item.id %}
+                            <dt>Max relevance</dt>
+                            <dd>{{ results.maxScore }}</dd>
+                        {% endwith %}
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </dl>
+                <div class="buttons">
+                    {% if item.pk %} {# database object with many-to-many #}
+                        {% for collection in item.collections.all %}
+                            <label class="ui basic button">{{ collection }}</label>
+                        {% endfor %}
+                    {% else %} {# solr object with list of strings #}
+                        {% for collection in item.collections %}
+                            {# Don't display collection badge for uncategorized items #}
+                            {% if collection != NO_COLLECTION_LABEL %}
+                            <label class="ui basic button">{{ collection }}</label>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                    <div class="item-detail">
+                        <span>See more details</span>
+                        {% include 'snippets/chevron.svg' %}
+                    </div>
                 </div>
             </div>
-            <div class="buttons">
-                {% if item.pk %} {# database object with many-to-many #}
-                    {% for collection in item.collections.all %}
-                        <label class="ui basic button">{{ collection }}</label>
-                    {% endfor %}
-                {% else %} {# solr object with list of strings #}
-                    {% for collection in item.collections %}
-                        <label class="ui basic button">{{ collection }}</label>
-                    {% endfor %}
-                {% endif %}
-                <a class="item-detail" href="{% url 'archive:detail' item.srcid %}">
-                    <span>See more details</span>
-                    {% include 'snippets/chevron.svg' %}
-                </a>
-            </div>
         </div>
+    </a>
+    <div class="page-previews container">
         {% if page_groups and page_highlights %}
         {% with results=page_groups|dict_item:item.id %}
             {% if results.numFound > 2 %}
-            <a class="total-pages"
-                href="{% url 'archive:detail' item.srcid %}?query={{ query }}">
-                Total Results: {{ results.numFound|intcomma }} page{{ results.numFound|pluralize }}
-            </a>
+            <span class="total-pages">
+                {{ results.numFound|intcomma }} matching page{{ results.numFound|pluralize }}
+            </span>
             {% endif %}
-            <div class="pages twelve wide column">
+            <div class="pages">
                 {% if page_highlights %}
                 <div class="wrapper">
                     {% for page in results.docs %}
                     {% with highlights=page_highlights|dict_item:page.id %}
-                        {% include 'archive/snippets/page_preview.html' with item_id=item.srcid  %}
+                        {% include 'archive/snippets/page_preview.html' with item_id=item.source_id  %}
                     {% endwith %}
                     {% endfor %}
                 </div>
@@ -86,4 +97,4 @@
         {% endwith %}
         {% endif %}
     </div>
-</div>
+</li>

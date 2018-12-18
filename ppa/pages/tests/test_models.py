@@ -1,18 +1,20 @@
 from time import sleep
 
+import bleach
+import pytest
 from django.contrib.contenttypes.models import ContentType
-from django.urls import reverse
 from django.template.defaultfilters import striptags
+from django.urls import reverse
 from wagtail.core.models import Page, Site
 from wagtail.tests.utils import WagtailPageTests
-from wagtail.tests.utils.form_data import nested_form_data, streamfield, \
-    rich_text
-import pytest
+from wagtail.tests.utils.form_data import (nested_form_data, rich_text,
+                                           streamfield)
 
 from ppa.archive.models import Collection, DigitizedWork
 from ppa.archive.solr import get_solr_connection
-from ppa.pages.models import HomePage, ContentPage, CollectionPage
 from ppa.editorial.models import EditorialIndexPage
+from ppa.pages.models import (CollectionPage, ContentPage, ContributorPage,
+                              HomePage, Person)
 
 
 class TestHomePage(WagtailPageTests):
@@ -55,7 +57,8 @@ class TestHomePage(WagtailPageTests):
 
     def test_subpages(self):
         self.assertAllowedSubpageTypes(
-            HomePage, [ContentPage, EditorialIndexPage, CollectionPage, Page])
+            HomePage, [ContentPage, EditorialIndexPage, CollectionPage,
+                       ContributorPage, Page])
 
     @pytest.mark.usefixtures("solr")
     def test_get_context(self):
@@ -151,25 +154,42 @@ class TestContentPage(WagtailPageTests):
         assert len(striptags(desc)) <= content_page.max_length
         # beginning of text should match exactly the *first* block
         # (excluding end of content because truncation is inside tags)
-        assert desc[:200] == str(content_page.body[0])[:200]
 
+        # should also be cleaned by bleach to its limited set of tags
+        assert desc[:200] == bleach.clean(
+            str(content_page.body[0]),
+            # omit 'a' from list of allowed tags
+            tags=list((set(bleach.sanitizer.ALLOWED_TAGS) |
+                       set(['p'])) - set(['a'])),
+            strip=True
+        )[:200]
         # empty tags in description shouldn't be used
         content_page.description = '<p></p>'
         desc = content_page.get_description()
-        assert desc[:200] == str(content_page.body[0])[:200]
+
 
         # test content page with image for first block
         content_page2 = ContentPage(
             title='What is Prosody?',
             body=[
                 ('image', '<img src="milton-example.png"/>'),
-                ('paragraph', '<p>Prosody today means both the study of versification and pronunciation</p>'),
+                ('paragraph', '<p>Prosody today means both the study of '
+                              'and <a href="#">pronunciation</a></p>'),
                 ('paragraph', '<p>More content here...</p>'),
             ]
         )
         # should ignore image block and use first paragraph content
         assert content_page2.get_description()[:200] == \
-            str(content_page2.body[1])[:200]
+            bleach.clean(
+                str(content_page2.body[1]),
+                # omit 'a' from list of allowed tags
+                tags=list((set(bleach.sanitizer.ALLOWED_TAGS) |
+                          set(['p'])) - set(['a'])),
+                strip=True
+            )[:200]
+
+        # should remove <a> tags
+        assert '<a href="#">' not in content_page2.get_description()
 
         # should use description field when set
         content_page2.description = '<p>A short intro to prosody.</p>'
@@ -193,6 +213,45 @@ class TestContentPage(WagtailPageTests):
         content_page.search_description = 'A different description for meta text.'
         assert content_page.get_plaintext_description() == \
             content_page.search_description
+
+    def test_template(self):
+        # test fixture display
+        site = Site.objects.first()
+        content_page = ContentPage.objects.first()
+        response = self.client.get(content_page.relative_url(site))
+        self.assertTemplateUsed(response, 'pages/content_page.html')
+        self.assertContains(response, 'class="footnotes"',
+            msg_prefix='footnotes block should get footnotes class')
+
+        # add image (without caption) + check template
+        content_page.body.stream_data.append({
+            'type': 'image',
+            'value': 1,
+            'id': 'img1'
+        })
+        content_page.save()
+        response = self.client.get(content_page.relative_url(site))
+        self.assertTemplateNotUsed(response, 'pages/snippets/figure.html')
+        self.assertTemplateUsed(response, 'pages/snippets/responsive_image.html')
+        self.assertContains(response, '<img')
+        self.assertContains(response, 'srcset')
+        # NOTE: not currently testing image srcset logic
+
+        # add image + caption to check template
+        caption_text = 'a very detailed caption'
+        content_page.body.stream_data.append({
+            'type': 'captioned_image',
+            # pseudo data, not a real image object
+            'value': {'image': 1, 'caption': caption_text},
+            'id': 'imgcapt1'
+        })
+        content_page.save()
+        response = self.client.get(content_page.relative_url(site))
+        self.assertTemplateUsed(response, 'pages/snippets/figure.html')
+        self.assertTemplateUsed(response, 'pages/snippets/responsive_image.html')
+        self.assertContains(response, '<figure>')
+        self.assertContains(
+            response, '<figcaption><div class="rich-text">%s</div></figcaption>' % caption_text)
 
 
 class TestCollectionPage(WagtailPageTests):
@@ -305,3 +364,65 @@ class TestCollectionPage(WagtailPageTests):
         self.assertContains(response, 'href="%s?collections=%s"' % (archive_url, coll2.pk))
         # empty collection should not link
         self.assertNotContains(response, 'href="%s?collections=%s"' % (archive_url, empty_coll.pk))
+
+
+class TestContributorPage(WagtailPageTests):
+    fixtures = ['wagtail_pages']
+
+    def test_can_create(self):
+        self.assertCanCreateAt(HomePage, ContributorPage)
+        root = HomePage.objects.first()
+        self.assertCanNotCreateAt(ContentPage, ContributorPage)
+        self.assertCanCreate(root, ContributorPage, nested_form_data({
+            'title': 'Board Members and Contributors',
+            'slug': 'contributors',
+            'contributors': streamfield([]),
+            'board': streamfield([]),
+            'body': streamfield([
+                ('paragraph', rich_text('some analysis'))
+            ])
+        }))
+
+    def test_parent_pages(self):
+        self.assertAllowedParentPageTypes(
+            ContributorPage, [HomePage])
+
+    def test_subpages(self):
+        self.assertAllowedSubpageTypes(
+            ContributorPage, [])
+
+    def test_template(self):
+        home = HomePage.objects.first()
+        site = Site.objects.first()
+        contrib = ContributorPage.objects.create(
+            title='Contributors and Board Members',
+            slug='contributors',
+            depth=home.depth + 1,
+            show_in_menus=False,
+            path=home.path + '0003',
+            content_type=ContentType.objects.get_for_model(ContributorPage)
+        )
+
+        # add people as project & board members
+        person_a = Person.objects.get(name='Person A')
+        person_b = Person.objects.get(name='Person B')
+        contrib.contributors.stream_data.append(('person', person_a, 'p1'))
+        contrib.board.stream_data.append(('person', person_b, 'p2'))
+        contrib.save()
+
+        response = self.client.get(contrib.relative_url(site))
+        # - check that correct templates are used
+        self.assertTemplateUsed(response, 'base.html')
+        self.assertTemplateUsed(response, 'pages/content_page.html')
+        self.assertTemplateUsed(response, 'pages/contributor_page.html')
+
+        # contributor name, description, link, project role
+        self.assertContains(response, person_a.name)
+        self.assertContains(response, person_a.url)
+        self.assertContains(response, person_a.description)
+        self.assertContains(response, person_a.project_role)
+
+        # board memeber name, description
+        self.assertContains(response, person_b.name)
+        self.assertContains(response, person_b.description)
+        self.assertNotContains(response, person_b.project_role)

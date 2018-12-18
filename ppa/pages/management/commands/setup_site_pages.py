@@ -13,7 +13,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from wagtail.core.models import Site as WagtailSite, Page
 
-from ppa.pages.models import HomePage, ContentPage, CollectionPage
+from ppa.pages.models import HomePage, ContentPage, CollectionPage, \
+    ContributorPage
 from ppa.editorial.models import EditorialIndexPage
 
 
@@ -89,15 +90,21 @@ class Command(BaseCommand):
         # create content page stubs if they are not already present
         index = 3
         for slug, title in self.content_pages.items():
-            cpage = ContentPage.objects.filter(slug=slug).first()
+            cpage = Page.objects.filter(slug=slug).first()
             if not cpage:
+                # use special contributor page for contributors
+                if slug == 'contributors':
+                    page_type = ContributorPage
+                else:
+                    page_type = ContentPage
+
                 ContentPage.objects.create(
                     title=title,
                     slug=slug,
                     depth=home.depth + 1,
                     path='{}{:04d}'.format(home.path, index),
                     show_in_menus=True,
-                    content_type=ContentType.objects.get_for_model(ContentPage)
+                    content_type=ContentType.objects.get_for_model(page_type)
                 )
             index += 1
 

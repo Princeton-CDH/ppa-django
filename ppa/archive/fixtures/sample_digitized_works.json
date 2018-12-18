@@ -3,14 +3,16 @@
   "model": "archive.collection",
   "pk": 1,
   "fields": {
-    "name": "Prosody"
+    "name": "Prosody",
+    "exclude": false
   }
 },
 {
   "model": "archive.collection",
   "pk": 2,
   "fields": {
-    "name": "typographically unique"
+    "name": "typographically unique",
+    "exclude": false
   }
 },
 {
@@ -28,6 +30,7 @@
     "publisher": "Daniel Press,",
     "pub_date": 1903,
     "page_count": 64,
+    "record_id": "100860237",
     "added": "2017-12-15T14:04:15.064Z",
     "updated": "2018-02-06T16:33:49.008Z",
     "collections": [
@@ -50,6 +53,7 @@
     "publisher": "Jansen, McClurg,",
     "pub_date": 1880,
     "page_count": 646,
+    "record_id": "000052812",
     "added": "2017-12-15T14:04:16.214Z",
     "updated": "2018-02-06T16:33:44.642Z",
     "collections": [

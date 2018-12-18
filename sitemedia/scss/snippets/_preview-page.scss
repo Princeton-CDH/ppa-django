@@ -1,4 +1,4 @@
-.page {
+.page:not(.item) {
     width: 100%;
     display: flex;
     // on small screen, wrap text below image
@@ -51,13 +51,13 @@
 
         .snippet {
             font-size: 1.25rem;
-            color: $darkGrey;
+            color: $slate-grey;
             line-height: normal;
         }
     }
 
     em {
         font-style: normal;
-        color: $blue;
+        color: $azure;
     }
 }

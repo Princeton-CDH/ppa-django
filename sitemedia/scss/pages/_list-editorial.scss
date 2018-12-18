@@ -1,6 +1,6 @@
 #list-editorial {
     h1 {
-        @include underline-headline($purple);
+        @include underline-headline($wisteria);
     }
 
     .updates {
@@ -12,10 +12,6 @@
             flex-flow: row wrap;
             justify-content: space-between;
             align-items: initial;
-
-            .card:last-child {
-                margin-left: auto;
-            }
         }
     }
 

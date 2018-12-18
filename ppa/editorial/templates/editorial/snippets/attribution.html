@@ -1,0 +1,16 @@
+{# Snippet to include authors and date attribution to editorial posts #}
+{% if page.authors %}
+    {% if add_urls %}
+        {% for block in page.authors %}
+            {% with block.value.url|yesno:"a,span" as tag %}
+                <{{ tag }} {% if tag == "a" %} href="{{ block.value.url }}" target="_blank" {% endif %}>
+                     {{ block.value.name }}</{{tag}}>{% if not forloop.last %}, {% endif %}
+            {% endwith %}
+        {% endfor %}
+    {% else %}
+        {% for block in page.authors %}
+            {{ block.value.name}}{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+    {% endif %}
+
+/ {% endif %}{{ page.first_published_at|date:"F j, Y"}}

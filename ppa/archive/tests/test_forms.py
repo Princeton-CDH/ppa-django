@@ -5,7 +5,7 @@ from django.test import TestCase
 import pytest
 
 from ppa.archive.forms import FacetChoiceField, SearchForm, RangeWidget, \
-    RangeField, RadioSelectWithDisabled
+    RangeField, RadioSelectWithDisabled, ModelMultipleChoiceFieldWithEmpty
 from ppa.archive.models import DigitizedWork, Collection
 
 
@@ -46,6 +46,19 @@ class TestSearchForm(TestCase):
         fake_form = {'query': 'foo', 'collections': [collections[0].pk, collections[1].pk]}
         searchform = SearchForm(fake_form)
         assert searchform.is_valid()
+
+    def test_defaults(self):
+        defaults = SearchForm.defaults()
+        assert defaults['sort'] == 'title_asc'
+        # all collections should be selected, since none are set to exclude
+        assert defaults['collections'] == \
+            [ModelMultipleChoiceFieldWithEmpty.EMPTY_ID] + \
+            list(Collection.objects.all().values_list('id', flat=True))
+
+        Collection.objects.filter(name='empty').update(exclude=True)
+        defaults = SearchForm.defaults()
+        assert Collection.objects.get(name='empty').pk not in \
+            defaults['collections']
 
     def test_collection_choices(self):
         # test collection set to disabled based on solr facets
@@ -171,4 +184,27 @@ class TestRadioWithDisabled(TestCase):
         # yes is not disabled
         self.assertInHTML('<input type="radio" name="yes_no" value="yes" '
                           'required id="id_yes_no_1" />', rendered)
+
+
+class TestModelMultipleChoiceFieldWithEmpty(TestCase):
+    fixtures = ['sample_digitized_works']
+
+    def test_clean(self):
+        collections = ModelMultipleChoiceFieldWithEmpty(
+            queryset=Collection.objects.order_by('name'), label='Collection')
+
+        # empty value -  should return empty list, no errors
+        assert not collections.clean([''])
+
+        # empty id + valid pk = should return empty label + collection
+        coll1 = Collection.objects.first()
+        cleaned_values = collections.clean([ModelMultipleChoiceFieldWithEmpty.EMPTY_ID,
+                                            coll1.pk])
+        assert collections.EMPTY_VALUE in cleaned_values
+        assert coll1 in cleaned_values
+
+        # invalid pk should still raise an exception
+        with pytest.raises(ValidationError):
+            collections.clean([404])
+
 

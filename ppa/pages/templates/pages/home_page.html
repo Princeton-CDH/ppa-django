@@ -6,6 +6,8 @@
 {% endblock %}
 
 {% block page-context-id %}homepage{% endblock %}
+{% block meta_title %}{% firstof page.seo_title page.title %}{% endblock %}
+{% block meta_description %}{{ page.search_description }}{% endblock %}
 
 {% block page_nav %}
     {% include 'snippets/nav.html' with style="homepage" %}
@@ -15,9 +17,9 @@
 <header class="homepage" id="header">
     <div class="banner"></div>
     <div id="scene">
-        <img class="layer one" data-depth="0.20" src="{% static 'img/ppaLogo_Layers_Revised/PPALogo_Blue.svg' %}" alt="">
-        <img class="layer two" data-depth="0.40" src="{% static 'img/ppaLogo_Layers_Revised/PPALogo_Teal.svg' %}" alt="">
-        <img class="layer three" data-depth="0.60" src="{% static 'img/ppaLogo_Layers_Revised/PPALogo_Red.svg' %}" alt="">
+        <img class="layer one" data-depth="0.20" src="{% static 'img/logos/outline/logo-outline-blue.svg' %}" alt="">
+        <img class="layer two" data-depth="0.40" src="{% static 'img/logos/outline/logo-outline-teal.svg' %}" alt="">
+        <img class="layer three" data-depth="0.60" src="{% static 'img/logos/outline/logo-outline-red.svg' %}" alt="">
     </div>
 </header>
 {% endblock %}
@@ -33,11 +35,6 @@
             View and search the archive
         </h3>
     </a>
-    <p class="learn-more">
-        Learn more below<br>
-        <img class="chevron icon"
-            src="{% static 'img/icons/RightChevron.svg' %}" alt="">
-    </p>
 </div>
 <div class="asides-collections ui vertical basic segment container">
    <div class="asides ui two cards">

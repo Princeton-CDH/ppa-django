@@ -108,6 +108,7 @@ INSTALLED_APPS = [
     'wagtail.core',
     'modelcluster',
     'taggit',
+    'fullurl',
     'ppa.archive',
     'ppa.common',
     'ppa.unapi',

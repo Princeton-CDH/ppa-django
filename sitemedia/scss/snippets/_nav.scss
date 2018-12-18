@@ -27,28 +27,6 @@
     }
 
     .ui.dropdown {
-        &:hover:not(.active) {
-            height: 35px;
-        }
-
-        &:hover > .menu {
-            visibility: hidden;
-            height: 1rem;
-        }
-
-        &.active .icon {
-            transform: rotate(-90deg);
-        }
-
-        &.active {
-            padding-bottom: 0 !important;
-        }
-
-        &.active > .menu {
-            padding-top: 0.5rem;
-            height: auto;
-        }
-
         .icon {
             float: none;
         }
@@ -59,13 +37,25 @@
         }
 
         .item {
-            visibility: hidden;
-            // padding: 0.5rem !important;
+            display: none;
             margin-left: 1rem;
         }
 
-        &.active .item {
-            visibility: visible;
+        &.active {
+            padding-bottom: 0 !important;
+
+            .item {
+                display: block;
+            }
+
+            .icon {
+                transform: rotate(-90deg);
+            }
+
+            > .menu {
+                padding-top: 0.5rem;
+                height: auto;
+            }
         }
     }
 
@@ -78,20 +68,24 @@
     padding: 0;
     z-index: 103; // above mobile nav
     transition: margin-top 0.5s;
-    border-top: 5px solid $pink;
+    border-top: 5px solid $rosy-pink;
     border-bottom: none;
     box-shadow: none;
 
     &.homepage {
-        border-color: $darkBlue;
+        border-color: $french-blue;
     }
 
     &.archive {
-        border-color: $teal;
+        border-color: $seafoam-blue;
     }
 
     &.editorial {
-        border-color: $purple;
+        border-color: $twilight;
+    }
+
+    &.error {
+        border-color: $black;
     }
 
     &.hidden {
@@ -149,6 +143,10 @@
             display: flex;
         }
 
+        &.about {
+            padding-right: 10px; // avoid placement of triangle over icon
+        }
+
         &.toc,
         &.search {
             display: flex;
@@ -158,28 +156,29 @@
             }
         }
 
-        &.about {
-            &.triangle::before { // can't use .active because it's a dropdown
-                @include triangle-overlay($pink);
-            }
+        &.active,
+        &.about.triangle {
+            font-weight: bold;
+        }
+
+        &.about.triangle::before { 
+            @include triangle-overlay($rosy-pink);
         }
         
-        &.editorial {
-            &.active::before {
-                @include triangle-overlay($purple);
-            }
+        &.editorial.active::before {
+            @include triangle-overlay($twilight);
         }
 
         &.collections,
         &.archive {
             &.active::before {
-                @include triangle-overlay($teal);
+                @include triangle-overlay($seafoam-blue);
             }
         }
     }
 
     a.item:hover {
-        border-bottom: 10px solid $darkBlue;
+        border-bottom: 10px solid $french-blue;
         padding-bottom: 8px;
     }
 

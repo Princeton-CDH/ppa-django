@@ -6,15 +6,16 @@ from unittest.mock import patch, Mock, DEFAULT
 from zipfile import ZipFile
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db.models.query import QuerySet
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
-from pairtree import pairtree_client, pairtree_path
+from pairtree import pairtree_client, pairtree_path, storage_exceptions
 import pytest
 
 from ppa.archive import hathi
-from ppa.archive.models import DigitizedWork, Collection
+from ppa.archive.models import DigitizedWork, Collection, NO_COLLECTION_LABEL
 from ppa.archive.solr import get_solr_connection, Indexable
 
 
@@ -231,14 +232,15 @@ class TestDigitizedWork(TestCase):
             author='Charles Witcomb', pub_place='Paris',
             publisher='Mesnil-Dramard',
             source_url='https://hdl.handle.net/2027/njp.32101013082597',
-            public_notes='A note field here')
+            public_notes='A note field here',
+            notes='internal notes for curation')
         coll1 = Collection.objects.create(name='Flotsam')
         coll2 = Collection.objects.create(name='Jetsam')
         digwork.collections.add(coll1)
         digwork.collections.add(coll2)
         index_data = digwork.index_data()
         assert index_data['id'] == digwork.source_id
-        assert index_data['srcid'] == digwork.source_id
+        assert index_data['source_id'] == digwork.source_id
         assert index_data['item_type'] == 'work'
         assert index_data['title'] == digwork.title
         assert index_data['subtitle'] == digwork.subtitle
@@ -248,14 +250,30 @@ class TestDigitizedWork(TestCase):
         assert index_data['pub_date'] == digwork.pub_date
         assert index_data['collections'] == ['Flotsam', 'Jetsam']
         assert index_data['publisher'] == digwork.publisher
-        assert index_data['src_url'] == digwork.source_url
-        assert digwork.public_notes in index_data['text']
-        assert digwork.notes not in index_data['text']
+        assert index_data['source_url'] == digwork.source_url
+        assert digwork.public_notes in index_data['notes']
+        assert digwork.notes not in index_data['notes']
         assert not index_data['enumcron']
 
         # with enumcron
         digwork.enumcron = 'v.7 (1848)'
         assert digwork.index_data()['enumcron'] == digwork.enumcron
+
+        # not in a collection
+        digwork.collections.clear()
+        assert digwork.index_data()['collections'] == [NO_COLLECTION_LABEL]
+
+        # suppressed
+        digwork.status = digwork.SUPPRESSED
+        # don't actually process the data deletion
+        with patch.object(digwork, 'delete_hathi_pairtree_data') \
+          as mock_delete_pairtree_data:
+            digwork.save()
+
+            # should *only* contain id, nothing else
+            index_data = digwork.index_data()
+            assert len(index_data) == 1
+            assert index_data['id'] == digwork.source_id
 
     def test_get_absolute_url(self):
         work = DigitizedWork.objects.first()
@@ -278,6 +296,11 @@ class TestDigitizedWork(TestCase):
         mock_bibdata = mock_bibapi.record.return_value
         mock_bibdata.marcxml.as_marc.assert_any_call()
         assert mdata == mock_bibdata.marcxml.as_marc.return_value
+
+        # non-hathi record: for now, not supported
+        nonhathi_work = DigitizedWork(source=DigitizedWork.OTHER, source_id='788423659')
+        # should not error, but nothing to return
+        assert not nonhathi_work.get_metadata('marc')
 
     def test_hathi_prefix(self):
         work = DigitizedWork(source_id='uva.1234')
@@ -391,7 +414,7 @@ class TestDigitizedWork(TestCase):
             for i, data in enumerate(page_data):
                 mets_page = mets.structmap_pages[i]
                 assert data['id'] == '.'.join([work.source_id, mets_page.text_file.sequence])
-                assert data['srcid'] == work.source_id
+                assert data['source_id'] == work.source_id
                 assert data['content'] == contents[i]
                 assert data['order'] == mets_page.order
                 assert data['item_type'] == 'page'
@@ -399,6 +422,19 @@ class TestDigitizedWork(TestCase):
                 assert 'tags' in data
                 assert data['tags'] == mets_page.label.split(', ')
 
+            # not suppressed by no data
+            mock_methods['hathi_metsfile_path'].side_effect = \
+                storage_exceptions.ObjectNotFoundException
+            # should log an error, not currently tested
+            assert not list(work.page_index_data())
+
+        # if item is suppressed - no page data
+        work.status = DigitizedWork.SUPPRESSED
+        assert not list(work.page_index_data())
+
+        # non hathi item - no page data
+        nonhathi_work = DigitizedWork(source=DigitizedWork.OTHER)
+        assert not list(nonhathi_work.page_index_data())
 
     def test_index_id(self):
         work = DigitizedWork(source_id='chi.79279237')
@@ -436,6 +472,92 @@ class TestDigitizedWork(TestCase):
         assert isinstance(args[0], QuerySet)
         assert digwork in args[0]
         assert kwargs['params'] == {'commitWithin': 3000}
+
+    def test_delete_hathi_pairtree_data(self):
+        work = DigitizedWork(source_id='chi.79279237')
+        with patch.object(work, 'hathi_pairtree_client') as mock_pairtree_client:
+            work.delete_hathi_pairtree_data()
+            # should initialize client
+            mock_pairtree_client.assert_called()
+            # should call delete boject
+            mock_pairtree_client.return_value.delete_object \
+                .assert_called_with(work.hathi_pairtree_id)
+
+            # should not raise an exception if deletion fails
+            mock_pairtree_client.return_value.delete_object.side_effect \
+                 = storage_exceptions.ObjectNotFoundException
+            work.delete_hathi_pairtree_data()
+            # not currently testing that warning is logged
+
+    def test_save(self):
+        work = DigitizedWork(source_id='chi.79279237')
+        with patch.object(work, 'delete_hathi_pairtree_data') \
+          as mock_delete_pairtree_data:
+            # no change in status - nothing should happen
+            work.save()
+            mock_delete_pairtree_data.assert_not_called()
+
+            # change status to suppressed - data should be deleted
+            work.status = work.SUPPRESSED
+            work.save()
+            mock_delete_pairtree_data.assert_called()
+
+            # changing status but not to suppressed - should not be called
+            mock_delete_pairtree_data.reset_mock()
+            work.status = work.PUBLIC
+            work.save()
+            mock_delete_pairtree_data.assert_not_called()
+
+            # non-hathi record - should not try to delete hathi data
+            work = DigitizedWork(source=DigitizedWork.OTHER)
+            work.save()
+            work.status = work.SUPPRESSED
+            work.save()
+            mock_delete_pairtree_data.assert_not_called()
+
+        # if source_id changes, old id should be removed from solr index
+        work = DigitizedWork.objects.create(source=DigitizedWork.OTHER,
+                                            source_id='12345')
+        with patch.object(work, 'remove_from_index') as mock_rm_from_index:
+            work.source_id = 'abcdef'
+            work.save()
+            mock_rm_from_index.assert_called()
+
+
+    def test_clean(self):
+        work = DigitizedWork(source_id='chi.79279237')
+
+        # no validation error
+        work.clean()
+
+        # change to suppressed - no problem
+        work.status = work.SUPPRESSED
+        work.clean()
+        # don't actually process the data deletion
+        with patch.object(work, 'delete_hathi_pairtree_data'):
+            work.save()
+
+        # try to change back - should error
+        work.status = work.PUBLIC
+        with pytest.raises(ValidationError):
+            work.clean()
+
+        # trying to change source id for hathi record should error
+        work.source_id = '123456a'
+        work.status = work.SUPPRESSED
+        with pytest.raises(ValidationError):
+            work.clean()
+
+        # not an error for non-hathi
+        work.source = DigitizedWork.OTHER
+        work.clean()
+
+    def test_is_suppressed(self):
+        work = DigitizedWork(source_id='chi.79279237')
+        assert not work.is_suppressed
+
+        work.status = DigitizedWork.SUPPRESSED
+        assert work.is_suppressed
 
 
 class TestCollection(TestCase):
