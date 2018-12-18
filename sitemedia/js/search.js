@@ -61,6 +61,7 @@ $(function(){
             }))
             $('.workscount').removeClass('loading') // turn off the loader
         })
+        advancedSearchIndicator()
     }
 
     function validate() {
@@ -131,9 +132,11 @@ $(function(){
             case undefined:
                 advancedSearchOff()
         }
+        advancedSearchIndicator()
     }
 
     function advancedSearchOn() {
+        $('.show-advanced').addClass('active')
         $('.advanced.segment').css('display', 'flex') // if we don't manually set flex here, jQuery can't infer it
         $('.advanced.column').css('display', 'inline-block') // column shouldn't be flex
         $('.advanced').hide().slideDown() // hide sets display to none while animating
@@ -141,12 +144,22 @@ $(function(){
     }
 
     function advancedSearchOff() {
+        $('.show-advanced').removeClass('active')
         $('.advanced').slideUp()
         sessionStorage.setItem('ppa-adv-search', 'closed')
     }
 
     function toggleAdvancedSearch() {
         $('.advanced').is(':hidden') ? advancedSearchOn() : advancedSearchOff()
+    }
+
+    function advancedSearchIndicator() { // if any adv. search fields are active, show it
+        if ($('.advanced input').get().map(e => e.value).find(v => v != '')) {
+            $('.show-advanced .search-active').fadeIn()
+        }
+        else {
+            $('.show-advanced .search-active').fadeOut()
+        }
     }
 
     bodymovin.loadAnimation({ // set up the loader animation
