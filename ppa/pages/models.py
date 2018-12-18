@@ -1,3 +1,4 @@
+import bleach
 from django.db import models
 from django.template.defaultfilters import truncatechars_html, striptags
 from wagtail.core import blocks
@@ -7,8 +8,49 @@ from wagtail.admin.edit_handlers import FieldPanel, PageChooserPanel, \
     StreamFieldPanel
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.documents.blocks import DocumentChooserBlock
+from wagtail.snippets.blocks import SnippetChooserBlock
+from wagtail.snippets.models import register_snippet
 
 from ppa.archive.models import Collection
+
+
+@register_snippet
+class Person(models.Model):
+    '''Common model for a person, currently used to document authorship for
+    instances of :class:`ppa.editorial.models.EditorialPage`.'''
+
+    #: the display name of an individual
+    name = models.CharField(
+        max_length=255,
+        help_text='Full name for the person as it should appear in the author '
+                  'list.'
+    )
+    #: identifying URI for a person (VIAF, ORCID iD, personal website, etc.)
+    url = models.URLField(
+        blank=True,
+        default='',
+        help_text='Personal website, profile page, or social media profile page '
+                  'for this person.'
+        )
+    #: description (affiliation, etc.)
+    description = RichTextField(
+        blank=True, features=['bold', 'italic'],
+        help_text='Title & affiliation, or other relevant context.')
+
+    #: project role
+    project_role = models.CharField(
+        max_length=255, blank=True,
+        help_text='Project role, if any, for display on contributor list.')
+
+    panels = [
+        FieldPanel('name'),
+        FieldPanel('url'),
+        FieldPanel('description'),
+        FieldPanel('project_role'),
+    ]
+
+    def __str__(self):
+        return self.name
 
 
 class HomePage(Page):
@@ -70,11 +112,26 @@ class HomePage(Page):
         return context
 
 
+class ImageWithCaption(blocks.StructBlock):
+    ''':class:`~wagtail.core.blocks.StructBlock` for an image with
+    a formatted caption, so caption can be context-specific.'''
+    image = ImageChooserBlock()
+    caption = blocks.RichTextBlock(features=['bold', 'italic', 'link'])
+
+    class Meta:
+        icon = 'image'
+
+
 class BodyContentBlock(blocks.StreamBlock):
     '''Common set of content blocks to be used on both content pages
     and editorial pages'''
     paragraph = blocks.RichTextBlock()
-    image  =  ImageChooserBlock()
+    image = ImageChooserBlock()
+    captioned_image = ImageWithCaption()
+    footnotes = blocks.RichTextBlock(
+        features=['ol', 'ul', 'bold', 'italic', 'link'],
+        classname='footnotes'
+    )
     document = DocumentChooserBlock()
 
 
@@ -86,10 +143,16 @@ class PagePreviewDescriptionMixin(models.Model):
 
     description = RichTextField(blank=True,
         help_text='Optional. Brief description for preview display. Will ' +
-        'also be used for search description (without tags), if one is not entered.')
+        'also be used for search description (without tags), if one is not entered.',
+        features=['bold', 'italic'])
 
     #: maximum length for description to be displayed
     max_length = 250
+
+    # ('a' is omitted by subsetting and p is added to default ALLOWED_TAGS)
+    #: allowed tags for bleach html stripping in description
+    allowed_tags = list((set(bleach.sanitizer.ALLOWED_TAGS) |
+                        set(['p'])) - set(['a']))
 
     class Meta:
         abstract = True
@@ -114,6 +177,11 @@ class PagePreviewDescriptionMixin(models.Model):
                     # break so we stop after the first instead of using last
                     break
 
+        description = bleach.clean(
+            str(description),
+            tags=self.allowed_tags,
+            strip=True
+        )
         # truncate either way
         return truncatechars_html(description, self.max_length)
 
@@ -135,6 +203,7 @@ class ContentPage(Page, PagePreviewDescriptionMixin):
         FieldPanel('description'),
         StreamFieldPanel('body'),
     ]
+
 
 class CollectionPage(Page):
     '''Collection list page, with editable text content'''
@@ -160,4 +229,30 @@ class CollectionPage(Page):
         return context
 
 
+class ContributorPage(Page, PagePreviewDescriptionMixin):
+    '''Project contributor and advisory board page.'''
+    contributors = StreamField(
+        [('person', SnippetChooserBlock(Person))],
+        blank=True,
+        help_text='Select and order people to be listed as project \
+        contributors.'
+    )
+    board = StreamField(
+        [('person', SnippetChooserBlock(Person))],
+        blank=True,
+        help_text='Select and order people to be listed as board members.'
+    )
 
+    body = StreamField(BodyContentBlock, blank=True)
+
+    content_panels = Page.content_panels + [
+        FieldPanel('description'),
+        StreamFieldPanel('contributors'),
+        StreamFieldPanel('board'),
+        StreamFieldPanel('body'),
+    ]
+
+    # only allow creating directly under home page
+    parent_page_types = [HomePage]
+    # not allowed to have sub pages
+    subpage_types = []

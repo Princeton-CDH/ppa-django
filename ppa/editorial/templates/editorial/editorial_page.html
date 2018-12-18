@@ -1,6 +1,8 @@
 {% extends 'pages/content_page.html' %}
 {% load static wagtailcore_tags %}
 
+{% block page-context-id %}editorial{% endblock %}
+
 {% block meta_title %}{% firstof page.seo_title page.title %}{% endblock %}
 {% block meta_description %}{{ page.get_plaintext_description }}{% endblock %}
 {# keywords for meta not yet implemented in wagtail #}
@@ -11,4 +13,8 @@
 
 {% block page_nav %}
     {% include 'snippets/nav.html' with style="editorial" active="editorial" %}
+{% endblock %}
+
+{% block attribution %}
+    {% include 'editorial/snippets/attribution.html' with page=page add_urls=True %}
 {% endblock %}

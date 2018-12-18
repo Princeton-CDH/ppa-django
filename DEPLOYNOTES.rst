@@ -3,12 +3,35 @@
 Deploy and Upgrade notes
 ========================
 
+3.0
+---
+
+* Solr field boosting requires an updated ``solrconfig.xml``. Before deploying
+  new code, ``solr_conf/solconfig.xml`` should be copied to the core's
+  `conf` directory and the core reloaded, or Solr restarted.
+
+* Revised Solr field names, updated collection search logic, and field boosting
+  require the index to be cleared and reindexed::
+
+    python manage.py index --clear all --index none
+    python manage.py solr_schema
+    python manage.py index
+
+* Admin functionality for suppressing digitized works requires that the
+  Django application have permission to **delete** files and directories
+  from the HathiTrust pairtree data stored in **HATHI_DATA**.
+
+* Adds a new contributor page type, which allows selecting a list of
+  people to display as project members and board members. If there is
+  an existing contributor content page, it should be removed and
+  replaced with a contributor page with the slug `contributor`.
+
+
 0.11
 ----
 
 * ``GTAGS_ANALYTICS_ID`` should include the property ID for the site, in order
     to enable Google Analytics on non-preview pages.
-
 
 0.10
 ----

@@ -9,25 +9,40 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
     list_display = (
         'display_title', 'subtitle', 'source_link', 'record_id', 'author',
         'list_collections', 'enumcron', 'pub_place', 'publisher', 'pub_date',
-        'page_count', 'added', 'updated'
+        'page_count', 'is_public', 'added', 'updated'
     )
     fields = (
-        'source_link', 'title', 'subtitle', 'sort_title', 'enumcron',
-        'author', 'pub_place', 'publisher', 'pub_date', 'page_count',
-        'public_notes', 'notes', 'record_id', 'collections',
+        'source', 'source_id', 'source_url', 'title', 'subtitle',
+        'sort_title', 'enumcron', 'author', 'pub_place', 'publisher',
+        'pub_date', 'page_count', 'public_notes', 'notes', 'record_id',
+        'collections', 'status', 'added', 'updated'
+    )
+    # fields that are always read only
+    readonly_fields = (
         'added', 'updated'
     )
-    readonly_fields = (
-        'source_link', 'page_count', 'added', 'updated', 'record_id',
+    # fields that are read only for HathiTrust records
+    hathi_readonly_fields = (
+        'source', 'source_id', 'source_url', 'page_count', 'record_id',
     )
+
     search_fields = (
         'source_id', 'title', 'subtitle', 'author', 'enumcron', 'pub_date',
         'publisher', 'public_notes', 'notes', 'record_id'
     )
     filter_horizontal = ('collections',)
     # date_hierarchy = 'added'  # is this useful?
-    list_filter = ['collections']
+    list_filter = ['collections', 'status', 'source']
     actions = ['bulk_add_collection']
+
+    def get_readonly_fields(self, request, obj=None):
+        """
+        Determine read only fields based on item source, to prevent
+        editing of HathiTrust fields that should not be changed.
+        """
+        if obj and obj.source == DigitizedWork.HATHI:
+            return self.hathi_readonly_fields + self.readonly_fields
+        return self.readonly_fields
 
     def list_collections(self, obj):
         '''Return a list of :class:ppa.archive.models.Collection object names
@@ -75,5 +90,10 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
                                              'to collections')
 
 
+class CollectionAdmin(admin.ModelAdmin):
+    list_display = ('name', 'exclude')
+    list_editable = ('exclude', )
+
+
 admin.site.register(DigitizedWork, DigitizedWorkAdmin)
-admin.site.register(Collection)
+admin.site.register(Collection, CollectionAdmin)

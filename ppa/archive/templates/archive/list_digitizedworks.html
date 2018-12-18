@@ -10,7 +10,7 @@
 href="{% url 'unapi' %}" />
 {% endblock %}
 
-{% block page-subtitle %}Archive | {% endblock %}
+{% block page-subtitle %}Archive · {% endblock %}
 {% block page-context-id %}search{% endblock %}
 
 {% block page_nav %}
@@ -19,8 +19,8 @@ href="{% url 'unapi' %}" />
 
 {% block content %}
 <section class="ui search basic vertical segment container">
-    <h1 class="ui sub header">Archive</h1>
     {% include 'archive/snippets/search_form.html' %}
+    {% include 'archive/snippets/jump_top.html' with anchor='search' %}
 </section>
 <div class="ajax-container">
     {% include 'archive/snippets/results_list.html' %}

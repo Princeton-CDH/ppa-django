@@ -1,6 +1,6 @@
-{% load semanticui humanize %}
-<form class="ui form{% if error %} error{% endif %}">
-    <div class="ui vertical stackable grid segment" role="group">
+{% load semanticui humanize static %}
+<form class="ui form{% if error %} error{% endif %} no-js">
+    <div class="ui vertical stackable grid segment">
         <legend class="sr-only">text search fields</legend>
         <div class="twelve wide column">
             {% render_field search_form.query %}
@@ -15,14 +15,14 @@
             </div>
         </div>
     </div>
-    <div class="ui vertical stackable grid segment advanced" role="group">
+    <div class="ui vertical stackable grid segment advanced">
         <legend class="sr-only">publication date fields</legend>
         <div class="four wide column" id="publication">
             {% render_field search_form.pub_date %}
             <span class="validation">
                 {{ search_form.pubdate_validation_msg }}
             </span>
-            <a class="clear-selection" role="button">Clear Selection</a>
+            <button class="clear-selection" type="button">Clear Selection</button>
         </div>
         <div class="eight wide column" id="histogram">
             <canvas class="visualization" height="60" width="600"></canvas>
@@ -30,20 +30,24 @@
             <span class="max-date"></span>
         </div>
     </div>
-    <div class="ui vertical stackable basic grid segment advanced" role="group">
+    <div class="ui vertical stackable basic grid segment">
         <legend class="sr-only">search filters</legend>
         <div class="twelve wide column" id="collections">
             <div class="field">
                 <label for="collections">Collections</label>
-                {% for collection in search_form.collections %}
-                <label class="ui button{% if collection.data.selected %} active{% endif %}" for="{{ collection.id_for_label }}" role="checkbox">
-                    {{ collection.choice_label }}
-                    {{ collection.tag }}
-                </label>
-                {% endfor %}
+                    {% for collection in search_form.collections %}
+                    <label class="ui button{% if collection.data.selected %} active{% endif %}">
+                        {{ collection.choice_label }}
+                        {{ collection.tag }}
+                    </label>
+                    {% endfor %}
+                    <div class="spacer"></div>
             </div>
+            <noscript>
+                <input class="ui primary button" type="submit" value="Submit"/>
+            </noscript>
         </div>
-        <!--
+        {% comment %}
         <div class="six wide column" id="booleans">
             <div class="two fields">
                 <div class="field">
@@ -58,15 +62,23 @@
                 </div>
             </div>
         </div>
-        -->
+        {% endcomment %}
     </div>
     <div class="ui vertical basic segment show-advanced">
-        <a>Advanced Search</a>
+        <button type="button">
+            <img class="dropdown icon" src="{% static 'img/icons/RightChevron.svg' %}" alt="">
+            Advanced Search
+            <span class="search-active">●</span>
+        </button>
     </div>
     <input type="submit" class="sr-only sr-only-focusable" aria-label="submit search">
     <div class="workscount ui center aligned text container">
         <p class="count">Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}</p>
         <p class="zotero">Work citations can be exported to <a href="https://www.zotero.org/support/getting_stuff_into_your_library">Zotero</a></p>
+        <div class="loader">
+            <div id="bm"></div>
+            <span>Results are loading</span>
+        </div>
     </div>
     <div class="pagination-sort">
         {% include 'archive/snippets/pagination.html' %}

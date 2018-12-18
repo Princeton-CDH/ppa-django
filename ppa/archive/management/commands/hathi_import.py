@@ -48,7 +48,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from django.template.defaultfilters import pluralize
-from pairtree import pairtree_client
+from pairtree import pairtree_client, storage_exceptions
 import progressbar
 
 from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound
@@ -283,10 +283,14 @@ class Command(BaseCommand):
 
         # count the files in the zipfile
         start = time.time()
-        with ZipFile(digwork.hathi_zipfile_path(ptree_client)) as ht_zip:
-            page_count = len(ht_zip.namelist())
-        logger.debug('Counted %d pages in zipfile in %f sec',
-                     page_count, time.time() - start)
+        try:
+            with ZipFile(digwork.hathi_zipfile_path(ptree_client)) as ht_zip:
+                page_count = len(ht_zip.namelist())
+                logger.debug('Counted %d pages in zipfile in %f sec',
+                             page_count, time.time() - start)
+        except storage_exceptions.ObjectNotFoundException:
+            self.stderr.write('%s not found in datastore' % digwork.source_id)
+            return
 
         # NOTE: could also count pages via mets file, but that's slower
         # than counting via zipfile name list
