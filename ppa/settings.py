@@ -259,7 +259,8 @@ PUCAS_LDAP = {
 CSP_DEFAULT_SRC = "'none'"
 
 # allow loading js locally, from a cdn, and from google (for analytics)
-CSP_SCRIPT_SRC = ("'self'", 'https://cdnjs.cloudflare.com', 'https://www.googletagmanager.com')
+CSP_SCRIPT_SRC = ("'self'", 'https://cdnjs.cloudflare.com',
+                  'https://www.googletagmanager.com')
 
 # allow loading fonts locally and from google (via data: url)
 CSP_FONT_SRC = ("'self'", 'https://fonts.gstatic.com data:')
@@ -267,8 +268,9 @@ CSP_FONT_SRC = ("'self'", 'https://fonts.gstatic.com data:')
 # allow loading css locally and from google (for fonts)
 CSP_STYLE_SRC = ("'self'", 'https://fonts.googleapis.com')
 
-# allow loading images locally, from hathi (for page images) and google tracking pixel
-CSP_IMG_SRC = ("'self'", 'https://babel.hathitrust.org', 'https://www.google-analytics.com')
+# allow loading local images, hathi page images, google tracking pixel
+CSP_IMG_SRC = ("'self'", 'https://babel.hathitrust.org',
+               'https://www.google-analytics.com')
 
 # exclude admin and cms urls from csp directives since they're authenticated
 CSP_EXCLUDE_URL_PREFIXES = ('/admin', '/cms')
@@ -309,4 +311,3 @@ if DEBUG:
         MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
     except ImportError:
         pass
-
