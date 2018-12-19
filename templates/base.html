@@ -52,10 +52,15 @@ by default; use page_rdf_type to override with a webpage subclass.
 
     <!-- scripts -->
     <script
-    src="https://code.jquery.com/jquery-3.1.1.min.js"
-    integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
-    crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.4.2/lottie_light.min.js"></script>
+        src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous">
+    </script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.4.2/lottie_light.min.js"
+        integrity="sha256-9W89GVg8IxmHBVQSCtQx0Sxkk2lQdScemvga5wLSEcQ="
+        crossorigin="anonymous">
+    </script>
     <script src="{% static 'semantic/dist/semantic.min.js' %}"></script>
     {% if not request.is_preview and GTAGS_ANALYTICS_ID %}
         {% include 'snippets/analytics.html' %}
