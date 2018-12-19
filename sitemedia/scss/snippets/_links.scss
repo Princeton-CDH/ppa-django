@@ -1,3 +1,7 @@
+a:not(.card) {
+    text-decoration: underline;
+}
+
 .archive-link { // "view the archive" button
     display: inline-block;
     padding: 0.8rem;
