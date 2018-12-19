@@ -1,0 +1,31 @@
+{% load fullurl %}
+{% comment %}
+Add HTML metadata tags for unfurling, twitter preview, etc.
+Uses wagtail page fields if available; uses meta_page_title,
+page_description, and page_meta_image if set in context.
+{% endcomment %}
+{% firstof page.seo_title page.title page_title as meta_page_title %}
+{% firstof page_meta_image 'mstile-150x150.png' as preview_image %}
+{% firstof page.get_plaintext_description page.search_description page_description as meta_description %}
+
+{# keywords for meta not yet implemented in wagtail #}
+{# <meta name="keywords" content="{% block meta_keywords %}{% endblock %}"> #}
+<meta name="description" content="{{ meta_description }}">
+
+{# open graph metadata #}
+<meta property="og:title" content="{{ meta_page_title }}" />
+<meta property="og:type" content="website" />
+<meta property="og:description" content="{{ meta_description }}"/>
+<meta property="og:site_name" content="Princeton Prosody Archive"/>
+{# twitter card #}
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="{{ meta_page_title }}"/>
+<meta name="twitter:description" content="{{ meta_description }}" />
+
+{% if request %} {# full urls required for image, dependent on request in context #}
+<meta property="og:image" content="{% fullstatic preview_image %}" />
+<meta name="twitter:image" content="{% fullstatic preview_image %}" />
+<meta property="og:url" content="{{ request.build_absolute_uri }}" />
+<meta name="twitter:url" content="{{ request.build_absolute_uri }}" />
+<meta name="twitter:domain" content="{{ request.get_host }}" />
+{% endif %}
