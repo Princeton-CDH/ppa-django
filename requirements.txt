@@ -16,6 +16,7 @@ django-compressor
 django-compressor-toolkit
 lxml
 eulxml
-wagtail>=2.3
+# pin to wagtail 2.3 for now (2.4 causing test/fixture error)
+wagtail>=2.3,<2.4
 bleach
 django-fullurl
