@@ -126,6 +126,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'wagtail.core.middleware.SiteMiddleware',
     'wagtail.contrib.redirects.middleware.RedirectMiddleware',
+    'csp.middleware.CSPMiddleware',
 ]
 
 AUTHENTICATION_BACKENDS = (
@@ -251,7 +252,23 @@ PUCAS_LDAP = {
     },
 }
 
+# django-csp configuration for content security policy definition and
+# violation reporting - https://github.com/mozilla/django-csp
 
+# allow loading js locally and from a cdn (for jQuery and other libraries)
+CSP_SCRIPT_SRC = ("'self'", 'https://cdnjs.cloudflare.com')
+
+# allow loading fonts locally and from google (via data: url)
+CSP_FONT_SRC = ("'self'", 'https://fonts.gstatic.com data:')
+
+# allow loading css locally and from google (for fonts)
+CSP_STYLE_SRC = ("'self'", 'https://fonts.googleapis.com')
+
+# allow loading images locally and from hathi (for page images)
+CSP_IMG_SRC = ("'self'", 'https://babel.hathitrust.org')
+
+# exclude admin and cms urls from csp directives since they're authenticated
+CSP_EXCLUDE_URL_PREFIXES = ('/admin', '/cms')
 
 ##################
 # LOCAL SETTINGS #

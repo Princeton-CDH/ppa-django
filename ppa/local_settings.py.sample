@@ -113,3 +113,12 @@ LOGGING = {
 
     }
 }
+
+# URL to POST reports of content security policy violations to
+# https://github.com/mozilla/django-csp
+
+if not DEBUG: # don't report in debug mode
+    if CSP_REPORT_ONLY:
+        CSP_REPORT_URI = '' # url for 'report-only' mode
+    else:
+        CSP_REPORT_URI = '' # url for blocked violations
