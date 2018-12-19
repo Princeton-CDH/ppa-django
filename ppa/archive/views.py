@@ -19,6 +19,7 @@ from ppa.archive.models import DigitizedWork, NO_COLLECTION_LABEL
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 from ppa.common.views import VaryOnHeadersMixin
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -87,7 +88,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             if collections:
                 # if *all* collections are selected, no need to filter
                 # (will return everything either way; keep the query simpler)
-                if len(collections) != len(searchform_defaults['collections']):
+                if len(collections) != len(self.form.fields['collections'].choices):
                     work_q.append('collections_exact:(%s)' % \
                         (' OR '.join(['"%s"' % coll for coll in collections])))
 
