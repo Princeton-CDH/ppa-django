@@ -1,7 +1,7 @@
 {% load static %}
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id={{ GTAGS_ANALYTICS_ID }}"></script>
-<script>
+<script nonce="{{ request.csp_nonce }}">
     /*
       Google Analytics gtags snippet to be included if analytics are enabled.
     */
