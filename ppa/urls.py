@@ -36,9 +36,6 @@ urlpatterns = [
     # unapi service endpoint for Zotero
     url(r'^unapi/$', UnAPIView.as_view(), name='unapi'),
 
-    # for testing 500 errors
-    url(r'^500/$', lambda _: 1/0),
-
     url(r'^cms/', include(wagtailadmin_urls)),
     url(r'^documents/', include(wagtaildocs_urls)),
 
