@@ -279,7 +279,7 @@ CSP_EXCLUDE_URL_PREFIXES = ('/admin', '/cms')
 CSP_INCLUDE_NONCE_IN = ('script-src',)
 
 # allow local scripts to connect to source (i.e. searchLoading)
-CSP_CONNECT_SRC = ("'self'",)
+CSP_CONNECT_SRC = ("'self'", "https://www.google-analytics.com")
 
 ##################
 # LOCAL SETTINGS #
