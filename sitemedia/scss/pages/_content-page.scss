@@ -1,5 +1,5 @@
 #page {
-    @include content-page();
+    @include content-page;
     
     h1 {
         @include underline-headline($pig-pink);

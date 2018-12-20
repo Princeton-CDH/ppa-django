@@ -1,6 +1,6 @@
 * {
     // render fonts to match the spec
-    @include font-smooth();
+    @include font-smooth;
 }
 
 .fermata {

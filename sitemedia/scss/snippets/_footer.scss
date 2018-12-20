@@ -4,11 +4,16 @@
     width: 100%;
     flex: none; // needed for chrome to get correct height
     flex-direction: column;
-
+    
     .container {
         @media (min-width: $computer) {
             width: 960px; // slightly larger than default container
         }
+    }
+    
+    a {
+        color: $white-two;
+        text-decoration: none;
     }
 
     // primary nav links
@@ -80,6 +85,10 @@
             flex-direction: row;
             justify-content: flex-start;
             padding: 1rem;
+
+            a {
+                padding-left: 2rem;
+            }
         }
     }
 
