@@ -5,8 +5,19 @@
         @include underline-headline($wisteria);
     }
 
+    .page-description {
+        font-size: 1.2rem;
+        max-width: 667px;
+        width: 100%;
+        margin-bottom: 1rem;
+ 
+        @media (min-width: $tablet) {
+            font-size: 1.5rem;
+        }
+    }
+
     .updates {
-        margin: 2rem 0 4rem;
+        margin-bottom: 4rem;
         flex-flow: column nowrap;
         align-items: center;
 
