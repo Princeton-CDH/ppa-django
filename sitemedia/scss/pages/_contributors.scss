@@ -3,7 +3,7 @@
         @include underline-headline($pig-pink);
     }
 
-    @include content-page();
+    @include content-page;
 
     .cards {
         display: flex;

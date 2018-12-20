@@ -2,7 +2,7 @@ a:not(.card) {
     text-decoration: underline;
 }
 
-.archive-link { // "view the archive" button
+a.archive-link { // "view the archive" button
     text-decoration: none;
     display: inline-block;
     padding: 0.8rem;

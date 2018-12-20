@@ -1,5 +1,5 @@
 #editorial {
-    @include content-page();
+    @include content-page;
     
     ul li::before {
         background-color: $wisteria; // purple-colored list bullets

@@ -9,7 +9,7 @@
     }
 
     .container:not(.message) {
-        @include wide-container();
+        @include wide-container;
     }
 
     .search {
@@ -192,8 +192,7 @@
     }
 
     .zotero a {
-        text-decoration: none;
-        @include link;
+        @include blue-link;
     }
 
     #booleans {
