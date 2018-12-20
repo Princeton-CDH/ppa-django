@@ -41,14 +41,14 @@ by default; use page_rdf_type to override with a webpage subclass.
     <script
         src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.4.2/lottie_light.min.js"
         integrity="sha256-9W89GVg8IxmHBVQSCtQx0Sxkk2lQdScemvga5wLSEcQ="
-        crossorigin="anonymous">
+        crossorigin="anonymous" defer>
     </script>
-    <script src="{% static 'semantic/dist/semantic.min.js' %}"></script>
+    <script src="{% static 'semantic/dist/semantic.min.js' %}" defer></script>
     {% if not request.is_preview and GTAGS_ANALYTICS_ID %}
         {% include 'snippets/analytics.html' %}
     {% endif %}
     {% compress js %}
-        <script src="{% static 'js/index.js' %}" type="module"></script>
+        <script src="{% static 'js/index.js' %}" type="module" defer></script>
         {% block js %}{% endblock %} {# add any additional javascript here #}
     {% endcompress %}
 
