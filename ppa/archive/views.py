@@ -41,6 +41,9 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
     # keyword query; assume no search terms unless set
     query = None
 
+    # search title query field syntax
+    search_title_query = '{!type=edismax qf=$search_title_qf pf=$search_title_pf v=$title_query}'
+
     def get_template_names(self):
         # when queried via ajax, return partial html for just the results section
         # (don't render the form or base template)
@@ -105,12 +108,16 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             else:
                 work_q.append('item_type:work AND -collections_exact:[* TO *]')
 
-            # filter books by title or author if there is a query
-            for field in ['title', 'author']:
-                if search_opts.get(field, None):
-                    # filter by title/author keyword or phrase
-                    work_q.append('%s:(%s)' % \
-                                  (field, search_opts[field]))
+            # filter books by title or author if there is are search terms
+            title_query = search_opts.get('title', None)
+            if title_query:
+                # special syntax to use query field configured in solr conf
+                # to search title and subtitle, with boosting
+                work_q.append(self.search_title_query)
+
+            author_query = search_opts.get('author', None)
+            if author_query:
+                work_q.append('author:(%s)' % author_query)
 
         range_opts = {
             'facet.range': self.form.range_facets
@@ -211,6 +218,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             'expand.rows': 2,   # number of items in the collapsed group, i.e pages to display
             # explicitly query pages on text content (join q seems to skip qf)
             'keyword_query': 'content:%s' % keyword_query,
+            'title_query': title_query,
             'work_query': work_query
         }
 

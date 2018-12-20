@@ -457,6 +457,12 @@ class TestArchiveViews(TestCase):
         self.assertContains(response, dial.source_id)
         self.assertNotContains(response, wintry.source_id)
 
+        # search on subtitle using the title query field
+        response = self.client.get(url, {'title': 'valuable'})
+        self.assertNotContains(response, dial.source_id)
+        self.assertNotContains(response, wintry.source_id)
+        self.assertContains(response, '135000 words')
+
         # search text in publisher name
         response = self.client.get(url, {'query': 'McClurg'})
         for digwork in DigitizedWork.objects.filter(publisher__icontains='mcclurg'):
