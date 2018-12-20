@@ -278,6 +278,9 @@ CSP_EXCLUDE_URL_PREFIXES = ('/admin', '/cms')
 # allow usage of nonce for inline js (for analytics)
 CSP_INCLUDE_NONCE_IN = ('script-src',)
 
+# allow local scripts to connect to source (i.e. searchLoading)
+CSP_CONNECT_SRC = ("'self'",)
+
 ##################
 # LOCAL SETTINGS #
 ##################
