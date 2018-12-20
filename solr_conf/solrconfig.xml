@@ -778,16 +778,16 @@
           publisher
       </str>
       <str name="search_title_qf">
-        title_nostem^40
-        subtitle_nostem^30
-        title^20
-        subtitle^15
+        title_nostem^100
+        title^80
+        subtitle_nostem^50
+        subtitle^25
       </str>
       <str name="search_title_pf">
-        title_nostem^40
-        subtitle_nostem^30
-        title^20
-        subtitle^15
+        title_nostem^100
+        title^80
+        subtitle_nostem^50
+        subtitle^25
       </str>
     </lst>
     <!-- In addition to defaults, "appends" params can be specified
