@@ -42,12 +42,20 @@
         @media (min-width: $tablet) {
             flex-flow: row wrap;
             justify-content: center;
+
+            a {
+                padding-left: 2rem;
+            }
         }
 
         @media (min-width: $computer) {
             flex-flow: row nowrap;
             justify-content: space-evenly;
             padding-bottom: 2rem;
+
+            a {
+                padding: 0;
+            }
         }
     }
 
@@ -85,10 +93,6 @@
             flex-direction: row;
             justify-content: flex-start;
             padding: 1rem;
-
-            a {
-                padding-left: 2rem;
-            }
         }
     }
 
