@@ -111,6 +111,11 @@
         font-style: italic;
     }
 
+    h4 {
+        font-family: $pageFont;
+        @include small-font-scale;
+    }
+
     img {
         text-align: center;
         object-fit: cover;
