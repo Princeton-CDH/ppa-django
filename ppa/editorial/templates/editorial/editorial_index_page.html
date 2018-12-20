@@ -17,7 +17,7 @@
         <h1 class="ui header">
             {% firstof page.title page_title object.title %}
         </h1>
-         {{ page.intro|richtext }}
+        <div class="page-description">{{ page.intro|richtext }}</div>
     </div>
 </div>
 <div class="ui vertical basic segment">
