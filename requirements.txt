@@ -16,7 +16,7 @@ django-compressor
 django-compressor-toolkit
 lxml
 eulxml
-wagtail>=2.3
+wagtail>=2.3,<2.4
 bleach
 django-fullurl
 django-csp
