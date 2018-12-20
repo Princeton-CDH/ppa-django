@@ -6,6 +6,12 @@
 {% endblock %}
 
 {% block page-subtitle %}Archive · {{ object.title }} {% endblock %}
+{% block metadata %}
+<meta name="twitter:label1" content="Publication Date" />
+<meta name="twitter:data1" content="{{ object.pub_date }}" />
+<meta name="twitter:label2" content="Author" />
+<meta name="twitter:data2" content="{{ object.author }}" />
+{% endblock %}
 
 {% block head_extras %}
     <link rel="unapi-server" type="application/xml" title="unAPI"

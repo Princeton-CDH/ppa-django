@@ -513,7 +513,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
                 .delete_object(self.hathi_pairtree_id)
         except storage_exceptions.ObjectNotFoundException:
             # data is already gone; warn, but not an error
-            logger.warn('Pairtree deletion failed; object not found %s',
+            logger.warning('Pairtree deletion failed; object not found %s',
                         self.source_id)
 
     def _hathi_content_path(self, ext, ptree_client=None):
