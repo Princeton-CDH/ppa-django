@@ -1,4 +1,9 @@
-.archive-link { // "view the archive" button
+a:not(.card) {
+    text-decoration: underline;
+}
+
+a.archive-link { // "view the archive" button
+    text-decoration: none;
     display: inline-block;
     padding: 0.8rem;
     background-color: $french-blue;

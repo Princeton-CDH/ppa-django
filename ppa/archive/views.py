@@ -19,6 +19,7 @@ from ppa.archive.models import DigitizedWork, NO_COLLECTION_LABEL
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 from ppa.common.views import VaryOnHeadersMixin
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -30,9 +31,18 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
     form_class = SearchForm
     paginate_by = 50
     vary_headers = ['X-Requested-With']
+    #: title for metadata / preview
+    meta_title = 'Princeton Prosody Archive'
+    #: page description for metadata/preview
+    meta_description = '''The Princeton Prosody Archive is a full-text
+    searchable database of thousands of historical documents about the
+    study of language and the study of poetry.'''
 
     # keyword query; assume no search terms unless set
     query = None
+
+    # search title query field syntax
+    search_title_query = '{!type=edismax qf=$search_title_qf pf=$search_title_pf v=$title_query}'
 
     def get_template_names(self):
         # when queried via ajax, return partial html for just the results section
@@ -87,7 +97,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             if collections:
                 # if *all* collections are selected, no need to filter
                 # (will return everything either way; keep the query simpler)
-                if len(collections) != len(searchform_defaults['collections']):
+                if len(collections) != len(self.form.fields['collections'].choices):
                     work_q.append('collections_exact:(%s)' % \
                         (' OR '.join(['"%s"' % coll for coll in collections])))
 
@@ -98,12 +108,16 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             else:
                 work_q.append('item_type:work AND -collections_exact:[* TO *]')
 
-            # filter books by title or author if there is a query
-            for field in ['title', 'author']:
-                if search_opts.get(field, None):
-                    # filter by title/author keyword or phrase
-                    work_q.append('%s:(%s)' % \
-                                  (field, search_opts[field]))
+            # filter books by title or author if there is are search terms
+            title_query = search_opts.get('title', None)
+            if title_query:
+                # special syntax to use query field configured in solr conf
+                # to search title and subtitle, with boosting
+                work_q.append(self.search_title_query)
+
+            author_query = search_opts.get('author', None)
+            if author_query:
+                work_q.append('author:(%s)' % author_query)
 
         range_opts = {
             'facet.range': self.form.range_facets
@@ -204,6 +218,7 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             'expand.rows': 2,   # number of items in the collapsed group, i.e pages to display
             # explicitly query pages on text content (join q seems to skip qf)
             'keyword_query': 'content:%s' % keyword_query,
+            'title_query': title_query,
             'work_query': work_query
         }
 
@@ -297,7 +312,9 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
             'page_highlights': self.get_page_highlights(page_groups),
             # query for use template links to detail view with search
             'query': self.query,
-            'NO_COLLECTION_LABEL': NO_COLLECTION_LABEL
+            'NO_COLLECTION_LABEL': NO_COLLECTION_LABEL,
+            'page_title': self.meta_title,
+            'page_description': self.meta_description
         })
         return context
 
@@ -325,10 +342,16 @@ class DigitizedWorkDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         digwork = context['object']
         # if suppressed, don't do any further processing
         if digwork.is_suppressed:
             return context
+
+        context.update({
+            'page_title': digwork.title,
+            'page_description': digwork.public_notes
+        })
 
         # pull in the query if it exists to use
         query = self.request.GET.get('query', '')

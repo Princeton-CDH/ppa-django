@@ -77,7 +77,7 @@
 }
 
 @mixin content-page() {
-    @include font-scale();
+    @include font-scale;
 
     .ui.text.container {
         font-size: inherit;
@@ -99,7 +99,7 @@
 
     h2, h3, p {
         font-family: $pageFont;
-        @include font-scale();
+        @include font-scale;
     }
 
     h2 {
@@ -109,6 +109,11 @@
     h3 {
         font-weight: normal;
         font-style: italic;
+    }
+
+    h4 {
+        font-family: $pageFont;
+        @include small-font-scale;
     }
 
     img {
@@ -147,9 +152,34 @@
         }
     }
 
-     a {
-         text-decoration: underline;
-     }
+    .footnotes {
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 2px solid $wisteria;
+
+        p {
+            margin: 0;
+        }
+        
+        * {
+            color: $slate-grey;
+            @include small-font-scale;
+        }
+    }
+
+    figure {
+        margin: 2rem 0 0;
+    }
+
+    figcaption {
+        margin-bottom: 4rem;
+        text-align: center;
+
+        * {
+            color: $slate-grey;
+            @include small-font-scale;
+        }
+    }
 }
 
 @mixin font-scale() {
@@ -190,9 +220,10 @@
     opacity: 0.5;
 }
 
-@mixin link() {
+@mixin blue-link() {
     color: $french-blue;
     border-bottom: 2px solid $french-blue;
+    text-decoration: none;
     cursor: pointer;
 }
 

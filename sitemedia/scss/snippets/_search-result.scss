@@ -5,11 +5,12 @@
     }
 
     a.detail {
+        text-decoration: none;
         display: block;
     }
 
     .brief-result.container {
-        @include wide-container();
+        @include wide-container;
         display: flex;
         flex-flow: row wrap;
         padding: 2rem 1rem;
