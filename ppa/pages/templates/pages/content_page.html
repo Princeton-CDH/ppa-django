@@ -1,9 +1,6 @@
 {% extends "base.html" %}
-{% load static wagtailcore_tags  %}
+{% load static wagtailcore_tags ppa_page_tags %}
 
-{% block meta_title %}{% firstof page.seo_title page.title %}{% endblock %}
-{% block meta_description %}{{ page.get_plaintext_description }}{% endblock %}
-{# keywords for meta not yet implemented in wagtail #}
 
 {% block page-subtitle %}{% firstof page.seo_title page.title %} · {% endblock %}
 {% block page-context-id %}page{% endblock %}
@@ -36,6 +33,10 @@
             {% include "pages/snippets/figure.html" with captioned_img=block.value %}
         {% elif block.block_type == 'image' %}
             {% include "pages/snippets/responsive_image.html" with img=block.value %}
+        {% elif block.block_type == 'paragraph' %}
+            <div class="{{ block.block_type }}">
+                {% include_block block|format_citation:SW_VERSION %}
+            </div>
         {% else %}
             <div class="{{ block.block_type }}">
                 {% include_block block %}
