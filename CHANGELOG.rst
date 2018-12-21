@@ -3,6 +3,24 @@
 CHANGELOG
 =========
 
+3.0.1
+-----
+
+* bugfix: Archive title search field should also search subtitle
+* As a user, I want search results from the title field to prioritize
+  unstemmed matches and boost title over subtitle.
+* bugfix: Collections set to be excluded by default are not excluded
+  on archive page first loaded
+* Style and template fixes and improvements
+  * Improved head metadata for Twitter and OpenGraph previews
+  * Add styles for <h4> in content pages
+  * Consistent link styles across all site content pages
+  * Editorial list page styles match other site pages
+  * Template tag to add current date and software version to citation page
+* Security and performance improvements
+  * Implement HTTP strict transport security (HSTS)
+  * Remove unused Semantic UI components
+
 3.0 - Initial public version (soft launch)
 ------------------------------------------
 
