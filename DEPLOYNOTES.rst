@@ -3,6 +3,13 @@
 Deploy and Upgrade notes
 ========================
 
+3.0.1
+-----
+
+* Title searching and boosting requires an update to ``solrconfig.xml``.
+  Before deploying new code, ``solr_conf/solconfig.xml`` should be copied
+  to the core's `conf` directory and the core reloaded, or Solr restarted.
+
 3.0
 ---
 
