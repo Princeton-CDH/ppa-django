@@ -14,6 +14,10 @@
         transition: all 0.2s ease;
         transform: rotate(90deg);
     }
+
+    .item a {
+        text-decoration: none; 
+    }
 }
 
 #mobile-nav {

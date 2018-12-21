@@ -6,8 +6,12 @@
 {% endblock %}
 
 {% block page-context-id %}homepage{% endblock %}
-{% block meta_title %}{% firstof page.seo_title page.title %}{% endblock %}
-{% block meta_description %}{{ page.search_description }}{% endblock %}
+
+{% block metadata %}
+{# verification code for google search console #}
+<meta name="google-site-verification" content="pS2kpksxg6JeC90IvA8BHVsFuK_6b7J_vARVLqqu7ck" />
+{% endblock %}
+
 
 {% block page_nav %}
     {% include 'snippets/nav.html' with style="homepage" %}

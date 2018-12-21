@@ -2,7 +2,7 @@
     padding-top: 100px;
     
     .container:not(.message) {
-        @include wide-container();
+        @include wide-container;
     }
 
     .meta {
@@ -55,7 +55,7 @@
         }
 
         .hathi-link a {
-            @include link;
+            @include blue-link;
         }
     }
 

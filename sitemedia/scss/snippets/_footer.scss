@@ -4,11 +4,16 @@
     width: 100%;
     flex: none; // needed for chrome to get correct height
     flex-direction: column;
-
+    
     .container {
         @media (min-width: $computer) {
             width: 960px; // slightly larger than default container
         }
+    }
+    
+    a {
+        color: $white-two;
+        text-decoration: none;
     }
 
     // primary nav links
@@ -37,12 +42,20 @@
         @media (min-width: $tablet) {
             flex-flow: row wrap;
             justify-content: center;
+
+            a {
+                padding-left: 2rem;
+            }
         }
 
         @media (min-width: $computer) {
             flex-flow: row nowrap;
             justify-content: space-evenly;
             padding-bottom: 2rem;
+
+            a {
+                padding: 0;
+            }
         }
     }
 

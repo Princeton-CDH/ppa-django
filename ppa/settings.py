@@ -126,6 +126,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'wagtail.core.middleware.SiteMiddleware',
     'wagtail.contrib.redirects.middleware.RedirectMiddleware',
+    'csp.middleware.CSPMiddleware',
 ]
 
 AUTHENTICATION_BACKENDS = (
@@ -251,7 +252,34 @@ PUCAS_LDAP = {
     },
 }
 
+# django-csp configuration for content security policy definition and
+# violation reporting - https://github.com/mozilla/django-csp
 
+# fallback for all protocols: block it
+CSP_DEFAULT_SRC = "'none'"
+
+# allow loading js locally, from a cdn, and from google (for analytics)
+CSP_SCRIPT_SRC = ("'self'", 'https://cdnjs.cloudflare.com',
+                  'https://www.googletagmanager.com')
+
+# allow loading fonts locally and from google (via data: url)
+CSP_FONT_SRC = ("'self'", 'https://fonts.gstatic.com data:')
+
+# allow loading css locally and from google (for fonts)
+CSP_STYLE_SRC = ("'self'", 'https://fonts.googleapis.com')
+
+# allow loading local images, hathi page images, google tracking pixel
+CSP_IMG_SRC = ("'self'", 'https://babel.hathitrust.org',
+               'https://www.google-analytics.com')
+
+# exclude admin and cms urls from csp directives since they're authenticated
+CSP_EXCLUDE_URL_PREFIXES = ('/admin', '/cms')
+
+# allow usage of nonce for inline js (for analytics)
+CSP_INCLUDE_NONCE_IN = ('script-src',)
+
+# allow local scripts to connect to source (i.e. searchLoading)
+CSP_CONNECT_SRC = ("'self'", "https://www.google-analytics.com")
 
 ##################
 # LOCAL SETTINGS #
@@ -286,4 +314,3 @@ if DEBUG:
         MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
     except ImportError:
         pass
-

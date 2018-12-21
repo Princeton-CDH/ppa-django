@@ -43,10 +43,11 @@
 
         .page-number {
 
-          a {
-            font-size: 1rem;
-            font-family: $pageFont;
-          }
+            a {
+                font-size: 1rem;
+                font-family: $pageFont;
+                text-decoration: none;
+            }
         }
 
         .snippet {
