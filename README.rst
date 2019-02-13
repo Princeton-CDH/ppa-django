@@ -83,14 +83,26 @@ Initial setup and installation:
 
 Frontend development setup:
 
-- To build the main `Semantic UI <https://semantic-ui.com/>`_ styles and js::
+This project uses the `Semantic UI <https://semantic-ui.com/>`_ library in
+addition to custom styles and javascript. You need to compile static assets
+before running the server.
+
+- To build all styles and js for production, including semantic UI::
 
     npm run build
 
-  This should run once automatically after you ``npm install``. To watch for changes
-  to the stylesheets and rebuild Semantic UI automatically::
+Alternatively, you can rebuild just the custom files or semantic independently.
+This is useful if you make small changes and need to recompile once::
 
-    npm start
+    npm run build:qa # just the custom files, with sourcemaps
+    npm run build:prod # just the custom files, no sourcemaps
+    npm run build:semantic # just semantic UI
+
+Finally, you can run a development server with hot reload if you'll be changing
+either set of assets frequently. These two processes are separate as well::
+
+    npm run dev # serve just the custom files from memory, with hot reload
+    npm run dev:semantic # serve just semantic UI files and recompile on changes 
 
 Tests
 ~~~~~~~~~~
