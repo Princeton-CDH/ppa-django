@@ -1,10 +1,10 @@
 sudo: required
 language: python
+python:
+- '3.6'
 addons:
   chrome: stable
   firefox: latest
-python:
-- '3.6'
 env:
   global:
   - MOZ_HEADLESS=1
@@ -16,16 +16,19 @@ cache:
   directories:
   - downloads
   - node_modules
+services:
+- mysql
 before_install:
-  - npm i -g npm@latest # newer npm needed for `npm ci` command
+- npm i -g npm@latest # newer npm needed for `npm ci` command
+- cp ci/testsettings.py ppa/local_settings.py
+- python -c "import uuid; print('SECRET_KEY = \'%s\'' % uuid.uuid4())" >> ppa/local_settings.py
 install:
 - pip install -r requirements.txt
 - pip install -r test-requirements.txt
 - pip install codecov
-- cp ci/testsettings.py ppa/local_settings.py
-- python -c "import uuid; print('SECRET_KEY = \'%s\'' % uuid.uuid4())" >> ppa/local_settings.py
 - npm ci # installs from package-lock.json
 before_script:
+- npm run build # compile static assets for production, incl. semantic
 - sudo chown root /opt/google/chrome/chrome-sandbox
 - sudo chmod 4755 /opt/google/chrome/chrome-sandbox
 - SOLR_VERSION=$SOLR_VERSION SOLR_CORE=$SOLR_CORE bash ci/config_solr.sh
@@ -41,9 +44,6 @@ before_cache:
 script:
 - python -m pytest --cov=ppa
 - npm test
-- npm run pa11y
-services:
-- mysql
 after_success:
 - codecov
 notifications:
