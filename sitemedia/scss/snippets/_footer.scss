@@ -45,6 +45,10 @@
 
             a {
                 padding-left: 2rem;
+		
+		&:first-child {
+			padding-left: 0;
+		}
             }
         }
 
@@ -52,10 +56,6 @@
             flex-flow: row nowrap;
             justify-content: space-evenly;
             padding-bottom: 2rem;
-
-            a {
-                padding: 0;
-            }
         }
     }
 
