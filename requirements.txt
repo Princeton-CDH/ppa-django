@@ -12,8 +12,6 @@ cached_property
 django-apptemplates
 progressbar2
 django-semanticui-forms
-django-compressor
-django-compressor-toolkit
 lxml
 eulxml
 # pin to wagtail 2.3 for now (2.4 causing test/fixture error)

@@ -61,27 +61,15 @@ MEDIA_URL = STATIC_URL + "media/"
 # Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
 
-# Compressor
-# https://django-compressor.readthedocs.io/en/latest/
-
-COMPRESS_PRECOMPILERS = (
-    ('text/x-scss', 'compressor_toolkit.precompilers.SCSSCompiler'),
-    ('module', 'compressor_toolkit.precompilers.ES6Compiler')
-)
-
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    # other finders..
-    'compressor.finders.CompressorFinder',
 )
 
 # Application definition
 
 INSTALLED_APPS = [
     'grappelli',
-    'compressor',
-    'compressor_toolkit',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
