@@ -4,6 +4,7 @@ node_modules/
 # Media ignores
 static/
 media/
+bundles/
 sitemedia/fonts
 **/.sass-cache/
 

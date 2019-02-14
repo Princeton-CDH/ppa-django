@@ -9,7 +9,7 @@ const TerserPlugin = require('terser-webpack-plugin')
 const devMode = process.env.NODE_ENV !== 'production' // i.e. not prod or qa
 
 module.exports = env => ({
-    context: path.resolve(__dirname, 'sitemedia'),
+    context: path.resolve(__dirname, 'srcmedia'),
     mode: devMode ?  'development' : 'production',
     entry: {
         main: [
@@ -21,7 +21,7 @@ module.exports = env => ({
         searchWithin: './js/searchWithin.js', // vue components & styles for search within work page
     },
     output: {
-        path: path.resolve(__dirname, 'static'), // where to output bundles
+        path: path.resolve(__dirname, 'bundles'), // where to output bundles
         publicPath: devMode ? 'http://localhost:3000/' : '/static/', // tell Django where to serve bundles from
         filename: devMode ? 'js/[name].js' : 'js/[name]-[hash].min.js', // append hashes in prod
     },
@@ -60,14 +60,14 @@ module.exports = env => ({
         new MiniCssExtractPlugin({ // extracts CSS to a single file per entrypoint
             filename: devMode ? 'css/[name].css' : 'css/[name]-[hash].min.css', // append hashes in prod
         }),
-        ...(devMode ? [] : [new CleanWebpackPlugin('static')]), // clear out static when rebuilding in prod/qa
+        ...(devMode ? [] : [new CleanWebpackPlugin('bundles')]), // clear out static when rebuilding in prod/qa
     ],
     resolve: {
         alias: { '^vue$': 'vue/dist/vue.esm.js' }, // use the esmodule version of Vue
         extensions: ['*', '.js', '.vue', '.json', '.scss'] // enables importing these without extensions
     },
     devServer: {
-        contentBase: path.join(__dirname, 'static'), // serve this as webroot
+        contentBase: path.join(__dirname, 'bundles'), // serve this as webroot
         overlay: true,
         port: 3000,
         allowedHosts: ['localhost'],

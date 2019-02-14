@@ -12,11 +12,11 @@ module.exports = (config) => {
           'https://code.jquery.com/jquery-3.1.1.min.js',
           'node_modules/jasmine-jquery/lib/jasmine-jquery.js',
           'sitemedia/semantic/dist/semantic.min.js',
-          'sitemedia/js/tests/*.spec.js',
-          { pattern: 'sitemedia/js/fixtures/*', served: true, included: false }
+          'srcmedia/test/**/*.spec.js',
+          { pattern: 'srcmedia/test/fixtures/*', served: true, included: false }
       ],
       preprocessors: {
-        'sitemedia/**/*.js': ['webpack']
+        'srcmedia/**/*.js': ['webpack']
       },
       webpack: webpackCfg({ maps: true })
     })

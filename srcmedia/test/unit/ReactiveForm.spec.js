@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs'
-import ReactiveForm from '../ReactiveForm'
+import ReactiveForm from '../../js/ReactiveForm'
 
-jasmine.getFixtures().fixturesPath = 'base/sitemedia/js/fixtures/'
+jasmine.getFixtures().fixturesPath = 'base/srcmedia/test/fixtures/'
 
 describe('Reactive Form', () => {
     
