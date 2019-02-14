@@ -61,27 +61,15 @@ MEDIA_URL = STATIC_URL + "media/"
 # Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
 
-# Compressor
-# https://django-compressor.readthedocs.io/en/latest/
-
-COMPRESS_PRECOMPILERS = (
-    ('text/x-scss', 'compressor_toolkit.precompilers.SCSSCompiler'),
-    ('module', 'compressor_toolkit.precompilers.ES6Compiler')
-)
-
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    # other finders..
-    'compressor.finders.CompressorFinder',
 )
 
 # Application definition
 
 INSTALLED_APPS = [
     'grappelli',
-    'compressor',
-    'compressor_toolkit',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -95,6 +83,7 @@ INSTALLED_APPS = [
     'django_cas_ng',
     'pucas',
     'semanticuiforms',
+    'webpack_loader',
     # 'wagtail.contrib.forms',
     'wagtail.contrib.redirects',
     # 'wagtail.embeds',
@@ -305,6 +294,15 @@ if os.path.exists(f):
     sys.modules[module_name] = module
     exec(open(f, "rb").read())
 
+# Django webpack loader
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'CACHE': not DEBUG,
+        'BUNDLE_DIR_NAME': 'static/',
+        'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.json'),
+    }
+}
+
 
 # if in debug mode and django-debug-toolbar is available, add to installed apps
 if DEBUG:
@@ -314,3 +312,8 @@ if DEBUG:
         MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
     except ImportError:
         pass
+
+    # allow webpack dev server through CSP when in DEBUG
+    CSP_SCRIPT_SRC += ('http://localhost:3000', "'unsafe-eval'")
+    CSP_STYLE_SRC += ('http://localhost:3000', "'unsafe-inline'")
+    CSP_CONNECT_SRC += ('http://localhost:3000', 'ws://localhost:3000',)

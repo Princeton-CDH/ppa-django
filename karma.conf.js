@@ -1,6 +1,8 @@
+let webpackCfg = require('./webpack.config')
+
 module.exports = (config) => {
     config.set({
-      frameworks: ['browserify', 'jasmine'],
+      frameworks: ['jasmine'],
       reporters: ['spec'],
       browsers: [
         'ChromeHeadless',
@@ -14,14 +16,9 @@ module.exports = (config) => {
           { pattern: 'sitemedia/js/fixtures/*', served: true, included: false }
       ],
       preprocessors: {
-        'sitemedia/**/*.js': ['browserify']
+        'sitemedia/**/*.js': ['webpack']
       },
-      browserify: {
-        debug: true,
-        transform: [
-            ['babelify', { 'presets': ['es2015'] }]
-        ]
-      }
+      webpack: webpackCfg({ maps: true })
     })
   }
   
