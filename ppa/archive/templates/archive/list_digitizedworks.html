@@ -1,8 +1,9 @@
 {% extends "base.html" %}
+{% load render_bundle from webpack_loader %}
 {% load static humanize ppa_tags %}
 
 {% block js %}
-<script src="{% static 'js/search.js' %}" type="module" defer></script>
+{% render_bundle 'search' 'js' %}
 {% endblock %}
 
 {% block head_extras %}

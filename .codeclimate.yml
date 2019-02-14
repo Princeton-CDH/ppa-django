@@ -1,0 +1,11 @@
+exclude_patterns:
+- "**/node_modules/"
+- "**/settings.py"
+- "*.config.js"
+- "*.conf.js"
+- "sitemedia/semantic/"
+- "docs/"
+- "**/test/"
+- "**/tests/"
+- "**/tests.py"
+- "**/migrations/"

@@ -83,27 +83,26 @@ Initial setup and installation:
 
 Frontend development setup:
 
-- django-compressor dependencies: you need `Node.js <https://nodejs.org/en/>`_
-  and a js package manager (``npm`` or ``yarn``). Install dependencies with the
-  relevant install command for your package manager - for ``npm``::
+This project uses the `Semantic UI <https://semantic-ui.com/>`_ library in
+addition to custom styles and javascript. You need to compile static assets
+before running the server.
 
-    npm install
-
-  for ``yarn``::
-
-    yarn
-
-  if you wish to install dependencies globally, take a look at the optional
-  settings for `django-compressor-toolkit <https://github.com/kottenator/django-compressor-toolkit>`_.
-
-- To build the main `Semantic UI <https://semantic-ui.com/>`_ styles and js::
+- To build all styles and js for production, including semantic UI::
 
     npm run build
 
-  This should run once automatically after you ``npm install``. To watch for changes
-  to the stylesheets and rebuild Semantic UI automatically::
+Alternatively, you can rebuild just the custom files or semantic independently.
+This is useful if you make small changes and need to recompile once::
 
-    npm start
+    npm run build:qa # just the custom files, with sourcemaps
+    npm run build:prod # just the custom files, no sourcemaps
+    npm run build:semantic # just semantic UI
+
+Finally, you can run a development server with hot reload if you'll be changing
+either set of assets frequently. These two processes are separate as well::
+
+    npm run dev # serve just the custom files from memory, with hot reload
+    npm run dev:semantic # serve just semantic UI files and recompile on changes 
 
 Tests
 ~~~~~~~~~~

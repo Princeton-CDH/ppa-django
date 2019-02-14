@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
+{% load render_bundle from webpack_loader %}
 {% load static humanize wagtailcore_tags %}
 
 {% block js %}
-<script src="{% static 'js/home.js' %}" type="module"></script>
+{% render_bundle 'home' 'js' %}
 {% endblock %}
 
 {% block page-context-id %}homepage{% endblock %}
