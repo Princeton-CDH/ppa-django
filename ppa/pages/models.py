@@ -7,6 +7,8 @@ from wagtail.core.fields import RichTextField, StreamField
 from wagtail.admin.edit_handlers import FieldPanel, PageChooserPanel, \
     StreamFieldPanel
 from wagtail.images.blocks import ImageChooserBlock
+from wagtail.images.edit_handlers import ImageChooserPanel
+from wagtail.images.models import Image
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.snippets.blocks import SnippetChooserBlock
 from wagtail.snippets.models import register_snippet
@@ -25,6 +27,9 @@ class Person(models.Model):
         help_text='Full name for the person as it should appear in the author '
                   'list.'
     )
+    #: Optional profile image to be associated with a person
+    image = models.ForeignKey(Image, null=True, blank=True,
+                              on_delete=models.CASCADE)
     #: identifying URI for a person (VIAF, ORCID iD, personal website, etc.)
     url = models.URLField(
         blank=True,
@@ -44,6 +49,7 @@ class Person(models.Model):
 
     panels = [
         FieldPanel('name'),
+        ImageChooserPanel('image'),
         FieldPanel('url'),
         FieldPanel('description'),
         FieldPanel('project_role'),
