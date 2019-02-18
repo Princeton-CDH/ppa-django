@@ -28,7 +28,7 @@ class Person(models.Model):
                   'list.'
     )
     #: Optional profile image to be associated with a person
-    image = models.ForeignKey(Image, null=True, blank=True,
+    photo = models.ForeignKey(Image, null=True, blank=True,
                               on_delete=models.CASCADE)
     #: identifying URI for a person (VIAF, ORCID iD, personal website, etc.)
     url = models.URLField(
@@ -49,7 +49,7 @@ class Person(models.Model):
 
     panels = [
         FieldPanel('name'),
-        ImageChooserPanel('image'),
+        ImageChooserPanel('photo'),
         FieldPanel('url'),
         FieldPanel('description'),
         FieldPanel('project_role'),
