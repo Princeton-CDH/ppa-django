@@ -19,6 +19,7 @@ href="{% url 'unapi' %}" />
 {% endblock %}
 
 {% block content %}
+<h1 class="sr-only">Archive</h1>
 <section class="ui search basic vertical segment container">
     {% include 'archive/snippets/search_form.html' %}
     {% include 'archive/snippets/jump_top.html' with anchor='search' %}
