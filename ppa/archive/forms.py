@@ -143,7 +143,11 @@ class ModelMultipleChoiceFieldWithEmpty(forms.ModelMultipleChoiceField):
     def clean(self, value):
         '''Extend clean to use default validation on all values but
         the empty id.'''
-        pk_values = [val for val in value if val and int(val) != self.EMPTY_ID]
+        try:
+            pk_values = [val for val in value if val and int(val) != self.EMPTY_ID]
+        except ValueError:
+            # non-integer will raise value error
+            raise ValidationError('Invalid collection')
         qs = super()._check_values(pk_values)
         if self.EMPTY_ID in value or str(self.EMPTY_ID) in value:
             return [self.EMPTY_VALUE] + list(qs)
