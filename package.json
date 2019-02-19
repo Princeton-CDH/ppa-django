@@ -16,7 +16,7 @@
         "test:unit": "karma start --single-run",
         "test:a11y": "pa11y-ci --sitemap http://localhost:8000/sitemap-pages.xml",
         "build": "npm run build:prod && npm run build:semantic",
-        "build:qa": "NODE_ENV=production webpack --env.map",
+        "build:qa": "NODE_ENV=production webpack --env.maps",
         "build:prod": "NODE_ENV=production webpack --env",
         "build:semantic": "gulp --gulpfile sitemedia/semantic/gulpfile.js build"
     },
