@@ -28,7 +28,6 @@
     "dependencies": {
         "parallax-js": "^3.1.0",
         "rxjs": "^6.1.0",
-        "rxjs-compat": "^6.1.0",
         "semantic-ui": "2.3.3"
     },
     "devDependencies": {
