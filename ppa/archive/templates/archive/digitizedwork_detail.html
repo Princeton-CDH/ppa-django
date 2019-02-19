@@ -3,6 +3,9 @@
 {% load static semanticui humanize %}
 
 {% block js %}
+<script>
+window.formData = {{ search_form.as_json|safe }}
+</script>
 {% render_bundle 'searchWithin' 'js' %}
 {% endblock %}
 
@@ -112,15 +115,10 @@
 {# search within a volume currently only supported for hathi content #}
 {% if object.source == object.HATHI %}
 <section class="ui basic vertical segment container">
-    <form class="ui form">
-        <fieldset class="ui vertical basic grid segment">
+    <form id="search-within" class="no-js">
+        <fieldset>
             <legend class="sr-only">text search fields</legend>
-            <div class="twelve wide column">
-                {% render_field search_form.query %}
-                <span class="question-popup" data-html="{{ search_form.QUESTION_POPUP_TEXT }}" data-position="top center">
-                    <i class="ui question circle icon"></i>
-                </span>
-            </div>
+            {% render_field search_form.query %}
             <input class="sr-only sr-only-focusable" type="submit" aria-label="submit search">
         </fieldset>
     </form>

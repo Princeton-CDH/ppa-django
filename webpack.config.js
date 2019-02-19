@@ -5,6 +5,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 const GlobImporter = require('node-sass-glob-importer')
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 const TerserPlugin = require('terser-webpack-plugin')
 const devMode = process.env.NODE_ENV !== 'production' // i.e. not prod or qa
 
@@ -60,10 +61,12 @@ module.exports = env => ({
         new MiniCssExtractPlugin({ // extracts CSS to a single file per entrypoint
             filename: devMode ? 'css/[name].css' : 'css/[name]-[hash].min.css', // append hashes in prod
         }),
-        ...(devMode ? [] : [new CleanWebpackPlugin('bundles')]), // clear out static when rebuilding in prod/qa
+        ...(devMode ?
+            [new BundleAnalyzerPlugin()] : // show the bundle analyzer when in dev
+            [new CleanWebpackPlugin('bundles')] // clear out bundle dir when rebuilding in prod/qa
+        ),
     ],
     resolve: {
-        alias: { '^vue$': 'vue/dist/vue.esm.js' }, // use the esmodule version of Vue
         extensions: ['*', '.js', '.vue', '.json', '.scss'] // enables importing these without extensions
     },
     devServer: {
