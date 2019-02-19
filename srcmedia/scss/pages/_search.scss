@@ -113,14 +113,20 @@
         }
     }
 
+    fieldset {
+        padding: 0;
+        border: none;
+    }
+
     #collections {
         .field {
             display: flex;
             flex-flow: row wrap;
         }
 
-        label[for=collections] {
+        legend {
             width: 100%;
+            margin-bottom: 1rem;
         }
 
         .button {
