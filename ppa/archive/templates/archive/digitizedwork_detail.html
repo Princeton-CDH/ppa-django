@@ -113,7 +113,7 @@
 {% if object.source == object.HATHI %}
 <section class="ui basic vertical segment container">
     <form class="ui form">
-        <fieldset class="ui vertical basic grid segment">
+        <div class="ui vertical basic grid segment">
             <legend class="sr-only">text search fields</legend>
             <div class="twelve wide column">
                 {% render_field search_form.query %}
@@ -122,7 +122,7 @@
                 </span>
             </div>
             <input class="sr-only sr-only-focusable" type="submit" aria-label="submit search">
-        </fieldset>
+        </div>
     </form>
     {% include 'archive/snippets/jump_top.html' with anchor='digitized-work' %}
 </section>
