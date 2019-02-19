@@ -88,8 +88,8 @@ class RangeWidget(forms.MultiWidget):
 
     def __init__(self, *args, **kwargs):
         widgets = [
-            forms.NumberInput(),
-            forms.NumberInput()
+            forms.NumberInput(attrs={'aria-label': 'Start'}),
+            forms.NumberInput(attrs={'aria-label': 'End'})
         ]
         super().__init__(widgets, *args, **kwargs)
 
