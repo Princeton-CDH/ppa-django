@@ -63,7 +63,6 @@ module.exports = env => ({
         ...(devMode ? [] : [new CleanWebpackPlugin('bundles')]), // clear out static when rebuilding in prod/qa
     ],
     resolve: {
-        alias: { '^vue$': 'vue/dist/vue.esm.js' }, // use the esmodule version of Vue
         extensions: ['*', '.js', '.vue', '.json', '.scss'] // enables importing these without extensions
     },
     devServer: {
