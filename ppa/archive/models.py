@@ -349,10 +349,12 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
         # set fields from marc if available, since it has more details
         if bibdata.marcxml:
+
             # set title and subtitle from marc if possible
             # - clean title: strip trailing space & slash and initial bracket
-            self.title = bibdata.marcxml['245']['a'].rstrip(' /') \
-                .lstrip('[')
+            if not self.protected_fields.title:
+                self.title = bibdata.marcxml['245']['a'].rstrip(' /') \
+                    .lstrip('[')
 
             # according to PUL CAMS,
             # 245 subfield contains the subtitle *if* the preceding field
@@ -371,11 +373,11 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
             # if preceding_character == ':':
             #     self.subtitle = bibdata.marcxml['245']['b'] or ''
-
-            # NOTE: skipping preceding character check for now
-            self.subtitle = bibdata.marcxml['245']['b'] or ''
-            # strip trailing space & slash from subtitle
-            self.subtitle = self.subtitle.rstrip(' /')
+            if not self.protected_fields.subtitle:
+                # NOTE: skipping preceding character check for now
+                self.subtitle = bibdata.marcxml['245']['b'] or ''
+                # strip trailing space & slash from subtitle
+                self.subtitle = self.subtitle.rstrip(' /')
 
             # indicator 2 provides the number of characters to be
             # skipped when sorting (could be 0)
@@ -392,39 +394,43 @@ class DigitizedWork(TrackChangesModel, Indexable):
             # definite article.
             # Also strip punctuation, since MARC only includes it in
             # non-sort count when there is a definite article.
-            self.sort_title = bibdata.marcxml.title()[non_sort:].strip(' "[')
-
-            self.author = bibdata.marcxml.author() or ''
-            # remove a note present on some records and strip whitespace
-            self.author = self.author.replace('[from old catalog]', '').strip()
-            # removing trailing period, except when it is part of an
-            # initial or known abbreviation (i.e, Esq.)
-            # Look for single initial, but support initials with no spaces
-            if self.author.endswith('.') and not \
-              re.search(r'( ([A-Z]\.)*[A-Z]| Esq)\.$', self.author):
-                self.author = self.author.rstrip('.')
+            if not self.protected_fields.sort_title:
+                self.sort_title = bibdata.marcxml.title()[non_sort:]\
+                    .strip(' "[')
+            if not self.protected_fields.author:
+                self.author = bibdata.marcxml.author() or ''
+                # remove a note present on some records and strip whitespace
+                self.author = self.author.replace('[from old catalog]', '').strip()
+                # removing trailing period, except when it is part of an
+                # initial or known abbreviation (i.e, Esq.)
+                # Look for single initial, but support initials with no spaces
+                if self.author.endswith('.') and not \
+                re.search(r'( ([A-Z]\.)*[A-Z]| Esq)\.$', self.author):
+                    self.author = self.author.rstrip('.')
 
             # field 260 includes publication information
             if '260' in bibdata.marcxml:
-                # strip trailing punctuation from publisher and pub place
+                if not self.protected_fields.pub_place:
+                    # strip trailing punctuation from publisher and pub place
 
-                # subfield $a is place of publication
-                self.pub_place = bibdata.marcxml['260']['a'] or ''
-                self.pub_place = self.pub_place.rstrip(';:,')
-                # if place is marked as unknown ("sine loco"), leave empty
-                if self.pub_place.lower() == '[s.l.]':
-                    self.pub_place = ''
+                    # subfield $a is place of publication
+                    self.pub_place = bibdata.marcxml['260']['a'] or ''
+                    self.pub_place = self.pub_place.rstrip(';:,')
+                    # if place is marked as unknown ("sine loco"), leave empty
+                    if self.pub_place.lower() == '[s.l.]':
+                        self.pub_place = ''
+                if not self.protected_fields.publisher:
+                    # subfield $b is name of publisher
+                    self.publisher = bibdata.marcxml['260']['b'] or ''
+                    self.publisher = self.publisher.rstrip(';:,')
+                    # if publisher is marked as unknown ("sine nomine"), leave empty
+                    if self.publisher.lower() == '[s.n.]':
+                        self.publisher = ''
 
-                # subfield $b is name of publisher
-                self.publisher = bibdata.marcxml['260']['b'] or ''
-                self.publisher = self.publisher.rstrip(';:,')
-                # if publisher is marked as unknown ("sine nomine"), leave empty
-                if self.publisher.lower() == '[s.n.]':
-                    self.publisher = ''
-
-            # remove printed by statement before publisher name
-            self.publisher = re.sub(self.printed_by_re, '', self.publisher,
-                flags=re.IGNORECASE)
+            if not self.protected_fields.publisher:
+                # remove printed by statement before publisher name
+                self.publisher = re.sub(self.printed_by_re, '', self.publisher,
+                    flags=re.IGNORECASE)
 
             # maybe: consider getting volume & series directly from
             # marc rather than relying on hathi enumcron ()
@@ -432,24 +438,29 @@ class DigitizedWork(TrackChangesModel, Indexable):
         else:
             # fallback behavior, if marc is not availiable
             # use dublin core title
-            self.title = bibdata.title
+            if not self.protected_fields.title:
+                self.title = bibdata.title
             # could guess at non-sort, but hopefully unnecessary
 
         # NOTE: might also want to store sort title
         # pub date returned in api JSON is list; use first for now (if available)
-        if bibdata.pub_dates:
-            self.pub_date = bibdata.pub_dates[0]
+        if not self.protected_fields.pub_date:
+            if bibdata.pub_dates:
+                self.pub_date = bibdata.pub_dates[0]
         copy_details = bibdata.copy_details(self.source_id)
         # hathi version/volume information for this specific copy of a work
-        self.enumcron = copy_details['enumcron'] or ''
+        if not self.protected_fields.enumcron:
+            self.enumcron = copy_details['enumcron'] or ''
         # hathi source url can currently be inferred from htid, but is
         # included in the bibdata in case it changes - so let's just store it
         self.source_url = copy_details['itemURL']
 
+        if not self.protected_fields.publisher:
         # remove brackets around inferred publishers, place of publication
         # *only* if they wrap the whole text
-        self.publisher = re.sub(r'^\[(.*)\]$', r'\1', self.publisher)
-        self.pub_place = re.sub(r'^\[(.*)\]$', r'\1', self.pub_place)
+            self.publisher = re.sub(r'^\[(.*)\]$', r'\1', self.publisher)
+        if not self.protected_fields.pub_place:
+            self.pub_place = re.sub(r'^\[(.*)\]$', r'\1', self.pub_place)
 
         # should also consider storing:
         # - last update, rights code / rights string, item url
