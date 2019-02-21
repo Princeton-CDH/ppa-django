@@ -9,6 +9,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
+from flags import Flags
 from pairtree import pairtree_path, pairtree_client, storage_exceptions
 import requests
 from wagtail.core.fields import RichTextField
@@ -121,6 +122,61 @@ class Collection(TrackChangesModel):
         return stats
 
 
+class ProtectedFlags(Flags):
+    '''Flag set of fields that should be protected if edited in the admin.'''
+    title = ()
+    subtitle = ()
+    sort_title = ()
+    enumcron = ()
+    author = ()
+    pub_place = ()
+    publisher = ()
+    pub_date = ()
+
+    @classmethod
+    def all_fields(cls):
+        return list(ProtectedFlags.__members__.keys())
+
+    def as_list(self):
+        '''Return combined flags as a list of field names.'''
+        all_fields = list(self.__members__.keys())
+        return [field for field in all_fields
+                if getattr(self, field)]
+
+    def __str__(self):
+        protected_fields = self.as_list()
+        verbose_names = []
+        for field in protected_fields:
+            field = DigitizedWork._meta.get_field(field)
+            verbose_names.append(field.verbose_name.capitalize())
+        return ', '.join(sorted(verbose_names))
+
+class ProtectedFlagsField(models.Field):
+    '''PositiveSmallIntegerField subclass that returns a
+    :class:`ProtectedFlags` object and stores as integer.'''
+
+    description = ('A field that stores an instance of :class:`ProtectedFlags` '
+                   'as an integer.')
+
+    def __init__(self, verbose_name=None, name=None, **kwargs):
+        '''Make the field unnullable and not allowed to be blank.'''
+        super().__init__(verbose_name, name, blank=False, null=False, **kwargs)
+
+    def from_db_value(self, value, expression, connection, context):
+        '''Always return an instance of :class:`ProtectedFlags`'''
+        return ProtectedFlags(value)
+
+    def get_internal_type(self):
+        return 'PositiveSmallIntegerField'
+
+    def get_prep_value(self, value):
+        return int(value)
+
+    def to_python(self, value):
+        '''Always return an instance of :class:`ProtectedFlags`'''
+        return ProtectedFlags(value)
+
+
 class DigitizedWork(TrackChangesModel, Indexable):
     '''
     Record to manage digitized works included in PPA and store their basic
@@ -184,6 +240,13 @@ class DigitizedWork(TrackChangesModel, Indexable):
     #: internal team notes, not displayed on the public facing site
     notes = models.TextField(blank=True, default='',
         help_text='Internal curation notes (not displayed on public site)')
+    #: metadata fields that should be preserved on bulk update because
+    # they have been modified by data editors.
+    protected_fields = ProtectedFlagsField(
+        default=int(ProtectedFlags.no_flags),
+        help_text='Fields protected from bulk update because they have been '
+                  'manually edited.'
+    )
     #: collections that this work is part of
     collections = models.ManyToManyField(Collection, blank=True)
     #: date added to the archive

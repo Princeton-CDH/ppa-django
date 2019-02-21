@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
-from ppa.archive.models import DigitizedWork, Collection
+from ppa.archive.models import DigitizedWork, Collection, ProtectedFlags
 
 
 class DigitizedWorkAdmin(admin.ModelAdmin):
@@ -15,11 +15,12 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         'source', 'source_id', 'source_url', 'title', 'subtitle',
         'sort_title', 'enumcron', 'author', 'pub_place', 'publisher',
         'pub_date', 'page_count', 'public_notes', 'notes', 'record_id',
-        'collections', 'status', 'added', 'updated'
+        'collections', 'protected_fields', 'status', 'added',
+        'updated'
     )
     # fields that are always read only
     readonly_fields = (
-        'added', 'updated'
+        'added', 'updated', 'protected_fields'
     )
     # fields that are read only for HathiTrust records
     hathi_readonly_fields = (
@@ -58,6 +59,30 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
     source_link.short_description = 'Source id'
     source_link.admin_order_field = 'source_id'
     source_link.allow_tags = True
+
+    def save_model(self, request, obj, form, change):
+        '''Note any fields in the protected list that have been changed
+        and preserve in database.'''
+        # new object, created from scratch, nothing to track and preserve
+        # NOTE: Is this logic correct? Or should all the fields be preserved?
+        if not change:
+            super().save_model(request, obj, form, change)
+            return
+        db_obj = DigitizedWork.objects.get(pk=obj.pk)
+        # get a list of fields with 1:1 mapping to model
+        protected_fields = ProtectedFlags.all_fields()
+        changed_fields = []
+        # if a field has changed, append to changed fields
+        for field in protected_fields:
+            if getattr(db_obj, field) != getattr(obj, field):
+                changed_fields.append(field)
+        # iterate over changed fields and 'append' (OR) to flags
+        result = db_obj.protected_fields
+        for field in changed_fields:
+            result = result | ProtectedFlags(field)
+        # set the object's protected fields and save the result
+        obj.protected_fields = result
+        super().save_model(request, obj, form, change)
 
     def save_related(self, request, form, formsets, change):
         '''Ensure reindex is called when admin form is saved'''
