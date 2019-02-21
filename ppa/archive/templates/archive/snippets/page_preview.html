@@ -12,8 +12,8 @@ Expected context variables:
     <div class="preview">
         <a href="{% page_url item_id page.order %}"
           target=_blank>
-          <img src="{% page_image_url item_id page.order 225 %}"
-              srcset="{% page_image_url item_id page.order 450 %} 2x"
+          <img data-src="{% page_image_url item_id page.order 225 %}"
+              data-srcset="{% page_image_url item_id page.order 450 %} 2x"
               alt="page preview {{ forloop.counter }}"/>
         </a>
     </div>
