@@ -28,8 +28,14 @@ class Person(models.Model):
                   'list.'
     )
     #: Optional profile image to be associated with a person
-    photo = models.ForeignKey(Image, null=True, blank=True,
-                              on_delete=models.CASCADE)
+    photo = models.ForeignKey(
+            Image,
+            null=True,
+            blank=True,
+            on_delete=models.CASCADE,
+            help_text='Image to use as a profile photo for a person, '
+                      'displayed on contributor list.'
+    )
     #: identifying URI for a person (VIAF, ORCID iD, personal website, etc.)
     url = models.URLField(
         blank=True,
