@@ -133,7 +133,11 @@ class ProtectedFlags(Flags):
     publisher = ()
     pub_date = ()
 
-    def deconstruct(self):
+    @classmethod
+    def deconstruct(cls):
+        '''Give Django information needed to make
+        :class:`ProtectedField.no_flags` default in migration.'''
+        # (import path, [args], kwargs)
         return ('ppa.archive.models.ProtectedFlags', ['no_flags'], {})
 
     @classmethod

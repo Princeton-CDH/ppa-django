@@ -25,6 +25,12 @@ FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
 
 class TestProtectedFlags(TestCase):
 
+    def test_deconstruct(self):
+        ret = ProtectedFlags.deconstruct()
+        assert ret[0] == 'ppa.archive.models.ProtectedFlags'
+        assert ret[1] == ['no_flags']
+        assert ret[2] == {}
+
     def test_all_fields(self):
         fields = ProtectedFlags.all_fields()
         assert isinstance(fields, list)
@@ -101,7 +107,7 @@ class TestDigitizedWork(TestCase):
 
         with open(self.bibdata_brief) as bibdata:
             brief_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
-        '''
+
         digwork = DigitizedWork(source_id='njp.32101013082597')
         digwork.populate_from_bibdata(brief_bibdata)
         assert digwork.record_id == brief_bibdata.record_id
@@ -252,7 +258,7 @@ class TestDigitizedWork(TestCase):
         assert digwork.publisher == ''
 
         # NOTE: not currently testing publication info unavailable
-        '''
+
         with open(self.bibdata_full2) as bibdata:
             full_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
 
