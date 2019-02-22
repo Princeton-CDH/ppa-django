@@ -244,7 +244,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
     pub_place = models.CharField('Place of Publication', max_length=255,
                                  blank=True)
     #: publisher
-    publisher = models.TextField(max_length=255, blank=True)
+    publisher = models.TextField(blank=True)
     # Needs to be integer to allow aggregating max/min, filtering by date
     pub_date = models.PositiveIntegerField('Publication Date', null=True, blank=True)
     #: number of pages in the work
