@@ -44,10 +44,12 @@ class TestProtectedFlags(TestCase):
         assert sorted(results.as_list()) == ['subtitle', 'title']
 
     def test_str(self):
-        fields = ProtectedFlags.enumcron | ProtectedFlags.title
+        fields = ProtectedFlags.enumcron | ProtectedFlags.title | \
+            ProtectedFlags.sort_title
 
         comparison = [
             DigitizedWork._meta.get_field('enumcron').verbose_name,
+            DigitizedWork._meta.get_field('sort_title').verbose_name.capitalize(),
             # no verbose name, so should be capitalized
             DigitizedWork._meta.get_field('title').verbose_name.capitalize()
         ]

@@ -157,8 +157,9 @@ class ProtectedFlags(Flags):
             field = DigitizedWork._meta.get_field(field)
             # if the field has no actual verbose name, just capitalize
             # as does the Django admin
-            if field.verbose_name == field.name:
-                verbose_names.append(field.name.capitalize())
+            # check against a version of field name with underscores replaced
+            if field.verbose_name == field.name.replace('_', ' '):
+                verbose_names.append(field.verbose_name.capitalize())
             else:
                 # otherwise use the verbose_name verbatim
                 verbose_names.append(field.verbose_name)
