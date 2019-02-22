@@ -19,3 +19,4 @@ wagtail>=2.3,<2.4
 bleach
 django-fullurl
 django-csp
+django-webpack-loader
