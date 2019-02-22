@@ -6,7 +6,7 @@ from django.test import TestCase, override_settings, RequestFactory
 from django.urls import reverse
 
 from ppa.archive.admin import DigitizedWorkAdmin
-from ppa.archive.models import DigitizedWork, Collection
+from ppa.archive.models import DigitizedWork, Collection, ProtectedFlags
 
 TEST_SOLR_CONNECTIONS = {
     'default': {
@@ -70,6 +70,28 @@ class TestDigitizedWorkAdmin(TestCase):
         hathi_work = DigitizedWork.objects.first()
         assert set(digadmin.get_readonly_fields(Mock(), hathi_work)) == \
             set(digadmin.readonly_fields + digadmin.hathi_readonly_fields)
+
+
+    def test_save_model(self):
+        request = self.factory.get('/madeup/url')
+        site = AdminSite()
+        digwork = DigitizedWork(source_id='njp.32101013082597')
+        form = Mock()
+        change = False
+        digadmin = DigitizedWorkAdmin(DigitizedWork, site)
+        # initially created, so work should just be saved, no flags set
+        digadmin.save_model(request, digwork, form, change)
+        saved_work = DigitizedWork.objects.get(source_id=digwork.source_id)
+        assert  saved_work == digwork
+        assert saved_work.protected_fields == ProtectedFlags.no_flags
+        saved_work.title = 'Test Title'
+        saved_work.enumcron = '0001'
+        change = True
+        # saved work should now set the flags for the altered fields
+        digadmin.save_model(request, saved_work, form, change)
+        new_work = DigitizedWork.objects.get(pk=saved_work.pk)
+        assert new_work.protected_fields == \
+                ProtectedFlags.title | ProtectedFlags.enumcron
 
 
     @override_settings(SOLR_CONNECTIONS=TEST_SOLR_CONNECTIONS)

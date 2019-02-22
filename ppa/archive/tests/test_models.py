@@ -15,11 +15,41 @@ from pairtree import pairtree_client, pairtree_path, storage_exceptions
 import pytest
 
 from ppa.archive import hathi
-from ppa.archive.models import DigitizedWork, Collection, NO_COLLECTION_LABEL
+from ppa.archive.models import DigitizedWork, Collection, \
+    NO_COLLECTION_LABEL, ProtectedFlags
 from ppa.archive.solr import get_solr_connection, Indexable
 
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
+
+
+class TestProtectedFlags(TestCase):
+
+    def test_all_fields(self):
+        fields = ProtectedFlags.all_fields()
+        assert isinstance(fields, list)
+        # Trivial test, but will catch changes to the return signature
+        # that aren't a simple listing of members
+        assert fields == list(ProtectedFlags.__members__.keys())
+
+    def test_as_list(self):
+        # should return a list of the flags that have been set
+        results = ProtectedFlags.title | ProtectedFlags.subtitle
+        assert sorted(results.as_list()) == ['subtitle', 'title']
+
+    def test_str(self):
+        fields = ProtectedFlags.enumcron | ProtectedFlags.title
+
+        comparison = [
+            DigitizedWork._meta.get_field('enumcron').verbose_name,
+            # no verbose name, so should be capitalized
+            DigitizedWork._meta.get_field('title').verbose_name.capitalize()
+        ]
+        # should be a comma-joined list of the verbose names of the
+        # fields, in alphabetical order; avoided hard coding in case
+        # verbose name changes
+        assert str(fields) == ', '.join(comparison)
+
 
 
 class TestDigitizedWork(TestCase):
@@ -71,7 +101,7 @@ class TestDigitizedWork(TestCase):
 
         with open(self.bibdata_brief) as bibdata:
             brief_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
-
+        '''
         digwork = DigitizedWork(source_id='njp.32101013082597')
         digwork.populate_from_bibdata(brief_bibdata)
         assert digwork.record_id == brief_bibdata.record_id
@@ -222,6 +252,56 @@ class TestDigitizedWork(TestCase):
         assert digwork.publisher == ''
 
         # NOTE: not currently testing publication info unavailable
+        '''
+        with open(self.bibdata_full2) as bibdata:
+            full_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
+
+        # test that protected fields are respected
+        digwork = DigitizedWork(source_id='aeu.ark:/13960/t1pg22p71')
+        # set each of the protected fields
+        digwork.title = 'Fake title'
+        digwork.subtitle = 'Silly subtitle'
+        digwork.sort_title = 'Sort title fake'
+        digwork.enumcron = '0001'
+        digwork.author = 'Not an author'
+        digwork.pub_place = 'Nowhere'
+        digwork.publisher = 'Not a publisher'
+        digwork.pub_date = 2200
+        # set all fields as protected
+        digwork.protected_fields = ProtectedFlags.all_flags
+        # fake bibdata for empty fields
+
+        full_bibdata.copy_details = Mock()
+        full_bibdata.copy_details.return_value = {
+            'enumcron': '0002',
+            'itemURL': 'http://example.com',
+
+        }
+        # fields have not changed
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.title == 'Fake title'
+        assert digwork.subtitle == 'Silly subtitle'
+        assert digwork.sort_title == 'Sort title fake'
+        assert digwork.enumcron == '0001'
+        assert digwork.pub_place == 'Nowhere'
+        assert digwork.publisher == 'Not a publisher'
+        assert digwork.pub_date == 2200
+        # check fallbacks for title
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.title == 'Fake title'
+        assert digwork.subtitle == 'Silly subtitle'
+        assert digwork.sort_title == 'Sort title fake'
+        # no protected fields
+        digwork.protected_fields = ProtectedFlags.no_flags
+        digwork.populate_from_bibdata(full_bibdata)
+        # all fields overwritten
+        assert digwork.title != 'Fake title'
+        assert digwork.subtitle != 'Silly subtitle'
+        assert digwork.sort_title != 'Sort title fake'
+        assert digwork.enumcron != '0001'
+        assert digwork.pub_place != 'Nowhere'
+        assert digwork.publisher != 'Not a publisher'
+        assert digwork.pub_date != 2200
 
     def test_index_data(self):
         digwork = DigitizedWork.objects.create(

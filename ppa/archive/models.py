@@ -133,6 +133,9 @@ class ProtectedFlags(Flags):
     publisher = ()
     pub_date = ()
 
+    def deconstruct(self):
+        return ('ppa.archive.models.ProtectedFlags', ['no_flags'], {})
+
     @classmethod
     def all_fields(cls):
         return list(ProtectedFlags.__members__.keys())
@@ -148,8 +151,15 @@ class ProtectedFlags(Flags):
         verbose_names = []
         for field in protected_fields:
             field = DigitizedWork._meta.get_field(field)
-            verbose_names.append(field.verbose_name.capitalize())
+            # if the field has no actual verbose name, just capitalize
+            # as does the Django admin
+            if field.verbose_name == field.name:
+                verbose_names.append(field.name.capitalize())
+            else:
+                # otherwise use the verbose_name verbatim
+                verbose_names.append(field.verbose_name)
         return ', '.join(sorted(verbose_names))
+
 
 class ProtectedFlagsField(models.Field):
     '''PositiveSmallIntegerField subclass that returns a
@@ -243,7 +253,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
     #: metadata fields that should be preserved on bulk update because
     # they have been modified by data editors.
     protected_fields = ProtectedFlagsField(
-        default=int(ProtectedFlags.no_flags),
+        default=ProtectedFlags,
         help_text='Fields protected from bulk update because they have been '
                   'manually edited.'
     )
@@ -346,6 +356,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
         '''
         # store hathi record id
         self.record_id = bibdata.record_id
+        print(bool(bibdata.marcxml))
 
         # set fields from marc if available, since it has more details
         if bibdata.marcxml:
