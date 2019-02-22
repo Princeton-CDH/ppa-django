@@ -17,6 +17,14 @@
 {% block head_extras %}
     <link rel="unapi-server" type="application/xml" title="unAPI"
           href="{% url 'unapi' %}" />
+    <noscript>
+        <style type="text/css">
+            /* hide lazy-loaded images */
+            img[data-src] {
+                display: none
+            }
+        </style>
+    </noscript>
 {% endblock %}
 
 {% block page-context-id %}digitized-work{% endblock %}
