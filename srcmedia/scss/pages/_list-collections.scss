@@ -8,7 +8,7 @@
         max-width: 667px;
         width: 100%;
         margin-bottom: 1rem;
- 
+
         @media (min-width: $tablet) {
             font-size: 1.5rem;
         }
@@ -28,7 +28,7 @@
             justify-content: space-between;
             align-items: initial;
 
-            .card:last-child {
+            .card:last-child:nth-child(even)  {
                 margin-left: auto;
             }
         }
