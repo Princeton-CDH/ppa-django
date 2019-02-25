@@ -500,7 +500,8 @@ class TestDigitizedWork(TestCase):
             # change status to suppressed - data should be deleted
             work.status = work.SUPPRESSED
             work.save()
-            mock_delete_pairtree_data.assert_called()
+            assert mock_delete_pairtree_data.call_count == 1
+            # mock_delete_pairtree_data.assert_called()
 
             # changing status but not to suppressed - should not be called
             mock_delete_pairtree_data.reset_mock()

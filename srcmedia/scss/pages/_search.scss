@@ -297,19 +297,4 @@
     .message {
         margin-top: 2rem;
     }
-
-    /* adjust display to make search form usable with no javascript */
-    .no-js {
-
-        .advanced {
-            display: block;
-        }
-        .sort .dropdown, .clear-selection, .show-advanced, #histogram {
-            display: none;
-        }
-        input[type=submit] {
-            float: right;
-        }
-
-    }
 }

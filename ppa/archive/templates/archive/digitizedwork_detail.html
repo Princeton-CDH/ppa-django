@@ -17,6 +17,9 @@
 {% block head_extras %}
     <link rel="unapi-server" type="application/xml" title="unAPI"
           href="{% url 'unapi' %}" />
+    <noscript>
+        <link rel="stylesheet" type="text/css" href="{% static 'css/noscript.css' %}"/>
+    </noscript>
 {% endblock %}
 
 {% block page-context-id %}digitized-work{% endblock %}

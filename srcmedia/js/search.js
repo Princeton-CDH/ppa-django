@@ -1,6 +1,7 @@
 import ReactiveForm from './ReactiveForm'
 import Histogram from './Histogram'
 import clearable from './clearable'
+import ImageLazyLoader from './modules/LazyLoad'
 
 $(function(){
 
@@ -21,12 +22,16 @@ $(function(){
     const $$textInputs = $('input[type="text"]')
     const $$relevanceOption = $('#sort .item[data-value="relevance"]')
     const $$advancedSearchButton = $('.show-advanced button')
+    const $$pagePreviews = $('img[data-src]')
 
     /* bindings */
     archiveSearchForm.onStateChange(submitForm)
     $$clearDatesLink.click(onClearDates)
     $$advancedSearchButton.click(toggleAdvancedSearch)
     $$textInputs.keyup(onTextInputChange)
+
+    new ImageLazyLoader($$pagePreviews.get()) // lazy load images
+
     onPageLoad() // misc functions that run once on page load
 
     $$collectionInputs
