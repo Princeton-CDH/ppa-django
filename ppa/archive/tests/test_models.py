@@ -79,6 +79,27 @@ class TestDigitizedWork(TestCase):
         assert res.get_results_count() == 1
         assert res.docs[0]['id'] == 'njp.32101013082597'
 
+    def test_populate_fields(self):
+        digwork = DigitizedWork(
+            source_id='testid',
+            title='Fake Title',
+            enumcron='02',
+            pub_place='Paris',
+            protected_fields=ProtectedWorkFieldFlags.enumcron
+            )
+        field_dict = {
+            'title': 'Test Title',
+            'enumcron': '01',
+            'pub_place': 'London'
+        }
+        digwork.populate_fields(field_dict)
+        # protected field was protected
+        assert digwork.enumcron == '02'
+        # unprotected fields are updated
+        assert digwork.title == 'Test Title'
+        assert digwork.pub_place == 'London'
+
+
     def test_populate_from_bibdata(self):
         with open(self.bibdata_full) as bibdata:
             full_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
