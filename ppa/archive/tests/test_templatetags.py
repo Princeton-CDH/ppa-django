@@ -49,12 +49,18 @@ def test_page_image_url():
     # basic test with order, width, and item id
     item_id = "mdp.39015031594768"
     order = 29
-    width = 180
+    width = 300
     img_url = page_image_url(item_id, order, width)
     # points to the appropriate url
     assert img_url.startswith("%s/imgsrv/image?" % HATHI_BASE_URL)
     # renders the correct query string
     assert img_url.endswith('image?id=%s;seq=%s;width=%s' % (item_id, order, width))
+    # test with width < 250; should use thumbnail API
+    width = 250
+    img_url = page_image_url(item_id, order, width)
+    # points to the appropriate url
+    assert img_url.startswith("%s/imgsrv/thumbnail?" % HATHI_BASE_URL)
+
 
 def test_page_url():
     item_id = "mdp.39015031594768"
