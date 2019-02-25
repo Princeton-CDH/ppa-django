@@ -330,6 +330,25 @@ class DigitizedWork(TrackChangesModel, Indexable):
         if self.has_changed('source_id') and self.source == self.HATHI:
             raise ValidationError('Changing source ID for HathiTrust records is not supported')
 
+    def compare_protected_fields(self, db_obj):
+        '''Compare protected fields in a
+        :class:`ppa.archive.models.DigitizedWork` instance and return those
+        that are changed.
+
+        :param object db_obj: Database instance of a
+            :class:`~ppa.archive.models.DigitizedWork`.
+        '''
+        changed_fields = []
+        # if a field has changed, append to changed fields
+        for field in ProtectedWorkFieldFlags.all_flags:
+            # field is in format of ProtectedWorkFieldFlags.title
+            field_name = str(field)
+            # if obj has a different value for a protected field
+            # than its db counterpart
+            if getattr(self, field_name) != getattr(db_obj, field_name):
+                # append as a now protected field
+                changed_fields.append(field_name)
+        return changed_fields
 
     def populate_fields(self, field_data):
         '''Conditionally update fields as protected by flags using Hathi
@@ -457,12 +476,10 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
         # remove brackets around inferred publishers, place of publication
         # *only* if they wrap the whole text
-        if 'publisher' in field_data:
-            field_data['publisher'] = \
-                re.sub(r'^\[(.*)\]$', r'\1', field_data['publisher'])
-        if 'pub_place' in field_data:
-            field_data['pub_place'] = \
-                re.sub(r'^\[(.*)\]$', r'\1', field_data['pub_place'])
+        for field in ['publisher', 'pub_place']:
+            if field in field_data:
+                field_data[field] = \
+                    re.sub(r'^\[(.*)\]$', r'\1', field_data[field])
 
         # should also consider storing:
         # - last update, rights code / rights string, item url

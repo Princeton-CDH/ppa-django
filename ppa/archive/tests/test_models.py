@@ -79,6 +79,33 @@ class TestDigitizedWork(TestCase):
         assert res.get_results_count() == 1
         assert res.docs[0]['id'] == 'njp.32101013082597'
 
+    def test_compare_protected_fields(self):
+
+        digwork = DigitizedWork(
+            source_id='testid',
+            title='Fake Title',
+            enumcron='02',
+            pub_place='Paris',
+            protected_fields=ProtectedWorkFieldFlags.all_flags
+        )
+        # change title and pub_place, leave enumcron
+        db_digwork = DigitizedWork(
+            source_id='testid2',
+            title='New Title',
+            enumcron='02',
+            pub_place='London',
+            protected_fields=ProtectedWorkFieldFlags.all_flags
+        )
+
+
+        changed_fields = digwork.compare_protected_fields(db_digwork)
+        assert 'title' in changed_fields
+        assert 'pub_place' in changed_fields
+        # source_id isn't a protected field so it shouldn't ever be in
+        # changed_fields
+        assert 'source_id' not in changed_fields
+        assert 'enumcron' not in changed_fields
+
     def test_populate_fields(self):
         digwork = DigitizedWork(
             source_id='testid',

@@ -73,17 +73,7 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         # instance -- obj is a new instance *not* a modified one,
         # so compare against database
         db_obj = DigitizedWork.objects.get(pk=obj.pk)
-        # get a list of fields with 1:1 mapping to model
-        changed_fields = []
-        # if a field has changed, append to changed fields
-        for field in ProtectedWorkFieldFlags.all_flags:
-            # field is in format of ProtectedWorkFieldFlags.title
-            field_name = str(field)
-            # if obj has a different value for a protected field
-            # than its db counterpart
-            if getattr(obj, field_name) != getattr(db_obj, field_name):
-                # append as a now protected field
-                changed_fields.append(field_name)
+        changed_fields = obj.compare_protected_fields(db_obj)
         # iterate over changed fields and 'append' (OR) to flags
         for field in changed_fields:
             obj.protected_fields = obj.protected_fields | \
