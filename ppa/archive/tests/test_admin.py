@@ -6,7 +6,7 @@ from django.test import TestCase, override_settings, RequestFactory
 from django.urls import reverse
 
 from ppa.archive.admin import DigitizedWorkAdmin
-from ppa.archive.models import DigitizedWork, Collection, ProtectedFlags
+from ppa.archive.models import DigitizedWork, Collection, ProtectedWorkFieldFlags
 
 TEST_SOLR_CONNECTIONS = {
     'default': {
@@ -83,7 +83,7 @@ class TestDigitizedWorkAdmin(TestCase):
         digadmin.save_model(request, digwork, form, change)
         saved_work = DigitizedWork.objects.get(source_id=digwork.source_id)
         assert  saved_work == digwork
-        assert saved_work.protected_fields == ProtectedFlags.no_flags
+        assert saved_work.protected_fields == ProtectedWorkFieldFlags.no_flags
         saved_work.title = 'Test Title'
         saved_work.enumcron = '0001'
         change = True
@@ -91,7 +91,7 @@ class TestDigitizedWorkAdmin(TestCase):
         digadmin.save_model(request, saved_work, form, change)
         new_work = DigitizedWork.objects.get(pk=saved_work.pk)
         assert new_work.protected_fields == \
-                ProtectedFlags.title | ProtectedFlags.enumcron
+                ProtectedWorkFieldFlags.title | ProtectedWorkFieldFlags.enumcron
 
 
     @override_settings(SOLR_CONNECTIONS=TEST_SOLR_CONNECTIONS)

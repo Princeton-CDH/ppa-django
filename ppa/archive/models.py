@@ -122,7 +122,7 @@ class Collection(TrackChangesModel):
         return stats
 
 
-class ProtectedFlags(Flags):
+class ProtectedWorkFieldFlags(Flags):
     '''Flag set of fields that should be protected if edited in the admin.'''
     title = ()
     subtitle = ()
@@ -136,41 +136,19 @@ class ProtectedFlags(Flags):
     @classmethod
     def deconstruct(cls):
         '''Give Django information needed to make
-        :class:`ProtectedField.no_flags` default in migration.'''
+        :class:`ProtectedWorkFieldFlags.no_flags` default in migration.'''
         # (import path, [args], kwargs)
-        return ('ppa.archive.models.ProtectedFlags', ['no_flags'], {})
-
-    @classmethod
-    def all_fields(cls):
-        return list(ProtectedFlags.__members__.keys())
-
-    def as_list(self):
-        '''Return combined flags as a list of field names.'''
-        all_fields = list(self.__members__.keys())
-        return [field for field in all_fields
-                if getattr(self, field)]
+        return ('ppa.archive.models.ProtectedWorkFieldFlags', ['no_flags'], {})
 
     def __str__(self):
-        protected_fields = self.as_list()
-        verbose_names = []
-        for field in protected_fields:
-            field = DigitizedWork._meta.get_field(field)
-            # if the field has no actual verbose name, just capitalize
-            # as does the Django admin
-            # check against a version of field name with underscores replaced
-            if field.verbose_name == field.name.replace('_', ' '):
-                verbose_names.append(field.verbose_name.capitalize())
-            else:
-                # otherwise use the verbose_name verbatim
-                verbose_names.append(field.verbose_name)
-        return ', '.join(sorted(verbose_names))
+        return ', '.join(sorted(self.to_simple_str().split('|')))
 
 
-class ProtectedFlagsField(models.Field):
+class ProtectedWorkField(models.Field):
     '''PositiveSmallIntegerField subclass that returns a
-    :class:`ProtectedFlags` object and stores as integer.'''
+    :class:`ProtectedWorkFieldFlags` object and stores as integer.'''
 
-    description = ('A field that stores an instance of :class:`ProtectedFlags` '
+    description = ('A field that stores an instance of :class:`ProtectedWorkFieldFlags` '
                    'as an integer.')
 
     def __init__(self, verbose_name=None, name=None, **kwargs):
@@ -178,8 +156,8 @@ class ProtectedFlagsField(models.Field):
         super().__init__(verbose_name, name, blank=False, null=False, **kwargs)
 
     def from_db_value(self, value, expression, connection, context):
-        '''Always return an instance of :class:`ProtectedFlags`'''
-        return ProtectedFlags(value)
+        '''Always return an instance of :class:`ProtectedWorkFieldFlags`'''
+        return ProtectedWorkFieldFlags(value)
 
     def get_internal_type(self):
         return 'PositiveSmallIntegerField'
@@ -188,8 +166,8 @@ class ProtectedFlagsField(models.Field):
         return int(value)
 
     def to_python(self, value):
-        '''Always return an instance of :class:`ProtectedFlags`'''
-        return ProtectedFlags(value)
+        '''Always return an instance of :class:`ProtectedWorkFieldFlags`'''
+        return ProtectedWorkFieldFlags(value)
 
 
 class DigitizedWork(TrackChangesModel, Indexable):
@@ -257,8 +235,8 @@ class DigitizedWork(TrackChangesModel, Indexable):
         help_text='Internal curation notes (not displayed on public site)')
     #: metadata fields that should be preserved on bulk update because
     # they have been modified by data editors.
-    protected_fields = ProtectedFlagsField(
-        default=ProtectedFlags,
+    protected_fields = ProtectedWorkField(
+        default=ProtectedWorkFieldFlags,
         help_text='Fields protected from bulk update because they have been '
                   'manually edited.'
     )

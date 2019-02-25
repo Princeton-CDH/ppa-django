@@ -16,7 +16,7 @@ import pytest
 
 from ppa.archive import hathi
 from ppa.archive.models import DigitizedWork, Collection, \
-    NO_COLLECTION_LABEL, ProtectedFlags
+    NO_COLLECTION_LABEL, ProtectedWorkFieldFlags
 from ppa.archive.solr import get_solr_connection, Indexable
 
 
@@ -26,39 +26,15 @@ FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
 class TestProtectedFlags(TestCase):
 
     def test_deconstruct(self):
-        ret = ProtectedFlags.deconstruct()
-        assert ret[0] == 'ppa.archive.models.ProtectedFlags'
+        ret = ProtectedWorkFieldFlags.deconstruct()
+        assert ret[0] == 'ppa.archive.models.ProtectedWorkFieldFlags'
         assert ret[1] == ['no_flags']
         assert ret[2] == {}
 
-    def test_all_fields(self):
-        fields = ProtectedFlags.all_fields()
-        assert isinstance(fields, list)
-        # Trivial test, but will catch changes to the return signature
-        # that aren't a simple listing of members
-        assert fields == list(ProtectedFlags.__members__.keys())
-
-    def test_as_list(self):
-        # should return a list of the flags that have been set
-        results = ProtectedFlags.title | ProtectedFlags.subtitle
-        assert sorted(results.as_list()) == ['subtitle', 'title']
-
     def test_str(self):
-        fields = ProtectedFlags.enumcron | ProtectedFlags.title | \
-            ProtectedFlags.sort_title
-
-        comparison = [
-            DigitizedWork._meta.get_field('enumcron').verbose_name,
-            DigitizedWork._meta.get_field('sort_title').verbose_name.capitalize(),
-            # no verbose name, so should be capitalized
-            DigitizedWork._meta.get_field('title').verbose_name.capitalize()
-        ]
-        # should be a comma-joined list of the verbose names of the
-        # fields, in alphabetical order; avoided hard coding in case
-        # verbose name changes
-        assert str(fields) == ', '.join(comparison)
-
-
+        fields = ProtectedWorkFieldFlags.enumcron | ProtectedWorkFieldFlags.title | \
+            ProtectedWorkFieldFlags.sort_title
+        assert str(fields) == 'enumcron, sort_title, title'
 
 class TestDigitizedWork(TestCase):
     fixtures = ['sample_digitized_works']
@@ -276,7 +252,7 @@ class TestDigitizedWork(TestCase):
         digwork.publisher = 'Not a publisher'
         digwork.pub_date = 2200
         # set all fields as protected
-        digwork.protected_fields = ProtectedFlags.all_flags
+        digwork.protected_fields = ProtectedWorkFieldFlags.all_flags
         # fake bibdata for empty fields
 
         full_bibdata.copy_details = Mock()
@@ -300,7 +276,7 @@ class TestDigitizedWork(TestCase):
         assert digwork.subtitle == 'Silly subtitle'
         assert digwork.sort_title == 'Sort title fake'
         # no protected fields
-        digwork.protected_fields = ProtectedFlags.no_flags
+        digwork.protected_fields = ProtectedWorkFieldFlags.no_flags
         digwork.populate_from_bibdata(full_bibdata)
         # all fields overwritten
         assert digwork.title != 'Fake title'

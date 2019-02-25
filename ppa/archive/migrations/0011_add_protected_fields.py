@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='digitizedwork',
             name='protected_fields',
-            field=ppa.archive.models.ProtectedFlagsField(default=ppa.archive.models.ProtectedFlags, help_text='Fields protected from bulk update because they have been manually edited.'),
+            field=ppa.archive.models.ProtectedWorkField(default=ppa.archive.models.ProtectedWorkFieldFlags, help_text='Fields protected from bulk update because they have been manually edited.'),
         ),
         migrations.AlterField(
             model_name='digitizedwork',

@@ -2,7 +2,8 @@ from django.contrib import admin
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
-from ppa.archive.models import DigitizedWork, Collection, ProtectedFlags
+from ppa.archive.models import DigitizedWork, Collection, \
+    ProtectedWorkFieldFlags
 
 
 class DigitizedWorkAdmin(admin.ModelAdmin):
@@ -61,27 +62,31 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
     source_link.allow_tags = True
 
     def save_model(self, request, obj, form, change):
-        '''Note any fields in the protected list that have been changed
-        and preserve in database.'''
+        '''Note any fields in the protected list that have been changed in
+        the admin and preserve in database.'''
         # new object, created from scratch, nothing to track and preserve
-        # NOTE: Is this logic correct? Or should all the fields be preserved?
         if not change:
             super().save_model(request, obj, form, change)
             return
+        # has_changes only works for objects that have been changed on their
+        # instance -- obj is a new instance *not* a modified one,
+        # so compare against database
         db_obj = DigitizedWork.objects.get(pk=obj.pk)
         # get a list of fields with 1:1 mapping to model
-        protected_fields = ProtectedFlags.all_fields()
         changed_fields = []
         # if a field has changed, append to changed fields
-        for field in protected_fields:
-            if getattr(db_obj, field) != getattr(obj, field):
-                changed_fields.append(field)
+        for field in ProtectedWorkFieldFlags.all_flags:
+            # field is in format of ProtectedWorkFieldFlags.title
+            field_name = str(field)
+            # if obj has a different value for a protected field
+            # than its db counterpart
+            if getattr(obj, field_name) != getattr(db_obj, field_name):
+                # append as a now protected field
+                changed_fields.append(field_name)
         # iterate over changed fields and 'append' (OR) to flags
-        result = db_obj.protected_fields
         for field in changed_fields:
-            result = result | ProtectedFlags(field)
-        # set the object's protected fields and save the result
-        obj.protected_fields = result
+            obj.protected_fields = obj.protected_fields | \
+                ProtectedWorkFieldFlags(field)
         super().save_model(request, obj, form, change)
 
     def save_related(self, request, form, formsets, change):
