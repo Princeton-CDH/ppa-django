@@ -237,8 +237,9 @@ class DigitizedWork(TrackChangesModel, Indexable):
     # they have been modified by data editors.
     protected_fields = ProtectedWorkField(
         default=ProtectedWorkFieldFlags,
-        help_text='Fields protected from bulk update because they have been '
-                  'manually edited.'
+        help_text='Fields protected from HathiTrust bulk '
+                  'update because they have been manually edited in the '
+                  'Django admin.'
     )
     #: collections that this work is part of
     collections = models.ManyToManyField(Collection, blank=True)

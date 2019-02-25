@@ -64,8 +64,9 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         '''Note any fields in the protected list that have been changed in
         the admin and preserve in database.'''
-        # new object, created from scratch, nothing to track and preserve
-        if not change:
+        # If new object, created from scratch, nothing to track and preserve
+        # or if item is not a HathiTrust item, save and return
+        if not change or obj.source != DigitizedWork.HATHI:
             super().save_model(request, obj, form, change)
             return
         # has_changes only works for objects that have been changed on their
