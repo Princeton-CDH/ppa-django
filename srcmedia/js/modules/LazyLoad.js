@@ -55,4 +55,9 @@ class ImageLazyLoader {
     }
 }
 
+export {
+    loadImage,
+    ImageLazyLoader
+}
+
 export default ImageLazyLoader
