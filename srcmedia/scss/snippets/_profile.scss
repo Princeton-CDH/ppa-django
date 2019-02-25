@@ -1,0 +1,28 @@
+#contributors {
+
+    article.profile {
+        margin-bottom: 2rem;
+
+        .title {
+            font-family: $pageFont;
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 0;
+            margin-bottom: 1rem;
+        }
+    
+        .name {
+            font-family: $pageFont;
+            font-size: 1.2rem;
+            font-weight: normal;
+            padding: 0;
+            margin: 2rem 0 1rem;
+        }
+    
+        .rich-text > * {
+            font-family: $pageFont;
+            font-size: 1rem;
+            font-weight: normal;
+        }
+    }
+}
