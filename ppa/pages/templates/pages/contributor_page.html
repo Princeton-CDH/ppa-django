@@ -16,19 +16,9 @@
 
     <section class="board">
         <h1>Advisory Board</h1>
-        <div class="ui cards">
         {% for block in page.specific.board %}
-            {% with person=block.value %}
-            {% with person.url|yesno:"a,div" as tag %}
-                <div class="person">
-                    <{{ tag }} class="ui profile card"{% if person.url %} href="{{ person.url }}" target="_blank" rel="noreferrer"{% endif %}>
-                    <h4 class="header">{{ person.name }}</h4>
-                    {{ person.description|richtext }}
-                    </{{ tag }}>
-                </div>
-            {% endwith %}{% endwith %}
+            {% include 'pages/snippets/profile.html' with person=block.value %}
         {% endfor %}
-        </div> {# end cards #}
     </div>
 
     {# regular body content, as for any other content page #}
