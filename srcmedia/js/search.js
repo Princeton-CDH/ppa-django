@@ -57,7 +57,7 @@ $(function(){
         $('.workscount').addClass('loading') // turn on the loader
         req.then(res => res.text()).then(html => { // submit the form and get html back
             $$paginationTop.html($(html).find('.page-controls').html()) // update the top pagination
-            dateHistogram.update(JSON.parse($(html).find('pre.facets').html())) // update the histogram
+            updateHistogram(JSON.parse($(html).find('pre.facets').html())) // update the histogram
             $$resultsCount.html($(html).find('pre.count').html()) // update the results count
             $$results.html(html) // update the results
             document.dispatchEvent(new Event('ZoteroItemUpdated', { // notify Zotero of changed results
@@ -113,7 +113,7 @@ $(function(){
     }
 
     function onPageLoad() {
-        dateHistogram.update(JSON.parse($('.ajax-container pre.facets').html())) // render the histogram initially
+        updateHistogram(JSON.parse($('.ajax-container pre.facets').html())) // render the histogram initially
         $$collectionInputs.filter(':disabled').parent().addClass('disabled') // disable empty collections
         $('.question-popup').popup() // initialize the question popup
         $$sortDropdown.dropdown('setting', {
@@ -154,6 +154,12 @@ $(function(){
         }
         else {
             $('.show-advanced .search-active').fadeOut()
+        }
+    }
+
+    function updateHistogram(counts) { // don't pass nonexistent data to the histogram
+        if (counts) {
+            dateHistogram.update(counts)
         }
     }
 
