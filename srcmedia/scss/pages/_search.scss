@@ -49,6 +49,11 @@
         }
     }
 
+    /* hide advanced search by default */
+    .advanced {
+        display: none;
+    }
+
     input[type=number] { // pubdate min/max
         width: 4rem;
         padding: 0.5rem;
