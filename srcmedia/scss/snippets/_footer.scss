@@ -82,6 +82,21 @@
         }
     }
 
+    // social links
+    section.social {
+        text-align: center;
+        margin-top: 1rem;
+
+        @media (min-width: $tablet) {
+            text-align: right;
+        }
+        
+        img {
+            width: 2rem;
+            height: 2rem;
+        }
+    }
+
     // copyright, a11y info, version, etc.
     .contact.list {
         display: flex;
