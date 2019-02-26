@@ -27,15 +27,25 @@
     
     .title.column {
         display: flex;
-        flex-direction: row;
+        flex-flow: row wrap;
+        margin-bottom: 1rem;
 
         @media (min-width: $tablet) {
+            flex-flow: row nowrap;
+            margin-bottom: 0;
             padding-right: 2rem;
         }
 
         .labels {
-            width: 3rem;
+            width: 100%;
+            display: block;
+            margin-bottom: 1rem;
             flex: none;
+
+            @media (min-width: $tablet) {
+                width: 3rem;
+                margin-bottom: 0;
+            }
 
             .result-number {
                 line-height: normal;
@@ -67,8 +77,12 @@
         .grid {
             margin: 0;
             display: grid;
-            grid-template-columns: 3fr 1fr;
+            grid-template-columns: 1fr 1fr;
             grid-gap: 2rem;
+
+            @media (min-width: $tablet) {
+                grid-template-columns: 3fr 2fr;
+            }
             
             .author,
             .publisher {
