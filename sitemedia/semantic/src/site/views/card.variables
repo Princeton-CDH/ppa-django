@@ -113,6 +113,7 @@
 @profileLargeWidth: 230px;
 @profileHeight: 160px;
 @profilePadding: 2rem 1rem;
+@profilePlaceholder: url('/static/img/logos/filled/grayscale.svg');
 
 /* Profile Link */
 @profileLinkShadowColor: @pink;

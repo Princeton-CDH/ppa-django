@@ -13,7 +13,7 @@
     margin: 1rem 0;
     width: @width;
     height: @height;
-    transition: all 0.2s ease;
+    transition: box-shadow 0.2s ease;
     overflow: hidden;
 
     @media (min-width: @tabletBreakpoint) {
@@ -122,6 +122,17 @@
         width: @profileWidth;
         padding: 0;
         margin: 0;
+        background-image: @profilePlaceholder;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 25%;
+
+        &:hover {
+            background-image: @profilePlaceholder;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: 25%;
+        }
 
         @media (min-width: @tabletBreakpoint) {
             width: @profileLargeWidth;
