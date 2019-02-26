@@ -124,7 +124,7 @@
     }
 
     #collections {
-        .field {
+        .inner {
             display: flex;
             flex-flow: row wrap;
         }
@@ -152,6 +152,7 @@
 
         .button.active {
             order: 1;
+            color: white;
         }
 
         .button:not(.active) {
@@ -189,11 +190,11 @@
             transition: opacity 0.2s;
         }
 
-        .button.active::after {
+        .button.active:not(.disabled)::after {
             opacity: 1;
         }
 
-        .button.active {
+        .button.active:not(.disabled) {
             padding-right: 1.25rem;
         }
     }

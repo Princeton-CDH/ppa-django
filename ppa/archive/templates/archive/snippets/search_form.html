@@ -31,14 +31,16 @@
     <div class="ui vertical stackable basic grid segment">
         <div class="twelve wide column" id="collections">
             <fieldset class="field">
-                <legend>Collections</legend>
-                {% for collection in search_form.collections %}
-                <label class="ui button{% if collection.data.selected %} active{% endif %}">
-                    {{ collection.choice_label }}
-                    {{ collection.tag }}
-                </label>
-                {% endfor %}
-                <div class="spacer"></div>
+                <div class="inner">
+                    <legend>Collections</legend>
+                    {% for collection in search_form.collections %}
+                    <label class="ui button{% if collection.data.selected %} active{% endif %}">
+                        {{ collection.choice_label }}
+                        {{ collection.tag }}
+                    </label>
+                    {% endfor %}
+                    <div class="spacer"></div>
+                </div>
             </fieldset>
         </div>
         {% comment %}
