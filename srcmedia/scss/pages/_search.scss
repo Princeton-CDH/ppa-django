@@ -49,6 +49,11 @@
         }
     }
 
+    /* hide advanced search by default */
+    .advanced {
+        display: none;
+    }
+
     input[type=number] { // pubdate min/max
         width: 4rem;
         padding: 0.5rem;
@@ -296,20 +301,5 @@
 
     .message {
         margin-top: 2rem;
-    }
-
-    /* adjust display to make search form usable with no javascript */
-    .no-js {
-
-        .advanced {
-            display: block;
-        }
-        .sort .dropdown, .clear-selection, .show-advanced, #histogram {
-            display: none;
-        }
-        input[type=submit] {
-            float: right;
-        }
-
     }
 }

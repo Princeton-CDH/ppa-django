@@ -1,5 +1,5 @@
 {% load semanticui humanize static %}
-<form class="ui form{% if error %} error{% endif %} no-js">
+<form class="ui form{% if error %} error{% endif %}">
     <div class="ui vertical stackable grid segment">
         <div class="twelve wide column">
             {% render_field search_form.query %}
@@ -40,9 +40,6 @@
                 {% endfor %}
                 <div class="spacer"></div>
             </fieldset>
-            <noscript>
-                <input class="ui primary button" type="submit" value="Submit"/>
-            </noscript>
         </div>
         {% comment %}
         <div class="six wide column" id="booleans">

@@ -1,6 +1,7 @@
 import ReactiveForm from './ReactiveForm'
 import Histogram from './Histogram'
 import clearable from './clearable'
+import ImageLazyLoader from './modules/LazyLoad'
 
 $(function(){
 
@@ -21,12 +22,16 @@ $(function(){
     const $$textInputs = $('input[type="text"]')
     const $$relevanceOption = $('#sort .item[data-value="relevance"]')
     const $$advancedSearchButton = $('.show-advanced button')
+    const $$pagePreviews = $('img[data-src]')
 
     /* bindings */
     archiveSearchForm.onStateChange(submitForm)
     $$clearDatesLink.click(onClearDates)
     $$advancedSearchButton.click(toggleAdvancedSearch)
     $$textInputs.keyup(onTextInputChange)
+
+    new ImageLazyLoader($$pagePreviews.get()) // lazy load images
+
     onPageLoad() // misc functions that run once on page load
 
     $$collectionInputs
@@ -108,8 +113,6 @@ $(function(){
     }
 
     function onPageLoad() {
-        // remove no-js styles for CSS since Javascript is running
-        $('.form').removeClass('no-js')
         dateHistogram.update(JSON.parse($('.ajax-container pre.facets').html())) // render the histogram initially
         $$collectionInputs.filter(':disabled').parent().addClass('disabled') // disable empty collections
         $('.question-popup').popup() // initialize the question popup

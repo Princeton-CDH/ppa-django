@@ -25,7 +25,21 @@
         margin-right: 1rem;
 
         img {
+            transition: all 0.25s;
             width: 180px;
+
+            // placeholder placeholder styles for image not yet loaded
+            // actual placeholder styles not yet designed
+            &[data-src] {
+                height: 250px;
+                display: block;
+                text-align: center;
+                background-color: white;
+                background-image: url('/static/img/logos/filled/grayscale.svg');
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 80%;
+            }
         }
 
         #digitized-work & { // larger size on digitized work page
