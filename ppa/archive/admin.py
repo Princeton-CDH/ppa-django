@@ -2,7 +2,8 @@ from django.contrib import admin
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
-from ppa.archive.models import DigitizedWork, Collection
+from ppa.archive.models import DigitizedWork, Collection, \
+    ProtectedWorkFieldFlags
 
 
 class DigitizedWorkAdmin(admin.ModelAdmin):
@@ -15,11 +16,12 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         'source', 'source_id', 'source_url', 'title', 'subtitle',
         'sort_title', 'enumcron', 'author', 'pub_place', 'publisher',
         'pub_date', 'page_count', 'public_notes', 'notes', 'record_id',
-        'collections', 'status', 'added', 'updated'
+        'collections', 'protected_fields', 'status', 'added',
+        'updated'
     )
     # fields that are always read only
     readonly_fields = (
-        'added', 'updated'
+        'added', 'updated', 'protected_fields'
     )
     # fields that are read only for HathiTrust records
     hathi_readonly_fields = (
@@ -58,6 +60,25 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
     source_link.short_description = 'Source id'
     source_link.admin_order_field = 'source_id'
     source_link.allow_tags = True
+
+    def save_model(self, request, obj, form, change):
+        '''Note any fields in the protected list that have been changed in
+        the admin and preserve in database.'''
+        # If new object, created from scratch, nothing to track and preserve
+        # or if item is not a HathiTrust item, save and return
+        if not change or obj.source != DigitizedWork.HATHI:
+            super().save_model(request, obj, form, change)
+            return
+        # has_changes only works for objects that have been changed on their
+        # instance -- obj is a new instance *not* a modified one,
+        # so compare against database
+        db_obj = DigitizedWork.objects.get(pk=obj.pk)
+        changed_fields = obj.compare_protected_fields(db_obj)
+        # iterate over changed fields and 'append' (OR) to flags
+        for field in changed_fields:
+            obj.protected_fields = obj.protected_fields | \
+                ProtectedWorkFieldFlags(field)
+        super().save_model(request, obj, form, change)
 
     def save_related(self, request, form, formsets, change):
         '''Ensure reindex is called when admin form is saved'''
