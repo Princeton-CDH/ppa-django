@@ -5,41 +5,21 @@
 
 {% block page_body %}
     {# project contributors #}
-    <div class="contributors">
-        <div class="ui cards">
+    <section class="team">
+        <h1>Project Team</h1>
         {% for block in page.specific.contributors %}
-            {% with person=block.value %}
-            {% with person.url|yesno:"a,div" as tag %}
-            <div class="person with-title">
-                <h2 class="title">{{ person.project_role }}</h2>
-                <{{ tag }} class="ui profile card"{% if person.url %} href="{{ person.url }}" target="_blank" rel="noreferrer"{% endif %}>
-                <h3 class="header">{{ person.name }}</h3>
-                {{ person.description|richtext }}
-                </{{ tag }}>
-            </div>
-        {% endwith %}{% endwith %}
+            {% include 'pages/snippets/profile.html' with person=block.value %}
         {% endfor %}
-        </div>
-    </div>
+    </section>
 
     {# advisory board members #}
 
-    <div class="board">
-        <h2>Advisory Board</h2>
-        <div class="ui cards">
+    <section class="board">
+        <h1>Advisory Board</h1>
         {% for block in page.specific.board %}
-            {% with person=block.value %}
-            {% with person.url|yesno:"a,div" as tag %}
-                <div class="person">
-                    <{{ tag }} class="ui profile card"{% if person.url %} href="{{ person.url }}" target="_blank" rel="noreferrer"{% endif %}>
-                    <h3 class="header">{{ person.name }}</h3>
-                    {{ person.description|richtext }}
-                    </{{ tag }}>
-                </div>
-            {% endwith %}{% endwith %}
+            {% include 'pages/snippets/profile.html' with person=block.value %}
         {% endfor %}
-        </div> {# end cards #}
-    </div>
+    </section>
 
     {# regular body content, as for any other content page #}
     {{ block.super }}

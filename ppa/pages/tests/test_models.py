@@ -425,4 +425,3 @@ class TestContributorPage(WagtailPageTests):
         # board memeber name, description
         self.assertContains(response, person_b.name)
         self.assertContains(response, person_b.description)
-        self.assertNotContains(response, person_b.project_role)

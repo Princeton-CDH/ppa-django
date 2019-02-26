@@ -109,10 +109,11 @@
 @postLinkHoverBoxShadow: @hoverShadowDistance @hoverShadowDistance 0px 0px @postLinkShadowColor;
 
 /* Profile */
-@profileWidth: 287px;
+@profileWidth: 285px;
 @profileLargeWidth: 230px;
-@profileHeight: 173px;
+@profileHeight: 160px;
 @profilePadding: 2rem 1rem;
+@profilePlaceholder: url('/static/img/logos/filled/grayscale.svg');
 
 /* Profile Link */
 @profileLinkShadowColor: @pink;

@@ -22,7 +22,7 @@
     "fields": {
         "name": "Person B",
         "url": "",
-        "project_role": "not on the project",
+        "project_role": "",
         "description": "Professor of Prosody, Versification U"
     }
 },
