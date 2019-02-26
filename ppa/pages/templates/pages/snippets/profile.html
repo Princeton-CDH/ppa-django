@@ -1,0 +1,20 @@
+{% load wagtailimages_tags wagtailcore_tags %}
+{% with person.url|yesno:"a,div" as tag %}
+<article class="profile">
+    {% if person.project_role %}
+        <span class="title">{{ person.project_role }}</span>
+    {% endif %}
+    <{{ tag }} class="ui profile card"{% if person.url %} href="{{ person.url }}" target="_blank" rel="noreferrer"{% endif %}>
+    {% if person.photo %}
+        {% image person.photo fill-285x160 as img %}
+        {% image person.photo fill-570x320 as img_2x %}
+        <img class="photo"
+            srcset="{{ img.url }}, {{ img_2x.url}} 2x"
+            width="{{ img.width }}" height="{{ img.height }}"
+            alt="{{ person.name }}"/>
+    {% endif %}
+    </{{ tag }}>
+    <h1 class="name">{{ person.name }}</h1>
+    {{ person.description|richtext }}
+</article>
+{% endwith %}
