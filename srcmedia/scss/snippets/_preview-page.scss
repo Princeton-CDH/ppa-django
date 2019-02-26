@@ -34,11 +34,11 @@
                 height: 250px;
                 display: block;
                 text-align: center;
-                padding: 5px;
-                background: white;
-                -moz-box-shadow: 0 0 5px 5px white;
-                -webkit-box-shadow: 0 0 5px 5px white;
-                box-shadow: 0 0 5px 5px white;
+                background-color: white;
+                background-image: url('/static/img/logos/filled/grayscale.svg');
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 80%;
             }
         }
 
