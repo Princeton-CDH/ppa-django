@@ -1,7 +1,11 @@
 #contributors {
 
     article.profile {
-        margin-bottom: 2rem;
+        width: 285px;
+
+        @media (min-width: $tablet) {
+            width: 230px;
+        }
 
         .title {
             display: block;

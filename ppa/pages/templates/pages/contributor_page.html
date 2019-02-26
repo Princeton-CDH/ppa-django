@@ -19,7 +19,7 @@
         {% for block in page.specific.board %}
             {% include 'pages/snippets/profile.html' with person=block.value %}
         {% endfor %}
-    </div>
+    </section>
 
     {# regular body content, as for any other content page #}
     {{ block.super }}

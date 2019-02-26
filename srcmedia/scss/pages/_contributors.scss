@@ -5,11 +5,26 @@
 
     @include content-page;
 
-    .team > h1,
-    .board > h1 {
-        font-size: 1.4rem;
-        font-family: $pageFont;
-        padding: 0;
+    section.team,
+    section.board {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-row-gap: 1rem;
+        justify-items: center;
+        margin-bottom: 4rem;
+
+        @media (min-width: $tablet) {
+            grid-template-columns: 1fr 1fr 1fr;
+            justify-items: stretch;
+        }
+
+        > h1 {
+            grid-column: 1 / -1;
+            justify-self: left;
+            font-size: 1.4rem;
+            font-family: $pageFont;
+            padding: 0;
+        }
     }
 
     .cards {
