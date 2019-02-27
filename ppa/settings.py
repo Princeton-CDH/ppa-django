@@ -271,6 +271,9 @@ CSP_INCLUDE_NONCE_IN = ('script-src',)
 # allow local scripts to connect to source (i.e. searchLoading)
 CSP_CONNECT_SRC = ("'self'", "https://www.google-analytics.com")
 
+# load a manifest file
+CSP_MANIFEST_SRC = "'self'"
+
 ##################
 # LOCAL SETTINGS #
 ##################
