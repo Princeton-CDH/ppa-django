@@ -66,7 +66,7 @@ $(function(){
             }))
             $('.workscount').removeClass('loading') // turn off the loader
         })
-        new ImageLazyLoader($$pagePreviews.get()) // re-bind lazy loaded images
+        new ImageLazyLoader($('img[data-src]').get()) // re-bind lazy loaded images
         advancedSearchIndicator()
     }
 
