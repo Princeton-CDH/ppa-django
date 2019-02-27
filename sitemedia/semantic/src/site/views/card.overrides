@@ -48,7 +48,7 @@
         text-align: left;
 
         @media (min-width: @tabletBreakpoint) {
-            font-size: 1.25rem;
+            font-size: 1.2rem;
         }
     }
 
