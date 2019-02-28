@@ -1,4 +1,12 @@
 export default class AboutNav {
+    /**
+     * Binds a keyboard navigation events using tab and
+     * up/down arrow keys to a CSS element structured as a
+     * semantic ui menu.
+     *
+     * @param {any} selector - JQuery or CSS selector for menu div
+     * @param {any} textSelector - JQuery or CSS selector for menu text div (i.e. name of menu)
+    */
     constructor(selector, textSelector) {
 
         let self = this
@@ -15,7 +23,11 @@ export default class AboutNav {
         self.$aboutMenu.keydown(self.keydownHandler.bind(self))
 
     }
-
+    /**
+     * Handler for keydown events on menu items.
+     *
+     * @param {jQuery.Event} ev - a jQuery keydown event
+    */
     keydownHandler(ev) {
         // if down arrow, target the next link element
         if (ev.keyCode === 40) {
