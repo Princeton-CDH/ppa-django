@@ -16,7 +16,7 @@
     }
 
     .item a {
-        text-decoration: none; 
+        text-decoration: none;
     }
 }
 
@@ -118,17 +118,17 @@
 
             &.hidden {
                 pointer-events: none;
-                
+
                 @media (max-width: $tablet) {
                     opacity: 0;
                 }
             }
-    
+
             &:hover {
                 border: none;
                 padding: 0;
             }
-    
+
             img {
                 position: relative;
                 width: 150px;
@@ -137,7 +137,7 @@
             }
         }
     }
-    
+
     .item {
         z-index: 1;
         display: none;
@@ -149,6 +149,20 @@
 
         &.about {
             padding-right: 10px; // avoid placement of triangle over icon
+            &.hovered {
+                > .icon {
+                    transform: rotate(-90deg);
+                }
+
+                > .menu {
+                    overflow: visible;
+                    width: auto;
+                    height: auto;
+                    top: 100%!important;
+                    opacity: 1;
+                }
+
+            }
         }
 
         &.toc,
@@ -165,10 +179,10 @@
             font-weight: bold;
         }
 
-        &.about.triangle::before { 
+        &.about.triangle::before {
             @include triangle-overlay($rosy-pink);
         }
-        
+
         &.editorial.active::before {
             @include triangle-overlay($twilight);
         }
