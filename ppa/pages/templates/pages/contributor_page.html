@@ -5,21 +5,21 @@
 
 {% block page_body %}
     {# project contributors #}
-    <section class="team">
-        <h1>Project Team</h1>
+    <div class="team">
+        <h2>Project Team</h2>
         {% for block in page.specific.contributors %}
             {% include 'pages/snippets/profile.html' with person=block.value %}
         {% endfor %}
-    </section>
+    </div>
 
     {# advisory board members #}
 
-    <section class="board">
-        <h1>Advisory Board</h1>
+    <div class="board">
+        <h2>Advisory Board</h2>
         {% for block in page.specific.board %}
             {% include 'pages/snippets/profile.html' with person=block.value %}
         {% endfor %}
-    </section>
+    </div>
 
     {# regular body content, as for any other content page #}
     {{ block.super }}

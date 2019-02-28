@@ -5,8 +5,8 @@
 
     @include content-page;
 
-    section.team,
-    section.board {
+    .team,
+    .board {
         display: grid;
         grid-template-columns: 1fr;
         grid-row-gap: 1rem;
@@ -18,16 +18,23 @@
             justify-items: stretch;
         }
 
-        > h1 {
+        @media (min-width: $computer) {
+            grid-column-gap: 4rem;
+        }
+
+        > h2 {
             grid-column: 1 / -1;
             justify-self: left;
-            font-size: 1.4rem;
-            font-family: $pageFont;
-            padding: 0;
         }
     }
 
-    section.board > .profile .title {
+    h2 {
+        font-size: 1.4rem;
+        font-family: $pageFont;
+        padding: 0;
+    }
+
+    .board > .profile .title {
         display: none; // don't display project roles for board members
     }
 
