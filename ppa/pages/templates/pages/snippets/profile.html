@@ -6,8 +6,8 @@
     {% endif %}
     <{{ tag }} class="ui profile card"{% if person.url %} href="{{ person.url }}" target="_blank" rel="noreferrer"{% endif %}>
     {% if person.photo %}
-        {% image person.photo fill-285x160 as img %}
-        {% image person.photo fill-570x320 as img_2x %}
+        {% image person.photo max-285x160 as img %}
+        {% image person.photo max-570x320 as img_2x %}
         <img class="photo"
             srcset="{{ img.url }}, {{ img_2x.url}} 2x"
             width="{{ img.width }}" height="{{ img.height }}"
