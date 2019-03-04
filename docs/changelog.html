@@ -6,13 +6,14 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>CHANGELOG &#8212; Princeton Prosody Archive 3.0.0 documentation</title>
+    <title>CHANGELOG &#8212; Princeton Prosody Archive 3.1.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Deploy and Upgrade notes" href="deploynotes.html" />
@@ -29,10 +30,58 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <div class="section" id="changelog">
 <span id="id1"></span><h1>CHANGELOG<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id2">
+<h2>3.1<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>Support for preserving local edits to metadata, add photos to contributor
+content page, and numerous accessibility and style fixes and improvements.</p>
+<ul class="simple">
+<li>As an admin, I want to correct basic item-level metadata errors and preserve those corrections so that I can override discrepancies in source materials for display on the site.</li>
+<li>As a content editor, I want to be able to add a photo to a contributor so that users can associate a face with a name and role.</li>
+<li>HathiTrust page image improvements: use Hathi thumbnail API where possible</li>
+</ul>
+<blockquote>
+<div>(lower res thumbnail), use lazy loading to improve performance and
+reduce likelihood of throttling.</div></blockquote>
+<ul class="simple">
+<li>bugfix: handle bad collection id on archive search page</li>
+<li>Accessibility improvements:
+* improve keyboard navigation
+* fix pages with missing level 1 heading
+* Archive search page accessibility improvements</li>
+<li>Style fixes and improvements:
+* Update contributor page styles and templates to include photos
+* New placeholder image for page images and contributors without photo
+* bugfix: Homepage logo placement is broken without javascript
+* bugfix: Search loading animation layout is broken in Firefox
+* Footer link spacing, mobile improvements for tile display and scrolling on iOS,</li>
+</ul>
+<p>[3.1 GitHub milestone](<a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/milestone/8?closed=1">https://github.com/Princeton-CDH/ppa-django/milestone/8?closed=1</a>)</p>
+</div>
+<div class="section" id="id3">
+<h2>3.0.1<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>bugfix: Archive title search field should also search subtitle</li>
+<li>As a user, I want search results from the title field to prioritize
+unstemmed matches and boost title over subtitle.</li>
+<li>bugfix: Collections set to be excluded by default are not excluded
+on archive page first loaded</li>
+<li>Style and template fixes and improvements
+* Improved head metadata for Twitter and OpenGraph previews
+* Add styles for &lt;h4&gt; in content pages
+* Consistent link styles across all site content pages
+* Editorial list page styles match other site pages
+* Template tag to add current date and software version to citation page</li>
+<li>Security and performance improvements
+* Implement HTTP strict transport security (HSTS)
+* Remove unused Semantic UI components</li>
+</ul>
+</div>
 <div class="section" id="initial-public-version-soft-launch">
 <h2>3.0 - Initial public version (soft launch)<a class="headerlink" href="#initial-public-version-soft-launch" title="Permalink to this headline">¶</a></h2>
 <p><strong>PPA 3.0 is a completely new implementation of the Princeton Prosody
@@ -51,6 +100,7 @@ as a way to credit and differentiate from previous versions of PPA.</strong></p>
 <li>As a user, I want keyword searches to prioritize matches in the author, title and public notes fields so that I can easily find works using keywords.</li>
 <li>As a user, I should not see suppressed items in search results or item display so that my results are not cluttered by items not meant to be part of the archive.</li>
 <li>As a user, I want to exclude or include items from any of the collections in PPA so that I can refine my search to include relevant items.</li>
+<li>As a user, I want the advanced search pulldown state that I have selected to be preserved when I reload the page so that my view of the search form is stable and consistent without having to continually modify my selection.</li>
 <li>Automatically change default sort to Relevance for keyword searches</li>
 <li>Change <cite>srcid</cite> to <cite>source_id</cite> for fielded search</li>
 <li>bugfix: non-sequential publication dates break search validation</li>
@@ -68,16 +118,21 @@ a date to go missing when form is submitted</li>
 <div class="section" id="ui-ux-design-updates">
 <h3>UI/UX/Design updates<a class="headerlink" href="#ui-ux-design-updates" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
+<li>Refinements to the search form
+- collapsible advanced search, hidden by default
+- visual indicator if filters are active in the advanced search
+- revised styles for collection filters</li>
+<li>Indicator for search in-progress</li>
+<li>Add a “jump to top” button on search results</li>
 <li>Styles for editorial list page, editorial post including image captions
 and footnotes</li>
-<li>Indicator for search in-progress</li>
 <li>Updated error pages</li>
-<li>Add a “jump to top” button on search results</li>
 </ul>
+<p>[3.0 GitHub milestone](<a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/milestone/7?closed=1">https://github.com/Princeton-CDH/ppa-django/milestone/7?closed=1</a>)</p>
 </div>
 </div>
-<div class="section" id="id2">
-<h2>0.11.0<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id4">
+<h2>0.11<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>As a content editor, I want to control how the description of my editorial content is displayed when on PPA, when shared, and when searched.</li>
 <li>As a content editor, I want to add new or edit existing editorial content so that I can publish and promote scholarly work related to the project.</li>
@@ -105,10 +160,11 @@ and footnotes</li>
 <li>Digitized work detail page</li>
 <li>Editorial post list page</li>
 </ul>
+<p>[0.11 GitHub milestone](<a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/milestone/6?closed=1">https://github.com/Princeton-CDH/ppa-django/milestone/6?closed=1</a>)</p>
 </div>
 </div>
-<div class="section" id="id3">
-<h2>0.10.0<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id5">
+<h2>0.10<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>As a content editor, I want unneeded punctuation removed when importing or updating records from HathiTrust metadata, so that records are easier to search and browse.</li>
 <li>As a user, I want item titles to be case-insensitive when sorting, so that I can find content alphabetically.</li>
@@ -123,17 +179,18 @@ and footnotes</li>
 <li>Add built-in fixtures to create default page structure within Wagtail.</li>
 </ul>
 </div>
-<div class="section" id="id4">
-<h3>Design updates<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id6">
+<h3>Design updates<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>Refactor SCSS and media queries.</li>
 <li>Fixes issues with histogram and pub date display on Chrome.</li>
 <li>Fixes an issue where hitting back on a search could result in unformatted JSON being displayed.</li>
 </ul>
+<p>[0.10 GitHub milestone](<a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/milestone/5?closed=1">https://github.com/Princeton-CDH/ppa-django/milestone/5?closed=1</a>)</p>
 </div>
 </div>
-<div class="section" id="id5">
-<h2>0.9.0<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id7">
+<h2>0.9<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>As an admin, I would like to be able to see the Hathi Catalog IDs for a volume so that I can see how individual volumes are grouped together within the HathiTrust.</li>
 <li>As an admin, I want the CSV report of materials on the site to include items’ Hathi catalog ID so that I can identify duplicates and multi-volume works.</li>
@@ -145,8 +202,8 @@ and footnotes</li>
 <li>As a user, I want different styles for the main title and subtitle on search results so that I can visually distinguish titles.</li>
 <li>As a user, I want item titles to ignore definite articles and punctuation when sorting, so that I can find the most relevant content first.</li>
 </ul>
-<div class="section" id="id6">
-<h3>Design updates<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id8">
+<h3>Design updates<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>Updates styles site-wide to match new designs for most pages</li>
 <li>Fixes some issues with min/max date display on publication date histogram</li>
@@ -154,10 +211,11 @@ and footnotes</li>
 <li>Adjusts the interactive area and cursor used for search sorting</li>
 <li>Fixes an issue with sizing of the footer in WebKit browsers</li>
 </ul>
+<p>[0.9 GitHub milestone](<a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/milestone/4?closed=1">https://github.com/Princeton-CDH/ppa-django/milestone/4?closed=1</a>)</p>
 </div>
 </div>
-<div class="section" id="id7">
-<h2>0.8.1<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id9">
+<h2>0.8.1<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
 <p>Minor updates, tweaks, and fixes:</p>
 <ul class="simple">
 <li>Set HathiTrust links to open in new browser window or tab</li>
@@ -203,6 +261,7 @@ on basic layout and interactions.</p>
 <li>Templates and basic styles for current site components</li>
 <li>SCSS/JS pipeline with compressor</li>
 </ul>
+<p>[0.8 GitHub milestone](<a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/milestone/3?closed=1">https://github.com/Princeton-CDH/ppa-django/milestone/3?closed=1</a>)</p>
 </div>
 </div>
 <div class="section" id="collections-improvements">
@@ -235,6 +294,7 @@ than adding digital works to collections.</li>
 <li>As a user, I want to browse the list of collections so I can find out more about important groupings of items in the archive.</li>
 <li>As a user, I want to filter search results by collection so that I can include or exclude groups of materials based on my interests.</li>
 </ul>
+<p>[0.6 GitHub milestone](<a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/milestone/2?closed=1">https://github.com/Princeton-CDH/ppa-django/milestone/2?closed=1</a>)</p>
 </div>
 </div>
 <div class="section" id="bulk-import-and-simple-search">
@@ -258,12 +318,14 @@ than adding digital works to collections.</li>
 <li>As a user, I want to search and browse digitized volumes by keyword so that I can see what materials are in the archive.</li>
 <li>As a user, I want to see basic details for individual items in the archive so that I can see the record details and get to the HathiTrust version.</li>
 </ul>
+<p>[0.5 GitHub milestone](<a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/milestone/1?closed=1">https://github.com/Princeton-CDH/ppa-django/milestone/1?closed=1</a>)</p>
 </div>
 </div>
 </div>
 
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -289,7 +351,7 @@ than adding digital works to collections.</li>
     
 
 <p>
-<a href="https://travis-ci.org/Princeton-CDH/ppa-django">
+<a class="badge" href="https://travis-ci.org/Princeton-CDH/ppa-django">
     <img
         alt="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
         src="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
@@ -303,7 +365,7 @@ than adding digital works to collections.</li>
     
 
 <p>
-<a href="https://codecov.io/github/Princeton-CDH/ppa-django">
+<a class="badge" href="https://codecov.io/github/Princeton-CDH/ppa-django">
     <img
     alt="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
     src="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
@@ -323,6 +385,8 @@ than adding digital works to collections.</li>
   <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">CHANGELOG</a><ul>
+<li><a class="reference internal" href="#id2">3.1</a></li>
+<li><a class="reference internal" href="#id3">3.0.1</a></li>
 <li><a class="reference internal" href="#initial-public-version-soft-launch">3.0 - Initial public version (soft launch)</a><ul>
 <li><a class="reference internal" href="#admin-data-curation-functionality">Admin &amp; data curation functionality</a></li>
 <li><a class="reference internal" href="#search-improvements">Search improvements</a></li>
@@ -330,21 +394,21 @@ than adding digital works to collections.</li>
 <li><a class="reference internal" href="#ui-ux-design-updates">UI/UX/Design updates</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id2">0.11.0</a><ul>
+<li><a class="reference internal" href="#id4">0.11</a><ul>
 <li><a class="reference internal" href="#bugs-chores">Bugs/chores</a></li>
 <li><a class="reference internal" href="#design-updates">Design updates</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id3">0.10.0</a><ul>
+<li><a class="reference internal" href="#id5">0.10</a><ul>
 <li><a class="reference internal" href="#content-management-updates">Content management updates</a></li>
-<li><a class="reference internal" href="#id4">Design updates</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#id5">0.9.0</a><ul>
 <li><a class="reference internal" href="#id6">Design updates</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id7">0.8.1</a></li>
+<li><a class="reference internal" href="#id7">0.9</a><ul>
+<li><a class="reference internal" href="#id8">Design updates</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id9">0.8.1</a></li>
 <li><a class="reference internal" href="#search-filtering-and-highlighting">0.8 Search filtering and highlighting</a><ul>
 <li><a class="reference internal" href="#search-filters-and-highlighting">Search filters and highlighting</a></li>
 <li><a class="reference internal" href="#basic-content-management">Basic content management</a></li>
@@ -392,8 +456,8 @@ than adding digital works to collections.</li>
       &copy;2018, CDH @ Princeton University.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="_sources/changelog.rst.txt"

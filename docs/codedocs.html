@@ -6,13 +6,14 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Code Documentation &#8212; Princeton Prosody Archive 3.0.0 documentation</title>
+    <title>Code Documentation &#8212; Princeton Prosody Archive 3.1.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="CHANGELOG" href="changelog.html" />
@@ -29,6 +30,8 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <div class="section" id="code-documentation">
@@ -44,6 +47,59 @@
 <dd><p>label to use for items that are not in a collection</p>
 </dd></dl>
 
+<div class="section" id="module-ppa.archive.admin">
+<span id="admin"></span><h3>Admin<a class="headerlink" href="#module-ppa.archive.admin" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="ppa.archive.admin.CollectionAdmin">
+<em class="property">class </em><code class="descclassname">ppa.archive.admin.</code><code class="descname">CollectionAdmin</code><span class="sig-paren">(</span><em>model</em>, <em>admin_site</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/admin.html#CollectionAdmin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.admin.CollectionAdmin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="ppa.archive.admin.DigitizedWorkAdmin">
+<em class="property">class </em><code class="descclassname">ppa.archive.admin.</code><code class="descname">DigitizedWorkAdmin</code><span class="sig-paren">(</span><em>model</em>, <em>admin_site</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/admin.html#DigitizedWorkAdmin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.admin.DigitizedWorkAdmin" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="ppa.archive.admin.DigitizedWorkAdmin.bulk_add_collection">
+<code class="descname">bulk_add_collection</code><span class="sig-paren">(</span><em>request</em>, <em>queryset</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/admin.html#DigitizedWorkAdmin.bulk_add_collection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.admin.DigitizedWorkAdmin.bulk_add_collection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bulk add a queryset of <code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.DigitizedWork</span></code> to
+a <code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.Collection</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.admin.DigitizedWorkAdmin.get_readonly_fields">
+<code class="descname">get_readonly_fields</code><span class="sig-paren">(</span><em>request</em>, <em>obj=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/admin.html#DigitizedWorkAdmin.get_readonly_fields"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.admin.DigitizedWorkAdmin.get_readonly_fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine read only fields based on item source, to prevent
+editing of HathiTrust fields that should not be changed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.admin.DigitizedWorkAdmin.list_collections">
+<code class="descname">list_collections</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/admin.html#DigitizedWorkAdmin.list_collections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.admin.DigitizedWorkAdmin.list_collections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of :class:ppa.archive.models.Collection object names
+as a comma separated list to populate a change_list column.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.admin.DigitizedWorkAdmin.save_model">
+<code class="descname">save_model</code><span class="sig-paren">(</span><em>request</em>, <em>obj</em>, <em>form</em>, <em>change</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/admin.html#DigitizedWorkAdmin.save_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.admin.DigitizedWorkAdmin.save_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Note any fields in the protected list that have been changed in
+the admin and preserve in database.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.admin.DigitizedWorkAdmin.save_related">
+<code class="descname">save_related</code><span class="sig-paren">(</span><em>request</em>, <em>form</em>, <em>formsets</em>, <em>change</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/admin.html#DigitizedWorkAdmin.save_related"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.admin.DigitizedWorkAdmin.save_related" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensure reindex is called when admin form is saved</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.admin.DigitizedWorkAdmin.source_link">
+<code class="descname">source_link</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/admin.html#DigitizedWorkAdmin.source_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.admin.DigitizedWorkAdmin.source_link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Link to source record</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 <div class="section" id="module-ppa.archive.models">
 <span id="models"></span><h3>Models<a class="headerlink" href="#module-ppa.archive.models" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
@@ -134,6 +190,23 @@ if someone tries to unsuppress a record that has been suppressed
 <dt id="ppa.archive.models.DigitizedWork.collections">
 <code class="descname">collections</code><a class="headerlink" href="#ppa.archive.models.DigitizedWork.collections" title="Permalink to this definition">¶</a></dt>
 <dd><p>collections that this work is part of</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.models.DigitizedWork.compare_protected_fields">
+<code class="descname">compare_protected_fields</code><span class="sig-paren">(</span><em>db_obj</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#DigitizedWork.compare_protected_fields"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.DigitizedWork.compare_protected_fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare protected fields in a
+<a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.models.DigitizedWork</span></code></a> instance and return those
+that are changed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>db_obj</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><em>object</em></a>) – Database instance of a
+<a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">DigitizedWork</span></code></a>.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -281,6 +354,22 @@ data to be indexed in solr.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="ppa.archive.models.DigitizedWork.populate_fields">
+<code class="descname">populate_fields</code><span class="sig-paren">(</span><em>field_data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#DigitizedWork.populate_fields"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.DigitizedWork.populate_fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conditionally update fields as protected by flags using Hathi
+bibdata information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_data</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – A dictionary of fields updated from a
+<a class="reference internal" href="#ppa.archive.hathi.HathiBibliographicRecord" title="ppa.archive.hathi.HathiBibliographicRecord"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.hathi.HathiBibliographicRecord</span></code></a> instance.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="ppa.archive.models.DigitizedWork.populate_from_bibdata">
 <code class="descname">populate_from_bibdata</code><span class="sig-paren">(</span><em>bibdata</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#DigitizedWork.populate_from_bibdata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.DigitizedWork.populate_from_bibdata" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update record fields based on Hathi bibdata information.
@@ -300,6 +389,14 @@ as instance of <a class="reference internal" href="#ppa.archive.hathi.HathiBibli
 <dt id="ppa.archive.models.DigitizedWork.printed_by_re">
 <code class="descname">printed_by_re</code><em class="property"> = '^(Printed)?( and )?(Pub(.|lished|lisht)?)?( and sold)? (by|for|at)( the)? ?'</em><a class="headerlink" href="#ppa.archive.models.DigitizedWork.printed_by_re" title="Permalink to this definition">¶</a></dt>
 <dd><p>regular expresion for cleaning preliminary text from publisher names</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.archive.models.DigitizedWork.protected_fields">
+<code class="descname">protected_fields</code><a class="headerlink" href="#ppa.archive.models.DigitizedWork.protected_fields" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#ppa.archive.models.ProtectedWorkField" title="ppa.archive.models.ProtectedWorkField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProtectedWorkField</span></code></a> instance to indicate metadata fields
+that should be preserved from bulk updates because they have been
+modified in Django admin.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -387,6 +484,93 @@ the same work or for different editions/volumes of a work</p>
 <dt id="ppa.archive.models.NO_COLLECTION_LABEL">
 <code class="descclassname">ppa.archive.models.</code><code class="descname">NO_COLLECTION_LABEL</code><em class="property"> = 'Uncategorized'</em><a class="headerlink" href="#ppa.archive.models.NO_COLLECTION_LABEL" title="Permalink to this definition">¶</a></dt>
 <dd><p>label to use for items that are not in a collection</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="ppa.archive.models.ProtectedWorkField">
+<em class="property">class </em><code class="descclassname">ppa.archive.models.</code><code class="descname">ProtectedWorkField</code><span class="sig-paren">(</span><em>verbose_name=None</em>, <em>name=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#ProtectedWorkField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.ProtectedWorkField" title="Permalink to this definition">¶</a></dt>
+<dd><p>PositiveSmallIntegerField subclass that returns a
+<a class="reference internal" href="#ppa.archive.models.ProtectedWorkFieldFlags" title="ppa.archive.models.ProtectedWorkFieldFlags"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProtectedWorkFieldFlags</span></code></a> object and stores as integer.</p>
+<dl class="method">
+<dt id="ppa.archive.models.ProtectedWorkField.from_db_value">
+<code class="descname">from_db_value</code><span class="sig-paren">(</span><em>value</em>, <em>expression</em>, <em>connection</em>, <em>context</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#ProtectedWorkField.from_db_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.ProtectedWorkField.from_db_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Always return an instance of <a class="reference internal" href="#ppa.archive.models.ProtectedWorkFieldFlags" title="ppa.archive.models.ProtectedWorkFieldFlags"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProtectedWorkFieldFlags</span></code></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.models.ProtectedWorkField.get_prep_value">
+<code class="descname">get_prep_value</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#ProtectedWorkField.get_prep_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.ProtectedWorkField.get_prep_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform preliminary non-db specific value checks and conversions.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.models.ProtectedWorkField.to_python">
+<code class="descname">to_python</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#ProtectedWorkField.to_python"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.ProtectedWorkField.to_python" title="Permalink to this definition">¶</a></dt>
+<dd><p>Always return an instance of <a class="reference internal" href="#ppa.archive.models.ProtectedWorkFieldFlags" title="ppa.archive.models.ProtectedWorkFieldFlags"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProtectedWorkFieldFlags</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="ppa.archive.models.ProtectedWorkFieldFlags">
+<em class="property">class </em><code class="descclassname">ppa.archive.models.</code><code class="descname">ProtectedWorkFieldFlags</code><a class="reference internal" href="_modules/ppa/archive/models.html#ProtectedWorkFieldFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.ProtectedWorkFieldFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">flags.Flags</span></code> instance to indicate which <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">DigitizedWork</span></code></a>
+fields should be protected if edited in the admin.</p>
+<dl class="attribute">
+<dt id="ppa.archive.models.ProtectedWorkFieldFlags.author">
+<code class="descname">author</code><em class="property"> = None</em><a class="headerlink" href="#ppa.archive.models.ProtectedWorkFieldFlags.author" title="Permalink to this definition">¶</a></dt>
+<dd><p>author</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="ppa.archive.models.ProtectedWorkFieldFlags.deconstruct">
+<em class="property">classmethod </em><code class="descname">deconstruct</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#ProtectedWorkFieldFlags.deconstruct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.ProtectedWorkFieldFlags.deconstruct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Give Django information needed to make
+<code class="xref py py-class docutils literal notranslate"><span class="pre">ProtectedWorkFieldFlags.no_flags</span></code> default in migration.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.archive.models.ProtectedWorkFieldFlags.enumcron">
+<code class="descname">enumcron</code><em class="property"> = None</em><a class="headerlink" href="#ppa.archive.models.ProtectedWorkFieldFlags.enumcron" title="Permalink to this definition">¶</a></dt>
+<dd><p>enumcron</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.archive.models.ProtectedWorkFieldFlags.pub_date">
+<code class="descname">pub_date</code><em class="property"> = None</em><a class="headerlink" href="#ppa.archive.models.ProtectedWorkFieldFlags.pub_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>publication date</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.archive.models.ProtectedWorkFieldFlags.pub_place">
+<code class="descname">pub_place</code><em class="property"> = None</em><a class="headerlink" href="#ppa.archive.models.ProtectedWorkFieldFlags.pub_place" title="Permalink to this definition">¶</a></dt>
+<dd><p>place of publication</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.archive.models.ProtectedWorkFieldFlags.publisher">
+<code class="descname">publisher</code><em class="property"> = None</em><a class="headerlink" href="#ppa.archive.models.ProtectedWorkFieldFlags.publisher" title="Permalink to this definition">¶</a></dt>
+<dd><p>publisher</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.archive.models.ProtectedWorkFieldFlags.sort_title">
+<code class="descname">sort_title</code><em class="property"> = None</em><a class="headerlink" href="#ppa.archive.models.ProtectedWorkFieldFlags.sort_title" title="Permalink to this definition">¶</a></dt>
+<dd><p>sort title</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.archive.models.ProtectedWorkFieldFlags.subtitle">
+<code class="descname">subtitle</code><em class="property"> = None</em><a class="headerlink" href="#ppa.archive.models.ProtectedWorkFieldFlags.subtitle" title="Permalink to this definition">¶</a></dt>
+<dd><p>subtitle</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.archive.models.ProtectedWorkFieldFlags.title">
+<code class="descname">title</code><em class="property"> = None</em><a class="headerlink" href="#ppa.archive.models.ProtectedWorkFieldFlags.title" title="Permalink to this definition">¶</a></dt>
+<dd><p>title</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -621,6 +805,25 @@ collapsed items.</p>
 a list. May not be called if render_to_response is overridden.</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="ppa.archive.views.DigitizedWorkListView.meta_description">
+<code class="descname">meta_description</code><em class="property"> = 'The Princeton Prosody Archive is a full-text\n    searchable database of thousands of historical documents about the\n    study of language and the study of poetry.'</em><a class="headerlink" href="#ppa.archive.views.DigitizedWorkListView.meta_description" title="Permalink to this definition">¶</a></dt>
+<dd><p>page description for metadata/preview</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.archive.views.DigitizedWorkListView.meta_title">
+<code class="descname">meta_title</code><em class="property"> = 'Princeton Prosody Archive'</em><a class="headerlink" href="#ppa.archive.views.DigitizedWorkListView.meta_title" title="Permalink to this definition">¶</a></dt>
+<dd><p>title for metadata / preview</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="ppa.archive.views.OpenSearchDescriptionView">
+<em class="property">class </em><code class="descclassname">ppa.archive.views.</code><code class="descname">OpenSearchDescriptionView</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#OpenSearchDescriptionView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.OpenSearchDescriptionView" title="Permalink to this definition">¶</a></dt>
+<dd><p>Basic open search description for searching the archive
+via browser or other tools.</p>
 </dd></dl>
 
 </div>
@@ -1296,7 +1499,7 @@ description, for use in previews on the site and plain-text metadata
 previews.</p>
 <dl class="attribute">
 <dt id="ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags">
-<code class="descname">allowed_tags</code><em class="property"> = ['abbr', 'strong', 'em', 'acronym', 'blockquote', 'li', 'p', 'b', 'ol', 'i', 'ul', 'code']</em><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags" title="Permalink to this definition">¶</a></dt>
+<code class="descname">allowed_tags</code><em class="property"> = ['i', 'ul', 'p', 'abbr', 'em', 'code', 'blockquote', 'strong', 'ol', 'acronym', 'li', 'b']</em><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags" title="Permalink to this definition">¶</a></dt>
 <dd><p>allowed tags for bleach html stripping in description</p>
 </dd></dl>
 
@@ -1354,6 +1557,12 @@ instances of <a class="reference internal" href="#ppa.editorial.models.Editorial
 <dt id="ppa.pages.models.Person.name">
 <code class="descname">name</code><a class="headerlink" href="#ppa.pages.models.Person.name" title="Permalink to this definition">¶</a></dt>
 <dd><p>the display name of an individual</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.pages.models.Person.photo">
+<code class="descname">photo</code><a class="headerlink" href="#ppa.pages.models.Person.photo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Optional profile image to be associated with a person</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1518,9 +1727,9 @@ previous versions need to be removed.</p>
 <div class="section" id="module-ppa.common">
 <span id="common"></span><h2>Common<a class="headerlink" href="#module-ppa.common" title="Permalink to this headline">¶</a></h2>
 <p>Django app for common functionality that doesn’t have an obvious home</p>
-<div class="section" id="module-ppa.common.admin">
-<span id="admin"></span><h3>Admin<a class="headerlink" href="#module-ppa.common.admin" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
+<div class="section" id="id3">
+<h3>Admin<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-ppa.common.admin"></span><dl class="class">
 <dt id="ppa.common.admin.LocalUserAdmin">
 <em class="property">class </em><code class="descclassname">ppa.common.admin.</code><code class="descname">LocalUserAdmin</code><span class="sig-paren">(</span><em>model</em>, <em>admin_site</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/common/admin.html#LocalUserAdmin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.common.admin.LocalUserAdmin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extends <code class="xref py py-class docutils literal notranslate"><span class="pre">django.contribut.auth.admin.UserAdmin</span></code>
@@ -1534,8 +1743,8 @@ to provide additional detail for user administration.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="id3">
-<h3>Views<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id4">
+<h3>Views<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <span class="target" id="module-ppa.common.views"></span><dl class="class">
 <dt id="ppa.common.views.VaryOnHeadersMixin">
 <em class="property">class </em><code class="descclassname">ppa.common.views.</code><code class="descname">VaryOnHeadersMixin</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/common/views.html#VaryOnHeadersMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.common.views.VaryOnHeadersMixin" title="Permalink to this definition">¶</a></dt>
@@ -1553,13 +1762,13 @@ winthrop-django.</p>
 
 </div>
 </div>
-<div class="section" id="id4">
-<h2>Editorial<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id5">
+<h2>Editorial<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
 <span class="target" id="module-ppa.editorial"></span><p>Management and display of editorial content. Includes custom page models
 for an editorial list page and editorial content pages, structured
 roughly like a scholarly blog..</p>
-<div class="section" id="id5">
-<h3>Models<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id6">
+<h3>Models<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <span class="target" id="module-ppa.editorial.models"></span><dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">ppa.editorial.models.</code><code class="descname">EditorialIndexPage</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/editorial/models.html#EditorialIndexPage"><span class="viewcode-link">[source]</span></a></dt>
@@ -1611,13 +1820,13 @@ publication date.
 
 </div>
 </div>
-<div class="section" id="id6">
-<h2>Pages<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id7">
+<h2>Pages<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
 <span class="target" id="module-ppa.pages"></span><p>Management and display of home page and other content pages. Includes
 custom page models for collections page, contributor page,
 and a person snippet for contributors and authors.</p>
-<div class="section" id="id7">
-<h3>Models<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id8">
+<h3>Models<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
 <span class="target" id="module-ppa.pages.models"></span><dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">ppa.pages.models.</code><code class="descname">BodyContentBlock</code><span class="sig-paren">(</span><em>local_blocks=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/pages/models.html#BodyContentBlock"><span class="viewcode-link">[source]</span></a></dt>
@@ -1705,7 +1914,7 @@ description, for use in previews on the site and plain-text metadata
 previews.</p>
 <dl class="attribute">
 <dt>
-<code class="descname">allowed_tags</code><em class="property"> = ['abbr', 'strong', 'em', 'acronym', 'blockquote', 'li', 'p', 'b', 'ol', 'i', 'ul', 'code']</em></dt>
+<code class="descname">allowed_tags</code><em class="property"> = ['i', 'ul', 'p', 'abbr', 'em', 'code', 'blockquote', 'strong', 'ol', 'acronym', 'li', 'b']</em></dt>
 <dd><p>allowed tags for bleach html stripping in description</p>
 </dd></dl>
 
@@ -1767,6 +1976,12 @@ instances of <a class="reference internal" href="#ppa.editorial.models.Editorial
 
 <dl class="attribute">
 <dt>
+<code class="descname">photo</code></dt>
+<dd><p>Optional profile image to be associated with a person</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
 <code class="descname">project_role</code></dt>
 <dd><p>project role</p>
 </dd></dl>
@@ -1780,8 +1995,8 @@ instances of <a class="reference internal" href="#ppa.editorial.models.Editorial
 </dd></dl>
 
 </div>
-<div class="section" id="id8">
-<h3>Manage Commands<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id9">
+<h3>Manage Commands<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="module-ppa.pages.management.commands.setup_site_pages">
 <span id="setup-site-pages"></span><h4>Setup Site Pages<a class="headerlink" href="#module-ppa.pages.management.commands.setup_site_pages" title="Permalink to this headline">¶</a></h4>
 <p><strong>setup_site_pages</strong> is a custom manage command to install
@@ -1797,8 +2012,8 @@ touch other content.</p>
 <div class="section" id="module-ppa.unapi">
 <span id="unapi"></span><h2>Unapi<a class="headerlink" href="#module-ppa.unapi" title="Permalink to this headline">¶</a></h2>
 <p>Django app for unAPI service</p>
-<div class="section" id="id9">
-<h3>Views<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id10">
+<h3>Views<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
 <span class="target" id="module-ppa.unapi.views"></span><dl class="class">
 <dt id="ppa.unapi.views.UnAPIView">
 <em class="property">class </em><code class="descclassname">ppa.unapi.views.</code><code class="descname">UnAPIView</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/unapi/views.html#UnAPIView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.unapi.views.UnAPIView" title="Permalink to this definition">¶</a></dt>
@@ -1861,6 +2076,7 @@ to normal template view behavior and displays format information.</p>
 
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -1886,7 +2102,7 @@ to normal template view behavior and displays format information.</p>
     
 
 <p>
-<a href="https://travis-ci.org/Princeton-CDH/ppa-django">
+<a class="badge" href="https://travis-ci.org/Princeton-CDH/ppa-django">
     <img
         alt="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
         src="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
@@ -1900,7 +2116,7 @@ to normal template view behavior and displays format information.</p>
     
 
 <p>
-<a href="https://codecov.io/github/Princeton-CDH/ppa-django">
+<a class="badge" href="https://codecov.io/github/Princeton-CDH/ppa-django">
     <img
     alt="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
     src="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
@@ -1921,6 +2137,7 @@ to normal template view behavior and displays format information.</p>
   <ul>
 <li><a class="reference internal" href="#">Code Documentation</a><ul>
 <li><a class="reference internal" href="#module-ppa.archive">Archive</a><ul>
+<li><a class="reference internal" href="#module-ppa.archive.admin">Admin</a></li>
 <li><a class="reference internal" href="#module-ppa.archive.models">Models</a></li>
 <li><a class="reference internal" href="#module-ppa.archive.views">Views</a></li>
 <li><a class="reference internal" href="#module-ppa.archive.forms">Forms</a></li>
@@ -1943,24 +2160,24 @@ to normal template view behavior and displays format information.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-ppa.common">Common</a><ul>
-<li><a class="reference internal" href="#module-ppa.common.admin">Admin</a></li>
-<li><a class="reference internal" href="#id3">Views</a></li>
+<li><a class="reference internal" href="#id3">Admin</a></li>
+<li><a class="reference internal" href="#id4">Views</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id4">Editorial</a><ul>
-<li><a class="reference internal" href="#id5">Models</a></li>
+<li><a class="reference internal" href="#id5">Editorial</a><ul>
+<li><a class="reference internal" href="#id6">Models</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id6">Pages</a><ul>
-<li><a class="reference internal" href="#id7">Models</a></li>
-<li><a class="reference internal" href="#id8">Manage Commands</a><ul>
+<li><a class="reference internal" href="#id7">Pages</a><ul>
+<li><a class="reference internal" href="#id8">Models</a></li>
+<li><a class="reference internal" href="#id9">Manage Commands</a><ul>
 <li><a class="reference internal" href="#module-ppa.pages.management.commands.setup_site_pages">Setup Site Pages</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-ppa.unapi">Unapi</a><ul>
-<li><a class="reference internal" href="#id9">Views</a></li>
+<li><a class="reference internal" href="#id10">Views</a></li>
 </ul>
 </li>
 </ul>
@@ -1993,8 +2210,8 @@ to normal template view behavior and displays format information.</p>
       &copy;2018, CDH @ Princeton University.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="_sources/codedocs.rst.txt"
