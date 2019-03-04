@@ -6,11 +6,11 @@
     {% endif %}
     <{{ tag }} class="ui profile card"{% if person.url %} href="{{ person.url }}" target="_blank" rel="noreferrer"{% endif %}>
     {% if person.photo %}
-        {% image person.photo max-285x160 as img %}
-        {% image person.photo max-570x320 as img_2x %}
+        {% image person.photo fill-230x160 as img %}
+        {% image person.photo fill-560x320 as img_2x %}
         <img class="photo"
+            src="{{ img.url }}"
             srcset="{{ img.url }}, {{ img_2x.url}} 2x"
-            width="{{ img.width }}" height="{{ img.height }}"
             alt="{{ person.name }}"/>
     {% endif %}
     </{{ tag }}>
