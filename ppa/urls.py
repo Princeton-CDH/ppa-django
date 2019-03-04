@@ -5,7 +5,7 @@ from django.conf import settings
 from django.conf.urls import url, include
 from django.conf.urls.static import serve
 from django.contrib import admin
-from django.views.generic.base import TemplateView
+from django.views.generic.base import TemplateView, RedirectView
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.core import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
@@ -25,7 +25,9 @@ sitemaps = {
 
 urlpatterns = [
     url(r'^robots\.txt$', TemplateView.as_view(template_name='robots.txt',
-        content_type='text/plain')),
+                                               content_type='text/plain')),
+    url(r'^favicon\.ico$', RedirectView.as_view(url='/static/favicon.ico',
+                                                permanent=True)),
     url(r'^admin/', admin.site.urls),
     # grappelli URLS for admin related lookups & autocompletes
     url(r'^grappelli/', include('grappelli.urls')),
