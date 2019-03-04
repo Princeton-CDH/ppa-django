@@ -23,8 +23,15 @@
         }
 
         > h2 {
+            width: 230px; // align with photos on mobile
+            margin: auto;
             grid-column: 1 / -1;
             justify-self: left;
+
+            @media (min-width: $tablet) {
+                width: fit-content;
+                margin: 0;
+            }
         }
     }
 
