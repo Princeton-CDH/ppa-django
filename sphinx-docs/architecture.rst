@@ -12,6 +12,16 @@ page content.
 Database
 --------
 
+3.1 Updates
+^^^^^^^^^^^
+
+* Add optional  :attr:`~ppa.pages.models.Person.photo` on
+  :class:`~ppa.pages.models.Person` to support
+  displaying photos on the contributor page.
+* Add new :attr:`~ppa.archive.models.DigitizedWork.protected_fields`
+  to :class:`~ppa.archive.models.DigitizedWork` to enable preserving
+  local edits to HathiTrust metadata.
+
 Wagtail (Release 0.10)
 ^^^^^^^^^^^^^^^^^^^^^^
 .. image:: _static/ppa-schema-v10.png
