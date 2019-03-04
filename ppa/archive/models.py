@@ -285,7 +285,6 @@ class DigitizedWork(TrackChangesModel, Indexable):
         return self.title
     display_title.short_description = 'title'
     display_title.admin_order_field = 'sort_title'
-    display_title.allow_tags = True
 
     def is_public(self):
         '''admin display field indicating if record is public or suppressed'''
