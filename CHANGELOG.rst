@@ -3,6 +3,32 @@
 CHANGELOG
 =========
 
+3.1
+---
+
+Support for preserving local edits to metadata, add photos to contributor
+content page, and numerous accessibility and style fixes and improvements.
+
+* As an admin, I want to correct basic item-level metadata errors and preserve those corrections so that I can override discrepancies in source materials for display on the site.
+* As a content editor, I want to be able to add a photo to a contributor so that users can associate a face with a name and role.
+* HathiTrust page image improvements: use Hathi thumbnail API where possible
+ (lower res thumbnail), use lazy loading to improve performance and
+ reduce likelihood of throttling.
+* bugfix: handle bad collection id on archive search page
+* Accessibility improvements:
+  * improve keyboard navigation
+  * fix pages with missing level 1 heading
+  * Archive search page accessibility improvements
+* Style fixes and improvements:
+  * Update contributor page styles and templates to include photos
+  * New placeholder image for page images and contributors without photo
+  * bugfix: Homepage logo placement is broken without javascript
+  * bugfix: Search loading animation layout is broken in Firefox
+  * Footer link spacing, mobile improvements for tile display and scrolling on iOS,
+
+
+[GitHub milestone](https://github.com/Princeton-CDH/ppa-django/milestone/8?closed=1)
+
 3.0.1
 -----
 
