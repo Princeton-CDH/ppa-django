@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('archive', '0010_digitizedwork_add_source'),
+        ('archive', '0011_add_protected_fields'),
     ]
 
     operations = [
