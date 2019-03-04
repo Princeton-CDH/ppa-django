@@ -123,14 +123,23 @@ class Collection(TrackChangesModel):
 
 
 class ProtectedWorkFieldFlags(Flags):
-    '''Flag set of fields that should be protected if edited in the admin.'''
+    ''':class:`flags.Flags` instance to indicate which :class:`DigitizedWork`
+    fields should be protected if edited in the admin.'''
+    #: title
     title = ()
+    #: subtitle
     subtitle = ()
+    #: sort title
     sort_title = ()
+    #: enumcron
     enumcron = ()
+    #: author
     author = ()
+    #: place of publication
     pub_place = ()
+    #: publisher
     publisher = ()
+    #: publication date
     pub_date = ()
 
     @classmethod
@@ -233,8 +242,9 @@ class DigitizedWork(TrackChangesModel, Indexable):
     #: internal team notes, not displayed on the public facing site
     notes = models.TextField(blank=True, default='',
         help_text='Internal curation notes (not displayed on public site)')
-    #: metadata fields that should be preserved on bulk update because
-    # they have been modified by data editors.
+    #: :class:`ProtectedWorkField` instance to indicate metadata fields
+    #: that should be preserved from bulk updates because they have been
+    #: modified in Django admin.
     protected_fields = ProtectedWorkField(
         default=ProtectedWorkFieldFlags,
         help_text='Fields protected from HathiTrust bulk '
