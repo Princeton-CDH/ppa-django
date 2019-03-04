@@ -10,7 +10,7 @@ from django.utils.http import urlencode
 from django.utils.timezone import now
 from django.urls import reverse
 from django.views.generic import ListView, DetailView
-from django.views.generic.base import RedirectView
+from django.views.generic.base import RedirectView, TemplateView
 from django.views.generic.edit import FormView
 from SolrClient.exceptions import SolrError
 
@@ -566,3 +566,11 @@ class AddToCollection(ListView, FormView):
         # doesn't pass the form with error set
         self.object_list = self.get_queryset()
         return self.render_to_response(self.get_context_data(form=form))
+
+
+class OpenSearchDescriptionView(TemplateView):
+    '''Basic open search description for searching the archive
+    via browser or other tools.'''
+
+    template_name = "archive/opensearch_description.xml"
+    content_type = 'application/opensearchdescription+xml'
