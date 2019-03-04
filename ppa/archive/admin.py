@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 
 from ppa.archive.models import DigitizedWork, Collection, \
     ProtectedWorkFieldFlags
@@ -55,11 +56,11 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
     list_collections.short_description = 'Collections'
 
     def source_link(self, obj):
-        return '<a href="%s" target="_blank">%s</a>' % (obj.source_url,
-                                                        obj.source_id)
+        '''Link to source record'''
+        return mark_safe('<a href="%s" target="_blank">%s</a>' % \
+                         (obj.source_url, obj.source_id))
     source_link.short_description = 'Source id'
     source_link.admin_order_field = 'source_id'
-    source_link.allow_tags = True
 
     def save_model(self, request, obj, form, change):
         '''Note any fields in the protected list that have been changed in
