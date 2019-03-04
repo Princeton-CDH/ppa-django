@@ -265,14 +265,15 @@ class TestArchiveViews(TestCase):
             count=1,
             msg_prefix='has page label for the print page numb.'
         )
-        # image url should appear twice each for src and srcset
+        # image url should appear in each src and and srcset
         # (one for lazy load image and one for noscript image)
         self.assertContains(
             response,
             page_image_url(result['source_id'], result['order'], 225),
-            count=2,
+            count=4,
             msg_prefix='has img src url'
         )
+        # 2x image url should appear in srcset for img and noscript img
         self.assertContains(
             response,
             page_image_url(result['source_id'], result['order'], 450),
