@@ -1,7 +1,6 @@
 {% load semanticui humanize static %}
-<form class="ui form{% if error %} error{% endif %} no-js">
+<form class="ui form{% if error %} error{% endif %}">
     <div class="ui vertical stackable grid segment">
-        <legend class="sr-only">text search fields</legend>
         <div class="twelve wide column">
             {% render_field search_form.query %}
             <span class="question-popup" data-html="{{ search_form.QUESTION_POPUP_TEXT }}" data-position="top center">
@@ -16,7 +15,6 @@
         </div>
     </div>
     <div class="ui vertical stackable grid segment advanced">
-        <legend class="sr-only">publication date fields</legend>
         <div class="four wide column" id="publication">
             {% render_field search_form.pub_date %}
             <span class="validation">
@@ -31,10 +29,10 @@
         </div>
     </div>
     <div class="ui vertical stackable basic grid segment">
-        <legend class="sr-only">search filters</legend>
         <div class="twelve wide column" id="collections">
-            <div class="field">
-                <label for="collections">Collections</label>
+            <fieldset class="field">
+                <legend>Collections</legend>
+                <div class="inner">
                     {% for collection in search_form.collections %}
                     <label class="ui button{% if collection.data.selected %} active{% endif %}">
                         {{ collection.choice_label }}
@@ -42,10 +40,8 @@
                     </label>
                     {% endfor %}
                     <div class="spacer"></div>
-            </div>
-            <noscript>
-                <input class="ui primary button" type="submit" value="Submit"/>
-            </noscript>
+                </div>
+            </fieldset>
         </div>
         {% comment %}
         <div class="six wide column" id="booleans">

@@ -1,11 +1,16 @@
+# Webpack files
+webpack-stats.json
+
 # JS dependencies
 node_modules/
 
 # Media ignores
 static/
 media/
+bundles/
 sitemedia/fonts
 **/.sass-cache/
+webpack-stats.json
 
 # Sphinx documentation
 docs/

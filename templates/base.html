@@ -1,4 +1,5 @@
-{% load static compress wagtailuserbar fullurl %}
+{% load render_bundle from webpack_loader %}
+{% load static wagtailuserbar fullurl %}
 {% comment %}
 NOTE: This site uses RDFa and schema.org vocabulary.  Every page will be declared as schema:Webpage
 by default; use page_rdf_type to override with a webpage subclass.
@@ -19,6 +20,8 @@ by default; use page_rdf_type to override with a webpage subclass.
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}" />
     <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon-16x16.png' %}" />
     <link rel="manifest" href="{% static 'manifest.json' %}" />
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search PPA" href="{% fullurl 'archive:opensearch-description' %}">
     <link rel="mask-icon" href="{% static 'safari-pinned-tab.svg' %}" color="#E9E9E9" />
     <meta name="theme-color" content="#E9E9E9" />
     {% include 'snippets/head_meta.html' %}
@@ -26,10 +29,10 @@ by default; use page_rdf_type to override with a webpage subclass.
 
     <!-- styles -->
     <link rel="stylesheet" type="text/css" href="{% static 'semantic/dist/semantic.min.css' %}">
+    {% if SHOW_TEST_WARNING %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/test-banner.css' %}">
-    {% compress css %}
-        <link rel="stylesheet" type="text/x-scss" href="{% static 'scss/ppa.scss' %}">
-    {% endcompress %}
+    {% endif %}
+    {% render_bundle 'main' 'css' %}
     {% block css %}{% endblock %} {# add any additional css here #}
 
     <!-- scripts -->
@@ -47,10 +50,8 @@ by default; use page_rdf_type to override with a webpage subclass.
     {% if not request.is_preview and GTAGS_ANALYTICS_ID %}
         {% include 'snippets/analytics.html' %}
     {% endif %}
-    {% compress js %}
-        <script src="{% static 'js/index.js' %}" type="module" defer></script>
-        {% block js %}{% endblock %} {# add any additional javascript here #}
-    {% endcompress %}
+    {% render_bundle 'main' 'js' %}
+    {% block js %}{% endblock %} {# add any additional javascript here #}
 
     <!-- extra metadata -->
     {% block head_extras %}{% endblock %}

@@ -3,6 +3,31 @@
 CHANGELOG
 =========
 
+3.1
+---
+
+Support for preserving local edits to metadata, add photos to contributor
+content page, and numerous accessibility and style fixes and improvements.
+
+* As an admin, I want to correct basic item-level metadata errors and preserve those corrections so that I can override discrepancies in source materials for display on the site.
+* As a content editor, I want to be able to add a photo to a contributor so that users can associate a face with a name and role.
+* HathiTrust page image improvements: use Hathi thumbnail API where possible
+ (lower res thumbnail), use lazy loading to improve performance and
+ reduce likelihood of throttling.
+* bugfix: handle bad collection id on archive search page
+* Accessibility improvements:
+  * improve keyboard navigation
+  * fix pages with missing level 1 heading
+  * Archive search page accessibility improvements
+* Style fixes and improvements:
+  * Update contributor page styles and templates to include photos
+  * New placeholder image for page images and contributors without photo
+  * bugfix: Homepage logo placement is broken without javascript
+  * bugfix: Search loading animation layout is broken in Firefox
+  * Footer link spacing, mobile improvements for tile display and scrolling on iOS,
+
+[3.1 GitHub milestone](https://github.com/Princeton-CDH/ppa-django/milestone/8?closed=1)
+
 3.0.1
 -----
 
@@ -63,9 +88,10 @@ UI/UX/Design updates
   and footnotes
 * Updated error pages
 
+[3.0 GitHub milestone](https://github.com/Princeton-CDH/ppa-django/milestone/7?closed=1)
 
-0.11.0
-------
+0.11
+----
 
 * As a content editor, I want to control how the description of my editorial content is displayed when on PPA, when shared, and when searched.
 * As a content editor, I want to add new or edit existing editorial content so that I can publish and promote scholarly work related to the project.
@@ -92,8 +118,10 @@ Design updates
 * Digitized work detail page
 * Editorial post list page
 
-0.10.0
-------
+[0.11 GitHub milestone](https://github.com/Princeton-CDH/ppa-django/milestone/6?closed=1)
+
+0.10
+----
 
 * As a content editor, I want unneeded punctuation removed when importing or updating records from HathiTrust metadata, so that records are easier to search and browse.
 * As a user, I want item titles to be case-insensitive when sorting, so that I can find content alphabetically.
@@ -114,8 +142,10 @@ Design updates
 * Fixes issues with histogram and pub date display on Chrome.
 * Fixes an issue where hitting back on a search could result in unformatted JSON being displayed.
 
-0.9.0
------
+[0.10 GitHub milestone](https://github.com/Princeton-CDH/ppa-django/milestone/5?closed=1)
+
+0.9
+---
 
 * As an admin, I would like to be able to see the Hathi Catalog IDs for a volume so that I can see how individual volumes are grouped together within the HathiTrust.
 * As an admin, I want the CSV report of materials on the site to include items' Hathi catalog ID so that I can identify duplicates and multi-volume works.
@@ -135,6 +165,8 @@ Design updates
 * Mutes the look of collection "badges" on search results
 * Adjusts the interactive area and cursor used for search sorting
 * Fixes an issue with sizing of the footer in WebKit browsers
+
+[0.9 GitHub milestone](https://github.com/Princeton-CDH/ppa-django/milestone/4?closed=1)
 
 0.8.1
 -----
@@ -184,6 +216,7 @@ Other improvements
 * Templates and basic styles for current site components
 * SCSS/JS pipeline with compressor
 
+[0.8 GitHub milestone](https://github.com/Princeton-CDH/ppa-django/milestone/3?closed=1)
 
 0.7 Collections Improvements
 ----------------------------
@@ -215,6 +248,7 @@ Collections
 * As a user, I want to browse the list of collections so I can find out more about important groupings of items in the archive.
 *  As a user, I want to filter search results by collection so that I can include or exclude groups of materials based on my interests.
 
+[0.6 GitHub milestone](https://github.com/Princeton-CDH/ppa-django/milestone/2?closed=1)
 
 0.5 Bulk Import and Simple Search
 ---------------------------------
@@ -237,3 +271,5 @@ HathiTrust Materials
 * As an admin, I want to see the history of all edits to a digitized work, including import and updates via script, so that I can track the full history of contributions and changes to the record.
 * As a user, I want to search and browse digitized volumes by keyword so that I can see what materials are in the archive.
 * As a user, I want to see basic details for individual items in the archive so that I can see the record details and get to the HathiTrust version.
+
+[0.5 GitHub milestone](https://github.com/Princeton-CDH/ppa-django/milestone/1?closed=1)

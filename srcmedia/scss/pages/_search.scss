@@ -1,0 +1,306 @@
+#search {
+    padding-top: 100px;
+
+    .sub.header { // "ARCHIVE" text
+        font-size: 1.5rem;
+        margin: 1rem 0;
+        text-align: center;
+        font-weight: normal;
+    }
+
+    .container:not(.message) {
+        @include wide-container;
+    }
+
+    .search {
+        padding: 0;
+    }
+
+    .show-advanced {
+        background: $white-two;
+        text-align: center;
+        padding-top: 0;
+
+        button {
+            font-family: $pageFont;
+            cursor: pointer;
+            appearance: none;
+            -moz-appearance: none;
+            -webkit-appearance: none;
+            border: none;
+            padding: 0;
+            background: none;
+        }
+
+        .search-active {
+            color: $rosy-pink;
+        }
+
+        .icon {
+            height: 1.25rem;
+            width: 1.25rem;
+            transition: all 0.2s ease;
+            transform: rotate(90deg);
+            vertical-align: top;
+        }
+
+        &.active .icon {
+            transform: rotate(-90deg);
+        }
+    }
+
+    /* hide advanced search by default */
+    .advanced {
+        display: none;
+    }
+
+    input[type=number] { // pubdate min/max
+        width: 4rem;
+        padding: 0.5rem;
+        appearance: textfield;
+        -moz-appearance: textfield;
+        -webkit-appearance: textfield;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    #publication {
+        label[for=id_pub_date] { // "Publication Year" text
+            @media (min-width: $tablet) {
+                display: block;
+                margin-bottom: .25rem;
+            }
+
+            @media (min-width: $computer) {
+                display: inline-block;
+                margin-bottom: 0;
+            }
+        }
+
+        label:nth-child(3) { // "to" in between dates
+            margin: 0 .5rem;
+
+            @media (min-width: $tablet) {
+                margin: 0 1rem;
+            }
+        }
+
+        input:invalid {
+            border-color: red;
+            box-shadow: 0 0 4px 0 red;
+        }
+
+        .validation {
+            visibility: hidden;
+            color: red;
+        }
+    }
+
+    .clear-selection {
+        font-family: $pageFont;
+        cursor: pointer;
+        appearance: none;
+        -moz-appearance: none;
+        -webkit-appearance: none;
+        border: none;
+        padding: 0;
+        background: none;
+        position: absolute;
+        bottom: -.5rem;
+        left: 1rem;
+
+        @media (min-width: $tablet) {
+            bottom: 1rem;
+        }
+    }
+
+    fieldset {
+        padding: 0;
+        border: none;
+    }
+
+    #collections {
+        .inner {
+            display: flex;
+            flex-flow: row wrap;
+        }
+
+        legend {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .button {
+            margin-bottom: 10px;
+            margin-right: 5px;
+            transition: padding 0.2s;
+            flex: none;
+            position: relative;
+        }
+
+        .ui.button {
+            display: inline-block;
+        }
+
+        .button > span { // hide counts
+            display: none;
+        }
+
+        .button.active {
+            order: 1;
+            color: white;
+        }
+
+        .button:not(.active) {
+            order: 3;
+        }
+
+        .button.disabled {
+            order: 4;
+        }
+
+        .spacer {
+            order: 2;
+            width: 100%;
+        }
+
+        input[type=checkbox] { // hide checkboxes
+            position: absolute;
+            opacity: 0;
+            outline: none;
+
+            &::-ms-check {
+                display: none;
+            }
+        }
+
+        .button::after {
+            content: "×";
+            cursor: pointer;
+            color: $white-two;
+            position: absolute;
+            font-size: 1rem;
+            right: 5px;
+            top: 5px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .button.active:not(.disabled)::after {
+            opacity: 1;
+        }
+
+        .button.active:not(.disabled) {
+            padding-right: 1.25rem;
+        }
+    }
+
+    .zotero a {
+        @include blue-link;
+    }
+
+    #booleans {
+        .inline.field:nth-child(2) .checkbox {
+            margin-top: .25rem;
+            margin-bottom: .75rem;
+        }
+    }
+
+    .workscount {
+        position: relative;
+        margin: 2rem auto;
+        font-size: 1rem;
+
+        p {
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
+
+        p:first-child {
+            margin-bottom: .5rem;
+        }
+    }
+
+    .workscount.loading p {
+        opacity: 0;
+    }
+
+    /* results */
+
+    .results-list {
+        padding-bottom: 2rem;
+        padding-left: 0;
+        list-style: none;
+    }
+
+    .data {
+        display: none;
+    }
+
+    .pagination-sort,
+    .pagination-bottom {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+
+        @media (min-width: $tablet) {
+            justify-content: space-between;
+        }
+    }
+
+    .pagination-sort {
+        margin: 0 1rem;
+        border-bottom: 2px solid $seafoam-blue;
+    }
+
+    .pagination-bottom {
+        padding: 0 1rem;
+
+        .page-controls {
+            position: relative;
+        }
+    }
+
+    .page-controls {
+        width: 100%;
+        text-align: center;
+        margin-top: 1rem;
+
+        @media (min-width: $tablet) {
+            width: auto;
+            margin: 0;
+        }
+
+        @media (min-width: $computer) {
+            position: absolute;
+            right: 0;
+            left: 0;
+            text-align: center;
+        }
+    }
+
+    .sort {
+        width: 100%;
+        margin: 1rem 0;
+
+        @media (min-width: $tablet) {
+            label {
+                margin-left: auto;
+                margin-right: 1rem;
+            }
+        }
+
+        @media (min-width: $computer) {
+            width: auto;
+        }
+    }
+
+    .message {
+        margin-top: 2rem;
+    }
+}

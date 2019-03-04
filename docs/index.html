@@ -6,13 +6,14 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Princeton Prosody Archive documentation &#8212; Princeton Prosody Archive 3.0.0 documentation</title>
+    <title>Princeton Prosody Archive documentation &#8212; Princeton Prosody Archive 3.1.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Architecture" href="architecture.html" />
@@ -28,6 +29,8 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <div class="section" id="princeton-prosody-archive-documentation">
@@ -44,6 +47,7 @@
 <p>Django web application for the new <a class="reference external" href="https://cdh.princeton.edu/projects/princeton-prosody-archive/">Princeton Prosody Archive</a>.</p>
 <p>Code and architecture documentation for the current release available
 at <a class="reference external" href="https://princeton-cdh.github.io/ppa-django/">https://princeton-cdh.github.io/ppa-django/</a>.</p>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.2400705"><img alt="DOI: 10.5281/zenodo.2400705" src="https://zenodo.org/badge/110731137.svg" /></a>
 <a class="reference external image-reference" href="https://travis-ci.org/Princeton-CDH/ppa-django"><img alt="Build status" src="https://travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master" /></a>
 <a class="reference external image-reference" href="https://landscape.io/github/Princeton-CDH/ppa-django/master"><img alt="Code Health" src="https://landscape.io/github/Princeton-CDH/ppa-django/master/landscape.svg?style=flat" /></a>
 <a class="reference external image-reference" href="https://codecov.io/gh/Princeton-CDH/ppa-django"><img alt="Code coverage" src="https://codecov.io/gh/Princeton-CDH/ppa-django/branch/master/graph/badge.svg" /></a>
@@ -106,31 +110,29 @@ and then run:</p>
 </li>
 </ul>
 <p>Frontend development setup:</p>
+<p>This project uses the <a class="reference external" href="https://semantic-ui.com/">Semantic UI</a> library in
+addition to custom styles and javascript. You need to compile static assets
+before running the server.</p>
 <ul>
-<li><p class="first">django-compressor dependencies: you need <a class="reference external" href="https://nodejs.org/en/">Node.js</a>
-and a js package manager (<code class="docutils literal notranslate"><span class="pre">npm</span></code> or <code class="docutils literal notranslate"><span class="pre">yarn</span></code>). Install dependencies with the
-relevant install command for your package manager - for <code class="docutils literal notranslate"><span class="pre">npm</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">npm</span> <span class="n">install</span>
-</pre></div>
-</div>
-<p>for <code class="docutils literal notranslate"><span class="pre">yarn</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">yarn</span>
-</pre></div>
-</div>
-<p>if you wish to install dependencies globally, take a look at the optional
-settings for <a class="reference external" href="https://github.com/kottenator/django-compressor-toolkit">django-compressor-toolkit</a>.</p>
-</li>
-<li><p class="first">To build the main <a class="reference external" href="https://semantic-ui.com/">Semantic UI</a> styles and js:</p>
+<li><p class="first">To build all styles and js for production, including semantic UI:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">npm</span> <span class="n">run</span> <span class="n">build</span>
-</pre></div>
-</div>
-<p>This should run once automatically after you <code class="docutils literal notranslate"><span class="pre">npm</span> <span class="pre">install</span></code>. To watch for changes
-to the stylesheets and rebuild Semantic UI automatically:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">npm</span> <span class="n">start</span>
 </pre></div>
 </div>
 </li>
 </ul>
+<p>Alternatively, you can rebuild just the custom files or semantic independently.
+This is useful if you make small changes and need to recompile once:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">npm</span> <span class="n">run</span> <span class="n">build</span><span class="p">:</span><span class="n">qa</span> <span class="c1"># just the custom files, with sourcemaps</span>
+<span class="n">npm</span> <span class="n">run</span> <span class="n">build</span><span class="p">:</span><span class="n">prod</span> <span class="c1"># just the custom files, no sourcemaps</span>
+<span class="n">npm</span> <span class="n">run</span> <span class="n">build</span><span class="p">:</span><span class="n">semantic</span> <span class="c1"># just semantic UI</span>
+</pre></div>
+</div>
+<p>Finally, you can run a development server with hot reload if you’ll be changing
+either set of assets frequently. These two processes are separate as well:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">npm</span> <span class="n">run</span> <span class="n">dev</span> <span class="c1"># serve just the custom files from memory, with hot reload</span>
+<span class="n">npm</span> <span class="n">run</span> <span class="n">dev</span><span class="p">:</span><span class="n">semantic</span> <span class="c1"># serve just semantic UI files and recompile on changes</span>
+</pre></div>
+</div>
 <div class="section" id="tests">
 <h3>Tests<a class="headerlink" href="#tests" title="Permalink to this headline">¶</a></h3>
 <p>Python unit tests are written with <a class="reference external" href="http://doc.pytest.org/">py.test</a> but use
@@ -204,6 +206,7 @@ use with Github Pages.</p>
 
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -229,7 +232,7 @@ use with Github Pages.</p>
     
 
 <p>
-<a href="https://travis-ci.org/Princeton-CDH/ppa-django">
+<a class="badge" href="https://travis-ci.org/Princeton-CDH/ppa-django">
     <img
         alt="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
         src="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
@@ -243,7 +246,7 @@ use with Github Pages.</p>
     
 
 <p>
-<a href="https://codecov.io/github/Princeton-CDH/ppa-django">
+<a class="badge" href="https://codecov.io/github/Princeton-CDH/ppa-django">
     <img
     alt="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
     src="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
@@ -300,8 +303,8 @@ use with Github Pages.</p>
       &copy;2018, CDH @ Princeton University.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="_sources/index.rst.txt"

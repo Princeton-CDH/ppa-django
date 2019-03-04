@@ -207,4 +207,6 @@ class TestModelMultipleChoiceFieldWithEmpty(TestCase):
         with pytest.raises(ValidationError):
             collections.clean([404])
 
-
+        # non-numeric should raise validation error
+        with pytest.raises(ValidationError):
+            collections.clean(['1" or (1,2)=(select*from(select '])

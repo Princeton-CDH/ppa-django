@@ -15,12 +15,26 @@ from pairtree import pairtree_client, pairtree_path, storage_exceptions
 import pytest
 
 from ppa.archive import hathi
-from ppa.archive.models import DigitizedWork, Collection, NO_COLLECTION_LABEL
+from ppa.archive.models import DigitizedWork, Collection, \
+    NO_COLLECTION_LABEL, ProtectedWorkFieldFlags
 from ppa.archive.solr import get_solr_connection, Indexable
 
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
 
+
+class TestProtectedFlags(TestCase):
+
+    def test_deconstruct(self):
+        ret = ProtectedWorkFieldFlags.deconstruct()
+        assert ret[0] == 'ppa.archive.models.ProtectedWorkFieldFlags'
+        assert ret[1] == ['no_flags']
+        assert ret[2] == {}
+
+    def test_str(self):
+        fields = ProtectedWorkFieldFlags.enumcron | ProtectedWorkFieldFlags.title | \
+            ProtectedWorkFieldFlags.sort_title
+        assert str(fields) == 'enumcron, sort_title, title'
 
 class TestDigitizedWork(TestCase):
     fixtures = ['sample_digitized_works']
@@ -64,6 +78,54 @@ class TestDigitizedWork(TestCase):
         res = solr.query(solr_collection, {'q': '*:*'})
         assert res.get_results_count() == 1
         assert res.docs[0]['id'] == 'njp.32101013082597'
+
+    def test_compare_protected_fields(self):
+
+        digwork = DigitizedWork(
+            source_id='testid',
+            title='Fake Title',
+            enumcron='02',
+            pub_place='Paris',
+            protected_fields=ProtectedWorkFieldFlags.all_flags
+        )
+        # change title and pub_place, leave enumcron
+        db_digwork = DigitizedWork(
+            source_id='testid2',
+            title='New Title',
+            enumcron='02',
+            pub_place='London',
+            protected_fields=ProtectedWorkFieldFlags.all_flags
+        )
+
+
+        changed_fields = digwork.compare_protected_fields(db_digwork)
+        assert 'title' in changed_fields
+        assert 'pub_place' in changed_fields
+        # source_id isn't a protected field so it shouldn't ever be in
+        # changed_fields
+        assert 'source_id' not in changed_fields
+        assert 'enumcron' not in changed_fields
+
+    def test_populate_fields(self):
+        digwork = DigitizedWork(
+            source_id='testid',
+            title='Fake Title',
+            enumcron='02',
+            pub_place='Paris',
+            protected_fields=ProtectedWorkFieldFlags.enumcron
+            )
+        field_dict = {
+            'title': 'Test Title',
+            'enumcron': '01',
+            'pub_place': 'London'
+        }
+        digwork.populate_fields(field_dict)
+        # protected field was protected
+        assert digwork.enumcron == '02'
+        # unprotected fields are updated
+        assert digwork.title == 'Test Title'
+        assert digwork.pub_place == 'London'
+
 
     def test_populate_from_bibdata(self):
         with open(self.bibdata_full) as bibdata:
@@ -222,6 +284,56 @@ class TestDigitizedWork(TestCase):
         assert digwork.publisher == ''
 
         # NOTE: not currently testing publication info unavailable
+
+        with open(self.bibdata_full2) as bibdata:
+            full_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
+
+        # test that protected fields are respected
+        digwork = DigitizedWork(source_id='aeu.ark:/13960/t1pg22p71')
+        # set each of the protected fields
+        digwork.title = 'Fake title'
+        digwork.subtitle = 'Silly subtitle'
+        digwork.sort_title = 'Sort title fake'
+        digwork.enumcron = '0001'
+        digwork.author = 'Not an author'
+        digwork.pub_place = 'Nowhere'
+        digwork.publisher = 'Not a publisher'
+        digwork.pub_date = 2200
+        # set all fields as protected
+        digwork.protected_fields = ProtectedWorkFieldFlags.all_flags
+        # fake bibdata for empty fields
+
+        full_bibdata.copy_details = Mock()
+        full_bibdata.copy_details.return_value = {
+            'enumcron': '0002',
+            'itemURL': 'http://example.com',
+
+        }
+        # fields have not changed
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.title == 'Fake title'
+        assert digwork.subtitle == 'Silly subtitle'
+        assert digwork.sort_title == 'Sort title fake'
+        assert digwork.enumcron == '0001'
+        assert digwork.pub_place == 'Nowhere'
+        assert digwork.publisher == 'Not a publisher'
+        assert digwork.pub_date == 2200
+        # check fallbacks for title
+        digwork.populate_from_bibdata(full_bibdata)
+        assert digwork.title == 'Fake title'
+        assert digwork.subtitle == 'Silly subtitle'
+        assert digwork.sort_title == 'Sort title fake'
+        # no protected fields
+        digwork.protected_fields = ProtectedWorkFieldFlags.no_flags
+        digwork.populate_from_bibdata(full_bibdata)
+        # all fields overwritten
+        assert digwork.title != 'Fake title'
+        assert digwork.subtitle != 'Silly subtitle'
+        assert digwork.sort_title != 'Sort title fake'
+        assert digwork.enumcron != '0001'
+        assert digwork.pub_place != 'Nowhere'
+        assert digwork.publisher != 'Not a publisher'
+        assert digwork.pub_date != 2200
 
     def test_index_data(self):
         digwork = DigitizedWork.objects.create(
@@ -500,7 +612,8 @@ class TestDigitizedWork(TestCase):
             # change status to suppressed - data should be deleted
             work.status = work.SUPPRESSED
             work.save()
-            mock_delete_pairtree_data.assert_called()
+            assert mock_delete_pairtree_data.call_count == 1
+            # mock_delete_pairtree_data.assert_called()
 
             # changing status but not to suppressed - should not be called
             mock_delete_pairtree_data.reset_mock()
