@@ -1,6 +1,6 @@
 {
-    "name": "",
-    "short_name": "",
+    "name": "Princeton Prosody Archive",
+    "short_name": "PPA",
     "icons": [
         {
             "src": "/static/android-chrome-192x192.png",
