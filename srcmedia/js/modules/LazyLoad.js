@@ -8,8 +8,17 @@
  * @param {HTMLElement} img
  */
 const loadImage = img => {
-    img.setAttribute('src', img.getAttribute('data-src')) // replace with real image
-    img.setAttribute('srcset', img.getAttribute('data-srcset'))
+    // NOTE: srcset must be copied *first*; otherwise Safari processes
+    // src first and then also processes srcset, loading both images.
+
+    // only copy attributes that are present, to avoid setting to "null"
+    if (img.hasAttribute('data-srcset')) {
+        img.setAttribute('srcset', img.getAttribute('data-srcset'))
+    }
+    if (img.hasAttribute('data-src')) {
+        img.setAttribute('src', img.getAttribute('data-src')) // replace with real image
+    }
+
     img.onload = () => {
         // remove the data attributes
         img.removeAttribute('data-src')
