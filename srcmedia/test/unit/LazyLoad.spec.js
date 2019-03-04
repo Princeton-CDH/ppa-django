@@ -34,6 +34,13 @@ describe('loadImage', () => {
         expect(img.hasAttribute('data-srcset')).toBe(false)
     })
 
+    it('should only copy attributes that exist', function() {
+        let img = document.querySelector('#three')
+        loadImage(img)
+        img.onload()
+        expect(img.hasAttribute('srcset')).toBe(false)
+    })
+
     it('should remove the srcset attribute if the image was an error response image', function() {
         let img = document.querySelector('#one')
         loadImage(img)
