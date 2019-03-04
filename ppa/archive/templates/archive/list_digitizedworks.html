@@ -1,13 +1,17 @@
 {% extends "base.html" %}
+{% load render_bundle from webpack_loader %}
 {% load static humanize ppa_tags %}
 
 {% block js %}
-<script src="{% static 'js/search.js' %}" type="module" defer></script>
+{% render_bundle 'search' 'js' %}
 {% endblock %}
 
 {% block head_extras %}
 <link rel="unapi-server" type="application/xml" title="unAPI"
 href="{% url 'unapi' %}" />
+<noscript>  
+    <link rel="stylesheet" type="text/css" href="{% static 'css/noscript.css' %}"/>
+</noscript>
 {% endblock %}
 
 {% block page-subtitle %}Archive · {% endblock %}
@@ -18,6 +22,7 @@ href="{% url 'unapi' %}" />
 {% endblock %}
 
 {% block content %}
+<h1 class="sr-only">Archive</h1>
 <section class="ui search basic vertical segment container">
     {% include 'archive/snippets/search_form.html' %}
     {% include 'archive/snippets/jump_top.html' with anchor='search' %}

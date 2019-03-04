@@ -1,0 +1,109 @@
+header { // used mostly as space for banner images
+    position: absolute;
+    top: $nav-height-mobile;
+    width: 100%;
+    padding-top: 50px;
+
+    @media (min-width: $computer) {
+        top: $nav-height;
+        padding-top: 45px;
+    }
+
+    .banner {
+        position: absolute;
+        z-index: -1;
+    }
+
+    &.contentpage {
+        @include notes-header($rosy-pink);
+    }
+
+    &.collections {
+        @include notes-header($seafoam-blue);
+    }
+
+    &.editorial {
+        @include notes-header($twilight);
+    }
+
+    &.homepage {
+        @include notes-header($warm-grey);
+
+        .banner {
+            opacity: 0.54; // darker banner
+        }
+
+        #scene { // parallax items
+            position: relative;
+            margin: 20px auto 0;
+            width: 300px;
+            mask-image: none;
+
+            @media (min-width: $tablet) {
+                margin: 2*$nav-height auto 0;
+            }
+
+            .layer {
+                position: absolute;
+                height: 200px;
+                left: 0;
+                top: 0;
+                right: 0;
+                margin: 0 auto;
+                user-select: none;
+                -moz-user-select: none;
+                -webkit-user-select: none;
+
+                @media (min-width: $tablet) {
+                    height: 300px;
+                }
+            }
+        }
+    }
+
+    &.error .banner {
+        width: 100%;
+        background: url('/static/img/headers/error/error-header-grey.png');
+        background-size: cover;
+        background-position: center 1rem;
+        background-repeat: no-repeat;
+        z-index: -1;
+        min-height: $banner-height;
+        opacity: 0.5;
+
+        @media (min-width: $tablet) {
+            min-height: $banner-height-m;
+            background-position: center 2rem;
+        }
+
+        @media (min-width: $computer) {
+            min-height: $banner-height-l;
+            background-size: contain;
+        }
+    }
+
+    &.error .lower {
+        width: 100%;
+        background: url('/static/img/headers/error/falling-header-grey.png');
+        background-size: 150%;
+        background-position: bottom;
+        background-repeat: no-repeat;
+        z-index: -1;
+        min-height: $banner-height;
+        opacity: 0.7;
+        top: 30vw;
+        position: relative;
+
+        @media (min-width: $tablet) {
+            min-height: $banner-height-m;
+            top: 25vw;
+            background-size: 100%;
+        }
+
+        @media (min-width: $computer) {
+            min-height: $banner-height-l;
+            background-size: contain;
+            top: 5vw;
+        }
+    }
+}

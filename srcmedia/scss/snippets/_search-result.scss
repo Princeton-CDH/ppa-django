@@ -1,0 +1,185 @@
+.results-list .item {
+
+    &:nth-child(even) {
+        background-color: $white-two;
+    }
+
+    a.detail {
+        text-decoration: none;
+        display: block;
+    }
+
+    .brief-result.container {
+        @include wide-container;
+        display: flex;
+        flex-flow: row wrap;
+        padding: 2rem 1rem;
+    }
+
+    .title.column,
+    .metadata.column {
+        width: 100%;
+        
+        @media (min-width: $tablet) {
+            width: 50%;
+        }
+    }
+    
+    .title.column {
+        display: flex;
+        flex-flow: row wrap;
+        margin-bottom: 1rem;
+
+        @media (min-width: $tablet) {
+            flex-flow: row nowrap;
+            margin-bottom: 0;
+            padding-right: 2rem;
+        }
+
+        .labels {
+            width: 100%;
+            display: block;
+            margin-bottom: 1rem;
+            flex: none;
+
+            @media (min-width: $tablet) {
+                width: 3rem;
+                margin-bottom: 0;
+            }
+
+            .result-number {
+                line-height: normal;
+                padding-top: 2px;
+            }
+        }
+
+        .labels,
+        .header {
+            font-size: 1.25rem;
+            font-family: $headerFont;
+            color: $black;
+    
+            @media (min-width: $tablet) {
+                font-size: 1.5rem;
+            }
+        }
+    
+        .sub.header {
+            font-weight: normal;
+            font-style: italic;
+            text-transform: none;
+        }
+    }
+
+    .metadata.column {
+        position: relative; // reference for the "details" link to position on
+
+        .grid {
+            margin: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-gap: 2rem;
+
+            @media (min-width: $tablet) {
+                grid-template-columns: 3fr 2fr;
+            }
+            
+            .author,
+            .publisher {
+                grid-column: 1;
+            }
+    
+            .pub-date,
+            .volume,
+            .score {
+                grid-column: 2;
+                text-align: right;
+            }
+
+            dt {
+                font-weight: bold;
+            }
+
+            dd {
+                margin: 0;
+            }
+    
+            .author dd,
+            .pub-date dd {
+                font-size: 1.2rem;
+            }
+        }
+
+        .buttons {
+            margin-top: 2rem;
+            width: 100%;
+            display: flex;
+            flex-flow: row wrap;
+
+            .button {
+                flex: none;
+                margin-bottom: 1rem;
+            }
+        }
+    }
+
+    .page-previews.container {
+        padding-left: 4rem;
+    }
+
+    .pages {
+        padding: 1rem 0;
+    }
+
+    .pages .wrapper {
+        display: flex;
+        margin-bottom: 1rem;
+    }
+
+    .total-pages {
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+
+    .item-detail {
+        color: $french-blue;
+        margin-left: auto;
+        margin-right: -0.5rem;
+
+        .chevron {
+            fill: $french-blue;
+            vertical-align: middle;
+            margin-left: -0.5rem;
+            width: 2rem;
+            height: 2rem;
+        }
+
+        @media (min-width: $computer) {
+            visibility: hidden;
+        }
+
+        @media (min-width: $largeMonitor) {
+            position: absolute;
+            right: -12rem;
+            top: calc(50% - 1rem); // middle of metadata column
+            bottom: 0;
+            margin: auto 0;
+            height: 4rem;
+
+            .chevron {
+                position: absolute;
+                left: 2.5rem;
+                top: -3rem;
+                height: 3rem;
+                width: 3rem;
+                margin: 0;
+            }
+        }
+    }
+}
+
+.results-list a.detail:hover {
+    .item-detail {
+        visibility: visible;
+    }
+}

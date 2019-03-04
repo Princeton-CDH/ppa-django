@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
+{% load render_bundle from webpack_loader %}
 {% load static humanize wagtailcore_tags %}
 
 {% block js %}
-<script src="{% static 'js/home.js' %}" type="module"></script>
+{% render_bundle 'home' 'js' %}
 {% endblock %}
 
 {% block page-context-id %}homepage{% endblock %}
@@ -29,15 +30,16 @@
 {% endblock %}
 
 {% block content %}
+<h1 class="sr-only">Princeton Prosody Archive</h1>
 <div class="hero ui vertical basic segment container">
     <div class="intro">
         {{ page.body|richtext }}
     </div>
     <a class="archive-link" href="{% url 'archive:list' %}">
-        <h3 class="ui header">
+        <span class="ui header">
             {% include 'snippets/fermata.svg' %}
             View and search the archive
-        </h3>
+        </span>
     </a>
 </div>
 <div class="asides-collections ui vertical basic segment container">
@@ -45,7 +47,7 @@
         {% for card in preview_pages %}
         <a class="aside card" href="{{ card.url }}">
             <div class="content">
-                <h3 class="header">{{ card.title }}</h3>
+                <span class="header">{{ card.title }}</span>
                 <div class="description">{{ card.specific.get_description|richtext }}</div>
             </div>
         </a>
@@ -53,13 +55,13 @@
     </div>
     {% if collection_page %}  {# page content pulled in from wagtail #}
     <div class="collections">
-        <h3 class="ui header about-header">{{ collection_page.title }}</h3>
+        <h2 class="ui header about-header">{{ collection_page.title }}</h2>
         <div class="description">{{ collection_page.body|richtext }}</div>
         <div class="ui cards">
             {% for item in collections %}
             <a class="ui card" href="{% url 'archive:list' %}?collections={{ item.pk }}">
                 <div class="content">
-                    <h3 class="header">{{ item.name }}</h3>
+                    <span class="header">{{ item.name }}</span>
                     {% with coll_stats=stats|dict_item:item.name %}
                         <div class="meta">
                             {% firstof coll_stats.count "0" as count %}

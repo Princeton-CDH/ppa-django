@@ -13,7 +13,7 @@
     margin: 1rem 0;
     width: @width;
     height: @height;
-    transition: all 0.2s ease;
+    transition: box-shadow 0.2s ease;
     overflow: hidden;
 
     @media (min-width: @tabletBreakpoint) {
@@ -48,7 +48,7 @@
         text-align: left;
 
         @media (min-width: @tabletBreakpoint) {
-            font-size: 1.25rem;
+            font-size: 1.2rem;
         }
     }
 
@@ -111,25 +111,27 @@
             text-align: left;
         }
 
-        .description p {
+        .description {
             line-height: 1.2;
-            font-size: 1.2rem;
+            font-size: 1.25rem;
         }
     }
 
     &.profile {
         height: @profileHeight;
         width: @profileWidth;
-        padding: @profilePadding;
-        margin: 0 0 3rem;
+        padding: 0;
+        margin: 0;
+        background-image: @profilePlaceholder;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 25%;
 
-        .header,
-        .description {
-            text-align: left;
-        }
-
-        .header {
-            font-size: 1.5rem;
+        &:hover {
+            background-image: @profilePlaceholder;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: 25%;
         }
 
         @media (min-width: @tabletBreakpoint) {
@@ -160,6 +162,7 @@ a.ui.card,
 
     &.post {
         box-shadow: @postLinkBoxShadow;
+        -webkit-tap-highlight-color: rgba(0,0,0,0); // remove gray highlight
 
         &:hover {
             box-shadow: @postLinkHoverBoxShadow;

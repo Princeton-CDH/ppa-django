@@ -1,0 +1,19 @@
+/* styles to be loaded when javascript is disabled */
+
+/* hide lazy-loaded images */
+img[data-src] {
+    display: none
+}
+
+/* adjust display to make search form usable with no javascript */
+.advanced {
+    display: block;
+}
+.sort .dropdown, .clear-selection, .show-advanced, #histogram {
+    display: none;
+}
+
+.chevron {
+    max-width: 2rem;
+    max-height: 2rem;
+}

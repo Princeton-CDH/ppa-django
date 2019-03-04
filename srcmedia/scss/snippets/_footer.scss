@@ -1,0 +1,120 @@
+#footer {
+    padding: 1rem 0;
+    margin: 0;
+    width: 100%;
+    flex: none; // needed for chrome to get correct height
+    flex-direction: column;
+    
+    .container {
+        @media (min-width: $computer) {
+            width: 960px; // slightly larger than default container
+        }
+    }
+    
+    a {
+        color: $white-two;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    // primary nav links
+    nav.menu {
+        margin-bottom: 1rem;
+        justify-content: center;
+        flex-direction: column;
+
+        @media (min-width: 420px) {
+            flex-direction: row;
+            margin-bottom: 0;
+        }
+
+        .item {
+            padding: .5rem;
+            justify-content: center;
+        }
+    }
+
+    // secondary links, e.g. "contact us"
+    .link.list {
+        display: flex;
+        flex-flow: column nowrap;
+        justify-content: space-evenly;
+
+        @media (min-width: $tablet) {
+            flex-flow: row wrap;
+            justify-content: center;
+
+            a {
+                padding-left: 2rem;
+		
+		&:first-child {
+			padding-left: 0;
+		}
+            }
+        }
+
+        @media (min-width: $computer) {
+            flex-flow: row nowrap;
+            justify-content: space-evenly;
+            padding-bottom: 2rem;
+        }
+    }
+
+    // PPA logo
+    .ppa-logo {
+        display: none;
+        height: 200px;
+        margin: auto;
+
+        @media (min-width: $computer) {
+            display: block;
+        }
+    }
+
+    // CDH and PUL logos
+    .list:not(.link) {
+        display: flex;
+        justify-content: center;
+        margin: 1rem 0;
+
+        @media (min-width: $computer) {
+            margin: 0;
+            justify-content: space-between;
+        }
+    }
+
+    // social links
+    section.social {
+        text-align: center;
+        margin-top: 1rem;
+
+        @media (min-width: $tablet) {
+            text-align: right;
+        }
+        
+        img {
+            width: 2rem;
+            height: 2rem;
+        }
+    }
+
+    // copyright, a11y info, version, etc.
+    .contact.list {
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        padding-bottom: 0;
+
+        @media only screen and (min-width: 768px) {
+            flex-direction: row;
+            justify-content: flex-start;
+            padding: 1rem;
+        }
+    }
+
+    #sw_version {
+        @media only screen and (min-width: 768px) {
+            margin-left: auto;
+        }
+    }
+}

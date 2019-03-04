@@ -1,0 +1,16 @@
+* {
+    // render fonts to match the spec
+    @include font-smooth;
+}
+
+body,
+.pusher {
+    -webkit-overflow-scrolling: touch;
+}
+
+.fermata {
+    fill: $french-blue;
+    height: 1.5rem;
+    vertical-align: middle;
+    padding-right: .5rem;
+}

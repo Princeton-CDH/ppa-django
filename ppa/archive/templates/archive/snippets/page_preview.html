@@ -12,9 +12,16 @@ Expected context variables:
     <div class="preview">
         <a href="{% page_url item_id page.order %}"
           target=_blank>
-          <img src="{% page_image_url item_id page.order 225 %}"
-              srcset="{% page_image_url item_id page.order 450 %} 2x"
-              alt="page preview {{ forloop.counter }}"/>
+          {% page_image_url item_id page.order 225 as 1x_img %}
+          {% page_image_url item_id page.order 450 as 2x_img %}
+          {# img with data-src/srcset attributes for lazy-loading  #}
+          <img data-src="{{ 1x_img }}" data-srcset="{{ 1x_img}}, {{ 2x_img }} 2x"
+              alt="page {{ page.label }}"/>
+          <noscript>
+            {# noscript image for fallback when javascript is disabled #}
+            <img src="{{ 1x_img }}" srcset="{{ 1x_img}}, {{ 2x_img }} 2x"
+              alt="page {{ page.label }}"/>
+          </noscript>
         </a>
     </div>
     {% if page.title %}<a>p. {{ page.title }}</a>{% endif %}
