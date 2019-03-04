@@ -6,13 +6,14 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>ppa.archive.models &#8212; Princeton Prosody Archive 3.0.0 documentation</title>
+    <title>ppa.archive.models &#8212; Princeton Prosody Archive 3.1.0 documentation</title>
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
    
@@ -27,6 +28,8 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <h1>Source code for ppa.archive.models</h1><div class="highlight"><pre>
@@ -41,6 +44,7 @@
 <span class="kn">from</span> <span class="nn">django.db</span> <span class="k">import</span> <span class="n">models</span>
 <span class="kn">from</span> <span class="nn">django.urls</span> <span class="k">import</span> <span class="n">reverse</span>
 <span class="kn">from</span> <span class="nn">eulxml.xmlmap</span> <span class="k">import</span> <span class="n">load_xmlobject_from_file</span>
+<span class="kn">from</span> <span class="nn">flags</span> <span class="k">import</span> <span class="n">Flags</span>
 <span class="kn">from</span> <span class="nn">pairtree</span> <span class="k">import</span> <span class="n">pairtree_path</span><span class="p">,</span> <span class="n">pairtree_client</span><span class="p">,</span> <span class="n">storage_exceptions</span>
 <span class="kn">import</span> <span class="nn">requests</span>
 <span class="kn">from</span> <span class="nn">wagtail.core.fields</span> <span class="k">import</span> <span class="n">RichTextField</span>
@@ -153,6 +157,63 @@
         <span class="k">return</span> <span class="n">stats</span></div></div>
 
 
+<div class="viewcode-block" id="ProtectedWorkFieldFlags"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.ProtectedWorkFieldFlags">[docs]</a><span class="k">class</span> <span class="nc">ProtectedWorkFieldFlags</span><span class="p">(</span><span class="n">Flags</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;:class:`flags.Flags` instance to indicate which :class:`DigitizedWork`</span>
+<span class="sd">    fields should be protected if edited in the admin.&#39;&#39;&#39;</span>
+    <span class="c1">#: title</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="c1">#: subtitle</span>
+    <span class="n">subtitle</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="c1">#: sort title</span>
+    <span class="n">sort_title</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="c1">#: enumcron</span>
+    <span class="n">enumcron</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="c1">#: author</span>
+    <span class="n">author</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="c1">#: place of publication</span>
+    <span class="n">pub_place</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="c1">#: publisher</span>
+    <span class="n">publisher</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="c1">#: publication date</span>
+    <span class="n">pub_date</span> <span class="o">=</span> <span class="p">()</span>
+
+<div class="viewcode-block" id="ProtectedWorkFieldFlags.deconstruct"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.ProtectedWorkFieldFlags.deconstruct">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">deconstruct</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Give Django information needed to make</span>
+<span class="sd">        :class:`ProtectedWorkFieldFlags.no_flags` default in migration.&#39;&#39;&#39;</span>
+        <span class="c1"># (import path, [args], kwargs)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;ppa.archive.models.ProtectedWorkFieldFlags&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;no_flags&#39;</span><span class="p">],</span> <span class="p">{})</span></div>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">to_simple_str</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="ProtectedWorkField"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.ProtectedWorkField">[docs]</a><span class="k">class</span> <span class="nc">ProtectedWorkField</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Field</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;PositiveSmallIntegerField subclass that returns a</span>
+<span class="sd">    :class:`ProtectedWorkFieldFlags` object and stores as integer.&#39;&#39;&#39;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;A field that stores an instance of :class:`ProtectedWorkFieldFlags` &#39;</span>
+                   <span class="s1">&#39;as an integer.&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Make the field unnullable and not allowed to be blank.&#39;&#39;&#39;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">verbose_name</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ProtectedWorkField.from_db_value"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.ProtectedWorkField.from_db_value">[docs]</a>    <span class="k">def</span> <span class="nf">from_db_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">expression</span><span class="p">,</span> <span class="n">connection</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Always return an instance of :class:`ProtectedWorkFieldFlags`&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">ProtectedWorkFieldFlags</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">get_internal_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;PositiveSmallIntegerField&#39;</span>
+
+<div class="viewcode-block" id="ProtectedWorkField.get_prep_value"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.ProtectedWorkField.get_prep_value">[docs]</a>    <span class="k">def</span> <span class="nf">get_prep_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ProtectedWorkField.to_python"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.ProtectedWorkField.to_python">[docs]</a>    <span class="k">def</span> <span class="nf">to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Always return an instance of :class:`ProtectedWorkFieldFlags`&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">ProtectedWorkFieldFlags</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div></div>
+
+
 <div class="viewcode-block" id="DigitizedWork"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.DigitizedWork">[docs]</a><span class="k">class</span> <span class="nc">DigitizedWork</span><span class="p">(</span><span class="n">TrackChangesModel</span><span class="p">,</span> <span class="n">Indexable</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Record to manage digitized works included in PPA and store their basic</span>
@@ -205,7 +266,7 @@
     <span class="n">pub_place</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="s1">&#39;Place of Publication&#39;</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span>
                                  <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="c1">#: publisher</span>
-    <span class="n">publisher</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">publisher</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="c1"># Needs to be integer to allow aggregating max/min, filtering by date</span>
     <span class="n">pub_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">PositiveIntegerField</span><span class="p">(</span><span class="s1">&#39;Publication Date&#39;</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="c1">#: number of pages in the work</span>
@@ -216,6 +277,15 @@
     <span class="c1">#: internal team notes, not displayed on the public facing site</span>
     <span class="n">notes</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
         <span class="n">help_text</span><span class="o">=</span><span class="s1">&#39;Internal curation notes (not displayed on public site)&#39;</span><span class="p">)</span>
+    <span class="c1">#: :class:`ProtectedWorkField` instance to indicate metadata fields</span>
+    <span class="c1">#: that should be preserved from bulk updates because they have been</span>
+    <span class="c1">#: modified in Django admin.</span>
+    <span class="n">protected_fields</span> <span class="o">=</span> <span class="n">ProtectedWorkField</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">ProtectedWorkFieldFlags</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s1">&#39;Fields protected from HathiTrust bulk &#39;</span>
+                  <span class="s1">&#39;update because they have been manually edited in the &#39;</span>
+                  <span class="s1">&#39;Django admin.&#39;</span>
+    <span class="p">)</span>
     <span class="c1">#: collections that this work is part of</span>
     <span class="n">collections</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">Collection</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="c1">#: date added to the archive</span>
@@ -260,7 +330,6 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span></div>
     <span class="n">display_title</span><span class="o">.</span><span class="n">short_description</span> <span class="o">=</span> <span class="s1">&#39;title&#39;</span>
     <span class="n">display_title</span><span class="o">.</span><span class="n">admin_order_field</span> <span class="o">=</span> <span class="s1">&#39;sort_title&#39;</span>
-    <span class="n">display_title</span><span class="o">.</span><span class="n">allow_tags</span> <span class="o">=</span> <span class="kc">True</span>
 
 <div class="viewcode-block" id="DigitizedWork.is_public"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.DigitizedWork.is_public">[docs]</a>    <span class="k">def</span> <span class="nf">is_public</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;admin display field indicating if record is public or suppressed&#39;&#39;&#39;</span>
@@ -305,6 +374,38 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_changed</span><span class="p">(</span><span class="s1">&#39;source_id&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">HATHI</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;Changing source ID for HathiTrust records is not supported&#39;</span><span class="p">)</span></div>
 
+<div class="viewcode-block" id="DigitizedWork.compare_protected_fields"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.DigitizedWork.compare_protected_fields">[docs]</a>    <span class="k">def</span> <span class="nf">compare_protected_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_obj</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Compare protected fields in a</span>
+<span class="sd">        :class:`ppa.archive.models.DigitizedWork` instance and return those</span>
+<span class="sd">        that are changed.</span>
+
+<span class="sd">        :param object db_obj: Database instance of a</span>
+<span class="sd">            :class:`~ppa.archive.models.DigitizedWork`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">changed_fields</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># if a field has changed, append to changed fields</span>
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">ProtectedWorkFieldFlags</span><span class="o">.</span><span class="n">all_flags</span><span class="p">:</span>
+            <span class="c1"># field is in format of ProtectedWorkFieldFlags.title</span>
+            <span class="n">field_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
+            <span class="c1"># if obj has a different value for a protected field</span>
+            <span class="c1"># than its db counterpart</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">db_obj</span><span class="p">,</span> <span class="n">field_name</span><span class="p">):</span>
+                <span class="c1"># append as a now protected field</span>
+                <span class="n">changed_fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">field_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">changed_fields</span></div>
+
+<div class="viewcode-block" id="DigitizedWork.populate_fields"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.DigitizedWork.populate_fields">[docs]</a>    <span class="k">def</span> <span class="nf">populate_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_data</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Conditionally update fields as protected by flags using Hathi</span>
+<span class="sd">        bibdata information.</span>
+
+<span class="sd">        :param dict field_data: A dictionary of fields updated from a</span>
+<span class="sd">            :class:`ppa.archive.hathi.HathiBibliographicRecord` instance.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">protected_fields</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">field</span><span class="p">)</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">protected_fields</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">field_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">protected_fields</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="DigitizedWork.populate_from_bibdata"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.DigitizedWork.populate_from_bibdata">[docs]</a>    <span class="k">def</span> <span class="nf">populate_from_bibdata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bibdata</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Update record fields based on Hathi bibdata information.</span>
 <span class="sd">        Full record is required in order to set all fields</span>
@@ -313,14 +414,16 @@
 <span class="sd">            as instance of :class:`ppa.archive.hathi.HathiBibliographicRecord`</span>
 
 <span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># create dictionary to store bibliographic information</span>
+        <span class="n">field_data</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="c1"># store hathi record id</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">record_id</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">record_id</span>
+        <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;record_id&#39;</span><span class="p">]</span><span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">record_id</span>
 
         <span class="c1"># set fields from marc if available, since it has more details</span>
         <span class="k">if</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">marcxml</span><span class="p">:</span>
             <span class="c1"># set title and subtitle from marc if possible</span>
             <span class="c1"># - clean title: strip trailing space &amp; slash and initial bracket</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">marcxml</span><span class="p">[</span><span class="s1">&#39;245&#39;</span><span class="p">][</span><span class="s1">&#39;a&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39; /&#39;</span><span class="p">)</span> \
+            <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">marcxml</span><span class="p">[</span><span class="s1">&#39;245&#39;</span><span class="p">][</span><span class="s1">&#39;a&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39; /&#39;</span><span class="p">)</span> \
                 <span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;[&#39;</span><span class="p">)</span>
 
             <span class="c1"># according to PUL CAMS,</span>
@@ -340,12 +443,10 @@
 
             <span class="c1"># if preceding_character == &#39;:&#39;:</span>
             <span class="c1">#     self.subtitle = bibdata.marcxml[&#39;245&#39;][&#39;b&#39;] or &#39;&#39;</span>
-
             <span class="c1"># NOTE: skipping preceding character check for now</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">subtitle</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">marcxml</span><span class="p">[</span><span class="s1">&#39;245&#39;</span><span class="p">][</span><span class="s1">&#39;b&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span>
-            <span class="c1"># strip trailing space &amp; slash from subtitle</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">subtitle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subtitle</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39; /&#39;</span><span class="p">)</span>
-
+            <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;subtitle&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">marcxml</span><span class="p">[</span><span class="s1">&#39;245&#39;</span><span class="p">][</span><span class="s1">&#39;b&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span>
+                <span class="c1"># strip trailing space &amp; slash from subtitle</span>
+            <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;subtitle&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;subtitle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39; /&#39;</span><span class="p">)</span>
             <span class="c1"># indicator 2 provides the number of characters to be</span>
             <span class="c1"># skipped when sorting (could be 0)</span>
             <span class="k">try</span><span class="p">:</span>
@@ -361,39 +462,41 @@
             <span class="c1"># definite article.</span>
             <span class="c1"># Also strip punctuation, since MARC only includes it in</span>
             <span class="c1"># non-sort count when there is a definite article.</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">sort_title</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">marcxml</span><span class="o">.</span><span class="n">title</span><span class="p">()[</span><span class="n">non_sort</span><span class="p">:]</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39; &quot;[&#39;</span><span class="p">)</span>
-
-            <span class="bp">self</span><span class="o">.</span><span class="n">author</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">marcxml</span><span class="o">.</span><span class="n">author</span><span class="p">()</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span>
+            <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;sort_title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">marcxml</span><span class="o">.</span><span class="n">title</span><span class="p">()[</span><span class="n">non_sort</span><span class="p">:]</span>\
+                    <span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39; &quot;[&#39;</span><span class="p">)</span>
+            <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;author&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">marcxml</span><span class="o">.</span><span class="n">author</span><span class="p">()</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span>
             <span class="c1"># remove a note present on some records and strip whitespace</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">author</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;[from old catalog]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;author&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;author&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;[from old catalog]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
             <span class="c1"># removing trailing period, except when it is part of an</span>
             <span class="c1"># initial or known abbreviation (i.e, Esq.)</span>
             <span class="c1"># Look for single initial, but support initials with no spaces</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> \
-              <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;( ([A-Z]\.)*[A-Z]| Esq)\.$&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">author</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;author&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> \
+            <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;( ([A-Z]\.)*[A-Z]| Esq)\.$&#39;</span><span class="p">,</span> <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;author&#39;</span><span class="p">]):</span>
+                <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;author&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;author&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
 
             <span class="c1"># field 260 includes publication information</span>
             <span class="k">if</span> <span class="s1">&#39;260&#39;</span> <span class="ow">in</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">marcxml</span><span class="p">:</span>
                 <span class="c1"># strip trailing punctuation from publisher and pub place</span>
-
                 <span class="c1"># subfield $a is place of publication</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">pub_place</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">marcxml</span><span class="p">[</span><span class="s1">&#39;260&#39;</span><span class="p">][</span><span class="s1">&#39;a&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">pub_place</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pub_place</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;;:,&#39;</span><span class="p">)</span>
+                <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;pub_place&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">marcxml</span><span class="p">[</span><span class="s1">&#39;260&#39;</span><span class="p">][</span><span class="s1">&#39;a&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span>
+                <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;pub_place&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;pub_place&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;;:,&#39;</span><span class="p">)</span>
                 <span class="c1"># if place is marked as unknown (&quot;sine loco&quot;), leave empty</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pub_place</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;[s.l.]&#39;</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">pub_place</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-
+                <span class="k">if</span> <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;pub_place&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;[s.l.]&#39;</span><span class="p">:</span>
+                    <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;pub_place&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
                 <span class="c1"># subfield $b is name of publisher</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">publisher</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">marcxml</span><span class="p">[</span><span class="s1">&#39;260&#39;</span><span class="p">][</span><span class="s1">&#39;b&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">publisher</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">publisher</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;;:,&#39;</span><span class="p">)</span>
+                <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;publisher&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">marcxml</span><span class="p">[</span><span class="s1">&#39;260&#39;</span><span class="p">][</span><span class="s1">&#39;b&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span>
+                <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;publisher&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;publisher&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;;:,&#39;</span><span class="p">)</span>
                 <span class="c1"># if publisher is marked as unknown (&quot;sine nomine&quot;), leave empty</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">publisher</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;[s.n.]&#39;</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">publisher</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                <span class="k">if</span> <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;publisher&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;[s.n.]&#39;</span><span class="p">:</span>
+                    <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;publisher&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
 
-            <span class="c1"># remove printed by statement before publisher name</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">publisher</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">printed_by_re</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">publisher</span><span class="p">,</span>
-                <span class="n">flags</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+                <span class="c1"># remove printed by statement before publisher name</span>
+                <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;publisher&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">printed_by_re</span><span class="p">,</span>
+                    <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                    <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;publisher&#39;</span><span class="p">],</span>
+                    <span class="n">flags</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span>
+                <span class="p">)</span>
 
             <span class="c1"># maybe: consider getting volume &amp; series directly from</span>
             <span class="c1"># marc rather than relying on hathi enumcron ()</span>
@@ -401,28 +504,33 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># fallback behavior, if marc is not availiable</span>
             <span class="c1"># use dublin core title</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">title</span>
+            <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">title</span>
             <span class="c1"># could guess at non-sort, but hopefully unnecessary</span>
 
         <span class="c1"># NOTE: might also want to store sort title</span>
         <span class="c1"># pub date returned in api JSON is list; use first for now (if available)</span>
         <span class="k">if</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">pub_dates</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">pub_date</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">pub_dates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;pub_date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">pub_dates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">copy_details</span> <span class="o">=</span> <span class="n">bibdata</span><span class="o">.</span><span class="n">copy_details</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_id</span><span class="p">)</span>
         <span class="c1"># hathi version/volume information for this specific copy of a work</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">enumcron</span> <span class="o">=</span> <span class="n">copy_details</span><span class="p">[</span><span class="s1">&#39;enumcron&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;enumcron&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy_details</span><span class="p">[</span><span class="s1">&#39;enumcron&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span>
         <span class="c1"># hathi source url can currently be inferred from htid, but is</span>
         <span class="c1"># included in the bibdata in case it changes - so let&#39;s just store it</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">source_url</span> <span class="o">=</span> <span class="n">copy_details</span><span class="p">[</span><span class="s1">&#39;itemURL&#39;</span><span class="p">]</span>
+        <span class="n">field_data</span><span class="p">[</span><span class="s1">&#39;source_url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy_details</span><span class="p">[</span><span class="s1">&#39;itemURL&#39;</span><span class="p">]</span>
 
         <span class="c1"># remove brackets around inferred publishers, place of publication</span>
         <span class="c1"># *only* if they wrap the whole text</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">publisher</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^\[(.*)\]$&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\1&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">publisher</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pub_place</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^\[(.*)\]$&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\1&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pub_place</span><span class="p">)</span></div>
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;publisher&#39;</span><span class="p">,</span> <span class="s1">&#39;pub_place&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">field_data</span><span class="p">:</span>
+                <span class="n">field_data</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> \
+                    <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^\[(.*)\]$&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\1&#39;</span><span class="p">,</span> <span class="n">field_data</span><span class="p">[</span><span class="n">field</span><span class="p">])</span>
 
         <span class="c1"># should also consider storing:</span>
         <span class="c1"># - last update, rights code / rights string, item url</span>
         <span class="c1"># (maybe solr only?)</span>
+
+        <span class="c1"># conditionally update fields that are protected (or not)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">populate_fields</span><span class="p">(</span><span class="n">field_data</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="DigitizedWork.handle_collection_save"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.models.DigitizedWork.handle_collection_save">[docs]</a>    <span class="k">def</span> <span class="nf">handle_collection_save</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;signal handler for collection save; reindex associated digitized works&#39;&#39;&#39;</span>
@@ -545,7 +653,7 @@
                 <span class="o">.</span><span class="n">delete_object</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hathi_pairtree_id</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">storage_exceptions</span><span class="o">.</span><span class="n">ObjectNotFoundException</span><span class="p">:</span>
             <span class="c1"># data is already gone; warn, but not an error</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Pairtree deletion failed; object not found </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Pairtree deletion failed; object not found </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">source_id</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_hathi_content_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ext</span><span class="p">,</span> <span class="n">ptree_client</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -584,7 +692,7 @@
                                              <span class="n">MinimalMETS</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">storage_exceptions</span><span class="o">.</span><span class="n">ObjectNotFoundException</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Pairtree data for </span><span class="si">%s</span><span class="s1"> not found but status is </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
-                         <span class="bp">self</span><span class="o">.</span><span class="n">source_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gpet_status_display</span><span class="p">())</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">source_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_status_display</span><span class="p">())</span>
             <span class="k">return</span>
 
         <span class="c1"># read zipfile contents in place, without unzipping</span>
@@ -630,6 +738,7 @@
 </pre></div>
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -655,7 +764,7 @@
     
 
 <p>
-<a href="https://travis-ci.org/Princeton-CDH/ppa-django">
+<a class="badge" href="https://travis-ci.org/Princeton-CDH/ppa-django">
     <img
         alt="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
         src="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
@@ -669,7 +778,7 @@
     
 
 <p>
-<a href="https://codecov.io/github/Princeton-CDH/ppa-django">
+<a class="badge" href="https://codecov.io/github/Princeton-CDH/ppa-django">
     <img
     alt="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
     src="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
@@ -712,8 +821,8 @@
       &copy;2018, CDH @ Princeton University.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
 

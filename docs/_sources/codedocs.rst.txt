@@ -9,6 +9,12 @@ Archive
 .. automodule:: ppa.archive
     :members:
 
+Admin
+^^^^^
+
+.. automodule:: ppa.archive.admin
+    :members:
+
 Models
 ^^^^^^
 .. automodule:: ppa.archive.models

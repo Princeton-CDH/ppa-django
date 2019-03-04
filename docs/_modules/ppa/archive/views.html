@@ -6,13 +6,14 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>ppa.archive.views &#8212; Princeton Prosody Archive 3.0.0 documentation</title>
+    <title>ppa.archive.views &#8212; Princeton Prosody Archive 3.1.0 documentation</title>
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
    
@@ -27,6 +28,8 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <h1>Source code for ppa.archive.views</h1><div class="highlight"><pre>
@@ -42,7 +45,7 @@
 <span class="kn">from</span> <span class="nn">django.utils.timezone</span> <span class="k">import</span> <span class="n">now</span>
 <span class="kn">from</span> <span class="nn">django.urls</span> <span class="k">import</span> <span class="n">reverse</span>
 <span class="kn">from</span> <span class="nn">django.views.generic</span> <span class="k">import</span> <span class="n">ListView</span><span class="p">,</span> <span class="n">DetailView</span>
-<span class="kn">from</span> <span class="nn">django.views.generic.base</span> <span class="k">import</span> <span class="n">RedirectView</span>
+<span class="kn">from</span> <span class="nn">django.views.generic.base</span> <span class="k">import</span> <span class="n">RedirectView</span><span class="p">,</span> <span class="n">TemplateView</span>
 <span class="kn">from</span> <span class="nn">django.views.generic.edit</span> <span class="k">import</span> <span class="n">FormView</span>
 <span class="kn">from</span> <span class="nn">SolrClient.exceptions</span> <span class="k">import</span> <span class="n">SolrError</span>
 
@@ -50,6 +53,7 @@
 <span class="kn">from</span> <span class="nn">ppa.archive.models</span> <span class="k">import</span> <span class="n">DigitizedWork</span><span class="p">,</span> <span class="n">NO_COLLECTION_LABEL</span>
 <span class="kn">from</span> <span class="nn">ppa.archive.solr</span> <span class="k">import</span> <span class="n">get_solr_connection</span><span class="p">,</span> <span class="n">PagedSolrQuery</span>
 <span class="kn">from</span> <span class="nn">ppa.common.views</span> <span class="k">import</span> <span class="n">VaryOnHeadersMixin</span>
+
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -62,9 +66,18 @@
     <span class="n">form_class</span> <span class="o">=</span> <span class="n">SearchForm</span>
     <span class="n">paginate_by</span> <span class="o">=</span> <span class="mi">50</span>
     <span class="n">vary_headers</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;X-Requested-With&#39;</span><span class="p">]</span>
+    <span class="c1">#: title for metadata / preview</span>
+    <span class="n">meta_title</span> <span class="o">=</span> <span class="s1">&#39;Princeton Prosody Archive&#39;</span>
+    <span class="c1">#: page description for metadata/preview</span>
+    <span class="n">meta_description</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;The Princeton Prosody Archive is a full-text</span>
+<span class="s1">    searchable database of thousands of historical documents about the</span>
+<span class="s1">    study of language and the study of poetry.&#39;&#39;&#39;</span>
 
     <span class="c1"># keyword query; assume no search terms unless set</span>
     <span class="n">query</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># search title query field syntax</span>
+    <span class="n">search_title_query</span> <span class="o">=</span> <span class="s1">&#39;{!type=edismax qf=$search_title_qf pf=$search_title_pf v=$title_query}&#39;</span>
 
 <div class="viewcode-block" id="DigitizedWorkListView.get_template_names"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.DigitizedWorkListView.get_template_names">[docs]</a>    <span class="k">def</span> <span class="nf">get_template_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># when queried via ajax, return partial html for just the results section</span>
@@ -119,7 +132,7 @@
             <span class="k">if</span> <span class="n">collections</span><span class="p">:</span>
                 <span class="c1"># if *all* collections are selected, no need to filter</span>
                 <span class="c1"># (will return everything either way; keep the query simpler)</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">collections</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">searchform_defaults</span><span class="p">[</span><span class="s1">&#39;collections&#39;</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">collections</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;collections&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">choices</span><span class="p">):</span>
                     <span class="n">work_q</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;collections_exact:(</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> \
                         <span class="p">(</span><span class="s1">&#39; OR &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;&quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="n">coll</span> <span class="k">for</span> <span class="n">coll</span> <span class="ow">in</span> <span class="n">collections</span><span class="p">])))</span>
 
@@ -130,12 +143,16 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">work_q</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;item_type:work AND -collections_exact:[* TO *]&#39;</span><span class="p">)</span>
 
-            <span class="c1"># filter books by title or author if there is a query</span>
-            <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;author&#39;</span><span class="p">]:</span>
-                <span class="k">if</span> <span class="n">search_opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
-                    <span class="c1"># filter by title/author keyword or phrase</span>
-                    <span class="n">work_q</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">:(</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> \
-                                  <span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">search_opts</span><span class="p">[</span><span class="n">field</span><span class="p">]))</span>
+            <span class="c1"># filter books by title or author if there is are search terms</span>
+            <span class="n">title_query</span> <span class="o">=</span> <span class="n">search_opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">title_query</span><span class="p">:</span>
+                <span class="c1"># special syntax to use query field configured in solr conf</span>
+                <span class="c1"># to search title and subtitle, with boosting</span>
+                <span class="n">work_q</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">search_title_query</span><span class="p">)</span>
+
+            <span class="n">author_query</span> <span class="o">=</span> <span class="n">search_opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;author&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">author_query</span><span class="p">:</span>
+                <span class="n">work_q</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;author:(</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="n">author_query</span><span class="p">)</span>
 
         <span class="n">range_opts</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;facet.range&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">form</span><span class="o">.</span><span class="n">range_facets</span>
@@ -236,6 +253,7 @@
             <span class="s1">&#39;expand.rows&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>   <span class="c1"># number of items in the collapsed group, i.e pages to display</span>
             <span class="c1"># explicitly query pages on text content (join q seems to skip qf)</span>
             <span class="s1">&#39;keyword_query&#39;</span><span class="p">:</span> <span class="s1">&#39;content:</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">keyword_query</span><span class="p">,</span>
+            <span class="s1">&#39;title_query&#39;</span><span class="p">:</span> <span class="n">title_query</span><span class="p">,</span>
             <span class="s1">&#39;work_query&#39;</span><span class="p">:</span> <span class="n">work_query</span>
         <span class="p">}</span>
 
@@ -329,7 +347,9 @@
             <span class="s1">&#39;page_highlights&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_page_highlights</span><span class="p">(</span><span class="n">page_groups</span><span class="p">),</span>
             <span class="c1"># query for use template links to detail view with search</span>
             <span class="s1">&#39;query&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">,</span>
-            <span class="s1">&#39;NO_COLLECTION_LABEL&#39;</span><span class="p">:</span> <span class="n">NO_COLLECTION_LABEL</span>
+            <span class="s1">&#39;NO_COLLECTION_LABEL&#39;</span><span class="p">:</span> <span class="n">NO_COLLECTION_LABEL</span><span class="p">,</span>
+            <span class="s1">&#39;page_title&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_title</span><span class="p">,</span>
+            <span class="s1">&#39;page_description&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_description</span>
         <span class="p">})</span>
         <span class="k">return</span> <span class="n">context</span></div></div>
 
@@ -357,10 +377,16 @@
 
 <div class="viewcode-block" id="DigitizedWorkDetailView.get_context_data"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.DigitizedWorkDetailView.get_context_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_context_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">context</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_context_data</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
         <span class="n">digwork</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s1">&#39;object&#39;</span><span class="p">]</span>
         <span class="c1"># if suppressed, don&#39;t do any further processing</span>
         <span class="k">if</span> <span class="n">digwork</span><span class="o">.</span><span class="n">is_suppressed</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">context</span>
+
+        <span class="n">context</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+            <span class="s1">&#39;page_title&#39;</span><span class="p">:</span> <span class="n">digwork</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+            <span class="s1">&#39;page_description&#39;</span><span class="p">:</span> <span class="n">digwork</span><span class="o">.</span><span class="n">public_notes</span>
+        <span class="p">})</span>
 
         <span class="c1"># pull in the query if it exists to use</span>
         <span class="n">query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;query&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -575,9 +601,18 @@
         <span class="c1"># doesn&#39;t pass the form with error set</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">object_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_queryset</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render_to_response</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_context_data</span><span class="p">(</span><span class="n">form</span><span class="o">=</span><span class="n">form</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="OpenSearchDescriptionView"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.OpenSearchDescriptionView">[docs]</a><span class="k">class</span> <span class="nc">OpenSearchDescriptionView</span><span class="p">(</span><span class="n">TemplateView</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Basic open search description for searching the archive</span>
+<span class="sd">    via browser or other tools.&#39;&#39;&#39;</span>
+
+    <span class="n">template_name</span> <span class="o">=</span> <span class="s2">&quot;archive/opensearch_description.xml&quot;</span>
+    <span class="n">content_type</span> <span class="o">=</span> <span class="s1">&#39;application/opensearchdescription+xml&#39;</span></div>
 </pre></div>
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -603,7 +638,7 @@
     
 
 <p>
-<a href="https://travis-ci.org/Princeton-CDH/ppa-django">
+<a class="badge" href="https://travis-ci.org/Princeton-CDH/ppa-django">
     <img
         alt="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
         src="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
@@ -617,7 +652,7 @@
     
 
 <p>
-<a href="https://codecov.io/github/Princeton-CDH/ppa-django">
+<a class="badge" href="https://codecov.io/github/Princeton-CDH/ppa-django">
     <img
     alt="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
     src="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
@@ -660,8 +695,8 @@
       &copy;2018, CDH @ Princeton University.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
 
