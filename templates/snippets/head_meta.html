@@ -1,12 +1,10 @@
-{% load static fullurl %}
+{% load fullurl %}
 {% comment %}
 Add HTML metadata tags for unfurling, twitter preview, etc.
 Uses wagtail page fields if available; uses meta_page_title,
 page_description, and page_meta_image if set in context.
 {% endcomment %}
 {% firstof page.seo_title page.title page_title as meta_page_title %}
-{% static "img/logos/social.png" as default_image %}
-{% firstof page_meta_image default_image as preview_image %}
 {% firstof page.get_plaintext_description page.search_description page_description as meta_description %}
 
 {# keywords for meta not yet implemented in wagtail #}
@@ -24,8 +22,11 @@ page_description, and page_meta_image if set in context.
 <meta name="twitter:description" content="{{ meta_description }}" />
 
 {% if request %} {# full urls required for image, dependent on request in context #}
+{% with default_image="img/logos/social.png" %}
+{% firstof page_meta_image default_image as preview_image %}
 <meta property="og:image" content="{% fullstatic preview_image %}" />
 <meta name="twitter:image" content="{% fullstatic preview_image %}" />
+{% endwith %}
 <meta property="og:url" content="{{ request.build_absolute_uri }}" />
 <meta name="twitter:url" content="{{ request.build_absolute_uri }}" />
 <meta name="twitter:domain" content="{{ request.get_host }}" />
