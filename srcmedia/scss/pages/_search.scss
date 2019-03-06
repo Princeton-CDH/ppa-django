@@ -49,6 +49,7 @@
         }
     }
 
+    /* hide advanced search by default */
     .advanced {
         display: none;
     }
@@ -117,14 +118,20 @@
         }
     }
 
+    fieldset {
+        padding: 0;
+        border: none;
+    }
+
     #collections {
-        .field {
+        .inner {
             display: flex;
             flex-flow: row wrap;
         }
 
-        label[for=collections] {
+        legend {
             width: 100%;
+            margin-bottom: 1rem;
         }
 
         .button {
@@ -145,6 +152,7 @@
 
         .button.active {
             order: 1;
+            color: white;
         }
 
         .button:not(.active) {
@@ -182,11 +190,11 @@
             transition: opacity 0.2s;
         }
 
-        .button.active::after {
+        .button.active:not(.disabled)::after {
             opacity: 1;
         }
 
-        .button.active {
+        .button.active:not(.disabled) {
             padding-right: 1.25rem;
         }
     }
@@ -294,20 +302,5 @@
 
     .message {
         margin-top: 2rem;
-    }
-
-    /* adjust display to make search form usable with no javascript */
-    .no-js {
-
-        .advanced {
-            display: block;
-        }
-        .sort .dropdown, .clear-selection, .show-advanced, #histogram {
-            display: none;
-        }
-        input[type=submit] {
-            float: right;
-        }
-
     }
 }

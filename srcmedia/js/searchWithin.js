@@ -5,6 +5,7 @@ Vue.use(VueRouter)
 
 import clearable from './clearable'
 import SearchWorkForm from './components/SearchWorkForm'
+import ImageLazyLoader from './modules/LazyLoad'
 
 const router = new VueRouter({
     routes: [{ path: '*' }],
@@ -22,4 +23,8 @@ $(function(){
     vm.$mount('#search-within') // mount vue
     $('.question-popup').popup()
     $('#id_query').get().map(clearable)
+
+    const $$pagePreviews = $('img[data-src]')
+
+    new ImageLazyLoader($$pagePreviews.get()) // lazy load images
 })

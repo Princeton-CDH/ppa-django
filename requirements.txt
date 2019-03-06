@@ -7,6 +7,7 @@ django-grappelli
 # unreleased version of SolrClient with schema field-type management
 git+https://github.com/rlskoeser/SolrClient.git@9d0493b#egg=SolrClient
 pairtree
+py-flags
 pymarc
 cached_property
 django-apptemplates
@@ -19,3 +20,4 @@ wagtail>=2.3,<2.4
 bleach
 django-fullurl
 django-csp
+django-webpack-loader

@@ -20,6 +20,9 @@ window.formData = {{ search_form.as_json|safe }}
 {% block head_extras %}
     <link rel="unapi-server" type="application/xml" title="unAPI"
           href="{% url 'unapi' %}" />
+    <noscript>
+        <link rel="stylesheet" type="text/css" href="{% static 'css/noscript.css' %}"/>
+    </noscript>
 {% endblock %}
 
 {% block page-context-id %}digitized-work{% endblock %}
@@ -30,7 +33,7 @@ window.formData = {{ search_form.as_json|safe }}
 
 {% block content %}
 <section class="meta ui basic vertical segment container">
-    <h3 class="header">{{ object.title }}</h3>
+    <h1 class="header">{{ object.title }}</h1>
     <abbr class="unapi-id" title="{{ object.source_id }}"></abbr>
     <table class="metadata ui very basic table">
         <tbody>
@@ -40,24 +43,30 @@ window.formData = {{ search_form.as_json|safe }}
                 <td>{{ object.subtitle }}</td>
             </tr>
             {% endif %}
+            {% if object.pub_date %}
             <tr>
                 <th scope="row">Publication Date</th>
                 <td>{{ object.pub_date }}</td>
             </tr>
+            {% endif %}
             {% if object.author %}
             <tr>
                 <th scope="row">Author</th>
                 <td>{{ object.author }}</td>
             </tr>
             {% endif %}
+            {% if object.publisher %}
             <tr>
                 <th scope="row">Publisher</th>
                 <td>{{ object.publisher }}</td>
             </tr>
+            {% endif %}
+            {% if object.pub_place %}
             <tr>
                 <th scope="row">City</th>
                 <td>{{ object.pub_place }}</td>
             </tr>
+            {% endif %}
             {% if object.page_count %}
             <tr>
                 <th scope="row">Page count</th>

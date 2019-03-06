@@ -1,4 +1,5 @@
 import PitBar from './pitbar'
+import NavMenu from './modules/NavMenu'
 
 $(function(){
 
@@ -7,9 +8,12 @@ $(function(){
     const $mobileNav = $('#mobile-nav')
     const $menuButton = $('.toc.item')
     const $mobileDropdown = $('#mobile-nav .dropdown.item')
+    const $aboutMenu = $('.about')
+    const $aboutMenuText = $('.about > .text')
 
     /* bindings */
     let pb = new PitBar($mainNav, $mobileNav)
+    let an = new NavMenu($aboutMenu, $aboutMenuText)
 
     $mobileNav
         .sidebar('attach events', $menuButton)
@@ -24,5 +28,7 @@ $(function(){
         })
 
     $mobileDropdown.click(() => $mobileDropdown.toggleClass('active'))
+
+
 })
 

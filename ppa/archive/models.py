@@ -9,6 +9,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
+from flags import Flags
 from pairtree import pairtree_path, pairtree_client, storage_exceptions
 import requests
 from wagtail.core.fields import RichTextField
@@ -121,6 +122,63 @@ class Collection(TrackChangesModel):
         return stats
 
 
+class ProtectedWorkFieldFlags(Flags):
+    ''':class:`flags.Flags` instance to indicate which :class:`DigitizedWork`
+    fields should be protected if edited in the admin.'''
+    #: title
+    title = ()
+    #: subtitle
+    subtitle = ()
+    #: sort title
+    sort_title = ()
+    #: enumcron
+    enumcron = ()
+    #: author
+    author = ()
+    #: place of publication
+    pub_place = ()
+    #: publisher
+    publisher = ()
+    #: publication date
+    pub_date = ()
+
+    @classmethod
+    def deconstruct(cls):
+        '''Give Django information needed to make
+        :class:`ProtectedWorkFieldFlags.no_flags` default in migration.'''
+        # (import path, [args], kwargs)
+        return ('ppa.archive.models.ProtectedWorkFieldFlags', ['no_flags'], {})
+
+    def __str__(self):
+        return ', '.join(sorted(self.to_simple_str().split('|')))
+
+
+class ProtectedWorkField(models.Field):
+    '''PositiveSmallIntegerField subclass that returns a
+    :class:`ProtectedWorkFieldFlags` object and stores as integer.'''
+
+    description = ('A field that stores an instance of :class:`ProtectedWorkFieldFlags` '
+                   'as an integer.')
+
+    def __init__(self, verbose_name=None, name=None, **kwargs):
+        '''Make the field unnullable and not allowed to be blank.'''
+        super().__init__(verbose_name, name, blank=False, null=False, **kwargs)
+
+    def from_db_value(self, value, expression, connection, context):
+        '''Always return an instance of :class:`ProtectedWorkFieldFlags`'''
+        return ProtectedWorkFieldFlags(value)
+
+    def get_internal_type(self):
+        return 'PositiveSmallIntegerField'
+
+    def get_prep_value(self, value):
+        return int(value)
+
+    def to_python(self, value):
+        '''Always return an instance of :class:`ProtectedWorkFieldFlags`'''
+        return ProtectedWorkFieldFlags(value)
+
+
 class DigitizedWork(TrackChangesModel, Indexable):
     '''
     Record to manage digitized works included in PPA and store their basic
@@ -173,7 +231,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
     pub_place = models.CharField('Place of Publication', max_length=255,
                                  blank=True)
     #: publisher
-    publisher = models.TextField(max_length=255, blank=True)
+    publisher = models.TextField(blank=True)
     # Needs to be integer to allow aggregating max/min, filtering by date
     pub_date = models.PositiveIntegerField('Publication Date', null=True, blank=True)
     #: number of pages in the work
@@ -184,6 +242,15 @@ class DigitizedWork(TrackChangesModel, Indexable):
     #: internal team notes, not displayed on the public facing site
     notes = models.TextField(blank=True, default='',
         help_text='Internal curation notes (not displayed on public site)')
+    #: :class:`ProtectedWorkField` instance to indicate metadata fields
+    #: that should be preserved from bulk updates because they have been
+    #: modified in Django admin.
+    protected_fields = ProtectedWorkField(
+        default=ProtectedWorkFieldFlags,
+        help_text='Fields protected from HathiTrust bulk '
+                  'update because they have been manually edited in the '
+                  'Django admin.'
+    )
     #: collections that this work is part of
     collections = models.ManyToManyField(Collection, blank=True)
     #: date added to the archive
@@ -228,7 +295,6 @@ class DigitizedWork(TrackChangesModel, Indexable):
         return self.title
     display_title.short_description = 'title'
     display_title.admin_order_field = 'sort_title'
-    display_title.allow_tags = True
 
     def is_public(self):
         '''admin display field indicating if record is public or suppressed'''
@@ -273,6 +339,38 @@ class DigitizedWork(TrackChangesModel, Indexable):
         if self.has_changed('source_id') and self.source == self.HATHI:
             raise ValidationError('Changing source ID for HathiTrust records is not supported')
 
+    def compare_protected_fields(self, db_obj):
+        '''Compare protected fields in a
+        :class:`ppa.archive.models.DigitizedWork` instance and return those
+        that are changed.
+
+        :param object db_obj: Database instance of a
+            :class:`~ppa.archive.models.DigitizedWork`.
+        '''
+        changed_fields = []
+        # if a field has changed, append to changed fields
+        for field in ProtectedWorkFieldFlags.all_flags:
+            # field is in format of ProtectedWorkFieldFlags.title
+            field_name = str(field)
+            # if obj has a different value for a protected field
+            # than its db counterpart
+            if getattr(self, field_name) != getattr(db_obj, field_name):
+                # append as a now protected field
+                changed_fields.append(field_name)
+        return changed_fields
+
+    def populate_fields(self, field_data):
+        '''Conditionally update fields as protected by flags using Hathi
+        bibdata information.
+
+        :param dict field_data: A dictionary of fields updated from a
+            :class:`ppa.archive.hathi.HathiBibliographicRecord` instance.
+        '''
+        protected_fields = [str(field) for field in self.protected_fields]
+        for field, value in field_data.items():
+            if field not in protected_fields:
+                setattr(self, field, value)
+
     def populate_from_bibdata(self, bibdata):
         '''Update record fields based on Hathi bibdata information.
         Full record is required in order to set all fields
@@ -281,14 +379,16 @@ class DigitizedWork(TrackChangesModel, Indexable):
             as instance of :class:`ppa.archive.hathi.HathiBibliographicRecord`
 
         '''
+        # create dictionary to store bibliographic information
+        field_data = {}
         # store hathi record id
-        self.record_id = bibdata.record_id
+        field_data['record_id']= bibdata.record_id
 
         # set fields from marc if available, since it has more details
         if bibdata.marcxml:
             # set title and subtitle from marc if possible
             # - clean title: strip trailing space & slash and initial bracket
-            self.title = bibdata.marcxml['245']['a'].rstrip(' /') \
+            field_data['title'] = bibdata.marcxml['245']['a'].rstrip(' /') \
                 .lstrip('[')
 
             # according to PUL CAMS,
@@ -308,12 +408,10 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
             # if preceding_character == ':':
             #     self.subtitle = bibdata.marcxml['245']['b'] or ''
-
             # NOTE: skipping preceding character check for now
-            self.subtitle = bibdata.marcxml['245']['b'] or ''
-            # strip trailing space & slash from subtitle
-            self.subtitle = self.subtitle.rstrip(' /')
-
+            field_data['subtitle'] = bibdata.marcxml['245']['b'] or ''
+                # strip trailing space & slash from subtitle
+            field_data['subtitle'] = field_data['subtitle'].rstrip(' /')
             # indicator 2 provides the number of characters to be
             # skipped when sorting (could be 0)
             try:
@@ -329,39 +427,41 @@ class DigitizedWork(TrackChangesModel, Indexable):
             # definite article.
             # Also strip punctuation, since MARC only includes it in
             # non-sort count when there is a definite article.
-            self.sort_title = bibdata.marcxml.title()[non_sort:].strip(' "[')
-
-            self.author = bibdata.marcxml.author() or ''
+            field_data['sort_title'] = bibdata.marcxml.title()[non_sort:]\
+                    .strip(' "[')
+            field_data['author'] = bibdata.marcxml.author() or ''
             # remove a note present on some records and strip whitespace
-            self.author = self.author.replace('[from old catalog]', '').strip()
+            field_data['author'] = field_data['author'].replace('[from old catalog]', '').strip()
             # removing trailing period, except when it is part of an
             # initial or known abbreviation (i.e, Esq.)
             # Look for single initial, but support initials with no spaces
-            if self.author.endswith('.') and not \
-              re.search(r'( ([A-Z]\.)*[A-Z]| Esq)\.$', self.author):
-                self.author = self.author.rstrip('.')
+            if field_data['author'].endswith('.') and not \
+            re.search(r'( ([A-Z]\.)*[A-Z]| Esq)\.$', field_data['author']):
+                field_data['author'] = field_data['author'].rstrip('.')
 
             # field 260 includes publication information
             if '260' in bibdata.marcxml:
                 # strip trailing punctuation from publisher and pub place
-
                 # subfield $a is place of publication
-                self.pub_place = bibdata.marcxml['260']['a'] or ''
-                self.pub_place = self.pub_place.rstrip(';:,')
+                field_data['pub_place'] = bibdata.marcxml['260']['a'] or ''
+                field_data['pub_place'] = field_data['pub_place'].rstrip(';:,')
                 # if place is marked as unknown ("sine loco"), leave empty
-                if self.pub_place.lower() == '[s.l.]':
-                    self.pub_place = ''
-
+                if field_data['pub_place'].lower() == '[s.l.]':
+                    field_data['pub_place'] = ''
                 # subfield $b is name of publisher
-                self.publisher = bibdata.marcxml['260']['b'] or ''
-                self.publisher = self.publisher.rstrip(';:,')
+                field_data['publisher'] = bibdata.marcxml['260']['b'] or ''
+                field_data['publisher'] = field_data['publisher'].rstrip(';:,')
                 # if publisher is marked as unknown ("sine nomine"), leave empty
-                if self.publisher.lower() == '[s.n.]':
-                    self.publisher = ''
+                if field_data['publisher'].lower() == '[s.n.]':
+                    field_data['publisher'] = ''
 
-            # remove printed by statement before publisher name
-            self.publisher = re.sub(self.printed_by_re, '', self.publisher,
-                flags=re.IGNORECASE)
+                # remove printed by statement before publisher name
+                field_data['publisher'] = re.sub(
+                    self.printed_by_re,
+                    '',
+                    field_data['publisher'],
+                    flags=re.IGNORECASE
+                )
 
             # maybe: consider getting volume & series directly from
             # marc rather than relying on hathi enumcron ()
@@ -369,28 +469,33 @@ class DigitizedWork(TrackChangesModel, Indexable):
         else:
             # fallback behavior, if marc is not availiable
             # use dublin core title
-            self.title = bibdata.title
+            field_data['title'] = bibdata.title
             # could guess at non-sort, but hopefully unnecessary
 
         # NOTE: might also want to store sort title
         # pub date returned in api JSON is list; use first for now (if available)
         if bibdata.pub_dates:
-            self.pub_date = bibdata.pub_dates[0]
+            field_data['pub_date'] = bibdata.pub_dates[0]
         copy_details = bibdata.copy_details(self.source_id)
         # hathi version/volume information for this specific copy of a work
-        self.enumcron = copy_details['enumcron'] or ''
+        field_data['enumcron'] = copy_details['enumcron'] or ''
         # hathi source url can currently be inferred from htid, but is
         # included in the bibdata in case it changes - so let's just store it
-        self.source_url = copy_details['itemURL']
+        field_data['source_url'] = copy_details['itemURL']
 
         # remove brackets around inferred publishers, place of publication
         # *only* if they wrap the whole text
-        self.publisher = re.sub(r'^\[(.*)\]$', r'\1', self.publisher)
-        self.pub_place = re.sub(r'^\[(.*)\]$', r'\1', self.pub_place)
+        for field in ['publisher', 'pub_place']:
+            if field in field_data:
+                field_data[field] = \
+                    re.sub(r'^\[(.*)\]$', r'\1', field_data[field])
 
         # should also consider storing:
         # - last update, rights code / rights string, item url
         # (maybe solr only?)
+
+        # conditionally update fields that are protected (or not)
+        self.populate_fields(field_data)
 
     def handle_collection_save(sender, instance, **kwargs):
         '''signal handler for collection save; reindex associated digitized works'''

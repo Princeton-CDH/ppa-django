@@ -12,6 +12,8 @@ urlpatterns = [
         name='add-to-collection'
     ),
     url(r'^csv/$', views.DigitizedWorkCSV.as_view(), name='csv'),
+    url(r'^opensearch-description/$',
+        views.OpenSearchDescriptionView.as_view(), name='opensearch-description'),
     url(r'^record/(?P<record_id>\d+)/$',
         views.DigitizedWorkByRecordId.as_view(), name='record-id'),
     url(r'^(?P<source_id>.+)/$',

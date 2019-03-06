@@ -1,8 +1,5 @@
 import { fromEvent, merge } from 'rxjs'
-import 'rxjs/add/operator/pluck'
-import 'rxjs/add/operator/map'
-import 'rxjs/add/operator/distinctUntilChanged'
-import 'rxjs/add/operator/debounceTime'
+import { map, debounceTime, distinctUntilChanged } from 'rxjs/operators'
 
 
 export default class ReactiveForm {
@@ -21,15 +18,17 @@ export default class ReactiveForm {
             case 'checkbox':
             case 'radio':
                 observable = fromEvent($element, 'change') // safari doesn't use input events for these
-                return observable.pluck('target', 'checked') // returns boolean immediately
+                return observable.pipe(map(e => e.target.checked)) // returns boolean immediately
             case 'select':
-                return observable.pluck('target', 'value') // return string immediately
+                return observable.pipe(map(e => e.target.value)) // return string immediately
             case 'text':
             case 'number':
             default:
-                return observable.pluck('target', 'value') // returns string
-                    .debounceTime(500) // filter out fast repetitive events
-                    .distinctUntilChanged() // filter out non-changes
+                return observable.pipe(
+                    map(e => e.target.value), // returns string
+                    debounceTime(500), // filter out fast repetitive events
+                    distinctUntilChanged(), // filter out non-changes
+                )
         }
     }
 
@@ -46,7 +45,7 @@ export default class ReactiveForm {
         self.$inputs = self.$$element.find('input').get() // find child <input> elements
         self.$inputs.push(...self.$$element.find('select').get()) // also add any <select> elements
         self.inputStream = merge(...self.$inputs.map(ReactiveForm.fromInput)) // create and then merge an array of input observables
-        self.stateStream = self.inputStream.map(() => self.$$element.serializeArray()) // get the form state each time input state changes
+        self.stateStream = self.inputStream.pipe(map(() => self.$$element.serializeArray())) // get the form state each time input state changes
     }
 
     /**

@@ -47,13 +47,16 @@ HATHI_BASE_URL = 'https://babel.hathitrust.org/cgi'
 @register.simple_tag
 def page_image_url(item_id, order, width):
     '''Generate a page image url based on an item id, page sequence label,
-    and desired width. Currently HathiTrust specific.
+    and desired width. Currently HathiTrust specific. Uses Hathi's
+    thumbnail API by default, switching to the image API for widths greater than
+    250px.
     Example use::
 
         {% page_image_url item_id page.order 220 %}
     '''
-    return '{}/imgsrv/image?id={};seq={};width={}' \
-        .format(HATHI_BASE_URL, item_id, order, width)
+    service = 'image' if width > 250 else 'thumbnail'
+    return '%s/imgsrv/%s?id=%s;seq=%s;width=%s' % \
+        (HATHI_BASE_URL, service, item_id, order, width)
 
         
 @register.simple_tag

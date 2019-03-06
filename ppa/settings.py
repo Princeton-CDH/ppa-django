@@ -271,6 +271,9 @@ CSP_INCLUDE_NONCE_IN = ('script-src',)
 # allow local scripts to connect to source (i.e. searchLoading)
 CSP_CONNECT_SRC = ("'self'", "https://www.google-analytics.com")
 
+# load a manifest file
+CSP_MANIFEST_SRC = "'self'"
+
 ##################
 # LOCAL SETTINGS #
 ##################
@@ -299,8 +302,11 @@ if os.path.exists(f):
 WEBPACK_LOADER = {
     'DEFAULT': {
         'CACHE': not DEBUG,
-        'BUNDLE_DIR_NAME': 'static/',
+        'BUNDLE_DIR_NAME': 'bundles/', # must end with slash
         'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.json'),
+        'POLL_INTERVAL': 0.1,
+        'TIMEOUT': None,
+        'IGNORE': [r'.+\.hot-update.js', r'.+\.map']
     }
 }
 

@@ -1,9 +1,49 @@
 #contributors {
-    h1 {
+    .page-title {
         @include underline-headline($pig-pink);
     }
 
     @include content-page;
+
+    .team,
+    .board {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-row-gap: 1rem;
+        justify-items: center;
+        margin-bottom: 4rem;
+
+        @media (min-width: $tablet) {
+            grid-template-columns: 1fr 1fr 1fr;
+            justify-items: stretch;
+        }
+
+        @media (min-width: $computer) {
+            grid-column-gap: 4rem;
+        }
+
+        > h2 {
+            width: 230px; // align with photos on mobile
+            margin: auto;
+            grid-column: 1 / -1;
+            justify-self: left;
+
+            @media (min-width: $tablet) {
+                width: fit-content;
+                margin: 0;
+            }
+        }
+    }
+
+    h2 {
+        font-size: 1.4rem;
+        font-family: $pageFont;
+        padding: 0;
+    }
+
+    .board > .profile .title {
+        display: none; // don't display project roles for board members
+    }
 
     .cards {
         display: flex;
@@ -14,68 +54,5 @@
             flex-flow: row wrap;
             justify-content: space-between;
         }
-    }
-
-    .board {
-        margin-bottom: 1rem;
-
-        h2 {
-            width: 287px;
-            margin-left: auto;
-            margin-right: auto;
-            margin-top: 1rem;
-
-            @media (min-width: $tablet) {
-                width: 100%;
-                margin-left: 0;
-                margin-right: 0;
-            }
-        }
-    }
-
-    .person {
-        flex: none;
-
-        @media (min-width: $tablet) {
-            width: calc(100% / 3);
-            margin: 0;
-
-            &:last-child {
-                margin-right: auto;
-            }
-        }
-
-        .header {
-            font-style: normal;
-            font-size: 1.5rem;
-        }
-        
-        .rich-text {
-            margin: 0;
-            
-            > * {
-                margin: 0;
-                font-size: 1rem;
-            }
-        }
-    }
-
-    .person.with-title {
-        .title {
-            height: 5rem;
-            vertical-align: bottom;
-            display: table-cell;
-            padding-bottom: 1rem;
-            font-size: 1.5rem;
-            padding-right: 1rem;
-        }
-
-        .card {
-            margin-bottom: 2rem;
-        }
-    }
-
-    a.card {
-        text-decoration: none;
     }
 }
