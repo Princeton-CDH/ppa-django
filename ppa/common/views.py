@@ -17,3 +17,17 @@ class VaryOnHeadersMixin(View):
         response = super(VaryOnHeadersMixin, self).dispatch(request, *args, **kwargs)
         patch_vary_headers(response, self.vary_headers)
         return response
+
+
+class AjaxTemplateMixin(VaryOnHeadersMixin):
+    '''View mixin to return a different version of a view's template when
+    responding to an ajax request.
+    '''
+
+    ajax_template_name = None
+    vary_headers = ['X-Requested-With']
+
+    def get_template_names(self):
+        if self.request.is_ajax():
+            return self.ajax_template_name
+        return super().get_template_names()

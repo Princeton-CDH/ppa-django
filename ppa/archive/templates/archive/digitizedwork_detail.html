@@ -3,10 +3,13 @@
 {% load static semanticui humanize %}
 
 {% block js %}
+{% if object.has_fulltext %}
 <script>
 window.formData = {{ search_form.as_json|safe }}
+window.formData.target = "{{ object.get_absolute_url }}"
 </script>
 {% render_bundle 'searchWithin' 'js' %}
+{% endif %}
 {% endblock %}
 
 {% block page-subtitle %}Archive · {{ object.title }} {% endblock %}
@@ -32,7 +35,7 @@ window.formData = {{ search_form.as_json|safe }}
 {% endblock %}
 
 {% block content %}
-<section class="meta ui basic vertical segment container">
+<section class="meta ui basic vertical segment container">2
     <h1 class="header">{{ object.title }}</h1>
     <abbr class="unapi-id" title="{{ object.source_id }}"></abbr>
     <table class="metadata ui very basic table">
@@ -122,7 +125,7 @@ window.formData = {{ search_form.as_json|safe }}
     </table>
 </section>
 {# search within a volume currently only supported for hathi content #}
-{% if object.source == object.HATHI %}
+{% if object.has_fulltext %}
 <section class="ui basic vertical segment container">
     <form id="search-within" class="no-js">
         <fieldset>
@@ -135,37 +138,7 @@ window.formData = {{ search_form.as_json|safe }}
 </section>
   {# display matching pages with highlighted text if there is a search active #}
   {% if query or page_highlights %}
-    {% if not error %}
-    <div class="occurrences ui center aligned text container">
-        <p>{{ page_obj.paginator.count }} occurrence{{ page_obj.paginator.count|pluralize }}</p>
-    </div>
-    <div class="pagination ui container">
-        {% include 'archive/snippets/pagination.html' %}
-    </div>
-    {% endif %}
-    <div class="results-list ui container">
-        {% for page in solr_results %}
-          {% with highlights=page_highlights|dict_item:page.id%}
-          <div class="ui page item">
-              <div class="pages ui twelve wide column">
-                  <div class="wrapper">
-                      {% include 'archive/snippets/page_preview.html' with item_id=page.source_id  %}
-                  </div>
-              </div>
-          </div>
-          {% endwith %}
-        {% empty %}
-            <div class="ui error message container">
-                {# display error if something went wrong (bad query, etc.) #}
-                <p>{% firstof error "No matching pages." %}</p>
-            </div>
-        {% endfor %}
-    </div>
-    {% if not error %}
-    <div class="pagination ui container">
-        {% include 'archive/snippets/pagination.html' %}
-    </div>
-    {% endif %}
+    {% include 'archive/snippets/results_within_list.html' %}
   {% endif %}
 {% endif %}
 {% endblock %}

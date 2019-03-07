@@ -55,6 +55,14 @@ class TestDigitizedWork(TestCase):
         digwork = DigitizedWork(title='Elocutionary Language')
         assert digwork.display_title() == digwork.title
 
+    def test_has_fulltext(self):
+        digwork = DigitizedWork(title='Elocutionary Language')
+        # should be hathi (thus have fulltext) by default
+        assert digwork.has_fulltext
+        digwork.source = DigitizedWork.OTHER
+        # for non-hathi items, shouldn't have full text
+        assert not digwork.has_fulltext
+
     @pytest.mark.usefixtures('solr')
     def test_index(self):
         with open(self.bibdata_brief) as bibdata:

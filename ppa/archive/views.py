@@ -17,20 +17,22 @@ from SolrClient.exceptions import SolrError
 from ppa.archive.forms import SearchForm, AddToCollectionForm, SearchWithinWorkForm
 from ppa.archive.models import DigitizedWork, NO_COLLECTION_LABEL
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
-from ppa.common.views import VaryOnHeadersMixin
+from ppa.common.views import AjaxTemplateMixin
 
 
 logger = logging.getLogger(__name__)
 
 
-class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
+class DigitizedWorkListView(AjaxTemplateMixin, ListView):
     '''Search and browse digitized works.  Based on Solr index
     of works and pages.'''
 
-    template_name = 'archive/list_digitizedworks.html'
+    model = DigitizedWork
+    # FIXME should auto-determine this
+    template_name = 'archive/digitizedwork_list.html'
+    ajax_template_name = 'archive/snippets/results_list.html'
     form_class = SearchForm
     paginate_by = 50
-    vary_headers = ['X-Requested-With']
     #: title for metadata / preview
     meta_title = 'Princeton Prosody Archive'
     #: page description for metadata/preview
@@ -44,12 +46,6 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
     # search title query field syntax
     search_title_query = '{!type=edismax qf=$search_title_qf pf=$search_title_pf v=$title_query}'
 
-    def get_template_names(self):
-        # when queried via ajax, return partial html for just the results section
-        # (don't render the form or base template)
-        if self.request.is_ajax():
-            return 'archive/snippets/results_list.html'
-        return self.template_name
 
     def get_queryset(self, **kwargs):
         form_opts = self.request.GET.copy()
@@ -319,9 +315,10 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
         return context
 
 
-class DigitizedWorkDetailView(DetailView):
+class DigitizedWorkDetailView(AjaxTemplateMixin, DetailView):
     '''Display details for a single digitized work. If a work has been
     surpressed, returns a 410 Gone response.'''
+    ajax_template_name = 'archive/snippets/results_within_list.html'
     model = DigitizedWork
     slug_field = 'source_id'
     slug_url_kwarg = 'source_id'

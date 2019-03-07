@@ -308,6 +308,12 @@ class DigitizedWork(TrackChangesModel, Indexable):
     # Printed by/for (the); Printed and sold by; Printed and published by;
     # Pub./Published/Publisht at/by/for the
 
+    @property
+    def has_fulltext(self):
+        '''Checks if an item has full text (currently only items from
+        HathiTrust).'''
+        return self.source == self.HATHI
+
     def save(self, *args, **kwargs):
         # if status has changed so that object is now suppressed and this
         # is a HathiTrust item, remove pairtree data
