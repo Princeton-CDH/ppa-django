@@ -14,9 +14,11 @@
 </template>
 
 <script>
+import debounce from 'lodash/debounce'
+
 import KeywordSearch from './KeywordSearch'
 import { ajax } from '../modules/Utilities'
-import debounce from 'lodash/debounce'
+import ImageLazyLoader from '../modules/LazyLoad'
 
 export default {
     components: {
@@ -25,20 +27,30 @@ export default {
     props: {
         fields: Object, // serialized representation of form
         target: String, // URL to use for requesting results
+        sharedState: Object,
+    },
+    data() {
+        return {
+            localState: this.sharedState
+        }
+    },
+    created() {
+        this.onInput()
     },
     methods: {
         /** 
-         * Converts the form's data into an object suitable for serializing as
-         * the querystring of a URL.
+         * Serializes the form's data as a URL querystring.
          */
         serialize() {
+            return new URLSearchParams(this.dataAsObject()).toString()
+        },
+        /**
+         * Converts the form's data into an object for passing to vue-router's
+         * replace() function for updating the querystring.
+         */
+        dataAsObject() {
             let data = new FormData(this.$el)
-            let params = new URLSearchParams(data) // not a true Object
-            let output = {}
-            for(let k of params) {
-                output[k[0]] = k[1]
-            }
-            return output
+            return Object.assign(...Array.from(data).map(d => ({[d[0]]: d[1]})))
         },
         /** 
          * Replaces the URL querystring with the current version of the form's
@@ -48,10 +60,19 @@ export default {
          * Debounced to prevent repeated calls within 300ms intervals, e.g. when
          * the user is typing rapidly into a text input.
          */
-        onInput: debounce(function() {
-            this.$router.replace({ query: this.serialize() })
-            console.log('sending request to', this.target)
+        onInput: debounce(function() {            
+            this.$router.replace({ query: this.dataAsObject() })
+            fetch(`${this.target}?${this.serialize()}`, ajax)
+                .then(res => res.text())
+                .then(html => {
+                    this.localState.results = html
+                    this.rebindLazyLoad()
+                })
         }, 300),
+        rebindLazyLoad() {
+            console.log('rebinding to:', Array.from(document.querySelectorAll('img[data-src]')))
+            new ImageLazyLoader(Array.from(document.querySelectorAll('img[data-src]'))) // lazy load images
+        }
     }
 }
 </script>

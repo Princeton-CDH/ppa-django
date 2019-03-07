@@ -35,7 +35,7 @@ window.formData.target = "{{ object.get_absolute_url }}"
 {% endblock %}
 
 {% block content %}
-<section class="meta ui basic vertical segment container">2
+<section class="meta ui basic vertical segment container">
     <h1 class="header">{{ object.title }}</h1>
     <abbr class="unapi-id" title="{{ object.source_id }}"></abbr>
     <table class="metadata ui very basic table">
@@ -137,8 +137,10 @@ window.formData.target = "{{ object.get_absolute_url }}"
     {% include 'archive/snippets/jump_top.html' with anchor='digitized-work' %}
 </section>
   {# display matching pages with highlighted text if there is a search active #}
+  <div class="ajax-container">
   {% if query or page_highlights %}
     {% include 'archive/snippets/results_within_list.html' %}
   {% endif %}
+  </div>
 {% endif %}
 {% endblock %}

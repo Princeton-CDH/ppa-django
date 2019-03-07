@@ -5,22 +5,35 @@ Vue.use(VueRouter)
 
 import clearable from './clearable'
 import SearchWorkForm from './components/SearchWorkForm'
+import SearchWorkResults from './components/SearchWorkResults'
 import ImageLazyLoader from './modules/LazyLoad'
+
+let store = {
+    results: ''
+}
 
 const router = new VueRouter({
     routes: [{ path: '*' }],
     mode: 'history',
 })
 
-const vm = new Vue({ // create search instance
+const formInstance = new Vue({ // create search instance
     router, // for manipulating the querystring
     render: h => h(SearchWorkForm, {
-        props: { ...window.formData }, // load initial state from Django
+        props: { ...window.formData, sharedState: store }, // load initial state from Django
+    })
+})
+
+const resultsInstance = new Vue({
+    render: h => h(SearchWorkResults, {
+        props: { sharedState: store }
     })
 })
 
 $(function(){
-    vm.$mount('#search-within') // mount vue
+    formInstance.$mount('#search-within') // mount form
+    resultsInstance.$mount('.ajax-container') // mount results
+
     $('.question-popup').popup()
     $('#id_query').get().map(clearable)
 
