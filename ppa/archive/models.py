@@ -6,7 +6,10 @@ from zipfile import ZipFile
 
 from cached_property import cached_property
 from django.conf import settings
+from django.contrib.admin.models import LogEntry, ADDITION, CHANGE
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
@@ -670,3 +673,135 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
         # error for unknown
         raise ValueError('Unsupported format %s' % metadata_format)
+
+    @staticmethod
+    def add_from_hathi(htid, bib_api=None, update=False,
+                       get_data=False, log_msg_src=None):
+        '''Add or update a HathiTrust work in the database.
+        Retrieves bibliographic data from Hathi api, retrieves or creates
+        a :class:`DigitizedWork` record, and populates the metadata if
+        this is a new record, if the Hathi metadata has changed, or
+        if update is requested. Creates admin log entry to document
+        record creation or update.  If `get_data` is specified,
+        will retrieve structure and aggregate data from Hathi Data API
+        and add it to the local pairtree datastore.
+
+        Raises :class:`ppa.archive.hathi.HathiItemNotFound` for invalid
+        id.
+
+        Returns the new or updated  :class:`~ppa.archive.models.DigitizedWork`.
+
+        :param htid: HathiTrust record identifier
+        :param bib_api: optional :class:`~ppa.archive.hathi.HathiBibliographicAPI`
+            instance, to allow for shared sessions in scripts
+        :param update: update bibliographic metadata even if the hathitrust
+            record is not newer than the local database record (default: False)
+        :param get_data: retrieve content data from Data API; for new
+            records only (default: False)
+        :param log_msg_src: source of the change to be used included
+            in log entry messages (optional)
+        '''
+
+        # initialize new bibliographic API if none is passed in
+        if bib_api is None:
+            bib_api = HathiBibliographicAPI()
+
+        if log_msg_src is None:
+            log_msg_src = 'from HathiTrust bibliographic data'
+
+        # get bibliographic data for this record from Hathi api
+        # - needed to check if update is required for existing records,
+        #   and to populate metadata for new records
+
+        # could raise HathiItemNotFound for invalid id
+        bibdata = bib_api.record('htid', htid)
+
+        # if hathi id is valid and we have bibliographic data, create
+        # a new record
+
+        # find existing record or create a new one
+        digwork, created = DigitizedWork.objects.get_or_create(source_id=htid)
+
+        script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
+
+        # if this is new record, create log entry
+        if created:
+            # create log entry for record creation
+            LogEntry.objects.log_action(
+                user_id=script_user.id,
+                content_type_id=ContentType.objects.get_for_model(digwork).pk,
+                object_id=digwork.pk,
+                object_repr=str(digwork),
+                # change_message='Created from hathi_import script',
+                change_message='Created %s' % log_msg_src,
+                action_flag=ADDITION)
+
+        # if this is an existing record, check if updates are needed
+        source_updated = None
+        if not created and not update:
+            source_updated = bibdata.copy_last_updated(htid)
+            if digwork.updated.date() > source_updated:
+                # local copy is newer than last source modification date
+                # and update is not requested; return
+                return digwork
+
+        # populate digitized item in the database
+        digwork.populate_from_bibdata(bibdata)
+        digwork.save()
+
+        # if this was not a new record, log the update
+        if not created:
+            # create log entry for updating an existing record
+            # include details about why the update happened if possible
+            msg_detail = ''
+            if update:
+                msg_detail = ' (forced update)'
+            else:
+                msg_detail = '; source record last updated %s' % source_updated
+
+            LogEntry.objects.log_action(
+                user_id=script_user.id,
+                content_type_id=ContentType.objects.get_for_model(digwork).pk,
+                object_id=digwork.pk,
+                object_repr=str(digwork),
+                change_message='Updated %s%s' % (log_msg_src, msg_detail),
+                action_flag=CHANGE)
+
+        # get data if requested if this was a new record
+        if get_data and created:
+            digwork.get_hathi_data()
+
+        return digwork
+
+    def get_hathi_data(self):
+        '''Use Data API to fetch zipfile and mets and add them to the
+        local pairtree. Intended for use with newly added HathiTrust
+        records not imported from local pairtree data.'''
+
+        # do nothing for non-hathi records
+        if self.source != DigitizedWork.HATHI:
+            return
+
+        data_api = HathiDataAPI()
+
+        # get pairtree client object for this item, creating if necessary
+        ptree_obj = self.hathi.pairtree_object(create=True)
+        # retrieve mets xml and add to pairtree
+        mets_response = data_api.get_structure(self.source_id)
+        # use filename provided by Hathi in response headers
+        mets_filename = os.path.basename(mets_response.headers['content-disposition'])
+        # file should be under content directory named by hathi id
+        mets_filename = os.path.join(self.hathi.content_dir,
+                                     mets_filename)
+        ptree_obj.add_bytestream_by_path(mets_filename, mets_response.content)
+
+        # get zip file and add to pairtree
+        data_response = data_api.get_aggregate(self.source_id)
+        data_filename = os.path.basename(data_response.headers['content-disposition'])
+        data_filename = data_filename.replace('filename=', '')
+        data_filename = os.path.join(self.hathi.content_dir,
+                                     data_filename)
+        ptree_obj.add_bytestream_by_path(data_filename, data_response.content)
+
+        # count pages now that data is present (required for indexing)
+        self.count_pages()
