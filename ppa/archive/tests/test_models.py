@@ -126,7 +126,6 @@ class TestDigitizedWork(TestCase):
         assert digwork.title == 'Test Title'
         assert digwork.pub_place == 'London'
 
-
     def test_populate_from_bibdata(self):
         with open(self.bibdata_full) as bibdata:
             full_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
@@ -497,6 +496,52 @@ class TestDigitizedWork(TestCase):
             my_ptree_client = Mock(spec=pairtree_client.PairtreeStorageClient)
             work.hathi_metsfile_path(my_ptree_client)
             mock_ptree_obj_meth.assert_called_with(ptree_client=my_ptree_client)
+
+    @patch('ppa.archive.models.ZipFile', spec=ZipFile)
+    def test_count_pages(self, mockzipfile):
+        prefix, pt_id = ('ab', '12345:6')
+        mock_pairtree_client = Mock(spec=pairtree_client.PairtreeStorageClient)
+        digwork = DigitizedWork.objects.create(source_id='.'.join([prefix, pt_id]))
+
+        pt_obj = mock_pairtree_client.get_object.return_value
+        pt_obj.list_parts.return_value = ['12345.mets.xml', '12345.zip']
+        pt_obj.id_to_dirpath.return_value = 'ab/path/12345+6'
+        # parts = ptobj.list_parts(content_dir)
+        # __enter__ required because zipfile used as context block
+        mockzip_obj = mockzipfile.return_value.__enter__.return_value
+        page_files = ['0001.txt', '00002.txt']
+        mockzip_obj.namelist.return_value = page_files
+        # simulate reading zip file contents
+        # mockzip_obj.open.return_value.__enter__.return_value \
+            # .read.return_value.decode.return_value = 'page content'
+
+        # count the pages
+        page_count = digwork.count_pages(mock_pairtree_client)
+
+        # inspect pairtree logic
+        mock_pairtree_client.get_object.assert_any_call(pt_id, create_if_doesnt_exist=False)
+        # list parts called on encoded version of pairtree id
+        content_dir = pairtree_path.id_encode(pt_id)
+        pt_obj.list_parts.assert_any_call(content_dir)
+        pt_obj.id_to_dirpath.assert_any_call()
+
+        # inspect zipfile logic
+        mockzip_obj.namelist.assert_called_with()
+
+        zipfile_path = os.path.join(pt_obj.id_to_dirpath(), content_dir, '12345.zip')
+        mockzipfile.assert_called_with(zipfile_path)
+
+        # return total and digitized work page counts updated
+        assert page_count == 2
+        digwork = DigitizedWork.objects.get(source_id=digwork.source_id)
+        assert digwork.page_count == 2
+
+        # object not found in pairtree data
+        mock_pairtree_client.get_object.side_effect = \
+            storage_exceptions.ObjectNotFoundException
+        # should not error; should report not found
+        with pytest.raises(storage_exceptions.ObjectNotFoundException):
+            digwork.count_pages(mock_pairtree_client)
 
     @patch('ppa.archive.models.ZipFile', spec=ZipFile)
     @override_settings(HATHI_DATA='/tmp/ht_text_pd')

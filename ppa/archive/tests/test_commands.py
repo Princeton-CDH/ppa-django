@@ -216,72 +216,23 @@ class TestHathiImportCommand(TestCase):
         assert ' (forced update)' in log_entry.change_message
         assert log_entry.action_flag == CHANGE
 
-    @patch('ppa.archive.management.commands.hathi_import.ZipFile', spec=ZipFile)
-    def test_count_pages(self, mockzipfile):
-        cmd = hathi_import.Command(stdout=StringIO(), stderr=StringIO())
-        cmd.stats = defaultdict(int)
-        prefix, pt_id = ('ab', '12345:6')
-        mock_pairtree_client = Mock(spec=pairtree_client.PairtreeStorageClient)
-        cmd.hathi_pairtree = {prefix: mock_pairtree_client}
-        cmd.solr = Mock(spec=SolrClient)
-        cmd.solr_collection = 'testidx'
-        digwork = DigitizedWork.objects.create(source_id='.'.join([prefix, pt_id]))
-
-        pt_obj = mock_pairtree_client.get_object.return_value
-        pt_obj.list_parts.return_value = ['12345.mets.xml', '12345.zip']
-        pt_obj.id_to_dirpath.return_value = 'ab/path/12345+6'
-        # parts = ptobj.list_parts(content_dir)
-        # __enter__ required because zipfile used as context block
-        mockzip_obj = mockzipfile.return_value.__enter__.return_value
-        page_files = ['0001.txt', '00002.txt']
-        mockzip_obj.namelist.return_value = page_files
-        # simulate reading zip file contents
-        # mockzip_obj.open.return_value.__enter__.return_value \
-            # .read.return_value.decode.return_value = 'page content'
-
-        # count the pages
-        cmd.count_pages(digwork)
-
-        # inspect pairtree logic
-        mock_pairtree_client.get_object.assert_any_call(pt_id, create_if_doesnt_exist=False)
-        # list parts called on encoded version of pairtree id
-        content_dir = pairtree_path.id_encode(pt_id)
-        pt_obj.list_parts.assert_any_call(content_dir)
-        pt_obj.id_to_dirpath.assert_any_call()
-
-        # inspect zipfile logic
-        mockzip_obj.namelist.assert_called_with()
-
-        zipfile_path = os.path.join(pt_obj.id_to_dirpath(), content_dir, '12345.zip')
-        mockzipfile.assert_called_with(zipfile_path)
-
-        # stats and digitized work page counts updated
-        assert cmd.stats['pages'] == 2
-        digwork = DigitizedWork.objects.get(source_id=digwork.source_id)
-        assert digwork.page_count == 2
-
-        # object not found in pairtree data
-        mock_pairtree_client.get_object.side_effect = \
-            storage_exceptions.ObjectNotFoundException
-        # should not error; should report not found
-        cmd.count_pages(digwork)
-        output = cmd.stderr.getvalue()
-        assert '%s not found' % digwork.source_id in output
 
     @patch('ppa.archive.management.commands.hathi_import.HathiBibliographicAPI')
     @patch('ppa.archive.management.commands.hathi_import.progressbar')
     def test_call_command(self, mockprogbar, mockhathi_bibapi):
 
+        digwork = DigitizedWork(source_id='test.123')
+
         # patch methods with actual logic to check handle method behavior
         with patch.object(hathi_import.Command, 'get_hathi_ids') as mock_get_htids, \
           patch.object(hathi_import.Command, 'initialize_pairtrees') as mock_init_ptree, \
           patch.object(hathi_import.Command, 'import_digitizedwork') as mock_import_digwork, \
-          patch.object(hathi_import.Command, 'count_pages') as mock_count_pages:
+          patch.object(digwork, 'count_pages') as mock_count_pages:
 
             mock_htids = ['ab.1234', 'cd.5678']
             mock_get_htids.return_value = mock_htids
-            digwork = DigitizedWork(source_id='test.123')
             mock_import_digwork.return_value = digwork
+            mock_count_pages.return_value = 10
 
             # default behavior = read ids from pairtree
             stdout = StringIO()
@@ -290,7 +241,7 @@ class TestHathiImportCommand(TestCase):
             mock_init_ptree.assert_any_call()
             for htid in mock_htids:
                 mock_import_digwork.assert_any_call(htid)
-            mock_count_pages.assert_called_with(digwork)
+            mock_count_pages.assert_any_call()
 
             output = stdout.getvalue()
             assert 'Processed 2 items for import.' in output
@@ -303,7 +254,7 @@ class TestHathiImportCommand(TestCase):
             # request progress bar
             call_command('hathi_import', progress=1, verbosity=0, stdout=stdout)
             mockprogbar.ProgressBar.assert_called_with(redirect_stdout=True,
-                    max_value=len(mock_htids))
+                                                       max_value=len(mock_htids))
 
 
 class TestIndexCommand(TestCase):

@@ -140,7 +140,10 @@ class Command(BaseCommand):
                 continue
 
             # count pages in the pairtree zip file and update digwork page count
-            self.count_pages(digwork)
+            try:
+                self.stats['pages'] += digwork.count_pages()
+            except storage_exceptions.ObjectNotFoundException:
+                self.stderr.write('%s not found in datastore' % digwork.source_id)
 
             if progbar:
                 progbar.update(self.stats['count'])
@@ -269,35 +272,3 @@ class Command(BaseCommand):
             self.stats['updated'] += 1
 
         return digwork
-
-    def count_pages(self, digwork):
-        '''Count the number of pages for a digitized work in the
-        pairtree content.'''
-
-        # NOTE: this might be overkill now that we're no longer
-        # indexing page content here, but should still be useful as
-        # a sanity check
-
-        # use existing pairtree client since it is already initialized
-        ptree_client = self.hathi_pairtree[digwork.hathi_prefix]
-
-        # count the files in the zipfile
-        start = time.time()
-        try:
-            with ZipFile(digwork.hathi_zipfile_path(ptree_client)) as ht_zip:
-                page_count = len(ht_zip.namelist())
-                logger.debug('Counted %d pages in zipfile in %f sec',
-                             page_count, time.time() - start)
-        except storage_exceptions.ObjectNotFoundException:
-            self.stderr.write('%s not found in datastore' % digwork.source_id)
-            return
-
-        # NOTE: could also count pages via mets file, but that's slower
-        # than counting via zipfile name list
-
-        self.stats['pages'] += page_count
-
-        # store page count in the database, if changed
-        if digwork.page_count != page_count:
-            digwork.page_count = page_count
-            digwork.save()

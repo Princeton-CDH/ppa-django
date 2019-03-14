@@ -1,6 +1,7 @@
 import logging
 import os.path
 import re
+import time
 from zipfile import ZipFile
 
 from cached_property import cached_property
@@ -589,7 +590,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
     def hathi_pairtree_client(self):
         '''Initialize a pairtree client for the pairtree datastore this
-         object belongs to, based on its Hathi prefix id.'''
+        object belongs to, based on its Hathi prefix id.'''
         return pairtree_client.PairtreeStorageClient(
             self.hathi_prefix,
             os.path.join(settings.HATHI_DATA, self.hathi_prefix))
@@ -641,6 +642,32 @@ class DigitizedWork(TrackChangesModel, Indexable):
     def hathi_metsfile_path(self, ptree_client=None):
         '''path to mets xml file within the hathi contents for this work'''
         return self._hathi_content_path('.mets.xml', ptree_client=ptree_client)
+
+    def count_pages(self, ptree_client=None):
+        '''Count the number of pages for this work based on the
+        number of files in the zipfile within the pairtree content.
+        Raises :class:`pairtree.storage_exceptions.ObjectNotFoundException`
+        if the data is not found in the pairtree storage. Returns page count
+        found; saves the object if the count has changed..'''
+        if not ptree_client:
+            ptree_client = self.hathi_pairtree_client()
+
+        # count the files in the zipfile
+        start = time.time()
+        # could raise pairtree exception, but allow calling context to catch
+        with ZipFile(self.hathi_zipfile_path(ptree_client)) as ht_zip:
+            page_count = len(ht_zip.namelist())
+            logger.debug('Counted %d pages in zipfile in %f sec',
+                         page_count, time.time() - start)
+        # NOTE: could also count pages via mets file, but that's slower
+        # than counting via zipfile name list
+
+        # store page count in the database if changed
+        if self.page_count != page_count:
+            self.page_count = page_count
+            self.save()
+
+        return page_count
 
     def page_index_data(self):
         '''Get page content for this work from Hathi pairtree and return
