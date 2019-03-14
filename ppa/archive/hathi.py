@@ -7,10 +7,12 @@ import io
 import time
 
 from django.conf import settings
-from eulxml import xmlmap
+from django.core.exceptions import ImproperlyConfigured
 import pymarc
 import requests
+from requests_oauthlib import OAuth1
 from cached_property import cached_property
+from eulxml import xmlmap
 
 from ppa import __version__ as ppa_version
 
@@ -19,17 +21,20 @@ logger = logging.getLogger(__name__)
 
 
 class HathiItemNotFound(Exception):
-    '''Item not found in bibliographic API'''
+    '''Item not found in bibliographic or data API'''
     pass
 
 
-class HathiBibliographicAPI(object):
-    '''Wrapper for HathiTrust Bibliographic API.
+class HathiItemForbidden(Exception):
+    '''Permission denied to access item in data API'''
+    pass
 
-    https://www.hathitrust.org/bib_api
-    '''
 
-    api_root = 'http://catalog.hathitrust.org/api'
+class HathiBaseAPI:
+    '''Base client class for HathiTrust APIs'''
+
+    #: base api URL for all requests
+    api_root = ''
 
     def __init__(self):
         # create a request session, for request pooling
@@ -45,24 +50,50 @@ class HathiBibliographicAPI(object):
             headers['From'] = tech_contact
         self.session.headers.update(headers)
 
+    def _make_request(self, url, params=None):
+        '''Make a GET request with the configured session. Takes a url
+        relative to :attr:`api_root` and optional dictionary of parameters.
+        Returns the response for status 200 OK; raises
+        :class:`HathiItemNotFound` for 404 and :class:`HathiItemForbidden`
+        for 403.
+        '''
+        url = '%s/%s' % (self.api_root, url)
+        rqst_opts = {}
+        if params:
+            rqst_opts['params'] = params
+
+        start = time.time()
+        resp = self.session.get(url, **rqst_opts)
+        logger.debug('get %s %s: %f sec', url,
+                     resp.status_code, time.time() - start)
+        if resp.status_code == requests.codes.ok:
+            return resp
+        if resp.status_code == requests.codes.not_found:
+            raise HathiItemNotFound
+        if resp.status_code == requests.codes.forbidden:
+            raise HathiItemForbidden
+
+
+class HathiBibliographicAPI(HathiBaseAPI):
+    '''Wrapper for HathiTrust Bibliographic API.
+
+    https://www.hathitrust.org/bib_api
+    '''
+
+    api_root = 'http://catalog.hathitrust.org/api'
+
     def _get_record(self, mode, id_type, id_value):
-        url = '%(base)s/volumes/%(mode)s/%(id_type)s/%(id_value)s.json' % {
-            'base': self.api_root,
+        url = 'volumes/%(mode)s/%(id_type)s/%(id_value)s.json' % {
             'mode': mode,
             'id_type': id_type,
             'id_value': id_value # NOTE: / in ark ids is *not* escaped
         }
-        start = time.time()
-        resp = self.session.get(url)
-        logger.debug('get record %s/%s %s: %f sec', id_type, id_value,
-                     resp.status_code, time.time() - start)
-        # TODO: handle errors
-        if resp.status_code == requests.codes.ok:
-            # for an invalid id, hathi seems to return a 200 ok
-            # but json has no records
-            if not resp.json().get('records', None):
-                raise HathiItemNotFound
-            return HathiBibliographicRecord(resp.json())
+        resp = self._make_request(url)
+        # for an invalid id, hathi seems to return a 200 ok
+        # but json has no records
+        if not resp.json().get('records', None):
+            raise HathiItemNotFound
+        return HathiBibliographicRecord(resp.json())
 
     def brief_record(self, id_type, id_value):
         '''Get brief record by id type and value.
@@ -83,8 +114,9 @@ class HathiBibliographicAPI(object):
     # also possible: get multiple records at once
 
 
-class HathiBibliographicRecord(object):
+class HathiBibliographicRecord:
     '''Representation of a HathiTrust bibliographic record.'''
+
     def __init__(self, data):
         self._data = data
         # for a single bib api json result, we only want the first item
@@ -124,6 +156,42 @@ class HathiBibliographicRecord(object):
         marcxml = self._data['records'][self.record_id].get('marc-xml', None)
         if marcxml:
             return pymarc.parse_xml_to_array(io.StringIO(marcxml))[0]
+
+
+class HathiDataAPI(HathiBaseAPI):
+    '''Wrapper for HathiTrust DATA API. Pulls OAuth credentials from
+    Django settings.'''
+
+    api_root = 'https://babel.hathitrust.org/cgi/htd'
+
+    cfg_err = 'OAuth key and secret configuration required for HathiDataAPI use'
+
+    def __init__(self):
+        super().__init__()
+        # get oauth configuration and attach to session
+        oauth_key = getattr(settings, 'HATHITRUST_OAUTH_KEY', None)
+        oauth_secret = getattr(settings, 'HATHITRUST_OAUTH_SECRET', None)
+        if not oauth_key or not oauth_secret:
+            raise ImproperlyConfigured(self.cfg_err)
+
+        self.oauth = OAuth1(client_key=oauth_key,
+                            client_secret=oauth_secret,
+                            signature_type='query')
+        self.session.auth = self.oauth
+
+    # NOTE: response headers include filename in content-disposition,
+    # so return the whole response for aggregrate and structure requests
+
+    def get_aggregate(self, htid):
+        '''Get aggregate date package for a HathiTrust record by hathi id.'''
+        # http[s]://babel.hathitrust.org/cgi/htd/aggregate/:ID?v=2
+        return self._make_request('aggregate/%s' % htid, params={'v': 2})
+
+    def get_structure(self, htid, fmt='xml'):
+        '''Get structure information for a HathiTrust record by hathi id.'''
+        # http[s]://babel.hathitrust.org/cgi/htd/structure/:ID?format=xml&v=2
+        return self._make_request('structure/%s' % htid,
+                                  params={'v': 2, 'format': fmt})
 
 
 class _METS(xmlmap.XmlObject):
