@@ -16,7 +16,7 @@ import pytest
 
 from ppa.archive import hathi
 from ppa.archive.models import DigitizedWork, Collection, \
-    NO_COLLECTION_LABEL, ProtectedWorkFieldFlags
+    NO_COLLECTION_LABEL, ProtectedWorkFieldFlags, CollectionSignalHandlers
 from ppa.archive.solr import get_solr_connection, Indexable
 
 
@@ -35,6 +35,44 @@ class TestProtectedFlags(TestCase):
         fields = ProtectedWorkFieldFlags.enumcron | ProtectedWorkFieldFlags.title | \
             ProtectedWorkFieldFlags.sort_title
         assert str(fields) == 'enumcron, sort_title, title'
+
+
+@pytest.mark.django_db
+class TestCollectionSignalHandlers:
+
+    @patch.object(Indexable, 'index_items')
+    def test_save(self, mock_index_items):
+        digwork = DigitizedWork.objects.create(source_id='njp.32101013082597')
+        coll1 = Collection.objects.create(name='Flotsam')
+        digwork.collections.add(coll1)
+
+        CollectionSignalHandlers.save(Mock(), coll1)
+        # index not called because collection name has not changed
+        mock_index_items.assert_not_called()
+
+        # modify name to test indexing
+        coll1.name = 'Jetsam'
+        CollectionSignalHandlers.save(Mock(), coll1)
+        # call must be inspected piecemeal because queryset equals comparison fails
+        args, kwargs = mock_index_items.call_args
+        assert isinstance(args[0], QuerySet)
+        assert digwork in args[0]
+        assert kwargs['params'] == {'commitWithin': 3000}
+
+    @patch.object(Indexable, 'index_items')
+    def test_delete(self, mock_index_items):
+        digwork = DigitizedWork.objects.create(source_id='njp.32101013082597')
+        coll1 = Collection.objects.create(name='Flotsam')
+        digwork.collections.add(coll1)
+
+        CollectionSignalHandlers.delete(Mock(), coll1)
+
+        assert coll1.digitizedwork_set.count() == 0
+        args, kwargs = mock_index_items.call_args
+        assert isinstance(args[0], QuerySet)
+        assert digwork in args[0]
+        assert kwargs['params'] == {'commitWithin': 3000}
+
 
 class TestDigitizedWork(TestCase):
     fixtures = ['sample_digitized_works']
@@ -521,39 +559,6 @@ class TestDigitizedWork(TestCase):
     def test_index_id(self):
         work = DigitizedWork(source_id='chi.79279237')
         assert work.index_id() == work.source_id
-
-    @patch.object(Indexable, 'index_items')
-    def test_handle_collection_save(self, mock_index_items):
-        digwork = DigitizedWork.objects.create(source_id='njp.32101013082597')
-        coll1 = Collection.objects.create(name='Flotsam')
-        digwork.collections.add(coll1)
-
-        DigitizedWork.handle_collection_save(Mock(), coll1)
-        # index not called because collection name has not changed
-        mock_index_items.assert_not_called()
-
-        # modify name to test indexing
-        coll1.name = 'Jetsam'
-        DigitizedWork.handle_collection_save(Mock(), coll1)
-        # call must be inspected piecemeal because queryset equals comparison fails
-        args, kwargs = mock_index_items.call_args
-        assert isinstance(args[0], QuerySet)
-        assert digwork in args[0]
-        assert kwargs['params'] == {'commitWithin': 3000}
-
-    @patch.object(Indexable, 'index_items')
-    def test_handle_collection_delete(self, mock_index_items):
-        digwork = DigitizedWork.objects.create(source_id='njp.32101013082597')
-        coll1 = Collection.objects.create(name='Flotsam')
-        digwork.collections.add(coll1)
-
-        DigitizedWork.handle_collection_delete(Mock(), coll1)
-
-        assert coll1.digitizedwork_set.count() == 0
-        args, kwargs = mock_index_items.call_args
-        assert isinstance(args[0], QuerySet)
-        assert digwork in args[0]
-        assert kwargs['params'] == {'commitWithin': 3000}
 
     def test_save(self):
         work = DigitizedWork(source_id='chi.79279237')

@@ -181,6 +181,38 @@ class ProtectedWorkField(models.Field):
         return ProtectedWorkFieldFlags(value)
 
 
+class CollectionSignalHandlers:
+    '''Signal handlers for indexing :class:`DigitizedWork` records when
+    :class:`Collection` records are saved or deleted.'''
+
+    @staticmethod
+    def save(sender, instance, **kwargs):
+        '''signal handler for collection save; reindex associated digitized works'''
+        # only reindex if collection name has changed
+        # and if collection has already been saved
+        if instance.pk and instance.name_changed:
+            # if the collection has any works associated
+            works = instance.digitizedwork_set.all()
+            if works.exists():
+                logger.debug('collection save, reindexing %d related works', works.count())
+                Indexable.index_items(works, params={'commitWithin': 3000})
+
+    @staticmethod
+    def delete(sender, instance, **kwargs):
+        '''signal handler for collection delete; clear associated digitized
+        works and reindex'''
+        logger.debug('collection delete')
+        # get a list of ids for collected works before clearing them
+        digwork_ids = instance.digitizedwork_set.values_list('id', flat=True)
+        # find the items based on the list of ids to reindex
+        digworks = DigitizedWork.objects.filter(id__in=list(digwork_ids))
+
+        # NOTE: this sends pre/post clear signal, but it's not obvious
+        # how to take advantage of that
+        instance.digitizedwork_set.clear()
+        Indexable.index_items(digworks, params={'commitWithin': 3000})
+
+
 class DigitizedWork(TrackChangesModel, Indexable):
     '''
     Record to manage digitized works included in PPA and store their basic
@@ -507,36 +539,11 @@ class DigitizedWork(TrackChangesModel, Indexable):
         # conditionally update fields that are protected (or not)
         self.populate_fields(field_data)
 
-    def handle_collection_save(sender, instance, **kwargs):
-        '''signal handler for collection save; reindex associated digitized works'''
-        # only reindex if collection name has changed
-        # and if collection has already been saved
-        if instance.pk and instance.name_changed:
-            # if the collection has any works associated
-            works = instance.digitizedwork_set.all()
-            if works.exists():
-                logger.debug('collection save, reindexing %d related works', works.count())
-                Indexable.index_items(works, params={'commitWithin': 3000})
-
-    def handle_collection_delete(sender, instance, **kwargs):
-        '''signal handler for collection delete; clear associated digitized
-        works and reindex'''
-        logger.debug('collection delete')
-        # get a list of ids for collected works before clearing them
-        digwork_ids = instance.digitizedwork_set.values_list('id', flat=True)
-        # find the items based on the list of ids to reindex
-        digworks = DigitizedWork.objects.filter(id__in=list(digwork_ids))
-
-        # NOTE: this sends pre/post clear signal, but it's not obvious
-        # how to take advantage of that
-        instance.digitizedwork_set.clear()
-        Indexable.index_items(digworks, params={'commitWithin': 3000})
 
     index_depends_on = {
         'collections': {
-            'save': handle_collection_save,
-            'delete': handle_collection_delete,
-
+            'save': CollectionSignalHandlers.save,
+            'delete': CollectionSignalHandlers.delete,
         }
     }
 
