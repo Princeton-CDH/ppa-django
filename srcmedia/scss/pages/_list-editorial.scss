@@ -10,7 +10,7 @@
         max-width: 667px;
         width: 100%;
         margin-bottom: 1rem;
- 
+
         @media (min-width: $tablet) {
             font-size: 1.5rem;
         }
@@ -32,12 +32,17 @@
         font-size: inherit;
     }
 
+    .card:last-child:nth-child(even)  {
+        margin-left: auto;
+    }
+
+
     .pagination {
         display: flex;
         justify-content: center;
         align-items: center;
         flex-wrap: wrap;
-        
+
         @media (min-width: $tablet) {
             justify-content: space-between;
         }

@@ -25,7 +25,7 @@ sitemaps = {
 
 urlpatterns = [
     url(r'^robots\.txt$', TemplateView.as_view(template_name='robots.txt',
-                                               content_type='text/plain')),
+                                                content_type='text/plain')),
     url(r'^favicon\.ico$', RedirectView.as_view(url='/static/favicon.ico',
                                                 permanent=True)),
     url(r'^admin/', admin.site.urls),
@@ -52,8 +52,12 @@ urlpatterns = [
 
 # serve media content for development
 if settings.DEBUG:
-    urlpatterns += [
+    import debug_toolbar
+
+    urlpatterns = [
+        # include debug toolbar urls first to avoid getting caught by other urls
+        url(r'^__debug__/', include(debug_toolbar.urls)),
         url(r'^media/(?P<path>.*)$', serve, {
             'document_root': settings.MEDIA_ROOT,
         }),
-    ]
+    ] + urlpatterns
