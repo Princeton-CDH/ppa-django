@@ -3,16 +3,19 @@ Utilities for working with HathiTrust materials and APIs.
 '''
 from datetime import datetime
 import logging
+import os.path
 import io
 import time
 
+from cached_property import cached_property
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from eulxml import xmlmap
+from pairtree import pairtree_path, pairtree_client, storage_exceptions
 import pymarc
 import requests
 from requests_oauthlib import OAuth1
-from cached_property import cached_property
-from eulxml import xmlmap
+
 
 from ppa import __version__ as ppa_version
 
@@ -257,3 +260,87 @@ class MinimalMETS(_METS):
     #: list of struct map pages as :class:`StructMapPage`
     structmap_pages = xmlmap.NodeListField('m:structMap[@TYPE="physical"]//m:div[@TYPE="page"]',
                                            StructMapPage)
+
+
+class HathiObject:
+    '''An object for working with a HathiTrust item with data in a
+    locally configured pairtree datastore.'''
+
+    hathi_id = None
+
+    def __init__(self, hathi_id):
+        self.hathi_id = hathi_id
+
+    @cached_property
+    def pairtree_prefix(self):
+        '''pairtree prefix (first portion of the hathi id, short-form
+        identifier for owning institution)'''
+        return self.hathi_id.split('.', 1)[0]
+
+    @cached_property
+    def pairtree_id(self):
+        '''pairtree identifier (second portion of source id)'''
+        return self.hathi_id.split('.', 1)[1]
+
+    @cached_property
+    def content_dir(self):
+        '''content directory for this work within the appropriate
+        pairtree'''
+        # contents are stored in a directory named based on a
+        # pairtree encoded version of the id
+        return pairtree_path.id_encode(self.pairtree_id)
+
+    def pairtree_client(self):
+        '''Initialize a pairtree client for the pairtree datastore this
+        object belongs to, based on its Hathi prefix id.'''
+        return pairtree_client.PairtreeStorageClient(
+            self.pairtree_prefix,
+            os.path.join(settings.HATHI_DATA, self.pairtree_prefix))
+
+    def pairtree_object(self, ptree_client=None, create=False):
+        '''get a pairtree object for this record
+
+        :param ptree_client: optional
+            :class:`pairtree_client.PairtreeStorageClient` if one has
+            already been initialized, to avoid repeated initialization
+            (currently used in hathi_import manage command)
+        '''
+        if ptree_client is None:
+            # get pairtree client if not passed in
+            ptree_client = self.pairtree_client()
+
+        # return the pairtree object for current work
+        return ptree_client.get_object(self.pairtree_id,
+                                       create_if_doesnt_exist=create)
+
+    def delete_pairtree_data(self):
+        '''Delete pairtree object from the pairtree datastore.'''
+        logger.info('Deleting pairtree data for %s', self.hathi_id)
+        try:
+            self.pairtree_client() \
+                .delete_object(self.pairtree_id)
+        except storage_exceptions.ObjectNotFoundException:
+            # data is already gone; warn, but not an error
+            logger.warning('Pairtree deletion failed; object not found %s',
+                           self.hathi_id)
+
+    def _content_path(self, ext, ptree_client=None):
+        '''path to zipfile within the hathi contents for this work'''
+        pairtree_obj = self.pairtree_object(ptree_client=ptree_client)
+        # - expect a mets file and a zip file
+        # NOTE: not yet making use of the metsfile
+        # - don't rely on them being returned in the same order on every machine
+        parts = pairtree_obj.list_parts(self.content_dir)
+        # find the first zipfile in the list (should only be one)
+        filepath = [part for part in parts if part.endswith(ext)][0]
+
+        return os.path.join(pairtree_obj.id_to_dirpath(),
+                            self.content_dir, filepath)
+
+    def zipfile_path(self, ptree_client=None):
+        '''path to zipfile within the hathi contents for this work'''
+        return self._content_path('zip', ptree_client=ptree_client)
+
+    def metsfile_path(self, ptree_client=None):
+        '''path to mets xml file within the hathi contents for this work'''
+        return self._content_path('.mets.xml', ptree_client=ptree_client)

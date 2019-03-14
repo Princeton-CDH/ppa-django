@@ -17,7 +17,8 @@ from wagtail.core.fields import RichTextField
 from wagtail.admin.edit_handlers import FieldPanel
 from wagtail.snippets.models import register_snippet
 
-from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS
+from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS, \
+    HathiDataAPI, HathiObject
 from ppa.archive.solr import Indexable
 from ppa.archive.solr import PagedSolrQuery
 
@@ -309,12 +310,20 @@ class DigitizedWork(TrackChangesModel, Indexable):
     # Printed by/for (the); Printed and sold by; Printed and published by;
     # Pub./Published/Publisht at/by/for the
 
+    @cached_property
+    def hathi(self):
+        ''':class:`ppa.archive.hathi.HathiObject` for HathiTrust records,
+        for working with data in HathiTrust pairtree data structure.'''
+        if self.source == self.HATHI:
+            return HathiObject(self.source_id)
+        return None
+
     def save(self, *args, **kwargs):
         # if status has changed so that object is now suppressed and this
         # is a HathiTrust item, remove pairtree data
         if self.has_changed('status') and self.status == self.SUPPRESSED \
           and self.source == DigitizedWork.HATHI:
-            self.delete_hathi_pairtree_data()
+            self.hathi.delete_pairtree_data()
 
         # source id is used as Solr identifier; if it changes, remove
         # the old record from Solr before saving with the new identifier
@@ -569,93 +578,20 @@ class DigitizedWork(TrackChangesModel, Indexable):
             'order': '0',
         }
 
-    @cached_property
-    def hathi_prefix(self):
-        '''hathi pairtree prefix (first portion of the source id, short-form
-        identifier for owning institution)'''
-        return self.source_id.split('.', 1)[0]
-
-    @cached_property
-    def hathi_pairtree_id(self):
-        '''hathi pairtree identifier (second portion of source id)'''
-        return self.source_id.split('.', 1)[1]
-
-    @cached_property
-    def hathi_content_dir(self):
-        '''hathi content directory for this work (within the corresponding
-        pairtree)'''
-        # contents are stored in a directory named based on a
-        # pairtree encoded version of the id
-        return pairtree_path.id_encode(self.hathi_pairtree_id)
-
-    def hathi_pairtree_client(self):
-        '''Initialize a pairtree client for the pairtree datastore this
-        object belongs to, based on its Hathi prefix id.'''
-        return pairtree_client.PairtreeStorageClient(
-            self.hathi_prefix,
-            os.path.join(settings.HATHI_DATA, self.hathi_prefix))
-
-    def hathi_pairtree_object(self, ptree_client=None):
-        '''get a pairtree object for the current work
-
-        :param ptree_client: optional
-            :class:`pairtree_client.PairtreeStorageClient` if one has
-            already been initialized, to avoid repeated initialization
-            (currently used in hathi_import manage command)
-        '''
-        if ptree_client is None:
-            # get pairtree client if not passed in
-            ptree_client = self.hathi_pairtree_client()
-
-        # return the pairtree object for current work
-        return ptree_client.get_object(self.hathi_pairtree_id,
-                                       create_if_doesnt_exist=False)
-
-    def delete_hathi_pairtree_data(self):
-        '''Delete pairtree object from the pairtree datastore.'''
-        logger.info('Deleting pairtree data for %s', self.source_id)
-        try:
-            self.hathi_pairtree_client() \
-                .delete_object(self.hathi_pairtree_id)
-        except storage_exceptions.ObjectNotFoundException:
-            # data is already gone; warn, but not an error
-            logger.warning('Pairtree deletion failed; object not found %s',
-                        self.source_id)
-
-    def _hathi_content_path(self, ext, ptree_client=None):
-        '''path to zipfile within the hathi contents for this work'''
-        pairtree_obj = self.hathi_pairtree_object(ptree_client=ptree_client)
-        # - expect a mets file and a zip file
-        # NOTE: not yet making use of the metsfile
-        # - don't rely on them being returned in the same order on every machine
-        parts = pairtree_obj.list_parts(self.hathi_content_dir)
-        # find the first zipfile in the list (should only be one)
-        filepath = [part for part in parts if part.endswith(ext)][0]
-
-        return os.path.join(pairtree_obj.id_to_dirpath(),
-                            self.hathi_content_dir, filepath)
-
-    def hathi_zipfile_path(self, ptree_client=None):
-        '''path to zipfile within the hathi contents for this work'''
-        return self._hathi_content_path('zip', ptree_client=ptree_client)
-
-    def hathi_metsfile_path(self, ptree_client=None):
-        '''path to mets xml file within the hathi contents for this work'''
-        return self._hathi_content_path('.mets.xml', ptree_client=ptree_client)
 
     def count_pages(self, ptree_client=None):
-        '''Count the number of pages for this work based on the
+        '''Count the number of pages for a digitized work based on the
         number of files in the zipfile within the pairtree content.
         Raises :class:`pairtree.storage_exceptions.ObjectNotFoundException`
         if the data is not found in the pairtree storage. Returns page count
-        found; saves the object if the count has changed..'''
+        found; saves the object if the count changes.'''
         if not ptree_client:
-            ptree_client = self.hathi_pairtree_client()
+            ptree_client = self.hathi.pairtree_client()
 
         # count the files in the zipfile
         start = time.time()
         # could raise pairtree exception, but allow calling context to catch
-        with ZipFile(self.hathi_zipfile_path(ptree_client)) as ht_zip:
+        with ZipFile(self.hathi.zipfile_path(ptree_client)) as ht_zip:
             page_count = len(ht_zip.namelist())
             logger.debug('Counted %d pages in zipfile in %f sec',
                          page_count, time.time() - start)
@@ -680,7 +616,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
         # load mets record to pull metadata about the images
         try:
-            mmets = load_xmlobject_from_file(self.hathi_metsfile_path(),
+            mmets = load_xmlobject_from_file(self.hathi.metsfile_path(),
                                              MinimalMETS)
         except storage_exceptions.ObjectNotFoundException:
             logger.error('Pairtree data for %s not found but status is %s',
@@ -688,13 +624,13 @@ class DigitizedWork(TrackChangesModel, Indexable):
             return
 
         # read zipfile contents in place, without unzipping
-        with ZipFile(self.hathi_zipfile_path()) as ht_zip:
+        with ZipFile(self.hathi.zipfile_path()) as ht_zip:
 
             # yield a generator of index data for each page; iterate
             # over pages in METS structmap
             for page in mmets.structmap_pages:
-                # zipfile spec uses / for path regardless of OS
-                pagefilename = '/'.join([self.hathi_content_dir, page.text_file_location])
+
+                pagefilename = os.path.join(self.hathi.content_dir, page.text_file_location)
                 with ht_zip.open(pagefilename) as pagefile:
                     try:
                         yield {

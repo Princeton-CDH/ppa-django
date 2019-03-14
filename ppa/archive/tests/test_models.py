@@ -55,6 +55,17 @@ class TestDigitizedWork(TestCase):
         digwork = DigitizedWork(title='Elocutionary Language')
         assert digwork.display_title() == digwork.title
 
+    def test_hathi(self):
+        digwork = DigitizedWork(source_id='njp.32101013082597',
+                                source=DigitizedWork.HATHI)
+        assert isinstance(digwork.hathi, hathi.HathiObject)
+        assert digwork.hathi.hathi_id == digwork.source_id
+
+        # not returned for non-hathi objects
+        digwork = DigitizedWork(source_id='foobar',
+                                source=DigitizedWork.OTHER)
+        assert digwork.hathi is None
+
     @pytest.mark.usefixtures('solr')
     def test_index(self):
         with open(self.bibdata_brief) as bibdata:
@@ -377,8 +388,7 @@ class TestDigitizedWork(TestCase):
         # suppressed
         digwork.status = digwork.SUPPRESSED
         # don't actually process the data deletion
-        with patch.object(digwork, 'delete_hathi_pairtree_data') \
-          as mock_delete_pairtree_data:
+        with patch.object(digwork, 'hathi'):
             digwork.save()
 
             # should *only* contain id, nothing else
@@ -413,89 +423,6 @@ class TestDigitizedWork(TestCase):
         # should not error, but nothing to return
         assert not nonhathi_work.get_metadata('marc')
 
-    def test_hathi_prefix(self):
-        work = DigitizedWork(source_id='uva.1234')
-        assert work.hathi_prefix == 'uva'
-
-    def test_hathi_pairtree_id(self):
-        work = DigitizedWork(source_id='uva.1234')
-        assert work.hathi_pairtree_id == '1234'
-
-    def test_hathi_content_dir(self):
-        work = DigitizedWork(source_id='uva.1234')
-        assert work.hathi_content_dir == pairtree_path.id_encode(work.hathi_pairtree_id)
-
-    @patch('ppa.archive.models.pairtree_client')
-    @override_settings(HATHI_DATA='/tmp/ht_text_pd')
-    def test_hathi_pairtree_object(self, mock_pairtree_client):
-        work = DigitizedWork(source_id='uva.1234')
-
-        ptree_obj = work.hathi_pairtree_object()
-        # client initialized
-        mock_pairtree_client.PairtreeStorageClient \
-            .assert_called_with(work.hathi_prefix,
-                                os.path.join(settings.HATHI_DATA, work.hathi_prefix))
-        # object retrieved
-        mock_pairtree_client.PairtreeStorageClient.return_value \
-            .get_object.assert_called_with(work.hathi_pairtree_id,
-                                           create_if_doesnt_exist=False)
-        # object returned
-        assert ptree_obj == mock_pairtree_client.PairtreeStorageClient  \
-                                                .return_value.get_object.return_value
-
-        # test passing in existing pairtree client
-        mock_pairtree_client.reset_mock()
-        my_ptree_client = Mock(spec=pairtree_client.PairtreeStorageClient)
-        ptree_obj = work.hathi_pairtree_object(my_ptree_client)
-        # should not initialize
-        mock_pairtree_client.PairtreeStorageClient.assert_not_called()
-        # should get object from my client
-        my_ptree_client.get_object.assert_called_with(work.hathi_pairtree_id,
-                                           create_if_doesnt_exist=False)
-
-    @override_settings(HATHI_DATA='/tmp/ht_text_pd')
-    def test_hathi_zipfile_path(self):
-        work = DigitizedWork(source_id='chi.79279237')
-        contents = ['79279237.mets.xml', '79279237.zip']
-
-        with patch.object(DigitizedWork, 'hathi_pairtree_object') as mock_ptree_obj_meth:
-            mock_ptree_obj = mock_ptree_obj_meth.return_value
-            mock_ptree_obj.list_parts.return_value = contents
-            mock_ptree_obj.id_to_dirpath.return_value = \
-                '/tmp/ht_text_pd/chi/pairtree_root/79/27/92/37'
-
-            zipfile_path = work.hathi_zipfile_path()
-            mock_ptree_obj_meth.assert_called_with(ptree_client=None)
-            assert zipfile_path == \
-                os.path.join(mock_ptree_obj.id_to_dirpath(), work.hathi_content_dir,
-                             contents[1])
-
-            # use pairtree client object if passed in
-            my_ptree_client = Mock(spec=pairtree_client.PairtreeStorageClient)
-            work.hathi_zipfile_path(my_ptree_client)
-            mock_ptree_obj_meth.assert_called_with(ptree_client=my_ptree_client)
-
-    @override_settings(HATHI_DATA='/tmp/ht_text_pd')
-    def test_hathi_metsfile_path(self):
-        work = DigitizedWork(source_id='chi.79279237')
-        contents = ['79279237.mets.xml', '79279237.zip']
-
-        with patch.object(DigitizedWork, 'hathi_pairtree_object') as mock_ptree_obj_meth:
-            mock_ptree_obj = mock_ptree_obj_meth.return_value
-            mock_ptree_obj.list_parts.return_value = contents
-            mock_ptree_obj.id_to_dirpath.return_value = \
-                '/tmp/ht_text_pd/chi/pairtree_root/79/27/92/37'
-
-            metsfile_path = work.hathi_metsfile_path()
-            mock_ptree_obj_meth.assert_called_with(ptree_client=None)
-            assert metsfile_path == \
-                os.path.join(mock_ptree_obj.id_to_dirpath(), work.hathi_content_dir,
-                             contents[0])
-
-            # use pairtree client object if passed in
-            my_ptree_client = Mock(spec=pairtree_client.PairtreeStorageClient)
-            work.hathi_metsfile_path(my_ptree_client)
-            mock_ptree_obj_meth.assert_called_with(ptree_client=my_ptree_client)
 
     @patch('ppa.archive.models.ZipFile', spec=ZipFile)
     def test_count_pages(self, mockzipfile):
@@ -558,12 +485,10 @@ class TestDigitizedWork(TestCase):
 
         # page data comes from mets
         mets = load_xmlobject_from_file(self.metsfile, hathi.MinimalMETS)
-
-        with patch.multiple(DigitizedWork, hathi_zipfile_path=DEFAULT,
-                            hathi_metsfile_path=DEFAULT) as \
-                            mock_methods:
-            mock_methods['hathi_zipfile_path'].return_value = '/path/to/79279237.zip'
-            mock_methods['hathi_metsfile_path'].return_value = self.metsfile
+        with patch.object(DigitizedWork, 'hathi') as mock_hathiobj:
+            mock_hathiobj.zipfile_path.return_value = '/path/to/79279237.zip'
+            mock_hathiobj.metsfile_path.return_value = self.metsfile
+            mock_hathiobj.content_dir = 'data'
 
             page_data = work.page_index_data()
             assert isinstance(page_data, types.GeneratorType)
@@ -580,7 +505,7 @@ class TestDigitizedWork(TestCase):
                 assert data['tags'] == mets_page.label.split(', ')
 
             # not suppressed by no data
-            mock_methods['hathi_metsfile_path'].side_effect = \
+            mock_hathiobj.metsfile_path.side_effect = \
                 storage_exceptions.ObjectNotFoundException
             # should log an error, not currently tested
             assert not list(work.page_index_data())
@@ -630,48 +555,30 @@ class TestDigitizedWork(TestCase):
         assert digwork in args[0]
         assert kwargs['params'] == {'commitWithin': 3000}
 
-    def test_delete_hathi_pairtree_data(self):
-        work = DigitizedWork(source_id='chi.79279237')
-        with patch.object(work, 'hathi_pairtree_client') as mock_pairtree_client:
-            work.delete_hathi_pairtree_data()
-            # should initialize client
-            mock_pairtree_client.assert_called()
-            # should call delete boject
-            mock_pairtree_client.return_value.delete_object \
-                .assert_called_with(work.hathi_pairtree_id)
-
-            # should not raise an exception if deletion fails
-            mock_pairtree_client.return_value.delete_object.side_effect \
-                 = storage_exceptions.ObjectNotFoundException
-            work.delete_hathi_pairtree_data()
-            # not currently testing that warning is logged
-
     def test_save(self):
         work = DigitizedWork(source_id='chi.79279237')
-        with patch.object(work, 'delete_hathi_pairtree_data') \
-          as mock_delete_pairtree_data:
+        with patch.object(work, 'hathi') as mock_hathiobj:
             # no change in status - nothing should happen
             work.save()
-            mock_delete_pairtree_data.assert_not_called()
+            mock_hathiobj.delete_pairtree_data.assert_not_called()
 
             # change status to suppressed - data should be deleted
             work.status = work.SUPPRESSED
             work.save()
-            assert mock_delete_pairtree_data.call_count == 1
-            # mock_delete_pairtree_data.assert_called()
+            assert mock_hathiobj.delete_pairtree_data.call_count == 1
 
             # changing status but not to suppressed - should not be called
-            mock_delete_pairtree_data.reset_mock()
+            mock_hathiobj.reset_mock()
             work.status = work.PUBLIC
             work.save()
-            mock_delete_pairtree_data.assert_not_called()
+            mock_hathiobj.delete_pairtree_data.assert_not_called()
 
             # non-hathi record - should not try to delete hathi data
             work = DigitizedWork(source=DigitizedWork.OTHER)
             work.save()
             work.status = work.SUPPRESSED
             work.save()
-            mock_delete_pairtree_data.assert_not_called()
+            mock_hathiobj.delete_pairtree_data.assert_not_called()
 
         # if source_id changes, old id should be removed from solr index
         work = DigitizedWork.objects.create(source=DigitizedWork.OTHER,
@@ -692,7 +599,7 @@ class TestDigitizedWork(TestCase):
         work.status = work.SUPPRESSED
         work.clean()
         # don't actually process the data deletion
-        with patch.object(work, 'delete_hathi_pairtree_data'):
+        with patch.object(work, 'hathi'):
             work.save()
 
         # try to change back - should error
