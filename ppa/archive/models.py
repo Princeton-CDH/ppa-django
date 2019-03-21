@@ -776,7 +776,13 @@ class DigitizedWork(TrackChangesModel, Indexable):
     def get_hathi_data(self):
         '''Use Data API to fetch zipfile and mets and add them to the
         local pairtree. Intended for use with newly added HathiTrust
-        records not imported from local pairtree data.'''
+        records not imported from local pairtree data.
+
+        Raises :class:`~ppa.archive.hathi.HathiItemNotFound` for invalid
+        id and :class:`~ppa.archive.hathi.HathiItemForbidden` for a
+        valid record that configured Data API credentials do not allow
+        accessing.
+        '''
 
         # do nothing for non-hathi records
         if self.source != DigitizedWork.HATHI:
