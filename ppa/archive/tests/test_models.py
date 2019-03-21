@@ -1,11 +1,15 @@
+from datetime import date, timedelta
 import json
 import os.path
 from time import sleep
 import types
-from unittest.mock import patch, Mock, DEFAULT
+from unittest.mock import patch, Mock
 from zipfile import ZipFile
 
 from django.conf import settings
+from django.contrib.admin.models import LogEntry, ADDITION, CHANGE
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db.models.query import QuerySet
 from django.test import TestCase, override_settings
@@ -593,7 +597,6 @@ class TestDigitizedWork(TestCase):
             work.save()
             mock_rm_from_index.assert_called()
 
-
     def test_clean(self):
         work = DigitizedWork(source_id='chi.79279237')
 
@@ -628,6 +631,91 @@ class TestDigitizedWork(TestCase):
 
         work.status = DigitizedWork.SUPPRESSED
         assert work.is_suppressed
+
+    @patch('ppa.archive.models.DigitizedWork.populate_from_bibdata')
+    @patch('ppa.archive.models.DigitizedWork.get_hathi_data')
+    @patch('ppa.archive.models.HathiBibliographicAPI')
+    def test_add_from_hathi(self, mock_hathibib_api, mock_get_hathi_data,
+                            mock_pop_from_bibdata):
+
+        script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
+
+        # add new with default opts
+        test_htid = 'abc:12345'
+        digwork = DigitizedWork.add_from_hathi(test_htid)
+        assert isinstance(digwork, DigitizedWork)
+        mock_hathibib_api.assert_called_with()
+        mock_hathibib = mock_hathibib_api.return_value
+        mock_hathibib.record.assert_called_with('htid', test_htid)
+        mock_pop_from_bibdata.assert_called_with(mock_hathibib.record.return_value)
+        mock_get_hathi_data.assert_not_called()
+
+        # log entry should exist for record creation only
+        log_entries = LogEntry.objects.filter(object_id=digwork.id)
+        # should only be one log entry
+        assert log_entries.count() == 1
+        log_entry = log_entries.first()
+        assert log_entry.user == script_user
+        assert log_entry.content_type == ContentType.objects.get_for_model(DigitizedWork)
+        # default log message for new record
+        assert log_entry.change_message == 'Created from HathiTrust bibliographic data'
+        assert log_entry.action_flag == ADDITION
+
+        # add new with bib api pased in, get data, and custom message
+        my_bib_api = Mock()
+        mock_hathibib_api.reset_mock()
+        test_htid = 'def:678910'
+        digwork = DigitizedWork.add_from_hathi(
+            test_htid, bib_api=my_bib_api, get_data=True,
+            log_msg_src='in unit tests')
+        mock_hathibib_api.assert_not_called()
+        my_bib_api.record.assert_called_with('htid', test_htid)
+        assert mock_get_hathi_data.call_count == 1
+        log_entry = LogEntry.objects.get(object_id=digwork.id)
+        assert log_entry.change_message == 'Created in unit tests'
+
+        # update existing record - no change on hathi, not forced
+        digwork_updated = digwork.updated  # store local record updated time
+        mockhathirecord = mock_hathibib.record.return_value
+        # set hathi record last updated before digwork last update
+        mockhathirecord.copy_last_updated.return_value = date.today() - timedelta(days=1)
+        digwork = DigitizedWork.add_from_hathi(test_htid)
+        # bib api should still be called
+        mock_hathibib.record.assert_called_with('htid', test_htid)
+        # record update time should be unchanged
+        assert digwork.updated == digwork_updated
+        # still only one log entry
+        assert LogEntry.objects.filter(object_id=digwork.id).count() == 1
+
+        # update existing record - no change on hathi, update forced
+        mock_pop_from_bibdata.reset_mock()
+        digwork = DigitizedWork.add_from_hathi(test_htid, update=True)
+        # record update time should be changed
+        assert digwork.updated != digwork_updated
+        mock_pop_from_bibdata.assert_called_with(mock_hathibib.record.return_value)
+        # new log entry should be added
+        assert LogEntry.objects.filter(object_id=digwork.id).count() == 2
+        # log entry should exist for record update; get newest
+        log_entry = LogEntry.objects.filter(object_id=digwork.id) \
+            .order_by('-action_time').first()
+        assert log_entry.action_flag == CHANGE
+        assert log_entry.change_message.startswith('Updated')
+        assert '(forced update)' in log_entry.change_message
+
+        # update existing record - changed on hathi, should auto update
+        # set hathi record last updated *after* digwork last update
+        mock_pop_from_bibdata.reset_mock()
+        mockhathirecord.copy_last_updated.return_value = date.today() + timedelta(days=1)
+        digwork_updated = digwork.updated  # store local record updated time
+        digwork = DigitizedWork.add_from_hathi(test_htid)
+        # record update time should be changed
+        assert digwork.updated != digwork_updated
+        mock_pop_from_bibdata.assert_called_with(mock_hathibib.record.return_value)
+        # new log entry should be added
+        assert LogEntry.objects.filter(object_id=digwork.id).count() == 3
+        # newest log entry should be an update
+        assert LogEntry.objects.filter(object_id=digwork.id) \
+            .order_by('-action_time').first().action_flag == CHANGE
 
 
 class TestCollection(TestCase):

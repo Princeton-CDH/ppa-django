@@ -699,15 +699,15 @@ class DigitizedWork(TrackChangesModel, Indexable):
         :param get_data: retrieve content data from Data API; for new
             records only (default: False)
         :param log_msg_src: source of the change to be used included
-            in log entry messages (optional)
+            in log entry messages (optional). Will be used as "Created/updated
+            [log_msg_src]".
         '''
 
         # initialize new bibliographic API if none is passed in
-        if bib_api is None:
-            bib_api = HathiBibliographicAPI()
+        bib_api = bib_api or HathiBibliographicAPI()
 
-        if log_msg_src is None:
-            log_msg_src = 'from HathiTrust bibliographic data'
+        # set a default log message source if not specified
+        log_msg_src = log_msg_src or 'from HathiTrust bibliographic data'
 
         # get bibliographic data for this record from Hathi api
         # - needed to check if update is required for existing records,

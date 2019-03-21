@@ -1,12 +1,10 @@
 from collections import defaultdict
-from datetime import date, timedelta
 from io import StringIO
 import json
 import os
 import tempfile
 import types
 from unittest.mock import patch, Mock
-from zipfile import ZipFile
 
 from django.conf import settings
 from django.contrib.admin.models import LogEntry, ADDITION, CHANGE
@@ -15,15 +13,13 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
-from pairtree import pairtree_client, pairtree_path, storage_exceptions
 import pytest
-from SolrClient import SolrClient
 
 from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound, \
     HathiBibliographicRecord
 from ppa.archive.models import DigitizedWork
 from ppa.archive.management.commands import hathi_import, index
-from ppa.archive.solr import get_solr_connection, Indexable
+from ppa.archive.solr import get_solr_connection
 
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
@@ -174,32 +170,6 @@ class TestHathiImportCommand(TestCase):
         assert cmd.import_digitizedwork(htid) == digwork
         assert cmd.stats['skipped'] == 1
         assert 'no update needed' in cmd.stdout.getvalue()
-
-        # simulate hathi record updated since import
-        # TODO: move to model method
-        # cmd.stats = defaultdict(int)
-        # cmd.stdout = StringIO()
-        # cmd.options = {'update': False}  # no force update
-        # cmd.verbosity = 2
-        # with patch.object(hathirecord, 'copy_last_updated') as mock_lastupdated:
-        #     # using tomorrow to ensure date is after local record modification
-        #     tomorrow = date.today() + timedelta(days=1)
-        #     mock_lastupdated.return_value = tomorrow
-        #     digwork = cmd.import_digitizedwork(htid)
-        #     assert digwork
-        #     assert cmd.stats['updated'] == 1
-        #     assert cmd.stats['skipped'] == 0
-        #     assert 'record last updated %s, update needed' % tomorrow in \
-        #         cmd.stdout.getvalue()
-
-        # log entry should exist for record update; get newest
-        # log_entry = LogEntry.objects.filter(object_id=digwork.id) \
-        #     .order_by('-action_time').first()
-        # assert log_entry.user == cmd.script_user
-        # assert log_entry.content_type == ContentType.objects.get_for_model(digwork)
-        # assert 'Updated via hathi_import script' in log_entry.change_message
-        # assert 'source record last updated %s' % tomorrow in log_entry.change_message
-        # assert log_entry.action_flag == CHANGE
 
         # update requested by user
         cmd.stats = defaultdict(int)
