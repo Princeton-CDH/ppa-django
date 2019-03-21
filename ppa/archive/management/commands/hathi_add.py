@@ -5,8 +5,10 @@ For records that are already in the local pairtree, use **hathi_import**.
 
 Example usage::
 
-    # add specific items
+    # add items by id on the command line
     python manage.py hathi_add htid1 htid2 htid3
+    # add items by one id per line in a text file
+    python manage.py --file path/to/idfile.txt
 
 '''
 
@@ -52,10 +54,9 @@ class Command(BaseCommand):
         parser.add_argument(
             'htids', nargs='*',
             help='Optional list of specific volumes to add by HathiTrust id.')
-        # TODO: also support file with list of ids
-        # parser.add_argument(
-        #     '--progress', action='store_true',
-        #     help='Display a progress bar to track the status of the import.')
+        parser.add_argument(
+            '--file', '-f',
+            help='Filename with a list of HathiTrust ids to add (one per line).')
 
     def handle(self, *args, **kwargs):
         # disconnect signal handler for on-demand indexing, for efficiency
@@ -67,21 +68,7 @@ class Command(BaseCommand):
         self.options = kwargs
 
         self.stats = defaultdict(int)
-        htids = self.options['htids']
-        self.stats['total'] = len(htids)
-
-        # check for any ids that are in the database and skip them
-        existing_ids = DigitizedWork.objects.filter(source_id__in=htids) \
-            .values_list('source_id', flat=True)
-
-        if existing_ids:
-            self.stats['skipped'] += len(existing_ids)
-            if self.verbosity >= self.v_normal:
-                self.stdout.write('Skipping ids already present: %s' %
-                                  ', '.join(existing_ids))
-
-        # only process ids that are not already present in the database
-        htids = set(htids) - set(existing_ids)
+        htids = self.ids_to_process()
 
         works = []
         for htid in htids:
@@ -112,6 +99,35 @@ class Command(BaseCommand):
             self.stats['pages'], pluralize(self.stats['pages'])
         )
         self.stdout.write(summary)
+
+    def ids_to_process(self):
+        '''Determine Hathi ids to be processed. Checks list of ids
+        on the command line and file if specified and filters out
+        any ids already present in the database.'''
+        htids = self.options['htids']
+        # if id file is specified, get ids from the file
+        if self.options['file']:
+            with open(self.options['file']) as idfile:
+                # add all non-empty lines with whitespace removed
+                htids.extend([line.strip() for line in idfile.readlines()
+                              if line.strip()])
+
+        self.stats['total'] = len(htids)
+
+        # check for any ids that are in the database and skip them
+        existing_ids = DigitizedWork.objects.filter(source_id__in=htids) \
+            .values_list('source_id', flat=True)
+
+        if existing_ids:
+            self.stats['skipped'] += len(existing_ids)
+            if self.verbosity >= self.v_normal:
+                self.stdout.write('Skipping ids already present: %s' %
+                                  ', '.join(existing_ids))
+
+        # only process ids that are not already present in the database
+        htids = set(htids) - set(existing_ids)
+
+        return htids
 
     def add_digitizedwork(self, htid):
         '''Add a new work to the database and its data to the file store.'''

@@ -408,7 +408,7 @@ class TestHathiAddCommand(TestCase):
             # fake add_from_hathi method to create
             # a new digwork and corresponding log entry
             digwork = DigitizedWork.objects.create(source_id=htid,
-                page_count=1337)
+                                                   page_count=1337)
             # create log entry for record creation
             LogEntry.objects.log_action(
                 user_id=User.objects.get(username=settings.SCRIPT_USERNAME).pk,
@@ -424,6 +424,34 @@ class TestHathiAddCommand(TestCase):
         digwork = cmd.add_digitizedwork(test_htid)
         assert cmd.stats['created'] == 1
         assert cmd.stats['pages'] == digwork.page_count
+
+    def test_ids_to_process(self):
+        cmd = hathi_add.Command()
+        cmd.stats = defaultdict(int)
+        cmd.stdout = StringIO()
+
+        digwork_ids = DigitizedWork.objects.values_list('source_id', flat=True)
+
+        # all existing ids via command line - nothing to process
+        cmd.options['htids'] = digwork_ids
+        cmd.options['file'] = None
+        assert cmd.ids_to_process() == set()
+
+        # all existing ids via command line - nothing to process
+        new_ids = ['one', 'two', 'three']
+        cmd.options['htids'] = new_ids + list(digwork_ids)
+        assert cmd.ids_to_process() == set(new_ids)
+
+        # with list of ids in a file
+        idfile = tempfile.NamedTemporaryFile(prefix='ht-add-ids', suffix='txt')
+        new_file_ids = ['a', 'b', 'c', 'd', 'efg', 'xyz', ' ']
+        idfile.write('\n'.join(new_file_ids).encode())
+        idfile.flush()  # write out to disk
+        cmd.options['htids'] = []
+        cmd.options['file'] = idfile.name
+        # should include all but the empty line at the end
+        print('ids to proc %s' % cmd.ids_to_process())
+        assert cmd.ids_to_process() == set(new_file_ids[:-1])
 
     @patch('ppa.archive.management.commands.hathi_add.get_solr_connection')
     @patch('ppa.archive.management.commands.hathi_add.Indexable')
