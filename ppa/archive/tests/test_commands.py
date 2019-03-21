@@ -16,9 +16,9 @@ from django.test import TestCase, override_settings
 import pytest
 
 from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound, \
-    HathiBibliographicRecord
+    HathiBibliographicRecord, HathiItemForbidden
 from ppa.archive.models import DigitizedWork
-from ppa.archive.management.commands import hathi_import, index
+from ppa.archive.management.commands import hathi_import, index, hathi_add
 from ppa.archive.solr import get_solr_connection
 
 
@@ -362,3 +362,112 @@ class TestIndexCommand(TestCase):
             assert not mock_cmd_index_method.call_count
             assert not mock_page_index_data.call_count
 
+
+class TestHathiAddCommand(TestCase):
+    fixtures = ['sample_digitized_works']
+
+    @patch('ppa.archive.models.DigitizedWork.add_from_hathi')
+    def test_add_digitizedwork(self, mock_add_from_hathi):
+        cmd = hathi_add.Command()
+        cmd.stats = defaultdict(int)
+        cmd.stderr = StringIO()
+        cmd.bib_api = Mock()
+
+        # simulate record not found
+        mock_add_from_hathi.side_effect = HathiItemNotFound
+        test_htid = 'a:123'
+        rval = cmd.add_digitizedwork(test_htid)
+        mock_add_from_hathi.assert_called_with(
+            test_htid, cmd.bib_api, get_data=True,
+            log_msg_src='via hathi_add script')
+        assert cmd.stats['error'] == 1
+        assert rval is None
+        assert cmd.stderr.getvalue() == \
+            "Error: record not found for '%s'" % test_htid
+        # no partial record hanging around
+        assert not DigitizedWork.objects.filter(source_id=test_htid)
+
+        # simulate permission denied
+        cmd.stderr = StringIO()
+        cmd.stats = defaultdict(int)
+        mock_add_from_hathi.side_effect = HathiItemForbidden
+        test_htid = 'a:123'
+        rval = cmd.add_digitizedwork(test_htid)
+        mock_add_from_hathi.assert_called_with(
+            test_htid, cmd.bib_api, get_data=True,
+            log_msg_src='via hathi_add script')
+        assert cmd.stats['error'] == 1
+        assert rval is None
+        assert cmd.stderr.getvalue() == \
+            "Error: data access not allowed for '%s'" % test_htid
+        # no partial record hanging aruond
+        assert not DigitizedWork.objects.filter(source_id=test_htid)
+
+        # simulate success
+        def fake_add_from_hathi(htid, *args, **kwargs):
+            # fake add_from_hathi method to create
+            # a new digwork and corresponding log entry
+            digwork = DigitizedWork.objects.create(source_id=htid,
+                page_count=1337)
+            # create log entry for record creation
+            LogEntry.objects.log_action(
+                user_id=User.objects.get(username=settings.SCRIPT_USERNAME).pk,
+                content_type_id=ContentType.objects.get_for_model(digwork).pk,
+                object_id=digwork.pk,
+                object_repr=str(digwork),
+                change_message='Created from unit test',
+                action_flag=ADDITION)
+
+            return digwork
+
+        mock_add_from_hathi.side_effect = fake_add_from_hathi
+        digwork = cmd.add_digitizedwork(test_htid)
+        assert cmd.stats['created'] == 1
+        assert cmd.stats['pages'] == digwork.page_count
+
+    @patch('ppa.archive.management.commands.hathi_add.get_solr_connection')
+    @patch('ppa.archive.management.commands.hathi_add.Indexable')
+    @patch.object(hathi_add.Command, 'add_digitizedwork')
+    def test_call_command(self, mock_cmd_add_digwork, mock_indexable,
+                          mock_get_solr):
+        stdout = StringIO()
+        digwork_ids = DigitizedWork.objects.values_list('source_id', flat=True)
+        # call on existing ids - all should be skipped
+        call_command('hathi_add', *digwork_ids, stdout=stdout, verbosity=3)
+        # should skip everything since all of the ids already exist
+        mock_cmd_add_digwork.assert_not_called()
+        mock_indexable.index_items.assert_not_called()
+        mock_get_solr.assert_not_called()
+        output = stdout.getvalue()
+        assert 'Skipping ids already present:' in output
+        assert 'skipped %d' % len(digwork_ids) in output
+
+        # call with new id - simulate no work returned
+        test_htid = 'xyz:9876'
+        mock_cmd_add_digwork.return_value = None
+        call_command('hathi_add', test_htid, stdout=stdout, verbosity=3)
+        mock_cmd_add_digwork.assert_called_with(test_htid)
+        mock_indexable.index_items.assert_not_called()
+        mock_get_solr.assert_not_called()
+
+        # call with one new id and one existing  - simulate success
+        mock_digwork = Mock()
+        test_htid = 'stu:6381'
+        mock_cmd_add_digwork.return_value = mock_digwork
+        mocksolr = Mock()
+        test_coll = 'test'
+        mock_get_solr.return_value = (mocksolr, test_coll)
+        stdout = StringIO()
+        call_command('hathi_add', test_htid, digwork_ids[0],
+                     stdout=stdout, verbosity=3)
+        # should index and commit changes
+        mock_indexable.index_items.assert_any_call([mock_digwork])
+        mock_indexable.index_items.assert_any_call(mock_digwork.page_index_data())
+        mock_get_solr.assert_called_with()
+        mocksolr.commit.assert_called_with(test_coll, openSearcher=True)
+        output = stdout.getvalue()
+        assert 'Processed 2 items' in output
+        assert 'skipped 1' in output
+        # NOTE: can't test this because count is set in add_digitizedwork,
+        # which we are mocking out for this test
+        # assert 'Added 1' in output

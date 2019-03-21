@@ -65,7 +65,6 @@ class Command(BaseCommand):
         self.bib_api = HathiBibliographicAPI()
         self.verbosity = kwargs.get('verbosity', self.v_normal)
         self.options = kwargs
-        # self.digwork_content_type = ContentType.objects.get_for_model(DigitizedWork)
 
         self.stats = defaultdict(int)
         htids = self.options['htids']
@@ -126,7 +125,7 @@ class Command(BaseCommand):
                 log_msg_src='via hathi_add script')
 
         except HathiItemNotFound:
-            self.stderr.write("Error: Record not found for '%s'" % htid)
+            self.stderr.write("Error: record not found for '%s'" % htid)
             self.stats['error'] += 1
             return
 
@@ -138,8 +137,14 @@ class Command(BaseCommand):
             DigitizedWork.objects.filter(source_id=htid).delete()
             return
 
-        # track success
-        self.stats['created'] += 1
+        log_entry = LogEntry.objects.filter(object_id=digwork.id,
+                                            action_time__gt=before).first()
+
+        # track successful creation of a new record
+        if log_entry and log_entry.action_flag == ADDITION:
+            self.stats['created'] += 1
+        # NOTE: currently hathi data is only retrieved for new records,
+        # so ignoring updates here (metadata changes only)
         self.stats['pages'] += digwork.page_count
 
         return digwork
