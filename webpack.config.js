@@ -54,7 +54,7 @@ module.exports = env => ({
         new MiniCssExtractPlugin({ // extracts CSS to a single file per entrypoint
             filename: devMode ? 'css/[name].css' : 'css/[name]-[hash].min.css', // append hashes in prod
         }),
-        ...(devMode ? [] : [new CleanWebpackPlugin('bundles')]), // clear out static when rebuilding in prod/qa
+        ...(devMode ? [] : [new CleanWebpackPlugin('bundles')]), // clear out bundle dir when rebuilding in prod/qa
     ],
     resolve: {
         extensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.scss'] // enables importing these without extensions

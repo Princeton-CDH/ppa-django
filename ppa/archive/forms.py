@@ -1,11 +1,14 @@
+import json
+
 from django import forms
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db.models import Max, Min
 from django.utils.safestring import mark_safe
+from django.utils.html import conditional_escape
 
-from ppa.archive.models import Collection, DigitizedWork, NO_COLLECTION_LABEL
+from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork
 
 
 class SelectDisabledMixin(object):
@@ -387,6 +390,34 @@ class SearchWithinWorkForm(forms.Form):
             '_align': 'left'
     }))
 
+    def as_json(self):
+        """Serialize the form's attributes as JSON for passing to a client-side
+        renderer (e.g. vue.js)."""
+
+        output = {
+            'fields': {}
+        }
+
+        for name, field in self.fields.items():
+            bf = self[name]
+
+            output['fields'][name] = {
+                # unbound attributes
+                'name': name,
+                'id': self.auto_id % name,
+                'label': field.label,
+                'required': field.required,
+                'disabled': field.disabled,
+                'widget': field.widget.__dict__,
+                # bound data
+                'errors': bf.errors,
+                'help_text': bf.help_text,
+                'field_name': bf.name,
+                'data': bf.data,
+                'value': bf.value(),
+            }
+        
+        return json.dumps(output)
 
 class AddToCollectionForm(forms.Form):
     '''

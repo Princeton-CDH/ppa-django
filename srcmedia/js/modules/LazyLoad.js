@@ -51,6 +51,7 @@ class ImageLazyLoader {
         if ('IntersectionObserver' in window) {
             let observer = new IntersectionObserver((items, observer) => {
                 items.forEach(item => {
+                    console.log(item)
                     if (item.isIntersecting) {
                         loadImage(item.target)
                         observer.unobserve(item.target)
