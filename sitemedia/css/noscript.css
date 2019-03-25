@@ -6,7 +6,7 @@ img[data-src] {
 }
 
 /* adjust display to make search form usable with no javascript */
-.advanced {
+#search .advanced {
     display: block;
 }
 .sort .dropdown, .clear-selection, .show-advanced, #histogram {
