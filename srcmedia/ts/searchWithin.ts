@@ -1,5 +1,6 @@
-import clearable from './clearable'
-import ImageLazyLoader from './modules/LazyLoad'
+import clearable from '../js/clearable'
+import ImageLazyLoader from '../js/modules/LazyLoad'
+import KeywordSearch from './modules/KeywordSearch'
 
 $(function(){
     const $$pagePreviews = $('img[data-src]')
@@ -8,4 +9,6 @@ $(function(){
     $('.question-popup').popup()
 
     new ImageLazyLoader($$pagePreviews.get()) // lazy load images
+
+    // new KeywordSearch('')
 })

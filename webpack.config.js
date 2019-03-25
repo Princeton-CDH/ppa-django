@@ -17,7 +17,7 @@ module.exports = env => ({
         ],
         home: './js/home.js', // homepage (parallax)
         search: './js/search.js', // scripts & styles for search page
-        searchWithin: './js/searchWithin.js', // vue components & styles for search within work page
+        searchWithin: './ts/searchWithin.ts', // components & styles for search within work page
     },
     output: {
         path: path.resolve(__dirname, 'bundles'), // where to output bundles
