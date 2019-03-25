@@ -140,16 +140,17 @@ class Command(BaseCommand):
                 htid, self.bib_api, get_data=True,
                 log_msg_src='via hathi_add script')
 
-        except HathiItemNotFound:
-            self.stderr.write("Error: record not found for '%s'" % htid)
+        except (HathiItemNotFound, HathiItemForbidden) as err:
+            if isinstance(err, HathiItemNotFound):
+                err_msg = 'record not found'
+            else:
+                # currently the only place forbidden can happen
+                #  is data aggregate request
+                err_msg = 'data access not allowed'
+            self.stderr.write("Error: %s for '%s'" % (err_msg, htid))
             self.stats['error'] += 1
-            return
-
-        except HathiItemForbidden:
-            # currently the only place this can fail is data aggregate request
-            self.stderr.write("Error: data access not allowed for '%s'" % htid)
-            self.stats['error'] += 1
-            # remove the partial record
+            # remove the partial record if it exists
+            # (i.e. if metadata succeeded but data failed)
             DigitizedWork.objects.filter(source_id=htid).delete()
             return
 
