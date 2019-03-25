@@ -724,50 +724,44 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
         script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
 
-        # if this is new record, create log entry
-        if created:
-            # create log entry for record creation
-            LogEntry.objects.log_action(
-                user_id=script_user.id,
-                content_type_id=ContentType.objects.get_for_model(digwork).pk,
-                object_id=digwork.pk,
-                object_repr=str(digwork),
-                # change_message='Created from hathi_import script',
-                change_message='Created %s' % log_msg_src,
-                action_flag=ADDITION)
-
         # if this is an existing record, check if updates are needed
         source_updated = None
         if not created and not update:
             source_updated = bibdata.copy_last_updated(htid)
             if digwork.updated.date() > source_updated:
                 # local copy is newer than last source modification date
-                # and update is not requested; return
+                # and update is not requested; return un modified
                 return digwork
 
         # populate digitized item in the database
         digwork.populate_from_bibdata(bibdata)
         digwork.save()
 
-        # if this was not a new record, log the update
+        # create a log entry to document record creation or change
+        # if created, action is addition and message is creation
+        log_change_message = 'Created %s' % log_msg_src
+        log_action = ADDITION
+        # if this was not a new record, log as an update
         if not created:
             # create log entry for updating an existing record
             # include details about why the update happened if possible
-            msg_detail = ''
             if update:
                 msg_detail = ' (forced update)'
             else:
                 msg_detail = '; source record last updated %s' % source_updated
+            log_change_message = 'Updated %s%s' % (log_msg_src, msg_detail)
+            log_action = CHANGE
 
-            LogEntry.objects.log_action(
-                user_id=script_user.id,
-                content_type_id=ContentType.objects.get_for_model(digwork).pk,
-                object_id=digwork.pk,
-                object_repr=str(digwork),
-                change_message='Updated %s%s' % (log_msg_src, msg_detail),
-                action_flag=CHANGE)
+        # create log entry for record creation
+        LogEntry.objects.log_action(
+            user_id=script_user.id,
+            content_type_id=ContentType.objects.get_for_model(digwork).pk,
+            object_id=digwork.pk,
+            object_repr=str(digwork),
+            change_message=log_change_message,
+            action_flag=log_action)
 
-        # get data if requested if this was a new record
+        # get data if requested and if this was a new record
         if get_data and created:
             digwork.get_hathi_data()
 
