@@ -150,7 +150,7 @@ class TestArchiveViews(TestCase):
         dial = DigitizedWork.objects.get(source_id='chi.78013704')
         dial.status = DigitizedWork.SUPPRESSED
         # don't actually process the data deletion
-        with patch.object(dial, 'delete_hathi_pairtree_data') \
+        with patch.object(dial, 'hathi') \
           as mock_delete_pairtree_data:
             dial.save()
 
