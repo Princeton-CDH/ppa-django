@@ -398,3 +398,16 @@ class AddToCollectionForm(forms.Form):
         required=True, queryset=Collection.objects.all().order_by('name'),
         help_text='Hold down ctrl or command key (on MacOS) to select '
                   'multiple collections.')
+
+
+class AddFromHathiForm(forms.Form):
+    hathi_ids = forms.CharField(
+        label='HathiTrust Identifiers',
+        required=True, widget=forms.Textarea,
+        help_text='List of Hathi IDs for items to add, one per line. '  + \
+            'Existing records and invalid IDs will be skipped.'
+    )
+
+    # def get_hathi_ids(self):
+
+

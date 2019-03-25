@@ -1,11 +1,13 @@
+from collections import OrderedDict
 import csv
+from json.decoder import JSONDecodeError
 import logging
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError, MultipleObjectsReturned
 from django.core.paginator import Paginator
 from django.http import HttpResponse, Http404
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import redirect, get_object_or_404, render
 from django.utils.http import urlencode
 from django.utils.timezone import now
 from django.urls import reverse
@@ -14,7 +16,9 @@ from django.views.generic.base import RedirectView, TemplateView
 from django.views.generic.edit import FormView
 from SolrClient.exceptions import SolrError
 
-from ppa.archive.forms import SearchForm, AddToCollectionForm, SearchWithinWorkForm
+from ppa.archive.forms import SearchForm, AddToCollectionForm, \
+    SearchWithinWorkForm, AddFromHathiForm
+from ppa.archive.hathi import HathiItemNotFound, HathiItemForbidden
 from ppa.archive.models import DigitizedWork, NO_COLLECTION_LABEL
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 from ppa.common.views import VaryOnHeadersMixin
@@ -566,6 +570,80 @@ class AddToCollection(ListView, FormView):
         # doesn't pass the form with error set
         self.object_list = self.get_queryset()
         return self.render_to_response(self.get_context_data(form=form))
+
+
+class AddFromHathiView(FormView):
+    template_name = 'archive/add_from_hathi.html'
+    form_class = AddFromHathiForm
+    page_title = 'Add new records from HathiTrust'
+
+    def get_context_data(self):
+        context = super().get_context_data()
+        context['page_title'] = self.page_title
+        return context
+
+    def form_valid(self, form):
+        # Process valid form data; should return an HttpResponse.
+
+        # get list of ids from form input
+        htids = [line.strip() for line in form.cleaned_data['hathi_ids'].split('\n')
+                 if line.strip()]
+
+        # TODO: refactor overlapping functionality from hathi_add script
+
+        # check for any ids that are in the database and skip them
+        # create dictionary of source id -> id to allow generating
+        # admin urls in the output
+        existing_ids = OrderedDict(DigitizedWork.objects.filter(source_id__in=htids) \
+            .values_list('source_id', 'id'))
+
+        # only process ids that are not already present in the database
+        htids = set(htids) - set(existing_ids.keys())
+        # IndexableSignalHandler.disconnect()
+
+        # create initial results dict, marking any skipped ids
+        results = OrderedDict((htid, 'Skipped; already in the database')
+                               for htid in existing_ids)
+
+        # TODO: refactor overlapping functionality from hathi_add script
+        works = []
+        for htid in htids:
+            try:
+                digwork = DigitizedWork.add_from_hathi(
+                    htid, get_data=True,
+                    log_msg_src='via django admin')
+                # TODO pass in current user
+                if digwork:
+                    works.append(digwork)
+
+                results[htid] = 'Success!' # link to record?
+            except (HathiItemNotFound, JSONDecodeError):
+                # json decode error possible/hopefully  temporary?
+                # getting 200 ok with php error output for bad id
+                results[htid] = 'Error loading record; check that id is valid.'
+            except HathiItemForbidden:
+                results[htid] = 'Permission denied to download data.'
+
+        # index the new content - both metadata and full text
+        if works:
+            DigitizedWork.index_items(works)
+            for work in works:
+                # index page index data in chunks (returns a generator)
+                DigitizedWork.index_items(work.page_index_data())
+
+            solr, solr_collection = get_solr_connection()
+            solr.commit(solr_collection, openSearcher=True)
+
+        # Default form_valid behavior is to redirect to success url,
+        # but we actually want to redisplay the template with results
+        # and allow submitting the form again with a new batch.
+
+        return render(self.request, self.template_name, context={
+            'results': results,
+            'existing_ids': existing_ids,
+            'form': self.form_class(),
+            'page_title': self.page_title
+            })
 
 
 class OpenSearchDescriptionView(TemplateView):
