@@ -3,6 +3,13 @@
 Deploy and Upgrade notes
 ========================
 
+3.2
+---
+
+* Requires configurations for **HATHITRUST_OAUTH_KEY** and
+  **HATHITRUST_OAUTH_SECRET** in order to use HathiTrust Data API
+  for adding new items from HathiTrust.
+
 3.0.1
 -----
 

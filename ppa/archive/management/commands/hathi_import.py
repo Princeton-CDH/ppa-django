@@ -40,7 +40,6 @@ from glob import glob
 import logging
 import os
 import time
-from zipfile import ZipFile
 
 from django.conf import settings
 from django.contrib.admin.models import LogEntry, ADDITION, CHANGE
@@ -48,6 +47,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from django.template.defaultfilters import pluralize
+from django.utils.timezone import now
 from pairtree import pairtree_client, storage_exceptions
 import progressbar
 
@@ -66,7 +66,6 @@ class Command(BaseCommand):
     bib_api = None
     hathi_pairtree = {}
     stats = None
-    script_user = None
     options = {}
     #: normal verbosity level
     v_normal = 1
@@ -91,6 +90,7 @@ class Command(BaseCommand):
         self.bib_api = HathiBibliographicAPI()
         self.verbosity = kwargs.get('verbosity', self.v_normal)
         self.options = kwargs
+        self.digwork_content_type = ContentType.objects.get_for_model(DigitizedWork)
 
         # bulk import only for now
         # - eventually support list of ids + rsync?
@@ -102,9 +102,6 @@ class Command(BaseCommand):
         #   or update requested in script options
 
         self.stats = defaultdict(int)
-
-        # retrieve script user for generating log entries / record history
-        self.script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
 
         # if ids are explicitly specified on the command line, only
         # index those items
@@ -140,7 +137,10 @@ class Command(BaseCommand):
                 continue
 
             # count pages in the pairtree zip file and update digwork page count
-            self.count_pages(digwork)
+            try:
+                self.stats['pages'] += digwork.count_pages()
+            except storage_exceptions.ObjectNotFoundException:
+                self.stderr.write('%s not found in datastore' % digwork.source_id)
 
             if progbar:
                 progbar.update(self.stats['count'])
@@ -200,104 +200,43 @@ class Command(BaseCommand):
         or no update is needed; otherwise, returns the
         :class:`~ppa.archive.models.DigitizedWork`.'''
 
-        # get bibliographic data for this record from Hathi api
-        # - needed to check if update is required for existing records,
-        #   and o populate metadata for new records
+        # store the current time to find log entries created after
+        before = now()
+
         try:
-            # should only error on user-supplied ids, but still possible
-            bibdata = self.bib_api.record('htid', htid)
+            digwork = DigitizedWork.add_from_hathi(
+                htid, self.bib_api, update=self.options['update'],
+                log_msg_src='via hathi_import script')
         except HathiItemNotFound:
             self.stdout.write("Error: Bibliographic data not found for '%s'" % htid)
             self.stats['error'] += 1
             return
 
-        # find existing record or create a new one
-        digwork, created = DigitizedWork.objects.get_or_create(source_id=htid)
+        # check log entries for this record to determine what was done
+        log_entries = LogEntry.objects.filter(
+            content_type_id=self.digwork_content_type.pk,
+            object_id=digwork.pk,
+            action_time__gte=before)
 
-        if created:
-            # create log entry for record creation
-            LogEntry.objects.log_action(
-                user_id=self.script_user.id,
-                content_type_id=ContentType.objects.get_for_model(digwork).pk,
-                object_id=digwork.pk,
-                object_repr=str(digwork),
-                change_message='Created via hathi_import script',
-                action_flag=ADDITION)
+        # no log entry - nothing was done (not new, no update needed)
+        if not log_entries.exists():
+            # local copy is newer than last source modification date
+            if self.verbosity > self.v_normal:
+                self.stdout.write('Source record last updated %s, no update needed'
+                                  % digwork.updated.date())
+            # nothing to do; continue to next item
+            self.stats['skipped'] += 1
 
-        # if this is an existing record, check if updates are needed
-        source_updated = None
-        if not created and not self.options['update']:
-            source_updated = bibdata.copy_last_updated(htid)
-            if digwork.updated.date() > source_updated:
-                # local copy is newer than last source modification date
-                if self.verbosity > self.v_normal:
-                    self.stdout.write('Source record last updated %s, no update needed'
-                                      % source_updated)
-                # nothing to do; continue to next item
-                self.stats['skipped'] += 1
-                return
-            else:
-                # report in verbose mode
-                if self.verbosity > self.v_normal:
-                    self.stdout.write('Source record last updated %s, updated needed'
-                                      % source_updated)
-
-        # update or populate digitized item in the database
-        digwork.populate_from_bibdata(bibdata)
-        digwork.save()
-
-        if not created:
-            # create log entry for updating an existing record
-            # 0 include details about why the update happened if possible
-            msg_detail = ''
-            if self.options['update']:
-                msg_detail = ' (forced update)'
-            else:
-                msg_detail = '; source record last updated %s' % source_updated
-
-            LogEntry.objects.log_action(
-                user_id=self.script_user.id,
-                content_type_id=ContentType.objects.get_for_model(digwork).pk,
-                object_id=digwork.pk,
-                object_repr=str(digwork),
-                change_message='Updated via hathi_import script%s' % msg_detail,
-                action_flag=CHANGE)
-
-        if created:
-            self.stats['created'] += 1
-        else:
+        elif log_entries.first().action_flag == CHANGE:
+            # report if record was changed and update not forced
+            if not self.options['update']:
+                self.stdout.write('Source record last updated %s, update needed'
+                                  % digwork.updated.date())
+            # count the update
             self.stats['updated'] += 1
 
+        elif log_entries.first().action_flag == ADDITION:
+            # count the new record
+            self.stats['created'] += 1
+
         return digwork
-
-    def count_pages(self, digwork):
-        '''Count the number of pages for a digitized work in the
-        pairtree content.'''
-
-        # NOTE: this might be overkill now that we're no longer
-        # indexing page content here, but should still be useful as
-        # a sanity check
-
-        # use existing pairtree client since it is already initialized
-        ptree_client = self.hathi_pairtree[digwork.hathi_prefix]
-
-        # count the files in the zipfile
-        start = time.time()
-        try:
-            with ZipFile(digwork.hathi_zipfile_path(ptree_client)) as ht_zip:
-                page_count = len(ht_zip.namelist())
-                logger.debug('Counted %d pages in zipfile in %f sec',
-                             page_count, time.time() - start)
-        except storage_exceptions.ObjectNotFoundException:
-            self.stderr.write('%s not found in datastore' % digwork.source_id)
-            return
-
-        # NOTE: could also count pages via mets file, but that's slower
-        # than counting via zipfile name list
-
-        self.stats['pages'] += page_count
-
-        # store page count in the database, if changed
-        if digwork.page_count != page_count:
-            digwork.page_count = page_count
-            digwork.save()
