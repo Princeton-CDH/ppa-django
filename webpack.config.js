@@ -1,6 +1,5 @@
 const path = require('path')
 const BundleTracker = require('webpack-bundle-tracker')
-const VueLoaderPlugin = require('vue-loader/lib/plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 const GlobImporter = require('node-sass-glob-importer')
@@ -27,16 +26,12 @@ module.exports = env => ({
     },
     module: {
         rules: [
-            { // compile Vue Single-File Components (SFCs)
-                test: /\.vue$/,
-                loader: 'vue-loader',
-            },
             { // transpile ES6+ to ES5 using Babel
-                test: /\.js$/,
-                loader: 'babel-loader',
+                test: /\.(t|j)sx?$/,
+                loader: 'awesome-typescript-loader',
                 exclude: /node_modules/, // don't transpile dependencies
             },
-            { // load and compile styles to CSS, including <style> blocks in SFCs
+            { // load and compile styles to CSS
                 test: /\.(sa|sc|c)ss$/,
                 use: [
                     devMode ? 'style-loader' : MiniCssExtractPlugin.loader, // use style-loader for hot reload in dev
@@ -56,14 +51,13 @@ module.exports = env => ({
     },
     plugins: [
         new BundleTracker({ filename: 'webpack-stats.json' }), // tells Django where to find webpack output
-        new VueLoaderPlugin(), // necessary for vue-loader to work
         new MiniCssExtractPlugin({ // extracts CSS to a single file per entrypoint
             filename: devMode ? 'css/[name].css' : 'css/[name]-[hash].min.css', // append hashes in prod
         }),
         ...(devMode ? [] : [new CleanWebpackPlugin('bundles')]), // clear out static when rebuilding in prod/qa
     ],
     resolve: {
-        extensions: ['*', '.js', '.vue', '.json', '.scss'] // enables importing these without extensions
+        extensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.scss'] // enables importing these without extensions
     },
     devServer: {
         contentBase: path.join(__dirname, 'bundles'), // serve this as webroot
