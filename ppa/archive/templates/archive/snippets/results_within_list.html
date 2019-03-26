@@ -1,12 +1,4 @@
 {% load ppa_tags %}
-{% if not error %}
-<div class="occurrences ui center aligned text container">
-    <p>{{ page_obj.paginator.count }} occurrence{{ page_obj.paginator.count|pluralize }}</p>
-</div>
-<div class="pagination ui container">
-    {% include 'archive/snippets/pagination.html' %}
-</div>
-{% endif %}
 <div class="results-list ui container">
     {% for page in solr_results %}
         {% with highlights=page_highlights|dict_item:page.id%}

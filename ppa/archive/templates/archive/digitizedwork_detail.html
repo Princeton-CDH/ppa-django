@@ -4,10 +4,6 @@
 
 {% block js %}
 {% if object.has_fulltext %}
-<script>
-window.formData = {{ search_form.as_json|safe }}
-window.formData.target = "{{ object.get_absolute_url }}"
-</script>
 {% render_bundle 'searchWithin' 'js' %}
 {% endif %}
 {% endblock %}
@@ -127,20 +123,33 @@ window.formData.target = "{{ object.get_absolute_url }}"
 {# search within a volume currently only supported for hathi content #}
 {% if object.has_fulltext %}
 <section class="ui basic vertical segment container">
-    <form id="search-within" class="no-js">
-        <fieldset>
+    <form id="search-within" class="ui form no-js">
+        <div class="ui vertical basic grid segment">
             <legend class="sr-only">text search fields</legend>
-            {% render_field search_form.query %}
+            <div class="twelve wide column">
+                {% render_field search_form.query %}
+                <span class="question-popup" data-html="{{ search_form.QUESTION_POPUP_TEXT }}" data-position="top center">
+                    <i class="ui question circle icon"></i>
+                </span>
+            </div>
             <input class="sr-only sr-only-focusable" type="submit" aria-label="submit search">
-        </fieldset>
+        </div>
     </form>
     {% include 'archive/snippets/jump_top.html' with anchor='digitized-work' %}
 </section>
+  {% if query or page_highlights %}
+    {% if not error %}
+    <div class="occurrences ui center aligned text container">
+        <p>{{ page_obj.paginator.count }} occurrence{{ page_obj.paginator.count|pluralize }}</p>
+    </div>
+    <div class="pagination ui container">
+        {% include 'archive/snippets/pagination.html' %}
+    </div>
+    {% endif %}
   {# display matching pages with highlighted text if there is a search active #}
   <div class="ajax-container">
-  {% if query or page_highlights %}
     {% include 'archive/snippets/results_within_list.html' %}
-  {% endif %}
   </div>
+  {% endif %}
 {% endif %}
 {% endblock %}

@@ -395,7 +395,9 @@ class SearchWithinWorkForm(forms.Form):
         renderer (e.g. vue.js)."""
 
         output = {
-            'fields': {}
+            'fields': {},
+            'valid': self.is_valid(),
+            'errors': self.errors.as_json(),
         }
 
         for name, field in self.fields.items():
