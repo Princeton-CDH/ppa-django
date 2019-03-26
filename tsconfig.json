@@ -4,7 +4,7 @@
         "sourceMap": true,
         "noImplicitAny": true, // best practice
         "strictNullChecks": true, // best practice
-        "module": "es6", // use es6-style module resolution
+        "moduleResolution": "node", // load from node-modules
         "jsx": "react", // compile jsx into render functions
         "target": "esnext", // don't transpile; we let babel handle this
         "allowJs": true, // allow mixed ts-js project
@@ -12,9 +12,9 @@
             "esnext", // full support for latest js features
             "dom", // assume DOM APIs are present
             "dom.iterable", // assume newer DOM APIs are present
-        ]
+        ],
     },
     "include": [
-        "./srcmedia/"
+        "srcmedia/"
     ]
 }

@@ -147,9 +147,9 @@
     </div>
     {% endif %}
   {# display matching pages with highlighted text if there is a search active #}
-  <div class="ajax-container">
+  <output class="ajax-container" form="search-within">
     {% include 'archive/snippets/results_within_list.html' %}
-  </div>
+  </output>
   {% endif %}
 {% endif %}
 {% endblock %}

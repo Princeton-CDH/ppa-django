@@ -29,6 +29,7 @@ module.exports = env => ({
             { // compile TypeScript to js
                 test: /\.tsx?$/,
                 loader: 'awesome-typescript-loader',
+                exclude: /node_modules/, // don't transpile dependencies
             },
             { // transpile es6+ js to es5
                 test: /\.js$/,

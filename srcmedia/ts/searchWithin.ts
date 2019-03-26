@@ -1,6 +1,6 @@
 import clearable from '../js/clearable'
 import ImageLazyLoader from '../js/modules/LazyLoad'
-import KeywordSearch from './modules/KeywordSearch'
+import PageSearchForm from './modules/PageSearchForm'
 
 $(function(){
     $('.question-popup').popup()
@@ -9,4 +9,8 @@ $(function(){
     const $$pagePreviews = $('img[data-src]')
 
     new ImageLazyLoader($$pagePreviews.get()) // lazy load images
+
+    let form = document.getElementById('search-within') as HTMLFormElement
+    let rf = new PageSearchForm(form)
+
 })
