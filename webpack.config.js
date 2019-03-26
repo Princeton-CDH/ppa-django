@@ -31,6 +31,11 @@ module.exports = env => ({
                 loader: 'awesome-typescript-loader',
                 exclude: /node_modules/, // don't transpile dependencies
             },
+            { // ensure output js has preserved sourcemaps
+                enforce: "pre",
+                test: /\.js$/,
+                loader: "source-map-loader"
+            },
             { // transpile es6+ js to es5
                 test: /\.js$/,
                 loader: 'babel-loader',
