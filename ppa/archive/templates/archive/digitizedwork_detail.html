@@ -137,19 +137,9 @@
     </form>
     {% include 'archive/snippets/jump_top.html' with anchor='digitized-work' %}
 </section>
-  {% if query or page_highlights %}
-    {% if not error %}
-    <div class="occurrences ui center aligned text container">
-        <p>{{ page_obj.paginator.count }} occurrence{{ page_obj.paginator.count|pluralize }}</p>
-    </div>
-    <div class="pagination ui container">
-        {% include 'archive/snippets/pagination.html' %}
-    </div>
-    {% endif %}
   {# display matching pages with highlighted text if there is a search active #}
   <output class="ajax-container" form="search-within">
     {% include 'archive/snippets/results_within_list.html' %}
   </output>
-  {% endif %}
 {% endif %}
 {% endblock %}
