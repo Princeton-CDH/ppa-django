@@ -1,12 +1,18 @@
 {
     "compilerOptions": {
         "outDir": "./bundles/",
-        "sourceMap": true,          // allow sourcemap support
-        "strictNullChecks": true,   // enable strict null checks as a best practice
-        "module": "es6",            // specify module code generation
-        "jsx": "react",             // use typescript to transpile jsx to js
-        "target": "es5",            // specify ECMAScript target version
-        "allowJs": true             // allow a partial TypeScript and JavaScript codebase
+        "sourceMap": true,
+        "noImplicitAny": true, // best practice
+        "strictNullChecks": true, // best practice
+        "module": "es6", // use es6-style module resolution
+        "jsx": "react", // compile jsx into render functions
+        "target": "esnext", // don't transpile; we let babel handle this
+        "allowJs": true, // allow mixed ts-js project
+        "lib": [
+            "esnext", // full support for latest js features
+            "dom", // assume DOM APIs are present
+            "dom.iterable", // assume newer DOM APIs are present
+        ]
     },
     "include": [
         "./srcmedia/"

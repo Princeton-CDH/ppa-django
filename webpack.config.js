@@ -26,9 +26,13 @@ module.exports = env => ({
     },
     module: {
         rules: [
-            { // transpile ES6+ to ES5 using Babel
-                test: /\.(t|j)sx?$/,
+            { // compile TypeScript to js
+                test: /\.tsx?$/,
                 loader: 'awesome-typescript-loader',
+            },
+            { // transpile es6+ js to es5
+                test: /\.js$/,
+                loader: 'babel-loader',
                 exclude: /node_modules/, // don't transpile dependencies
             },
             { // load and compile styles to CSS
