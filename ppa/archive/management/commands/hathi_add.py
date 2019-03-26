@@ -32,7 +32,7 @@ from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound, \
 from ppa.archive.models import DigitizedWork
 from ppa.archive.signals import IndexableSignalHandler
 from ppa.archive.solr import Indexable, get_solr_connection
-
+from ppa.archive.util import HathiImporter
 
 logger = logging.getLogger(__name__)
 
@@ -61,34 +61,43 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         # disconnect signal handler for on-demand indexing, for efficiency
         # (index in bulk after an update, not one at a time)
-        IndexableSignalHandler.disconnect()
 
         self.bib_api = HathiBibliographicAPI()
         self.verbosity = kwargs.get('verbosity', self.v_normal)
         self.options = kwargs
 
         self.stats = defaultdict(int)
+        # determine ids from command line and/or input file
         htids = self.ids_to_process()
 
-        works = []
-        for htid in htids:
+        # create importer and filter out existing ids
+        htimporter = HathiImporter(htids)
+        htimporter.filter_existing_ids()
+
+        # report on any requested ids that are already in the db
+        if htimporter.existing_ids:
+            self.stats['skipped'] += len(htimporter.existing_ids)
             if self.verbosity >= self.v_normal:
-                self.stdout.write('Adding %s' % htid)
+                self.stdout.write('Skipping ids already present: %s' %
+                                  ', '.join(htimporter.existing_ids.keys()))
 
-            self.stats['count'] += 1
-            digwork = self.add_digitizedwork(htid)
-            if digwork:
-                works.append(digwork)
+        # add records for all remaining ids
+        htimporter.add_items(log_msg_src='via hathi_add script')
 
-        # index the new content - both metadata and full text
-        if works:
-            Indexable.index_items(works)
-            for work in works:
-                # index page index data in chunks (returns a generator)
-                Indexable.index_items(work.page_index_data())
+        # count and report on errors
+        for htid, status in htimporter.results.items():
+            # report errors to stderr
+            if status != 'Success' and 'Skipped' not in status:
+                self.stderr.write("%s - %s" % (htid, status))
+                self.stats['error'] += 1
 
-            solr, solr_collection = get_solr_connection()
-            solr.commit(solr_collection, openSearcher=True)
+        # get totals for added works & pages
+        self.stats['created'] = len(htimporter.imported_works)
+        self.stats['pages'] = sum(digwork.page_count
+                                  for digwork in htimporter.imported_works)
+
+        # index works and pages for newly added items
+        htimporter.index()
 
         summary = '\nProcessed {:,d} item{}.' + \
         '\nAdded {:,d}; skipped {:,d}; {:,d} error{}; imported {:,d} page{}.'
@@ -102,8 +111,7 @@ class Command(BaseCommand):
 
     def ids_to_process(self):
         '''Determine Hathi ids to be processed. Checks list of ids
-        on the command line and file if specified and filters out
-        any ids already present in the database.'''
+        on the command line and file if specified.'''
         htids = self.options['htids']
         # if id file is specified, get ids from the file
         if self.options['file']:
@@ -113,55 +121,4 @@ class Command(BaseCommand):
                               if line.strip()])
 
         self.stats['total'] = len(htids)
-
-        # check for any ids that are in the database and skip them
-        existing_ids = DigitizedWork.objects.filter(source_id__in=htids) \
-            .values_list('source_id', flat=True)
-
-        if existing_ids:
-            self.stats['skipped'] += len(existing_ids)
-            if self.verbosity >= self.v_normal:
-                self.stdout.write('Skipping ids already present: %s' %
-                                  ', '.join(existing_ids))
-
-        # only process ids that are not already present in the database
-        htids = set(htids) - set(existing_ids)
-
         return htids
-
-    def add_digitizedwork(self, htid):
-        '''Add a new work to the database and its data to the file store.'''
-
-        # store the current time to find log entries created after
-        before = now()
-
-        try:
-            digwork = DigitizedWork.add_from_hathi(
-                htid, self.bib_api, get_data=True,
-                log_msg_src='via hathi_add script')
-
-        except (HathiItemNotFound, HathiItemForbidden) as err:
-            if isinstance(err, HathiItemNotFound):
-                err_msg = 'record not found'
-            else:
-                # currently the only place forbidden can happen
-                #  is data aggregate request
-                err_msg = 'data access not allowed'
-            self.stderr.write("Error: %s for '%s'" % (err_msg, htid))
-            self.stats['error'] += 1
-            # remove the partial record if it exists
-            # (i.e. if metadata succeeded but data failed)
-            DigitizedWork.objects.filter(source_id=htid).delete()
-            return
-
-        log_entry = LogEntry.objects.filter(object_id=digwork.id,
-                                            action_time__gt=before).first()
-
-        # track successful creation of a new record
-        if log_entry and log_entry.action_flag == ADDITION:
-            self.stats['created'] += 1
-        # NOTE: currently hathi data is only retrieved for new records,
-        # so ignoring updates here (metadata changes only)
-        self.stats['pages'] += digwork.page_count
-
-        return digwork

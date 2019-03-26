@@ -401,13 +401,18 @@ class AddToCollectionForm(forms.Form):
 
 
 class AddFromHathiForm(forms.Form):
+    '''Form to input HathiTrust IDs for items to be added.'''
     hathi_ids = forms.CharField(
         label='HathiTrust Identifiers',
         required=True, widget=forms.Textarea,
-        help_text='List of Hathi IDs for items to add, one per line. '  + \
+        help_text='List of HathiTrust IDs for items to add, one per line. '  + \
             'Existing records and invalid IDs will be skipped.'
     )
 
-    # def get_hathi_ids(self):
-
+    def get_hathi_ids(self):
+        '''Get list of ids from valid form input. Splits on newlines,
+        strips whitespace, and ignores empty lines.'''
+        return [line.strip()
+                for line in self.cleaned_data['hathi_ids'].split('\n')
+                if line.strip()]
 

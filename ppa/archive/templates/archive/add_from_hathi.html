@@ -24,7 +24,7 @@
         <tr>
             <th scope="col">HathiTrust ID</th>
             <th scope="col">Status</th>
-            <th scope="col">View in Admin</th>
+            <th scope="col">Admin View</th>
             <th scope="col">View on Site</th>
         </tr>
     </thead>
@@ -35,10 +35,12 @@
             <td>{{ htid }}</td>
             <td>{{ result }}</td>
             {% if 'Success' in result or htid in existing_ids %}
-            <td><a href="{% url 'admin:archive_digitizedwork_change' existing_ids|dict_item:htid %}">
+            <td><a href="{{ admin_urls|dict_item:htid }}">
                 View in Admin</a></td>
             <td><a href="{% url 'archive:detail' htid %}">
                 View on Site</a></td>
+            {% else %}
+            <td></td><td></td>
             {% endif %}
         </tr>
         {% endfor %}

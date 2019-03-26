@@ -21,6 +21,7 @@ from ppa.archive.forms import SearchForm, AddToCollectionForm, \
 from ppa.archive.hathi import HathiItemNotFound, HathiItemForbidden
 from ppa.archive.models import DigitizedWork, NO_COLLECTION_LABEL
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
+from ppa.archive.util import HathiImporter
 from ppa.common.views import VaryOnHeadersMixin
 
 
@@ -573,12 +574,15 @@ class AddToCollection(ListView, FormView):
 
 
 class AddFromHathiView(FormView):
+    '''Admin view to add new HathiTrust records by providing a list
+    of ids.'''
     template_name = 'archive/add_from_hathi.html'
     form_class = AddFromHathiForm
     page_title = 'Add new records from HathiTrust'
 
-    def get_context_data(self):
-        context = super().get_context_data()
+    def get_context_data(self, *args, **kwargs):
+        # Add page title to template context data
+        context = super().get_context_data(*args, **kwargs)
         context['page_title'] = self.page_title
         return context
 
@@ -586,63 +590,31 @@ class AddFromHathiView(FormView):
         # Process valid form data; should return an HttpResponse.
 
         # get list of ids from form input
-        htids = [line.strip() for line in form.cleaned_data['hathi_ids'].split('\n')
-                 if line.strip()]
+        htids = form.get_hathi_ids()
 
-        # TODO: refactor overlapping functionality from hathi_add script
-
-        # check for any ids that are in the database and skip them
-        # create dictionary of source id -> id to allow generating
-        # admin urls in the output
-        existing_ids = OrderedDict(DigitizedWork.objects.filter(source_id__in=htids) \
-            .values_list('source_id', 'id'))
-
-        # only process ids that are not already present in the database
-        htids = set(htids) - set(existing_ids.keys())
+        htimporter = HathiImporter(htids)
+        htimporter.filter_existing_ids()
         # IndexableSignalHandler.disconnect()
+        htimporter.add_items(log_msg_src='via django admin')
+        htimporter.index()
 
-        # create initial results dict, marking any skipped ids
-        results = OrderedDict((htid, 'Skipped; already in the database')
-                               for htid in existing_ids)
-
-        # TODO: refactor overlapping functionality from hathi_add script
-        works = []
-        for htid in htids:
-            try:
-                digwork = DigitizedWork.add_from_hathi(
-                    htid, get_data=True,
-                    log_msg_src='via django admin')
-                # TODO pass in current user
-                if digwork:
-                    works.append(digwork)
-
-                results[htid] = 'Success!' # link to record?
-            except (HathiItemNotFound, JSONDecodeError):
-                # json decode error possible/hopefully  temporary?
-                # getting 200 ok with php error output for bad id
-                results[htid] = 'Error loading record; check that id is valid.'
-            except HathiItemForbidden:
-                results[htid] = 'Permission denied to download data.'
-
-        # index the new content - both metadata and full text
-        if works:
-            DigitizedWork.index_items(works)
-            for work in works:
-                # index page index data in chunks (returns a generator)
-                DigitizedWork.index_items(work.page_index_data())
-
-            solr, solr_collection = get_solr_connection()
-            solr.commit(solr_collection, openSearcher=True)
+        # generate lookup for admin urls keyed on source id to simplify
+        # template logic needed
+        admin_urls = {htid: reverse('admin:archive_digitizedwork_change', args=[pk])
+                      for htid, pk in htimporter.existing_ids.items()}
+        for work in htimporter.imported_works:
+            admin_urls[work.source_id] = \
+                reverse('admin:archive_digitizedwork_change', args=[work.pk])
 
         # Default form_valid behavior is to redirect to success url,
         # but we actually want to redisplay the template with results
         # and allow submitting the form again with a new batch.
-
         return render(self.request, self.template_name, context={
-            'results': results,
-            'existing_ids': existing_ids,
-            'form': self.form_class(),
-            'page_title': self.page_title
+            'results': htimporter.output_results(),
+            'existing_ids': htimporter.existing_ids,
+            'form': self.form_class(),  # new form instance
+            'page_title': self.page_title,
+            'admin_urls': admin_urls
             })
 
 
