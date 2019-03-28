@@ -15,11 +15,11 @@ from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
 import pytest
 
-from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound, \
-    HathiBibliographicRecord, HathiItemForbidden
+from ppa.archive import hathi
 from ppa.archive.models import DigitizedWork
 from ppa.archive.management.commands import hathi_import, index, hathi_add
 from ppa.archive.solr import get_solr_connection
+from ppa.archive.util import HathiImporter
 
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
@@ -122,13 +122,13 @@ class TestHathiImportCommand(TestCase):
     @pytest.mark.usefixtures('solr')
     def test_import_digitizedwork(self):
         cmd = hathi_import.Command(stdout=StringIO())
-        cmd.bib_api = Mock(spec=HathiBibliographicAPI)
+        cmd.bib_api = Mock(spec=hathi.HathiBibliographicAPI)
         cmd.stats = defaultdict(int)
 
         # simulate record not found
         cmd.options['update'] = False
         cmd.digwork_content_type = ContentType.objects.get_for_model(DigitizedWork)
-        cmd.bib_api.record.side_effect = HathiItemNotFound
+        cmd.bib_api.record.side_effect = hathi.HathiItemNotFound
         assert cmd.import_digitizedwork('ht.12345') is None
         assert cmd.stats['error'] == 1
         assert DigitizedWork.objects.all().count() == 0
@@ -140,7 +140,7 @@ class TestHathiImportCommand(TestCase):
         bibdata_full = os.path.join(FIXTURES_PATH, 'bibdata_full_njp.32101013082597.json')
         cmd.bib_api.record.side_effect = None
         with open(bibdata_full) as bibdata:
-            hathirecord = HathiBibliographicRecord(json.load(bibdata))
+            hathirecord = hathi.HathiBibliographicRecord(json.load(bibdata))
             cmd.bib_api.record.return_value = hathirecord
         # reset stats
         cmd.stats = defaultdict(int)
@@ -188,7 +188,6 @@ class TestHathiImportCommand(TestCase):
         assert 'Updated via hathi_import script' in log_entry.change_message
         assert ' (forced update)' in log_entry.change_message
         assert log_entry.action_flag == CHANGE
-
 
     @patch('ppa.archive.management.commands.hathi_import.HathiBibliographicAPI')
     @patch('ppa.archive.management.commands.hathi_import.progressbar')
@@ -387,51 +386,62 @@ class TestHathiAddCommand(TestCase):
         # should include all but the empty line at the end
         assert cmd.ids_to_process() == new_file_ids[:-1]
 
-    @pytest.mark.skip  # TODO: update for HathiImporter refactor
-    @patch('ppa.archive.management.commands.hathi_add.get_solr_connection')
-    @patch('ppa.archive.management.commands.hathi_add.Indexable')
-    @patch('ppa.archive.management.commands.HathiImporter')
-    def test_call_command(self, mock_hathi_importer, mock_indexable, mock_get_solr):
+    @patch('ppa.archive.management.commands.hathi_add.HathiImporter')
+    def test_call_command(self, mock_hathi_importer):
         stdout = StringIO()
+        mock_htimporter = mock_hathi_importer.return_value
+        # copy constants to the mock
+        mock_hathi_importer.SUCCESS = HathiImporter.SUCCESS
+        mock_hathi_importer.SKIPPED = HathiImporter.SKIPPED
+
         digwork_ids = DigitizedWork.objects.values_list('source_id', flat=True)
         # call on existing ids - all should be skipped
+
+        # simulate all ids existing
+        mock_htimporter.existing_ids = dict((dw_id, '') for dw_id in digwork_ids)
+
         call_command('hathi_add', *digwork_ids, stdout=stdout, verbosity=3)
 
-        # should skip everything since all of the ids already exist
-        # mock_cmd_add_digwork.assert_not_called()
-        mock_indexable.index_items.assert_not_called()
-        mock_get_solr.assert_not_called()
+        # should initialize importer with htids
+        mock_hathi_importer.assert_called_with(list(digwork_ids))
+        # should filter out existing ids
+        mock_htimporter.filter_existing_ids.assert_called_with()
+        # should call add items
+        mock_htimporter.add_items.assert_called_with(log_msg_src='via hathi_add script')
+        # should call index
+        mock_htimporter.index.assert_called_with()
+        # should report skipped ids
         output = stdout.getvalue()
         assert 'Skipping ids already present:' in output
         assert 'skipped %d' % len(digwork_ids) in output
 
-        # call with new id - simulate no work returned
-        test_htid = 'xyz:9876'
-        # mock_cmd_add_digwork.return_value = None
-        call_command('hathi_add', test_htid, stdout=stdout, verbosity=3)
-        # mock_cmd_add_digwork.assert_called_with(test_htid)
-        mock_indexable.index_items.assert_not_called()
-        mock_get_solr.assert_not_called()
-
-        # call with one new id and one existing  - simulate success
-        mock_digwork = Mock()
-        test_htid = 'stu:6381'
-        # mock_cmd_add_digwork.return_value = mock_digwork
-        mocksolr = Mock()
-        test_coll = 'test'
-        mock_get_solr.return_value = (mocksolr, test_coll)
+        # call with new id - simulate error
+        stderr = StringIO()
         stdout = StringIO()
-        call_command('hathi_add', test_htid, digwork_ids[0],
-                     stdout=stdout, verbosity=3)
-        # should index and commit changes
-        mock_indexable.index_items.assert_any_call([mock_digwork])
-        mock_indexable.index_items.assert_any_call(mock_digwork.page_index_data())
-        mock_get_solr.assert_called_with()
-        mocksolr.commit.assert_called_with(test_coll, openSearcher=True)
+        test_htid = 'xyz:9876'
+        mock_htimporter.existing_ids = {}
+        mock_htimporter.results = {test_htid: hathi.HathiItemNotFound()}
+        # simulate what would be generated by output results method
+        mock_htimporter.output_results.return_value = {
+            test_htid: HathiImporter.status_message[hathi.HathiItemNotFound]
+        }
+        call_command('hathi_add', test_htid, stdout=stdout, stderr=stderr,
+                     verbosity=3)
+        err_output = stderr.getvalue()
         output = stdout.getvalue()
-        assert 'Processed 2 items' in output
-        assert 'skipped 1' in output
+        # human-readable error results output
+        expected_err_msg = '%s - %s' % \
+            (test_htid, HathiImporter.status_message[hathi.HathiItemNotFound])
+        assert expected_err_msg in err_output
+        assert '1 error' in output
 
-        # NOTE: can't test this because count is set in add_digitizedwork,
-        # which we are mocking out for this test
-        # assert 'Added 1' in output
+        # simulate success
+        stdout = StringIO()
+        test_htid = 'stu:6381'
+        mock_htimporter.results = {test_htid: HathiImporter.SUCCESS}
+        mock_htimporter.imported_works = [Mock(page_count=550)]
+        call_command('hathi_add', test_htid, stdout=stdout, verbosity=3)
+        output = stdout.getvalue()
+        assert 'Processed 1 item' in output
+        assert 'Added 1' in output
+        assert 'imported 550 pages' in output

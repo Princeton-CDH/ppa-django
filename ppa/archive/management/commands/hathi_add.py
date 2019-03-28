@@ -12,27 +12,14 @@ Example usage::
 
 '''
 
-
 from collections import defaultdict
 import logging
-import os
-import time
 
-from django.conf import settings
-from django.contrib.admin.models import LogEntry, ADDITION, CHANGE
-from django.contrib.auth.models import User
-from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from django.template.defaultfilters import pluralize
-from django.utils.timezone import now
-import progressbar
 
-from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound, \
-    HathiItemForbidden
-from ppa.archive.models import DigitizedWork
-from ppa.archive.signals import IndexableSignalHandler
-from ppa.archive.solr import Indexable, get_solr_connection
 from ppa.archive.util import HathiImporter
+
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +28,6 @@ class Command(BaseCommand):
     '''Import HathiTrust digitized items into PPA to be managed and searched'''
     help = __doc__
 
-    bib_api = None
     hathi_pairtree = {}
     stats = None
     script_user = None
@@ -62,7 +48,7 @@ class Command(BaseCommand):
         # disconnect signal handler for on-demand indexing, for efficiency
         # (index in bulk after an update, not one at a time)
 
-        self.bib_api = HathiBibliographicAPI()
+
         self.verbosity = kwargs.get('verbosity', self.v_normal)
         self.options = kwargs
 
@@ -85,10 +71,13 @@ class Command(BaseCommand):
         htimporter.add_items(log_msg_src='via hathi_add script')
 
         # count and report on errors
+        output_results = htimporter.output_results()
         for htid, status in htimporter.results.items():
+            print("htid %s status %s" % (htid, status))
+            print('ht sucsess %s skipped %s' % (HathiImporter.SUCCESS, HathiImporter.SKIPPED))
             # report errors to stderr
-            if status != 'Success' and 'Skipped' not in status:
-                self.stderr.write("%s - %s" % (htid, status))
+            if status not in (HathiImporter.SUCCESS, HathiImporter.SKIPPED):
+                self.stderr.write("%s - %s" % (htid, output_results[htid]))
                 self.stats['error'] += 1
 
         # get totals for added works & pages
