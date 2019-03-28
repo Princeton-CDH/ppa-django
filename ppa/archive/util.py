@@ -7,7 +7,7 @@ Utility code related to :mod:`ppa.archives`
 from collections import OrderedDict
 from json.decoder import JSONDecodeError
 
-from ppa.archive.hathi import HathiItemNotFound, HathiItemForbidden
+from ppa.archive import hathi
 from ppa.archive.models import DigitizedWork
 from ppa.archive.signals import IndexableSignalHandler
 from ppa.archive.solr import get_solr_connection
@@ -28,8 +28,8 @@ class HathiImporter:
     status_message = {
         SUCCESS: 'Success',
         SKIPPED: 'Skipped; already in the database',
-        HathiItemNotFound: 'Error loading record; check that id is valid.',
-        HathiItemForbidden: 'Permission denied to download data.',
+        hathi.HathiItemNotFound: 'Error loading record; check that id is valid.',
+        hathi.HathiItemForbidden: 'Permission denied to download data.',
         # only saw this one on day, but this was what it was
         JSONDecodeError: 'HathiTrust catalog temporarily unavailable.'
     }
@@ -38,6 +38,10 @@ class HathiImporter:
         self.imported_works = []
         self.results = {}
         self.htids = htids
+        # initialize a bibliographic api client to use the same
+        # session when adding multiple items
+        self.bib_api = hathi.HathiBibliographicAPI()
+
         # not calling filter_existing_ids here because it is
         # probably not desirable behavior for current hathi_import script
 
@@ -80,15 +84,15 @@ class HathiImporter:
         for htid in self.htids:
             try:
                 digwork = DigitizedWork.add_from_hathi(
-                    htid, get_data=True,
+                    htid, self.bib_api, get_data=True,
                     log_msg_src=log_msg_src)
                 # TODO pass in current user
                 if digwork:
                     self.imported_works.append(digwork)
 
                 self.results[htid] = self.SUCCESS
-            except (HathiItemNotFound, JSONDecodeError,
-                    HathiItemForbidden) as err:
+            except (hathi.HathiItemNotFound, JSONDecodeError,
+                    hathi.HathiItemForbidden) as err:
                 # json decode error occurred 3/26/2019 - catalog was broken
                 # and gave a 200 Ok response with PHP error content
                 # hopefully temporary, but could occur again...
@@ -115,11 +119,19 @@ class HathiImporter:
             solr, solr_collection = get_solr_connection()
             solr.commit(solr_collection, openSearcher=True)
 
+    def get_status_message(self, status):
+        '''Get a readable status message for a given status'''
+        try:
+            # try message for simple states (success, skipped)
+            return self.status_message[status]
+        except KeyError:
+            # if that fails, check for error message
+            return self.status_message[status.__class__]
+
     def output_results(self):
         '''Provide human-readable report of results for each
         id that was processed.'''
         return OrderedDict([
-            (htid, self.status_message[status]) if status in self.status_message
-            else self.status_message[status.__class__]
+            (htid, self.get_status_message(status))
             for htid, status in self.results.items()
         ])
