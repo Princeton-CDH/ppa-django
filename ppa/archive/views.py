@@ -594,8 +594,9 @@ class AddFromHathiView(FormView):
 
         htimporter = HathiImporter(htids)
         htimporter.filter_existing_ids()
-        # IndexableSignalHandler.disconnect()
-        htimporter.add_items(log_msg_src='via django admin')
+        # add items, and create log entries associated with current user
+        htimporter.add_items(log_msg_src='via django admin',
+                             user=self.request.user)
         htimporter.index()
 
         # generate lookup for admin urls keyed on source id to simplify

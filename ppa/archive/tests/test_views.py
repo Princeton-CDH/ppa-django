@@ -919,8 +919,9 @@ class TestAddFromHathiView(TestCase):
         self.factory = RequestFactory()
         self.add_from_hathi_url = reverse('admin:add-from-hathi')
 
-        get_user_model().objects.create_superuser(email='su@example.com',
-                                                  **self.superuser)
+        self.user = get_user_model().objects\
+            .create_superuser(email='su@example.com',
+                              **self.superuser)
 
     def test_get_context(self):
         add_from_hathi = AddFromHathiView()
@@ -943,11 +944,13 @@ class TestAddFromHathiView(TestCase):
         add_from_hathi = AddFromHathiView()
         add_from_hathi.request = self.factory.post(self.add_from_hathi_url,
             {'hathi_ids': 'old\nnew'})
+        add_from_hathi.request.user = self.user
         response = add_from_hathi.form_valid(add_form)
 
         mock_hathi_importer.assert_called_with(add_form.get_hathi_ids())
         mock_htimporter.filter_existing_ids.assert_called_with()
-        mock_htimporter.add_items.assert_called_with(log_msg_src='via django admin')
+        mock_htimporter.add_items.assert_called_with(log_msg_src='via django admin',
+                                                     user=self.user)
         mock_htimporter.index.assert_called_with()
 
         # can't inspect response context because not called with test client

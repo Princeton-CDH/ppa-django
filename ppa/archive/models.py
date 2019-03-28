@@ -676,7 +676,8 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
     @staticmethod
     def add_from_hathi(htid, bib_api=None, update=False,
-                       get_data=False, log_msg_src=None):
+                       get_data=False, log_msg_src=None,
+                       user=None):
         '''Add or update a HathiTrust work in the database.
         Retrieves bibliographic data from Hathi api, retrieves or creates
         a :class:`DigitizedWork` record, and populates the metadata if
@@ -701,6 +702,9 @@ class DigitizedWork(TrackChangesModel, Indexable):
         :param log_msg_src: source of the change to be used included
             in log entry messages (optional). Will be used as "Created/updated
             [log_msg_src]".
+        :param user: optional user responsible for the change,
+            to be associated with :class:`~django.admin.models.LogEntry`
+            record
         '''
 
         # initialize new bibliographic API if none is passed in
@@ -722,7 +726,9 @@ class DigitizedWork(TrackChangesModel, Indexable):
         # find existing record or create a new one
         digwork, created = DigitizedWork.objects.get_or_create(source_id=htid)
 
-        script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
+        # get configured script user for log entries if no user passed in
+        if not user:
+            user = User.objects.get(username=settings.SCRIPT_USERNAME)
 
         # if this is an existing record, check if updates are needed
         source_updated = None
@@ -754,7 +760,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
         # create log entry for record creation
         LogEntry.objects.log_action(
-            user_id=script_user.id,
+            user_id=user.id,
             content_type_id=ContentType.objects.get_for_model(digwork).pk,
             object_id=digwork.pk,
             object_repr=str(digwork),

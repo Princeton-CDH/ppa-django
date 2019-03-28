@@ -46,7 +46,8 @@ class TestHathiImporter(TestCase):
         mock_add_from_hathi.side_effect = hathi.HathiItemNotFound
         htimporter.add_items()
         mock_add_from_hathi.assert_called_with(
-            test_htid, htimporter.bib_api, get_data=True, log_msg_src=None)
+            test_htid, htimporter.bib_api, get_data=True,
+            log_msg_src=None, user=None)
         assert not htimporter.imported_works
         # actual error stored in results
         assert isinstance(htimporter.results[test_htid], hathi.HathiItemNotFound)
@@ -59,7 +60,7 @@ class TestHathiImporter(TestCase):
         htimporter.add_items(log_msg_src)
         mock_add_from_hathi.assert_called_with(
             test_htid, htimporter.bib_api, get_data=True,
-            log_msg_src=log_msg_src)
+            log_msg_src=log_msg_src, user=None)
         # actual error stored in results
         assert isinstance(htimporter.results[test_htid], hathi.HathiItemForbidden)
         # no partial record hanging aruond

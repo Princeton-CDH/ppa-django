@@ -71,7 +71,7 @@ class HathiImporter:
         # filter to ids that are not already present in the database
         self.htids = set(self.htids) - set(self.existing_ids.keys())
 
-    def add_items(self, log_msg_src=None):
+    def add_items(self, log_msg_src=None, user=None):
         '''Add new items from HathiTrust.
 
         :params log_msg_src: optional source of change to be included in
@@ -85,8 +85,7 @@ class HathiImporter:
             try:
                 digwork = DigitizedWork.add_from_hathi(
                     htid, self.bib_api, get_data=True,
-                    log_msg_src=log_msg_src)
-                # TODO pass in current user
+                    log_msg_src=log_msg_src, user=user)
                 if digwork:
                     self.imported_works.append(digwork)
 
