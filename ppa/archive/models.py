@@ -588,7 +588,6 @@ class DigitizedWork(TrackChangesModel, Indexable):
             'order': '0',
         }
 
-
     def count_pages(self, ptree_client=None):
         '''Count the number of pages for a digitized work based on the
         number of files in the zipfile within the pairtree content.
@@ -602,7 +601,10 @@ class DigitizedWork(TrackChangesModel, Indexable):
         start = time.time()
         # could raise pairtree exception, but allow calling context to catch
         with ZipFile(self.hathi.zipfile_path(ptree_client)) as ht_zip:
-            page_count = len(ht_zip.namelist())
+            # some aggregate packages retrieved from Data API
+            # include jp2 and xml files as well as txt; only count text
+            page_count = len([filename for filename in ht_zip.namelist()
+                              if filename.endswith('.txt')])
             logger.debug('Counted %d pages in zipfile in %f sec',
                          page_count, time.time() - start)
         # NOTE: could also count pages via mets file, but that's slower
