@@ -415,4 +415,3 @@ class AddFromHathiForm(forms.Form):
         return [line.strip()
                 for line in self.cleaned_data['hathi_ids'].split('\n')
                 if line.strip()]
-
