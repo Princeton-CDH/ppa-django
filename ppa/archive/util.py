@@ -31,7 +31,7 @@ class HathiImporter:
         hathi.HathiItemNotFound: 'Error loading record; check that id is valid.',
         hathi.HathiItemForbidden: 'Permission denied to download data.',
         # only saw this one on day, but this was what it was
-        JSONDecodeError: 'HathiTrust catalog temporarily unavailable.'
+        JSONDecodeError: 'HathiTrust catalog temporarily unavailable (malformed response).'
     }
 
     def __init__(self, htids):
@@ -53,9 +53,6 @@ class HathiImporter:
 
         :param htids: list of HathiTrust Identifiers (correspending to
             :attr:`~ppa.archive.models.DigitizedWork.source_id`)
-        :returns: tuple of:
-            - list of htids not present in the database
-            - dictionary of
         '''
         # query for digitized work with these ids and return
         # source id, db id and generate an ordered dict
