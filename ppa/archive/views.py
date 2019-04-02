@@ -1,11 +1,13 @@
+from collections import OrderedDict
 import csv
+from json.decoder import JSONDecodeError
 import logging
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError, MultipleObjectsReturned
 from django.core.paginator import Paginator
 from django.http import HttpResponse, Http404
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import redirect, get_object_or_404, render
 from django.utils.http import urlencode
 from django.utils.timezone import now
 from django.urls import reverse
@@ -14,9 +16,12 @@ from django.views.generic.base import RedirectView, TemplateView
 from django.views.generic.edit import FormView
 from SolrClient.exceptions import SolrError
 
-from ppa.archive.forms import SearchForm, AddToCollectionForm, SearchWithinWorkForm
+from ppa.archive.forms import SearchForm, AddToCollectionForm, \
+    SearchWithinWorkForm, AddFromHathiForm
+from ppa.archive.hathi import HathiItemNotFound, HathiItemForbidden
 from ppa.archive.models import DigitizedWork, NO_COLLECTION_LABEL
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
+from ppa.archive.util import HathiImporter
 from ppa.common.views import VaryOnHeadersMixin
 
 
@@ -566,6 +571,52 @@ class AddToCollection(ListView, FormView):
         # doesn't pass the form with error set
         self.object_list = self.get_queryset()
         return self.render_to_response(self.get_context_data(form=form))
+
+
+class AddFromHathiView(FormView):
+    '''Admin view to add new HathiTrust records by providing a list
+    of ids.'''
+    template_name = 'archive/add_from_hathi.html'
+    form_class = AddFromHathiForm
+    page_title = 'Add new records from HathiTrust'
+
+    def get_context_data(self, *args, **kwargs):
+        # Add page title to template context data
+        context = super().get_context_data(*args, **kwargs)
+        context['page_title'] = self.page_title
+        return context
+
+    def form_valid(self, form):
+        # Process valid form data; should return an HttpResponse.
+
+        # get list of ids from form input
+        htids = form.get_hathi_ids()
+
+        htimporter = HathiImporter(htids)
+        htimporter.filter_existing_ids()
+        # add items, and create log entries associated with current user
+        htimporter.add_items(log_msg_src='via django admin',
+                             user=self.request.user)
+        htimporter.index()
+
+        # generate lookup for admin urls keyed on source id to simplify
+        # template logic needed
+        admin_urls = {htid: reverse('admin:archive_digitizedwork_change', args=[pk])
+                      for htid, pk in htimporter.existing_ids.items()}
+        for work in htimporter.imported_works:
+            admin_urls[work.source_id] = \
+                reverse('admin:archive_digitizedwork_change', args=[work.pk])
+
+        # Default form_valid behavior is to redirect to success url,
+        # but we actually want to redisplay the template with results
+        # and allow submitting the form again with a new batch.
+        return render(self.request, self.template_name, context={
+            'results': htimporter.output_results(),
+            'existing_ids': htimporter.existing_ids,
+            'form': self.form_class(),  # new form instance
+            'page_title': self.page_title,
+            'admin_urls': admin_urls
+            })
 
 
 class OpenSearchDescriptionView(TemplateView):

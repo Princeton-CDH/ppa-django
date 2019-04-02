@@ -588,7 +588,6 @@ class DigitizedWork(TrackChangesModel, Indexable):
             'order': '0',
         }
 
-
     def count_pages(self, ptree_client=None):
         '''Count the number of pages for a digitized work based on the
         number of files in the zipfile within the pairtree content.
@@ -602,7 +601,10 @@ class DigitizedWork(TrackChangesModel, Indexable):
         start = time.time()
         # could raise pairtree exception, but allow calling context to catch
         with ZipFile(self.hathi.zipfile_path(ptree_client)) as ht_zip:
-            page_count = len(ht_zip.namelist())
+            # some aggregate packages retrieved from Data API
+            # include jp2 and xml files as well as txt; only count text
+            page_count = len([filename for filename in ht_zip.namelist()
+                              if filename.endswith('.txt')])
             logger.debug('Counted %d pages in zipfile in %f sec',
                          page_count, time.time() - start)
         # NOTE: could also count pages via mets file, but that's slower
@@ -676,7 +678,8 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
     @staticmethod
     def add_from_hathi(htid, bib_api=None, update=False,
-                       get_data=False, log_msg_src=None):
+                       get_data=False, log_msg_src=None,
+                       user=None):
         '''Add or update a HathiTrust work in the database.
         Retrieves bibliographic data from Hathi api, retrieves or creates
         a :class:`DigitizedWork` record, and populates the metadata if
@@ -701,6 +704,9 @@ class DigitizedWork(TrackChangesModel, Indexable):
         :param log_msg_src: source of the change to be used included
             in log entry messages (optional). Will be used as "Created/updated
             [log_msg_src]".
+        :param user: optional user responsible for the change,
+            to be associated with :class:`~django.admin.models.LogEntry`
+            record
         '''
 
         # initialize new bibliographic API if none is passed in
@@ -722,7 +728,9 @@ class DigitizedWork(TrackChangesModel, Indexable):
         # find existing record or create a new one
         digwork, created = DigitizedWork.objects.get_or_create(source_id=htid)
 
-        script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
+        # get configured script user for log entries if no user passed in
+        if not user:
+            user = User.objects.get(username=settings.SCRIPT_USERNAME)
 
         # if this is an existing record, check if updates are needed
         source_updated = None
@@ -754,7 +762,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
         # create log entry for record creation
         LogEntry.objects.log_action(
-            user_id=script_user.id,
+            user_id=user.id,
             content_type_id=ContentType.objects.get_for_model(digwork).pk,
             object_id=digwork.pk,
             object_repr=str(digwork),

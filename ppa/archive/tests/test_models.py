@@ -505,6 +505,12 @@ class TestDigitizedWork(TestCase):
         digwork = DigitizedWork.objects.get(source_id=digwork.source_id)
         assert digwork.page_count == 2
 
+        # should ignore non-text files
+        page_files = ['0001.txt', '00002.txt', '00001.jp2', '00002.jp2']
+        mockzip_obj.namelist.return_value = page_files
+        assert digwork.count_pages(mock_pairtree_client) == 2
+
+
         # object not found in pairtree data
         mock_pairtree_client.get_object.side_effect = \
             storage_exceptions.ObjectNotFoundException
