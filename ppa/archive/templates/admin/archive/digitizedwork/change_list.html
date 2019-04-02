@@ -3,5 +3,7 @@
 
 {% block object-tools-items %}
     <li><a href="{% url 'archive:csv' %}" class="grp-state-focus">Download as CSV</a></li>
+    <li><a href="{% url 'admin:add-from-hathi' %}"
+        class="grp-add-link grp-state-focus">Add from HathiTrust</a></li>
     {{ block.super }}
 {% endblock %}

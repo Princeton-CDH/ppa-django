@@ -40,6 +40,11 @@ Hathi
 .. automodule:: ppa.archive.hathi
     :members:
 
+Util
+^^^^^
+.. automodule:: ppa.archive.util
+    :members:
+
 
 Pages
 -----
