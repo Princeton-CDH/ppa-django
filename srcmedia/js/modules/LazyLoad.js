@@ -45,7 +45,7 @@ const loadImage = img => {
 class ImageLazyLoader {
 
     /**
-     * @param {Array<HTMLElement>} images
+     * @param {Array<Element>} images
      */
     constructor(images) {
         if ('IntersectionObserver' in window) {
