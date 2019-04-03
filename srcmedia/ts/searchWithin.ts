@@ -1,16 +1,19 @@
 import clearable from '../js/clearable'
 import ImageLazyLoader from '../js/modules/LazyLoad'
-import PageSearchForm from './modules/PageSearchForm'
+import PageSearchForm from './components/PageSearchForm'
 
-$(function(){
-    $('.question-popup').popup()
-    $('#id_query').get().map(clearable)
+document.addEventListener('DOMContentLoaded', () => {
 
-    const $$pagePreviews = $('img[data-src]')
+    // selectors
+    const $pageSearchForm = document.getElementById('search-within') as HTMLFormElement
+    const $pagePreviews = document.querySelectorAll('img[data-src]')
 
-    new ImageLazyLoader($$pagePreviews.get()) // lazy load images
+    // components
+    const pageSearchForm = new PageSearchForm($pageSearchForm)
 
-    let form = document.getElementById('search-within') as HTMLFormElement
-    let rf = new PageSearchForm(form)
+    // bindings
+    $('.question-popup').popup() // semantic ui popups
+    $('#id_query').get().map(clearable) // clearable inputs
+    new ImageLazyLoader(Array.from($pagePreviews)) // lazy load images
 
 })
