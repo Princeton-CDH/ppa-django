@@ -20,11 +20,6 @@
         "build:prod": "NODE_ENV=production webpack --env",
         "build:semantic": "gulp --gulpfile sitemedia/semantic/gulpfile.js build"
     },
-    "browserslist": [
-        "> 1%",
-        "last 2 versions",
-        "not ie <= 8"
-    ],
     "dependencies": {
         "@types/jquery": "^3.3.29",
         "@types/semantic-ui": "^2.2.7",
