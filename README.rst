@@ -4,7 +4,7 @@ ppa-django
 .. sphinx-start-marker-do-not-remove
 
 Django web application for the new `Princeton Prosody Archive
-<https://cdh.princeton.edu/projects/princeton-prosody-archive/>`_.
+<https://prosody.princeton.edu/>`_.
 
 Code and architecture documentation for the current release available
 at `<https://princeton-cdh.github.io/ppa-django/>`_.
@@ -102,7 +102,7 @@ Finally, you can run a development server with hot reload if you'll be changing
 either set of assets frequently. These two processes are separate as well::
 
     npm run dev # serve just the custom files from memory, with hot reload
-    npm run dev:semantic # serve just semantic UI files and recompile on changes 
+    npm run dev:semantic # serve just semantic UI files and recompile on changes
 
 Tests
 ~~~~~~~~~~
