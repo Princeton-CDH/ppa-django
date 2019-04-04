@@ -73,8 +73,6 @@ class Command(BaseCommand):
         # count and report on errors
         output_results = htimporter.output_results()
         for htid, status in htimporter.results.items():
-            print("htid %s status %s" % (htid, status))
-            print('ht sucsess %s skipped %s' % (HathiImporter.SUCCESS, HathiImporter.SKIPPED))
             # report errors to stderr
             if status not in (HathiImporter.SUCCESS, HathiImporter.SKIPPED):
                 self.stderr.write("%s - %s" % (htid, output_results[htid]))
