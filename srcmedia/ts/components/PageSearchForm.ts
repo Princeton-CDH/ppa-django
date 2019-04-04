@@ -27,7 +27,7 @@ class PageSearchForm extends RxForm implements Reactive<PageSearchFormState>{
      * @memberof PageSearchForm
      */
     async submit(): Promise<void> {
-        await fetch(`${this.target}?${this.serialize()}`, ajax)
+        return fetch(`${this.target}?${this.serialize()}`, ajax)
             .then(res => res.text())
             .then(html => this.update({ results: html }))
             .then(() => window.history.pushState(null, 'PPA Archive Search', this.serialize()))
