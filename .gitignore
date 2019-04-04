@@ -126,3 +126,6 @@ ENV/
 # semantic ui
 !sitemedia/semantic/tasks/build
 !sitemedia/semantic/tasks/docs
+
+# ts lib files
+!srcmedia/ts/lib/
