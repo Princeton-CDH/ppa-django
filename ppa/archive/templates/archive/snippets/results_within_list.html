@@ -8,25 +8,25 @@
         {% include 'archive/snippets/pagination.html' %}
     </div>
     {% endif %}
-{% endif %}
-<div class="results-list ui container">
-    {% for page in solr_results %}
-        {% with highlights=page_highlights|dict_item:page.id%}
-        <div class="ui page item">
-            <div class="pages ui twelve wide column">
-                <div class="wrapper">
-                    {% include 'archive/snippets/page_preview.html' with item_id=page.source_id  %}
+    <div class="results-list ui container">
+        {% for page in solr_results %}
+            {% with highlights=page_highlights|dict_item:page.id%}
+            <div class="ui page item">
+                <div class="pages ui twelve wide column">
+                    <div class="wrapper">
+                        {% include 'archive/snippets/page_preview.html' with item_id=page.source_id  %}
+                    </div>
                 </div>
             </div>
-        </div>
-        {% endwith %}
-    {% empty %}
-        <div class="ui error message container">
-            {# display error if something went wrong (bad query, etc.) #}
-            <p>{% firstof error "No matching pages." %}</p>
-        </div>
-    {% endfor %}
-</div>
+            {% endwith %}
+        {% empty %}
+            <div class="ui error message container">
+                {# display error if something went wrong (bad query, etc.) #}
+                <p>{% firstof error "No matching pages." %}</p>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
 {% if not error and page_obj.paginator.count > 5 %}
 <div class="pagination ui container">
     {% include 'archive/snippets/pagination.html' %}
