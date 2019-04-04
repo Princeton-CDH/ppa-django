@@ -59,7 +59,7 @@
         "style-loader": "^0.23.1",
         "terser-webpack-plugin": "^1.2.2",
         "ts-jest": "^24.0.1",
-        "typescript": "^3.4.0-dev.20190323",
+        "typescript": "^3.4.1",
         "webpack": "^4.29.3",
         "webpack-bundle-tracker": "^0.4.2-beta",
         "webpack-cli": "^3.2.3",
