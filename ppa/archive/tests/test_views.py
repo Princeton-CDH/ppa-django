@@ -8,17 +8,19 @@ from unittest.mock import Mock, patch
 from django.contrib.auth import get_user_model
 from django.db.models.functions import Lower
 from django.template.defaultfilters import escape
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
 from django.urls import reverse
 from django.utils.http import urlencode
 from django.utils.timezone import now
 import pytest
 from SolrClient.exceptions import SolrError
 
-from ppa.archive.forms import SearchForm, ModelMultipleChoiceFieldWithEmpty
+from ppa.archive.forms import SearchForm, ModelMultipleChoiceFieldWithEmpty, \
+    AddFromHathiForm
 from ppa.archive.models import DigitizedWork, Collection, NO_COLLECTION_LABEL
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
-from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView
+from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView, \
+    AddFromHathiView
 from ppa.archive.templatetags.ppa_tags import page_image_url, page_url
 
 
@@ -150,7 +152,7 @@ class TestArchiveViews(TestCase):
         dial = DigitizedWork.objects.get(source_id='chi.78013704')
         dial.status = DigitizedWork.SUPPRESSED
         # don't actually process the data deletion
-        with patch.object(dial, 'delete_hathi_pairtree_data') \
+        with patch.object(dial, 'hathi') \
           as mock_delete_pairtree_data:
             dial.save()
 
@@ -920,3 +922,101 @@ class TestDigitizedWorkListView(TestCase):
             assert ' AND id:("p1a" "p1b" "p2a" "p2b")' in solr_opts['q']
 
             assert highlights == mockpsq.return_value.get_highlighting()
+
+
+class TestAddFromHathiView(TestCase):
+
+    superuser = {
+        'username': 'super',
+        'password': 'secret',
+    }
+
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.add_from_hathi_url = reverse('admin:add-from-hathi')
+
+        self.user = get_user_model().objects\
+            .create_superuser(email='su@example.com',
+                              **self.superuser)
+
+    def test_get_context(self):
+        add_from_hathi = AddFromHathiView()
+        add_from_hathi.request = self.factory.get(self.add_from_hathi_url)
+        context = add_from_hathi.get_context_data()
+        assert context['page_title'] == AddFromHathiView.page_title
+
+    @patch('ppa.archive.views.HathiImporter')
+    def test_form_valid(self, mock_hathi_importer):
+        add_form = AddFromHathiForm({'hathi_ids': 'old\nnew'})
+        add_form.is_valid()
+
+        mock_htimporter = mock_hathi_importer.return_value
+        # set mock existing id & imported work on the mock importer
+        mock_htimporter.existing_ids = {'old': 1}
+        mock_htimporter.imported_works = [
+            Mock(source_id='new', pk=2)
+        ]
+
+        add_from_hathi = AddFromHathiView()
+        add_from_hathi.request = self.factory.post(self.add_from_hathi_url,
+            {'hathi_ids': 'old\nnew'})
+        add_from_hathi.request.user = self.user
+        response = add_from_hathi.form_valid(add_form)
+
+        mock_hathi_importer.assert_called_with(add_form.get_hathi_ids())
+        mock_htimporter.filter_existing_ids.assert_called_with()
+        mock_htimporter.add_items.assert_called_with(log_msg_src='via django admin',
+                                                     user=self.user)
+        mock_htimporter.index.assert_called_with()
+
+        # can't inspect response context because not called with test client
+        # sanity check result
+        assert response.status_code == 200
+
+    def test_get(self):
+        # denied to anonymous user
+        response = self.client.get(self.add_from_hathi_url)
+        # django redirects to login instead of returning 401
+        assert response.status_code == 302
+
+        self.client.login(**self.superuser)
+        response = self.client.get(self.add_from_hathi_url)
+        assert response.status_code == 200
+        self.assertTemplateUsed(response, AddFromHathiView.template_name)
+        # sanity check that form display
+        self.assertContains(response, '<form')
+        self.assertContains(response, '<textarea name="hathi_ids"')
+
+    @patch('ppa.archive.views.HathiImporter')
+    def test_post(self, mock_hathi_importer):
+        mock_htimporter = mock_hathi_importer.return_value
+        # set mock existing id & imported work on the mock importer
+        mock_htimporter.existing_ids = {'old': 1}
+        mock_htimporter.imported_works = [
+            Mock(source_id='new', pk=2)
+        ]
+        mock_htimporter.output_results.return_value = {
+            'old': mock_hathi_importer.SKIPPED,
+            'new': mock_hathi_importer.SUCCESS
+        }
+
+        self.client.login(**self.superuser)
+        response = self.client.post(self.add_from_hathi_url, {
+            'hathi_ids': 'old\nnew'
+        })
+        assert response.status_code == 200
+        self.assertContains(response, 'Processed 2 HathiTrust Identifiers')
+        # inspect context
+        assert response.context['results'] == mock_htimporter.output_results()
+        assert response.context['existing_ids'] == mock_htimporter.existing_ids
+        assert isinstance(response.context['form'], AddFromHathiForm)
+        assert response.context['page_title'] == AddFromHathiView.page_title
+        assert 'admin_urls' in response.context
+        assert response.context['admin_urls']['old'] == \
+            reverse('admin:archive_digitizedwork_change', args=[1])
+        assert response.context['admin_urls']['new'] == \
+            reverse('admin:archive_digitizedwork_change', args=[2])
+
+        # should redisplay the form
+        self.assertContains(response, '<form')
+        self.assertContains(response, '<textarea name="hathi_ids"')

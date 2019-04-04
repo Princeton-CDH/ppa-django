@@ -1,11 +1,15 @@
 import logging
 import os.path
 import re
+import time
 from zipfile import ZipFile
 
 from cached_property import cached_property
 from django.conf import settings
+from django.contrib.admin.models import LogEntry, ADDITION, CHANGE
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
@@ -16,7 +20,8 @@ from wagtail.core.fields import RichTextField
 from wagtail.admin.edit_handlers import FieldPanel
 from wagtail.snippets.models import register_snippet
 
-from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS
+from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS, \
+    HathiDataAPI, HathiObject
 from ppa.archive.solr import Indexable
 from ppa.archive.solr import PagedSolrQuery
 
@@ -179,6 +184,38 @@ class ProtectedWorkField(models.Field):
         return ProtectedWorkFieldFlags(value)
 
 
+class CollectionSignalHandlers:
+    '''Signal handlers for indexing :class:`DigitizedWork` records when
+    :class:`Collection` records are saved or deleted.'''
+
+    @staticmethod
+    def save(sender, instance, **kwargs):
+        '''signal handler for collection save; reindex associated digitized works'''
+        # only reindex if collection name has changed
+        # and if collection has already been saved
+        if instance.pk and instance.name_changed:
+            # if the collection has any works associated
+            works = instance.digitizedwork_set.all()
+            if works.exists():
+                logger.debug('collection save, reindexing %d related works', works.count())
+                Indexable.index_items(works, params={'commitWithin': 3000})
+
+    @staticmethod
+    def delete(sender, instance, **kwargs):
+        '''signal handler for collection delete; clear associated digitized
+        works and reindex'''
+        logger.debug('collection delete')
+        # get a list of ids for collected works before clearing them
+        digwork_ids = instance.digitizedwork_set.values_list('id', flat=True)
+        # find the items based on the list of ids to reindex
+        digworks = DigitizedWork.objects.filter(id__in=list(digwork_ids))
+
+        # NOTE: this sends pre/post clear signal, but it's not obvious
+        # how to take advantage of that
+        instance.digitizedwork_set.clear()
+        Indexable.index_items(digworks, params={'commitWithin': 3000})
+
+
 class DigitizedWork(TrackChangesModel, Indexable):
     '''
     Record to manage digitized works included in PPA and store their basic
@@ -313,13 +350,21 @@ class DigitizedWork(TrackChangesModel, Indexable):
         '''Checks if an item has full text (currently only items from
         HathiTrust).'''
         return self.source == self.HATHI
+        
+    @cached_property
+    def hathi(self):
+        ''':class:`ppa.archive.hathi.HathiObject` for HathiTrust records,
+        for working with data in HathiTrust pairtree data structure.'''
+        if self.source == self.HATHI:
+            return HathiObject(self.source_id)
+        return None
 
     def save(self, *args, **kwargs):
         # if status has changed so that object is now suppressed and this
         # is a HathiTrust item, remove pairtree data
         if self.has_changed('status') and self.status == self.SUPPRESSED \
           and self.source == DigitizedWork.HATHI:
-            self.delete_hathi_pairtree_data()
+            self.hathi.delete_pairtree_data()
 
         # source id is used as Solr identifier; if it changes, remove
         # the old record from Solr before saving with the new identifier
@@ -503,36 +548,11 @@ class DigitizedWork(TrackChangesModel, Indexable):
         # conditionally update fields that are protected (or not)
         self.populate_fields(field_data)
 
-    def handle_collection_save(sender, instance, **kwargs):
-        '''signal handler for collection save; reindex associated digitized works'''
-        # only reindex if collection name has changed
-        # and if collection has already been saved
-        if instance.pk and instance.name_changed:
-            # if the collection has any works associated
-            works = instance.digitizedwork_set.all()
-            if works.exists():
-                logger.debug('collection save, reindexing %d related works', works.count())
-                Indexable.index_items(works, params={'commitWithin': 3000})
-
-    def handle_collection_delete(sender, instance, **kwargs):
-        '''signal handler for collection delete; clear associated digitized
-        works and reindex'''
-        logger.debug('collection delete')
-        # get a list of ids for collected works before clearing them
-        digwork_ids = instance.digitizedwork_set.values_list('id', flat=True)
-        # find the items based on the list of ids to reindex
-        digworks = DigitizedWork.objects.filter(id__in=list(digwork_ids))
-
-        # NOTE: this sends pre/post clear signal, but it's not obvious
-        # how to take advantage of that
-        instance.digitizedwork_set.clear()
-        Indexable.index_items(digworks, params={'commitWithin': 3000})
 
     index_depends_on = {
         'collections': {
-            'save': handle_collection_save,
-            'delete': handle_collection_delete,
-
+            'save': CollectionSignalHandlers.save,
+            'delete': CollectionSignalHandlers.delete,
         }
     }
 
@@ -574,79 +594,34 @@ class DigitizedWork(TrackChangesModel, Indexable):
             'order': '0',
         }
 
-    @cached_property
-    def hathi_prefix(self):
-        '''hathi pairtree prefix (first portion of the source id, short-form
-        identifier for owning institution)'''
-        return self.source_id.split('.', 1)[0]
+    def count_pages(self, ptree_client=None):
+        '''Count the number of pages for a digitized work based on the
+        number of files in the zipfile within the pairtree content.
+        Raises :class:`pairtree.storage_exceptions.ObjectNotFoundException`
+        if the data is not found in the pairtree storage. Returns page count
+        found; saves the object if the count changes.'''
+        if not ptree_client:
+            ptree_client = self.hathi.pairtree_client()
 
-    @cached_property
-    def hathi_pairtree_id(self):
-        '''hathi pairtree identifier (second portion of source id)'''
-        return self.source_id.split('.', 1)[1]
+        # count the files in the zipfile
+        start = time.time()
+        # could raise pairtree exception, but allow calling context to catch
+        with ZipFile(self.hathi.zipfile_path(ptree_client)) as ht_zip:
+            # some aggregate packages retrieved from Data API
+            # include jp2 and xml files as well as txt; only count text
+            page_count = len([filename for filename in ht_zip.namelist()
+                              if filename.endswith('.txt')])
+            logger.debug('Counted %d pages in zipfile in %f sec',
+                         page_count, time.time() - start)
+        # NOTE: could also count pages via mets file, but that's slower
+        # than counting via zipfile name list
 
-    @cached_property
-    def hathi_content_dir(self):
-        '''hathi content directory for this work (within the corresponding
-        pairtree)'''
-        # contents are stored in a directory named based on a
-        # pairtree encoded version of the id
-        return pairtree_path.id_encode(self.hathi_pairtree_id)
+        # store page count in the database if changed
+        if self.page_count != page_count:
+            self.page_count = page_count
+            self.save()
 
-    def hathi_pairtree_client(self):
-        '''Initialize a pairtree client for the pairtree datastore this
-         object belongs to, based on its Hathi prefix id.'''
-        return pairtree_client.PairtreeStorageClient(
-            self.hathi_prefix,
-            os.path.join(settings.HATHI_DATA, self.hathi_prefix))
-
-    def hathi_pairtree_object(self, ptree_client=None):
-        '''get a pairtree object for the current work
-
-        :param ptree_client: optional
-            :class:`pairtree_client.PairtreeStorageClient` if one has
-            already been initialized, to avoid repeated initialization
-            (currently used in hathi_import manage command)
-        '''
-        if ptree_client is None:
-            # get pairtree client if not passed in
-            ptree_client = self.hathi_pairtree_client()
-
-        # return the pairtree object for current work
-        return ptree_client.get_object(self.hathi_pairtree_id,
-                                       create_if_doesnt_exist=False)
-
-    def delete_hathi_pairtree_data(self):
-        '''Delete pairtree object from the pairtree datastore.'''
-        logger.info('Deleting pairtree data for %s', self.source_id)
-        try:
-            self.hathi_pairtree_client() \
-                .delete_object(self.hathi_pairtree_id)
-        except storage_exceptions.ObjectNotFoundException:
-            # data is already gone; warn, but not an error
-            logger.warning('Pairtree deletion failed; object not found %s',
-                        self.source_id)
-
-    def _hathi_content_path(self, ext, ptree_client=None):
-        '''path to zipfile within the hathi contents for this work'''
-        pairtree_obj = self.hathi_pairtree_object(ptree_client=ptree_client)
-        # - expect a mets file and a zip file
-        # NOTE: not yet making use of the metsfile
-        # - don't rely on them being returned in the same order on every machine
-        parts = pairtree_obj.list_parts(self.hathi_content_dir)
-        # find the first zipfile in the list (should only be one)
-        filepath = [part for part in parts if part.endswith(ext)][0]
-
-        return os.path.join(pairtree_obj.id_to_dirpath(),
-                            self.hathi_content_dir, filepath)
-
-    def hathi_zipfile_path(self, ptree_client=None):
-        '''path to zipfile within the hathi contents for this work'''
-        return self._hathi_content_path('zip', ptree_client=ptree_client)
-
-    def hathi_metsfile_path(self, ptree_client=None):
-        '''path to mets xml file within the hathi contents for this work'''
-        return self._hathi_content_path('.mets.xml', ptree_client=ptree_client)
+        return page_count
 
     def page_index_data(self):
         '''Get page content for this work from Hathi pairtree and return
@@ -659,7 +634,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
         # load mets record to pull metadata about the images
         try:
-            mmets = load_xmlobject_from_file(self.hathi_metsfile_path(),
+            mmets = load_xmlobject_from_file(self.hathi.metsfile_path(),
                                              MinimalMETS)
         except storage_exceptions.ObjectNotFoundException:
             logger.error('Pairtree data for %s not found but status is %s',
@@ -667,13 +642,13 @@ class DigitizedWork(TrackChangesModel, Indexable):
             return
 
         # read zipfile contents in place, without unzipping
-        with ZipFile(self.hathi_zipfile_path()) as ht_zip:
+        with ZipFile(self.hathi.zipfile_path()) as ht_zip:
 
             # yield a generator of index data for each page; iterate
             # over pages in METS structmap
             for page in mmets.structmap_pages:
-                # zipfile spec uses / for path regardless of OS
-                pagefilename = '/'.join([self.hathi_content_dir, page.text_file_location])
+
+                pagefilename = os.path.join(self.hathi.content_dir, page.text_file_location)
                 with ht_zip.open(pagefilename) as pagefile:
                     try:
                         yield {
@@ -706,3 +681,141 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
         # error for unknown
         raise ValueError('Unsupported format %s' % metadata_format)
+
+    @staticmethod
+    def add_from_hathi(htid, bib_api=None, update=False,
+                       get_data=False, log_msg_src=None,
+                       user=None):
+        '''Add or update a HathiTrust work in the database.
+        Retrieves bibliographic data from Hathi api, retrieves or creates
+        a :class:`DigitizedWork` record, and populates the metadata if
+        this is a new record, if the Hathi metadata has changed, or
+        if update is requested. Creates admin log entry to document
+        record creation or update.  If `get_data` is specified,
+        will retrieve structure and aggregate data from Hathi Data API
+        and add it to the local pairtree datastore.
+
+        Raises :class:`ppa.archive.hathi.HathiItemNotFound` for invalid
+        id.
+
+        Returns the new or updated  :class:`~ppa.archive.models.DigitizedWork`.
+
+        :param htid: HathiTrust record identifier
+        :param bib_api: optional :class:`~ppa.archive.hathi.HathiBibliographicAPI`
+            instance, to allow for shared sessions in scripts
+        :param update: update bibliographic metadata even if the hathitrust
+            record is not newer than the local database record (default: False)
+        :param get_data: retrieve content data from Data API; for new
+            records only (default: False)
+        :param log_msg_src: source of the change to be used included
+            in log entry messages (optional). Will be used as "Created/updated
+            [log_msg_src]".
+        :param user: optional user responsible for the change,
+            to be associated with :class:`~django.admin.models.LogEntry`
+            record
+        '''
+
+        # initialize new bibliographic API if none is passed in
+        bib_api = bib_api or HathiBibliographicAPI()
+
+        # set a default log message source if not specified
+        log_msg_src = log_msg_src or 'from HathiTrust bibliographic data'
+
+        # get bibliographic data for this record from Hathi api
+        # - needed to check if update is required for existing records,
+        #   and to populate metadata for new records
+
+        # could raise HathiItemNotFound for invalid id
+        bibdata = bib_api.record('htid', htid)
+
+        # if hathi id is valid and we have bibliographic data, create
+        # a new record
+
+        # find existing record or create a new one
+        digwork, created = DigitizedWork.objects.get_or_create(source_id=htid)
+
+        # get configured script user for log entries if no user passed in
+        if not user:
+            user = User.objects.get(username=settings.SCRIPT_USERNAME)
+
+        # if this is an existing record, check if updates are needed
+        source_updated = None
+        if not created and not update:
+            source_updated = bibdata.copy_last_updated(htid)
+            if digwork.updated.date() > source_updated:
+                # local copy is newer than last source modification date
+                # and update is not requested; return un modified
+                return digwork
+
+        # populate digitized item in the database
+        digwork.populate_from_bibdata(bibdata)
+        digwork.save()
+
+        # create a log entry to document record creation or change
+        # if created, action is addition and message is creation
+        log_change_message = 'Created %s' % log_msg_src
+        log_action = ADDITION
+        # if this was not a new record, log as an update
+        if not created:
+            # create log entry for updating an existing record
+            # include details about why the update happened if possible
+            if update:
+                msg_detail = ' (forced update)'
+            else:
+                msg_detail = '; source record last updated %s' % source_updated
+            log_change_message = 'Updated %s%s' % (log_msg_src, msg_detail)
+            log_action = CHANGE
+
+        # create log entry for record creation
+        LogEntry.objects.log_action(
+            user_id=user.id,
+            content_type_id=ContentType.objects.get_for_model(digwork).pk,
+            object_id=digwork.pk,
+            object_repr=str(digwork),
+            change_message=log_change_message,
+            action_flag=log_action)
+
+        # get data if requested and if this was a new record
+        if get_data and created:
+            digwork.get_hathi_data()
+
+        return digwork
+
+    def get_hathi_data(self):
+        '''Use Data API to fetch zipfile and mets and add them to the
+        local pairtree. Intended for use with newly added HathiTrust
+        records not imported from local pairtree data.
+
+        Raises :class:`~ppa.archive.hathi.HathiItemNotFound` for invalid
+        id and :class:`~ppa.archive.hathi.HathiItemForbidden` for a
+        valid record that configured Data API credentials do not allow
+        accessing.
+        '''
+
+        # do nothing for non-hathi records
+        if self.source != DigitizedWork.HATHI:
+            return
+
+        data_api = HathiDataAPI()
+
+        # get pairtree client object for this item, creating if necessary
+        ptree_obj = self.hathi.pairtree_object(create=True)
+        # retrieve mets xml and add to pairtree
+        mets_response = data_api.get_structure(self.source_id)
+        # use filename provided by Hathi in response headers
+        mets_filename = os.path.basename(mets_response.headers['content-disposition'])
+        # file should be under content directory named by hathi id
+        mets_filename = os.path.join(self.hathi.content_dir,
+                                     mets_filename)
+        ptree_obj.add_bytestream_by_path(mets_filename, mets_response.content)
+
+        # get zip file and add to pairtree
+        data_response = data_api.get_aggregate(self.source_id)
+        data_filename = os.path.basename(data_response.headers['content-disposition'])
+        data_filename = data_filename.replace('filename=', '')
+        data_filename = os.path.join(self.hathi.content_dir,
+                                     data_filename)
+        ptree_obj.add_bytestream_by_path(data_filename, data_response.content)
+
+        # count pages now that data is present (required for indexing)
+        self.count_pages()

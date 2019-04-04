@@ -61,6 +61,10 @@ SOLR_CONNECTIONS = {
 
 # local path to hathi pairtree data provided via rsync
 HATHI_DATA = '/path/to/hathi_pairtree_root'
+# credentials for Hathi Data API
+HATHITRUST_OAUTH_KEY = ''
+HATHITRUST_OAUTH_SECRET = ''
+
 
 # CAS login configuration
 CAS_SERVER_URL = ''

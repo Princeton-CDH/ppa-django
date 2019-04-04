@@ -46,7 +46,7 @@ class TestDigitizedWorkSitemap(TestCase):
         digwork = DigitizedWork.objects.first()
         digwork.status = DigitizedWork.SUPPRESSED
         # don't actually process the data deletion
-        with patch.object(digwork, 'delete_hathi_pairtree_data') \
+        with patch.object(digwork, 'hathi') \
           as mock_delete_pairtree_data:
             digwork.save()
 

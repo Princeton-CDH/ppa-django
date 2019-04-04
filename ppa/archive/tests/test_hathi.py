@@ -1,14 +1,17 @@
 from datetime import date
 import os.path
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 import json
 
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, override_settings
 from eulxml.xmlmap import load_xmlobject_from_file
+from pairtree import pairtree_client, pairtree_path, storage_exceptions
 import pymarc
 import pytest
 import requests
+import requests_oauthlib
 
 from ppa import __version__
 from ppa.archive import hathi
@@ -23,25 +26,6 @@ class TestHathiBibliographicAPI(TestCase):
     bibdata = os.path.join(FIXTURES_PATH,
         'bibdata_brief_njp.32101013082597.json')
 
-    def test_init(self, mockrequests):
-        # test session initialization
-
-        # no technical contact
-        with override_settings(TECHNICAL_CONTACT=None):
-            base_user_agent = 'requests/v123'
-            mockrequests.Session.return_value.headers = {'User-Agent': base_user_agent}
-            bib_api = hathi.HathiBibliographicAPI()
-            mockrequests.Session.assert_any_call()
-            assert bib_api.session == mockrequests.Session.return_value
-            assert 'ppa-django' in bib_api.session.headers['User-Agent']
-            assert __version__ in bib_api.session.headers['User-Agent']
-            assert '(%s)' % base_user_agent in bib_api.session.headers['User-Agent']
-            assert 'From' not in bib_api.session.headers
-
-        tech_contact = 'webmaster@example.com'
-        with override_settings(TECHNICAL_CONTACT=tech_contact):
-            bib_api = hathi.HathiBibliographicAPI()
-            assert bib_api.session.headers['From'] == tech_contact
 
     def test_brief_record(self, mockrequests):
         mockrequests.codes = requests.codes
@@ -94,6 +78,7 @@ class TestHathiBibliographicAPI(TestCase):
         record = bib_api.record('htid', htid)
         assert isinstance(record, hathi.HathiBibliographicRecord)
 
+        print(mocksession.get.call_args_list)
         # check expected url was called - full instead of brief
         mocksession.get.assert_any_call(
             'http://catalog.hathitrust.org/api/volumes/full/htid/%s.json' % htid)
@@ -182,3 +167,204 @@ class TestMETS(TestCase):
         assert textfile.id == page.text_file_id
         assert textfile.sequence == '00000001'
         assert textfile.location == '00000001.txt'
+
+@patch('ppa.archive.hathi.requests')
+class TestHathiBaseAPI(TestCase):
+
+    def test_init(self, mockrequests):
+        # test session initialization
+
+        # no technical contact
+        with override_settings(TECHNICAL_CONTACT=None):
+            base_user_agent = 'requests/v123'
+            mockrequests.Session.return_value.headers = {'User-Agent': base_user_agent}
+            base_api = hathi.HathiBaseAPI()
+            mockrequests.Session.assert_any_call()
+            assert base_api.session == mockrequests.Session.return_value
+            assert 'ppa-django' in base_api.session.headers['User-Agent']
+            assert __version__ in base_api.session.headers['User-Agent']
+            assert '(%s)' % base_user_agent in base_api.session.headers['User-Agent']
+            assert 'From' not in base_api.session.headers
+
+        # technical contact configured
+        tech_contact = 'webmaster@example.com'
+        with override_settings(TECHNICAL_CONTACT=tech_contact):
+            base_api = hathi.HathiBaseAPI()
+            assert base_api.session.headers['From'] == tech_contact
+
+    def test_make_request(self, mockrequests):
+        base_api = hathi.HathiBaseAPI()
+        base_api.api_root = 'http://example.com/api'
+
+        mockrequests.codes = requests.codes
+
+        # mock successful request
+        base_api.session.get.return_value.status_code = requests.codes.ok
+        resp = base_api._make_request('foo')
+        base_api.session.get.assert_called_with('%s/foo' % base_api.api_root)
+        assert resp == base_api.session.get.return_value
+
+        # 404 not found response should raise item not found
+        base_api.session.get.return_value.status_code = requests.codes.not_found
+        with pytest.raises(hathi.HathiItemNotFound):
+            base_api._make_request('foo')
+
+        # 403 forbidden response should raise item forbidden
+        base_api.session.get.return_value.status_code = requests.codes.forbidden
+        with pytest.raises(hathi.HathiItemForbidden):
+            base_api._make_request('foo')
+
+
+class TestHathiDataAPI(TestCase):
+
+    def test_init(self):
+        # test session initialization
+
+        # no oauth key or secret - error
+        with override_settings(HATHITRUST_OAUTH_KEY=None,
+                               HATHITRUST_OAUTH_SECRET=None):
+            with pytest.raises(ImproperlyConfigured) as err:
+                hathi.HathiDataAPI()
+            assert 'configuration required' in str(err)
+
+        # with oauth key and secret - init oauth
+        key = 'mykey'
+        secret = 'mysecret'
+        with override_settings(HATHITRUST_OAUTH_KEY=key,
+                               HATHITRUST_OAUTH_SECRET=secret):
+            data_api = hathi.HathiDataAPI()
+            assert isinstance(data_api.session.auth, requests_oauthlib.OAuth1)
+            assert data_api.session.auth.client.client_key == key
+            assert data_api.session.auth.client.client_secret == secret
+            assert data_api.session.auth.client.signature_type == 'QUERY'
+
+    @override_settings(HATHITRUST_OAUTH_KEY='mykey',
+                       HATHITRUST_OAUTH_SECRET='mysecret')
+    def test_get_aggregate(self):
+        data_api = hathi.HathiDataAPI()
+        htid = 'abc.1235813'
+
+        with patch.object(data_api, '_make_request') as mock_make_request:
+            response = data_api.get_aggregate(htid)
+            assert response == mock_make_request.return_value
+            mock_make_request.assert_called_with('aggregate/%s' % htid,
+                                                 params={'v': 2})
+
+    @override_settings(HATHITRUST_OAUTH_KEY='mykey',
+                       HATHITRUST_OAUTH_SECRET='mysecret')
+    def test_get_structure(self):
+        data_api = hathi.HathiDataAPI()
+        htid = 'abc.1235813'
+
+        with patch.object(data_api, '_make_request') as mock_make_request:
+            response = data_api.get_structure(htid)
+            assert response == mock_make_request.return_value
+            # default format is xml
+            mock_make_request.assert_called_with(
+                'structure/%s' % htid, params={'v': 2, 'format': 'xml'})
+
+            response = data_api.get_structure(htid, 'json')
+            mock_make_request.assert_called_with(
+                'structure/%s' % htid, params={'v': 2, 'format': 'json'})
+
+class TestHathiObject:
+
+    def test_pairtree_prefix(self):
+        hobj = hathi.HathiObject(hathi_id='uva.1234')
+        assert hobj.pairtree_prefix == 'uva'
+
+    def test_pairtree_id(self):
+        hobj = hathi.HathiObject(hathi_id='uva.1234')
+        assert hobj.pairtree_id == '1234'
+
+    def test_content_dir(self):
+        hobj = hathi.HathiObject(hathi_id='uva.1234')
+        assert hobj.content_dir == pairtree_path.id_encode(hobj.pairtree_id)
+
+    @patch('ppa.archive.hathi.pairtree_client')
+    @override_settings(HATHI_DATA='/tmp/ht_text_pd')
+    def test_pairtree_object(self, mock_pairtree_client):
+        hobj = hathi.HathiObject(hathi_id='uva.1234')
+
+        ptree_obj = hobj.pairtree_object()
+        # client initialized
+        mock_pairtree_client.PairtreeStorageClient \
+            .assert_called_with(hobj.pairtree_prefix,
+                                os.path.join(settings.HATHI_DATA, hobj.pairtree_prefix))
+        # object retrieved
+        mock_pairtree_client.PairtreeStorageClient.return_value \
+            .get_object.assert_called_with(hobj.pairtree_id,
+                                           create_if_doesnt_exist=False)
+        # object returned
+        assert ptree_obj == mock_pairtree_client.PairtreeStorageClient  \
+                                                .return_value.get_object.return_value
+
+        # test passing in existing pairtree client
+        mock_pairtree_client.reset_mock()
+        my_ptree_client = Mock(spec=pairtree_client.PairtreeStorageClient)
+        ptree_obj = hobj.pairtree_object(my_ptree_client)
+        # should not initialize
+        mock_pairtree_client.PairtreeStorageClient.assert_not_called()
+        # should get object from my client
+        my_ptree_client.get_object.assert_called_with(hobj.pairtree_id,
+                                                      create_if_doesnt_exist=False)
+
+    @override_settings(HATHI_DATA='/tmp/ht_text_pd')
+    def test_zipfile_path(self):
+        hobj = hathi.HathiObject(hathi_id='chi.79279237')
+        contents = ['79279237.mets.xml', '79279237.zip']
+
+        with patch.object(hathi.HathiObject, 'pairtree_object') as mock_ptree_obj_meth:
+            mock_ptree_obj = mock_ptree_obj_meth.return_value
+            mock_ptree_obj.list_parts.return_value = contents
+            mock_ptree_obj.id_to_dirpath.return_value = \
+                '/tmp/ht_text_pd/chi/pairtree_root/79/27/92/37'
+
+            zipfile_path = hobj.zipfile_path()
+            mock_ptree_obj_meth.assert_called_with(ptree_client=None)
+            assert zipfile_path == \
+                os.path.join(mock_ptree_obj.id_to_dirpath(), hobj.content_dir,
+                             contents[1])
+
+            # use pairtree client object if passed in
+            my_ptree_client = Mock(spec=pairtree_client.PairtreeStorageClient)
+            hobj.zipfile_path(my_ptree_client)
+            mock_ptree_obj_meth.assert_called_with(ptree_client=my_ptree_client)
+
+    @override_settings(HATHI_DATA='/tmp/ht_text_pd')
+    def test_metsfile_path(self):
+        hobj = hathi.HathiObject(hathi_id='chi.79279237')
+        contents = ['79279237.mets.xml', '79279237.zip']
+
+        with patch.object(hathi.HathiObject, 'pairtree_object') as mock_ptree_obj_meth:
+            mock_ptree_obj = mock_ptree_obj_meth.return_value
+            mock_ptree_obj.list_parts.return_value = contents
+            mock_ptree_obj.id_to_dirpath.return_value = \
+                '/tmp/ht_text_pd/chi/pairtree_root/79/27/92/37'
+
+            metsfile_path = hobj.metsfile_path()
+            mock_ptree_obj_meth.assert_called_with(ptree_client=None)
+            assert metsfile_path == \
+                os.path.join(mock_ptree_obj.id_to_dirpath(), hobj.content_dir,
+                             contents[0])
+
+            # use pairtree client object if passed in
+            my_ptree_client = Mock(spec=pairtree_client.PairtreeStorageClient)
+            hobj.metsfile_path(my_ptree_client)
+            mock_ptree_obj_meth.assert_called_with(ptree_client=my_ptree_client)
+
+    def test_delete_pairtree_data(self):
+        hobj = hathi.HathiObject(hathi_id='chi.79279237')
+        with patch.object(hobj, 'pairtree_client') as mock_pairtree_client:
+            hobj.delete_pairtree_data()
+            # should initialize client
+            mock_pairtree_client.assert_called()
+            # should call delete boject
+            mock_pairtree_client.return_value.delete_object \
+                .assert_called_with(hobj.pairtree_id)
+
+            # should not raise an exception if deletion fails
+            mock_pairtree_client.return_value.delete_object.side_effect \
+                 = storage_exceptions.ObjectNotFoundException
+            hobj.delete_pairtree_data()
+            # not currently testing that warning is logged
