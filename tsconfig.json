@@ -8,6 +8,7 @@
         "jsx": "react", // compile jsx into render functions
         "target": "esnext", // don't transpile; we let babel handle this
         "allowJs": true, // allow mixed ts-js project
+        "esModuleInterop": true, // allows importing cjs modules with e.g. `import $ from 'jquery'`
         "lib": [
             "esnext", // full support for latest js features
             "dom", // assume DOM APIs are present
