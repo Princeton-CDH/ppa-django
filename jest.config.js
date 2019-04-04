@@ -7,7 +7,8 @@ module.exports = {
     moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx', 'json', 'node'],
     coverageDirectory: '<rootDir>/coverage',
     collectCoverageFrom: [
-        "ts/components/*.{ts,tsx}", // we're only unit testing components
+        "ts/**/*.{ts,tsx}", // get coverage for all ts...
+        "!ts/searchWithin.ts", // *except* page files, which should be e2e tested
         '!**/node_modules/**', // don't cover pulled-in dependencies
     ]
 }
