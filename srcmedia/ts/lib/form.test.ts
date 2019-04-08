@@ -6,14 +6,21 @@ describe('RxForm', () => {
         document.body.innerHTML = `<form><input type="text" name="query"/></form>`
     })
 
-    test('it stores a target for submissions', () => {
+    it('stores a target for submissions if one is set', () => {
+        const $form = document.querySelector('form') as HTMLFormElement
+        $form.target = '/myendpoint/'
+        const rxf = new RxForm($form)
+        expect(rxf.target).toEqual('/myendpoint/')
+    })
+    
+    it('uses the current page as target if none is set', () => {
         window.history.pushState({}, 'form', '/form/') // go to some path /form
         const $form = document.querySelector('form') as HTMLFormElement
         const rxf = new RxForm($form)
         expect(rxf.target).toEqual('/form/') // endpoint should be the path we're on
     })
 
-    test('can reset itself', () => {
+    it('can reset itself', () => {
         const $form = document.querySelector('form') as HTMLFormElement
         const $input = document.querySelector('input[type=text]') as HTMLInputElement
         const rxf = new RxForm($form)
@@ -22,7 +29,7 @@ describe('RxForm', () => {
         expect($input.value).toBe('')
     })
     
-    test('can seralize itself', () => {
+    it('can seralize itself', () => {
         const $form = document.querySelector('form') as HTMLFormElement
         const $input = document.querySelector('input[type=text]') as HTMLInputElement
         const rxf = new RxForm($form)
@@ -30,7 +37,7 @@ describe('RxForm', () => {
         expect(rxf.serialize()).toEqual('query=my+search')
     })
 
-    test('can update its state', () => {
+    it('can update its state', () => {
         const $form = document.querySelector('form') as HTMLFormElement
         const rxf = new RxForm($form)
         const watcher = jest.fn()

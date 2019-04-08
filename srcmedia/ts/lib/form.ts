@@ -14,8 +14,12 @@ class RxForm extends Component implements Reactive<RxFormState> {
     constructor(element: HTMLFormElement) {
         super(element)
         this.state = new Subject()
-        // FIXME naively assuming that the form targets the current path
-        this.target = window.location.pathname
+        if (this.element.target) { // check for a `target` attribute
+            this.target = this.element.target
+        }
+        else { // otherwise assume it targets the current path
+            this.target = window.location.pathname
+        }
     }
     /**
      * Update the form's state. We don't need to change the DOM, so all we do
