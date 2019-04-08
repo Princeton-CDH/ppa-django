@@ -1,4 +1,8 @@
 {% load ppa_tags %}
+{% comment %}
+    This partial is rendered as part of `digitizedwork_detail.html` and can also 
+    be requested asynchronously to repopulate the search results.
+{% endcomment %}
 {% if query or page_highlights %}
     {% if not error %}
     <div class="occurrences ui center aligned text container">
