@@ -1,11 +1,14 @@
+import json
+
 from django import forms
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db.models import Max, Min
 from django.utils.safestring import mark_safe
+from django.utils.html import conditional_escape
 
-from ppa.archive.models import Collection, DigitizedWork, NO_COLLECTION_LABEL
+from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork
 
 
 class SelectDisabledMixin(object):

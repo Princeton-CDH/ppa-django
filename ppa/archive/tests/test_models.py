@@ -97,6 +97,14 @@ class TestDigitizedWork(TestCase):
         digwork = DigitizedWork(title='Elocutionary Language')
         assert digwork.display_title() == digwork.title
 
+    def test_has_fulltext(self):
+        digwork = DigitizedWork(title='Elocutionary Language')
+        # should be hathi (thus have fulltext) by default
+        assert digwork.has_fulltext
+        digwork.source = DigitizedWork.OTHER
+        # for non-hathi items, shouldn't have full text
+        assert not digwork.has_fulltext
+        
     def test_hathi(self):
         digwork = DigitizedWork(source_id='njp.32101013082597',
                                 source=DigitizedWork.HATHI)

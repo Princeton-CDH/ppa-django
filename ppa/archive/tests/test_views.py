@@ -304,6 +304,22 @@ class TestArchiveViews(TestCase):
             response = self.client.get(url, {'query': 'knobs'})
             self.assertContains(response, 'Something went wrong.')
 
+        # ajax request for search results
+        response = self.client.get(url, {'query': 'knobs'}, 
+                                   HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        assert response.status_code == 200
+        # should render the results list partial
+        self.assertTemplateUsed('archive/snippets/results_within_list.html')
+        # shouldn't render the whole list
+        self.assertTemplateNotUsed('archive/digitizedwork_detail.html')
+        # should have all the results
+        assert len(response.context['page_highlights']) == 1
+        print(response.content)
+        # should have the results count
+        self.assertContains(response, "1 occurrence")
+        # should have pagination
+        self.assertContains(response, "<div class=\"page-controls")
+
     @pytest.mark.usefixtures("solr")
     def test_digitizedwork_listview(self):
         url = reverse('archive:list')
@@ -583,7 +599,7 @@ class TestArchiveViews(TestCase):
         self.assertTemplateUsed('archive/snippest/search_result.html')
         # shouldn't render the search form or whole list
         self.assertTemplateNotUsed('archive/snippets/search_form.html')
-        self.assertTemplateNotUsed('archive/list_digitizedworks.html')
+        self.assertTemplateNotUsed('archive/digitizedwork_list.html')
         # should have all the results
         assert len(response.context['object_list']) == len(digitized_works)
         # should have the results count

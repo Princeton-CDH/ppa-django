@@ -1,0 +1,38 @@
+{% load ppa_tags %}
+{% comment %}
+    This partial is rendered as part of `digitizedwork_detail.html` and can also 
+    be requested asynchronously to repopulate the search results.
+{% endcomment %}
+{% if query or page_highlights %}
+    {% if not error %}
+    <div class="occurrences ui center aligned text container">
+        <p>{{ page_obj.paginator.count }} occurrence{{ page_obj.paginator.count|pluralize }}</p>
+    </div>
+    <div class="pagination ui container">
+        {% include 'archive/snippets/pagination.html' %}
+    </div>
+    {% endif %}
+    <div class="results-list ui container">
+        {% for page in solr_results %}
+            {% with highlights=page_highlights|dict_item:page.id%}
+            <div class="ui page item">
+                <div class="pages ui twelve wide column">
+                    <div class="wrapper">
+                        {% include 'archive/snippets/page_preview.html' with item_id=page.source_id  %}
+                    </div>
+                </div>
+            </div>
+            {% endwith %}
+        {% empty %}
+            <div class="ui error message container">
+                {# display error if something went wrong (bad query, etc.) #}
+                <p>{% firstof error "No matching pages." %}</p>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% if not error and page_obj.paginator.count > 5 %}
+<div class="pagination ui container">
+    {% include 'archive/snippets/pagination.html' %}
+</div>
+{% endif %}

@@ -6,7 +6,7 @@ from django.urls import reverse
 from wagtail.core.models import Site, Page
 
 from ppa.common.admin import LocalUserAdmin
-from ppa.common.views import VaryOnHeadersMixin
+from ppa.common.views import VaryOnHeadersMixin, AjaxTemplateMixin
 from ppa.archive.views import DigitizedWorkListView
 
 
@@ -62,6 +62,21 @@ class TestVaryOnHeadersMixin(TestCase):
         # check for the set header with the values supplied
         assert response['Vary'] == 'X-Foobar, X-Bazbar'
 
+
+class TestAjaxTemplateMixin(TestCase):
+
+    def test_get_templates(self):
+        class MyAjaxyView(AjaxTemplateMixin):
+            ajax_template_name = 'my_ajax_template.json'
+            template_name = 'my_normal_template.html'
+
+        myview = MyAjaxyView()
+        myview.request = Mock()
+        myview.request.is_ajax.return_value = False
+        assert myview.get_template_names() == [MyAjaxyView.template_name]
+
+        myview.request.is_ajax.return_value = True
+        assert myview.get_template_names() == MyAjaxyView.ajax_template_name
 
 
 class TestRobotsTxt(TestCase):

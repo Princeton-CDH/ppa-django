@@ -1,5 +1,5 @@
-import ReactiveForm from './ReactiveForm'
-import Histogram from './Histogram'
+import ReactiveForm from './modules/ReactiveForm'
+import Histogram from './modules/Histogram'
 import clearable from './clearable'
 import ImageLazyLoader from './modules/LazyLoad'
 
