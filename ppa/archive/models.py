@@ -642,7 +642,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
             # over pages in METS structmap
             for page in mmets.structmap_pages:
                 # zipfile spec uses / for path regardless of OS
-                pagefilename = '/'.join([self.hathi_content_dir, page.text_file_location])
+                pagefilename = '/'.join([self.hathi.content_dir, page.text_file_location])
                 with ht_zip.open(pagefilename) as pagefile:
                     try:
                         yield {
