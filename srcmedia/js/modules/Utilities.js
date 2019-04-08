@@ -1,3 +1,8 @@
+/**
+ * Miscellaneous utility functions taken from Winthrop - note some of these
+ * may not currently be in use.
+ */
+
 export const toArray = value => Array.isArray(value) ? value : value ? [value] : undefined
 
 export const ajax = {
@@ -7,6 +12,10 @@ export const ajax = {
 }
 export const parser = new DOMParser()
 
+/**
+ * Reducer that converts a JSON response containing facet data into an object
+ * with a map-like structure (key-value).
+ */
 export const reduceFacets = (acc, cur) => {
     if (acc[cur.facet]) {
         if (!Array.isArray(acc[cur.facet])) {
