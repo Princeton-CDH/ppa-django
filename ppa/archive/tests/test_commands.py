@@ -445,3 +445,13 @@ class TestHathiAddCommand(TestCase):
         assert 'Processed 1 item' in output
         assert 'Added 1' in output
         assert 'imported 550 pages' in output
+        # success by pid
+        assert '%s - successfully added' % test_htid in output
+
+        # success not reported when less verbose
+        stdout = StringIO()
+        call_command('hathi_add', test_htid, stdout=stdout, verbosity=0)
+        output = stdout.getvalue()
+        # success by pid
+        assert '%s - successfully added' % test_htid not in output
+

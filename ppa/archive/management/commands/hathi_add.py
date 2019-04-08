@@ -77,6 +77,10 @@ class Command(BaseCommand):
             if status not in (HathiImporter.SUCCESS, HathiImporter.SKIPPED):
                 self.stderr.write("%s - %s" % (htid, output_results[htid]))
                 self.stats['error'] += 1
+            # report success unless verbosity below default
+            if status == HathiImporter.SUCCESS:
+                if self.verbosity >= self.v_normal:
+                    self.stdout.write('%s - successfully added' % htid)
 
         # get totals for added works & pages
         self.stats['created'] = len(htimporter.imported_works)
