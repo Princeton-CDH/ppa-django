@@ -20,9 +20,8 @@ class VaryOnHeadersMixin(View):
 
 
 class AjaxTemplateMixin(TemplateResponseMixin, VaryOnHeadersMixin):
-    '''View mixin to return a different version of a view's template when
-    responding to an ajax request.
-    '''
+    '''View mixin to use a different template when responding to an ajax
+    request.'''
 
     #: name of the template to use for ajax request
     ajax_template_name = None
