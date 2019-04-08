@@ -390,36 +390,6 @@ class SearchWithinWorkForm(forms.Form):
             '_align': 'left'
     }))
 
-    def as_json(self):
-        """Serialize the form's attributes as JSON for passing to a client-side
-        renderer (e.g. vue.js)."""
-
-        output = {
-            'fields': {},
-            'valid': self.is_valid(),
-            'errors': self.errors.as_json(),
-        }
-
-        for name, field in self.fields.items():
-            bf = self[name]
-
-            output['fields'][name] = {
-                # unbound attributes
-                'name': name,
-                'id': self.auto_id % name,
-                'label': field.label,
-                'required': field.required,
-                'disabled': field.disabled,
-                'widget': field.widget.__dict__,
-                # bound data
-                'errors': bf.errors,
-                'help_text': bf.help_text,
-                'field_name': bf.name,
-                'data': bf.data,
-                'value': bf.value(),
-            }
-        
-        return json.dumps(output)
 
 class AddToCollectionForm(forms.Form):
     '''
