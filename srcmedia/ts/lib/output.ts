@@ -3,6 +3,7 @@ import { Subject } from 'rxjs'
 import { Component, Reactive } from '../lib/common'
 import { ImageLazyLoader } from '../../js/modules/LazyLoad'
 
+// State represented as just a string for now, e.g. for html responses
 type RxOutputState = string
 
 class RxOutput extends Component implements Reactive<RxOutputState> {
@@ -15,7 +16,7 @@ class RxOutput extends Component implements Reactive<RxOutputState> {
     }
 
     async update(newState: RxOutputState): Promise<void> {
-        this.element.innerHTML = newState // update the results
+        this.element.innerHTML = newState // directly apply state as html
         let images = Array.from(document.querySelectorAll('img[data-src]'))
         new ImageLazyLoader(images) // rebind lazy load
         this.state.next(newState)
