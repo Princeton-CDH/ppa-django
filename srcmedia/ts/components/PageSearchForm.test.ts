@@ -50,7 +50,7 @@ test('updates the URL/browser history on submission', done => {
     const response = new Response(new Blob(['results!'], { type: 'text/plain' }))
     jest.spyOn(window, 'fetch').mockImplementation(() => Promise.resolve(response))
     psf.submit().then(() => {
-        expect(window.location.pathname).toBe('/query=mysearch') // we're at this URL
+        expect(window.location.search).toBe('?query=mysearch') // querystring was changed
         expect(window.history.length).toBeGreaterThan(1) // we added entries to browser history
         done()
     })
