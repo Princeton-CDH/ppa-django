@@ -1,6 +1,8 @@
 import PitBar from './pitbar'
 import NavMenu from './modules/NavMenu'
 
+document.firstElementChild.classList.remove('no-js') // remove the no-js class
+
 $(function(){
 
     /* dom */
