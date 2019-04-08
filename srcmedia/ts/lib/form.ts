@@ -20,6 +20,8 @@ class RxForm extends Component implements Reactive<RxFormState> {
         else { // otherwise assume it targets the current path
             this.target = window.location.pathname
         }
+        // prevent the enter key from submitting the form
+        this.element.onkeydown = e => { if (e.key === 'Enter') e.preventDefault() }
     }
     /**
      * Update the form's state. We don't need to change the DOM, so all we do

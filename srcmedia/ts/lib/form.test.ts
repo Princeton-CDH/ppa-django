@@ -46,4 +46,13 @@ describe('RxForm', () => {
         expect(watcher).toHaveBeenCalledWith({ foo: 'bar' })
     })
 
+    it('ignores the enter key when pressed', () => {
+        const $form = document.querySelector('form') as HTMLFormElement
+        const rxf = new RxForm($form)
+        const enterPress = new KeyboardEvent('keydown', { key: 'Enter' })
+        enterPress.preventDefault = jest.fn() // mock the preventDefault() hook
+        $form.dispatchEvent(enterPress)
+        expect(enterPress.preventDefault).toHaveBeenCalled()
+    })
+
 })
