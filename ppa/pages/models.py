@@ -137,7 +137,10 @@ class ImageWithCaption(blocks.StructBlock):
 class BodyContentBlock(blocks.StreamBlock):
     '''Common set of content blocks to be used on both content pages
     and editorial pages'''
-    paragraph = blocks.RichTextBlock()
+    paragraph = blocks.RichTextBlock(
+        features=['h2', 'h3', 'bold', 'italic', 'link', 'ol', 'ul',
+                  'hr', 'blockquote', 'document']
+    )
     image = ImageChooserBlock()
     captioned_image = ImageWithCaption()
     footnotes = blocks.RichTextBlock(

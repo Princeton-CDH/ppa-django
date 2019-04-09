@@ -5,6 +5,10 @@
         background-color: $wisteria; // purple-colored list bullets
     }
 
+    blockquote {
+        border-color: $wisteria;
+    }
+
     h1 {
         @include underline-headline($wisteria);
     }
