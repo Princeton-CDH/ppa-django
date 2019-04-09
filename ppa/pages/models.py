@@ -134,7 +134,8 @@ class ImageWithCaption(blocks.StructBlock):
         ('left', 'Floated Left'),
         ('right', 'Floated Right'),
         ], help_text='Controls how other content flows around the image. Note \
-            that this will only take effect on larger screens.')
+            that this will only take effect on larger screens. Float consecutive \
+            images in opposite directions for side-by-side display.')
 
     class Meta:
         icon = 'image'
