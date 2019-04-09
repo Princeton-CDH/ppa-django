@@ -249,9 +249,30 @@ class TestContentPage(WagtailPageTests):
         response = self.client.get(content_page.relative_url(site))
         self.assertTemplateUsed(response, 'pages/snippets/figure.html')
         self.assertTemplateUsed(response, 'pages/snippets/responsive_image.html')
-        self.assertContains(response, '<figure>')
+        # should default to full-width image
+        self.assertContains(response, '<figure class="full">')
         self.assertContains(
             response, '<figcaption><div class="rich-text">%s</div></figcaption>' % caption_text)
+
+        # test image floating logic
+        # left float
+        content_page.body.stream_data.append({
+            'type': 'captioned_image',
+            'value': { 'image': 1, 'caption': caption_text, 'style': 'left' },
+            'id': 'leftimg'
+        })
+        content_page.save()
+        response = self.client.get(content_page.relative_url(site))
+        self.assertContains(response, '<figure class="left">')
+        # right float
+        content_page.body.stream_data.append({
+            'type': 'captioned_image',
+            'value': { 'image': 1, 'caption': caption_text, 'style': 'right' },
+            'id': 'rightimg'
+        })
+        content_page.save()
+        response = self.client.get(content_page.relative_url(site))
+        self.assertContains(response, '<figure class="right">')
 
 
 class TestCollectionPage(WagtailPageTests):
