@@ -186,7 +186,7 @@
                 width: calc(50% - 1rem);
     
                 figcaption {
-                    margin-bottom: 2rem;
+                    margin-bottom: 1rem;
                 }
             }
 
@@ -197,6 +197,12 @@
 
             &.right + figure.left {
                 margin-right: 0;
+            }
+
+            // any content after side-by-side images should be cleared
+            &.left + figure.right + *,
+            &.right + figure.left + * {
+                clear: both;
             }
         }
     }
@@ -228,6 +234,10 @@
             margin: 5rem 0 5rem 3rem;
             padding-left: 3rem;
         }
+    }
+
+    .paragraph { // spacing between richtext blocks
+        margin-top: 1rem;
     }
 }
 
