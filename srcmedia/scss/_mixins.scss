@@ -196,9 +196,12 @@
             }
 
             // any content after side-by-side images should be cleared
+            // it also needs padding (not margin) in order to create space
+            // because the floats will ignore margin
             &.left + figure.right + *,
             &.right + figure.left + * {
                 clear: both;
+                padding-top: 1rem;
             }
         }
     }
