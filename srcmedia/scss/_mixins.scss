@@ -184,10 +184,6 @@
             &.left,
             &.right {
                 width: calc(50% - 1rem);
-    
-                figcaption {
-                    margin-bottom: 1rem;
-                }
             }
 
             // when side-by-side only need one margin
@@ -208,7 +204,7 @@
     }
 
     figcaption {
-        margin-bottom: 4rem;
+        margin-bottom: 2rem;
         text-align: center;
 
         * {
