@@ -148,7 +148,7 @@ class BodyContentBlock(blocks.StreamBlock):
     and editorial pages'''
     paragraph = blocks.RichTextBlock(
         features=['h2', 'h3', 'bold', 'italic', 'link', 'ol', 'ul',
-                  'hr', 'image', 'blockquote', 'document']
+                  'hr', 'blockquote', 'document']
     )
     captioned_image = ImageWithCaption(label='image') # just call it regular image
     footnotes = blocks.RichTextBlock(
