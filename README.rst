@@ -17,13 +17,13 @@ at `<https://princeton-cdh.github.io/ppa-django/>`_.
    :target: https://travis-ci.org/Princeton-CDH/ppa-django
    :alt: Build status
 
-.. image:: https://landscape.io/github/Princeton-CDH/ppa-django/master/landscape.svg?style=flat
-   :target: https://landscape.io/github/Princeton-CDH/ppa-django/master
-   :alt: Code Health
-
 .. image:: https://codecov.io/gh/Princeton-CDH/ppa-django/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/Princeton-CDH/ppa-django
    :alt: Code coverage
+
+.. image:: https://api.codeclimate.com/v1/badges/68a6e452a7d32c6b72de/maintainability
+   :target: https://codeclimate.com/github/Princeton-CDH/ppa-django/maintainability
+   :alt: Maintainability
 
 .. image:: https://requires.io/github/Princeton-CDH/ppa-django/requirements.svg?branch=master
    :target: https://requires.io/github/Princeton-CDH/ppa-django/requirements/?branch=master
