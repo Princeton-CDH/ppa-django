@@ -209,6 +209,7 @@ class TestArchiveViews(TestCase):
         # search term should be ignored for items without fulltext
         with patch('ppa.archive.views.PagedSolrQuery') as mock_paged_solrq:
             mock_paged_solrq.return_value.count.return_value = 0
+            mock_paged_solrq.return_value.__getitem__.side_effect = IndexError
             response = self.client.get(thesis.get_absolute_url(), {'query': 'lady'})
             # called once for last modified, but not for search
             assert mock_paged_solrq.call_count == 1
@@ -321,6 +322,8 @@ class TestArchiveViews(TestCase):
             mockpsq.return_value.get_results.side_effect = SolrError
             # count needed for paginator
             mockpsq.return_value.count.return_value = 0
+            # error for last-modified
+            mockpsq.return_value.__getitem__.side_effect = SolrError
             response = self.client.get(url, {'query': 'knobs'})
             self.assertContains(response, 'Something went wrong.')
 
@@ -487,15 +490,6 @@ class TestArchiveViews(TestCase):
         self.assertContains(response, wintry.source_id)
         self.assertNotContains(response, dial.source_id)
 
-        # no text query, so solr query should not have page join present
-        with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
-            # needed for the paginator
-            mockpsq.return_value.count.return_value = 0
-            response = self.client.get(url, {'author': 'Robert'})
-            # the call args are very long and not all relevant, cast as
-            # string and look for the offending join
-            assert 'OR {!join from=id to=source_id v=$work_query})' \
-                not in str(mockpsq.call_args)
 
         # search title using the title field
         response = self.client.get(url, {'title': 'The Dial'})
@@ -651,6 +645,8 @@ class TestArchiveViews(TestCase):
             mockpsq.return_value.get_expanded.side_effect = SolrError
             # count needed for paginator
             mockpsq.return_value.count.return_value = 0
+            # simulate empty result doc for last modified check
+            mockpsq.return_value.__getitem__.return_value = {}
             response = self.client.get(url, {'query': 'something'})
             # paginator variables should still be set
             assert 'object_list' in response.context
@@ -901,6 +897,9 @@ class TestAddToCollection(TestCase):
 
 class TestDigitizedWorkListView(TestCase):
 
+    def setUp(self):
+        self.factory = RequestFactory()
+
     def test_get_page_highlights(self):
 
         digworkview = DigitizedWorkListView()
@@ -947,6 +946,35 @@ class TestDigitizedWorkListView(TestCase):
             assert ' AND id:("p1a" "p1b" "p2a" "p2b")' in solr_opts['q']
 
             assert highlights == mockpsq.return_value.get_highlighting()
+
+    def test_get_queryset(self):
+        digworkview = DigitizedWorkListView()
+
+        # no text query, so solr query should not have page join present
+        with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
+            # needed for the paginator
+            mockpsq.return_value.count.return_value = 0
+            digworkview.request = self.factory.get(
+                reverse('archive:list'), {'author': 'Robert'})
+            digworkview.get_queryset()
+            # the call args are very long and not all relevant, cast as
+            # string and look for the offending join
+            print(mockpsq.call_args)
+            assert 'OR {!join from=id to=source_id v=$work_query})' \
+                not in str(mockpsq.call_args)
+
+    def test_get_lastmodified(self):
+        digworkview = DigitizedWorkListView()
+
+        with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
+            # needed for the paginator
+            mockpsq.return_value.__getitem__.side_effect = IndexError
+            # returns nothing if no result
+            assert not digworkview.last_modified()
+            # doesn't call count
+            mockpsq.return_value.count.assert_not_called()
+
+
 
 
 class TestAddFromHathiView(TestCase):
