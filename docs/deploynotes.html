@@ -1,0 +1,325 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Deploy and Upgrade notes &#8212; Princeton Prosody Archive 3.2.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="CHANGELOG" href="changelog.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="deploy-and-upgrade-notes">
+<span id="deploynotes"></span><h1>Deploy and Upgrade notes<a class="headerlink" href="#deploy-and-upgrade-notes" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2>3.2<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Requires configurations for <strong>HATHITRUST_OAUTH_KEY</strong> and
+<strong>HATHITRUST_OAUTH_SECRET</strong> in order to use HathiTrust Data API
+for adding new items from HathiTrust.</li>
+<li>New functionality for adding items from HathiTrust requires that
+Django application have permission to <strong>add</strong> new files and directories
+from the HathiTrust pairtree data stored in <strong>HATHI_DATA</strong>.</li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h2>3.0.1<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Title searching and boosting requires an update to <code class="docutils literal notranslate"><span class="pre">solrconfig.xml</span></code>.
+Before deploying new code, <code class="docutils literal notranslate"><span class="pre">solr_conf/solconfig.xml</span></code> should be copied
+to the core’s <cite>conf</cite> directory and the core reloaded, or Solr restarted.</li>
+</ul>
+</div>
+<div class="section" id="id3">
+<h2>3.0<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">Solr field boosting requires an updated <code class="docutils literal notranslate"><span class="pre">solrconfig.xml</span></code>. Before deploying
+new code, <code class="docutils literal notranslate"><span class="pre">solr_conf/solconfig.xml</span></code> should be copied to the core’s
+<cite>conf</cite> directory and the core reloaded, or Solr restarted.</p>
+</li>
+<li><p class="first">Revised Solr field names, updated collection search logic, and field boosting
+require the index to be cleared and reindexed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">index</span> <span class="o">--</span><span class="n">clear</span> <span class="nb">all</span> <span class="o">--</span><span class="n">index</span> <span class="n">none</span>
+<span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">solr_schema</span>
+<span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">index</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Admin functionality for suppressing digitized works requires that the
+Django application have permission to <strong>delete</strong> files and directories
+from the HathiTrust pairtree data stored in <strong>HATHI_DATA</strong>.</p>
+</li>
+<li><p class="first">Adds a new contributor page type, which allows selecting a list of
+people to display as project members and board members. If there is
+an existing contributor content page, it should be removed and
+replaced with a contributor page with the slug <cite>contributor</cite>.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="id4">
+<h2>0.11<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">GTAGS_ANALYTICS_ID</span></code> should include the property ID for the site, in order</dt>
+<dd>to enable Google Analytics on non-preview pages.</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="id5">
+<h2>0.10<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">Switching from Mezzanine to Wagtail requires a manual migration <em>before</em>
+installing the new version to avoid migration dependency conflicts:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">migrate</span> <span class="n">pages</span> <span class="n">zero</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Wagtail provides predefined groups for <em>Editor</em> and <em>Moderator</em>. Users
+who were previously in the <em>Content Editor</em> group should be added
+to one of these, and the <em>Content Editor</em> group should be removed.</p>
+</li>
+<li><p class="first">To benefit from new logic for cleaning metadata fields on import, the
+HathiTrust import should be run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">hathi_import</span> <span class="o">-</span><span class="n">v</span> <span class="mi">0</span> <span class="o">--</span><span class="n">progress</span> <span class="o">--</span><span class="n">update</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Solr schema changes for this release require an updated <code class="docutils literal notranslate"><span class="pre">solrconfig.xml</span></code>
+with additional <code class="docutils literal notranslate"><span class="pre">&lt;lib/&gt;</span></code> declarations. Copy <code class="docutils literal notranslate"><span class="pre">solr_conf/solrconfig.xml</span></code>
+to the Solr core’s <cite>conf</cite> directory, and then restart the Solr server
+to enable the new library paths.</p>
+<p>Because this includes a Solr schema field type change that cannot be converted
+automatically, the index must be cleared before changing the schema,
+and then all content must be reindexed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">index</span> <span class="o">--</span><span class="n">clear</span> <span class="nb">all</span> <span class="o">--</span><span class="n">index</span> <span class="n">none</span>
+<span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">solr_schema</span>
+<span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">index</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">manage.py</span> <span class="pre">setup_site_pages</span></code> to create stub pages for all
+site content needed for main site navigation.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="id6">
+<h2>0.9<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">Configure a <strong>TECHNICAL_CONTACT</strong> email address in local settings
+to set a <strong>From</strong> header on requests made against the HathiTrust API.</p>
+</li>
+<li><p class="first">Logic for populating local records from HathiTrust has changed; records
+need to be updated:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">hathi_import</span> <span class="o">-</span><span class="n">v</span> <span class="mi">0</span> <span class="o">--</span><span class="n">progress</span> <span class="o">--</span><span class="n">update</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">This update requires a Solr schema update and a full reindex; due to changes
+in page indexing, pages must also be cleared from the Solr index:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">solr_schema</span>
+<span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">index</span> <span class="o">--</span><span class="n">clear</span> <span class="n">pages</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="search-filtering-and-highlighting">
+<h2>0.8 Search filtering and highlighting<a class="headerlink" href="#search-filtering-and-highlighting" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">The Solr schema has been modified and must be updated:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">solr_schema</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">The Solr schema change requires reindexing content.  It is
+<strong>recommended</strong> to clear out your Solr index and reindex everything:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">index</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">A fixture has been provided with site page content.  Load via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">loaddata</span> <span class="n">ppa</span><span class="o">/</span><span class="n">archive</span><span class="o">/</span><span class="n">fixtures</span><span class="o">/</span><span class="n">pages</span><span class="o">.</span><span class="n">json</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The previous import and index script has been broken into two
+scripts. For a fresh install, run <strong>hathi_import</strong> as before to import
+content into the Django database and then run <strong>index</strong> to index work
+and page content into Solr.</p>
+</div>
+</div>
+<div class="section" id="bulk-import-and-simple-search">
+<h2>0.5 Bulk Import and Simple Search<a class="headerlink" href="#bulk-import-and-simple-search" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">Configure your database in local settings and run migrations:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">migrate</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Create a new Solr core with a basic configuration and managed schema:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">solr</span> <span class="n">create</span> <span class="o">-</span><span class="n">c</span> <span class="n">SOLR_CORE</span> <span class="o">-</span><span class="n">n</span> <span class="n">basic_configs</span>
+</pre></div>
+</div>
+<p>Configure the Solr core name and urls in local settings, and then update
+the schema:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">solr_schema</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Bulk import assumes you already have a local copy of the desired
+HathiTrust materials retrieved via rsync (see <a class="reference external" href="https://www.hathitrust.org/datasets">https://www.hathitrust.org/datasets</a>).
+Be sure to include pairtree version and prefix files in the rsync data.
+The path to the top directory of the local Hathi data should be
+configured in localsettings as <strong>HATHI_DATA</strong>.  Once the data is present
+and the path is configured, run the import script (with optional
+progress bar):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">hathi_import</span>
+<span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">hathi_import</span> <span class="o">-</span><span class="n">v</span> <span class="mi">0</span> <span class="o">--</span><span class="n">progress</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Princeton Prosody Archive</a></h1>
+
+
+
+<p class="blurb">Django web application for "Princeton Prosody Archive" CDH project</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=Princeton-CDH&repo=ppa-django&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+    
+
+<p>
+<a class="badge" href="https://travis-ci.org/Princeton-CDH/ppa-django">
+    <img
+        alt="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
+        src="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
+    />
+</a>
+</p>
+
+
+
+
+    
+
+<p>
+<a class="badge" href="https://codecov.io/github/Princeton-CDH/ppa-django">
+    <img
+    alt="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
+    src="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
+    />
+</a>
+</p>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="codedocs.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Deploy Notes</a></li>
+</ul>
+
+
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Deploy and Upgrade notes</a><ul>
+<li><a class="reference internal" href="#id1">3.2</a></li>
+<li><a class="reference internal" href="#id2">3.0.1</a></li>
+<li><a class="reference internal" href="#id3">3.0</a></li>
+<li><a class="reference internal" href="#id4">0.11</a></li>
+<li><a class="reference internal" href="#id5">0.10</a></li>
+<li><a class="reference internal" href="#id6">0.9</a></li>
+<li><a class="reference internal" href="#search-filtering-and-highlighting">0.8 Search filtering and highlighting</a></li>
+<li><a class="reference internal" href="#bulk-import-and-simple-search">0.5 Bulk Import and Simple Search</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><div class="powered_by">
+<p>Powered by:</p>
+<a href="http://cdh.princeton.edu/">
+<img src="https://cdh.princeton.edu/static/img/logos/cdh-logo.svg"
+    alt="Center for Digital Humanities @ Princeton" />
+</a>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, CDH @ Princeton University.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/deploynotes.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
