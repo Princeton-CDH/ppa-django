@@ -125,6 +125,10 @@ class SolrSchema(object):
         # fields without stemming for search boosting
         {'name': 'title_nostem', 'type': 'text_nostem', 'required': False},
         {'name': 'subtitle_nostem', 'type': 'text_nostem', 'required': False},
+
+        # have solr automatically track last modification time for
+        # indexed content
+        {'name': 'last_modified', 'type': 'date', 'default': 'NOW'},
     ]
     #: fields to be copied into general purpose text field for searching
     text_fields = []
