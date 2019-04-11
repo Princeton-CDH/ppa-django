@@ -1,0 +1,6 @@
+# browsers supported by this application
+# https://github.com/browserslist/browserslist
+
+> 1%
+last 2 versions
+not ie <= 8

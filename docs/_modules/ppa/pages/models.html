@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>ppa.pages.models &#8212; Princeton Prosody Archive 3.1.0 documentation</title>
+    <title>ppa.pages.models &#8212; Princeton Prosody Archive 3.2.0 documentation</title>
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
@@ -164,6 +164,13 @@
 <span class="sd">    a formatted caption, so caption can be context-specific.&#39;&#39;&#39;</span>
     <span class="n">image</span> <span class="o">=</span> <span class="n">ImageChooserBlock</span><span class="p">()</span>
     <span class="n">caption</span> <span class="o">=</span> <span class="n">blocks</span><span class="o">.</span><span class="n">RichTextBlock</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;bold&#39;</span><span class="p">,</span> <span class="s1">&#39;italic&#39;</span><span class="p">,</span> <span class="s1">&#39;link&#39;</span><span class="p">])</span>
+    <span class="n">style</span> <span class="o">=</span> <span class="n">blocks</span><span class="o">.</span><span class="n">ChoiceBlock</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;full&#39;</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">(</span><span class="s1">&#39;full&#39;</span><span class="p">,</span> <span class="s1">&#39;Full Width&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="s1">&#39;Floated Left&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;right&#39;</span><span class="p">,</span> <span class="s1">&#39;Floated Right&#39;</span><span class="p">),</span>
+        <span class="p">],</span> <span class="n">help_text</span><span class="o">=</span><span class="s1">&#39;Controls how other content flows around the image. Note </span><span class="se">\</span>
+<span class="s1">            that this will only take effect on larger screens. Float consecutive </span><span class="se">\</span>
+<span class="s1">            images in opposite directions for side-by-side display.&#39;</span><span class="p">)</span>
 
     <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
         <span class="n">icon</span> <span class="o">=</span> <span class="s1">&#39;image&#39;</span></div>
@@ -172,7 +179,10 @@
 <div class="viewcode-block" id="BodyContentBlock"><a class="viewcode-back" href="../../../codedocs.html#ppa.pages.models.BodyContentBlock">[docs]</a><span class="k">class</span> <span class="nc">BodyContentBlock</span><span class="p">(</span><span class="n">blocks</span><span class="o">.</span><span class="n">StreamBlock</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Common set of content blocks to be used on both content pages</span>
 <span class="sd">    and editorial pages&#39;&#39;&#39;</span>
-    <span class="n">paragraph</span> <span class="o">=</span> <span class="n">blocks</span><span class="o">.</span><span class="n">RichTextBlock</span><span class="p">()</span>
+    <span class="n">paragraph</span> <span class="o">=</span> <span class="n">blocks</span><span class="o">.</span><span class="n">RichTextBlock</span><span class="p">(</span>
+        <span class="n">features</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;h2&#39;</span><span class="p">,</span> <span class="s1">&#39;h3&#39;</span><span class="p">,</span> <span class="s1">&#39;bold&#39;</span><span class="p">,</span> <span class="s1">&#39;italic&#39;</span><span class="p">,</span> <span class="s1">&#39;link&#39;</span><span class="p">,</span> <span class="s1">&#39;ol&#39;</span><span class="p">,</span> <span class="s1">&#39;ul&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;hr&#39;</span><span class="p">,</span> <span class="s1">&#39;blockquote&#39;</span><span class="p">,</span> <span class="s1">&#39;document&#39;</span><span class="p">]</span>
+    <span class="p">)</span>
     <span class="n">image</span> <span class="o">=</span> <span class="n">ImageChooserBlock</span><span class="p">()</span>
     <span class="n">captioned_image</span> <span class="o">=</span> <span class="n">ImageWithCaption</span><span class="p">()</span>
     <span class="n">footnotes</span> <span class="o">=</span> <span class="n">blocks</span><span class="o">.</span><span class="n">RichTextBlock</span><span class="p">(</span>

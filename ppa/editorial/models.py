@@ -27,7 +27,8 @@ class EditorialIndexPage(Page):
         context = super().get_context(request)
 
         # Add extra variables and return the updated context
-        context['posts'] = EditorialPage.objects.child_of(self).live()
+        context['posts'] = EditorialPage.objects.child_of(self).live() \
+                                        .order_by('-first_published_at')
         return context
 
     def route(self, request, path_components):

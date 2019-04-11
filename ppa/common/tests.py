@@ -1,3 +1,4 @@
+from datetime import datetime
 from unittest.mock import Mock
 
 from django.contrib.auth.models import User, Group
@@ -6,7 +7,8 @@ from django.urls import reverse
 from wagtail.core.models import Site, Page
 
 from ppa.common.admin import LocalUserAdmin
-from ppa.common.views import VaryOnHeadersMixin
+from ppa.common.views import VaryOnHeadersMixin, AjaxTemplateMixin, \
+    LastModifiedMixin
 from ppa.archive.views import DigitizedWorkListView
 
 
@@ -62,6 +64,21 @@ class TestVaryOnHeadersMixin(TestCase):
         # check for the set header with the values supplied
         assert response['Vary'] == 'X-Foobar, X-Bazbar'
 
+
+class TestAjaxTemplateMixin(TestCase):
+
+    def test_get_templates(self):
+        class MyAjaxyView(AjaxTemplateMixin):
+            ajax_template_name = 'my_ajax_template.json'
+            template_name = 'my_normal_template.html'
+
+        myview = MyAjaxyView()
+        myview.request = Mock()
+        myview.request.is_ajax.return_value = False
+        assert myview.get_template_names() == [MyAjaxyView.template_name]
+
+        myview.request.is_ajax.return_value = True
+        assert myview.get_template_names() == MyAjaxyView.ajax_template_name
 
 
 class TestRobotsTxt(TestCase):
@@ -133,3 +150,20 @@ class TestAnalytics(TestCase):
         )
         # should not have the call to gtags snippet
         self.assertNotContains(res, 'gtag(')
+
+
+
+
+
+class TestLastModifiedMixin(TestCase):
+
+    def test_solr_timestamp_to_datetime(self):
+        # with microseconds
+        solr_dt = LastModifiedMixin.solr_timestamp_to_datetime('2018-07-02T21:08:46.428Z')
+        assert solr_dt == datetime(2018, 7, 2, 21, 8, 46)
+        # without
+        solr_dt = LastModifiedMixin.solr_timestamp_to_datetime('2018-07-02T21:08:46Z')
+        assert solr_dt == datetime(2018, 7, 2, 21, 8, 46)
+
+
+

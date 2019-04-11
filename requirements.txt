@@ -21,3 +21,5 @@ bleach
 django-fullurl
 django-csp
 django-webpack-loader
+requests_oauthlib
+wand

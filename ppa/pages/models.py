@@ -126,9 +126,18 @@ class HomePage(Page):
 
 class ImageWithCaption(blocks.StructBlock):
     ''':class:`~wagtail.core.blocks.StructBlock` for an image with
-    a formatted caption, so caption can be context-specific.'''
+    a formatted caption, so caption can be context-specific. Also allows images
+    to be floated right, left, or take up the width of the page.'''
     image = ImageChooserBlock()
-    caption = blocks.RichTextBlock(features=['bold', 'italic', 'link'])
+    caption = blocks.RichTextBlock(required=False,
+                                   features=['bold', 'italic', 'link'])
+    style = blocks.ChoiceBlock(required=True, default='full', choices=[
+        ('full', 'Full Width'),
+        ('left', 'Floated Left'),
+        ('right', 'Floated Right'),
+        ], help_text='Controls how other content flows around the image. Note \
+            that this will only take effect on larger screens. Float consecutive \
+            images in opposite directions for side-by-side display.')
 
     class Meta:
         icon = 'image'
@@ -137,9 +146,11 @@ class ImageWithCaption(blocks.StructBlock):
 class BodyContentBlock(blocks.StreamBlock):
     '''Common set of content blocks to be used on both content pages
     and editorial pages'''
-    paragraph = blocks.RichTextBlock()
-    image = ImageChooserBlock()
-    captioned_image = ImageWithCaption()
+    paragraph = blocks.RichTextBlock(
+        features=['h2', 'h3', 'bold', 'italic', 'link', 'ol', 'ul',
+                  'hr', 'blockquote', 'document']
+    )
+    captioned_image = ImageWithCaption(label='image') # just call it regular image
     footnotes = blocks.RichTextBlock(
         features=['ol', 'ul', 'bold', 'italic', 'link'],
         classname='footnotes'

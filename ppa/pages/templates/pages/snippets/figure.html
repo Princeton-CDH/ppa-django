@@ -2,7 +2,9 @@
 {# Generate responsive image using wagtail image template tag #}
 {# Expects ImageWithCaption structblock with image and caption #}
 {# sizes per design spec #}
-<figure>
-    {% include "pages/snippets/responsive_image.html" with img=captioned_img.image %}
-    <figcaption>{{ captioned_img.caption }}</figcaption>
+<figure class="{{ img.style }}">
+    {% include "pages/snippets/responsive_image.html" with img=img.image %}
+    {% if img.caption %}
+    <figcaption>{{ img.caption }}</figcaption>
+    {% endif %}
 </figure>

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Code Documentation &#8212; Princeton Prosody Archive 3.1.0 documentation</title>
+    <title>Code Documentation &#8212; Princeton Prosody Archive 3.2.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -158,6 +158,26 @@ values are a dictionary with count and dates.</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="ppa.archive.models.CollectionSignalHandlers">
+<em class="property">class </em><code class="descclassname">ppa.archive.models.</code><code class="descname">CollectionSignalHandlers</code><a class="reference internal" href="_modules/ppa/archive/models.html#CollectionSignalHandlers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.CollectionSignalHandlers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Signal handlers for indexing <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">DigitizedWork</span></code></a> records when
+<a class="reference internal" href="#ppa.archive.models.Collection" title="ppa.archive.models.Collection"><code class="xref py py-class docutils literal notranslate"><span class="pre">Collection</span></code></a> records are saved or deleted.</p>
+<dl class="staticmethod">
+<dt id="ppa.archive.models.CollectionSignalHandlers.delete">
+<em class="property">static </em><code class="descname">delete</code><span class="sig-paren">(</span><em>sender</em>, <em>instance</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#CollectionSignalHandlers.delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.CollectionSignalHandlers.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>signal handler for collection delete; clear associated digitized
+works and reindex</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="ppa.archive.models.CollectionSignalHandlers.save">
+<em class="property">static </em><code class="descname">save</code><span class="sig-paren">(</span><em>sender</em>, <em>instance</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#CollectionSignalHandlers.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.CollectionSignalHandlers.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>signal handler for collection save; reindex associated digitized works</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="ppa.archive.models.DigitizedWork">
 <em class="property">class </em><code class="descclassname">ppa.archive.models.</code><code class="descname">DigitizedWork</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#DigitizedWork"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.DigitizedWork" title="Permalink to this definition">¶</a></dt>
 <dd><p>Record to manage digitized works included in PPA and store their basic
@@ -171,6 +191,45 @@ metadata.</p>
 <dt id="ppa.archive.models.DigitizedWork.MultipleObjectsReturned">
 <em class="property">exception </em><code class="descname">MultipleObjectsReturned</code><a class="headerlink" href="#ppa.archive.models.DigitizedWork.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="ppa.archive.models.DigitizedWork.add_from_hathi">
+<em class="property">static </em><code class="descname">add_from_hathi</code><span class="sig-paren">(</span><em>htid</em>, <em>bib_api=None</em>, <em>update=False</em>, <em>get_data=False</em>, <em>log_msg_src=None</em>, <em>user=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#DigitizedWork.add_from_hathi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.DigitizedWork.add_from_hathi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add or update a HathiTrust work in the database.
+Retrieves bibliographic data from Hathi api, retrieves or creates
+a <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">DigitizedWork</span></code></a> record, and populates the metadata if
+this is a new record, if the Hathi metadata has changed, or
+if update is requested. Creates admin log entry to document
+record creation or update.  If <cite>get_data</cite> is specified,
+will retrieve structure and aggregate data from Hathi Data API
+and add it to the local pairtree datastore.</p>
+<p>Raises <a class="reference internal" href="#ppa.archive.hathi.HathiItemNotFound" title="ppa.archive.hathi.HathiItemNotFound"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.hathi.HathiItemNotFound</span></code></a> for invalid
+id.</p>
+<p>Returns the new or updated  <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">DigitizedWork</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>htid</strong> – HathiTrust record identifier</li>
+<li><strong>bib_api</strong> – optional <a class="reference internal" href="#ppa.archive.hathi.HathiBibliographicAPI" title="ppa.archive.hathi.HathiBibliographicAPI"><code class="xref py py-class docutils literal notranslate"><span class="pre">HathiBibliographicAPI</span></code></a>
+instance, to allow for shared sessions in scripts</li>
+<li><strong>update</strong> – update bibliographic metadata even if the hathitrust
+record is not newer than the local database record (default: False)</li>
+<li><strong>get_data</strong> – retrieve content data from Data API; for new
+records only (default: False)</li>
+<li><strong>log_msg_src</strong> – source of the change to be used included
+in log entry messages (optional). Will be used as “Created/updated
+[log_msg_src]”.</li>
+<li><strong>user</strong> – optional user responsible for the change,
+to be associated with <code class="xref py py-class docutils literal notranslate"><span class="pre">LogEntry</span></code>
+record</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="ppa.archive.models.DigitizedWork.added">
@@ -210,9 +269,13 @@ that are changed.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="ppa.archive.models.DigitizedWork.delete_hathi_pairtree_data">
-<code class="descname">delete_hathi_pairtree_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#DigitizedWork.delete_hathi_pairtree_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.DigitizedWork.delete_hathi_pairtree_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Delete pairtree object from the pairtree datastore.</p>
+<dt id="ppa.archive.models.DigitizedWork.count_pages">
+<code class="descname">count_pages</code><span class="sig-paren">(</span><em>ptree_client=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#DigitizedWork.count_pages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.DigitizedWork.count_pages" title="Permalink to this definition">¶</a></dt>
+<dd><p>Count the number of pages for a digitized work based on the
+number of files in the zipfile within the pairtree content.
+Raises <code class="xref py py-class docutils literal notranslate"><span class="pre">pairtree.storage_exceptions.ObjectNotFoundException</span></code>
+if the data is not found in the pairtree storage. Returns page count
+found; saves the object if the count changes.</p>
 </dd></dl>
 
 <dl class="method">
@@ -235,79 +298,36 @@ that are changed.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="ppa.archive.models.DigitizedWork.get_hathi_data">
+<code class="descname">get_hathi_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#DigitizedWork.get_hathi_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.DigitizedWork.get_hathi_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use Data API to fetch zipfile and mets and add them to the
+local pairtree. Intended for use with newly added HathiTrust
+records not imported from local pairtree data.</p>
+<p>Raises <a class="reference internal" href="#ppa.archive.hathi.HathiItemNotFound" title="ppa.archive.hathi.HathiItemNotFound"><code class="xref py py-class docutils literal notranslate"><span class="pre">HathiItemNotFound</span></code></a> for invalid
+id and <a class="reference internal" href="#ppa.archive.hathi.HathiItemForbidden" title="ppa.archive.hathi.HathiItemForbidden"><code class="xref py py-class docutils literal notranslate"><span class="pre">HathiItemForbidden</span></code></a> for a
+valid record that configured Data API credentials do not allow
+accessing.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="ppa.archive.models.DigitizedWork.get_metadata">
 <code class="descname">get_metadata</code><span class="sig-paren">(</span><em>metadata_format</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#DigitizedWork.get_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.DigitizedWork.get_metadata" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get metadata for this item in the specified format.
 Currently only supports marc.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="ppa.archive.models.DigitizedWork.handle_collection_delete">
-<code class="descname">handle_collection_delete</code><span class="sig-paren">(</span><em>instance</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#DigitizedWork.handle_collection_delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.DigitizedWork.handle_collection_delete" title="Permalink to this definition">¶</a></dt>
-<dd><p>signal handler for collection delete; clear associated digitized
-works and reindex</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="ppa.archive.models.DigitizedWork.handle_collection_save">
-<code class="descname">handle_collection_save</code><span class="sig-paren">(</span><em>instance</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#DigitizedWork.handle_collection_save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.DigitizedWork.handle_collection_save" title="Permalink to this definition">¶</a></dt>
-<dd><p>signal handler for collection save; reindex associated digitized works</p>
+<dl class="attribute">
+<dt id="ppa.archive.models.DigitizedWork.has_fulltext">
+<code class="descname">has_fulltext</code><a class="headerlink" href="#ppa.archive.models.DigitizedWork.has_fulltext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if an item has full text (currently only items from
+HathiTrust).</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ppa.archive.models.DigitizedWork.hathi_content_dir">
-<code class="descname">hathi_content_dir</code><a class="headerlink" href="#ppa.archive.models.DigitizedWork.hathi_content_dir" title="Permalink to this definition">¶</a></dt>
-<dd><p>hathi content directory for this work (within the corresponding
-pairtree)</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="ppa.archive.models.DigitizedWork.hathi_metsfile_path">
-<code class="descname">hathi_metsfile_path</code><span class="sig-paren">(</span><em>ptree_client=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#DigitizedWork.hathi_metsfile_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.DigitizedWork.hathi_metsfile_path" title="Permalink to this definition">¶</a></dt>
-<dd><p>path to mets xml file within the hathi contents for this work</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="ppa.archive.models.DigitizedWork.hathi_pairtree_client">
-<code class="descname">hathi_pairtree_client</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#DigitizedWork.hathi_pairtree_client"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.DigitizedWork.hathi_pairtree_client" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize a pairtree client for the pairtree datastore this
-object belongs to, based on its Hathi prefix id.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ppa.archive.models.DigitizedWork.hathi_pairtree_id">
-<code class="descname">hathi_pairtree_id</code><a class="headerlink" href="#ppa.archive.models.DigitizedWork.hathi_pairtree_id" title="Permalink to this definition">¶</a></dt>
-<dd><p>hathi pairtree identifier (second portion of source id)</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="ppa.archive.models.DigitizedWork.hathi_pairtree_object">
-<code class="descname">hathi_pairtree_object</code><span class="sig-paren">(</span><em>ptree_client=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#DigitizedWork.hathi_pairtree_object"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.DigitizedWork.hathi_pairtree_object" title="Permalink to this definition">¶</a></dt>
-<dd><p>get a pairtree object for the current work</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ptree_client</strong> – optional
-<code class="xref py py-class docutils literal notranslate"><span class="pre">pairtree_client.PairtreeStorageClient</span></code> if one has
-already been initialized, to avoid repeated initialization
-(currently used in hathi_import manage command)</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ppa.archive.models.DigitizedWork.hathi_prefix">
-<code class="descname">hathi_prefix</code><a class="headerlink" href="#ppa.archive.models.DigitizedWork.hathi_prefix" title="Permalink to this definition">¶</a></dt>
-<dd><p>hathi pairtree prefix (first portion of the source id, short-form
-identifier for owning institution)</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="ppa.archive.models.DigitizedWork.hathi_zipfile_path">
-<code class="descname">hathi_zipfile_path</code><span class="sig-paren">(</span><em>ptree_client=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#DigitizedWork.hathi_zipfile_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.models.DigitizedWork.hathi_zipfile_path" title="Permalink to this definition">¶</a></dt>
-<dd><p>path to zipfile within the hathi contents for this work</p>
+<dt id="ppa.archive.models.DigitizedWork.hathi">
+<code class="descname">hathi</code><a class="headerlink" href="#ppa.archive.models.DigitizedWork.hathi" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#ppa.archive.hathi.HathiObject" title="ppa.archive.hathi.HathiObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.hathi.HathiObject</span></code></a> for HathiTrust records,
+for working with data in HathiTrust pairtree data structure.</p>
 </dd></dl>
 
 <dl class="method">
@@ -603,6 +623,31 @@ only works on the current instance of an object.</p>
 <div class="section" id="module-ppa.archive.views">
 <span id="views"></span><h3>Views<a class="headerlink" href="#module-ppa.archive.views" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
+<dt id="ppa.archive.views.AddFromHathiView">
+<em class="property">class </em><code class="descclassname">ppa.archive.views.</code><code class="descname">AddFromHathiView</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#AddFromHathiView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.AddFromHathiView" title="Permalink to this definition">¶</a></dt>
+<dd><p>Admin view to add new HathiTrust records by providing a list
+of ids.</p>
+<dl class="attribute">
+<dt id="ppa.archive.views.AddFromHathiView.form_class">
+<code class="descname">form_class</code><a class="headerlink" href="#ppa.archive.views.AddFromHathiView.form_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#ppa.archive.forms.AddFromHathiForm" title="ppa.archive.forms.AddFromHathiForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.forms.AddFromHathiForm</span></code></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.views.AddFromHathiView.form_valid">
+<code class="descname">form_valid</code><span class="sig-paren">(</span><em>form</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#AddFromHathiView.form_valid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.AddFromHathiView.form_valid" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the form is valid, redirect to the supplied URL.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.views.AddFromHathiView.get_context_data">
+<code class="descname">get_context_data</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#AddFromHathiView.get_context_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.AddFromHathiView.get_context_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert the form into the context dict.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="ppa.archive.views.AddToCollection">
 <em class="property">class </em><code class="descclassname">ppa.archive.views.</code><code class="descname">AddToCollection</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#AddToCollection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.AddToCollection" title="Permalink to this definition">¶</a></dt>
 <dd><p>View to bulk add a queryset of <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.models.DigitizedWork</span></code></a>
@@ -746,14 +791,8 @@ surpressed, returns a 410 Gone response.</p>
 <dl class="method">
 <dt id="ppa.archive.views.DigitizedWorkDetailView.get_template_names">
 <code class="descname">get_template_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#DigitizedWorkDetailView.get_template_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.DigitizedWorkDetailView.get_template_names" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a list of template names to be used for the request. May not be
-called if render_to_response is overridden. Returns the following list:</p>
-<ul class="simple">
-<li>the value of <code class="docutils literal notranslate"><span class="pre">template_name</span></code> on the view (if provided)</li>
-<li>the contents of the <code class="docutils literal notranslate"><span class="pre">template_name_field</span></code> field on the
-object instance that the view is operating upon (if available)</li>
-<li><code class="docutils literal notranslate"><span class="pre">&lt;app_label&gt;/&lt;model_name&gt;&lt;template_name_suffix&gt;.html</span></code></li>
-</ul>
+<dd><p>Return <code class="xref py py-attr docutils literal notranslate"><span class="pre">ajax_template_name</span></code> if this is an ajax request;
+otherwise return default template name.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -798,13 +837,6 @@ collapsed items.</p>
 <cite>QuerySet</cite> in which case <cite>QuerySet</cite> specific behavior will be enabled.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="ppa.archive.views.DigitizedWorkListView.get_template_names">
-<code class="descname">get_template_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#DigitizedWorkListView.get_template_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.DigitizedWorkListView.get_template_names" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a list of template names to be used for the request. Must return
-a list. May not be called if render_to_response is overridden.</p>
-</dd></dl>
-
 <dl class="attribute">
 <dt id="ppa.archive.views.DigitizedWorkListView.meta_description">
 <code class="descname">meta_description</code><em class="property"> = 'The Princeton Prosody Archive is a full-text\n    searchable database of thousands of historical documents about the\n    study of language and the study of poetry.'</em><a class="headerlink" href="#ppa.archive.views.DigitizedWorkListView.meta_description" title="Permalink to this definition">¶</a></dt>
@@ -815,6 +847,12 @@ a list. May not be called if render_to_response is overridden.</p>
 <dt id="ppa.archive.views.DigitizedWorkListView.meta_title">
 <code class="descname">meta_title</code><em class="property"> = 'Princeton Prosody Archive'</em><a class="headerlink" href="#ppa.archive.views.DigitizedWorkListView.meta_title" title="Permalink to this definition">¶</a></dt>
 <dd><p>title for metadata / preview</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.archive.views.DigitizedWorkListView.model">
+<code class="descname">model</code><a class="headerlink" href="#ppa.archive.views.DigitizedWorkListView.model" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.models.DigitizedWork</span></code></a></p>
 </dd></dl>
 
 </dd></dl>
@@ -829,6 +867,19 @@ via browser or other tools.</p>
 </div>
 <div class="section" id="module-ppa.archive.forms">
 <span id="forms"></span><h3>Forms<a class="headerlink" href="#module-ppa.archive.forms" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="ppa.archive.forms.AddFromHathiForm">
+<em class="property">class </em><code class="descclassname">ppa.archive.forms.</code><code class="descname">AddFromHathiForm</code><span class="sig-paren">(</span><em>data=None</em>, <em>files=None</em>, <em>auto_id='id_%s'</em>, <em>prefix=None</em>, <em>initial=None</em>, <em>error_class=&lt;class 'django.forms.utils.ErrorList'&gt;</em>, <em>label_suffix=None</em>, <em>empty_permitted=False</em>, <em>field_order=None</em>, <em>use_required_attribute=None</em>, <em>renderer=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#AddFromHathiForm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.forms.AddFromHathiForm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Form to input HathiTrust IDs for items to be added.</p>
+<dl class="method">
+<dt id="ppa.archive.forms.AddFromHathiForm.get_hathi_ids">
+<code class="descname">get_hathi_ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#AddFromHathiForm.get_hathi_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.forms.AddFromHathiForm.get_hathi_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get list of ids from valid form input. Splits on newlines,
+strips whitespace, and ignores empty lines.</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="class">
 <dt id="ppa.archive.forms.AddToCollectionForm">
 <em class="property">class </em><code class="descclassname">ppa.archive.forms.</code><code class="descname">AddToCollectionForm</code><span class="sig-paren">(</span><em>data=None</em>, <em>files=None</em>, <em>auto_id='id_%s'</em>, <em>prefix=None</em>, <em>initial=None</em>, <em>error_class=&lt;class 'django.forms.utils.ErrorList'&gt;</em>, <em>label_suffix=None</em>, <em>empty_permitted=False</em>, <em>field_order=None</em>, <em>use_required_attribute=None</em>, <em>renderer=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#AddToCollectionForm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.forms.AddToCollectionForm" title="Permalink to this definition">¶</a></dt>
@@ -1227,6 +1278,18 @@ created and updated.</p>
 <span id="hathi"></span><h3>Hathi<a class="headerlink" href="#module-ppa.archive.hathi" title="Permalink to this headline">¶</a></h3>
 <p>Utilities for working with HathiTrust materials and APIs.</p>
 <dl class="class">
+<dt id="ppa.archive.hathi.HathiBaseAPI">
+<em class="property">class </em><code class="descclassname">ppa.archive.hathi.</code><code class="descname">HathiBaseAPI</code><a class="reference internal" href="_modules/ppa/archive/hathi.html#HathiBaseAPI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.hathi.HathiBaseAPI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base client class for HathiTrust APIs</p>
+<dl class="attribute">
+<dt id="ppa.archive.hathi.HathiBaseAPI.api_root">
+<code class="descname">api_root</code><em class="property"> = ''</em><a class="headerlink" href="#ppa.archive.hathi.HathiBaseAPI.api_root" title="Permalink to this definition">¶</a></dt>
+<dd><p>base api URL for all requests</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="ppa.archive.hathi.HathiBibliographicAPI">
 <em class="property">class </em><code class="descclassname">ppa.archive.hathi.</code><code class="descname">HathiBibliographicAPI</code><a class="reference internal" href="_modules/ppa/archive/hathi.html#HathiBibliographicAPI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.hathi.HathiBibliographicAPI" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper for HathiTrust Bibliographic API.</p>
@@ -1303,10 +1366,104 @@ hathi id.  Returns as <a class="reference external" href="https://docs.python.or
 
 </dd></dl>
 
+<dl class="class">
+<dt id="ppa.archive.hathi.HathiDataAPI">
+<em class="property">class </em><code class="descclassname">ppa.archive.hathi.</code><code class="descname">HathiDataAPI</code><a class="reference internal" href="_modules/ppa/archive/hathi.html#HathiDataAPI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.hathi.HathiDataAPI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for HathiTrust DATA API. Pulls OAuth credentials from
+Django settings.</p>
+<dl class="method">
+<dt id="ppa.archive.hathi.HathiDataAPI.get_aggregate">
+<code class="descname">get_aggregate</code><span class="sig-paren">(</span><em>htid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/hathi.html#HathiDataAPI.get_aggregate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.hathi.HathiDataAPI.get_aggregate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get aggregate date package for a HathiTrust record by hathi id.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.hathi.HathiDataAPI.get_structure">
+<code class="descname">get_structure</code><span class="sig-paren">(</span><em>htid</em>, <em>fmt='xml'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/hathi.html#HathiDataAPI.get_structure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.hathi.HathiDataAPI.get_structure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get structure information for a HathiTrust record by hathi id.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="ppa.archive.hathi.HathiItemForbidden">
+<em class="property">exception </em><code class="descclassname">ppa.archive.hathi.</code><code class="descname">HathiItemForbidden</code><a class="reference internal" href="_modules/ppa/archive/hathi.html#HathiItemForbidden"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.hathi.HathiItemForbidden" title="Permalink to this definition">¶</a></dt>
+<dd><p>Permission denied to access item in data API</p>
+</dd></dl>
+
 <dl class="exception">
 <dt id="ppa.archive.hathi.HathiItemNotFound">
 <em class="property">exception </em><code class="descclassname">ppa.archive.hathi.</code><code class="descname">HathiItemNotFound</code><a class="reference internal" href="_modules/ppa/archive/hathi.html#HathiItemNotFound"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.hathi.HathiItemNotFound" title="Permalink to this definition">¶</a></dt>
-<dd><p>Item not found in bibliographic API</p>
+<dd><p>Item not found in bibliographic or data API</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="ppa.archive.hathi.HathiObject">
+<em class="property">class </em><code class="descclassname">ppa.archive.hathi.</code><code class="descname">HathiObject</code><span class="sig-paren">(</span><em>hathi_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/hathi.html#HathiObject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.hathi.HathiObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>An object for working with a HathiTrust item with data in a
+locally configured pairtree datastore.</p>
+<dl class="attribute">
+<dt id="ppa.archive.hathi.HathiObject.content_dir">
+<code class="descname">content_dir</code><a class="headerlink" href="#ppa.archive.hathi.HathiObject.content_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>content directory for this work within the appropriate
+pairtree</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.hathi.HathiObject.delete_pairtree_data">
+<code class="descname">delete_pairtree_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/hathi.html#HathiObject.delete_pairtree_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.hathi.HathiObject.delete_pairtree_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete pairtree object from the pairtree datastore.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.hathi.HathiObject.metsfile_path">
+<code class="descname">metsfile_path</code><span class="sig-paren">(</span><em>ptree_client=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/hathi.html#HathiObject.metsfile_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.hathi.HathiObject.metsfile_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>path to mets xml file within the hathi contents for this work</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.hathi.HathiObject.pairtree_client">
+<code class="descname">pairtree_client</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/hathi.html#HathiObject.pairtree_client"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.hathi.HathiObject.pairtree_client" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a pairtree client for the pairtree datastore this
+object belongs to, based on its Hathi prefix id.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.archive.hathi.HathiObject.pairtree_id">
+<code class="descname">pairtree_id</code><a class="headerlink" href="#ppa.archive.hathi.HathiObject.pairtree_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>pairtree identifier (second portion of source id)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.hathi.HathiObject.pairtree_object">
+<code class="descname">pairtree_object</code><span class="sig-paren">(</span><em>ptree_client=None</em>, <em>create=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/hathi.html#HathiObject.pairtree_object"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.hathi.HathiObject.pairtree_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>get a pairtree object for this record</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ptree_client</strong> – optional
+<code class="xref py py-class docutils literal notranslate"><span class="pre">pairtree_client.PairtreeStorageClient</span></code> if one has
+already been initialized, to avoid repeated initialization
+(currently used in hathi_import manage command)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.archive.hathi.HathiObject.pairtree_prefix">
+<code class="descname">pairtree_prefix</code><a class="headerlink" href="#ppa.archive.hathi.HathiObject.pairtree_prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>pairtree prefix (first portion of the hathi id, short-form
+identifier for owning institution)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.hathi.HathiObject.zipfile_path">
+<code class="descname">zipfile_path</code><span class="sig-paren">(</span><em>ptree_client=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/hathi.html#HathiObject.zipfile_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.hathi.HathiObject.zipfile_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>path to zipfile within the hathi contents for this work</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -1399,6 +1556,88 @@ what is needed to support page indexing for <code class="xref py py-mod docutils
 <dt id="ppa.archive.hathi.StructMapPage.text_file_location">
 <code class="descname">text_file_location</code><a class="headerlink" href="#ppa.archive.hathi.StructMapPage.text_file_location" title="Permalink to this definition">¶</a></dt>
 <dd><p>location for the text file</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-ppa.archive.util">
+<span id="util"></span><h3>Util<a class="headerlink" href="#module-ppa.archive.util" title="Permalink to this headline">¶</a></h3>
+<p>Utility code related to <code class="xref py py-mod docutils literal notranslate"><span class="pre">ppa.archives</span></code></p>
+<dl class="class">
+<dt id="ppa.archive.util.HathiImporter">
+<em class="property">class </em><code class="descclassname">ppa.archive.util.</code><code class="descname">HathiImporter</code><span class="sig-paren">(</span><em>htids</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/util.html#HathiImporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.util.HathiImporter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logic for creating new <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">DigitizedWork</span></code></a>
+records from HathiTrust. For use in views and manage commands.</p>
+<dl class="attribute">
+<dt id="ppa.archive.util.HathiImporter.SKIPPED">
+<code class="descname">SKIPPED</code><em class="property"> = 2</em><a class="headerlink" href="#ppa.archive.util.HathiImporter.SKIPPED" title="Permalink to this definition">¶</a></dt>
+<dd><p>status - skipped because already in the database</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.archive.util.HathiImporter.SUCCESS">
+<code class="descname">SUCCESS</code><em class="property"> = 1</em><a class="headerlink" href="#ppa.archive.util.HathiImporter.SUCCESS" title="Permalink to this definition">¶</a></dt>
+<dd><p>status - successfully imported record</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.util.HathiImporter.add_items">
+<code class="descname">add_items</code><span class="sig-paren">(</span><em>log_msg_src=None</em>, <em>user=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/util.html#HathiImporter.add_items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.util.HathiImporter.add_items" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add new items from HathiTrust.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Params log_msg_src:</th></tr>
+<tr class="field-odd field"><td>&#160;</td><td class="field-body">optional source of change to be included in
+log entry message</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.util.HathiImporter.filter_existing_ids">
+<code class="descname">filter_existing_ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/util.html#HathiImporter.filter_existing_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.util.HathiImporter.filter_existing_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check for any ids that are in the database so they can
+be skipped for import.  Populates <code class="xref py py-attr docutils literal notranslate"><span class="pre">existing_ids</span></code>
+with an <a class="reference external" href="https://docs.python.org/3/library/collections.html#collections.OrderedDict" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">OrderedDict</span></code></a> of htid -&gt; id for
+ids already in the database and filters <code class="xref py py-attr docutils literal notranslate"><span class="pre">htids</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>htids</strong> – list of HathiTrust Identifiers (correspending to
+<a class="reference internal" href="#ppa.archive.models.DigitizedWork.source_id" title="ppa.archive.models.DigitizedWork.source_id"><code class="xref py py-attr docutils literal notranslate"><span class="pre">source_id</span></code></a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.util.HathiImporter.get_status_message">
+<code class="descname">get_status_message</code><span class="sig-paren">(</span><em>status</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/util.html#HathiImporter.get_status_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.util.HathiImporter.get_status_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a readable status message for a given status</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.util.HathiImporter.index">
+<code class="descname">index</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/util.html#HathiImporter.index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.util.HathiImporter.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Index newly imported content, both metadata and full text.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.util.HathiImporter.output_results">
+<code class="descname">output_results</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/util.html#HathiImporter.output_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.util.HathiImporter.output_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide human-readable report of results for each
+id that was processed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.archive.util.HathiImporter.status_message">
+<code class="descname">status_message</code><em class="property"> = {1: 'Success', 2: 'Skipped; already in the database', &lt;class 'ppa.archive.hathi.HathiItemNotFound'&gt;: 'Error loading record; check that id is valid.', &lt;class 'ppa.archive.hathi.HathiItemForbidden'&gt;: 'Permission denied to download data.', &lt;class 'json.decoder.JSONDecodeError'&gt;: 'HathiTrust catalog temporarily unavailable (malformed response).'}</em><a class="headerlink" href="#ppa.archive.util.HathiImporter.status_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>human-readable message to display for result status</p>
 </dd></dl>
 
 </dd></dl>
@@ -1499,7 +1738,7 @@ description, for use in previews on the site and plain-text metadata
 previews.</p>
 <dl class="attribute">
 <dt id="ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags">
-<code class="descname">allowed_tags</code><em class="property"> = ['i', 'ul', 'p', 'abbr', 'em', 'code', 'blockquote', 'strong', 'ol', 'acronym', 'li', 'b']</em><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags" title="Permalink to this definition">¶</a></dt>
+<code class="descname">allowed_tags</code><em class="property"> = ['em', 'i', 'ol', 'strong', 'acronym', 'blockquote', 'li', 'abbr', 'ul', 'p', 'code', 'b']</em><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags" title="Permalink to this definition">¶</a></dt>
 <dd><p>allowed tags for bleach html stripping in description</p>
 </dd></dl>
 
@@ -1746,6 +1985,33 @@ to provide additional detail for user administration.</p>
 <div class="section" id="id4">
 <h3>Views<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <span class="target" id="module-ppa.common.views"></span><dl class="class">
+<dt id="ppa.common.views.AjaxTemplateMixin">
+<em class="property">class </em><code class="descclassname">ppa.common.views.</code><code class="descname">AjaxTemplateMixin</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/common/views.html#AjaxTemplateMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.common.views.AjaxTemplateMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>View mixin to use a different template when responding to an ajax
+request.</p>
+<dl class="attribute">
+<dt id="ppa.common.views.AjaxTemplateMixin.ajax_template_name">
+<code class="descname">ajax_template_name</code><em class="property"> = None</em><a class="headerlink" href="#ppa.common.views.AjaxTemplateMixin.ajax_template_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>name of the template to use for ajax request</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.common.views.AjaxTemplateMixin.get_template_names">
+<code class="descname">get_template_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/common/views.html#AjaxTemplateMixin.get_template_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.common.views.AjaxTemplateMixin.get_template_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <a class="reference internal" href="#ppa.common.views.AjaxTemplateMixin.ajax_template_name" title="ppa.common.views.AjaxTemplateMixin.ajax_template_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ajax_template_name</span></code></a> if this is an ajax request;
+otherwise return default template name.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ppa.common.views.AjaxTemplateMixin.vary_headers">
+<code class="descname">vary_headers</code><em class="property"> = ['X-Requested-With']</em><a class="headerlink" href="#ppa.common.views.AjaxTemplateMixin.vary_headers" title="Permalink to this definition">¶</a></dt>
+<dd><p>vary on X-Request-With to avoid browsers caching and displaying
+ajax response for the non-ajax response</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="ppa.common.views.VaryOnHeadersMixin">
 <em class="property">class </em><code class="descclassname">ppa.common.views.</code><code class="descname">VaryOnHeadersMixin</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/common/views.html#VaryOnHeadersMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.common.views.VaryOnHeadersMixin" title="Permalink to this definition">¶</a></dt>
 <dd><p>View mixin to set Vary header - class-based view equivalent to
@@ -1914,7 +2180,7 @@ description, for use in previews on the site and plain-text metadata
 previews.</p>
 <dl class="attribute">
 <dt>
-<code class="descname">allowed_tags</code><em class="property"> = ['i', 'ul', 'p', 'abbr', 'em', 'code', 'blockquote', 'strong', 'ol', 'acronym', 'li', 'b']</em></dt>
+<code class="descname">allowed_tags</code><em class="property"> = ['em', 'i', 'ol', 'strong', 'acronym', 'blockquote', 'li', 'abbr', 'ul', 'p', 'code', 'b']</em></dt>
 <dd><p>allowed tags for bleach html stripping in description</p>
 </dd></dl>
 
@@ -2143,6 +2409,7 @@ to normal template view behavior and displays format information.</p>
 <li><a class="reference internal" href="#module-ppa.archive.forms">Forms</a></li>
 <li><a class="reference internal" href="#module-ppa.archive.solr">Solr</a></li>
 <li><a class="reference internal" href="#module-ppa.archive.hathi">Hathi</a></li>
+<li><a class="reference internal" href="#module-ppa.archive.util">Util</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-ppa.pages">Pages</a><ul>

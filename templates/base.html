@@ -5,7 +5,7 @@ NOTE: This site uses RDFa and schema.org vocabulary.  Every page will be declare
 by default; use page_rdf_type to override with a webpage subclass.
 {% endcomment %}
 <!DOCTYPE html>
-<html lang="en" xmlns:schema="http://schema.org/" xmlns:og="http://ogp.me/ns#">
+<html lang="en" xmlns:schema="http://schema.org/" xmlns:og="http://ogp.me/ns#" class="no-js">
 <head>
     <!-- metadata -->
     {# html metadata #}
@@ -20,8 +20,10 @@ by default; use page_rdf_type to override with a webpage subclass.
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}" />
     <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon-16x16.png' %}" />
     <link rel="manifest" href="{% static 'manifest.json' %}" />
+    {% if request %} {# fullurl requires request, not available on error pages #}
     <link rel="search" type="application/opensearchdescription+xml"
           title="Search PPA" href="{% fullurl 'archive:opensearch-description' %}">
+    {% endif %}
     <link rel="mask-icon" href="{% static 'safari-pinned-tab.svg' %}" color="#E9E9E9" />
     <meta name="theme-color" content="#E9E9E9" />
     {% include 'snippets/head_meta.html' %}
