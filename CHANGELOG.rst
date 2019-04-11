@@ -19,6 +19,7 @@ for writing and styling editorial content.
 * Unifies the available Image block types in the Wagtail editor.
 * Adds Wand as a required dependency for animated gif support in Wagtail.
 * Fixes an issue with zipfile paths on Windows.
+* Adds support for last-modified headers on archive list and detail views.
 
 [3.2 GitHub milestone](https://github.com/Princeton-CDH/ppa-django/milestone/9)
 
