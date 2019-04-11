@@ -3,6 +3,25 @@
 CHANGELOG
 =========
 
+3.2
+---
+
+Adds support for adding HathiTrust items to the archive in bulk. Adds reactivity
+to the search within work page. Makes numerous improvements to the Wagtail editor
+for writing and styling editorial content.
+
+* As a content editor, I want to control how my images are positioned relative to other content so that I can flow text around images and position images side-by-side.
+* As a content editor, I want to insert block quotes into the page so that I can use a special style to highlighted quoted material.
+* As a user, I want my search results within a work to be loaded as soon as I enter a search term so that my search experience is consistent across pages.
+* As an admin, I want to add one or several new items from HathiTrust with a script so that I can add content to the site if I identify something that should be included in the archive.
+* As an admin, I want to add one or several new items from HathiTrust via the admin interface so that I can add content to the site if I identify something that should be included in the archive.
+* Fixes editorial list page so that newest essays appear first.
+* Unifies the available Image block types in the Wagtail editor.
+* Adds Wand as a required dependency for animated gif support in Wagtail.
+* Fixes an issue with zipfile paths on Windows.
+
+[3.2 GitHub milestone](https://github.com/Princeton-CDH/ppa-django/milestone/9)
+
 3.1
 ---
 
