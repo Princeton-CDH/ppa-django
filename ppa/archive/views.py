@@ -18,18 +18,17 @@ from SolrClient.exceptions import SolrError
 
 from ppa.archive.forms import SearchForm, AddToCollectionForm, \
     SearchWithinWorkForm, AddFromHathiForm
-from ppa.archive.hathi import HathiItemNotFound, HathiItemForbidden
 from ppa.archive.models import DigitizedWork, NO_COLLECTION_LABEL
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
-from ppa.common.views import AjaxTemplateMixin
+from ppa.common.views import AjaxTemplateMixin, LastModifiedMixin, \
+    LastModifiedListMixin
 from ppa.archive.util import HathiImporter
-from ppa.common.views import VaryOnHeadersMixin
 
 
 logger = logging.getLogger(__name__)
 
 
-class DigitizedWorkListView(AjaxTemplateMixin, ListView):
+class DigitizedWorkListView(AjaxTemplateMixin, LastModifiedListMixin, ListView):
     '''Search and browse digitized works.  Based on Solr index
     of works and pages.'''
 
@@ -51,7 +50,6 @@ class DigitizedWorkListView(AjaxTemplateMixin, ListView):
 
     # search title query field syntax
     search_title_query = '{!type=edismax qf=$search_title_qf pf=$search_title_pf v=$title_query}'
-
 
     def get_queryset(self, **kwargs):
         form_opts = self.request.GET.copy()
@@ -320,8 +318,34 @@ class DigitizedWorkListView(AjaxTemplateMixin, ListView):
         })
         return context
 
+    def last_modified(self):
+        '''override last modified logic to work with Solr'''
 
-class DigitizedWorkDetailView(AjaxTemplateMixin, DetailView):
+        # override sort to return most recent modification date,
+        # only return last modified value and nothing else
+
+        # use most recent modification time of anything in the index,
+        # since any search on the archive page coud change based
+        # on work or text content changing in the index, (could add
+        # or remove results from any particular set)
+        query_opts = {
+            'q': '*:*',
+            'sort': 'last_modified desc',
+            'fl': 'last_modified'
+        }
+
+        # if a syntax or other solr error happens, no date to return
+        try:
+            psq = PagedSolrQuery(query_opts)
+            # Solr stores date in isoformat; convert to datetime
+            return self.solr_timestamp_to_datetime(psq[0]['last_modified'])
+            # skip extra call to Solr to check count and just grab the first
+            # item if it exists
+        except (IndexError, KeyError, SolrError):
+            pass
+
+
+class DigitizedWorkDetailView(AjaxTemplateMixin, LastModifiedMixin, DetailView):
     '''Display details for a single digitized work. If a work has been
     surpressed, returns a 410 Gone response.'''
     ajax_template_name = 'archive/snippets/results_within_list.html'
@@ -335,6 +359,24 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, DetailView):
         if self.object.status == DigitizedWork.SUPPRESSED:
             return '410.html'
         return super().get_template_names()
+
+    def last_modified(self):
+        """get last index modification from Solr, as it will be more
+        current than object last modified."""
+
+        # if there is a solr error or last modified is not avilable,
+        # skip last-modified behavior and display page
+        try:
+            psq = PagedSolrQuery({
+                'q': 'source_id:"%s"' % self.object.source_id,
+                'fl': 'last_modified'
+            })
+            # Solr stores date in isoformat; convert to datetime
+            return self.solr_timestamp_to_datetime(psq[0]['last_modified'])
+            # skip extra call to Solr to check count and just grab the first
+            # item if it exists
+        except (SolrError, IndexError, KeyError):
+            pass
 
     def get(self, *args, **kwargs):
         response = super().get(*args, **kwargs)
