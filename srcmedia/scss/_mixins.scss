@@ -121,11 +121,11 @@
         object-fit: cover;
         height: unset;
         max-width: 100%;
+        margin: auto auto 1rem;
     }
 
     img,
     .rich-text {
-        margin: auto auto 1rem;
         display: block;
     }
 
@@ -169,16 +169,74 @@
 
     figure {
         margin: 2rem 0 0;
+
+        @media (min-width: $computer) { // all floats restricted to desktop & up
+            &.left {
+                float: left;
+                margin-right: 2rem;
+            }
+    
+            &.right {
+                float: right;
+                margin-left: 2rem;
+            }
+    
+            &.left,
+            &.right {
+                width: calc(50% - 1rem);
+            }
+
+            // when side-by-side only need one margin
+            &.left + figure.right { 
+                margin-left: 0;
+            }
+
+            &.right + figure.left {
+                margin-right: 0;
+            }
+
+            // any content after side-by-side images should be cleared
+            // it also needs padding (not margin) in order to create space
+            // because the floats will ignore margin
+            &.left + figure.right + *,
+            &.right + figure.left + * {
+                clear: both;
+                padding-top: 1rem;
+            }
+        }
     }
 
     figcaption {
-        margin-bottom: 4rem;
+        margin-bottom: 2rem;
         text-align: center;
 
         * {
             color: $slate-grey;
             @include small-font-scale;
         }
+    }
+
+    blockquote {
+        margin: 2rem 0 2rem 1.5rem;
+        padding-left: 1.5rem;
+        border-left-style: solid;
+        border-left-width: 5px;
+        border-left-color: $pig-pink;
+        font-style: italic;
+
+        @media (min-width: $tablet) {
+            margin: 3rem 0 3rem 2rem;
+            padding-left: 2rem;
+        }
+
+        @media (min-width: $computer) {
+            margin: 5rem 0 5rem 3rem;
+            padding-left: 3rem;
+        }
+    }
+
+    .paragraph { // spacing between richtext blocks
+        margin-top: 1rem;
     }
 }
 

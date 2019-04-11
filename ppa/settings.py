@@ -16,7 +16,7 @@ import os
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = []
 
@@ -321,6 +321,6 @@ if DEBUG:
         pass
 
     # allow webpack dev server through CSP when in DEBUG
-    CSP_SCRIPT_SRC += ('http://localhost:3000', "'unsafe-eval'")
+    CSP_SCRIPT_SRC += ('http://localhost:3000', "'unsafe-eval'", "'unsafe-inline'")
     CSP_STYLE_SRC += ('http://localhost:3000', "'unsafe-inline'")
     CSP_CONNECT_SRC += ('http://localhost:3000', 'ws://localhost:3000',)

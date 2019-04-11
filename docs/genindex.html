@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Index &#8212; Princeton Prosody Archive 3.1.0 documentation</title>
+    <title>Index &#8212; Princeton Prosody Archive 3.2.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -58,12 +58,21 @@
  | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
+ | <a href="#Z"><strong>Z</strong></a>
  
 </div>
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.add_from_hathi">add_from_hathi() (ppa.archive.models.DigitizedWork static method)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.util.HathiImporter.add_items">add_items() (ppa.archive.util.HathiImporter method)</a>
+</li>
       <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.added">added (ppa.archive.models.DigitizedWork attribute)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.forms.AddFromHathiForm">AddFromHathiForm (class in ppa.archive.forms)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.views.AddFromHathiView">AddFromHathiView (class in ppa.archive.views)</a>
 </li>
       <li><a href="codedocs.html#ppa.archive.views.AddToCollection">AddToCollection (class in ppa.archive.views)</a>
 </li>
@@ -71,7 +80,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="codedocs.html#ppa.archive.forms.AddToCollectionForm">AddToCollectionForm (class in ppa.archive.forms)</a>
 </li>
+      <li><a href="codedocs.html#ppa.common.views.AjaxTemplateMixin.ajax_template_name">ajax_template_name (ppa.common.views.AjaxTemplateMixin attribute)</a>
+</li>
+      <li><a href="codedocs.html#ppa.common.views.AjaxTemplateMixin">AjaxTemplateMixin (class in ppa.common.views)</a>
+</li>
       <li><a href="codedocs.html#ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags">allowed_tags (ppa.pages.models.PagePreviewDescriptionMixin attribute)</a>, <a href="codedocs.html#ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags">[1]</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.hathi.HathiBaseAPI.api_root">api_root (ppa.archive.hathi.HathiBaseAPI attribute)</a>
 </li>
       <li><a href="codedocs.html#ppa.archive.models.ProtectedWorkFieldFlags.author">author (ppa.archive.models.ProtectedWorkFieldFlags attribute)</a>
 </li>
@@ -119,11 +134,15 @@
 </li>
       <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.collections">collections (ppa.archive.models.DigitizedWork attribute)</a>
 </li>
+      <li><a href="codedocs.html#ppa.archive.models.CollectionSignalHandlers">CollectionSignalHandlers (class in ppa.archive.models)</a>
+</li>
       <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.compare_protected_fields">compare_protected_fields() (ppa.archive.models.DigitizedWork method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="codedocs.html#ppa.archive.forms.RangeField.compress">compress() (ppa.archive.forms.RangeField method)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.hathi.HathiObject.content_dir">content_dir (ppa.archive.hathi.HathiObject attribute)</a>
 </li>
       <li><a href="codedocs.html#ppa.unapi.views.UnAPIView.content_type">content_type (ppa.unapi.views.UnAPIView attribute)</a>
 </li>
@@ -147,6 +166,8 @@
 </li>
       <li><a href="codedocs.html#ppa.archive.solr.PagedSolrQuery.count">count() (ppa.archive.solr.PagedSolrQuery method)</a>
 </li>
+      <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.count_pages">count_pages() (ppa.archive.models.DigitizedWork method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -159,7 +180,9 @@
 </li>
       <li><a href="codedocs.html#ppa.archive.forms.SearchForm.defaults">defaults() (ppa.archive.forms.SearchForm static method)</a>
 </li>
-      <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.delete_hathi_pairtree_data">delete_hathi_pairtree_data() (ppa.archive.models.DigitizedWork method)</a>
+      <li><a href="codedocs.html#ppa.archive.models.CollectionSignalHandlers.delete">delete() (ppa.archive.models.CollectionSignalHandlers static method)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.hathi.HathiObject.delete_pairtree_data">delete_pairtree_data() (ppa.archive.hathi.HathiObject method)</a>
 </li>
       <li><a href="codedocs.html#ppa.archive.models.Collection.description">description (ppa.archive.models.Collection attribute)</a>
 
@@ -233,16 +256,22 @@
 </li>
       <li><a href="codedocs.html#ppa.unapi.views.UnAPIView.file_extension">file_extension (ppa.unapi.views.UnAPIView attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="codedocs.html#ppa.archive.views.AddToCollection.form_class">form_class (ppa.archive.views.AddToCollection attribute)</a>
+      <li><a href="codedocs.html#ppa.archive.util.HathiImporter.filter_existing_ids">filter_existing_ids() (ppa.archive.util.HathiImporter method)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.views.AddFromHathiView.form_class">form_class (ppa.archive.views.AddFromHathiView attribute)</a>
 
       <ul>
+        <li><a href="codedocs.html#ppa.archive.views.AddToCollection.form_class">(ppa.archive.views.AddToCollection attribute)</a>
+</li>
         <li><a href="codedocs.html#ppa.archive.views.DigitizedWorkDetailView.form_class">(ppa.archive.views.DigitizedWorkDetailView attribute)</a>
 </li>
         <li><a href="codedocs.html#ppa.archive.views.DigitizedWorkListView.form_class">(ppa.archive.views.DigitizedWorkListView attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="codedocs.html#ppa.archive.views.AddFromHathiView.form_valid">form_valid() (ppa.archive.views.AddFromHathiView method)</a>
+</li>
       <li><a href="codedocs.html#ppa.unapi.views.UnAPIView.formats">formats (ppa.unapi.views.UnAPIView attribute)</a>
 </li>
       <li><a href="codedocs.html#ppa.archive.models.ProtectedWorkField.from_db_value">from_db_value() (ppa.archive.models.ProtectedWorkField method)</a>
@@ -261,9 +290,13 @@
       </ul></li>
       <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.get_absolute_url">get_absolute_url() (ppa.archive.models.DigitizedWork method)</a>
 </li>
-      <li><a href="codedocs.html#ppa.archive.views.DigitizedWorkDetailView.get_context_data">get_context_data() (ppa.archive.views.DigitizedWorkDetailView method)</a>
+      <li><a href="codedocs.html#ppa.archive.hathi.HathiDataAPI.get_aggregate">get_aggregate() (ppa.archive.hathi.HathiDataAPI method)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.views.AddFromHathiView.get_context_data">get_context_data() (ppa.archive.views.AddFromHathiView method)</a>
 
       <ul>
+        <li><a href="codedocs.html#ppa.archive.views.DigitizedWorkDetailView.get_context_data">(ppa.archive.views.DigitizedWorkDetailView method)</a>
+</li>
         <li><a href="codedocs.html#ppa.archive.views.DigitizedWorkListView.get_context_data">(ppa.archive.views.DigitizedWorkListView method)</a>
 </li>
         <li><a href="codedocs.html#ppa.unapi.views.UnAPIView.get_context_data">(ppa.unapi.views.UnAPIView method)</a>
@@ -278,6 +311,10 @@
       <li><a href="codedocs.html#ppa.archive.solr.PagedSolrQuery.get_expanded">get_expanded() (ppa.archive.solr.PagedSolrQuery method)</a>
 </li>
       <li><a href="codedocs.html#ppa.archive.solr.PagedSolrQuery.get_facets">get_facets() (ppa.archive.solr.PagedSolrQuery method)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.get_hathi_data">get_hathi_data() (ppa.archive.models.DigitizedWork method)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.forms.AddFromHathiForm.get_hathi_ids">get_hathi_ids() (ppa.archive.forms.AddFromHathiForm method)</a>
 </li>
       <li><a href="codedocs.html#ppa.archive.solr.PagedSolrQuery.get_highlighting">get_highlighting() (ppa.archive.solr.PagedSolrQuery method)</a>
 </li>
@@ -313,12 +350,16 @@
 </li>
       <li><a href="codedocs.html#ppa.archive.forms.SearchForm.get_solr_sort_field">get_solr_sort_field() (ppa.archive.forms.SearchForm method)</a>
 </li>
+      <li><a href="codedocs.html#ppa.archive.util.HathiImporter.get_status_message">get_status_message() (ppa.archive.util.HathiImporter method)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.hathi.HathiDataAPI.get_structure">get_structure() (ppa.archive.hathi.HathiDataAPI method)</a>
+</li>
       <li><a href="codedocs.html#ppa.archive.views.AddToCollection.get_success_url">get_success_url() (ppa.archive.views.AddToCollection method)</a>
 </li>
       <li><a href="codedocs.html#ppa.archive.views.DigitizedWorkDetailView.get_template_names">get_template_names() (ppa.archive.views.DigitizedWorkDetailView method)</a>
 
       <ul>
-        <li><a href="codedocs.html#ppa.archive.views.DigitizedWorkListView.get_template_names">(ppa.archive.views.DigitizedWorkListView method)</a>
+        <li><a href="codedocs.html#ppa.common.views.AjaxTemplateMixin.get_template_names">(ppa.common.views.AjaxTemplateMixin method)</a>
 </li>
       </ul></li>
       <li><a href="codedocs.html#ppa.archive.models.Collection.get_usage">get_usage() (ppa.archive.models.Collection method)</a>
@@ -335,35 +376,31 @@
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.handle_collection_delete">handle_collection_delete() (ppa.archive.models.DigitizedWork method)</a>
-</li>
-      <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.handle_collection_save">handle_collection_save() (ppa.archive.models.DigitizedWork method)</a>
-</li>
       <li><a href="codedocs.html#ppa.archive.models.TrackChangesModel.has_changed">has_changed() (ppa.archive.models.TrackChangesModel method)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.has_fulltext">has_fulltext (ppa.archive.models.DigitizedWork attribute)</a>
 </li>
       <li><a href="codedocs.html#ppa.archive.forms.SearchForm.has_keyword_query">has_keyword_query() (ppa.archive.forms.SearchForm method)</a>
 </li>
-      <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.hathi_content_dir">hathi_content_dir (ppa.archive.models.DigitizedWork attribute)</a>
+      <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.hathi">hathi (ppa.archive.models.DigitizedWork attribute)</a>
 </li>
-      <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.hathi_metsfile_path">hathi_metsfile_path() (ppa.archive.models.DigitizedWork method)</a>
-</li>
-      <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.hathi_pairtree_client">hathi_pairtree_client() (ppa.archive.models.DigitizedWork method)</a>
-</li>
-      <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.hathi_pairtree_id">hathi_pairtree_id (ppa.archive.models.DigitizedWork attribute)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.hathi_pairtree_object">hathi_pairtree_object() (ppa.archive.models.DigitizedWork method)</a>
-</li>
-      <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.hathi_prefix">hathi_prefix (ppa.archive.models.DigitizedWork attribute)</a>
-</li>
-      <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.hathi_zipfile_path">hathi_zipfile_path() (ppa.archive.models.DigitizedWork method)</a>
+      <li><a href="codedocs.html#ppa.archive.hathi.HathiBaseAPI">HathiBaseAPI (class in ppa.archive.hathi)</a>
 </li>
       <li><a href="codedocs.html#ppa.archive.hathi.HathiBibliographicAPI">HathiBibliographicAPI (class in ppa.archive.hathi)</a>
 </li>
       <li><a href="codedocs.html#ppa.archive.hathi.HathiBibliographicRecord">HathiBibliographicRecord (class in ppa.archive.hathi)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="codedocs.html#ppa.archive.hathi.HathiDataAPI">HathiDataAPI (class in ppa.archive.hathi)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.util.HathiImporter">HathiImporter (class in ppa.archive.util)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.hathi.HathiItemForbidden">HathiItemForbidden</a>
+</li>
       <li><a href="codedocs.html#ppa.archive.hathi.HathiItemNotFound">HathiItemNotFound</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.hathi.HathiObject">HathiObject (class in ppa.archive.hathi)</a>
 </li>
       <li><a href="codedocs.html#ppa.pages.models.HomePage">HomePage (class in ppa.pages.models)</a>, <a href="codedocs.html#ppa.pages.models.HomePage">[1]</a>
 </li>
@@ -384,7 +421,11 @@
       <li><a href="codedocs.html#ppa.pages.models.ImageWithCaption">ImageWithCaption (class in ppa.pages.models)</a>, <a href="codedocs.html#ppa.pages.models.ImageWithCaption">[1]</a>
 </li>
       <li><a href="codedocs.html#ppa.archive.solr.Indexable.index">index() (ppa.archive.solr.Indexable method)</a>
+
+      <ul>
+        <li><a href="codedocs.html#ppa.archive.util.HathiImporter.index">(ppa.archive.util.HathiImporter method)</a>
 </li>
+      </ul></li>
       <li><a href="codedocs.html#ppa.archive.solr.Indexable.index_chunk_size">index_chunk_size (ppa.archive.solr.Indexable attribute)</a>
 </li>
       <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.index_data">index_data() (ppa.archive.models.DigitizedWork method)</a>
@@ -443,6 +484,8 @@
 </li>
       <li><a href="codedocs.html#ppa.archive.hathi.METSFile">METSFile (class in ppa.archive.hathi)</a>
 </li>
+      <li><a href="codedocs.html#ppa.archive.hathi.HathiObject.metsfile_path">metsfile_path() (ppa.archive.hathi.HathiObject method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="codedocs.html#ppa.archive.hathi.MinimalMETS">MinimalMETS (class in ppa.archive.hathi)</a>
@@ -453,6 +496,8 @@
         <li><a href="codedocs.html#ppa.archive.views.DigitizedWorkCSV.model">(ppa.archive.views.DigitizedWorkCSV attribute)</a>
 </li>
         <li><a href="codedocs.html#ppa.archive.views.DigitizedWorkDetailView.model">(ppa.archive.views.DigitizedWorkDetailView attribute)</a>
+</li>
+        <li><a href="codedocs.html#ppa.archive.views.DigitizedWorkListView.model">(ppa.archive.views.DigitizedWorkListView attribute)</a>
 </li>
       </ul></li>
       <li><a href="codedocs.html#ppa.archive.forms.ModelMultipleChoiceFieldWithEmpty">ModelMultipleChoiceFieldWithEmpty (class in ppa.archive.forms)</a>
@@ -489,11 +534,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="codedocs.html#ppa.archive.views.OpenSearchDescriptionView">OpenSearchDescriptionView (class in ppa.archive.views)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="codedocs.html#ppa.archive.hathi.StructMapPage.order">order (ppa.archive.hathi.StructMapPage attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="codedocs.html#ppa.archive.hathi.StructMapPage.orderlabel">orderlabel (ppa.archive.hathi.StructMapPage attribute)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.util.HathiImporter.output_results">output_results() (ppa.archive.util.HathiImporter method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -508,6 +555,14 @@
       <li><a href="codedocs.html#ppa.archive.solr.PagedSolrQuery">PagedSolrQuery (class in ppa.archive.solr)</a>
 </li>
       <li><a href="codedocs.html#ppa.pages.models.PagePreviewDescriptionMixin">PagePreviewDescriptionMixin (class in ppa.pages.models)</a>, <a href="codedocs.html#ppa.pages.models.PagePreviewDescriptionMixin">[1]</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.hathi.HathiObject.pairtree_client">pairtree_client() (ppa.archive.hathi.HathiObject method)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.hathi.HathiObject.pairtree_id">pairtree_id (ppa.archive.hathi.HathiObject attribute)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.hathi.HathiObject.pairtree_object">pairtree_object() (ppa.archive.hathi.HathiObject method)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.hathi.HathiObject.pairtree_prefix">pairtree_prefix (ppa.archive.hathi.HathiObject attribute)</a>
 </li>
       <li><a href="codedocs.html#ppa.pages.models.Person">Person (class in ppa.pages.models)</a>, <a href="codedocs.html#ppa.pages.models.Person">[1]</a>
 </li>
@@ -541,12 +596,14 @@
 </li>
       <li><a href="codedocs.html#module-ppa.archive.solr">ppa.archive.solr (module)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="codedocs.html#module-ppa.archive.util">ppa.archive.util (module)</a>
+</li>
       <li><a href="codedocs.html#module-ppa.archive.views">ppa.archive.views (module)</a>
 </li>
       <li><a href="codedocs.html#module-ppa.common">ppa.common (module)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="codedocs.html#module-ppa.common.admin">ppa.common.admin (module)</a>
 </li>
       <li><a href="codedocs.html#module-ppa.common.views">ppa.common.views (module)</a>
@@ -641,9 +698,11 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.save">save() (ppa.archive.models.DigitizedWork method)</a>
+      <li><a href="codedocs.html#ppa.archive.models.CollectionSignalHandlers.save">save() (ppa.archive.models.CollectionSignalHandlers static method)</a>
 
       <ul>
+        <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.save">(ppa.archive.models.DigitizedWork method)</a>
+</li>
         <li><a href="codedocs.html#ppa.archive.models.TrackChangesModel.save">(ppa.archive.models.TrackChangesModel method)</a>
 </li>
       </ul></li>
@@ -668,6 +727,8 @@
       <li><a href="codedocs.html#ppa.archive.solr.PagedSolrQuery.set_limits">set_limits() (ppa.archive.solr.PagedSolrQuery method)</a>
 </li>
       <li><a href="codedocs.html#ppa.editorial.models.EditorialPage.set_url_path">set_url_path() (ppa.editorial.models.EditorialPage method)</a>, <a href="codedocs.html#ppa.editorial.models.EditorialPage.set_url_path">[1]</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.util.HathiImporter.SKIPPED">SKIPPED (ppa.archive.util.HathiImporter attribute)</a>
 </li>
       <li><a href="codedocs.html#ppa.archive.solr.SolrSchema.solr_schema_field_types">solr_schema_field_types() (ppa.archive.solr.SolrSchema method)</a>
 </li>
@@ -695,6 +756,8 @@
 </li>
       <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.status">status (ppa.archive.models.DigitizedWork attribute)</a>
 </li>
+      <li><a href="codedocs.html#ppa.archive.util.HathiImporter.status_message">status_message (ppa.archive.util.HathiImporter attribute)</a>
+</li>
       <li><a href="codedocs.html#ppa.archive.hathi.MinimalMETS.structmap_pages">structmap_pages (ppa.archive.hathi.MinimalMETS attribute)</a>
 </li>
       <li><a href="codedocs.html#ppa.archive.hathi.StructMapPage">StructMapPage (class in ppa.archive.hathi)</a>
@@ -705,6 +768,8 @@
         <li><a href="codedocs.html#ppa.archive.models.ProtectedWorkFieldFlags.subtitle">(ppa.archive.models.ProtectedWorkFieldFlags attribute)</a>
 </li>
       </ul></li>
+      <li><a href="codedocs.html#ppa.archive.util.HathiImporter.SUCCESS">SUCCESS (ppa.archive.util.HathiImporter attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -761,6 +826,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="codedocs.html#ppa.common.views.AjaxTemplateMixin.vary_headers">vary_headers (ppa.common.views.AjaxTemplateMixin attribute)</a>
+</li>
       <li><a href="codedocs.html#ppa.common.views.VaryOnHeadersMixin">VaryOnHeadersMixin (class in ppa.common.views)</a>
 </li>
   </ul></td>
@@ -770,6 +837,14 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="codedocs.html#ppa.archive.forms.RangeField.widget">widget (ppa.archive.forms.RangeField attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Z">Z</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="codedocs.html#ppa.archive.hathi.HathiObject.zipfile_path">zipfile_path() (ppa.archive.hathi.HathiObject method)</a>
 </li>
   </ul></td>
 </tr></table>

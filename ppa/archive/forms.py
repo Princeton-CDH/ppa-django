@@ -1,11 +1,14 @@
+import json
+
 from django import forms
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db.models import Max, Min
 from django.utils.safestring import mark_safe
+from django.utils.html import conditional_escape
 
-from ppa.archive.models import Collection, DigitizedWork, NO_COLLECTION_LABEL
+from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork
 
 
 class SelectDisabledMixin(object):
@@ -398,3 +401,20 @@ class AddToCollectionForm(forms.Form):
         required=True, queryset=Collection.objects.all().order_by('name'),
         help_text='Hold down ctrl or command key (on MacOS) to select '
                   'multiple collections.')
+
+
+class AddFromHathiForm(forms.Form):
+    '''Form to input HathiTrust IDs for items to be added.'''
+    hathi_ids = forms.CharField(
+        label='HathiTrust Identifiers',
+        required=True, widget=forms.Textarea,
+        help_text='List of HathiTrust IDs for items to add, one per line. '  + \
+            'Existing records and invalid IDs will be skipped.'
+    )
+
+    def get_hathi_ids(self):
+        '''Get list of ids from valid form input. Splits on newlines,
+        strips whitespace, and ignores empty lines.'''
+        return [line.strip()
+                for line in self.cleaned_data['hathi_ids'].split('\n')
+                if line.strip()]

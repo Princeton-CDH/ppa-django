@@ -1,11 +1,13 @@
+from collections import OrderedDict
 import csv
+from json.decoder import JSONDecodeError
 import logging
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError, MultipleObjectsReturned
 from django.core.paginator import Paginator
 from django.http import HttpResponse, Http404
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import redirect, get_object_or_404, render
 from django.utils.http import urlencode
 from django.utils.timezone import now
 from django.urls import reverse
@@ -14,23 +16,28 @@ from django.views.generic.base import RedirectView, TemplateView
 from django.views.generic.edit import FormView
 from SolrClient.exceptions import SolrError
 
-from ppa.archive.forms import SearchForm, AddToCollectionForm, SearchWithinWorkForm
+from ppa.archive.forms import SearchForm, AddToCollectionForm, \
+    SearchWithinWorkForm, AddFromHathiForm
 from ppa.archive.models import DigitizedWork, NO_COLLECTION_LABEL
 from ppa.archive.solr import get_solr_connection, PagedSolrQuery
-from ppa.common.views import VaryOnHeadersMixin
+from ppa.common.views import AjaxTemplateMixin, LastModifiedMixin, \
+    LastModifiedListMixin
+from ppa.archive.util import HathiImporter
 
 
 logger = logging.getLogger(__name__)
 
 
-class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
+class DigitizedWorkListView(AjaxTemplateMixin, LastModifiedListMixin, ListView):
     '''Search and browse digitized works.  Based on Solr index
     of works and pages.'''
 
-    template_name = 'archive/list_digitizedworks.html'
+    model = DigitizedWork
+    # FIXME should auto-determine this
+    template_name = 'archive/digitizedwork_list.html'
+    ajax_template_name = 'archive/snippets/results_list.html'
     form_class = SearchForm
     paginate_by = 50
-    vary_headers = ['X-Requested-With']
     #: title for metadata / preview
     meta_title = 'Princeton Prosody Archive'
     #: page description for metadata/preview
@@ -43,13 +50,6 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
 
     # search title query field syntax
     search_title_query = '{!type=edismax qf=$search_title_qf pf=$search_title_pf v=$title_query}'
-
-    def get_template_names(self):
-        # when queried via ajax, return partial html for just the results section
-        # (don't render the form or base template)
-        if self.request.is_ajax():
-            return 'archive/snippets/results_list.html'
-        return self.template_name
 
     def get_queryset(self, **kwargs):
         form_opts = self.request.GET.copy()
@@ -318,10 +318,37 @@ class DigitizedWorkListView(ListView, VaryOnHeadersMixin):
         })
         return context
 
+    def last_modified(self):
+        '''override last modified logic to work with Solr'''
 
-class DigitizedWorkDetailView(DetailView):
+        # override sort to return most recent modification date,
+        # only return last modified value and nothing else
+
+        # use most recent modification time of anything in the index,
+        # since any search on the archive page coud change based
+        # on work or text content changing in the index, (could add
+        # or remove results from any particular set)
+        query_opts = {
+            'q': '*:*',
+            'sort': 'last_modified desc',
+            'fl': 'last_modified'
+        }
+
+        # if a syntax or other solr error happens, no date to return
+        try:
+            psq = PagedSolrQuery(query_opts)
+            # Solr stores date in isoformat; convert to datetime
+            return self.solr_timestamp_to_datetime(psq[0]['last_modified'])
+            # skip extra call to Solr to check count and just grab the first
+            # item if it exists
+        except (IndexError, KeyError, SolrError):
+            pass
+
+
+class DigitizedWorkDetailView(AjaxTemplateMixin, LastModifiedMixin, DetailView):
     '''Display details for a single digitized work. If a work has been
     surpressed, returns a 410 Gone response.'''
+    ajax_template_name = 'archive/snippets/results_within_list.html'
     model = DigitizedWork
     slug_field = 'source_id'
     slug_url_kwarg = 'source_id'
@@ -332,6 +359,24 @@ class DigitizedWorkDetailView(DetailView):
         if self.object.status == DigitizedWork.SUPPRESSED:
             return '410.html'
         return super().get_template_names()
+
+    def last_modified(self):
+        """get last index modification from Solr, as it will be more
+        current than object last modified."""
+
+        # if there is a solr error or last modified is not avilable,
+        # skip last-modified behavior and display page
+        try:
+            psq = PagedSolrQuery({
+                'q': 'source_id:"%s"' % self.object.source_id,
+                'fl': 'last_modified'
+            })
+            # Solr stores date in isoformat; convert to datetime
+            return self.solr_timestamp_to_datetime(psq[0]['last_modified'])
+            # skip extra call to Solr to check count and just grab the first
+            # item if it exists
+        except (SolrError, IndexError, KeyError):
+            pass
 
     def get(self, *args, **kwargs):
         response = super().get(*args, **kwargs)
@@ -566,6 +611,52 @@ class AddToCollection(ListView, FormView):
         # doesn't pass the form with error set
         self.object_list = self.get_queryset()
         return self.render_to_response(self.get_context_data(form=form))
+
+
+class AddFromHathiView(FormView):
+    '''Admin view to add new HathiTrust records by providing a list
+    of ids.'''
+    template_name = 'archive/add_from_hathi.html'
+    form_class = AddFromHathiForm
+    page_title = 'Add new records from HathiTrust'
+
+    def get_context_data(self, *args, **kwargs):
+        # Add page title to template context data
+        context = super().get_context_data(*args, **kwargs)
+        context['page_title'] = self.page_title
+        return context
+
+    def form_valid(self, form):
+        # Process valid form data; should return an HttpResponse.
+
+        # get list of ids from form input
+        htids = form.get_hathi_ids()
+
+        htimporter = HathiImporter(htids)
+        htimporter.filter_existing_ids()
+        # add items, and create log entries associated with current user
+        htimporter.add_items(log_msg_src='via django admin',
+                             user=self.request.user)
+        htimporter.index()
+
+        # generate lookup for admin urls keyed on source id to simplify
+        # template logic needed
+        admin_urls = {htid: reverse('admin:archive_digitizedwork_change', args=[pk])
+                      for htid, pk in htimporter.existing_ids.items()}
+        for work in htimporter.imported_works:
+            admin_urls[work.source_id] = \
+                reverse('admin:archive_digitizedwork_change', args=[work.pk])
+
+        # Default form_valid behavior is to redirect to success url,
+        # but we actually want to redisplay the template with results
+        # and allow submitting the form again with a new batch.
+        return render(self.request, self.template_name, context={
+            'results': htimporter.output_results(),
+            'existing_ids': htimporter.existing_ids,
+            'form': self.form_class(),  # new form instance
+            'page_title': self.page_title,
+            'admin_urls': admin_urls
+            })
 
 
 class OpenSearchDescriptionView(TemplateView):

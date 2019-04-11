@@ -6,7 +6,8 @@ from django.db import models
 from django.test import TestCase, override_settings
 import pytest
 
-from ppa.archive.models import Collection, DigitizedWork
+from ppa.archive.models import Collection, DigitizedWork, \
+    CollectionSignalHandlers
 from ppa.archive.signals import IndexableSignalHandler
 
 
@@ -35,9 +36,9 @@ class TestIndexableSignalHandler(TestCase):
 
         # testing related handlers based on DigitizedWork config
         post_save_handlers = [item[1] for item in models.signals.post_save.receivers]
-        assert ref(DigitizedWork.handle_collection_save) in post_save_handlers
+        assert ref(CollectionSignalHandlers.save) in post_save_handlers
         pre_del_handlers = [item[1] for item in models.signals.pre_delete.receivers]
-        assert ref(DigitizedWork.handle_collection_delete) in pre_del_handlers
+        assert ref(CollectionSignalHandlers.delete) in pre_del_handlers
 
     @pytest.mark.django_db
     def test_handle_save(self):

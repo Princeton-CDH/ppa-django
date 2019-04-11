@@ -1,3 +1,4 @@
+from django.conf.urls import url
 from django.contrib import admin
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -5,6 +6,7 @@ from django.utils.safestring import mark_safe
 
 from ppa.archive.models import DigitizedWork, Collection, \
     ProtectedWorkFieldFlags
+from ppa.archive.views import AddFromHathiView
 
 
 class DigitizedWorkAdmin(admin.ModelAdmin):
@@ -110,6 +112,15 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
 
     bulk_add_collection.short_description = ('Add selected digitized works '
                                              'to collections')
+
+    def get_urls(self):
+        urls = super(DigitizedWorkAdmin, self).get_urls()
+        my_urls = [
+            url(r'^add-hathi/$',
+                self.admin_site.admin_view(AddFromHathiView.as_view()),
+                name='add-from-hathi'),
+        ]
+        return my_urls + urls
 
 
 class CollectionAdmin(admin.ModelAdmin):

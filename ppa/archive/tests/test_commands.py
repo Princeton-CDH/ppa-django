@@ -1,12 +1,10 @@
 from collections import defaultdict
-from datetime import date, timedelta
 from io import StringIO
 import json
 import os
 import tempfile
 import types
 from unittest.mock import patch, Mock
-from zipfile import ZipFile
 
 from django.conf import settings
 from django.contrib.admin.models import LogEntry, ADDITION, CHANGE
@@ -15,15 +13,13 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
-from pairtree import pairtree_client, pairtree_path, storage_exceptions
 import pytest
-from SolrClient import SolrClient
 
-from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound, \
-    HathiBibliographicRecord
+from ppa.archive import hathi
 from ppa.archive.models import DigitizedWork
-from ppa.archive.management.commands import hathi_import, index
-from ppa.archive.solr import get_solr_connection, Indexable
+from ppa.archive.management.commands import hathi_import, index, hathi_add
+from ppa.archive.solr import get_solr_connection
+from ppa.archive.util import HathiImporter
 
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
@@ -126,11 +122,13 @@ class TestHathiImportCommand(TestCase):
     @pytest.mark.usefixtures('solr')
     def test_import_digitizedwork(self):
         cmd = hathi_import.Command(stdout=StringIO())
-        cmd.bib_api = Mock(spec=HathiBibliographicAPI)
+        cmd.bib_api = Mock(spec=hathi.HathiBibliographicAPI)
         cmd.stats = defaultdict(int)
 
         # simulate record not found
-        cmd.bib_api.record.side_effect = HathiItemNotFound
+        cmd.options['update'] = False
+        cmd.digwork_content_type = ContentType.objects.get_for_model(DigitizedWork)
+        cmd.bib_api.record.side_effect = hathi.HathiItemNotFound
         assert cmd.import_digitizedwork('ht.12345') is None
         assert cmd.stats['error'] == 1
         assert DigitizedWork.objects.all().count() == 0
@@ -142,7 +140,7 @@ class TestHathiImportCommand(TestCase):
         bibdata_full = os.path.join(FIXTURES_PATH, 'bibdata_full_njp.32101013082597.json')
         cmd.bib_api.record.side_effect = None
         with open(bibdata_full) as bibdata:
-            hathirecord = HathiBibliographicRecord(json.load(bibdata))
+            hathirecord = hathi.HathiBibliographicRecord(json.load(bibdata))
             cmd.bib_api.record.return_value = hathirecord
         # reset stats
         cmd.stats = defaultdict(int)
@@ -169,34 +167,9 @@ class TestHathiImportCommand(TestCase):
         cmd.stdout = StringIO()
         cmd.options = {'update': False}
         cmd.verbosity = 2
-        assert cmd.import_digitizedwork(htid) is None
+        assert cmd.import_digitizedwork(htid) == digwork
         assert cmd.stats['skipped'] == 1
         assert 'no update needed' in cmd.stdout.getvalue()
-
-        # simulate hathi record updated since import
-        cmd.stats = defaultdict(int)
-        cmd.stdout = StringIO()
-        cmd.options = {'update': False}  # no force update
-        cmd.verbosity = 2
-        with patch.object(hathirecord, 'copy_last_updated') as mock_lastupdated:
-            # using tomorrow to ensure date is after local record modification
-            tomorrow = date.today() + timedelta(days=1)
-            mock_lastupdated.return_value = tomorrow
-            digwork = cmd.import_digitizedwork(htid)
-            assert digwork
-            assert cmd.stats['updated'] == 1
-            assert cmd.stats['skipped'] == 0
-            assert 'record last updated %s, updated needed' % tomorrow in \
-                cmd.stdout.getvalue()
-
-        # log entry should exist for record update; get newest
-        log_entry = LogEntry.objects.filter(object_id=digwork.id) \
-            .order_by('-action_time').first()
-        assert log_entry.user == cmd.script_user
-        assert log_entry.content_type == ContentType.objects.get_for_model(digwork)
-        assert 'Updated via hathi_import script' in log_entry.change_message
-        assert 'source record last updated %s' % tomorrow in log_entry.change_message
-        assert log_entry.action_flag == CHANGE
 
         # update requested by user
         cmd.stats = defaultdict(int)
@@ -216,72 +189,22 @@ class TestHathiImportCommand(TestCase):
         assert ' (forced update)' in log_entry.change_message
         assert log_entry.action_flag == CHANGE
 
-    @patch('ppa.archive.management.commands.hathi_import.ZipFile', spec=ZipFile)
-    def test_count_pages(self, mockzipfile):
-        cmd = hathi_import.Command(stdout=StringIO(), stderr=StringIO())
-        cmd.stats = defaultdict(int)
-        prefix, pt_id = ('ab', '12345:6')
-        mock_pairtree_client = Mock(spec=pairtree_client.PairtreeStorageClient)
-        cmd.hathi_pairtree = {prefix: mock_pairtree_client}
-        cmd.solr = Mock(spec=SolrClient)
-        cmd.solr_collection = 'testidx'
-        digwork = DigitizedWork.objects.create(source_id='.'.join([prefix, pt_id]))
-
-        pt_obj = mock_pairtree_client.get_object.return_value
-        pt_obj.list_parts.return_value = ['12345.mets.xml', '12345.zip']
-        pt_obj.id_to_dirpath.return_value = 'ab/path/12345+6'
-        # parts = ptobj.list_parts(content_dir)
-        # __enter__ required because zipfile used as context block
-        mockzip_obj = mockzipfile.return_value.__enter__.return_value
-        page_files = ['0001.txt', '00002.txt']
-        mockzip_obj.namelist.return_value = page_files
-        # simulate reading zip file contents
-        # mockzip_obj.open.return_value.__enter__.return_value \
-            # .read.return_value.decode.return_value = 'page content'
-
-        # count the pages
-        cmd.count_pages(digwork)
-
-        # inspect pairtree logic
-        mock_pairtree_client.get_object.assert_any_call(pt_id, create_if_doesnt_exist=False)
-        # list parts called on encoded version of pairtree id
-        content_dir = pairtree_path.id_encode(pt_id)
-        pt_obj.list_parts.assert_any_call(content_dir)
-        pt_obj.id_to_dirpath.assert_any_call()
-
-        # inspect zipfile logic
-        mockzip_obj.namelist.assert_called_with()
-
-        zipfile_path = os.path.join(pt_obj.id_to_dirpath(), content_dir, '12345.zip')
-        mockzipfile.assert_called_with(zipfile_path)
-
-        # stats and digitized work page counts updated
-        assert cmd.stats['pages'] == 2
-        digwork = DigitizedWork.objects.get(source_id=digwork.source_id)
-        assert digwork.page_count == 2
-
-        # object not found in pairtree data
-        mock_pairtree_client.get_object.side_effect = \
-            storage_exceptions.ObjectNotFoundException
-        # should not error; should report not found
-        cmd.count_pages(digwork)
-        output = cmd.stderr.getvalue()
-        assert '%s not found' % digwork.source_id in output
-
     @patch('ppa.archive.management.commands.hathi_import.HathiBibliographicAPI')
     @patch('ppa.archive.management.commands.hathi_import.progressbar')
     def test_call_command(self, mockprogbar, mockhathi_bibapi):
+
+        digwork = DigitizedWork(source_id='test.123')
 
         # patch methods with actual logic to check handle method behavior
         with patch.object(hathi_import.Command, 'get_hathi_ids') as mock_get_htids, \
           patch.object(hathi_import.Command, 'initialize_pairtrees') as mock_init_ptree, \
           patch.object(hathi_import.Command, 'import_digitizedwork') as mock_import_digwork, \
-          patch.object(hathi_import.Command, 'count_pages') as mock_count_pages:
+          patch.object(digwork, 'count_pages') as mock_count_pages:
 
             mock_htids = ['ab.1234', 'cd.5678']
             mock_get_htids.return_value = mock_htids
-            digwork = DigitizedWork(source_id='test.123')
             mock_import_digwork.return_value = digwork
+            mock_count_pages.return_value = 10
 
             # default behavior = read ids from pairtree
             stdout = StringIO()
@@ -290,7 +213,7 @@ class TestHathiImportCommand(TestCase):
             mock_init_ptree.assert_any_call()
             for htid in mock_htids:
                 mock_import_digwork.assert_any_call(htid)
-            mock_count_pages.assert_called_with(digwork)
+            mock_count_pages.assert_any_call()
 
             output = stdout.getvalue()
             assert 'Processed 2 items for import.' in output
@@ -303,7 +226,7 @@ class TestHathiImportCommand(TestCase):
             # request progress bar
             call_command('hathi_import', progress=1, verbosity=0, stdout=stdout)
             mockprogbar.ProgressBar.assert_called_with(redirect_stdout=True,
-                    max_value=len(mock_htids))
+                                                       max_value=len(mock_htids))
 
 
 class TestIndexCommand(TestCase):
@@ -437,4 +360,98 @@ class TestIndexCommand(TestCase):
             call_command('index', index='none', stdout=stdout)
             assert not mock_cmd_index_method.call_count
             assert not mock_page_index_data.call_count
+
+
+class TestHathiAddCommand(TestCase):
+    fixtures = ['sample_digitized_works']
+
+    def test_ids_to_process(self):
+        cmd = hathi_add.Command()
+        cmd.stats = defaultdict(int)
+        cmd.stdout = StringIO()
+
+        # ids via command line
+        htids = ['1', '2', '3']
+        cmd.options['htids'] = htids
+        cmd.options['file'] = None
+        assert cmd.ids_to_process() == htids
+
+        # list of ids in a file
+        idfile = tempfile.NamedTemporaryFile(prefix='ht-add-ids', suffix='txt')
+        new_file_ids = ['a', 'b', 'c', 'd', 'efg', 'xyz', ' ']
+        idfile.write('\n'.join(new_file_ids).encode())
+        idfile.flush()  # write out to disk
+        cmd.options['htids'] = []
+        cmd.options['file'] = idfile.name
+        # should include all but the empty line at the end
+        assert cmd.ids_to_process() == new_file_ids[:-1]
+
+    @patch('ppa.archive.management.commands.hathi_add.HathiImporter')
+    def test_call_command(self, mock_hathi_importer):
+        stdout = StringIO()
+        mock_htimporter = mock_hathi_importer.return_value
+        # copy constants to the mock
+        mock_hathi_importer.SUCCESS = HathiImporter.SUCCESS
+        mock_hathi_importer.SKIPPED = HathiImporter.SKIPPED
+
+        digwork_ids = DigitizedWork.objects.values_list('source_id', flat=True)
+        # call on existing ids - all should be skipped
+
+        # simulate all ids existing
+        mock_htimporter.existing_ids = dict((dw_id, '') for dw_id in digwork_ids)
+
+        call_command('hathi_add', *digwork_ids, stdout=stdout, verbosity=3)
+
+        # should initialize importer with htids
+        mock_hathi_importer.assert_called_with(list(digwork_ids))
+        # should filter out existing ids
+        mock_htimporter.filter_existing_ids.assert_called_with()
+        # should call add items
+        mock_htimporter.add_items.assert_called_with(log_msg_src='via hathi_add script')
+        # should call index
+        mock_htimporter.index.assert_called_with()
+        # should report skipped ids
+        output = stdout.getvalue()
+        assert 'Skipping ids already present:' in output
+        assert 'skipped %d' % len(digwork_ids) in output
+
+        # call with new id - simulate error
+        stderr = StringIO()
+        stdout = StringIO()
+        test_htid = 'xyz:9876'
+        mock_htimporter.existing_ids = {}
+        mock_htimporter.results = {test_htid: hathi.HathiItemNotFound()}
+        # simulate what would be generated by output results method
+        mock_htimporter.output_results.return_value = {
+            test_htid: HathiImporter.status_message[hathi.HathiItemNotFound]
+        }
+        call_command('hathi_add', test_htid, stdout=stdout, stderr=stderr,
+                     verbosity=3)
+        err_output = stderr.getvalue()
+        output = stdout.getvalue()
+        # human-readable error results output
+        expected_err_msg = '%s - %s' % \
+            (test_htid, HathiImporter.status_message[hathi.HathiItemNotFound])
+        assert expected_err_msg in err_output
+        assert '1 error' in output
+
+        # simulate success
+        stdout = StringIO()
+        test_htid = 'stu:6381'
+        mock_htimporter.results = {test_htid: HathiImporter.SUCCESS}
+        mock_htimporter.imported_works = [Mock(page_count=550)]
+        call_command('hathi_add', test_htid, stdout=stdout, verbosity=3)
+        output = stdout.getvalue()
+        assert 'Processed 1 item' in output
+        assert 'Added 1' in output
+        assert 'imported 550 pages' in output
+        # success by pid
+        assert '%s - successfully added' % test_htid in output
+
+        # success not reported when less verbose
+        stdout = StringIO()
+        call_command('hathi_add', test_htid, stdout=stdout, verbosity=0)
+        output = stdout.getvalue()
+        # success by pid
+        assert '%s - successfully added' % test_htid not in output
 
