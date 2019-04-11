@@ -52,6 +52,7 @@ class DigitizedWorkListView(AjaxTemplateMixin, LastModifiedListMixin, ListView):
     search_title_query = '{!type=edismax qf=$search_title_qf pf=$search_title_pf v=$title_query}'
 
     def get_queryset(self, **kwargs):
+        print("*** get queryset")
         form_opts = self.request.GET.copy()
         # if relevance sort is requested but there is no keyword search
         # term present, clear it out and fallback to default sort
@@ -338,7 +339,8 @@ class DigitizedWorkListView(AjaxTemplateMixin, LastModifiedListMixin, ListView):
         try:
             psq = PagedSolrQuery(query_opts)
             # Solr stores date in isoformat; convert to datetime
-            return self.solr_timestamp_to_datetime(psq[0]['last_modified'])
+            if psq.count():
+                return self.solr_timestamp_to_datetime(psq[0]['last_modified'])
             # skip extra call to Solr to check count and just grab the first
             # item if it exists
         except (IndexError, SolrError):
@@ -364,7 +366,8 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, LastModifiedMixin, DetailView):
         """get last index modification from Solr, as it will be more
         current than object last modified."""
 
-        # if there is a solr error, skip last-modified behavior and display page
+        # if there is a solr error or last modified is not avilable,
+        # skip last-modified behavior and display page
         try:
             psq = PagedSolrQuery({
                 'q': 'source_id:"%s"' % self.object.source_id,
@@ -373,7 +376,7 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, LastModifiedMixin, DetailView):
             if psq.count():
                 # Solr stores date in isoformat; convert to datetime
                 return self.solr_timestamp_to_datetime(psq[0]['last_modified'])
-        except SolrError:
+        except (SolrError, KeyError):
             pass
 
     def get(self, *args, **kwargs):

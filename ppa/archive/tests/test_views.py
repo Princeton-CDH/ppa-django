@@ -38,6 +38,11 @@ class TestArchiveViews(TestCase):
         dial = DigitizedWork.objects.get(source_id='chi.78013704')
         url = reverse('archive:detail', kwargs={'source_id': dial.source_id})
 
+        # index in solr to add last modified for header
+        solr, solr_collection = get_solr_connection()
+        solr.index(solr_collection, [dial.index_data()], params={"commitWithin": 100})
+        sleep(1)
+
         # get the detail view page and check that the response is 200
         response = self.client.get(url)
         assert response.status_code == 200
@@ -53,6 +58,9 @@ class TestArchiveViews(TestCase):
         # check that the appropriate item is in context
         assert 'object' in response.context
         assert response.context['object'] == dial
+
+        # last modified header should be set on response
+        assert response.has_header('last-modified')
 
         # get a work and its detail page to test with
         # wintry = DigitizedWork.objects.get(source_id='chi.13880510')
@@ -164,6 +172,7 @@ class TestArchiveViews(TestCase):
         # should not display item details
         self.assertNotContains(response, dial.title, status_code=410)
 
+    @pytest.mark.usefixtures("solr")
     def test_digitizedwork_detailview_nonhathi(self):
         # non-hathi work
         thesis = DigitizedWork.objects.create(
@@ -173,6 +182,11 @@ class TestArchiveViews(TestCase):
             sort_title='study of the accentual structure of caesural phrases in The lady of the lake',
             author='Farley, Odessa', publisher='University of Iowa',
             pub_date=1924, page_count=81)
+
+        # index in solr to add last modified for header
+        solr, solr_collection = get_solr_connection()
+        solr.index(solr_collection, [thesis.index_data()], params={"commitWithin": 100})
+        sleep(1)
 
         response = self.client.get(thesis.get_absolute_url())
         # should display item details
@@ -194,8 +208,10 @@ class TestArchiveViews(TestCase):
 
         # search term should be ignored for items without fulltext
         with patch('ppa.archive.views.PagedSolrQuery') as mock_paged_solrq:
+            mock_paged_solrq.return_value.count.return_value = 0
             response = self.client.get(thesis.get_absolute_url(), {'query': 'lady'})
-            mock_paged_solrq.assert_not_called()
+            # called once for last modified, but not for search
+            assert mock_paged_solrq.call_count == 1
 
     @pytest.mark.usefixtures("solr")
     def test_digitizedwork_detailview_query(self):
@@ -204,6 +220,11 @@ class TestArchiveViews(TestCase):
         # get a work and its detail page to test with
         dial = DigitizedWork.objects.get(source_id='chi.78013704')
         url = reverse('archive:detail', kwargs={'source_id': dial.source_id})
+
+        # index in solr to add last modified for header
+        solr, solr_collection = get_solr_connection()
+        solr.index(solr_collection, [dial.index_data()], params={"commitWithin": 100})
+        sleep(1)
 
         # make some sample page content
         # sample page content associated with one of the fixture works
@@ -224,7 +245,6 @@ class TestArchiveViews(TestCase):
         sleep(2)
 
         # search should include query in the context and a PageSolrQuery
-
 
         # search with no matches - test empty search result
         response = self.client.get(url, {'query': 'thermodynamics'})
@@ -300,12 +320,12 @@ class TestArchiveViews(TestCase):
         with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
             mockpsq.return_value.get_results.side_effect = SolrError
             # count needed for paginator
-            mockpsq.return_value.count = 0
+            mockpsq.return_value.count.return_value = 0
             response = self.client.get(url, {'query': 'knobs'})
             self.assertContains(response, 'Something went wrong.')
 
         # ajax request for search results
-        response = self.client.get(url, {'query': 'knobs'}, 
+        response = self.client.get(url, {'query': 'knobs'},
                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         assert response.status_code == 200
         # should render the results list partial
@@ -358,9 +378,11 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url)
         assert response.status_code == 200
         self.assertContains(response, '%d digitized works' % len(digitized_works))
-        self.assertContains(response, '<p class="result-number">1</p>',
+        self.assertContains(
+            response, '<p class="result-number">1</p>',
             msg_prefix='results have numbers')
-        self.assertContains(response, '<p class="result-number">2</p>',
+        self.assertContains(
+            response, '<p class="result-number">2</p>',
             msg_prefix='results have multiple numbers')
 
         # unapi server link present
@@ -368,6 +390,9 @@ class TestArchiveViews(TestCase):
             response, '''<link rel="unapi-server" type="application/xml"
             title="unAPI" href="%s" />''' % reverse('unapi'),
             msg_prefix='unapi server link should be set', html=True)
+
+        # last modified header should be set on response
+        assert response.has_header('last-modified')
 
         # should not have scores for all results, as not logged in
         self.assertNotContains(response, 'score')
@@ -464,8 +489,8 @@ class TestArchiveViews(TestCase):
 
         # no text query, so solr query should not have page join present
         with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
-            # needed for the pagniator
-            mockpsq.return_value.count = 0
+            # needed for the paginator
+            mockpsq.return_value.count.return_value = 0
             response = self.client.get(url, {'author': 'Robert'})
             # the call args are very long and not all relevant, cast as
             # string and look for the offending join
@@ -625,7 +650,7 @@ class TestArchiveViews(TestCase):
         with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
             mockpsq.return_value.get_expanded.side_effect = SolrError
             # count needed for paginator
-            mockpsq.return_value.count = 0
+            mockpsq.return_value.count.return_value = 0
             response = self.client.get(url, {'query': 'something'})
             # paginator variables should still be set
             assert 'object_list' in response.context

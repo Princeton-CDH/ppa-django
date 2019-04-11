@@ -1,3 +1,4 @@
+import calendar
 from datetime import datetime
 
 from django.utils.cache import get_conditional_response, patch_vary_headers
@@ -49,18 +50,22 @@ class LastModifiedMixin(View):
         return self.get_object().updated
 
     def dispatch(self, request, *args, **kwargs):
+        # NOTE: this doesn't actually skip view processing,
+        # but without it we could return a not modified for a non-200 response
         response = super(LastModifiedMixin, self).dispatch(request, *args, **kwargs)
-        # NOTE: remove microseconds so that comparison will pass,
-        # since microseconds are not included in the last-modified header
 
         last_modified = self.last_modified()
         if last_modified:
+            # remove microseconds so that comparison will pass,
+            # since microseconds are not included in the last-modified header
             last_modified = self.last_modified().replace(microsecond=0)
             response['Last-Modified'] = last_modified.strftime('%a, %d %b %Y %H:%M:%S GMT')
-            last_modified = last_modified.timestamp()
+            # convert the same way django does so that they will
+            # compare correctly
+            last_modified = calendar.timegm(last_modified.utctimetuple())
 
-        return get_conditional_response(
-            request, last_modified=last_modified, response=response)
+        return get_conditional_response(request, last_modified=last_modified,
+                                        response=response)
 
     @staticmethod
     def solr_timestamp_to_datetime(solr_time):
