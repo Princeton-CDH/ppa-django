@@ -21,7 +21,7 @@ for writing and styling editorial content.
 * Fixes an issue with zipfile paths on Windows.
 * Adds support for last-modified headers on archive list and detail views.
 
-[3.2 GitHub milestone](https://github.com/Princeton-CDH/ppa-django/milestone/9)
+`3.2 GitHub milestone <https://github.com/Princeton-CDH/ppa-django/milestone/9?closed=1>`_
 
 3.1
 ---
@@ -46,7 +46,7 @@ content page, and numerous accessibility and style fixes and improvements.
   * bugfix: Search loading animation layout is broken in Firefox
   * Footer link spacing, mobile improvements for tile display and scrolling on iOS,
 
-[3.1 GitHub milestone](https://github.com/Princeton-CDH/ppa-django/milestone/8?closed=1)
+`3.1 GitHub milestone <https://github.com/Princeton-CDH/ppa-django/milestone/8?closed=1>`_
 
 3.0.1
 -----
@@ -108,7 +108,7 @@ UI/UX/Design updates
   and footnotes
 * Updated error pages
 
-[3.0 GitHub milestone](https://github.com/Princeton-CDH/ppa-django/milestone/7?closed=1)
+`3.0 GitHub milestone <https://github.com/Princeton-CDH/ppa-django/milestone/7?closed=1>`_
 
 0.11
 ----
@@ -138,7 +138,7 @@ Design updates
 * Digitized work detail page
 * Editorial post list page
 
-[0.11 GitHub milestone](https://github.com/Princeton-CDH/ppa-django/milestone/6?closed=1)
+`0.11 GitHub milestone <https://github.com/Princeton-CDH/ppa-django/milestone/6?closed=1>`_
 
 0.10
 ----
@@ -162,7 +162,7 @@ Design updates
 * Fixes issues with histogram and pub date display on Chrome.
 * Fixes an issue where hitting back on a search could result in unformatted JSON being displayed.
 
-[0.10 GitHub milestone](https://github.com/Princeton-CDH/ppa-django/milestone/5?closed=1)
+`0.10 GitHub milestone <https://github.com/Princeton-CDH/ppa-django/milestone/5?closed=1>`_
 
 0.9
 ---
@@ -186,7 +186,7 @@ Design updates
 * Adjusts the interactive area and cursor used for search sorting
 * Fixes an issue with sizing of the footer in WebKit browsers
 
-[0.9 GitHub milestone](https://github.com/Princeton-CDH/ppa-django/milestone/4?closed=1)
+`0.9 GitHub milestone <https://github.com/Princeton-CDH/ppa-django/milestone/4?closed=1>`_
 
 0.8.1
 -----
@@ -236,7 +236,7 @@ Other improvements
 * Templates and basic styles for current site components
 * SCSS/JS pipeline with compressor
 
-[0.8 GitHub milestone](https://github.com/Princeton-CDH/ppa-django/milestone/3?closed=1)
+`0.8 GitHub milestone <https://github.com/Princeton-CDH/ppa-django/milestone/3?closed=1>`_
 
 0.7 Collections Improvements
 ----------------------------
@@ -268,7 +268,7 @@ Collections
 * As a user, I want to browse the list of collections so I can find out more about important groupings of items in the archive.
 *  As a user, I want to filter search results by collection so that I can include or exclude groups of materials based on my interests.
 
-[0.6 GitHub milestone](https://github.com/Princeton-CDH/ppa-django/milestone/2?closed=1)
+`0.6 GitHub milestone <https://github.com/Princeton-CDH/ppa-django/milestone/2?closed=1>`_
 
 0.5 Bulk Import and Simple Search
 ---------------------------------
@@ -292,4 +292,4 @@ HathiTrust Materials
 * As a user, I want to search and browse digitized volumes by keyword so that I can see what materials are in the archive.
 * As a user, I want to see basic details for individual items in the archive so that I can see the record details and get to the HathiTrust version.
 
-[0.5 GitHub milestone](https://github.com/Princeton-CDH/ppa-django/milestone/1?closed=1)
+`0.5 GitHub milestone <https://github.com/Princeton-CDH/ppa-django/milestone/1?closed=1>`_
