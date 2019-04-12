@@ -369,6 +369,7 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, LastModifiedMixin, DetailView):
         try:
             psq = PagedSolrQuery({
                 'q': 'source_id:"%s"' % self.object.source_id,
+                'sort': 'last_modified desc',
                 'fl': 'last_modified'
             })
             # Solr stores date in isoformat; convert to datetime
