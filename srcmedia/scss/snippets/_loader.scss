@@ -1,8 +1,8 @@
 .loader {
     position: absolute;
+    top: 0;
     width: 100%;
     height: 100%;
-    top: 0;
     display: flex;
     flex-direction: row;
     justify-content: center;
@@ -11,13 +11,13 @@
     transition: opacity 0.5s;
     z-index: -1;
 
+    img {
+        flex: none;
+        height: 3rem;
+        display: inline-block;
+    }
+
     .loading & {
         opacity: 1;
     }
-}
-
-#bm {
-    width: 80px;
-    height: 50px;
-    display: inline-block;
 }
