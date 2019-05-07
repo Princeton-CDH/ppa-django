@@ -163,12 +163,4 @@ $(function(){
             dateHistogram.update(counts)
         }
     }
-
-    bodymovin.loadAnimation({ // set up the loader animation
-        container: document.getElementById('bm'),
-        renderer: 'svg',
-        loop: true,
-        autoplay: true,
-        path: '/static/img/loader/searchLoading.json'
-    })
 })
