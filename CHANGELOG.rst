@@ -3,6 +3,13 @@
 CHANGELOG
 =========
 
+3.2.1
+-----
+
+* Updates the homepage graphic and favicon/logo images to use the filled-in logo.
+* Updates the loading animation on the archive search to use an animated .gif.
+* Sets the last-modified date for the archive search to match the most recently modified work in the index. 
+
 3.2
 ---
 
