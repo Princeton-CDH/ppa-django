@@ -14,6 +14,12 @@ Deploy and Upgrade notes
   Django application have permission to **add** new files and directories
   from the HathiTrust pairtree data stored in **HATHI_DATA**.
 
+* An update to Solr to include last modification dates for use in
+  HTTP response headers requires a schema update and work reindex::
+
+    python manage.py solr_schema
+    python manage.py index
+
 3.0.1
 -----
 

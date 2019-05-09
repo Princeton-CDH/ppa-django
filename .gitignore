@@ -129,3 +129,6 @@ ENV/
 
 # ts lib files
 !srcmedia/ts/lib/
+
+# osx thumbnails
+.DS_Store
