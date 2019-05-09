@@ -1,6 +1,8 @@
 {
     "name": "Princeton Prosody Archive",
     "short_name": "PPA",
+    "description": "A full-text searchable database of works on prosody.",
+    "start_url": "/",
     "icons": [
         {
             "src": "/static/android-chrome-192x192.png",
@@ -13,7 +15,7 @@
             "type": "image/png"
         }
     ],
-    "theme_color": "#e9e9e9",
+    "theme_color": "#f05b69",
     "background_color": "#e9e9e9",
     "display": "standalone"
 }

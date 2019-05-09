@@ -1,7 +1,6 @@
 import { Subject } from 'rxjs'
 
 import { RxInput, RxTextInput, RxCheckboxInput } from './input'
-import { exec } from 'child_process';
 
 describe('RxInput', () => {
 
