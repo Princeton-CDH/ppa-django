@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Code Documentation &#8212; Princeton Prosody Archive 3.2.0 documentation</title>
+    <title>Code Documentation &#8212; Princeton Prosody Archive 3.2.1 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -763,7 +763,7 @@ are provided as kwargs to this method.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://django.readthedocs.io/en/latest/ref/request-response.html#django.http.HttpResponse" title="(in Django v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.http.HttpResponse</span></code></a></td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://django.readthedocs.io/en/latest/ref/request-response.html#django.http.HttpResponse" title="(in Django v3.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.http.HttpResponse</span></code></a></td>
 </tr>
 </tbody>
 </table>
@@ -793,6 +793,13 @@ surpressed, returns a 410 Gone response.</p>
 <code class="descname">get_template_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#DigitizedWorkDetailView.get_template_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.DigitizedWorkDetailView.get_template_names" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <code class="xref py py-attr docutils literal notranslate"><span class="pre">ajax_template_name</span></code> if this is an ajax request;
 otherwise return default template name.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.views.DigitizedWorkDetailView.last_modified">
+<code class="descname">last_modified</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#DigitizedWorkDetailView.last_modified"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.DigitizedWorkDetailView.last_modified" title="Permalink to this definition">¶</a></dt>
+<dd><p>get last index modification from Solr, as it will be more
+current than object last modified.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -835,6 +842,12 @@ collapsed items.</p>
 <dd><p>Return the list of items for this view.</p>
 <p>The return value must be an iterable and may be an instance of
 <cite>QuerySet</cite> in which case <cite>QuerySet</cite> specific behavior will be enabled.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ppa.archive.views.DigitizedWorkListView.last_modified">
+<code class="descname">last_modified</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#DigitizedWorkListView.last_modified"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.views.DigitizedWorkListView.last_modified" title="Permalink to this definition">¶</a></dt>
+<dd><p>override last modified logic to work with Solr</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -890,7 +903,7 @@ to bulk add a queryset of :class:ppa.archive.models.DigitizedWork</p>
 <dl class="class">
 <dt id="ppa.archive.forms.CheckboxSelectMultipleWithDisabled">
 <em class="property">class </em><code class="descclassname">ppa.archive.forms.</code><code class="descname">CheckboxSelectMultipleWithDisabled</code><span class="sig-paren">(</span><em>attrs=None</em>, <em>choices=()</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#CheckboxSelectMultipleWithDisabled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.forms.CheckboxSelectMultipleWithDisabled" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/widgets.html#django.forms.CheckboxSelectMultiple" title="(in Django v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.CheckboxSelectMultiple</span></code></a> with option to mark
+<dd><p>Subclass of <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/widgets.html#django.forms.CheckboxSelectMultiple" title="(in Django v3.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.CheckboxSelectMultiple</span></code></a> with option to mark
 a choice as disabled.</p>
 </dd></dl>
 
@@ -909,7 +922,7 @@ a choice as disabled.</p>
 <dl class="class">
 <dt id="ppa.archive.forms.ModelMultipleChoiceFieldWithEmpty">
 <em class="property">class </em><code class="descclassname">ppa.archive.forms.</code><code class="descname">ModelMultipleChoiceFieldWithEmpty</code><span class="sig-paren">(</span><em>queryset</em>, <em>required=True</em>, <em>widget=None</em>, <em>label=None</em>, <em>initial=None</em>, <em>help_text=''</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#ModelMultipleChoiceFieldWithEmpty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.forms.ModelMultipleChoiceFieldWithEmpty" title="Permalink to this definition">¶</a></dt>
-<dd><p>Extend <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/fields.html#django.forms.ModelMultipleChoiceField" title="(in Django v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.ModelMultipleChoiceField</span></code></a> to add an
+<dd><p>Extend <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/fields.html#django.forms.ModelMultipleChoiceField" title="(in Django v3.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.ModelMultipleChoiceField</span></code></a> to add an
 option for an unset or empty choice (i.e. no relationship in a
 many-to-many relationship such as collection membership).</p>
 <dl class="method">
@@ -924,7 +937,7 @@ the empty id.</p>
 <dl class="class">
 <dt id="ppa.archive.forms.RadioSelectWithDisabled">
 <em class="property">class </em><code class="descclassname">ppa.archive.forms.</code><code class="descname">RadioSelectWithDisabled</code><span class="sig-paren">(</span><em>attrs=None</em>, <em>choices=()</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#RadioSelectWithDisabled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.forms.RadioSelectWithDisabled" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/widgets.html#django.forms.RadioSelect" title="(in Django v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.RadioSelect</span></code></a> with option to mark
+<dd><p>Subclass of <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/widgets.html#django.forms.RadioSelect" title="(in Django v3.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.RadioSelect</span></code></a> with option to mark
 a choice as disabled.</p>
 </dd></dl>
 
@@ -1050,7 +1063,7 @@ of a digitized work.</p>
 <dl class="class">
 <dt id="ppa.archive.forms.SelectDisabledMixin">
 <em class="property">class </em><code class="descclassname">ppa.archive.forms.</code><code class="descname">SelectDisabledMixin</code><a class="reference internal" href="_modules/ppa/archive/forms.html#SelectDisabledMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.forms.SelectDisabledMixin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Mixin for <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/widgets.html#django.forms.RadioSelect" title="(in Django v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.RadioSelect</span></code></a> or <code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.CheckboxSelect</span></code>
+<dd><p>Mixin for <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/widgets.html#django.forms.RadioSelect" title="(in Django v3.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.RadioSelect</span></code></a> or <code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.CheckboxSelect</span></code>
 classes to set an option as disabled. To disable, the widget’s choice
 label option should be passed in as a dictionary with <cite>disabled</cite> set
 to True:</p>
@@ -1062,7 +1075,7 @@ to True:</p>
 <dl class="class">
 <dt id="ppa.archive.forms.SelectWithDisabled">
 <em class="property">class </em><code class="descclassname">ppa.archive.forms.</code><code class="descname">SelectWithDisabled</code><span class="sig-paren">(</span><em>attrs=None</em>, <em>choices=()</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#SelectWithDisabled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.archive.forms.SelectWithDisabled" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/widgets.html#django.forms.Select" title="(in Django v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.Select</span></code></a> with option to mark
+<dd><p>Subclass of <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/widgets.html#django.forms.Select" title="(in Django v3.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.Select</span></code></a> with option to mark
 a choice as disabled.</p>
 </dd></dl>
 
@@ -1235,7 +1248,7 @@ not exposed by SolrClient</p>
 methods to update configured Solr instance.</p>
 <dl class="attribute">
 <dt id="ppa.archive.solr.SolrSchema.fields">
-<code class="descname">fields</code><em class="property"> = [{'name': 'source_id', 'type': 'string', 'required': False}, {'name': 'content', 'type': 'text_en', 'required': False}, {'name': 'item_type', 'type': 'string', 'required': False}, {'name': 'title', 'type': 'text_en', 'required': False}, {'name': 'subtitle', 'type': 'text_en', 'required': False}, {'name': 'sort_title', 'type': 'string_i', 'required': False}, {'name': 'enumcron', 'type': 'string', 'required': False}, {'name': 'author', 'type': 'text_en', 'required': False}, {'name': 'pub_date', 'type': 'int', 'required': False}, {'name': 'pub_place', 'type': 'text_en', 'required': False}, {'name': 'publisher', 'type': 'text_en', 'required': False}, {'name': 'source_url', 'type': 'string', 'required': False}, {'name': 'order', 'type': 'string', 'required': False}, {'name': 'collections', 'type': 'text_en', 'required': False, 'multiValued': True}, {'name': 'notes', 'type': 'text_en', 'required': False}, {'name': 'label', 'type': 'text_en', 'required': False}, {'name': 'tags', 'type': 'string', 'required': False, 'multiValued': True}, {'name': 'author_exact', 'type': 'string', 'required': False}, {'name': 'collections_exact', 'type': 'string', 'required': False, 'multiValued': True}, {'name': 'title_nostem', 'type': 'text_nostem', 'required': False}, {'name': 'subtitle_nostem', 'type': 'text_nostem', 'required': False}]</em><a class="headerlink" href="#ppa.archive.solr.SolrSchema.fields" title="Permalink to this definition">¶</a></dt>
+<code class="descname">fields</code><em class="property"> = [{'name': 'source_id', 'type': 'string', 'required': False}, {'name': 'content', 'type': 'text_en', 'required': False}, {'name': 'item_type', 'type': 'string', 'required': False}, {'name': 'title', 'type': 'text_en', 'required': False}, {'name': 'subtitle', 'type': 'text_en', 'required': False}, {'name': 'sort_title', 'type': 'string_i', 'required': False}, {'name': 'enumcron', 'type': 'string', 'required': False}, {'name': 'author', 'type': 'text_en', 'required': False}, {'name': 'pub_date', 'type': 'int', 'required': False}, {'name': 'pub_place', 'type': 'text_en', 'required': False}, {'name': 'publisher', 'type': 'text_en', 'required': False}, {'name': 'source_url', 'type': 'string', 'required': False}, {'name': 'order', 'type': 'string', 'required': False}, {'name': 'collections', 'type': 'text_en', 'required': False, 'multiValued': True}, {'name': 'notes', 'type': 'text_en', 'required': False}, {'name': 'label', 'type': 'text_en', 'required': False}, {'name': 'tags', 'type': 'string', 'required': False, 'multiValued': True}, {'name': 'author_exact', 'type': 'string', 'required': False}, {'name': 'collections_exact', 'type': 'string', 'required': False, 'multiValued': True}, {'name': 'title_nostem', 'type': 'text_nostem', 'required': False}, {'name': 'subtitle_nostem', 'type': 'text_nostem', 'required': False}, {'name': 'last_modified', 'type': 'date', 'default': 'NOW'}]</em><a class="headerlink" href="#ppa.archive.solr.SolrSchema.fields" title="Permalink to this definition">¶</a></dt>
 <dd><p>solr schema field definitions</p>
 </dd></dl>
 
@@ -1726,7 +1739,8 @@ and editorial pages</p>
 <dt id="ppa.pages.models.ImageWithCaption">
 <em class="property">class </em><code class="descclassname">ppa.pages.models.</code><code class="descname">ImageWithCaption</code><span class="sig-paren">(</span><em>local_blocks=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/pages/models.html#ImageWithCaption"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.pages.models.ImageWithCaption" title="Permalink to this definition">¶</a></dt>
 <dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">StructBlock</span></code> for an image with
-a formatted caption, so caption can be context-specific.</p>
+a formatted caption, so caption can be context-specific. Also allows images
+to be floated right, left, or take up the width of the page.</p>
 </dd></dl>
 
 <dl class="class">
@@ -1738,7 +1752,7 @@ description, for use in previews on the site and plain-text metadata
 previews.</p>
 <dl class="attribute">
 <dt id="ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags">
-<code class="descname">allowed_tags</code><em class="property"> = ['em', 'i', 'ol', 'strong', 'acronym', 'blockquote', 'li', 'abbr', 'ul', 'p', 'code', 'b']</em><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags" title="Permalink to this definition">¶</a></dt>
+<code class="descname">allowed_tags</code><em class="property"> = ['i', 'strong', 'code', 'blockquote', 'ul', 'acronym', 'p', 'ol', 'b', 'li', 'em', 'abbr']</em><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags" title="Permalink to this definition">¶</a></dt>
 <dd><p>allowed tags for bleach html stripping in description</p>
 </dd></dl>
 
@@ -2012,6 +2026,25 @@ ajax response for the non-ajax response</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="ppa.common.views.LastModifiedListMixin">
+<em class="property">class </em><code class="descclassname">ppa.common.views.</code><code class="descname">LastModifiedListMixin</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/common/views.html#LastModifiedListMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.common.views.LastModifiedListMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Variant of <a class="reference internal" href="#ppa.common.views.LastModifiedMixin" title="ppa.common.views.LastModifiedMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">LastModifiedMixin</span></code></a> for use on a list view</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="ppa.common.views.LastModifiedMixin">
+<em class="property">class </em><code class="descclassname">ppa.common.views.</code><code class="descname">LastModifiedMixin</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/common/views.html#LastModifiedMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.common.views.LastModifiedMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>View mixin to add last modified headers</p>
+<dl class="staticmethod">
+<dt id="ppa.common.views.LastModifiedMixin.solr_timestamp_to_datetime">
+<em class="property">static </em><code class="descname">solr_timestamp_to_datetime</code><span class="sig-paren">(</span><em>solr_time</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/common/views.html#LastModifiedMixin.solr_timestamp_to_datetime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.common.views.LastModifiedMixin.solr_timestamp_to_datetime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert Solr timestamp (isoformat that may or may not include
+microseconds) to <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.datetime</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="ppa.common.views.VaryOnHeadersMixin">
 <em class="property">class </em><code class="descclassname">ppa.common.views.</code><code class="descname">VaryOnHeadersMixin</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/common/views.html#VaryOnHeadersMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ppa.common.views.VaryOnHeadersMixin" title="Permalink to this definition">¶</a></dt>
 <dd><p>View mixin to set Vary header - class-based view equivalent to
@@ -2168,7 +2201,8 @@ and editorial pages</p>
 <dt>
 <em class="property">class </em><code class="descclassname">ppa.pages.models.</code><code class="descname">ImageWithCaption</code><span class="sig-paren">(</span><em>local_blocks=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/pages/models.html#ImageWithCaption"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">StructBlock</span></code> for an image with
-a formatted caption, so caption can be context-specific.</p>
+a formatted caption, so caption can be context-specific. Also allows images
+to be floated right, left, or take up the width of the page.</p>
 </dd></dl>
 
 <dl class="class">
@@ -2180,7 +2214,7 @@ description, for use in previews on the site and plain-text metadata
 previews.</p>
 <dl class="attribute">
 <dt>
-<code class="descname">allowed_tags</code><em class="property"> = ['em', 'i', 'ol', 'strong', 'acronym', 'blockquote', 'li', 'abbr', 'ul', 'p', 'code', 'b']</em></dt>
+<code class="descname">allowed_tags</code><em class="property"> = ['i', 'strong', 'code', 'blockquote', 'ul', 'acronym', 'p', 'ol', 'b', 'li', 'em', 'abbr']</em></dt>
 <dd><p>allowed tags for bleach html stripping in description</p>
 </dd></dl>
 
