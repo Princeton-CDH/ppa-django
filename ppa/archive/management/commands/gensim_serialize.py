@@ -1,4 +1,4 @@
-'''
+"""
 **gensim_serialize** is a custom manage command to generate and serialize
 a Gensim corpus from Solr.  It should be run *after* content has been indexed
 into Solr via the **index** manage command.
@@ -55,7 +55,7 @@ Example usage::
     # Don't generate dictionary; don't generate metadata
     python manage.py gensim_serialize --path data --doc-limit 1000 --preprocess lower --no-dictionary --no-metadata
 
-'''
+"""
 
 import logging
 import csv
