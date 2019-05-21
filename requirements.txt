@@ -23,3 +23,6 @@ django-csp
 django-webpack-loader
 requests_oauthlib
 wand
+
+# only needed for the 'gensim_serialize' manage command
+gensim
