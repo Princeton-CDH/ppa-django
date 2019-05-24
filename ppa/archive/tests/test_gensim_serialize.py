@@ -113,13 +113,13 @@ def test_doc_ids(mock_get_solr_connection, temp_dirname):
     with pytest.raises(RuntimeError):
         call_command('gensim_serialize', '--path', temp_dirname, '--doc-id', 'doc_4')
 
-    # If we're not saving metadata, we're fine - though we won't get anything in our dictionary, obviously
+    # If we're not saving metadata, we're fine - though we won't get anything in our dictionary, obviously.
     call_command('gensim_serialize', '--path', temp_dirname, '--doc-id', 'doc_4', '--no-metadata')
     dictionary_file = os.path.join(temp_dirname, 'corpus.mm.dict')
     assert os.path.exists(dictionary_file)
 
     tokens = open(dictionary_file, 'r').readlines()
-    assert len(tokens) == 0  # We specified a doc-id that's not there, so we get nothing.
+    assert not tokens  # We specified a doc-id that's not there, so we get no tokens.
 
 
 @patch('ppa.archive.solr.get_solr_connection')
