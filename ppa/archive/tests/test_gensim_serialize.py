@@ -3,6 +3,7 @@ from tempfile import TemporaryDirectory
 import pytest
 from unittest.mock import patch, Mock
 from django.core.management import call_command
+from django.core.management.base import CommandError
 
 
 @pytest.fixture
@@ -32,6 +33,11 @@ mock_solr_query.docs = [
     {
         'item_type': 'work',
         'pub_year': 1863
+    },
+    # If multiple metadata rows are found, the first one (above) is used
+    {
+        'item_type': 'work',
+        'pub_year': 'unknown'
     },
     # Subsequent records have item_type='page', page-order specified by 'order', with content in 'content'
     {
@@ -95,3 +101,31 @@ def test_metadata_file(mock_get_solr_connection, temp_dirname):
     # The actual rows with metadata - our mock object returns the same metadata for both documents
     assert set(lines[1].rstrip('\n').split(',')) == {'work', '1863'}
     assert set(lines[2].rstrip('\n').split(',')) == {'work', '1863'}
+
+
+@patch('ppa.archive.solr.get_solr_connection')
+def test_doc_ids(mock_get_solr_connection, temp_dirname):
+    mock_get_solr_connection.return_value = (mock_solr_client, 'mock_collection')
+
+    # Explicitly specify the doc_id - note that a document with doc_id 'doc_4' doesn't exist!
+
+    # We'll thus be unable to determine the metadata fields
+    with pytest.raises(RuntimeError):
+        call_command('gensim_serialize', '--path', temp_dirname, '--doc-id', 'doc_4')
+
+    # If we're not saving metadata, we're fine - though we won't get anything in our dictionary, obviously
+    call_command('gensim_serialize', '--path', temp_dirname, '--doc-id', 'doc_4', '--no-metadata')
+    dictionary_file = os.path.join(temp_dirname, 'corpus.mm.dict')
+    assert os.path.exists(dictionary_file)
+
+    tokens = open(dictionary_file, 'r').readlines()
+    assert len(tokens) == 0  # We specified a doc-id that's not there, so we get nothing.
+
+
+@patch('ppa.archive.solr.get_solr_connection')
+def test_invalid_preprocess_flags(mock_get_solr_connection, temp_dirname):
+    mock_get_solr_connection.return_value = (mock_solr_client, 'mock_collection')
+
+    # Flags that are not supported
+    with pytest.raises(CommandError):
+        call_command('gensim_serialize', '--path', temp_dirname, '--preprocess', 'upper')
