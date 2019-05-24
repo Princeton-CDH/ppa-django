@@ -11,6 +11,7 @@ env:
   - SOLR_VERSION=6.6.5
   - SOLR_CORE=test-ppa
   - PA11Y_SOLR_CORE=ppa-pa11y
+  - BOTO_CONFIG=/dev/null  # https://github.com/travis-ci/travis-ci/issues/7940
 cache:
   pip: true
   directories:
