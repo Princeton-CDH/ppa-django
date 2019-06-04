@@ -30,7 +30,7 @@ class TestSolrSchemaCommand(TestCase):
         # simulate no solr running
         with override_settings(SOLR_CONNECTIONS={'default':
                               {'COLLECTION': 'bogus',
-                               'URL': 'http://localhost:191918984/solr/'}}):
+                               'URL': 'http://localhost:9876/solr/'}}):
             with pytest.raises(CommandError):
                 call_command('solr_schema')
 
