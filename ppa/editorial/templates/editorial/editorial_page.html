@@ -7,6 +7,17 @@
 {% block meta_description %}{{ page.get_plaintext_description }}{% endblock %}
 {# keywords for meta not yet implemented in wagtail #}
 
+{% block metadata %}
+<meta property="citation_title" content="{{ page.title|escape }}" />
+{# should have original pub date and citation_online_date for reposted content... #}
+<meta property="citation_publication_date" content="{{ page.first_published_at|date:"Y/m/d" }}" />
+{% for block in page.authors %}
+<meta property="citation_author" content="{{ block.value.name|escape }}" />
+{% endfor %}
+<meta property="citation_publisher" content="Center for Digital Humanities at Princeton" />
+<meta property="citation_public_url" content="{{ request.build_absolute_uri }}" />
+{% endblock %}
+
 {% block page_header %}
     {% include 'snippets/header.html' with style='editorial' %}
 {% endblock %}

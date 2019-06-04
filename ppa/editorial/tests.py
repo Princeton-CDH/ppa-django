@@ -2,6 +2,7 @@ from datetime import date
 
 from django.http import Http404
 from django.test import TestCase
+from django.test.client import RequestFactory
 from wagtail.core.url_routing import RouteResult
 from wagtail.core.models import Site
 from wagtail.tests.utils import WagtailPageTests
@@ -219,11 +220,11 @@ class TestEditorialPage(WagtailPageTests):
         response = self.client.get(editorial_url)
         # basic template/content check
         self.assertContains(response, editorial_page.title)
-        # each author should be shown once
+        # each author should be shown twice: visible and in head metadata
         person_a = Person.objects.get(name='Person A')
         person_b = Person.objects.get(name='Person B')
-        self.assertContains(response, person_a.name, count=1)
-        self.assertContains(response, person_b.name, count=1)
+        self.assertContains(response, person_a.name, count=2)
+        self.assertContains(response, person_b.name, count=2)
         # the date of the post's publication should be present with slash
         self.assertContains(
             response,
@@ -242,7 +243,39 @@ class TestEditorialPage(WagtailPageTests):
         # order as set in the editorial page should be [B is 2, A is 1]
         assert page.authors.stream_data[0]['value'] == 2
         assert page.authors.stream_data[1]['value'] == 1
-        # delete them
+
+        # citation metadata should be set in header
+        self.assertContains(
+            response,
+            '<meta property="citation_title" content="%s" />' % editorial_page.title,
+            html=True
+        )
+        for author in [person_a, person_b]:
+            self.assertContains(
+                response,
+                '<meta property="citation_author" content="%s" />' % person_a.name,
+                html=True
+            )
+        self.assertContains(
+            response,
+            '<meta property="citation_publication_date" content="%s" />' % \
+                editorial_page.first_published_at.strftime('%Y/%m/%d'),
+            html=True
+        )
+        self.assertContains(
+            response,
+            '<meta property="citation_publisher" content="Center for Digital Humanities at Princeton" />',
+            html=True
+        )
+        request = RequestFactory().get(editorial_url)
+        self.assertContains(
+            response,
+            '<meta property="citation_public_url" content="%s" />' % \
+                request.build_absolute_uri(),
+            html=True
+        )
+
+        # delete authors
         editorial_page.authors = None
         editorial_page.save()
         response = self.client.get(editorial_url)
@@ -256,6 +289,8 @@ class TestEditorialPage(WagtailPageTests):
             editorial_page.first_published_at.strftime('%B %-d, %Y'),
             count=1
             )
+
+
 
 
 class TestPerson(TestCase):
