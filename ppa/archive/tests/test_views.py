@@ -740,13 +740,23 @@ class TestAddToCollection(TestCase):
     fixtures = ['sample_digitized_works']
 
     def setUp(self):
+        self.test_pass = 'secret'
+        self.testuser = 'test'
         self.user = get_user_model().objects.create_user(username='test',
-                                                         password='secret')
+                                                         password=self.test_pass)
         self.user.save()
+        self.test_credentials = {
+            'username': self.testuser,
+            'password': self.test_pass
+        }
 
         get_user_model().objects.create_superuser(
-            username='super', password='secret', email='foo@bar.com'
+            username='super', password=self.test_pass, email='foo@bar.com'
         )
+        self.admin_credentials = {
+            'username': 'super',
+            'password': self.test_pass
+        }
 
     def test_permissions(self):
         # - anonymous login is redirected to sign in
@@ -754,7 +764,7 @@ class TestAddToCollection(TestCase):
         response = self.client.get(bulk_add)
         assert response.status_code == 302
         # - so is a user without staff permissions
-        self.client.login(username='test', password='secret')
+        self.client.login(**self.test_credentials)
         response = self.client.get(bulk_add)
         assert response.status_code == 302
         self.user.is_staff = True
@@ -764,8 +774,7 @@ class TestAddToCollection(TestCase):
         assert response.status_code == 200
 
     def test_get(self):
-
-        self.client.login(username='super', password='secret')
+        self.client.login(**self.admin_credentials)
 
         # - a get to the view with ids should return a message to use
         # the admin interface and not enable the form for submission
@@ -812,7 +821,7 @@ class TestAddToCollection(TestCase):
         mockcollection = Mock()
         mockgetsolr.return_value = mocksolr, mockcollection
 
-        self.client.login(username='super', password='secret')
+        self.client.login(**self.admin_credentials)
 
         # - check that a post to the bulk-add route with valid pks
         # adds them to the appropriate collection

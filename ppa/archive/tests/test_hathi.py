@@ -2,6 +2,7 @@ from datetime import date
 import os.path
 from unittest.mock import patch, Mock
 import json
+import tempfile
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -217,6 +218,13 @@ class TestHathiBaseAPI(TestCase):
 
 class TestHathiDataAPI(TestCase):
 
+    test_hathi_key = 'mykey'
+    test_hathi_secret = 'mysecret'
+    test_hathi_opts = {
+        'HATHITRUST_OAUTH_KEY': test_hathi_key,
+        'HATHITRUST_OAUTH_SECRET': test_hathi_secret
+    }
+
     def test_init(self):
         # test session initialization
 
@@ -228,18 +236,16 @@ class TestHathiDataAPI(TestCase):
             assert 'configuration required' in str(err)
 
         # with oauth key and secret - init oauth
-        key = 'mykey'
-        secret = 'mysecret'
-        with override_settings(HATHITRUST_OAUTH_KEY=key,
-                               HATHITRUST_OAUTH_SECRET=secret):
+        with override_settings(**self.test_hathi_opts):
             data_api = hathi.HathiDataAPI()
             assert isinstance(data_api.session.auth, requests_oauthlib.OAuth1)
-            assert data_api.session.auth.client.client_key == key
-            assert data_api.session.auth.client.client_secret == secret
+            assert data_api.session.auth.client.client_key == \
+                self.test_hathi_key
+            assert data_api.session.auth.client.client_secret == \
+                self.test_hathi_secret
             assert data_api.session.auth.client.signature_type == 'QUERY'
 
-    @override_settings(HATHITRUST_OAUTH_KEY='mykey',
-                       HATHITRUST_OAUTH_SECRET='mysecret')
+    @override_settings(**test_hathi_opts)
     def test_get_aggregate(self):
         data_api = hathi.HathiDataAPI()
         htid = 'abc.1235813'
@@ -250,8 +256,7 @@ class TestHathiDataAPI(TestCase):
             mock_make_request.assert_called_with('aggregate/%s' % htid,
                                                  params={'v': 2})
 
-    @override_settings(HATHITRUST_OAUTH_KEY='mykey',
-                       HATHITRUST_OAUTH_SECRET='mysecret')
+    @override_settings(**test_hathi_opts)
     def test_get_structure(self):
         data_api = hathi.HathiDataAPI()
         htid = 'abc.1235813'
@@ -267,7 +272,10 @@ class TestHathiDataAPI(TestCase):
             mock_make_request.assert_called_with(
                 'structure/%s' % htid, params={'v': 2, 'format': 'json'})
 
+
 class TestHathiObject:
+
+    ht_tempdir = tempfile.TemporaryDirectory(prefix="ht_text_pd")
 
     def test_pairtree_prefix(self):
         hobj = hathi.HathiObject(hathi_id='uva.1234')
@@ -282,7 +290,7 @@ class TestHathiObject:
         assert hobj.content_dir == pairtree_path.id_encode(hobj.pairtree_id)
 
     @patch('ppa.archive.hathi.pairtree_client')
-    @override_settings(HATHI_DATA='/tmp/ht_text_pd')
+    @override_settings(HATHI_DATA=ht_tempdir.name)
     def test_pairtree_object(self, mock_pairtree_client):
         hobj = hathi.HathiObject(hathi_id='uva.1234')
 
@@ -309,7 +317,7 @@ class TestHathiObject:
         my_ptree_client.get_object.assert_called_with(hobj.pairtree_id,
                                                       create_if_doesnt_exist=False)
 
-    @override_settings(HATHI_DATA='/tmp/ht_text_pd')
+    @override_settings(HATHI_DATA=ht_tempdir.name)
     def test_zipfile_path(self):
         hobj = hathi.HathiObject(hathi_id='chi.79279237')
         contents = ['79279237.mets.xml', '79279237.zip']
@@ -318,7 +326,7 @@ class TestHathiObject:
             mock_ptree_obj = mock_ptree_obj_meth.return_value
             mock_ptree_obj.list_parts.return_value = contents
             mock_ptree_obj.id_to_dirpath.return_value = \
-                '/tmp/ht_text_pd/chi/pairtree_root/79/27/92/37'
+                '%s/chi/pairtree_root/79/27/92/37' % self.ht_tempdir.name
 
             zipfile_path = hobj.zipfile_path()
             mock_ptree_obj_meth.assert_called_with(ptree_client=None)
@@ -331,7 +339,7 @@ class TestHathiObject:
             hobj.zipfile_path(my_ptree_client)
             mock_ptree_obj_meth.assert_called_with(ptree_client=my_ptree_client)
 
-    @override_settings(HATHI_DATA='/tmp/ht_text_pd')
+    @override_settings(HATHI_DATA=ht_tempdir.name)
     def test_metsfile_path(self):
         hobj = hathi.HathiObject(hathi_id='chi.79279237')
         contents = ['79279237.mets.xml', '79279237.zip']
@@ -340,7 +348,7 @@ class TestHathiObject:
             mock_ptree_obj = mock_ptree_obj_meth.return_value
             mock_ptree_obj.list_parts.return_value = contents
             mock_ptree_obj.id_to_dirpath.return_value = \
-                '/tmp/ht_text_pd/chi/pairtree_root/79/27/92/37'
+                '%s/chi/pairtree_root/79/27/92/37' % self.ht_tempdir.name
 
             metsfile_path = hobj.metsfile_path()
             mock_ptree_obj_meth.assert_called_with(ptree_client=None)
