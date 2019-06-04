@@ -3,6 +3,15 @@
 CHANGELOG
 =========
 
+3.2.2
+-----
+
+* Update 500 error logo image for consistent color order/overlap
+* Add citation metadata to editorial content pages
+* bugfix: handle multiple rows of side-by-side images in wagtail content
+* bugfix: editorial list page margin fix for even-numbered last child on
+  mobile
+
 3.2.1
 -----
 

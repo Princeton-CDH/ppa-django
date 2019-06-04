@@ -40,8 +40,10 @@
         font-size: inherit;
     }
 
-    .card:last-child:nth-child(even)  {
-        margin-left: auto;
+    @media (min-width: $tablet) {
+        .card:last-child:nth-child(even)  {
+            margin-left: auto;
+        }
     }
 
     .card blockquote { // don't use blockquote border styles on card previews

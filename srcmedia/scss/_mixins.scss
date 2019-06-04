@@ -195,14 +195,24 @@
                 margin-right: 0;
             }
 
-            // any content after side-by-side images should be cleared
+            // any non-figure content OR left figure after side-by-side 
+            // images should be cleared
             // it also needs padding (not margin) in order to create space
             // because the floats will ignore margin
-            &.left + figure.right + *,
-            &.right + figure.left + * {
+            &.left + figure.right + :not(figure),
+            &.left + figure.right + figure.left,            
+            &.right + figure.left + :not(figure) {
                 clear: both;
                 padding-top: 1rem;
             }
+
+            // a right side figure following a left figure
+            // after side-by-side should only clear right
+            &.right + figure.left + figure.right {
+                clear: right;
+                padding-top: 1rem;
+            }
+
         }
     }
 

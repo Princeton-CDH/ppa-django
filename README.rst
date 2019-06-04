@@ -21,9 +21,9 @@ at `<https://princeton-cdh.github.io/ppa-django/>`_.
    :target: https://codecov.io/gh/Princeton-CDH/ppa-django
    :alt: Code coverage
 
-.. image:: https://api.codeclimate.com/v1/badges/68a6e452a7d32c6b72de/maintainability
-   :target: https://codeclimate.com/github/Princeton-CDH/ppa-django/maintainability
-   :alt: Maintainability
+.. image:: https://www.codefactor.io/repository/github/princeton-cdh/ppa-django/badge
+   :target: https://www.codefactor.io/repository/github/princeton-cdh/ppa-django
+   :alt: CodeFactor
 
 .. image:: https://requires.io/github/Princeton-CDH/ppa-django/requirements.svg?branch=master
    :target: https://requires.io/github/Princeton-CDH/ppa-django/requirements/?branch=master
