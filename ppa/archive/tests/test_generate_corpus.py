@@ -63,7 +63,7 @@ mock_solr_client.query.return_value = mock_solr_query
 def test_dictionary(mock_get_solr_connection, temp_dirname):
     mock_get_solr_connection.return_value = (mock_solr_client, 'mock_collection')
 
-    call_command('gensim_serialize', '--path', temp_dirname)
+    call_command('generate_corpus', '--path', temp_dirname)
     dictionary_file = os.path.join(temp_dirname, 'corpus.mm.dict')
     assert os.path.exists(dictionary_file)
 
@@ -75,7 +75,7 @@ def test_dictionary(mock_get_solr_connection, temp_dirname):
 def test_dictionary_with_preprocessing(mock_get_solr_connection, temp_dirname):
     mock_get_solr_connection.return_value = (mock_solr_client, 'mock_collection')
 
-    call_command('gensim_serialize', '--path', temp_dirname, '--preprocess', 'strip_short')
+    call_command('generate_corpus', '--path', temp_dirname, '--preprocess', 'strip_short')
     dictionary_file = os.path.join(temp_dirname, 'corpus.mm.dict')
     assert os.path.exists(dictionary_file)
 
@@ -87,7 +87,7 @@ def test_dictionary_with_preprocessing(mock_get_solr_connection, temp_dirname):
 def test_metadata_file(mock_get_solr_connection, temp_dirname):
     mock_get_solr_connection.return_value = (mock_solr_client, 'mock_collection')
 
-    call_command('gensim_serialize', '--path', temp_dirname, '--preprocess', 'strip_short')
+    call_command('generate_corpus', '--path', temp_dirname, '--preprocess', 'strip_short')
     metadata_file = os.path.join(temp_dirname, 'corpus.mm.metadata')
     assert os.path.exists(metadata_file)
 
@@ -111,10 +111,10 @@ def test_doc_ids(mock_get_solr_connection, temp_dirname):
 
     # We'll thus be unable to determine the metadata fields
     with pytest.raises(RuntimeError):
-        call_command('gensim_serialize', '--path', temp_dirname, '--doc-id', 'doc_4')
+        call_command('generate_corpus', '--path', temp_dirname, '--doc-id', 'doc_4')
 
     # If we're not saving metadata, we're fine - though we won't get anything in our dictionary, obviously.
-    call_command('gensim_serialize', '--path', temp_dirname, '--doc-id', 'doc_4', '--no-metadata')
+    call_command('generate_corpus', '--path', temp_dirname, '--doc-id', 'doc_4', '--no-metadata')
     dictionary_file = os.path.join(temp_dirname, 'corpus.mm.dict')
     assert os.path.exists(dictionary_file)
 
@@ -128,4 +128,4 @@ def test_invalid_preprocess_flags(mock_get_solr_connection, temp_dirname):
 
     # Flags that are not supported
     with pytest.raises(CommandError):
-        call_command('gensim_serialize', '--path', temp_dirname, '--preprocess', 'upper')
+        call_command('generate_corpus', '--path', temp_dirname, '--preprocess', 'upper')

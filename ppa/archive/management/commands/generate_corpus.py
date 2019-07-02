@@ -1,5 +1,5 @@
 """
-**gensim_serialize** is a custom manage command to generate and serialize
+**generate_corpus** is a custom manage command to generate and serialize
 a Gensim corpus from Solr.  It should be run *after* content has been indexed
 into Solr via the **index** manage command.
 
@@ -43,17 +43,17 @@ be explicitly specified using the flags:
 Example usage::
 
     # Save all files to the 'data' folder, with bare-minimum preprocessing
-    python manage.py gensim_serialize --path data --preprocess lower --preprocess strip_tags
+    python manage.py generate_corpus --path data --preprocess lower --preprocess strip_tags
 
     # Restrict corpus to specific doc IDs
-    python manage.py gensim_serialize --path data --doc-id mdp.39015019158776 --doc-id njp.32101072898206
+    python manage.py generate_corpus --path data --doc-id mdp.39015019158776 --doc-id njp.32101072898206
         --preprocess lower --preprocess strip_tags
 
     # Restrict corpus to 1000 documents
-    python manage.py gensim_serialize --path data --doc-limit 1000 --preprocess lower --preprocess strip_tags
+    python manage.py generate_corpus --path data --doc-limit 1000 --preprocess lower --preprocess strip_tags
 
     # Don't generate dictionary; don't generate metadata
-    python manage.py gensim_serialize --path data --doc-limit 1000 --preprocess lower --no-dictionary --no-metadata
+    python manage.py generate_corpus --path data --doc-limit 1000 --preprocess lower --no-dictionary --no-metadata
 
 """
 
