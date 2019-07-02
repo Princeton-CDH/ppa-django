@@ -15,9 +15,8 @@ Additional document-level metadata found in the Solr Index is also saved by defa
 This is a csv file with a header row and one row per unique document found in the Solr index.
 Saving the metadata can be skipped by using the --no-metadata option.
 
-By default, _all_ documents found in the Solr index are serialized. This can be controlled using (one of):
-  --doc-id: Document ID(s) to serialize. Multiple documents can be specified by multiple --doc-id flags.
-  --doc-limit: Max no. of documents to serialize.
+By default, _all_ documents found in the Solr index are serialized. This can be controlled using --doc-limit,
+which denotes the maximum no. of documents to serialize.
 
 For corpus generation, the following preprocessing options are available via the --preprocess flag:
 
@@ -34,20 +33,10 @@ For corpus generation, the following preprocessing options are available via the
 IMPORTANT - NO preprocessing filters are applied by default, but you will typically at least want to use 'lower'.
 Multiple preprocessing filters can be applied (in order) by specifying multiple --preprocess flags.
 
-The fields that correspond to 'document identifier', 'document content', and 'page order' in the Solr Corpus can
-be explicitly specified using the flags:
-    --doc-id-field = field for document identifier (default 'source_id')
-    --doc-content-field = field for document content (default 'content')
-    --page-order-field = field indicating page order (default 'order')
-
 Example usage::
 
     # Save all files to the 'data' folder, with bare-minimum preprocessing
     python manage.py generate_corpus --path data --preprocess lower --preprocess strip_tags
-
-    # Restrict corpus to specific doc IDs
-    python manage.py generate_corpus --path data --doc-id mdp.39015019158776 --doc-id njp.32101072898206
-        --preprocess lower --preprocess strip_tags
 
     # Restrict corpus to 1000 documents
     python manage.py generate_corpus --path data --doc-limit 1000 --preprocess lower --preprocess strip_tags
@@ -87,8 +76,13 @@ PREPROCESS_FUNCTIONS = {
 
 
 class SolrCorpus:
-    def __init__(self, name, client, collection, doc_id_field='source_id', doc_content_field='content',
-                 page_order_field='order', doc_limit=-1, doc_ids=None, preprocess_fns=None, pbar=True):
+
+    # Class attributes that rarely, if ever, need to change
+    DOC_ID_FIELD = 'source_id'     # Solr field name for document identifier
+    DOC_CONTENT_FIELD = 'content'  # Solr field name for document content
+    PAGE_ORDER_FIELD = 'order'     # Solr field name for page ordering
+
+    def __init__(self, name, client, collection, doc_limit=-1, preprocess_fns=None, pbar=True):
         """
         A class encapsulating a Solr Client specification, that yields Bag-of-Word vectors on iteration, and thus
             acts as a Gensim Corpus.
@@ -96,11 +90,7 @@ class SolrCorpus:
         :param name: A string name of this corpus. Used as a string prefix for generated files.
         :param client: A SolrClient.SolrClient object used to interface with Solr
         :param collection: A string representing the Solr collection name.
-        :param doc_id_field: Solr field name for document identifier. Default 'source_id'.
-        :param doc_content_field: Solr field name for document content. Default 'content'.
-        :param page_order_field: Solr field name for page ordering. Default 'order'.
         :param doc_limit: Max no. of documents to process. The default of -1 means we process ALL documents found.
-        :param doc_ids: List of document identifiers to process. If None, ALL documents found are processed.
         :param preprocess_fns: A list of single-argument functions to use as preprocessors.
             See the module gensim.parsing.preprocessing for some typical preprocessing functions.
         :param pbar: A boolean indicating whether to display a progress bar during corpus generation.
@@ -108,9 +98,6 @@ class SolrCorpus:
         self.name = name
         self.client = client
         self.collection = collection
-        self.doc_id_field = doc_id_field
-        self.doc_content_field = doc_content_field
-        self.page_order_field = page_order_field
         self.doc_limit = doc_limit
         self.preprocess_fns = preprocess_fns or []
 
@@ -129,7 +116,7 @@ class SolrCorpus:
                 'q': '*:*',
                 'facet': 'on',
                 'rows': 0,
-                'facet.field': doc_id_field,
+                'facet.field': SolrCorpus.DOC_ID_FIELD,
                 'facet.limit': self.doc_limit
             }
         )
@@ -140,7 +127,7 @@ class SolrCorpus:
         metadata would be in the same order as the BoW-vectors returned by this object's iterator.
         """
         self.page_counts = results.get_facets()['source_id']
-        self.doc_ids = doc_ids or self.page_counts.keys()
+        self.doc_ids = self.page_counts.keys()
         self.doc_count = len(self.doc_ids)
         self.pbar = ProgressBar(redirect_stderr=True, max_value=self.doc_count) if pbar else NullBar()
 
@@ -155,8 +142,8 @@ class SolrCorpus:
             result = self.client.query(
                 collection=self.collection,
                 query={
-                    'q': '{}:{}'.format(self.doc_id_field, doc_id),
-                    'order': '{} asc'.format(self.page_order_field),
+                    'q': '{}:{}'.format(SolrCorpus.DOC_ID_FIELD, doc_id),
+                    'order': '{} asc'.format(SolrCorpus.PAGE_ORDER_FIELD),
                     'rows': self.page_counts[doc_id]
                 }
             )
@@ -174,11 +161,11 @@ class SolrCorpus:
             else:
                 logger.warning('No metadata record found for doc ID {}.'.format(doc_id))
 
-            # filter out ages that have no content; combine all pages into one string
+            # filter out pages that have no content; combine all pages into one string
             fulltext = ' '.join(list(
                 filter(
                     None,
-                    (doc.get(self.doc_content_field) for doc in result.docs if doc['item_type'] == 'page')
+                    (doc.get(SolrCorpus.DOC_CONTENT_FIELD) for doc in result.docs if doc['item_type'] == 'page')
                 )
             ))
             fulltext = preprocess_string(fulltext, filters=self.preprocess_fns)
@@ -235,26 +222,10 @@ class Command(BaseCommand):
         parser.add_argument(
             '--name', default='corpus',
             help='Name prefix to use for all saved corpus file(s).')
-        parser.add_argument(
-            '--doc-id-field', default='source_id',
-            help='Name of the Solr field that denotes the document identifier.')
-        parser.add_argument(
-            '--doc-content-field', default='content',
-            help='Name of the Solr field that denotes the document content.')
-        parser.add_argument(
-            '--page-order-field', default='order',
-            help='Name of the Solr field that denotes the ordering of pages.')
 
-        # Either explicit doc-id(s) or a global doc-limit can be specified
-        group = parser.add_mutually_exclusive_group()
-        group.add_argument(
-            '--doc-id', action="append",
-            help='Doc IDs to consider for corpus generation. Multiple filters can be applied (in order) by adding \
-                multiple --doc-id flags. The default of None considers ALL documents.')
-        group.add_argument(
+        parser.add_argument(
             '--doc-limit', type=int, default=-1,
             help='Limit on the number of documents for corpus generation. The default of -1 considers ALL documents.')
-
         parser.add_argument(
             '--no-dictionary', action='store_true',
             help='Do not save corpus dictionary.')
@@ -276,11 +247,7 @@ class Command(BaseCommand):
             name=options['name'],
             client=client,
             collection=collection,
-            doc_id_field=options['doc_id_field'],
-            doc_content_field=options['doc_content_field'],
-            page_order_field=options['page_order_field'],
             doc_limit=options['doc_limit'],
-            doc_ids=options['doc_id'],
             preprocess_fns=options['preprocess'],
             pbar=not options['no_progress']
         )

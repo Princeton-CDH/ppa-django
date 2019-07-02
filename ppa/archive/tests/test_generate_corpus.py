@@ -104,25 +104,6 @@ def test_metadata_file(mock_get_solr_connection, temp_dirname):
 
 
 @patch('ppa.archive.solr.get_solr_connection')
-def test_doc_ids(mock_get_solr_connection, temp_dirname):
-    mock_get_solr_connection.return_value = (mock_solr_client, 'mock_collection')
-
-    # Explicitly specify the doc_id - note that a document with doc_id 'doc_4' doesn't exist!
-
-    # We'll thus be unable to determine the metadata fields
-    with pytest.raises(RuntimeError):
-        call_command('generate_corpus', '--path', temp_dirname, '--doc-id', 'doc_4')
-
-    # If we're not saving metadata, we're fine - though we won't get anything in our dictionary, obviously.
-    call_command('generate_corpus', '--path', temp_dirname, '--doc-id', 'doc_4', '--no-metadata')
-    dictionary_file = os.path.join(temp_dirname, 'corpus.mm.dict')
-    assert os.path.exists(dictionary_file)
-
-    tokens = open(dictionary_file, 'r').readlines()
-    assert not tokens  # We specified a doc-id that's not there, so we get no tokens.
-
-
-@patch('ppa.archive.solr.get_solr_connection')
 def test_invalid_preprocess_flags(mock_get_solr_connection, temp_dirname):
     mock_get_solr_connection.return_value = (mock_solr_client, 'mock_collection')
 
