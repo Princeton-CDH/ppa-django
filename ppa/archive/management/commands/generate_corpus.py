@@ -10,7 +10,7 @@ Typically, an index corresponding to the .mm file is also saved by Gensim, with 
 A dictionary corresponding to token IDs is also saved by default, using a .mm.dict extension.
 By default, this is a pickled Gensim Dictionary object.
 If the --dictionary-as-text flag is specified, then the dictionary is saved as a utf8-encoded and newline-separated
-    file, where line number N contains the token with token_id N-1.
+file, where line number N contains the token with token_id N-1.
 Saving the dictionary can be skipped by using the --no-dictionary option.
 
 Additional document-level metadata found in the Solr Index is also saved by default, with .mm.metadata extension.
@@ -18,9 +18,10 @@ This is a csv file with a header row and one row per unique document found in th
 Saving the metadata can be skipped by using the --no-metadata option.
 
 By default, _all_ documents found in the Solr index are serialized. This can be controlled using --doc-limit,
-which denotes the maximum no. of documents to serialize.
+which denotes the maximum no. of documents to serialize. This is especially useful for development, or for
+sanity-testing your Solr installation.
 
-For corpus generation, the following preprocessing options are available via the --preprocess flag:
+For corpus generation, the following pre-processing options are available via the --preprocess flag:
 
     'lower' = Lower-cases words
     'strip_tags' = Strips HTML tags
