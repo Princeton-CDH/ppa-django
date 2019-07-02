@@ -63,7 +63,7 @@ mock_solr_client.query.return_value = mock_solr_query
 def test_dictionary(mock_get_solr_connection, temp_dirname):
     mock_get_solr_connection.return_value = (mock_solr_client, 'mock_collection')
 
-    call_command('generate_corpus', '--path', temp_dirname)
+    call_command('generate_corpus', '--path', temp_dirname, '--dictionary-as-text')
     dictionary_file = os.path.join(temp_dirname, 'corpus.mm.dict')
     assert os.path.exists(dictionary_file)
 
@@ -75,7 +75,7 @@ def test_dictionary(mock_get_solr_connection, temp_dirname):
 def test_dictionary_with_preprocessing(mock_get_solr_connection, temp_dirname):
     mock_get_solr_connection.return_value = (mock_solr_client, 'mock_collection')
 
-    call_command('generate_corpus', '--path', temp_dirname, '--preprocess', 'strip_short')
+    call_command('generate_corpus', '--path', temp_dirname, '--preprocess', 'strip_short', '--dictionary-as-text')
     dictionary_file = os.path.join(temp_dirname, 'corpus.mm.dict')
     assert os.path.exists(dictionary_file)
 

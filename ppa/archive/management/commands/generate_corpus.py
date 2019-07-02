@@ -8,7 +8,9 @@ with a .mm extension, using the Gensim Topic Modelling library (https://radimreh
 Typically, an index corresponding to the .mm file is also saved by Gensim, with a .mm.index extension.
 
 A dictionary corresponding to token IDs is also saved by default, using a .mm.dict extension.
-This is a utf8-encoded and newline-separated file where the line number N contains the token with word_id N-1.
+By default, this is a pickled Gensim Dictionary object.
+If the --dictionary-as-text flag is specified, then the dictionary is saved as a utf8-encoded and newline-separated
+    file, where line number N contains the token with token_id N-1.
 Saving the dictionary can be skipped by using the --no-dictionary option.
 
 Additional document-level metadata found in the Solr Index is also saved by default, with .mm.metadata extension.
@@ -173,10 +175,18 @@ class SolrCorpus:
             yield self.dictionary.doc2bow(fulltext, allow_update=True)
             self.pbar.update(self.pbar.value + 1)
 
-    def _save_dictionary(self, filepath):
-        with open(filepath, 'w', encoding='utf8') as f:
-            for i in range(len(self.dictionary)):
-                f.write(self.dictionary[i] + '\n')
+    def _save_dictionary(self, filepath, as_text=False):
+        """
+        Save dictionary at a specified path, either as a picked Gensim Dictionary object, or a .txt file
+        :param filepath: File path for saved dictionary
+        :param as_text: Whether to save as a plaintext file, where the 0-indexed line number denotes the token id.
+        :return: None
+        """
+        if as_text:
+            with open(filepath, 'w', encoding='utf8') as f:
+                f.writelines([self.dictionary[i] + '\n' for i in range(len(self.dictionary))])
+        else:
+            self.dictionary.save(filepath)
 
     def _save_metadata(self, filepath):
         if self.metadata_field_names is None:
@@ -190,7 +200,7 @@ class SolrCorpus:
                 metadata = self._metadata[doc_id]
                 writer.writerow([metadata.get(field_name) for field_name in self.metadata_field_names])
 
-    def save(self, path, save_dictionary=True, save_metadata=False):
+    def save(self, path, save_dict=True, save_dict_as_text=False, save_metadata=False):
         if not os.path.isdir(path):
             makedirs(path)
         corpus_path = os.path.join(path, '{}.mm'.format(self.name))
@@ -199,8 +209,8 @@ class SolrCorpus:
         # frequency to one more than the no. of documents we have, so it will effectively be shut off.
         corpora.MmCorpus.serialize(corpus_path, self, progress_cnt=self.doc_count+1)
 
-        if save_dictionary:
-            self._save_dictionary(corpus_path + '.dict')
+        if save_dict:
+            self._save_dictionary(corpus_path + '.dict', as_text=save_dict_as_text)
         if save_metadata:
             self._save_metadata(corpus_path + '.metadata')
 
@@ -230,6 +240,9 @@ class Command(BaseCommand):
             '--no-dictionary', action='store_true',
             help='Do not save corpus dictionary.')
         parser.add_argument(
+            '--dictionary-as-text', action='store_true',
+            help='If saving dictionary, save as a plaintext file.')
+        parser.add_argument(
             '--no-metadata', action='store_true',
             help='Do not save corpus metadata.')
         parser.add_argument(
@@ -254,6 +267,7 @@ class Command(BaseCommand):
 
         corpus.save(
             options['path'],
-            save_dictionary=not options['no_dictionary'],
+            save_dict=not options['no_dictionary'],
+            save_dict_as_text=options['dictionary_as_text'],
             save_metadata=not options['no_metadata']
         )
