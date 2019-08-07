@@ -50,6 +50,7 @@ Example usage::
 """
 
 import logging
+from collections import OrderedDict
 import csv
 from os import makedirs
 import os.path
@@ -66,16 +67,16 @@ from ppa.archive.solr import get_solr_connection
 
 logger = logging.getLogger(__name__)
 
-PREPROCESS_FUNCTIONS = {
-    'lower': lambda x: x.lower(),
-    'strip_tags': strip_tags,
-    'strip_punctuation': strip_punctuation,
-    'strip_multiple_whitespaces': strip_multiple_whitespaces,
-    'strip_numeric': strip_numeric,
-    'remove_stopwords': remove_stopwords,
-    'strip_short': strip_short,
-    'stem_text': stem_text
-}
+PREPROCESS_FUNCTIONS = OrderedDict([
+    ('strip_short', strip_short),
+    ('strip_multiple_whitespaces', strip_multiple_whitespaces),
+    ('strip_punctuation', strip_punctuation),
+    ('strip_tags', strip_tags),
+    ('strip_numeric', strip_numeric),
+    ('lower', lambda x: x.lower()),
+    ('remove_stopwords', remove_stopwords),
+    ('stem_text', stem_text)
+])
 
 
 class SolrCorpus:
@@ -102,7 +103,14 @@ class SolrCorpus:
         self.client = client
         self.collection = collection
         self.doc_limit = doc_limit
-        self.preprocess_fns = preprocess_fns or []
+
+        if preprocess_fns is not None:
+            if 'ALL' in preprocess_fns:
+                self.preprocess_fns = PREPROCESS_FUNCTIONS.values()
+            else:
+                self.preprocess_fns = [PREPROCESS_FUNCTIONS[k] for k in preprocess_fns]
+        else:
+            self.preprocess_fns = []
 
         self.dictionary = Dictionary()
 
@@ -218,14 +226,6 @@ class SolrCorpus:
 
 class Command(BaseCommand):
 
-    def _preprocess_fn(self, name):
-        if name in PREPROCESS_FUNCTIONS:
-            return PREPROCESS_FUNCTIONS[name]
-        else:
-            # argparse automatically traps any TypeError and ValueError exceptions and converts them to a simple error
-            # message for the user.
-            raise ValueError
-
     def add_arguments(self, parser):
         parser.add_argument(
             '--path', required=True,
@@ -250,9 +250,9 @@ class Command(BaseCommand):
             '--no-progress', action='store_true',
             help='Do not display progress bar to track the status of the command.')
         parser.add_argument(
-            '--preprocess', action="append", type=self._preprocess_fn,
-            help='Preprocessing filter(s) to apply. One of {}. Multiple filters can be applied (in order) by adding \
-                multiple --preprocess flags.'.format(' / '.join(PREPROCESS_FUNCTIONS.keys())))
+            '--preprocess', action="append", choices=list(PREPROCESS_FUNCTIONS.keys()) + ['ALL'],
+            help='Pre-processing filter(s) to apply. Multiple filters can be applied (in order) by adding \
+                multiple --preprocess flags. Use ALL to apply all pre-processing filters.')
 
     def handle(self, *args, **options):
         client, collection = get_solr_connection()
