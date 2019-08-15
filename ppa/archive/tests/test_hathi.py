@@ -231,9 +231,9 @@ class TestHathiDataAPI(TestCase):
         # no oauth key or secret - error
         with override_settings(HATHITRUST_OAUTH_KEY=None,
                                HATHITRUST_OAUTH_SECRET=None):
-            with pytest.raises(ImproperlyConfigured) as err:
+            with pytest.raises(ImproperlyConfigured) as excinfo:
                 hathi.HathiDataAPI()
-            assert 'configuration required' in str(err)
+            assert 'configuration required' in str(excinfo.value)
 
         # with oauth key and secret - init oauth
         with override_settings(**self.test_hathi_opts):
