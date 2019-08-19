@@ -21,3 +21,6 @@ django-csp
 django-webpack-loader
 requests_oauthlib
 wand
+
+# only needed for the 'generate_corpus' manage command
+gensim

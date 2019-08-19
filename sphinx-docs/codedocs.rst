@@ -88,6 +88,11 @@ Index
 
 .. automodule:: ppa.archive.management.commands.index
 
+Generate Corpus
+~~~~~~~~~~~~~~~
+
+.. automodule:: ppa.archive.management.commands.generate_corpus
+
 
 Common
 ------
