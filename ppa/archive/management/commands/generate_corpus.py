@@ -5,61 +5,68 @@ into Solr via the **index** manage command.
 
 The Corpus is serialized in the Matrix Market format
 (https://math.nist.gov/MatrixMarket/formats.html)
-with a .mm extension, using the Gensim Topic Modelling library
+with a `.mm` extension, using the Gensim Topic Modelling library
 (https://radimrehurek.com/gensim)
 Typically, an index corresponding to the .mm file is also saved by Gensim,
-with a .mm.index extension.
+with a `.mm.index` extension.
 
 A dictionary corresponding to token IDs is also saved by default,
-using a .mm.dict extension.
+using a `.mm.dict` extension.
 By default, this is a pickled Gensim Dictionary object.
-If the --dictionary-as-text flag is specified, then the dictionary is saved as
-a utf8-encoded and newline-separated
+If the `--dictionary-as-text` flag is specified, then the dictionary is saved
+as a utf8-encoded and newline-separated
 file, where line number N contains the token with token_id N-1.
-Saving the dictionary can be skipped by using the --no-dictionary option.
+Saving the dictionary can be skipped by using the `--no-dictionary` option.
 
 Additional document-level metadata found in the Solr Index is also saved by
-default, with .mm.metadata extension.
+default, with `.mm.metadata` extension.
 This is a csv file with a header row and one row per unique document found in
 the Solr index.
-Saving the metadata can be skipped by using the --no-metadata option.
+Saving the metadata can be skipped by using the `--no-metadata` option.
 
-By default, _all_ documents found in the Solr index are serialized.
-This can be controlled using --doc-limit,
+By default, *all* documents found in the Solr index are serialized.
+This can be controlled using -`-doc-limit`,
 which denotes the maximum no. of documents to serialize. This is especially
 useful for development, or for sanity-testing your Solr installation.
 
 For corpus generation, the following pre-processing options are available via
-the --preprocess flag:
+the `--preprocess` flag::
 
-    'lower' = Lower-cases words
-    'strip_tags' = Strips HTML tags
-    'strip_punctuation' = Strips punctuation
-    'strip_multiple_whitespaces' = Collapses multiple whitespaces into one
-    'strip_numeric' = Strips numeric characters
-    'remove_stopwords' = Removes stopwords.
-        Note that the set of default stopwords used by Gensim is from
-        Stone, Denis, Kwantes (2010).
-    'strip_short' = strip short words. The lower limit on word length is 3.
-    'stem_text' = Use Porter Stemmer for word-normalization.
+    # Lower-cases words
+    'lower'
+    # Strips HTML tags
+    'strip_tags'
+    # Strips punctuation
+    'strip_punctuation'
+    # Collapses multiple whitespaces into one
+    'strip_multiple_whitespaces'
+    # Strips numeric characters
+    'strip_numeric'
+    # Removes stopwords - Note that the set of default stopwords used by Gensim
+    # is from Stone, Denis, Kwantes (2010).
+    'remove_stopwords'
+    # Strip short words. The lower limit on word length is 3.
+    'strip_short'
+    # Use Porter Stemmer for word-normalization.
+    'stem_text'
 
 IMPORTANT - NO preprocessing filters are applied by default, but you will
-typically at least want to use 'lower'.
+typically at least want to use `lower`.
 Multiple preprocessing filters can be applied (in order) by specifying multiple
---preprocess flags.
+`--preprocess` flags.
 
 Example usage::
 
-# Save all files to the 'data' folder, with bare-minimum preprocessing
-python manage.py generate_corpus --path data
+    # Save all files to the 'data' folder, with bare-minimum preprocessing
+    python manage.py generate_corpus --path data --preprocess lower
+    --preprocess strip_tags
+
+    # Restrict corpus to 1000 documents
+    python manage.py generate_corpus --path data --doc-limit 1000
     --preprocess lower --preprocess strip_tags
 
-# Restrict corpus to 1000 documents
-python manage.py generate_corpus --path data --doc-limit 1000
-    --preprocess lower --preprocess strip_tags
-
-# Don't generate dictionary; don't generate metadata
-python manage.py generate_corpus --path data --doc-limit 1000
+    # Don't generate dictionary; don't generate metadata
+    python manage.py generate_corpus --path data --doc-limit 1000
     --preprocess lower --no-dictionary --no-metadata
 
 """
