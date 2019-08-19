@@ -29,7 +29,8 @@ mock_solr_query.get_facets.return_value = {
 
 # A regular query is used to get document level data
 mock_solr_query.docs = [
-    # The first record has item_type='work' and contains metadata for the document
+    # The first record has item_type='work' and contains metadata for the
+    # document
     {
         'item_type': 'work',
         'pub_year': 1863
@@ -39,16 +40,19 @@ mock_solr_query.docs = [
         'item_type': 'work',
         'pub_year': 'unknown'
     },
-    # Subsequent records have item_type='page', page-order specified by 'order', with content in 'content'
+    # Subsequent records have item_type='page', page-order specified by
+    # 'order', with content in 'content'
     {
         'item_type': 'page',
         'order': 1,
-        'content': 'Four score and seven years ago our fathers brought forth on this continent, a new nation, '
+        'content': 'Four score and seven years ago our fathers brought forth'
+                   ' on this continent, a new nation, '
     },
     {
         'item_type': 'page',
         'order': 2,
-        'content': 'conceived in Liberty, and dedicated to the proposition that all men are created equal.'
+        'content': 'conceived in Liberty, and dedicated to the proposition'
+                   ' that all men are created equal.'
     }
 ]
 
@@ -61,9 +65,11 @@ mock_solr_client.query.return_value = mock_solr_query
 
 @patch('ppa.archive.solr.get_solr_connection')
 def test_dictionary(mock_get_solr_connection, temp_dirname):
-    mock_get_solr_connection.return_value = (mock_solr_client, 'mock_collection')
+    mock_get_solr_connection.return_value = (mock_solr_client,
+                                             'mock_collection')
 
-    call_command('generate_corpus', '--path', temp_dirname, '--dictionary-as-text')
+    call_command('generate_corpus', '--path', temp_dirname,
+                 '--dictionary-as-text')
     dictionary_file = os.path.join(temp_dirname, 'corpus.mm.dict')
     assert os.path.exists(dictionary_file)
 
@@ -73,9 +79,11 @@ def test_dictionary(mock_get_solr_connection, temp_dirname):
 
 @patch('ppa.archive.solr.get_solr_connection')
 def test_dictionary_with_preprocessing(mock_get_solr_connection, temp_dirname):
-    mock_get_solr_connection.return_value = (mock_solr_client, 'mock_collection')
+    mock_get_solr_connection.return_value = (mock_solr_client,
+                                             'mock_collection')
 
-    call_command('generate_corpus', '--path', temp_dirname, '--preprocess', 'strip_short', '--dictionary-as-text')
+    call_command('generate_corpus', '--path', temp_dirname, '--preprocess',
+                 'strip_short', '--dictionary-as-text')
     dictionary_file = os.path.join(temp_dirname, 'corpus.mm.dict')
     assert os.path.exists(dictionary_file)
 
@@ -85,9 +93,11 @@ def test_dictionary_with_preprocessing(mock_get_solr_connection, temp_dirname):
 
 @patch('ppa.archive.solr.get_solr_connection')
 def test_metadata_file(mock_get_solr_connection, temp_dirname):
-    mock_get_solr_connection.return_value = (mock_solr_client, 'mock_collection')
+    mock_get_solr_connection.return_value = (mock_solr_client,
+                                             'mock_collection')
 
-    call_command('generate_corpus', '--path', temp_dirname, '--preprocess', 'strip_short')
+    call_command('generate_corpus', '--path', temp_dirname, '--preprocess',
+                 'strip_short')
     metadata_file = os.path.join(temp_dirname, 'corpus.mm.metadata')
     assert os.path.exists(metadata_file)
 
@@ -95,18 +105,22 @@ def test_metadata_file(mock_get_solr_connection, temp_dirname):
     # 3 lines - header + metadata for doc_1 + metadata for doc_2
     assert len(lines) == 3
 
-    # Header line with metadata field names. Note that we cannot rely on the order
+    # Header line with metadata field names. Note that we cannot rely on the
+    # order
     assert set(lines[0].rstrip('\n').split(',')) == {'item_type', 'pub_year'}
 
-    # The actual rows with metadata - our mock object returns the same metadata for both documents
+    # The actual rows with metadata - our mock object returns the same metadata
+    # for both documents
     assert set(lines[1].rstrip('\n').split(',')) == {'work', '1863'}
     assert set(lines[2].rstrip('\n').split(',')) == {'work', '1863'}
 
 
 @patch('ppa.archive.solr.get_solr_connection')
 def test_invalid_preprocess_flags(mock_get_solr_connection, temp_dirname):
-    mock_get_solr_connection.return_value = (mock_solr_client, 'mock_collection')
+    mock_get_solr_connection.return_value = (mock_solr_client,
+                                             'mock_collection')
 
     # Flags that are not supported
     with pytest.raises(CommandError):
-        call_command('generate_corpus', '--path', temp_dirname, '--preprocess', 'upper')
+        call_command('generate_corpus', '--path', temp_dirname, '--preprocess',
+                     'upper')
