@@ -3,6 +3,16 @@
 CHANGELOG
 =========
 
+3.2.4
+-----
+
+Maintenance release.
+
+* Update to pucas 0.6 and current version of django-cas-ng
+* Update to pytest 5.x
+* Security updates for npm packages
+
+
 3.2.2
 -----
 
@@ -17,7 +27,7 @@ CHANGELOG
 
 * Updates the homepage graphic and favicon/logo images to use the filled-in logo.
 * Updates the loading animation on the archive search to use an animated .gif.
-* Sets the last-modified date for the archive search to match the most recently modified work in the index. 
+* Sets the last-modified date for the archive search to match the most recently modified work in the index.
 
 3.2
 ---
