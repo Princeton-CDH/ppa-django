@@ -10,6 +10,8 @@ Maintenance release.
 
 * Update to pucas 0.6 and current version of django-cas-ng
 * Update to pytest 5.x
+* Security updates for npm packages
+
 
 3.2.2
 -----
