@@ -86,11 +86,11 @@ INSTALLED_APPS = [
     'webpack_loader',
     # 'wagtail.contrib.forms',
     'wagtail.contrib.redirects',
-    # 'wagtail.embeds',
     'wagtail.sites',
     'wagtail.users',
     'wagtail.snippets',
     'wagtail.documents',
+    'wagtail.embeds',
     'wagtail.images',
     # 'wagtail.search',
     'wagtail.admin',
@@ -223,6 +223,15 @@ MEDIA_ROOT = os.path.join(BASE_DIR, *MEDIA_URL.strip("/").split("/"))
 SITE_ID = 1
 
 WAGTAIL_SITE_NAME = 'Princeton Prosody Archive'
+
+WAGTAILEMBEDS_FINDERS = [
+    {
+        'class': 'wagtail.embeds.finders.oembed'
+    },
+    {
+        'class': 'ppa.pages.embed_finders.GlitchEmbedFinder'
+    },
+]
 
 GRAPPELLI_ADMIN_TITLE = 'Princeton Prosody Archive Admin'
 
