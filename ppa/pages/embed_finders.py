@@ -1,5 +1,6 @@
 from urllib.parse import urljoin
 
+from bs4 import BeautifulSoup
 import requests
 from wagtail.embeds.finders.base import EmbedFinder
 
@@ -26,23 +27,21 @@ class GlitchEmbedFinder(EmbedFinder):
 
         This is the part that may make requests to external APIs.
         """
-        # TODO: Perform the request
 
+        # implementation assumes that glitch has an embed json file
+        # with appropriate metadata
         response = requests.get(urljoin(url, 'embed.json'))
         if response.status_code == requests.codes.ok:
             embed_info = response.json()
 
+            # if embed info request succeeded, then get actual content
             response = requests.get(url)
-            embed_info['html'] = response.content
-            return embed_info
+            soup = BeautifulSoup(response.content, 'html.parser')
+            # make links relative
+            for link in soup.find_all(href=True):
+                link['href'] = urljoin(url, link['href'])
+            for source in soup.find_all(src=True):
+                source['src'] = urljoin(url, source['src'])
 
-        # return {
-        #     'title': "Title of the content",
-        #     'author_name': "Author name",
-        #     'provider_name': "Provider name (eg. YouTube, Vimeo, etc)",
-        #     'type': "Either 'photo', 'video', 'link' or 'rich'",
-        #     'thumbnail_url': "URL to thumbnail image",
-        #     'width': width_in_pixels,
-        #     'height': height_in_pixels,
-        #     'html': "<h2>The Embed HTML</h2>",
-        # }
+            embed_info['html'] = soup.prettify()
+            return embed_info
