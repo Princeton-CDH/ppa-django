@@ -259,13 +259,14 @@ CSP_DEFAULT_SRC = "'none'"
 
 # allow loading js locally, from a cdn, and from google (for analytics)
 CSP_SCRIPT_SRC = ("'self'", 'https://cdnjs.cloudflare.com',
-                  'https://www.googletagmanager.com')
+                  'https://www.googletagmanager.com', "*.glitch.me")
 
 # allow loading fonts locally and from google (via data: url)
 CSP_FONT_SRC = ("'self'", 'https://fonts.gstatic.com data:')
 
 # allow loading css locally and from google (for fonts)
-CSP_STYLE_SRC = ("'self'", 'https://fonts.googleapis.com')
+CSP_STYLE_SRC = ("'self'", 'https://fonts.googleapis.com',
+                 '*.glitch.me')
 
 # allow loading local images, hathi page images, google tracking pixel
 CSP_IMG_SRC = ("'self'", 'https://babel.hathitrust.org',
@@ -278,7 +279,7 @@ CSP_EXCLUDE_URL_PREFIXES = ('/admin', '/cms')
 CSP_INCLUDE_NONCE_IN = ('script-src',)
 
 # allow local scripts to connect to source (i.e. searchLoading)
-CSP_CONNECT_SRC = ("'self'", "https://www.google-analytics.com")
+CSP_CONNECT_SRC = ("'self'", "https://www.google-analytics.com", "*.glitch.me")
 
 # load a manifest file
 CSP_MANIFEST_SRC = "'self'"
