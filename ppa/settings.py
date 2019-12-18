@@ -86,11 +86,11 @@ INSTALLED_APPS = [
     'webpack_loader',
     # 'wagtail.contrib.forms',
     'wagtail.contrib.redirects',
-    # 'wagtail.embeds',
     'wagtail.sites',
     'wagtail.users',
     'wagtail.snippets',
     'wagtail.documents',
+    'wagtail.embeds',
     'wagtail.images',
     # 'wagtail.search',
     'wagtail.admin',
@@ -224,6 +224,15 @@ SITE_ID = 1
 
 WAGTAIL_SITE_NAME = 'Princeton Prosody Archive'
 
+WAGTAILEMBEDS_FINDERS = [
+    {
+        'class': 'wagtail.embeds.finders.oembed'
+    },
+    {
+        'class': 'ppa.pages.embed_finders.GlitchEmbedFinder'
+    },
+]
+
 GRAPPELLI_ADMIN_TITLE = 'Princeton Prosody Archive Admin'
 
 # username for logging activity by local scripts
@@ -250,13 +259,14 @@ CSP_DEFAULT_SRC = "'none'"
 
 # allow loading js locally, from a cdn, and from google (for analytics)
 CSP_SCRIPT_SRC = ("'self'", 'https://cdnjs.cloudflare.com',
-                  'https://www.googletagmanager.com')
+                  'https://www.googletagmanager.com', "*.glitch.me")
 
 # allow loading fonts locally and from google (via data: url)
 CSP_FONT_SRC = ("'self'", 'https://fonts.gstatic.com data:')
 
 # allow loading css locally and from google (for fonts)
-CSP_STYLE_SRC = ("'self'", 'https://fonts.googleapis.com')
+CSP_STYLE_SRC = ("'self'", 'https://fonts.googleapis.com',
+                 '*.glitch.me')
 
 # allow loading local images, hathi page images, google tracking pixel
 CSP_IMG_SRC = ("'self'", 'https://babel.hathitrust.org',
@@ -269,7 +279,7 @@ CSP_EXCLUDE_URL_PREFIXES = ('/admin', '/cms')
 CSP_INCLUDE_NONCE_IN = ('script-src',)
 
 # allow local scripts to connect to source (i.e. searchLoading)
-CSP_CONNECT_SRC = ("'self'", "https://www.google-analytics.com")
+CSP_CONNECT_SRC = ("'self'", "https://www.google-analytics.com", "*.glitch.me")
 
 # load a manifest file
 CSP_MANIFEST_SRC = "'self'"
@@ -302,7 +312,7 @@ if os.path.exists(f):
 WEBPACK_LOADER = {
     'DEFAULT': {
         'CACHE': not DEBUG,
-        'BUNDLE_DIR_NAME': 'bundles/', # must end with slash
+        'BUNDLE_DIR_NAME': 'bundles/',  # must end with slash
         'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.json'),
         'POLL_INTERVAL': 0.1,
         'TIMEOUT': None,

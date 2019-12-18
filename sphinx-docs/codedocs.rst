@@ -57,6 +57,11 @@ Models
 .. automodule:: ppa.pages.models
     :members:
 
+Embed Finders
+^^^^^^^^^^^^^
+.. automodule:: ppa.pages.embed_finders
+    :members:
+
 
 Editorial
 ---------
