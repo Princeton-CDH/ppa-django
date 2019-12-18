@@ -4,12 +4,14 @@ from django.template.defaultfilters import truncatechars_html, striptags
 from wagtail.core import blocks
 from wagtail.core.models import Page
 from wagtail.core.fields import RichTextField, StreamField
+
 from wagtail.admin.edit_handlers import FieldPanel, PageChooserPanel, \
     StreamFieldPanel
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.images.edit_handlers import ImageChooserPanel
 from wagtail.images.models import Image
 from wagtail.documents.blocks import DocumentChooserBlock
+from wagtail.embeds.blocks import EmbedBlock
 from wagtail.snippets.blocks import SnippetChooserBlock
 from wagtail.snippets.models import register_snippet
 
@@ -135,12 +137,32 @@ class ImageWithCaption(blocks.StructBlock):
         ('full', 'Full Width'),
         ('left', 'Floated Left'),
         ('right', 'Floated Right'),
-        ], help_text='Controls how other content flows around the image. Note \
-            that this will only take effect on larger screens. Float consecutive \
-            images in opposite directions for side-by-side display.')
+    ], help_text='Controls how other content flows around the image. Note \
+        that this will only take effect on larger screens. Float consecutive \
+        images in opposite directions for side-by-side display.')
 
     class Meta:
         icon = 'image'
+
+
+class ScriptBlock(blocks.StructBlock):
+    ''':class:`~wagtail.core.blocks.StructBlock` for an image with
+    a formatted caption, so caption can be context-specific. Also allows images
+    to be floated right, left, or take up the width of the page.'''
+    image = ImageChooserBlock()
+    caption = blocks.RichTextBlock(required=False,
+                                   features=['bold', 'italic', 'link'])
+    style = blocks.ChoiceBlock(required=True, default='full', choices=[
+        ('full', 'Full Width'),
+        ('left', 'Floated Left'),
+        ('right', 'Floated Right'),
+    ], help_text='Controls how other content flows around the image. Note \
+        that this will only take effect on larger screens. Float consecutive \
+        images in opposite directions for side-by-side display.')
+
+    class Meta:
+        icon = 'image'
+
 
 
 class BodyContentBlock(blocks.StreamBlock):
@@ -156,6 +178,7 @@ class BodyContentBlock(blocks.StreamBlock):
         classname='footnotes'
     )
     document = DocumentChooserBlock()
+    embed = EmbedBlock()
 
 
 class PagePreviewDescriptionMixin(models.Model):
