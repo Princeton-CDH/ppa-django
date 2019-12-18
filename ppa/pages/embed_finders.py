@@ -3,6 +3,7 @@ Custom :class:`~wagtail.embeds.finders.base.EmbedFinder` implementations
 for embedding content in wagtail pages.
 '''
 
+from json import JSONDecodeError
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
@@ -53,18 +54,18 @@ class GlitchEmbedFinder(EmbedFinder):
         # with appropriate metadata
         response = requests.get(urljoin(url, 'embed.json'))
         # if embed info couldn't be loaded, error
-        print('json response')
-        print(response)
         if response.status_code != requests.codes.ok:
-            raise EmbedException
+            raise EmbedException('Failed to load embed.json file')
+        try:
+            embed_info = response.json()
+        except JSONDecodeError:
+            raise EmbedException('Error parsing embed.json file')
 
-        embed_info = response.json()
         # if embed info request succeeded, then get actual content
         response = requests.get(url)
-        print('url response')
-        print(response)
         if response.status_code != requests.codes.ok:
-            raise EmbedException
+            raise EmbedException('Failed to load url')
+
         soup = BeautifulSoup(response.content, 'html.parser')
         # cnovert relative links so they are absolute to glitch url
         for link in soup.find_all(href=True):

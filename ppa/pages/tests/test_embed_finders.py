@@ -1,3 +1,4 @@
+from json import JSONDecodeError
 from unittest.mock import Mock, patch
 
 import requests
@@ -40,8 +41,15 @@ class TestGlitchEmbedFinder:
                                         Mock(status_code=500))
         with pytest.raises(EmbedException):
             glitcher.find_embed('http://test.glitch.me')
-
         mockrequests.get.side_effect = None
+
+        # json decode error
+        with pytest.raises(EmbedException):
+            mockrequests.get.return_value.json.side_effect = JSONDecodeError
+            glitcher.find_embed('http://test.glitch.me')
+
+        mockrequests.get.return_value.json.side_effect = None
+
         mockrequests.get.return_value.status_code = 200
         mock_embed = {
             'title': 'test glitch',
