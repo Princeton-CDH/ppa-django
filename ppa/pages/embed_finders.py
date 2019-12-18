@@ -1,47 +1,76 @@
+'''
+Custom :class:`~wagtail.embeds.finders.base.EmbedFinder` implementations
+for embedding content in wagtail pages.
+'''
+
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 import requests
 from wagtail.embeds.finders.base import EmbedFinder
+from wagtail.embeds.exceptions import EmbedException
 
 
 class GlitchEmbedFinder(EmbedFinder):
-    def __init__(self, **options):
-        pass
+    '''Custom oembed finder built to embed Glitch apps in wagtail pages.
+
+    To support embedding, the glitch app should include a file named
+    embed.json, available directly under the top level url, with
+    oembed content::
+
+        {
+          "title": "title",
+          "author_name": "author",
+          "provider_name": "Glitch",
+          "type": "rich",
+          "thumbnail_url": "URL to thumbnail image",
+          "width": xx,
+          "height": xx
+        }
+
+    If the request for an embed.json file fails, no content will be embedded.
+
+    Any urls that cannot automatically be made relative by embed code (i.e.
+    data files loaded by javascript code) should use absolute URLs, or they
+    will not resolve when embedded.
+    '''
 
     def accept(self, url):
         """
-        Returns True if this finder knows how to fetch an embed for the URL.
-
-        This should not have any side effects (no requests to external servers)
+        Accept a url if it includes `.glitch.me`
         """
-        if '.glitch.me' in url:
-            return True
-
-        return False
+        # return True if this finder can handle a url; no external requests
+        return bool('.glitch.me' in url)
 
     def find_embed(self, url, max_width=None):
         """
-        Takes a URL and max width and returns a dictionary of information about
-        the content to be used for embedding it on the site.
-
-        This is the part that may make requests to external APIs.
+        Retrieve embed.json and requested url and return content
+        for embedding it on the site.
         """
+        # NOTE: currently ignores max width
 
         # implementation assumes that glitch has an embed json file
         # with appropriate metadata
         response = requests.get(urljoin(url, 'embed.json'))
-        if response.status_code == requests.codes.ok:
-            embed_info = response.json()
+        # if embed info couldn't be loaded, error
+        print('json response')
+        print(response)
+        if response.status_code != requests.codes.ok:
+            raise EmbedException
 
-            # if embed info request succeeded, then get actual content
-            response = requests.get(url)
-            soup = BeautifulSoup(response.content, 'html.parser')
-            # make links relative
-            for link in soup.find_all(href=True):
-                link['href'] = urljoin(url, link['href'])
-            for source in soup.find_all(src=True):
-                source['src'] = urljoin(url, source['src'])
+        embed_info = response.json()
+        # if embed info request succeeded, then get actual content
+        response = requests.get(url)
+        print('url response')
+        print(response)
+        if response.status_code != requests.codes.ok:
+            raise EmbedException
+        soup = BeautifulSoup(response.content, 'html.parser')
+        # cnovert relative links so they are absolute to glitch url
+        for link in soup.find_all(href=True):
+            link['href'] = urljoin(url, link['href'])
+        for source in soup.find_all(src=True):
+            source['src'] = urljoin(url, source['src'])
 
-            embed_info['html'] = soup.prettify()
-            return embed_info
+        embed_info['html'] = soup.prettify()
+        return embed_info
