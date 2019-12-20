@@ -125,12 +125,17 @@ class HomePage(Page):
         })
         return context
 
+#: help text for image alternative text
+ALT_TEXT_HELP = """Alternative text for visually impaired users to
+briefly communicate the intended message of the image in this context."""
+
 
 class ImageWithCaption(blocks.StructBlock):
     ''':class:`~wagtail.core.blocks.StructBlock` for an image with
     a formatted caption, so caption can be context-specific. Also allows images
     to be floated right, left, or take up the width of the page.'''
     image = ImageChooserBlock()
+    alternative_text = blocks.TextBlock(required=True, help_text=ALT_TEXT_HELP)
     caption = blocks.RichTextBlock(required=False,
                                    features=['bold', 'italic', 'link'])
     style = blocks.ChoiceBlock(required=True, default='full', choices=[
@@ -143,26 +148,29 @@ class ImageWithCaption(blocks.StructBlock):
 
     class Meta:
         icon = 'image'
+        template = 'pages/blocks/image_caption_block.html'
 
 
-class ScriptBlock(blocks.StructBlock):
-    ''':class:`~wagtail.core.blocks.StructBlock` for an image with
-    a formatted caption, so caption can be context-specific. Also allows images
-    to be floated right, left, or take up the width of the page.'''
-    image = ImageChooserBlock()
-    caption = blocks.RichTextBlock(required=False,
-                                   features=['bold', 'italic', 'link'])
-    style = blocks.ChoiceBlock(required=True, default='full', choices=[
-        ('full', 'Full Width'),
-        ('left', 'Floated Left'),
-        ('right', 'Floated Right'),
-    ], help_text='Controls how other content flows around the image. Note \
-        that this will only take effect on larger screens. Float consecutive \
-        images in opposite directions for side-by-side display.')
+class SVGImageBlock(blocks.StructBlock):
+    ''':class:`~wagtail.core.blocks.StructBlock` for an SVG image with
+    alternative text and optional formatted caption. Separate from
+    :class:`CaptionedImageBlock` because Wagtail image handling
+    does not work with SVG.'''
+    extended_description_help = '''This text will only be read to \
+    non-sighted users and should describe the major insights or \
+    takeaways from the graphic. Multiple paragraphs are allowed.'''
+
+    image = DocumentChooserBlock()
+    alternative_text = blocks.TextBlock(required=True, help_text=ALT_TEXT_HELP)
+    caption = blocks.RichTextBlock(features=['bold', 'italic', 'link'],
+                                   required=False)
+    extended_description = blocks.RichTextBlock(
+        features=['p'], required=False, help_text=extended_description_help)
 
     class Meta:
         icon = 'image'
-
+        label = 'SVG'
+        template = 'pages/blocks/svg_image_block.html'
 
 
 class BodyContentBlock(blocks.StreamBlock):
@@ -172,7 +180,8 @@ class BodyContentBlock(blocks.StreamBlock):
         features=['h2', 'h3', 'bold', 'italic', 'link', 'ol', 'ul',
                   'hr', 'blockquote', 'document']
     )
-    captioned_image = ImageWithCaption(label='image') # just call it regular image
+    captioned_image = ImageWithCaption(label='image')  # lavel as image
+    svg_image = SVGImageBlock()
     footnotes = blocks.RichTextBlock(
         features=['ol', 'ul', 'bold', 'italic', 'link'],
         classname='footnotes'
