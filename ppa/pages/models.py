@@ -1,6 +1,7 @@
 import bleach
 from django.db import models
 from django.template.defaultfilters import truncatechars_html, striptags
+from django.utils.text import slugify
 from wagtail.core import blocks
 from wagtail.core.models import Page
 from wagtail.core.fields import RichTextField, StreamField
@@ -173,6 +174,31 @@ class SVGImageBlock(blocks.StructBlock):
         template = 'pages/blocks/svg_image_block.html'
 
 
+class LinkableSectionBlock(blocks.StructBlock):
+    ''':class:`~wagtail.core.blocks.StructBlock` for a rich text block and an
+    associated `title` that will render as an <h2>. Creates an anchor (<a>)
+    so that the section can be directly linked to using a url fragment.'''
+    title = blocks.CharBlock()
+    anchor_text = blocks.CharBlock(help_text='Short label for anchor link')
+    body = blocks.RichTextBlock()
+    panels = [
+        FieldPanel('title'),
+        FieldPanel('slug'),
+        FieldPanel('body'),
+    ]
+
+    class Meta:
+        icon = 'form'
+        label = 'Linkable Section'
+        template = 'pages/blocks/linkable_section.html'
+
+    def clean(self, value):
+        cleaned_values = super().clean(value)
+        # run slugify to ensure anchor text is a slug
+        cleaned_values['anchor_text'] = slugify(cleaned_values['anchor_text'])
+        return cleaned_values
+
+
 class BodyContentBlock(blocks.StreamBlock):
     '''Common set of content blocks to be used on both content pages
     and editorial pages'''
@@ -187,6 +213,7 @@ class BodyContentBlock(blocks.StreamBlock):
         classname='footnotes'
     )
     document = DocumentChooserBlock()
+    linkable_section = LinkableSectionBlock()
     embed = EmbedBlock()
 
 
