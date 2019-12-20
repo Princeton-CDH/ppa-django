@@ -17,7 +17,7 @@ from ppa.archive.models import Collection, DigitizedWork
 from ppa.archive.solr import get_solr_connection
 from ppa.editorial.models import EditorialIndexPage
 from ppa.pages.models import CollectionPage, ContentPage, ContributorPage, \
-    HomePage, ImageWithCaption, Person, SVGImageBlock
+    HomePage, ImageWithCaption, LinkableSectionBlock, Person, SVGImageBlock
 
 
 class TestHomePage(WagtailPageTests):
@@ -517,3 +517,32 @@ class TestSVGImageBlock(SimpleTestCase):
         assert ('<figcaption>%s</figcaption' % caption) in html
         assert '<div class="sr-only" id="graphsvg-desc">' in html
         assert desc in html
+
+
+class TestLinkableSectionBlock(SimpleTestCase):
+
+    def test_clean(self):
+        block = LinkableSectionBlock()
+        cleaned_values = block.clean({'anchor_text': 'lending library plans'})
+        assert cleaned_values['anchor_text'] == 'lending-library-plans'
+
+    def test_render(self):
+        block = LinkableSectionBlock()
+        html = block.render(block.to_python({
+            'title': 'Joining the Lending Library',
+            'body': 'Info about lending library subscription plans',
+            'anchor_text': 'joining-the-lending-library',
+        }))
+        expected_html = '''
+            <div id="joining-the-lending-library">
+            <h2>Joining the Lending Library
+            <a class="headerlink" href="#joining-the-lending-library"
+               title="Permalink to this section">¶</a>
+            </h2>
+            <div class="rich-text">
+                Info about lending library subscription plans
+            </div>
+            </div>
+        '''
+
+        self.assertHTMLEqual(html, expected_html)
