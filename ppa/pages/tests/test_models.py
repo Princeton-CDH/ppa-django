@@ -1,11 +1,14 @@
 from time import sleep
+from unittest.mock import Mock
 
 import bleach
 import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.template.defaultfilters import striptags
+from django.test import SimpleTestCase
 from django.urls import reverse
 from wagtail.core.models import Page, Site
+from wagtail.images.models import Image
 from wagtail.tests.utils import WagtailPageTests
 from wagtail.tests.utils.form_data import (nested_form_data, rich_text,
                                            streamfield)
@@ -13,8 +16,8 @@ from wagtail.tests.utils.form_data import (nested_form_data, rich_text,
 from ppa.archive.models import Collection, DigitizedWork
 from ppa.archive.solr import get_solr_connection
 from ppa.editorial.models import EditorialIndexPage
-from ppa.pages.models import (CollectionPage, ContentPage, ContributorPage,
-                              HomePage, Person)
+from ppa.pages.models import CollectionPage, ContentPage, ContributorPage, \
+    HomePage, ImageWithCaption, Person, SVGImageBlock
 
 
 class TestHomePage(WagtailPageTests):
@@ -220,20 +223,23 @@ class TestContentPage(WagtailPageTests):
         content_page = ContentPage.objects.first()
         response = self.client.get(content_page.relative_url(site))
         self.assertTemplateUsed(response, 'pages/content_page.html')
-        self.assertContains(response, 'class="footnotes"',
+        self.assertContains(
+            response, 'class="footnotes"',
             msg_prefix='footnotes block should get footnotes class')
         # NOTE default wagtail image block type no longer supported
         # add image (without caption) + check template
         content_page.body.stream_data.append({
             'type': 'captioned_image',
-            'value': {'image': 1, 'caption': '' },
+            'value': {'image': 1, 'caption': ''},
             'id': 'img1'
         })
         content_page.save()
         response = self.client.get(content_page.relative_url(site))
         # will always use <figure>
-        self.assertTemplateUsed(response, 'pages/snippets/figure.html')
-        self.assertTemplateUsed(response, 'pages/snippets/responsive_image.html')
+        self.assertTemplateUsed(
+            response, 'pages/blocks/image_caption_block.html')
+        self.assertTemplateUsed(
+            response, 'pages/snippets/responsive_image.html')
         self.assertContains(response, '<img')
         self.assertContains(response, 'srcset')
         # no caption was specified; shouldn't render figcaption
@@ -250,18 +256,22 @@ class TestContentPage(WagtailPageTests):
         })
         content_page.save()
         response = self.client.get(content_page.relative_url(site))
-        self.assertTemplateUsed(response, 'pages/snippets/figure.html')
-        self.assertTemplateUsed(response, 'pages/snippets/responsive_image.html')
+        self.assertTemplateUsed(
+            response, 'pages/blocks/image_caption_block.html')
+        self.assertTemplateUsed(
+            response, 'pages/snippets/responsive_image.html')
         # should default to full-width image
         self.assertContains(response, '<figure class="full">')
         self.assertContains(
-            response, '<figcaption><div class="rich-text">%s</div></figcaption>' % caption_text)
+            response,
+            '<figcaption><div class="rich-text">%s</div></figcaption>'
+            % caption_text)
 
         # test image floating logic
         # left float
         content_page.body.stream_data.append({
             'type': 'captioned_image',
-            'value': { 'image': 1, 'caption': caption_text, 'style': 'left' },
+            'value': {'image': 1, 'caption': caption_text, 'style': 'left'},
             'id': 'leftimg'
         })
         content_page.save()
@@ -270,7 +280,7 @@ class TestContentPage(WagtailPageTests):
         # right float
         content_page.body.stream_data.append({
             'type': 'captioned_image',
-            'value': { 'image': 1, 'caption': caption_text, 'style': 'right' },
+            'value': {'image': 1, 'caption': caption_text, 'style': 'right'},
             'id': 'rightimg'
         })
         content_page.save()
@@ -449,3 +459,61 @@ class TestContributorPage(WagtailPageTests):
         # board memeber name, description
         self.assertContains(response, person_b.name)
         self.assertContains(response, person_b.description)
+
+
+class TestImageWithCaption(SimpleTestCase):
+
+    def test_render(self):
+        block = ImageWithCaption()
+        test_img = Mock(spec=Image, url='kitty.png', width=100, height=200)
+        # django templates call callables, which Mocks are; return the mock again
+        test_img.return_value = test_img
+        # for simplicity, use the image for all renditions of the image
+        test_img.get_rendition.return_value = test_img
+        alt_text = 'picture of a kitten'
+        # NOTE: using "img" here instead of "image" means we're
+        # not actually testing the image logic; but not clear how
+        # to mock or use an image object in a test
+        html = block.render({
+            'image': test_img, 'alternative_text': alt_text,
+            'style': 'full'
+        })
+        assert '<figure class="full">' in html
+        assert '<img srcset="' in html
+        assert 'alt="picture of a kitten" ' in html
+        # no caption
+        assert '<figcaption>' not in html
+
+        # with caption
+        caption = 'A kitten curled up in the sunshine'
+        html = block.render(block.to_python({
+            'img': test_img, 'alternative_text': alt_text,
+            'caption': caption}))
+        assert ('<figcaption><div class="rich-text">%s</div></figcaption'
+                % caption) in html
+
+
+class TestSVGImageBlock(SimpleTestCase):
+
+    def test_render(self):
+        block = SVGImageBlock()
+        test_svg = {'url': 'graph.svg'}  # Mock(spec=Document, url='graph.svg')
+        alt_text = 'membership timeline'
+        html = block.render({
+            'image': test_svg, 'alternative_text': alt_text
+        })
+        assert ('<figure role="img" aria-label="%s"' % alt_text) in html
+        assert '<img role="img" aria-hidden="true"' in html
+        # no caption, no extended description
+        assert '<figcaption>' not in html
+        assert '<div class="sr-only" ' not in html
+
+        # with caption & extended description
+        caption = 'membership activity from 1919 to 1942'
+        desc = 'chart shows activity in 1920 and 1940'
+        html = block.render({
+            'image': test_svg, 'alternative_text': alt_text,
+            'caption': caption, 'extended_description': desc})
+        assert ('<figcaption>%s</figcaption' % caption) in html
+        assert '<div class="sr-only" id="graphsvg-desc">' in html
+        assert desc in html

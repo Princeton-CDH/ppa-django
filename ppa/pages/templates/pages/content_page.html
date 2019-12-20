@@ -29,9 +29,7 @@
     </h1>
     {% block page_body %}
     {% for block in page.body %}
-        {% if block.block_type == 'captioned_image' %}
-            {% include "pages/snippets/figure.html" with img=block.value %}
-        {% elif block.block_type == 'paragraph' %}
+        {% if block.block_type == 'paragraph' %}
             <div class="{{ block.block_type }}">
                 {% include_block block|format_citation:SW_VERSION %}
             </div>
