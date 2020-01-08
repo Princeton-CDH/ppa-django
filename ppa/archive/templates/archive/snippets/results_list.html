@@ -1,15 +1,13 @@
 {% load static humanize ppa_tags %}
 {% comment %}
-this template can be rendered by digitizedwork_list.html or requested separately 
+this template can be rendered by digitizedwork_list.html or requested separately
 via ajax, e.g. to update the search results.
 {% endcomment %}
 <div class="data">
     <pre class="count">
         Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}
     </pre>
-    <pre class="facets">
-        {{ facet_ranges.pub_date|json }}
-    </pre>
+    {{ facet_ranges.pub_date|json_script:"facets" }}
 </div>
 <ol class="results-list">
     {% for item in object_list %}

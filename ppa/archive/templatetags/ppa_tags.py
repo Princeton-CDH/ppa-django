@@ -58,7 +58,7 @@ def page_image_url(item_id, order, width):
     return '%s/imgsrv/%s?id=%s;seq=%s;width=%s' % \
         (HATHI_BASE_URL, service, item_id, order, width)
 
-        
+
 @register.simple_tag
 def page_url(item_id, order):
     '''Generate a link to HathiTrust for an individual page
@@ -93,8 +93,3 @@ def solr_highlight(value, autoescape=True):
         mark_safe(part) if EM_TAG_RE.match(part) else esc(part)
         for part in EM_TAG_RE.split(value)
     ]))
-
-
-@register.filter(name='json')
-def json_dumps(data):
-    return mark_safe(json.dumps(data))
