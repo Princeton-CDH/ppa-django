@@ -6,6 +6,7 @@ from time import sleep
 from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.db.models.functions import Lower
 from django.template.defaultfilters import escape
 from django.test import TestCase, RequestFactory
@@ -759,19 +760,20 @@ class TestAddToCollection(TestCase):
         }
 
     def test_permissions(self):
-        # - anonymous login is redirected to sign in
+        # - anonymous user gets redirect to login
         bulk_add = reverse('archive:add-to-collection')
-        response = self.client.get(bulk_add)
-        assert response.status_code == 302
-        # - so is a user without staff permissions
+        assert self.client.get(bulk_add).status_code == 302
+        # - user without staff permissions gets forbidden
         self.client.login(**self.test_credentials)
-        response = self.client.get(bulk_add)
-        assert response.status_code == 302
+        assert self.client.get(bulk_add).status_code == 302
+        # - logged in staff user is still forbidden
         self.user.is_staff = True
         self.user.save()
-        # a logged in staff user is not redirected
-        response = self.client.get(bulk_add)
-        assert response.status_code == 200
+        assert self.client.get(bulk_add).status_code == 403
+        # - user with change permission on digitized work
+        change_digwork_perm = Permission.objects.get(codename='change_digitizedwork')
+        self.user.user_permissions.add(change_digwork_perm)
+        assert self.client.get(bulk_add).status_code == 200
 
     def test_get(self):
         self.client.login(**self.admin_credentials)
@@ -780,7 +782,8 @@ class TestAddToCollection(TestCase):
         # the admin interface and not enable the form for submission
         bulk_add = reverse('archive:add-to-collection')
         response = self.client.get(bulk_add)
-        self.assertContains(response,
+        self.assertContains(
+            response,
             '<h1>Add Digitized Works to Collections</h1>', html=True)
         self.assertContains(
             response,
@@ -984,8 +987,6 @@ class TestDigitizedWorkListView(TestCase):
             mockpsq.return_value.count.assert_not_called()
 
 
-
-
 class TestAddFromHathiView(TestCase):
 
     superuser = {
@@ -1000,6 +1001,13 @@ class TestAddFromHathiView(TestCase):
         self.user = get_user_model().objects\
             .create_superuser(email='su@example.com',
                               **self.superuser)
+
+        test_pass = 'secret'
+        testuser = 'test'
+        self.user = get_user_model().objects.create_user(
+            username=testuser, password=test_pass, is_staff=True)
+        self.user.save()
+        self.test_credentials = {'username': testuser, 'password': test_pass}
 
     def test_get_context(self):
         add_from_hathi = AddFromHathiView()
@@ -1020,15 +1028,16 @@ class TestAddFromHathiView(TestCase):
         ]
 
         add_from_hathi = AddFromHathiView()
-        add_from_hathi.request = self.factory.post(self.add_from_hathi_url,
+        add_from_hathi.request = self.factory.post(
+            self.add_from_hathi_url,
             {'hathi_ids': 'old\nnew'})
         add_from_hathi.request.user = self.user
         response = add_from_hathi.form_valid(add_form)
 
         mock_hathi_importer.assert_called_with(add_form.get_hathi_ids())
         mock_htimporter.filter_existing_ids.assert_called_with()
-        mock_htimporter.add_items.assert_called_with(log_msg_src='via django admin',
-                                                     user=self.user)
+        mock_htimporter.add_items.assert_called_with(
+            log_msg_src='via django admin', user=self.user)
         mock_htimporter.index.assert_called_with()
 
         # can't inspect response context because not called with test client
@@ -1036,14 +1045,19 @@ class TestAddFromHathiView(TestCase):
         assert response.status_code == 200
 
     def test_get(self):
-        # denied to anonymous user
-        response = self.client.get(self.add_from_hathi_url)
-        # django redirects to login instead of returning 401
-        assert response.status_code == 302
+        # denied to anonymous user; django redirects to login
+        assert self.client.get(self.add_from_hathi_url).status_code == 302
 
-        self.client.login(**self.superuser)
+        # denied to logged in staff user
+        self.client.login(**self.test_credentials)
+        assert self.client.get(self.add_from_hathi_url).status_code == 403
+
+        # works for user with add permission on digitized work
+        add_digwork_perm = Permission.objects.get(codename='add_digitizedwork')
+        self.user.user_permissions.add(add_digwork_perm)
         response = self.client.get(self.add_from_hathi_url)
         assert response.status_code == 200
+
         self.assertTemplateUsed(response, AddFromHathiView.template_name)
         # sanity check that form display
         self.assertContains(response, '<form')
