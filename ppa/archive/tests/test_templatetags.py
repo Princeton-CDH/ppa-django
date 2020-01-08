@@ -1,12 +1,11 @@
 from unittest.mock import Mock
 
 from django.http import QueryDict
-from django.utils.safestring import SafeString, mark_safe
-
-import json
+from django.utils.safestring import SafeString
 
 from ppa.archive.templatetags.ppa_tags import dict_item, querystring_replace, \
-    page_image_url, page_url, solr_highlight, json_dumps, HATHI_BASE_URL
+    page_image_url, page_url, solr_highlight, HATHI_BASE_URL
+
 
 def test_dict_item():
     # no error on not found
@@ -69,6 +68,7 @@ def test_page_url():
     assert hathi_url.startswith('%s/pt' % HATHI_BASE_URL)
     assert hathi_url.endswith('?id=%s;view=1up;seq=%s' % (item_id, order))
 
+
 def test_solr_highlight():
     # simple text snippet
     val = '''Make the cold air fire EaFeF
@@ -89,14 +89,3 @@ Sbelley, <em>Prometheus</em>, II. v.
     # check that output is unchanged if autoescape is off
     highlighted = solr_highlight(val, autoescape=False)
     assert highlighted == val
-
-
-def test_json():
-    # should be the same as json_dumps()
-    val = {
-        'a': 'b',
-        'c': 'd',
-        'e': 3,
-        'f': ['g', 6, 'h']
-    }
-    assert json_dumps(val) == mark_safe(json.dumps(val))
