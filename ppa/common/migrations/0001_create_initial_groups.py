@@ -16,7 +16,7 @@ def load_group_fixture(apps, schema_editor):
         create_permissions(app_config, apps=apps, verbosity=0)
         app_config.models_module = None
 
-    call_command('loaddata', 'initial_groups', app_label='common', verbose=0)
+    call_command('loaddata', 'initial_groups', app_label='common', verbosity=0)
 
 
 class Migration(migrations.Migration):
