@@ -112,6 +112,7 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
 
     bulk_add_collection.short_description = ('Add selected digitized works '
                                              'to collections')
+    bulk_add_collection.allowed_permissions = ('change',)
 
     def get_urls(self):
         urls = super(DigitizedWorkAdmin, self).get_urls()

@@ -4,6 +4,7 @@ from json.decoder import JSONDecodeError
 import logging
 
 from django.contrib import messages
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import ValidationError, MultipleObjectsReturned
 from django.core.paginator import Paginator
 from django.http import HttpResponse, Http404
@@ -525,14 +526,12 @@ class DigitizedWorkCSV(ListView):
         return self.render_to_csv(self.get_data())
 
 
-class AddToCollection(ListView, FormView):
+class AddToCollection(PermissionRequiredMixin, ListView, FormView):
     '''
     View to bulk add a queryset of :class:`ppa.archive.models.DigitizedWork`
     to a set of :class:`ppa.archive.models.Collection instances`.
-
-    Restricted to staff users via staff_member_required on url.
     '''
-
+    permission_required = 'archive.change_digitizedwork'
     model = DigitizedWork
     template_name = 'archive/add_to_collection.html'
     form_class = AddToCollectionForm
@@ -614,9 +613,10 @@ class AddToCollection(ListView, FormView):
         return self.render_to_response(self.get_context_data(form=form))
 
 
-class AddFromHathiView(FormView):
+class AddFromHathiView(PermissionRequiredMixin, FormView):
     '''Admin view to add new HathiTrust records by providing a list
     of ids.'''
+    permission_required = 'archive.add_digitizedwork'
     template_name = 'archive/add_from_hathi.html'
     form_class = AddFromHathiForm
     page_title = 'Add new records from HathiTrust'
