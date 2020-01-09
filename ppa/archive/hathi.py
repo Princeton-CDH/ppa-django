@@ -44,14 +44,18 @@ class HathiBaseAPI:
         self.session = requests.Session()
         # set a user-agent header, but  preserve requests version information
         headers = {
-            'User-Agent': 'ppa-django/%s (%s)' % \
-                (ppa_version, self.session.headers['User-Agent'])
+            'User-Agent': 'ppa-django/%s (%s)' %
+                          (ppa_version, self.session.headers['User-Agent'])
         }
         # include technical contact as From header, if set
         tech_contact = getattr(settings, 'TECHNICAL_CONTACT', None)
         if tech_contact:
             headers['From'] = tech_contact
         self.session.headers.update(headers)
+
+    def __del__(self):
+        # close the request session
+        self.session.close()
 
     def _make_request(self, url, params=None):
         '''Make a GET request with the configured session. Takes a url

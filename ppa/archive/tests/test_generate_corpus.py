@@ -73,7 +73,8 @@ def test_dictionary(mock_get_solr_connection, temp_dirname):
     dictionary_file = os.path.join(temp_dirname, 'corpus.mm.dict')
     assert os.path.exists(dictionary_file)
 
-    tokens = open(dictionary_file, 'r').readlines()
+    with open(dictionary_file, 'r') as dictfile:
+        tokens = dictfile.readlines()
     assert len(tokens) == 29  # 29 unique tokens
 
 
@@ -87,7 +88,8 @@ def test_dictionary_with_preprocessing(mock_get_solr_connection, temp_dirname):
     dictionary_file = os.path.join(temp_dirname, 'corpus.mm.dict')
     assert os.path.exists(dictionary_file)
 
-    tokens = open(dictionary_file, 'r').readlines()
+    with open(dictionary_file, 'r') as dictfile:
+        tokens = dictfile.readlines()
     assert len(tokens) == 25  # 25 unique tokens with length>=3
 
 
@@ -101,7 +103,8 @@ def test_metadata_file(mock_get_solr_connection, temp_dirname):
     metadata_file = os.path.join(temp_dirname, 'corpus.mm.metadata')
     assert os.path.exists(metadata_file)
 
-    lines = open(metadata_file, 'r').readlines()
+    with open(metadata_file, 'r') as mfile:
+        lines = mfile.readlines()
     # 3 lines - header + metadata for doc_1 + metadata for doc_2
     assert len(lines) == 3
 
