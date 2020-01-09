@@ -1,9 +1,9 @@
-django>=1.11.16,<2.0
+django>=2.2,<3.0
 mysqlclient
 pucas>=0.6
 django-grappelli
 # unreleased version of SolrClient with schema field-type management
-git+https://github.com/rlskoeser/SolrClient.git@9d0493b#egg=SolrClient
+git+https://github.com/rlskoeser/SolrClient.git@7420ab3#egg=SolrClient
 pairtree
 py-flags
 pymarc
@@ -13,8 +13,7 @@ progressbar2
 django-semanticui-forms
 lxml
 eulxml
-# pin to wagtail 2.3 for now (2.4 causing test/fixture error)
-wagtail>=2.3,<2.4
+wagtail>=2.7
 bleach
 django-fullurl
 django-csp
