@@ -887,7 +887,7 @@ class TestAddToCollection(TestCase):
         # should redirect with an error
         session['collection-add-ids'] = pks
         session.save()
-        response = self.client.post(bulk_add, {'collections': None})
+        response = self.client.post(bulk_add, {'collections': ''})
         assert response.status_code == 200
         # check that the error message rendered for a missing Collection
         self.assertContains(
