@@ -4,6 +4,7 @@ import operator
 import re
 from time import sleep
 from unittest.mock import Mock, patch
+import uuid
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -538,7 +539,7 @@ class TestArchiveViews(TestCase):
                                     key=operator.itemgetter('pub_date'))
         # the two context lists should match exactly
         assert sorted_object_list == response.context['object_list']
-         # test sort date in reverse
+        # test sort date in reverse
         response = self.client.get(url, {'query': '', 'sort': 'pub_date_desc'})
         # explicitly sort by pub_date manually in descending order
         sorted_object_list = sorted(response.context['object_list'],
@@ -991,7 +992,7 @@ class TestAddFromHathiView(TestCase):
 
     superuser = {
         'username': 'super',
-        'password': 'secret',
+        'password': uuid.uuid4()
     }
 
     def setUp(self):
@@ -999,7 +1000,7 @@ class TestAddFromHathiView(TestCase):
         self.add_from_hathi_url = reverse('admin:add-from-hathi')
 
         self.user = get_user_model().objects\
-            .create_superuser(email='su@example.com',
+            .create_superuser(email='su@example.
                               **self.superuser)
 
         test_pass = 'secret'
