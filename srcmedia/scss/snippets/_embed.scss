@@ -1,0 +1,14 @@
+.embed {
+    margin: 2rem 0 0;  /* match margins for figures */
+
+    .caption { /* match bottom margin on images in figures */
+        margin-top: 1rem;
+    }
+}
+
+/* override wagtail embed styles - for details, see
+  https://github.com/wagtail/wagtail/issues/1495  */
+.responsive-object {
+  padding-bottom: 0px !important;
+
+}

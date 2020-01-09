@@ -1,0 +1,5 @@
+{# Render ImageWithCaption as a figure with responsive image #}
+<figure class="{{ value.style }}">
+    {% include "pages/snippets/responsive_image.html" with img=value.image alt_text=value.alternative_text %}
+    {% if value.caption %}<figcaption>{{ value.caption }}</figcaption>{% endif %}
+</figure>

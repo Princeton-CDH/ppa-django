@@ -57,6 +57,11 @@ Models
 .. automodule:: ppa.pages.models
     :members:
 
+Embed Finders
+^^^^^^^^^^^^^
+.. automodule:: ppa.pages.embed_finders
+    :members:
+
 
 Editorial
 ---------
@@ -87,6 +92,11 @@ Index
 ~~~~~
 
 .. automodule:: ppa.archive.management.commands.index
+
+Generate Corpus
+~~~~~~~~~~~~~~~
+
+.. automodule:: ppa.archive.management.commands.generate_corpus
 
 
 Common

@@ -1,4 +1,4 @@
-a:not(.card) {
+a:not(.card):not(.headerlink) {
     text-decoration: underline;
 }
 
@@ -13,7 +13,7 @@ a.archive-link { // "view the archive" button
         padding: 1rem;
         margin: 2rem 0;
     }
-    
+
     .ui.header {
         color: $white-two;
         font-size: 1rem;
@@ -61,4 +61,26 @@ a.archive-link { // "view the archive" button
     &:active .icon {
         color: $white-two;
     }
+}
+
+// '¶' links to linkable sections in body text
+.headerlink {
+    color: $french-blue;
+    border: none;
+    text-decoration: none;
+    opacity: 0;
+    font-size: 1.2rem;
+    transition: opacity 0.2s ease-in-out;
+    position: relative;
+    top: -0.2rem;
+
+    &:hover, &:focus {
+        border: none;
+        text-decoration: none;
+        color: $french-blue;
+    }
+}
+
+h2:hover > .headerlink {
+    opacity: 1;
 }
