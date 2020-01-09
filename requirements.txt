@@ -3,7 +3,7 @@ mysqlclient
 pucas>=0.6
 django-grappelli
 # unreleased version of SolrClient with schema field-type management
-git+https://github.com/rlskoeser/SolrClient.git@9d0493b#egg=SolrClient
+git+https://github.com/rlskoeser/SolrClient.git@7420ab3#egg=SolrClient
 pairtree
 py-flags
 pymarc
