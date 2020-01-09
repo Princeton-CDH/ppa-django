@@ -1000,8 +1000,7 @@ class TestAddFromHathiView(TestCase):
         self.add_from_hathi_url = reverse('admin:add-from-hathi')
 
         self.user = get_user_model().objects\
-            .create_superuser(email='su@example.
-                              **self.superuser)
+            .create_superuser(email='su@example.com', **self.superuser)
 
         test_pass = 'secret'
         testuser = 'test'
