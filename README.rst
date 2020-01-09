@@ -33,21 +33,22 @@ This repo uses `git-flow <https://github.com/nvie/gitflow>`_ conventions; **mast
 contains the most recent release, and work in progress will be on the **develop** branch.
 Pull requests should be made against develop.
 
+Python 3.6 / Django 1.11 / Node 10.5.0 / MariaDB (MySQL) 5.5 w/ timezone info
 
 Development instructions
 ------------------------
 
 Initial setup and installation:
 
-- **recommended:** create and activate a python 3.5 virtualenv::
+- **recommended:** create and activate a python 3.6 virtualenv::
 
-     virtualenv ppa -p python3.5
+     virtualenv ppa -p python3.6
      source ppa/bin/activate
 
 - Use pip to install required python dependencies::
 
-    pip install -r requirements.txt
-    pip install -r dev-requirements.txt
+   pip install -r requirements.txt
+   pip install -r dev-requirements.txt
 
 - Copy sample local settings and configure for your environment::
 
@@ -104,8 +105,23 @@ either set of assets frequently. These two processes are separate as well::
     npm run dev # serve just the custom files from memory, with hot reload
     npm run dev:semantic # serve just semantic UI files and recompile on changes
 
+- If running this application on MariaDB/MySQL, you must make sure that
+  time zone definitions are installed. On most flavors of Linux/MacOS,
+  you may use the following command, which will prompt
+  for the database server's root password::
+
+    mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql -p
+
+  If this command does not work, make sure you have the command line utilities
+  for MariaDB/MySQL installed and consult the documentation for your OS for
+  timezone info. Windows users will need to install a copy of the zoneinfo
+  files.
+
+  See `MariaDB <https://mariadb.com/kb/en/library/mysql_tzinfo_to_sql/>`_'s
+  info on the utility for more information.
+
 Tests
-~~~~~~~~~~
+~~~~~
 
 Python unit tests are written with `py.test <http://doc.pytest.org/>`_ but use
 Django fixture loading and convenience testing methods when that makes
@@ -164,6 +180,20 @@ When building for a release ``make docs`` will create a folder called ``docs``,
 build the HTML documents and static assets, and force add it to the commit for
 use with Github Pages.
 
+To build and publish documentation for a release, add the ``gh-pages`` branch
+to the ``docs`` folder in your worktree::
+
+  git worktree add -B gh-pages docs origin/gh-pages
+
+In the ``sphinx-docs`` folder, use ``make docs`` to build the HTML documents
+and static assets, add it to the docs folder, and commit it for publication on
+Github Pages. After the build completes, push to GitHub from the ``docs`` folder.
+
 License
 -------
 This project is licensed under the `Apache 2.0 License <https://github.com/Princeton-CDH/ppa-django/blob/master/LICENSE>`_.
+
+©2019 Trustees of Princeton University.  Permission granted via
+Princeton Docket #20-3624 for distribution online under a standard Open Source
+license. Ownership rights transferred to Rebecca Koeser provided software
+is distributed online via open source.

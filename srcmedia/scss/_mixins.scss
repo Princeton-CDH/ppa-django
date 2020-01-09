@@ -9,12 +9,12 @@
     -webkit-mask-size: contain;
     -webkit-mask-repeat: no-repeat;
     z-index: -1;
-    
+
     // small 1x and 2x
     min-height: $banner-height;
     mask-image: url("#{$src}-S@1x.png");
     -webkit-mask-image: url("#{$src}-S@1x.png");
-    
+
     @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
         mask-image: url("#{$src}-S@2x.png");
 	    -webkit-mask-image: url("#{$src}-S@2x.png");
@@ -25,7 +25,7 @@
         min-height: $banner-height-m;
         mask-image: url("#{$src}-M@1x.png");
         -webkit-mask-image: url("#{$src}-M@1x.png");
-        
+
         @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
             mask-image: url("#{$src}-M@2x.png");
 	        -webkit-mask-image: url("#{$src}-M@2x.png");
@@ -37,7 +37,7 @@
         min-height: $banner-height-l;
         mask-image: url("#{$src}@1x.png");
         -webkit-mask-image: url("#{$src}@1x.png");
-        
+
         @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
             mask-image: url("#{$src}@2x.png");
 	        -webkit-mask-image: url("#{$src}@2x.png");
@@ -160,7 +160,7 @@
         p {
             margin: 0;
         }
-        
+
         * {
             color: $slate-grey;
             @include small-font-scale;
@@ -175,19 +175,19 @@
                 float: left;
                 margin-right: 2rem;
             }
-    
+
             &.right {
                 float: right;
                 margin-left: 2rem;
             }
-    
+
             &.left,
             &.right {
                 width: calc(50% - 1rem);
             }
 
             // when side-by-side only need one margin
-            &.left + figure.right { 
+            &.left + figure.right {
                 margin-left: 0;
             }
 
@@ -195,12 +195,12 @@
                 margin-right: 0;
             }
 
-            // any non-figure content OR left figure after side-by-side 
+            // any non-figure content OR left figure after side-by-side
             // images should be cleared
             // it also needs padding (not margin) in order to create space
             // because the floats will ignore margin
             &.left + figure.right + :not(figure),
-            &.left + figure.right + figure.left,            
+            &.left + figure.right + figure.left,
             &.right + figure.left + :not(figure) {
                 clear: both;
                 padding-top: 1rem;
@@ -216,7 +216,7 @@
         }
     }
 
-    figcaption {
+    figcaption, .caption {
         margin-bottom: 2rem;
         text-align: center;
 

@@ -13,6 +13,7 @@ env:
   - SOLR_VERSION=6.6.5
   - SOLR_CORE=test-ppa
   - PA11Y_SOLR_CORE=ppa-pa11y
+  - BOTO_CONFIG=/dev/null  # https://github.com/travis-ci/travis-ci/issues/7940
   - JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64 # otherwise jdk11 will be used
 cache:
   pip: true

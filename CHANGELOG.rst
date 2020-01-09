@@ -3,6 +3,15 @@
 CHANGELOG
 =========
 
+3.3
+---
+
+* As a content editor, I want to create linkable anchors in documents so that I can reference specific sections of my content on other pages.
+* As a content editor, I want to add SVG images to content pages so that I can include data visualizations and other scalable images.
+* As a content editor, I want to embed external content in editorial and other pages, so that I can include dynamic content in essays.
+* Update captioned image to require contextual alternative text
+* Preliminary manage command to generate a token-count corpus; implemented by @vineetbansal
+
 3.2.4
 -----
 

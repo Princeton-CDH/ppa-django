@@ -1,4 +1,5 @@
 {% load wagtailimages_tags %}
+{% spaceless %} {# use spaceless to avoid blank lines for image variables #}
 {# Generate responsive image using wagtail image template tag #}
 {# Expects Image as img; sizes per design spec #}
 {% image img max-291x438 as mobile_1x %}
@@ -17,4 +18,5 @@
            (max-width: 735px) {{ tablet_1x.width }}px,
            {{ desktop_1x.width }}px"
     src="{{ desktop_1x.url }}"
-    alt="{{ desktop_1x.alt }}" title="{{ desktop_1x.alt }}"/>
+    alt="{% firstof alt_text desktop_1x.alt %}" title="{{ desktop_1x.alt }}"/>
+{% endspaceless %}
