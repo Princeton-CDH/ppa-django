@@ -1,0 +1,335 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Princeton Prosody Archive documentation &#8212; Princeton Prosody Archive 3.3.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Architecture" href="architecture.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="princeton-prosody-archive-documentation">
+<h1>Princeton Prosody Archive documentation<a class="headerlink" href="#princeton-prosody-archive-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="codedocs.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deploynotes.html">Deploy Notes</a></li>
+</ul>
+</div>
+<p>Django web application for the new <a class="reference external" href="https://prosody.princeton.edu/">Princeton Prosody Archive</a>.</p>
+<p>Code and architecture documentation for the current release available
+at <a class="reference external" href="https://princeton-cdh.github.io/ppa-django/">https://princeton-cdh.github.io/ppa-django/</a>.</p>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.2400705"><img alt="DOI: 10.5281/zenodo.2400705" src="https://zenodo.org/badge/110731137.svg" /></a>
+<a class="reference external image-reference" href="https://travis-ci.org/Princeton-CDH/ppa-django"><img alt="Build status" src="https://travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master" /></a>
+<a class="reference external image-reference" href="https://codecov.io/gh/Princeton-CDH/ppa-django"><img alt="Code coverage" src="https://codecov.io/gh/Princeton-CDH/ppa-django/branch/master/graph/badge.svg" /></a>
+<a class="reference external image-reference" href="https://www.codefactor.io/repository/github/princeton-cdh/ppa-django"><img alt="CodeFactor" src="https://www.codefactor.io/repository/github/princeton-cdh/ppa-django/badge" /></a>
+<a class="reference external image-reference" href="https://requires.io/github/Princeton-CDH/ppa-django/requirements/?branch=master"><img alt="Requirements Status" src="https://requires.io/github/Princeton-CDH/ppa-django/requirements.svg?branch=master" /></a>
+<p>This repo uses <a class="reference external" href="https://github.com/nvie/gitflow">git-flow</a> conventions; <strong>master</strong>
+contains the most recent release, and work in progress will be on the <strong>develop</strong> branch.
+Pull requests should be made against develop.</p>
+<p>Python 3.6 / Django 1.11 / Node 10.5.0 / MariaDB (MySQL) 5.5 w/ timezone info</p>
+<div class="section" id="development-instructions">
+<h2>Development instructions<a class="headerlink" href="#development-instructions" title="Permalink to this headline">¶</a></h2>
+<p>Initial setup and installation:</p>
+<ul>
+<li><p><strong>recommended:</strong> create and activate a python 3.6 virtualenv:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">virtualenv</span> <span class="n">ppa</span> <span class="o">-</span><span class="n">p</span> <span class="n">python3</span><span class="o">.</span><span class="mi">6</span>
+<span class="n">source</span> <span class="n">ppa</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span>
+</pre></div>
+</div>
+</li>
+<li><p>Use pip to install required python dependencies:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">dev</span><span class="o">-</span><span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+</li>
+<li><p>Copy sample local settings and configure for your environment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cp</span> <span class="n">ppa</span><span class="o">/</span><span class="n">local_settings</span><span class="o">.</span><span class="n">py</span><span class="o">.</span><span class="n">sample</span> <span class="n">ppa</span><span class="o">/</span><span class="n">local_settings</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+</li>
+<li><p>Create a database, configure in local settings, and run migrations:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">migrate</span>
+</pre></div>
+</div>
+</li>
+<li><p>Create two new Solr cores using project specific managed schema and
+solr config, using the core/collection names for development and
+testing that you configured in local settings:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">solr</span> <span class="n">create</span> <span class="o">-</span><span class="n">c</span> <span class="n">SOLR_CORE</span> <span class="o">-</span><span class="n">d</span> <span class="n">solr_conf</span>
+<span class="n">solr</span> <span class="n">create</span> <span class="o">-</span><span class="n">c</span> <span class="n">SOLR_TEST_CORE</span> <span class="o">-</span><span class="n">d</span> <span class="n">solr_conf</span>
+</pre></div>
+</div>
+</li>
+<li><p>Run the manage command to configure the schema:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">solr_schema</span>
+</pre></div>
+</div>
+<p>The manage command will automatically reload the core to ensure schema
+changes take effect.</p>
+</li>
+<li><p>Bulk import (<em>provisional</em>): requires a local copy of HathiTrust data as
+pairtree provided by rsync.  Configure the path in <cite>localsettings.py</cite>
+and then run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">hathi_import</span>
+</pre></div>
+</div>
+</li>
+<li><p>Then index the imported content into Solr:</p>
+<blockquote>
+<div><p>python manage.py index</p>
+</div></blockquote>
+</li>
+</ul>
+<p>Frontend development setup:</p>
+<p>This project uses the <a class="reference external" href="https://semantic-ui.com/">Semantic UI</a> library in
+addition to custom styles and javascript. You need to compile static assets
+before running the server.</p>
+<ul>
+<li><p>To build all styles and js for production, including semantic UI:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">npm</span> <span class="n">run</span> <span class="n">build</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>Alternatively, you can rebuild just the custom files or semantic independently.
+This is useful if you make small changes and need to recompile once:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">npm</span> <span class="n">run</span> <span class="n">build</span><span class="p">:</span><span class="n">qa</span> <span class="c1"># just the custom files, with sourcemaps</span>
+<span class="n">npm</span> <span class="n">run</span> <span class="n">build</span><span class="p">:</span><span class="n">prod</span> <span class="c1"># just the custom files, no sourcemaps</span>
+<span class="n">npm</span> <span class="n">run</span> <span class="n">build</span><span class="p">:</span><span class="n">semantic</span> <span class="c1"># just semantic UI</span>
+</pre></div>
+</div>
+<p>Finally, you can run a development server with hot reload if you’ll be changing
+either set of assets frequently. These two processes are separate as well:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">npm</span> <span class="n">run</span> <span class="n">dev</span> <span class="c1"># serve just the custom files from memory, with hot reload</span>
+<span class="n">npm</span> <span class="n">run</span> <span class="n">dev</span><span class="p">:</span><span class="n">semantic</span> <span class="c1"># serve just semantic UI files and recompile on changes</span>
+</pre></div>
+</div>
+<ul>
+<li><p>If running this application on MariaDB/MySQL, you must make sure that
+time zone definitions are installed. On most flavors of Linux/MacOS,
+you may use the following command, which will prompt
+for the database server’s root password:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mysql_tzinfo_to_sql</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">zoneinfo</span> <span class="o">|</span> <span class="n">mysql</span> <span class="o">-</span><span class="n">u</span> <span class="n">root</span> <span class="n">mysql</span> <span class="o">-</span><span class="n">p</span>
+</pre></div>
+</div>
+<p>If this command does not work, make sure you have the command line utilities
+for MariaDB/MySQL installed and consult the documentation for your OS for
+timezone info. Windows users will need to install a copy of the zoneinfo
+files.</p>
+<p>See <a class="reference external" href="https://mariadb.com/kb/en/library/mysql_tzinfo_to_sql/">MariaDB</a>’s
+info on the utility for more information.</p>
+</li>
+</ul>
+<div class="section" id="tests">
+<h3>Tests<a class="headerlink" href="#tests" title="Permalink to this headline">¶</a></h3>
+<p>Python unit tests are written with <a class="reference external" href="http://doc.pytest.org/">py.test</a> but use
+Django fixture loading and convenience testing methods when that makes
+things easier. To run them, first install development requirements:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">dev</span><span class="o">-</span><span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+<p>Run tests using py.test.  Note that this currently requires the
+top level project directory be included in your python path.  You can
+accomplish this either by calling pytest via python:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pytest</span>
+</pre></div>
+</div>
+<p>Or, if you wish to use the <code class="docutils literal notranslate"><span class="pre">pytest</span></code> command directly, simply add the
+top-level project directory to your python path environment variable:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">setenv</span> <span class="n">PYTHONPATH</span> <span class="o">.</span>  <span class="c1"># csh</span>
+<span class="n">export</span> <span class="n">PYTHONPATH</span><span class="o">=.</span>  <span class="c1"># bash</span>
+</pre></div>
+</div>
+<p>Make sure you configure a test solr connection and set up an empty
+Solr core using the same instructions as for the development core.</p>
+<p>Javascript unit tests are written with <a class="reference external" href="https://jasmine.github.io/">Jasmine</a>
+and run using <a class="reference external" href="https://karma-runner.github.io/2.0/index.html">Karma</a>. To run
+them, you can use an <code class="docutils literal notranslate"><span class="pre">npm</span></code> command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">npm</span> <span class="n">test</span>
+</pre></div>
+</div>
+<p>Automated accessibility testing is also possible using <a class="reference external" href="https://github.com/pa11y/pa11y">pa11y</a>
+and <a class="reference external" href="https://github.com/pa11y/pa11y-ci">pa11y-ci</a>. To run accessibility tests,
+start the server with <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">manage.py</span> <span class="pre">runserver</span></code> and then use <code class="docutils literal notranslate"><span class="pre">npm</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">npm</span> <span class="n">run</span> <span class="n">pa11y</span>
+</pre></div>
+</div>
+<p>The accessibility tests are configured to read options from the <code class="docutils literal notranslate"><span class="pre">.pa11yci.json</span></code>
+file and look for a sitemap at <code class="docutils literal notranslate"><span class="pre">localhost:8000/sitemap.xml</span></code> to use to crawl the
+site. Additional URLs to test can be added to the <cite>urls</cite> property of the
+<code class="docutils literal notranslate"><span class="pre">.pa11yci.json</span></code> file.</p>
+</div>
+</div>
+<div class="section" id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
+<p>Documentation is generated using <a class="reference external" href="http://www.sphinx-doc.org/">sphinx</a>
+To generate documentation them, first install development requirements:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">dev</span><span class="o">-</span><span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+<p>Then build documentation using the customized make file in the <code class="docutils literal notranslate"><span class="pre">docs</span></code>
+directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">sphinx</span><span class="o">-</span><span class="n">docs</span>
+<span class="n">make</span> <span class="n">html</span>
+</pre></div>
+</div>
+<p>When building for a release <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">docs</span></code> will create a folder called <code class="docutils literal notranslate"><span class="pre">docs</span></code>,
+build the HTML documents and static assets, and force add it to the commit for
+use with Github Pages.</p>
+</div>
+<div class="section" id="license">
+<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
+<p>This project is licensed under the <a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/blob/master/LICENSE">Apache 2.0 License</a>.</p>
+<p>©2019 Trustees of Princeton University.  Permission granted via
+Princeton Docket #20-3624 for distribution online under a standard Open Source
+license. Ownership rights transferred to Rebecca Koeser provided software
+is distributed online via open source.</p>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">Princeton Prosody Archive</a></h1>
+
+
+
+<p class="blurb">Django web application for "Princeton Prosody Archive" CDH project</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=Princeton-CDH&repo=ppa-django&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+    
+
+<p>
+<a class="badge" href="https://travis-ci.org/Princeton-CDH/ppa-django">
+    <img
+        alt="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
+        src="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
+    />
+</a>
+</p>
+
+
+
+
+    
+
+<p>
+<a class="badge" href="https://codecov.io/github/Princeton-CDH/ppa-django">
+    <img
+    alt="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
+    src="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
+    />
+</a>
+</p>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="codedocs.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deploynotes.html">Deploy Notes</a></li>
+</ul>
+
+
+  <h3><a href="#">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Princeton Prosody Archive documentation</a><ul>
+<li><a class="reference internal" href="#development-instructions">Development instructions</a><ul>
+<li><a class="reference internal" href="#tests">Tests</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#documentation">Documentation</a></li>
+<li><a class="reference internal" href="#license">License</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><div class="powered_by">
+<p>Powered by:</p>
+<a href="http://cdh.princeton.edu/">
+<img src="https://cdh.princeton.edu/static/img/logos/cdh-logo.svg"
+    alt="Center for Digital Humanities @ Princeton" />
+</a>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, CDH @ Princeton University.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
