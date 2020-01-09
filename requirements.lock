@@ -13,18 +13,19 @@ cached-property==1.5.1
 certifi==2019.3.9
 chardet==3.0.4
 coverage==4.5.3
+cycler==0.10.0
 Cython==0.29.13
 decorator==4.4.0
 defusedxml==0.6.0
 dictionaries==0.0.1
-Django==1.11.21
+Django==1.11.27
 django-apptemplates==1.4
 django-cas-ng==3.6.0
 django-csp==3.5
 django-debug-toolbar==2.0
 django-fullurl==1.0
-django-grappelli==2.12.3
-django-modelcluster==4.4
+django-grappelli==2.13.3
+django-modelcluster==4.4.1
 django-semanticui-forms==1.6.5
 django-taggit==0.23.0
 django-treebeard==4.3
@@ -55,9 +56,11 @@ jupyter-client==5.3.1
 jupyter-console==6.0.0
 jupyter-core==4.5.0
 kazoo==2.2.1
+kiwisolver==1.1.0
 ldap3==2.6
 lxml==4.3.3
 MarkupSafe==1.1.1
+matplotlib==3.1.1
 mistune==0.8.4
 more-itertools==7.0.0
 mysqlclient==1.4.2.post1
@@ -108,7 +111,7 @@ Send2Trash==1.5.0
 six==1.12.0
 smart-open==1.8.4
 snowballstemmer==1.2.1
-SolrClient==0.2.0
+-e git+git@github.com:rlskoeser/SolrClient.git@7420ab3ca97be6fcc178d74e10c136b73b332edd#egg=SolrClient
 Sphinx==2.1.2
 sphinxcontrib-applehelp==1.0.1
 sphinxcontrib-devhelp==1.0.1
