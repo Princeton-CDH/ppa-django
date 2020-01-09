@@ -13,8 +13,7 @@ progressbar2
 django-semanticui-forms
 lxml
 eulxml
-# pin to wagtail 2.3 for now (2.4 causing test/fixture error)
-wagtail>=2.3,<2.4
+wagtail>=2.7
 bleach
 django-fullurl
 django-csp
