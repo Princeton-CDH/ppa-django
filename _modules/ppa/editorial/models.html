@@ -1,0 +1,250 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>ppa.editorial.models &#8212; Princeton Prosody Archive 3.3.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for ppa.editorial.models</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">date</span>
+
+<span class="kn">from</span> <span class="nn">django.http</span> <span class="k">import</span> <span class="n">Http404</span>
+<span class="kn">from</span> <span class="nn">wagtail.admin.edit_handlers</span> <span class="k">import</span> <span class="n">FieldPanel</span><span class="p">,</span> <span class="n">StreamFieldPanel</span>
+<span class="kn">from</span> <span class="nn">wagtail.core.models</span> <span class="k">import</span> <span class="n">Page</span>
+<span class="kn">from</span> <span class="nn">wagtail.core.fields</span> <span class="k">import</span> <span class="n">RichTextField</span><span class="p">,</span> <span class="n">StreamField</span>
+<span class="kn">from</span> <span class="nn">wagtail.snippets.blocks</span> <span class="k">import</span> <span class="n">SnippetChooserBlock</span>
+
+<span class="kn">from</span> <span class="nn">ppa.pages.models</span> <span class="k">import</span> <span class="n">BodyContentBlock</span><span class="p">,</span> <span class="n">PagePreviewDescriptionMixin</span><span class="p">,</span> \
+    <span class="n">Person</span>
+
+
+<div class="viewcode-block" id="EditorialIndexPage"><a class="viewcode-back" href="../../../codedocs.html#ppa.editorial.models.EditorialIndexPage">[docs]</a><span class="k">class</span> <span class="nc">EditorialIndexPage</span><span class="p">(</span><span class="n">Page</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Editorial index page; list recent editorial articles.&#39;&#39;&#39;</span>
+    <span class="n">intro</span> <span class="o">=</span> <span class="n">RichTextField</span><span class="p">(</span><span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">content_panels</span> <span class="o">=</span> <span class="n">Page</span><span class="o">.</span><span class="n">content_panels</span> <span class="o">+</span> <span class="p">[</span>
+        <span class="n">FieldPanel</span><span class="p">(</span><span class="s1">&#39;intro&#39;</span><span class="p">,</span> <span class="n">classname</span><span class="o">=</span><span class="s2">&quot;full&quot;</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="c1"># can only be created under home page; can only have</span>
+    <span class="c1"># editorial pages as subpages</span>
+    <span class="n">parent_page_types</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;pages.HomePage&#39;</span><span class="p">]</span>
+    <span class="n">subpage_types</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;editorial.EditorialPage&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+
+        <span class="c1"># Add extra variables and return the updated context</span>
+        <span class="n">context</span><span class="p">[</span><span class="s1">&#39;posts&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">EditorialPage</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">child_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">live</span><span class="p">()</span> \
+                                        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">&#39;-first_published_at&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">context</span>
+
+<div class="viewcode-block" id="EditorialIndexPage.route"><a class="viewcode-back" href="../../../codedocs.html#ppa.editorial.models.EditorialIndexPage.route">[docs]</a>    <span class="k">def</span> <span class="nf">route</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">path_components</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Customize editorial page routing to serve editorial pages</span>
+<span class="sd">        by year/month/slug.&#39;&#39;&#39;</span>
+
+        <span class="c1"># NOTE: might be able to use RoutablePageMixin for this,</span>
+        <span class="c1"># but could not get that to work</span>
+
+        <span class="k">if</span> <span class="n">path_components</span><span class="p">:</span>
+
+            <span class="c1"># if not enough path components are specified, raise a 404</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">path_components</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">Http404</span>
+                <span class="c1"># (could eventually handle year/month to display posts by</span>
+                <span class="c1"># date, but not yet implemented)</span>
+
+            <span class="c1"># currently only handle year/month/post-slug/</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">path_components</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="c1"># request is for a child of this page</span>
+
+                <span class="c1"># not using a regex route, so check character count</span>
+                <span class="c1"># - want a four-digit year and a two-digit month</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">path_components</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">4</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">path_components</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">Http404</span>
+
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">year</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">path_components</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">month</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">path_components</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="c1"># if year or month are not numeric, then 404</span>
+                    <span class="k">raise</span> <span class="n">Http404</span>
+
+                <span class="n">child_slug</span> <span class="o">=</span> <span class="n">path_components</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">remaining_components</span> <span class="o">=</span> <span class="n">path_components</span><span class="p">[</span><span class="mi">3</span><span class="p">:]</span>
+
+                <span class="c1"># find a matching child or 404</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">subpage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_children</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                        <span class="n">first_published_at__year</span><span class="o">=</span><span class="n">year</span><span class="p">,</span>
+                        <span class="n">first_published_at__month</span><span class="o">=</span><span class="n">month</span><span class="p">,</span>
+                        <span class="n">slug</span><span class="o">=</span><span class="n">child_slug</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">Page</span><span class="o">.</span><span class="n">DoesNotExist</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">Http404</span>
+
+                <span class="c1"># delegate further routing to child page</span>
+                <span class="k">return</span> <span class="n">subpage</span><span class="o">.</span><span class="n">specific</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">remaining_components</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># handle normally (display current page)</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">path_components</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="EditorialPage"><a class="viewcode-back" href="../../../codedocs.html#ppa.editorial.models.EditorialPage">[docs]</a><span class="k">class</span> <span class="nc">EditorialPage</span><span class="p">(</span><span class="n">Page</span><span class="p">,</span> <span class="n">PagePreviewDescriptionMixin</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Editorial page, for scholarly, educational, or other essay-like</span>
+<span class="sd">    content related to the site&#39;&#39;&#39;</span>
+
+    <span class="c1"># preliminary streamfield; we may need other options for content</span>
+    <span class="c1"># (maybe a footnotes block?)</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="n">StreamField</span><span class="p">(</span><span class="n">BodyContentBlock</span><span class="p">)</span>
+    <span class="n">authors</span> <span class="o">=</span> <span class="n">StreamField</span><span class="p">(</span>
+        <span class="p">[(</span><span class="s1">&#39;author&#39;</span><span class="p">,</span> <span class="n">SnippetChooserBlock</span><span class="p">(</span><span class="n">Person</span><span class="p">))],</span>
+        <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s1">&#39;Select or create people snippets to add as authors.&#39;</span>
+    <span class="p">)</span>
+    <span class="n">content_panels</span> <span class="o">=</span> <span class="n">Page</span><span class="o">.</span><span class="n">content_panels</span> <span class="o">+</span> <span class="p">[</span>
+        <span class="n">FieldPanel</span><span class="p">(</span><span class="s1">&#39;description&#39;</span><span class="p">),</span>
+        <span class="n">StreamFieldPanel</span><span class="p">(</span><span class="s1">&#39;authors&#39;</span><span class="p">),</span>
+        <span class="n">StreamFieldPanel</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="c1"># can only be under editorial, cannot have subpages</span>
+    <span class="n">parent_page_types</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;editorial.EditorialIndexPage&#39;</span><span class="p">]</span>
+    <span class="n">subpage_types</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="EditorialPage.set_url_path"><a class="viewcode-back" href="../../../codedocs.html#ppa.editorial.models.EditorialPage.set_url_path">[docs]</a>    <span class="k">def</span> <span class="nf">set_url_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate the url_path field based on this page&#39;s slug, first publication date,</span>
+<span class="sd">        and the specified parent page. Adapted from default logic to include</span>
+<span class="sd">        publication date.</span>
+<span class="sd">        (Parent is passed in for previewing unsaved pages)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># use current date for preview if first published is not set</span>
+        <span class="n">post_date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_published_at</span> <span class="ow">or</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">parent</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">url_path</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}{}</span><span class="s1">/</span><span class="si">{}</span><span class="s1">/&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">parent</span><span class="o">.</span><span class="n">url_path</span><span class="p">,</span> <span class="n">post_date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y/%m&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">slug</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># a page without a parent is the tree root, which always has a url_path of &#39;/&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">url_path</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">url_path</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Princeton Prosody Archive</a></h1>
+
+
+
+<p class="blurb">Django web application for "Princeton Prosody Archive" CDH project</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=Princeton-CDH&repo=ppa-django&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+    
+
+<p>
+<a class="badge" href="https://travis-ci.org/Princeton-CDH/ppa-django">
+    <img
+        alt="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
+        src="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
+    />
+</a>
+</p>
+
+
+
+
+    
+
+<p>
+<a class="badge" href="https://codecov.io/github/Princeton-CDH/ppa-django">
+    <img
+    alt="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
+    src="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
+    />
+</a>
+</p>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../codedocs.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deploynotes.html">Deploy Notes</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><div class="powered_by">
+<p>Powered by:</p>
+<a href="http://cdh.princeton.edu/">
+<img src="https://cdh.princeton.edu/static/img/logos/cdh-logo.svg"
+    alt="Center for Digital Humanities @ Princeton" />
+</a>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, CDH @ Princeton University.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
