@@ -1,5 +1,5 @@
 django>=2.2,<3.0
-mysqlclient
+mysqlclient>=1.3.13
 pucas>=0.6
 django-grappelli
 # unreleased version of SolrClient with schema field-type management
