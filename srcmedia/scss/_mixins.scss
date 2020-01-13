@@ -245,7 +245,7 @@
         }
     }
 
-    .paragraph { // spacing between richtext blocks
+    .paragraph, .linkable_section { // spacing between richtext blocks
         margin-top: 1rem;
     }
 }
