@@ -20,6 +20,6 @@ django-csp
 django-webpack-loader
 requests_oauthlib
 wand
-beautifulsoup4
+beautifulsoup4<4.6.1
 # only needed for the 'generate_corpus' manage command
 gensim
