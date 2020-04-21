@@ -42,8 +42,8 @@ Initial setup and installation:
 
 - **recommended:** create and activate a python 3.6 virtualenv::
 
-     virtualenv ppa -p python3.6
-     source ppa/bin/activate
+     virtualenv venv -p python3.6
+     source venv/bin/activate
 
 - Use pip to install required python dependencies::
 
@@ -62,8 +62,8 @@ Initial setup and installation:
   solr config, using the core/collection names for development and
   testing that you configured in local settings::
 
-    solr create -c SOLR_CORE -d solr_conf
-    solr create -c SOLR_TEST_CORE -d solr_conf
+    solr create -c ppa -d solr_conf
+    solr create -c ppa-test -d solr_conf
 
 - Run the manage command to configure the schema::
 
@@ -78,7 +78,7 @@ Initial setup and installation:
 
     python manage.py hathi_import
 
-- Then index the imported content into Solr:
+- Then index the imported content into Solr::
 
     python manage.py index
 
@@ -90,6 +90,8 @@ before running the server.
 
 - To build all styles and js for production, including semantic UI::
 
+    npm install
+    npm install -D
     npm run build
 
 Alternatively, you can rebuild just the custom files or semantic independently.
@@ -188,6 +190,17 @@ to the ``docs`` folder in your worktree::
 In the ``sphinx-docs`` folder, use ``make docs`` to build the HTML documents
 and static assets, add it to the docs folder, and commit it for publication on
 Github Pages. After the build completes, push to GitHub from the ``docs`` folder.
+
+Troubleshooting
+-------------
+
+Trouble launching Solr? Try configuring Java to version 8. Later versions of 
+Java will cause Solr 6 to time out.
+
+Solr changes not reflected in search results? ``solrconfig.xml`` must be 
+updated in Solr's main directory: ``solr/server/solr/[CORE]/conf/solrconfig.xml``
+
+We currently do not support Python 3.7 or Solr 7 and above.
 
 License
 -------
