@@ -40,8 +40,7 @@ Development instructions
 
 Initial setup and installation:
 
-- **recommended:** create and activate a python 3.6 virtual environment, perhaps with 
-`virtualenv` or `venv`
+- **recommended:** create and activate a python 3.6 virtual environment, perhaps with ``virtualenv`` or ``venv``
 
 - Use pip to install required python dependencies::
 
