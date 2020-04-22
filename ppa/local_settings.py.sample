@@ -96,25 +96,34 @@ STATIC_ROOT = os.path.join(BASE_DIR, STATIC_URL.strip("/"))
 # Sends a logging email even when DEBUG is on
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'basic': {
+            'format': '[%(asctime)s] %(levelname)s:%(name)s::%(message)s',
+            'datefmt': '%d/%b/%Y %H:%M:%S',
+        },
+    },
     'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler',
-            'include_html': True
-        }
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'basic',
+            'level': 'DEBUG'
+
+        },
     },
     'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'WARN'),
+        },
+        'ppa':  {
+            'handlers': ['console'],
+            'level': 'DEBUG'
         },
         'SolrClient':  {
             'handlers': ['console'],
             'level': 'WARN'
         },
-
     }
 }
 
