@@ -764,6 +764,7 @@
           pub_place
           publisher
           source_id^10
+          content_nostem^50
           content
       </str>
       <str name="pf">
@@ -773,7 +774,8 @@
           subtitle^35
           author^100
           notes^50
-          content^20
+          content_nostem^50
+          content
           pub_place
           publisher
       </str>
