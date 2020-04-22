@@ -33,17 +33,15 @@ This repo uses `git-flow <https://github.com/nvie/gitflow>`_ conventions; **mast
 contains the most recent release, and work in progress will be on the **develop** branch.
 Pull requests should be made against develop.
 
-Python 3.6 / Django 1.11 / Node 10.5.0 / MariaDB (MySQL) 5.5 w/ timezone info
+Python 3.6 / Django 2.2 / Node 10.5.0 / MariaDB (MySQL) 5.5 w/ timezone info / Solr 6.6 (requires Java 8)
 
 Development instructions
 ------------------------
 
 Initial setup and installation:
 
-- **recommended:** create and activate a python 3.6 virtualenv::
-
-     virtualenv venv -p python3.6
-     source venv/bin/activate
+- **recommended:** create and activate a python 3.6 virtual environment, perhaps with 
+`virtualenv` or `venv`
 
 - Use pip to install required python dependencies::
 
@@ -54,7 +52,7 @@ Initial setup and installation:
 
    cp ppa/local_settings.py.sample ppa/local_settings.py
 
-- Create a database, configure in local settings, and run migrations::
+- Create a database, configure in local settings in the `DATABASES` dictionary, change `SECRET_KEY`, and run migrations::
 
     python manage.py migrate
 
@@ -91,7 +89,6 @@ before running the server.
 - To build all styles and js for production, including semantic UI::
 
     npm install
-    npm install -D
     npm run build
 
 Alternatively, you can rebuild just the custom files or semantic independently.
@@ -190,17 +187,6 @@ to the ``docs`` folder in your worktree::
 In the ``sphinx-docs`` folder, use ``make docs`` to build the HTML documents
 and static assets, add it to the docs folder, and commit it for publication on
 Github Pages. After the build completes, push to GitHub from the ``docs`` folder.
-
-Troubleshooting
--------------
-
-Trouble launching Solr? Try configuring Java to version 8. Later versions of 
-Java will cause Solr 6 to time out.
-
-Solr changes not reflected in search results? ``solrconfig.xml`` must be 
-updated in Solr's main directory: ``solr/server/solr/[CORE]/conf/solrconfig.xml``
-
-We currently do not support Python 3.7 or Solr 7 and above.
 
 License
 -------
