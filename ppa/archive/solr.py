@@ -92,7 +92,7 @@ class SolrSchema(object):
             },
         },
         {
-            'name': 'punctuation_parser',
+            'name': 'text_with_punctuation',
             "class":"solr.TextField",
             # for now, configuring index and query analyzers the same
             # if we want synonyms, query must be separate
@@ -102,12 +102,7 @@ class SolrSchema(object):
                     "class": "solr.WhitespaceTokenizerFactory",
                 },
                 "filters": [
-                    {"class": "solr.StopFilterFactory", "ignoreCase": True,
-                     "words": "lang/stopwords_en.txt"},
                     {"class": "solr.LowerCaseFilterFactory"},
-                    # {"class": "solr.EnglishPossessiveFilterFactory"},
-                    # {"class": "solr.KeywordMarkerFilterFactory"},
-                    # {"class": "solr.PorterStemFilterFactory"},
                     {"class": "solr.ICUFoldingFilterFactory"},
                 ]
             }
@@ -153,7 +148,7 @@ class SolrSchema(object):
         {'name': 'last_modified', 'type': 'date', 'default': 'NOW'},
 
         # Punctuation search
-        {'name': 'content_punctuation', 'type': 'punctuation_parser', 'required': False, 'stored': False},        
+        {'name': 'content_punctuation', 'type': 'text_with_punctuation', 'required': False, 'stored': False},        
     ]
     #: fields to be copied into general purpose text field for searching
     text_fields = []
