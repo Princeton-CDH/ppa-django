@@ -91,22 +91,22 @@ class SolrSchema(object):
                 ]
             },
         },
-        {
-            'name': 'text_with_punctuation',
-            "class":"solr.TextField",
-            # for now, configuring index and query analyzers the same
-            # if we want synonyms, query must be separate
-            "analyzer": {
-                # "charFilters": [],
-                "tokenizer": {
-                    "class": "solr.WhitespaceTokenizerFactory",
-                },
-                "filters": [
-                    {"class": "solr.LowerCaseFilterFactory"},
-                    {"class": "solr.ICUFoldingFilterFactory"},
-                ]
-            }
-        },
+        # {
+        #     'name': 'text_with_punctuation',
+        #     "class":"solr.TextField",
+        #     # for now, configuring index and query analyzers the same
+        #     # if we want synonyms, query must be separate
+        #     "analyzer": {
+        #         # "charFilters": [],
+        #         "tokenizer": {
+        #             "class": "solr.WhitespaceTokenizerFactory",
+        #         },
+        #         "filters": [
+        #             {"class": "solr.LowerCaseFilterFactory"},
+        #             {"class": "solr.ICUFoldingFilterFactory"},
+        #         ]
+        #     }
+        # },
     ]
 
     #: solr schema field definitions
@@ -137,7 +137,7 @@ class SolrSchema(object):
         {'name': 'author_exact', 'type': 'string', 'required': False},
         {'name': 'collections_exact', 'type': 'string', 'required': False,
          'multiValued': True},
-        {'name': 'content_nostem', 'type': 'text_nostem', 'required': False, 'stored': False},
+        # {'name': 'content_nostem', 'type': 'text_nostem', 'required': False, 'stored': False},
 
         # fields without stemming for search boosting
         {'name': 'title_nostem', 'type': 'text_nostem', 'required': False, 'stored': False},
@@ -148,7 +148,7 @@ class SolrSchema(object):
         {'name': 'last_modified', 'type': 'date', 'default': 'NOW'},
 
         # Punctuation search
-        {'name': 'content_punctuation', 'type': 'text_with_punctuation', 'required': False, 'stored': False},        
+        # {'name': 'content_punctuation', 'type': 'text_with_punctuation', 'required': False, 'stored': False},        
     ]
     #: fields to be copied into general purpose text field for searching
     text_fields = []
@@ -160,8 +160,8 @@ class SolrSchema(object):
         ('collections', 'collections_exact'),
         ('title', 'title_nostem'),
         ('subtitle', 'subtitle_nostem'),
-        ('content', 'content_nostem'),
-        ('content', 'content_punctuation')
+        # ('content', 'content_nostem'),
+        # ('content', 'content_punctuation')
     ]
 
     def __init__(self):
