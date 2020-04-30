@@ -212,7 +212,10 @@
                 clear: right;
                 padding-top: 1rem;
             }
-
+            
+            &.full {
+                clear: both;
+            }
         }
     }
 
