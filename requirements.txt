@@ -20,7 +20,6 @@ django-csp
 django-webpack-loader
 requests_oauthlib
 wand
-# bs4 pinned because of wagtail 2.8.1
-beautifulsoup4<4.6.1
+beautifulsoup4
 # only needed for the 'generate_corpus' manage command
 gensim
