@@ -360,11 +360,16 @@ class DigitizedWork(TrackChangesModel, Indexable):
         return None
 
     def save(self, *args, **kwargs):
-        # if status has changed so that object is now suppressed and this
-        # is a HathiTrust item, remove pairtree data
-        if self.has_changed('status') and self.status == self.SUPPRESSED \
-          and self.source == DigitizedWork.HATHI:
-            self.hathi.delete_pairtree_data()
+        # if status has changed so that object is now suppressed,
+        # do some cleanup
+        if self.has_changed('status') and self.status == self.SUPPRESSED:
+            # remove indexed page content from Solr
+            solr, solr_collection = get_solr_connection()
+            solr.delete_doc_by_query(solr_collection,
+                                     'source_id:"%s"' % self.source_id)
+            # if this is a HathiTrust item, remove pairtree data
+            if self.source == DigitizedWork.HATHI:
+                self.hathi.delete_pairtree_data()
 
         # source id is used as Solr identifier; if it changes, remove
         # the old record from Solr before saving with the new identifier
