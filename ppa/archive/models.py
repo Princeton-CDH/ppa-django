@@ -22,8 +22,7 @@ from wagtail.snippets.models import register_snippet
 
 from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS, \
     HathiDataAPI, HathiObject
-from ppa.archive.solr import Indexable
-from ppa.archive.solr import PagedSolrQuery
+from ppa.archive.solr import Indexable, PagedSolrQuery, get_solr_connection
 
 
 logger = logging.getLogger(__name__)
