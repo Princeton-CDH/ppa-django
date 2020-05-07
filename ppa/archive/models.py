@@ -169,7 +169,7 @@ class ProtectedWorkField(models.Field):
         '''Make the field unnullable and not allowed to be blank.'''
         super().__init__(verbose_name, name, blank=False, null=False, **kwargs)
 
-    def from_db_value(self, value, expression, connection, context):
+    def from_db_value(self, value, expression, connection):
         '''Always return an instance of :class:`ProtectedWorkFieldFlags`'''
         return ProtectedWorkFieldFlags(value)
 
@@ -350,7 +350,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
         '''Checks if an item has full text (currently only items from
         HathiTrust).'''
         return self.source == self.HATHI
-        
+
     @cached_property
     def hathi(self):
         ''':class:`ppa.archive.hathi.HathiObject` for HathiTrust records,

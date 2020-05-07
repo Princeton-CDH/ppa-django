@@ -773,7 +773,7 @@
           subtitle^35
           author^100
           notes^50
-          content^20
+          content
           pub_place
           publisher
       </str>

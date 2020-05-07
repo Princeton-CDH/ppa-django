@@ -66,14 +66,14 @@ def ht_pairtree(request):
     (currently has no pairtree content).  Sets list of `hathi_prefixes`
     on the calling class.'''
     # create temporary directories mocking hathi pairtree structure
-    tmpdir = tempfile.TemporaryDirectory(prefix='ht_data_')
-    prefixes = ['ab', 'cd', 'ef1', 'g23']
-    request.cls.hathi_prefixes = prefixes
-    with override_settings(HATHI_DATA=tmpdir.name):
-        for prefix in prefixes:
-            os.mkdir(os.path.join(tmpdir.name, prefix))
-        # use yield to ensure tests operate with the overridden settings
-        yield prefixes
+    with tempfile.TemporaryDirectory(prefix='ht_data_') as tmpdir_name:
+        prefixes = ['ab', 'cd', 'ef1', 'g23']
+        request.cls.hathi_prefixes = prefixes
+        with override_settings(HATHI_DATA=tmpdir_name):
+            for prefix in prefixes:
+                os.mkdir(os.path.join(tmpdir_name, prefix))
+            # use yield to ensure tests operate with the overridden settings
+            yield prefixes
 
 
 @pytest.mark.usefixtures("ht_pairtree")
