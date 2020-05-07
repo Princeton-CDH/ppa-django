@@ -33,17 +33,16 @@ This repo uses `git-flow <https://github.com/nvie/gitflow>`_ conventions; **mast
 contains the most recent release, and work in progress will be on the **develop** branch.
 Pull requests should be made against develop.
 
-Python 3.6 / Django 1.11 / Node 10.5.0 / MariaDB (MySQL) 5.5 w/ timezone info / Solr 6.6
+
+Python 3.6 / Django 1.11 / Node 10.5.0 / MariaDB (MySQL) 5.5 w/ timezone info / Solr 6.6 (requires Java 8)
+
 
 Development instructions
 ------------------------
 
 Initial setup and installation:
 
-- **recommended:** create and activate a python 3.6 virtualenv::
-
-     virtualenv ppa -p python3.6
-     source ppa/bin/activate
+- **recommended:** create and activate a python 3.6 virtual environment, perhaps with ``virtualenv`` or ``venv``
 
 - Use pip to install required python dependencies::
 
@@ -54,7 +53,7 @@ Initial setup and installation:
 
    cp ppa/local_settings.py.sample ppa/local_settings.py
 
-- Create a database, configure in local settings, and run migrations::
+- Create a database, configure in local settings in the `DATABASES` dictionary, change `SECRET_KEY`, and run migrations::
 
     python manage.py migrate
 
@@ -62,8 +61,8 @@ Initial setup and installation:
   solr config, using the core/collection names for development and
   testing that you configured in local settings::
 
-    solr create -c SOLR_CORE -d solr_conf
-    solr create -c SOLR_TEST_CORE -d solr_conf
+    solr create -c ppa -d solr_conf
+    solr create -c ppa-test -d solr_conf
 
 - Run the manage command to configure the schema::
 
@@ -78,7 +77,7 @@ Initial setup and installation:
 
     python manage.py hathi_import
 
-- Then index the imported content into Solr:
+- Then index the imported content into Solr::
 
     python manage.py index
 
@@ -90,6 +89,7 @@ before running the server.
 
 - To build all styles and js for production, including semantic UI::
 
+    npm install
     npm run build
 
 Alternatively, you can rebuild just the custom files or semantic independently.

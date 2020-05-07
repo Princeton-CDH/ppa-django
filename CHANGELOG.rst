@@ -3,6 +3,14 @@
 CHANGELOG
 =========
 
+3.4
+---
+
+* Add required alternative text field to captioned image for wagtail content
+* Upgrade to Django 2.2
+* Upgrade to Wagtail 2.7
+* bugfix: correct style regression for side by side images in wagtail content
+
 3.3
 ---
 

@@ -1,7 +1,7 @@
 {# Render SVGImageBlock with optional caption and description #}
 {% with img_id=value.image.url|slugify %} {# slugify image url for unique id #}
-<figure role="img" aria-label="{{ value.alternative_text }}" {% if value.extended_description %}aria-describedby="{{ img_id }}-desc"{% endif %}>
-    <img role="img" aria-hidden="true" src="{{ value.image.url }}" alt="{{ value.alternative_text }}"/>
+<figure {% if value.extended_description %}aria-describedby="{{ img_id }}-desc"{% endif %}>
+    <img role="img" src="{{ value.image.url }}" alt="{{ value.alternative_text }}"/>
     {% if value.caption %}
     <figcaption>{{ value.caption }}</figcaption>
     {% endif %}

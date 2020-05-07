@@ -212,7 +212,10 @@
                 clear: right;
                 padding-top: 1rem;
             }
-
+            
+            &.full {
+                clear: both;
+            }
         }
     }
 
@@ -245,7 +248,7 @@
         }
     }
 
-    .paragraph { // spacing between richtext blocks
+    .paragraph, .linkable_section { // spacing between richtext blocks
         margin-top: 1rem;
     }
 }

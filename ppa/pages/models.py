@@ -204,7 +204,8 @@ class BodyContentBlock(blocks.StreamBlock):
     and editorial pages'''
     paragraph = blocks.RichTextBlock(
         features=['h2', 'h3', 'bold', 'italic', 'link', 'ol', 'ul',
-                  'hr', 'blockquote', 'document']
+                  'hr', 'blockquote', 'document', 'superscript', 'subscript',
+                  'strikethrough', 'code']
     )
     captioned_image = ImageWithCaption(label='image')  # lavel as image
     svg_image = SVGImageBlock()
