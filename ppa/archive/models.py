@@ -34,7 +34,7 @@ NO_COLLECTION_LABEL = 'Uncategorized'
 
 
 class TrackChangesModel(models.Model):
-    ''':class:`~django.modles.Model` mixin that keeps a copy of initial
+    ''':class:`~django.models.Model` mixin that keeps a copy of initial
     data in order to check if fields have been changed. Change detection
     only works on the current instance of an object.'''
 
