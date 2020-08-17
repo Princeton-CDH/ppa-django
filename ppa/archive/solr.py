@@ -137,7 +137,7 @@ class SolrSchema(object):
         {'name': 'author_exact', 'type': 'string', 'required': False},
         {'name': 'collections_exact', 'type': 'string', 'required': False,
          'multiValued': True},
-        # {'name': 'content_nostem', 'type': 'text_nostem', 'required': False, 'stored': False},
+        {'name': 'content_nostem', 'type': 'text_nostem', 'required': False, 'stored': False},
 
         # fields without stemming for search boosting
         {'name': 'title_nostem', 'type': 'text_nostem', 'required': False, 'stored': False},
@@ -160,7 +160,7 @@ class SolrSchema(object):
         ('collections', 'collections_exact'),
         ('title', 'title_nostem'),
         ('subtitle', 'subtitle_nostem'),
-        # ('content', 'content_nostem'),
+        ('content', 'content_nostem'),
         # ('content', 'content_punctuation')
     ]
 
