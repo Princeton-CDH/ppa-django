@@ -103,8 +103,8 @@ class Command(BaseCommand):
         if self.options['clear']:
             self.clear(self.options['clear'])
 
-        # self.stats = defaultdict(int)
-        works = DigitizedWork.objects.all()
+        # Include only public works, exclude suppressed
+        works = DigitizedWork.objects.filter(status=DigitizedWork.PUBLIC)
 
         if self.options['source_ids']:
             works = works.filter(source_id__in=self.options['source_ids'])

@@ -361,6 +361,32 @@ class TestIndexCommand(TestCase):
             assert not mock_cmd_index_method.call_count
             assert not mock_page_index_data.call_count
 
+    @patch('ppa.archive.management.commands.index.get_solr_connection')
+    @patch('ppa.archive.management.commands.index.progressbar')
+    @patch.object(index.Command, 'index')
+    def test_skip_suppressed(self, mock_cmd_index_method, mockprogbar, mock_get_solr):
+        mocksolr = Mock()
+        test_coll = 'test'
+        mock_get_solr.return_value = (mocksolr, test_coll)
+
+        # mark one as suppressed
+        work = DigitizedWork.objects.first()
+        work.status = DigitizedWork.SUPPRESSED
+        work.save()
+
+        # digworks = DigitizedWork.objects.filter(status=DigitizedWork.PUBLIC)
+
+        stdout = StringIO()
+        call_command('index', index='works', stdout=stdout)
+
+        # index all works
+        # (can't use assert_called_with because querysets doesn't evaluate equal)
+        # mock_cmd_index_method.assert_called_with(digworks)
+        args = mock_cmd_index_method.call_args[0]
+        # first arg is queryset; compare them as lists
+        # assert list(digworks) == list(args[0])
+        assert work not in list(args[0])
+
 
 class TestHathiAddCommand(TestCase):
     fixtures = ['sample_digitized_works']
