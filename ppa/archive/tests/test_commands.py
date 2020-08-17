@@ -372,7 +372,10 @@ class TestIndexCommand(TestCase):
         # mark one as suppressed
         work = DigitizedWork.objects.first()
         work.status = DigitizedWork.SUPPRESSED
-        work.save()
+
+        # skip hathi data deletion when suppressed
+        with patch.object(work, 'hathi'):
+            work.save()
 
         # digworks = DigitizedWork.objects.filter(status=DigitizedWork.PUBLIC)
 
