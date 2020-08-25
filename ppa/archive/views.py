@@ -98,8 +98,9 @@ class DigitizedWorkListView(AjaxTemplateMixin, LastModifiedListMixin, ListView):
             if collections:
                 # if *all* collections are selected, no need to filter
                 # (will return everything either way; keep the query simpler)
-                if len(collections) != len(self.form.fields['collections'].choices):
-                    work_q.append('collections_exact:(%s)' % \
+                if len(collections) < len(self.form.fields['collections'].choices):
+                    work_q.append(
+                        'collections_exact:(%s)' %
                         (' OR '.join(['"%s"' % coll for coll in collections])))
 
             # For collection exclusion logic to work properly, if no
