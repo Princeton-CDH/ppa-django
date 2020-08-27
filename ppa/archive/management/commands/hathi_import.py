@@ -49,11 +49,11 @@ from django.core.management.base import BaseCommand
 from django.template.defaultfilters import pluralize
 from django.utils.timezone import now
 from pairtree import pairtree_client, storage_exceptions
+from parasolr.django.signals import IndexableSignalHandler
 import progressbar
 
 from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound
 from ppa.archive.models import DigitizedWork
-from ppa.archive.signals import IndexableSignalHandler
 
 
 logger = logging.getLogger(__name__)
