@@ -16,12 +16,13 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
 from pairtree import pairtree_client, pairtree_path, storage_exceptions
+from parasolr.django.indexing import ModelIndexable
+from parasolr.django.solrclient import SolrClient
 import pytest
 
 from ppa.archive import hathi
 from ppa.archive.models import DigitizedWork, Collection, \
     NO_COLLECTION_LABEL, ProtectedWorkFieldFlags, CollectionSignalHandlers
-from ppa.archive.solr import get_solr_connection, Indexable
 
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
@@ -44,7 +45,7 @@ class TestProtectedFlags(TestCase):
 @pytest.mark.django_db
 class TestCollectionSignalHandlers:
 
-    @patch.object(Indexable, 'index_items')
+    @patch.object(ModelIndexable, 'index_items')
     def test_save(self, mock_index_items):
         digwork = DigitizedWork.objects.create(source_id='njp.32101013082597')
         coll1 = Collection.objects.create(name='Flotsam')
@@ -61,9 +62,8 @@ class TestCollectionSignalHandlers:
         args, kwargs = mock_index_items.call_args
         assert isinstance(args[0], QuerySet)
         assert digwork in args[0]
-        assert kwargs['params'] == {'commitWithin': 3000}
 
-    @patch.object(Indexable, 'index_items')
+    @patch.object(ModelIndexable, 'index_items')
     def test_delete(self, mock_index_items):
         digwork = DigitizedWork.objects.create(source_id='njp.32101013082597')
         coll1 = Collection.objects.create(name='Flotsam')
@@ -75,7 +75,6 @@ class TestCollectionSignalHandlers:
         args, kwargs = mock_index_items.call_args
         assert isinstance(args[0], QuerySet)
         assert digwork in args[0]
-        assert kwargs['params'] == {'commitWithin': 3000}
 
 
 class TestDigitizedWork(TestCase):
@@ -104,7 +103,7 @@ class TestDigitizedWork(TestCase):
         digwork.source = DigitizedWork.OTHER
         # for non-hathi items, shouldn't have full text
         assert not digwork.has_fulltext
-        
+
     def test_hathi(self):
         digwork = DigitizedWork(source_id='njp.32101013082597',
                                 source=DigitizedWork.HATHI)
@@ -116,7 +115,6 @@ class TestDigitizedWork(TestCase):
                                 source=DigitizedWork.OTHER)
         assert digwork.hathi is None
 
-    @pytest.mark.usefixtures('solr')
     def test_index(self):
         with open(self.bibdata_brief) as bibdata:
             brief_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
@@ -124,20 +122,20 @@ class TestDigitizedWork(TestCase):
         digwork = DigitizedWork(source_id='njp.32101013082597')
         digwork.populate_from_bibdata(brief_bibdata)
         digwork.save()
-        solr, solr_collection = get_solr_connection()
+        solr = SolrClient()
         # digwork should be unindexed
-        res = solr.query(solr_collection, {'q': '*:*'})
-        assert res.get_results_count() == 0
+        res = solr.query(q='*:*')
+        assert res.numFound == 0
         # reindex to check that the method works on a saved object
         digwork.index()
         # digwork should be unindexed still because no commitWithin
-        res = solr.query(solr_collection, {'q': '*:*'})
-        assert res.get_results_count() == 0
-        digwork.index(params={'commitWithin': 500})
+        res = solr.query(q='*:*')
+        assert res.numFound == 0
+        digwork.index()
         sleep(1)
         # digwork should be returned by a query
-        res = solr.query(solr_collection, {'q': '*:*'})
-        assert res.get_results_count() == 1
+        res = solr.query(q='*:*')
+        assert res.numFound == 1
         assert res.docs[0]['id'] == 'njp.32101013082597'
 
     def test_compare_protected_fields(self):
@@ -158,7 +156,6 @@ class TestDigitizedWork(TestCase):
             protected_fields=ProtectedWorkFieldFlags.all_flags
         )
 
-
         changed_fields = digwork.compare_protected_fields(db_digwork)
         assert 'title' in changed_fields
         assert 'pub_place' in changed_fields
@@ -174,7 +171,7 @@ class TestDigitizedWork(TestCase):
             enumcron='02',
             pub_place='Paris',
             protected_fields=ProtectedWorkFieldFlags.enumcron
-            )
+        )
         field_dict = {
             'title': 'Test Title',
             'enumcron': '01',
@@ -796,7 +793,6 @@ class TestCollection(TestCase):
         collection.save()
         assert not collection.name_changed
 
-    @pytest.mark.usefixtures("solr")
     def test_stats(self):
         # test collection stats from Solr
 
@@ -816,9 +812,7 @@ class TestCollection(TestCase):
         wintry.collections.add(coll2)
 
         # reindex the digitized works so we can check stats
-        solr, solr_collection = get_solr_connection()
-        solr.index(solr_collection, [dw.index_data() for dw in digworks],
-                   params={"commitWithin": 100})
+        DigitizedWork.index_items(digworks)
         sleep(2)
 
         stats = Collection.stats()

@@ -17,46 +17,12 @@ import pytest
 
 from ppa.archive import hathi
 from ppa.archive.models import DigitizedWork
-from ppa.archive.management.commands import hathi_import, index, hathi_add
-from ppa.archive.solr import get_solr_connection
+from ppa.archive.management.commands import hathi_import, hathi_add
+# from ppa.archive.management.commands import hathi_import, index, hathi_add
 from ppa.archive.util import HathiImporter
 
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
-
-class TestSolrSchemaCommand(TestCase):
-
-    def test_connection_error(self):
-        # simulate no solr running
-        with override_settings(SOLR_CONNECTIONS={'default':
-                              {'COLLECTION': 'bogus',
-                               'URL': 'http://localhost:9876/solr/'}}):
-            with pytest.raises(CommandError):
-                call_command('solr_schema')
-
-    @pytest.mark.usefixtures("empty_solr")
-    def test_empty_solr(self):
-        stdout = StringIO()
-        call_command('solr_schema', stdout=stdout)
-        output = stdout.getvalue()
-        assert 'Added ' in output
-        assert 'Updated ' not in output
-
-    @pytest.mark.usefixtures("solr")
-    def test_update_solr(self):
-        stdout = StringIO()
-        call_command('solr_schema', stdout=stdout)
-        output = stdout.getvalue()
-        assert 'Updated ' in output
-        assert 'Added ' not in output
-
-        # create field to be removed
-        solr, coll = get_solr_connection()
-        solr.schema.create_field(
-            coll, {'name': 'bogus', 'type': 'string', 'required': False})
-        call_command('solr_schema', stdout=stdout)
-        output = stdout.getvalue()
-        assert 'Removed 1 field' in output
 
 
 @pytest.fixture(scope='class')
@@ -119,7 +85,6 @@ class TestHathiImportCommand(TestCase):
             .return_value.list_ids.return_value = id_values
         assert cmd.count_hathi_ids() == len(self.hathi_prefixes) * len(id_values)
 
-    @pytest.mark.usefixtures('solr')
     def test_import_digitizedwork(self):
         cmd = hathi_import.Command(stdout=StringIO())
         cmd.bib_api = Mock(spec=hathi.HathiBibliographicAPI)
@@ -228,167 +193,167 @@ class TestHathiImportCommand(TestCase):
             mockprogbar.ProgressBar.assert_called_with(redirect_stdout=True,
                                                        max_value=len(mock_htids))
 
+# disabled until index script is removed or refactored
+# class TestIndexCommand(TestCase):
+#     fixtures = ['sample_digitized_works']
 
-class TestIndexCommand(TestCase):
-    fixtures = ['sample_digitized_works']
+#     @patch('ppa.archive.management.commands.index.Indexable')
+#     def test_index(self, mockindexable):
+#         # index data into solr and catch  an error
+#         cmd = index.Command()
+#         cmd.solr = Mock()
+#         cmd.solr_collection = 'test'
 
-    @patch('ppa.archive.management.commands.index.Indexable')
-    def test_index(self, mockindexable):
-        # index data into solr and catch  an error
-        cmd = index.Command()
-        cmd.solr = Mock()
-        cmd.solr_collection = 'test'
+#         test_index_data = range(5)
+#         cmd.index(test_index_data)
+#         mockindexable.index_items.assert_called_with(test_index_data, progbar=None)
 
-        test_index_data = range(5)
-        cmd.index(test_index_data)
-        mockindexable.index_items.assert_called_with(test_index_data, progbar=None)
+#         # solr connection exception should raise a command error
+#         with pytest.raises(CommandError):
+#             mockindexable.index_items.side_effect = Exception
+#             cmd.index(test_index_data)
 
-        # solr connection exception should raise a command error
-        with pytest.raises(CommandError):
-            mockindexable.index_items.side_effect = Exception
-            cmd.index(test_index_data)
+#     def test_clear(self):
+#         # index data into solr and catch  an error
+#         cmd = index.Command()
+#         cmd.solr = Mock()
+#         cmd.solr_collection = 'test'
 
-    def test_clear(self):
-        # index data into solr and catch  an error
-        cmd = index.Command()
-        cmd.solr = Mock()
-        cmd.solr_collection = 'test'
+#         cmd.clear('all')
+#         cmd.solr.delete_doc_by_query.assert_called_with(cmd.solr_collection, '*:*')
 
-        cmd.clear('all')
-        cmd.solr.delete_doc_by_query.assert_called_with(cmd.solr_collection, '*:*')
+#         cmd.solr.reset_mock()
+#         cmd.clear('works')
+#         cmd.solr.delete_doc_by_query.assert_called_with(cmd.solr_collection, 'item_type:work')
 
-        cmd.solr.reset_mock()
-        cmd.clear('works')
-        cmd.solr.delete_doc_by_query.assert_called_with(cmd.solr_collection, 'item_type:work')
+#         cmd.solr.reset_mock()
+#         cmd.clear('pages')
+#         cmd.solr.delete_doc_by_query.assert_called_with(cmd.solr_collection, 'item_type:page')
 
-        cmd.solr.reset_mock()
-        cmd.clear('pages')
-        cmd.solr.delete_doc_by_query.assert_called_with(cmd.solr_collection, 'item_type:page')
+#         cmd.solr.reset_mock()
+#         cmd.clear('foo')
+#         cmd.solr.delete_doc_by_query.assert_not_called()
 
-        cmd.solr.reset_mock()
-        cmd.clear('foo')
-        cmd.solr.delete_doc_by_query.assert_not_called()
+#         cmd.stdout = StringIO()
+#         cmd.verbosity = 3
+#         cmd.clear('works')
+#         assert cmd.stdout.getvalue() == 'Clearing works from the index'
 
-        cmd.stdout = StringIO()
-        cmd.verbosity = 3
-        cmd.clear('works')
-        assert cmd.stdout.getvalue() == 'Clearing works from the index'
+#     @patch('ppa.archive.management.commands.index.get_solr_connection')
+#     @patch('ppa.archive.management.commands.index.progressbar')
+#     @patch.object(index.Command, 'index')
+#     def test_call_command(self, mock_cmd_index_method, mockprogbar, mock_get_solr):
+#         mocksolr = Mock()
+#         test_coll = 'test'
+#         mock_get_solr.return_value = (mocksolr, test_coll)
+#         digworks = DigitizedWork.objects.all()
 
-    @patch('ppa.archive.management.commands.index.get_solr_connection')
-    @patch('ppa.archive.management.commands.index.progressbar')
-    @patch.object(index.Command, 'index')
-    def test_call_command(self, mock_cmd_index_method, mockprogbar, mock_get_solr):
-        mocksolr = Mock()
-        test_coll = 'test'
-        mock_get_solr.return_value = (mocksolr, test_coll)
-        digworks = DigitizedWork.objects.all()
+#         stdout = StringIO()
+#         call_command('index', index='works', stdout=stdout)
 
-        stdout = StringIO()
-        call_command('index', index='works', stdout=stdout)
+#         # index all works
+#         # (can't use assert_called_with because querysets doesn't evaluate equal)
+#         # mock_cmd_index_method.assert_called_with(digworks)
+#         args = mock_cmd_index_method.call_args[0]
+#         # first arg is queryset; compare them as lists
+#         assert list(digworks) == list(args[0])
 
-        # index all works
-        # (can't use assert_called_with because querysets doesn't evaluate equal)
-        # mock_cmd_index_method.assert_called_with(digworks)
-        args = mock_cmd_index_method.call_args[0]
-        # first arg is queryset; compare them as lists
-        assert list(digworks) == list(args[0])
+#         # not enough data to run progress bar
+#         mockprogbar.ProgressBar.assert_not_called()
+#         # commit called after works are indexed
+#         mocksolr.commit.assert_called_with(test_coll, openSearcher=True)
+#         # only called once (no pages)
+#         assert mock_cmd_index_method.call_count == 1
 
-        # not enough data to run progress bar
-        mockprogbar.ProgressBar.assert_not_called()
-        # commit called after works are indexed
-        mocksolr.commit.assert_called_with(test_coll, openSearcher=True)
-        # only called once (no pages)
-        assert mock_cmd_index_method.call_count == 1
+#         with patch.object(DigitizedWork, 'page_index_data') as mock_page_index_data:
+#             mock_cmd_index_method.reset_mock()
+#             total_works = digworks.count()
+#             total_pages = sum(work.page_count for work in digworks)
 
-        with patch.object(DigitizedWork, 'page_index_data') as mock_page_index_data:
-            mock_cmd_index_method.reset_mock()
-            total_works = digworks.count()
-            total_pages = sum(work.page_count for work in digworks)
+#             # simple number generator to test indexing in chunks
+#             def test_generator():
+#                 for i in range(155):
+#                     yield i
 
-            # simple number generator to test indexing in chunks
-            def test_generator():
-                for i in range(155):
-                    yield i
+#             mock_page_index_data.side_effect = test_generator
 
-            mock_page_index_data.side_effect = test_generator
+#             call_command('index', index='pages', stdout=stdout)
 
-            call_command('index', index='pages', stdout=stdout)
+#             # progressbar should be called
+#             mockprogbar.ProgressBar.assert_called_with(
+#                 redirect_stdout=True, max_value=total_pages)
+#             # page index data called once for each work
+#             assert mock_page_index_data.call_count == total_works
+#             # progress bar updated called once for each work
+#             mockprogbar.ProgressBar.return_value.update.call_count = total_works
+#             # mock index called once for each work (chunking handled in Indexable)
+#             assert mock_cmd_index_method.call_count == total_works
 
-            # progressbar should be called
-            mockprogbar.ProgressBar.assert_called_with(
-                redirect_stdout=True, max_value=total_pages)
-            # page index data called once for each work
-            assert mock_page_index_data.call_count == total_works
-            # progress bar updated called once for each work
-            mockprogbar.ProgressBar.return_value.update.call_count = total_works
-            # mock index called once for each work (chunking handled in Indexable)
-            assert mock_cmd_index_method.call_count == total_works
+#             # request no progress bar
+#             mockprogbar.reset_mock()
+#             call_command('index', index='pages', no_progress=True, stdout=stdout)
+#             mockprogbar.ProgressBar.assert_not_called()
 
-            # request no progress bar
-            mockprogbar.reset_mock()
-            call_command('index', index='pages', no_progress=True, stdout=stdout)
-            mockprogbar.ProgressBar.assert_not_called()
+#             # index both works and pages (default behavior)
+#             mock_cmd_index_method.reset_mock()
+#             mock_page_index_data.reset_mock()
+#             call_command('index', stdout=stdout)
+#             # progressbar should be called, total = works + pages
+#             mockprogbar.ProgressBar.assert_called_with(
+#                 redirect_stdout=True, max_value=total_works + total_pages)
+#             # called once for the works (all indexed in one batch) and
+#             # once for each set of pages in a work
+#             assert mock_cmd_index_method.call_count == total_works + 1
+#             # page index data called
+#             assert mock_page_index_data.call_count == total_works
 
-            # index both works and pages (default behavior)
-            mock_cmd_index_method.reset_mock()
-            mock_page_index_data.reset_mock()
-            call_command('index', stdout=stdout)
-            # progressbar should be called, total = works + pages
-            mockprogbar.ProgressBar.assert_called_with(
-                redirect_stdout=True, max_value=total_works + total_pages)
-            # called once for the works (all indexed in one batch) and
-            # once for each set of pages in a work
-            assert mock_cmd_index_method.call_count == total_works + 1
-            # page index data called
-            assert mock_page_index_data.call_count == total_works
+#             # index a single work by id
+#             work = digworks.first()
+#             mock_cmd_index_method.reset_mock()
+#             mock_page_index_data.reset_mock()
+#             call_command('index', work.source_id, stdout=stdout)
+#             mockprogbar.ProgressBar.assert_called_with(
+#                 redirect_stdout=True, max_value=1 + work.page_count)
+#             # called once for the work and once for the pages
+#             assert mock_cmd_index_method.call_count == 2
+#             # page index data called once only
+#             assert mock_page_index_data.call_count == 1
 
-            # index a single work by id
-            work = digworks.first()
-            mock_cmd_index_method.reset_mock()
-            mock_page_index_data.reset_mock()
-            call_command('index', work.source_id, stdout=stdout)
-            mockprogbar.ProgressBar.assert_called_with(
-                redirect_stdout=True, max_value=1 + work.page_count)
-            # called once for the work and once for the pages
-            assert mock_cmd_index_method.call_count == 2
-            # page index data called once only
-            assert mock_page_index_data.call_count == 1
+#             # index nothing
+#             mock_cmd_index_method.reset_mock()
+#             mock_page_index_data.reset_mock()
+#             call_command('index', index='none', stdout=stdout)
+#             assert not mock_cmd_index_method.call_count
+#             assert not mock_page_index_data.call_count
 
-            # index nothing
-            mock_cmd_index_method.reset_mock()
-            mock_page_index_data.reset_mock()
-            call_command('index', index='none', stdout=stdout)
-            assert not mock_cmd_index_method.call_count
-            assert not mock_page_index_data.call_count
+#     @patch('ppa.archive.management.commands.index.get_solr_connection')
+#     @patch('ppa.archive.management.commands.index.progressbar')
+#     @patch.object(index.Command, 'index')
+#     def test_skip_suppressed(self, mock_cmd_index_method, mockprogbar, mock_get_solr):
+#         mocksolr = Mock()
+#         test_coll = 'test'
+#         mock_get_solr.return_value = (mocksolr, test_coll)
 
-    @patch('ppa.archive.management.commands.index.get_solr_connection')
-    @patch('ppa.archive.management.commands.index.progressbar')
-    @patch.object(index.Command, 'index')
-    def test_skip_suppressed(self, mock_cmd_index_method, mockprogbar, mock_get_solr):
-        mocksolr = Mock()
-        test_coll = 'test'
-        mock_get_solr.return_value = (mocksolr, test_coll)
+#         # mark one as suppressed
+#         work = DigitizedWork.objects.first()
+#         work.status = DigitizedWork.SUPPRESSED
 
-        # mark one as suppressed
-        work = DigitizedWork.objects.first()
-        work.status = DigitizedWork.SUPPRESSED
+#         # skip hathi data deletion when suppressed
+#         with patch.object(work, 'hathi'):
+#             work.save()
 
-        # skip hathi data deletion when suppressed
-        with patch.object(work, 'hathi'):
-            work.save()
+#         # digworks = DigitizedWork.objects.filter(status=DigitizedWork.PUBLIC)
 
-        # digworks = DigitizedWork.objects.filter(status=DigitizedWork.PUBLIC)
+#         stdout = StringIO()
+#         call_command('index', index='works', stdout=stdout)
 
-        stdout = StringIO()
-        call_command('index', index='works', stdout=stdout)
-
-        # index all works
-        # (can't use assert_called_with because querysets doesn't evaluate equal)
-        # mock_cmd_index_method.assert_called_with(digworks)
-        args = mock_cmd_index_method.call_args[0]
-        # first arg is queryset; compare them as lists
-        # assert list(digworks) == list(args[0])
-        assert work not in list(args[0])
+#         # index all works
+#         # (can't use assert_called_with because querysets doesn't evaluate equal)
+#         # mock_cmd_index_method.assert_called_with(digworks)
+#         args = mock_cmd_index_method.call_args[0]
+#         # first arg is queryset; compare them as lists
+#         # assert list(digworks) == list(args[0])
+#         assert work not in list(args[0])
 
 
 class TestHathiAddCommand(TestCase):

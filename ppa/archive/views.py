@@ -20,7 +20,6 @@ from SolrClient.exceptions import SolrError
 from ppa.archive.forms import SearchForm, AddToCollectionForm, \
     SearchWithinWorkForm, AddFromHathiForm
 from ppa.archive.models import DigitizedWork, NO_COLLECTION_LABEL
-from ppa.archive.solr import get_solr_connection, PagedSolrQuery
 from ppa.common.views import AjaxTemplateMixin, LastModifiedMixin, \
     LastModifiedListMixin
 from ppa.archive.util import HathiImporter
@@ -587,10 +586,8 @@ class AddToCollection(PermissionRequiredMixin, ListView, FormView):
                 # previous digitized works in set.
                 collection.digitizedwork_set.add(*digitized_works)
             # reindex solr with the new collection data
-            solr_docs = [work.index_data() for work in digitized_works]
-            solr, solr_collection = get_solr_connection()
-            solr.index(solr_collection, solr_docs,
-                       params={'commitWithin': 2000})
+            DigitizedWork.index(digitized_works)
+
             # create a success message to add to message framework stating
             # what happened
             num_works = digitized_works.count()

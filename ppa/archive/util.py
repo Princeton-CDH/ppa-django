@@ -7,10 +7,10 @@ Utility code related to :mod:`ppa.archives`
 from collections import OrderedDict
 from json.decoder import JSONDecodeError
 
+from parasolr.django.signals import IndexableSignalHandler
+
 from ppa.archive import hathi
 from ppa.archive.models import DigitizedWork
-from ppa.archive.signals import IndexableSignalHandler
-from ppa.archive.solr import get_solr_connection
 
 
 class HathiImporter:
@@ -111,9 +111,6 @@ class HathiImporter:
             for work in self.imported_works:
                 # index page index data in chunks (returns a generator)
                 DigitizedWork.index_items(work.page_index_data())
-
-            solr, solr_collection = get_solr_connection()
-            solr.commit(solr_collection, openSearcher=True)
 
     def get_status_message(self, status):
         '''Get a readable status message for a given status'''

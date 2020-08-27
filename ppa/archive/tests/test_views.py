@@ -20,7 +20,7 @@ from SolrClient.exceptions import SolrError
 from ppa.archive.forms import SearchForm, ModelMultipleChoiceFieldWithEmpty, \
     AddFromHathiForm
 from ppa.archive.models import DigitizedWork, Collection, NO_COLLECTION_LABEL
-from ppa.archive.solr import get_solr_connection, PagedSolrQuery
+# from ppa.archive.solr import PagedSolrQuery
 from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView, \
     AddFromHathiView
 from ppa.archive.templatetags.ppa_tags import page_image_url, page_url
@@ -34,15 +34,13 @@ class TestArchiveViews(TestCase):
         self.admin_user = get_user_model().objects.create_superuser(
             'admin', 'admin@example.com', self.admin_pass)
 
-    @pytest.mark.usefixtures("solr")
     def test_digitizedwork_detailview(self):
         # get a work and its detail page to test with
         dial = DigitizedWork.objects.get(source_id='chi.78013704')
         url = reverse('archive:detail', kwargs={'source_id': dial.source_id})
 
         # index in solr to add last modified for header
-        solr, solr_collection = get_solr_connection()
-        solr.index(solr_collection, [dial.index_data()], params={"commitWithin": 100})
+        DigitizedWork.index_items([dial])
         sleep(1)
 
         # get the detail view page and check that the response is 200
@@ -174,7 +172,6 @@ class TestArchiveViews(TestCase):
         # should not display item details
         self.assertNotContains(response, dial.title, status_code=410)
 
-    @pytest.mark.usefixtures("solr")
     def test_digitizedwork_detailview_nonhathi(self):
         # non-hathi work
         thesis = DigitizedWork.objects.create(
@@ -186,8 +183,7 @@ class TestArchiveViews(TestCase):
             pub_date=1924, page_count=81)
 
         # index in solr to add last modified for header
-        solr, solr_collection = get_solr_connection()
-        solr.index(solr_collection, [thesis.index_data()], params={"commitWithin": 100})
+        DigitizedWork.index_items([thesis])
         sleep(1)
 
         response = self.client.get(thesis.get_absolute_url())
@@ -216,7 +212,6 @@ class TestArchiveViews(TestCase):
             # called once for last modified, but not for search
             assert mock_paged_solrq.call_count == 1
 
-    @pytest.mark.usefixtures("solr")
     def test_digitizedwork_detailview_query(self):
         '''test digitized work detail page with search query'''
 
@@ -225,8 +220,7 @@ class TestArchiveViews(TestCase):
         url = reverse('archive:detail', kwargs={'source_id': dial.source_id})
 
         # index in solr to add last modified for header
-        solr, solr_collection = get_solr_connection()
-        solr.index(solr_collection, [dial.index_data()], params={"commitWithin": 100})
+        DigitizedWork.index_items([dial])
         sleep(1)
 
         # make some sample page content
@@ -239,12 +233,11 @@ class TestArchiveViews(TestCase):
         solr_page_docs = [
             {'content': content, 'order': i+1, 'item_type': 'page',
              'source_id': htid, 'id': '%s.%s' % (htid, i), 'label': i}
-             for i, content in enumerate(sample_page_content)]
+            for i, content in enumerate(sample_page_content)]
         dial = DigitizedWork.objects.get(source_id='chi.78013704')
         solr_work_docs = [dial.index_data()]
-        solr, solr_collection = get_solr_connection()
         index_data = solr_work_docs + solr_page_docs
-        solr.index(solr_collection, index_data, params={"commitWithin": 100})
+        DigitizedWork.index_items(index_data)
         sleep(2)
 
         # search should include query in the context and a PageSolrQuery
@@ -345,7 +338,6 @@ class TestArchiveViews(TestCase):
         # should have pagination
         self.assertContains(response, "<div class=\"page-controls")
 
-    @pytest.mark.usefixtures("solr")
     def test_digitizedwork_listview(self):
         url = reverse('archive:list')
 
@@ -371,9 +363,8 @@ class TestArchiveViews(TestCase):
         wintry = digitized_works.filter(title__icontains='Wintry')[0]
         wintry.collections.add(collection)
         solr_work_docs = [digwork.index_data() for digwork in digitized_works]
-        solr, solr_collection = get_solr_connection()
         index_data = solr_work_docs + solr_page_docs
-        solr.index(solr_collection, index_data, params={"commitWithin": 100})
+        DigitizedWork.index_items(index_data)
         sleep(2)
 
         # also get dial for use with author and title searching
