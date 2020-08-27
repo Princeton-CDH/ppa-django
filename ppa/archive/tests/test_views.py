@@ -809,13 +809,8 @@ class TestAddToCollection(TestCase):
             html=True
         )
 
-    @patch('ppa.archive.views.get_solr_connection')
-    def test_post(self, mockgetsolr):
-
-        mocksolr = Mock()
-        mockcollection = Mock()
-        mockgetsolr.return_value = mocksolr, mockcollection
-
+    @patch.object(DigitizedWork, 'index')
+    def test_post(self, mockindex):
         self.client.login(**self.admin_credentials)
 
         # - check that a post to the bulk-add route with valid pks
@@ -844,12 +839,11 @@ class TestAddToCollection(TestCase):
             session['collection-add-ids']
         # the session variable is cleared
         assert 'collection-add-ids' not in self.client.session
-        # - check that solr indexing was called correctly via mocks
-        assert mockgetsolr.called
-        solr_docs = [work.index_data() for work in digworks]
-        mocksolr.index.assert_called_with(
-            mockcollection, solr_docs, params={'commitWithin': 2000}
-        )
+        # - check that index method was called
+        assert mockindex.call_count == 1
+        # check index called with the expected works
+        # (use list because of queryset comparison limitations)
+        assert list(mockindex.call_args[0][0]) == list(digworks)
 
         # - bulk add should actually add and not reset collections, i.e.
         # those individually added or added in a previous bulk add shouldn't
