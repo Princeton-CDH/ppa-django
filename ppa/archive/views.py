@@ -15,6 +15,7 @@ from django.urls import reverse
 from django.views.generic import ListView, DetailView
 from django.views.generic.base import RedirectView, TemplateView
 from django.views.generic.edit import FormView
+from parasolr.utils import solr_timestamp_to_datetime
 from SolrClient.exceptions import SolrError
 
 from ppa.archive.forms import SearchForm, AddToCollectionForm, \
@@ -339,7 +340,7 @@ class DigitizedWorkListView(AjaxTemplateMixin, LastModifiedListMixin, ListView):
         try:
             psq = PagedSolrQuery(query_opts)
             # Solr stores date in isoformat; convert to datetime
-            return self.solr_timestamp_to_datetime(psq[0]['last_modified'])
+            return solr_timestamp_to_datetime(psq[0]['last_modified'])
             # skip extra call to Solr to check count and just grab the first
             # item if it exists
         except (IndexError, KeyError, SolrError):
@@ -374,7 +375,7 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, LastModifiedMixin, DetailView):
                 'fl': 'last_modified'
             })
             # Solr stores date in isoformat; convert to datetime
-            return self.solr_timestamp_to_datetime(psq[0]['last_modified'])
+            return solr_timestamp_to_datetime(psq[0]['last_modified'])
             # skip extra call to Solr to check count and just grab the first
             # item if it exists
         except (SolrError, IndexError, KeyError):
