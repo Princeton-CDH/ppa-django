@@ -15,6 +15,8 @@ from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
 from flags import Flags
 from pairtree import pairtree_path, pairtree_client, storage_exceptions
+from parasolr.django import SolrQuerySet
+from parasolr.django.indexing import ModelIndexable
 import requests
 from wagtail.core.fields import RichTextField
 from wagtail.admin.edit_handlers import FieldPanel
@@ -22,7 +24,6 @@ from wagtail.snippets.models import register_snippet
 
 from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS, \
     HathiDataAPI, HathiObject
-from ppa.archive.solr import Indexable, PagedSolrQuery, get_solr_connection
 
 
 logger = logging.getLogger(__name__)
@@ -98,29 +99,18 @@ class Collection(TrackChangesModel):
         '''
 
         # NOTE: if we *only* want counts, could just do a regular facet
-        solr_stats = PagedSolrQuery({
-            'q': '*:*',
-            'facet': True,
-            'facet.pivot': '{!stats=piv1}collections_exact',
-            # NOTE: if we pivot on collection twice, like this, we should
-            # have the information needed to generate a venn diagram
-            # of the collections (based on number of overlap)
-            # 'facet.pivot': '{!stats=piv1}collections_exact,collections_exact'
-            'stats': True,
-            'stats.field': '{!tag=piv1 min=true max=true}pub_date',
-            # don't return any actual items, just the facets
-            'rows': 0
-        })
-        facet_pivot = solr_stats.raw_response['facet_counts']['facet_pivot']
+        sqs = SolrQuerySet().stats('{!tag=piv1 min=true max=true}pub_date') \
+            .facet(pivot='{!stats=piv1}collections_exact')
+        facet_pivot = sqs.get_facets().facet_pivot
         # simplify the pivot stat data for display
         stats = {}
-        for info in facet_pivot['collections_exact']:
-            pub_date_stats = info['stats']['stats_fields']['pub_date']
-            stats[info['value']] = {
-                'count': info['count'],
+        for collection in facet_pivot.collections_exact:
+            pub_date_stats = collection.stats.stats_fields.pub_date
+            stats[collection.value] = {
+                'count': collection.count,
                 'dates': '%(min)d–%(max)d' % pub_date_stats \
-                    if pub_date_stats['max'] != pub_date_stats['min'] \
-                    else '%d' % pub_date_stats['min']
+                    if pub_date_stats.max != pub_date_stats.min \
+                    else '%d' % pub_date_stats.min
             }
 
         return stats
@@ -197,7 +187,7 @@ class CollectionSignalHandlers:
             works = instance.digitizedwork_set.all()
             if works.exists():
                 logger.debug('collection save, reindexing %d related works', works.count())
-                Indexable.index_items(works, params={'commitWithin': 3000})
+                DigitizedWork.index_items(works)
 
     @staticmethod
     def delete(sender, instance, **kwargs):
@@ -212,10 +202,10 @@ class CollectionSignalHandlers:
         # NOTE: this sends pre/post clear signal, but it's not obvious
         # how to take advantage of that
         instance.digitizedwork_set.clear()
-        Indexable.index_items(digworks, params={'commitWithin': 3000})
+        DigitizedWork.index_items(digworks)
 
 
-class DigitizedWork(TrackChangesModel, Indexable):
+class DigitizedWork(TrackChangesModel, ModelIndexable):
     '''
     Record to manage digitized works included in PPA and store their basic
     metadata.
@@ -363,9 +353,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
         # do some cleanup
         if self.has_changed('status') and self.status == self.SUPPRESSED:
             # remove indexed page content from Solr
-            solr, solr_collection = get_solr_connection()
-            solr.delete_doc_by_query(solr_collection,
-                                     'source_id:"%s"' % self.source_id)
+            self.solr.update.delete_by_query('source_id:"%s"' % self.source_id)
             # if this is a HathiTrust item, remove pairtree data
             if self.source == DigitizedWork.HATHI:
                 self.hathi.delete_pairtree_data()
@@ -377,7 +365,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
         if self.has_changed('source_id'):
             new_source_id = self.source_id
             self.source_id = self.initial_value('source_id')
-            self.remove_from_index(params={"commitWithin": 3000})
+            self.remove_from_index()
             self.source_id = new_source_id
 
         super().save(*args, **kwargs)
@@ -555,8 +543,8 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
     index_depends_on = {
         'collections': {
-            'save': CollectionSignalHandlers.save,
-            'delete': CollectionSignalHandlers.delete,
+            'post_save': CollectionSignalHandlers.save,
+            'pre_delete': CollectionSignalHandlers.delete,
         }
     }
 
