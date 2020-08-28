@@ -1,15 +1,13 @@
-from datetime import datetime
 from unittest.mock import Mock
 
-from django.contrib.auth.models import User, Group
-from django.test import override_settings, RequestFactory, TestCase
+from django.contrib.auth.models import Group, User
+from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
-from wagtail.core.models import Site, Page
+from wagtail.core.models import Page, Site
 
-from ppa.common.admin import LocalUserAdmin
-from ppa.common.views import VaryOnHeadersMixin, AjaxTemplateMixin, \
-    LastModifiedMixin
 from ppa.archive.views import DigitizedWorkListView
+from ppa.common.admin import LocalUserAdmin
+from ppa.common.views import AjaxTemplateMixin, VaryOnHeadersMixin
 
 
 class TestLocalUserAdmin(TestCase):

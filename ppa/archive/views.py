@@ -15,21 +15,22 @@ from django.urls import reverse
 from django.views.generic import ListView, DetailView
 from django.views.generic.base import RedirectView, TemplateView
 from django.views.generic.edit import FormView
-from parasolr.utils import solr_timestamp_to_datetime
+from parasolr.django import SolrQuerySet
+from parasolr.django.views import SolrLastModifiedMixin
 from SolrClient.exceptions import SolrError
 
 from ppa.archive.forms import SearchForm, AddToCollectionForm, \
     SearchWithinWorkForm, AddFromHathiForm
 from ppa.archive.models import DigitizedWork, NO_COLLECTION_LABEL
-from ppa.common.views import AjaxTemplateMixin, LastModifiedMixin, \
-    LastModifiedListMixin
+from ppa.common.views import AjaxTemplateMixin
 from ppa.archive.util import HathiImporter
 
 
 logger = logging.getLogger(__name__)
 
 
-class DigitizedWorkListView(AjaxTemplateMixin, LastModifiedListMixin, ListView):
+class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
+                            ListView):
     '''Search and browse digitized works.  Based on Solr index
     of works and pages.'''
 
@@ -320,34 +321,9 @@ class DigitizedWorkListView(AjaxTemplateMixin, LastModifiedListMixin, ListView):
         })
         return context
 
-    def last_modified(self):
-        '''override last modified logic to work with Solr'''
 
-        # override sort to return most recent modification date,
-        # only return last modified value and nothing else
-
-        # use most recent modification time of anything in the index,
-        # since any search on the archive page coud change based
-        # on work or text content changing in the index, (could add
-        # or remove results from any particular set)
-        query_opts = {
-            'q': '*:*',
-            'sort': 'last_modified desc',
-            'fl': 'last_modified'
-        }
-
-        # if a syntax or other solr error happens, no date to return
-        try:
-            psq = PagedSolrQuery(query_opts)
-            # Solr stores date in isoformat; convert to datetime
-            return solr_timestamp_to_datetime(psq[0]['last_modified'])
-            # skip extra call to Solr to check count and just grab the first
-            # item if it exists
-        except (IndexError, KeyError, SolrError):
-            pass
-
-
-class DigitizedWorkDetailView(AjaxTemplateMixin, LastModifiedMixin, DetailView):
+class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin,
+                              DetailView):
     '''Display details for a single digitized work. If a work has been
     surpressed, returns a 410 Gone response.'''
     ajax_template_name = 'archive/snippets/results_within_list.html'
@@ -362,24 +338,8 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, LastModifiedMixin, DetailView):
             return '410.html'
         return super().get_template_names()
 
-    def last_modified(self):
-        """get last index modification from Solr, as it will be more
-        current than object last modified."""
-
-        # if there is a solr error or last modified is not avilable,
-        # skip last-modified behavior and display page
-        try:
-            psq = PagedSolrQuery({
-                'q': 'source_id:"%s"' % self.object.source_id,
-                'sort': 'last_modified desc',
-                'fl': 'last_modified'
-            })
-            # Solr stores date in isoformat; convert to datetime
-            return solr_timestamp_to_datetime(psq[0]['last_modified'])
-            # skip extra call to Solr to check count and just grab the first
-            # item if it exists
-        except (SolrError, IndexError, KeyError):
-            pass
+    def get_solr_lastmodified_filters(self):
+        return {'source_id': self.object.source_id}
 
     def get(self, *args, **kwargs):
         response = super().get(*args, **kwargs)
