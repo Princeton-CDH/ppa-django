@@ -17,6 +17,7 @@ from django.views.generic.base import RedirectView, TemplateView
 from django.views.generic.edit import FormView
 from parasolr.django import SolrQuerySet
 from parasolr.django.views import SolrLastModifiedMixin
+import requests
 from SolrClient.exceptions import SolrError
 
 from ppa.archive.forms import SearchForm, AddToCollectionForm, \
@@ -365,51 +366,40 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin,
         query = self.request.GET.get('query', '')
         form_opts = self.request.GET.copy()
         form = self.form_class(form_opts)
-        context['search_form'] = form
-        solr_pageq = None
+        context.update({
+            'search_form': form,
+            'query': query
+        })
 
         # search within a volume currently only supported for hathi content
         if query and digwork.source == DigitizedWork.HATHI:
-            context['query'] = query
-            solr_q = query
-            solr_opts = {
-                'q': 'content:(%s)' % solr_q,
-                # sort by page order by default
-                'sort': 'order asc',
-                # 'fl': '*',
-                'fl': 'id,source_id,order,title,label',  # Limiting only to needed fields
-                'fq': 'source_id:("%s") AND item_type:page' % digwork.source_id,
-                # configure highlighting on page text content
-                'hl': True,
-                'hl.fl': 'content',
-                'hl.snippets': 3,
-                # not default but recommended
-                'hl.method': 'unified',
-            }
-            logger.info("Solr page keyword search query: %s" % solr_q)
+            # search on the specified search terms,
+            # filter on digitized work source id and page type,
+            # sort by page order,
+            # only return fields needed for page result display,
+            # configure highlighting on page text content
+            solr_pageq = SolrQuerySet() \
+                .search(content='(%s)' % query) \
+                .filter(source_id='(%s)' % digwork.source_id,
+                        item_type='page') \
+                .only('id', 'source_id', 'order', 'title', 'label') \
+                .highlight('content', snippets=3, method='unified') \
+                .order_by('order')
 
             try:
-                # configure paginator and set in context
-                solr_pageq = PagedSolrQuery(solr_opts)
                 paginator = Paginator(solr_pageq, per_page=self.paginate_by)
-                page = self.request.GET.get('page', 1)
+                page_num = self.request.GET.get('page', 1)
+                current_page = paginator.page(page_num)
+                paged_result = current_page.object_list
+
                 context.update({
                     'search_form': form,
-                    'page_obj': paginator.page(page),
-                    # get matching pages and highlights and set in context
-                    # 'page_highlights': solr_pageq.get_highlighting() if solr_pageq else {}
-                    'page_highlights': solr_pageq.get_highlighting() if solr_pageq else {},
-                    'solr_results': solr_pageq.get_results() if solr_pageq else []
+                    'current_results': current_page,
+                    # add highlights to context
+                    'page_highlights': paged_result.get_highlighting()
                 })
-
-            except SolrError as solr_err:
-                if 'Cannot parse' in str(solr_err):
-                    error_msg = ('Unable to parse search query; '
-                                 'please revise and try again.')
-                else:
-                    # NOTE: this error should possibly be raised; 500 error?
-                    error_msg = 'Something went wrong.'
-                context['error'] = error_msg
+            except requests.exceptions.ConnectionError:
+                context['error'] = 'Something went wrong'
 
         return context
 

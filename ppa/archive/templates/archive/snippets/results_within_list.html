@@ -1,19 +1,19 @@
 {% load ppa_tags %}
 {% comment %}
-    This partial is rendered as part of `digitizedwork_detail.html` and can also 
+    This partial is rendered as part of `digitizedwork_detail.html` and can also
     be requested asynchronously to repopulate the search results.
 {% endcomment %}
 {% if query or page_highlights %}
     {% if not error %}
     <div class="occurrences ui center aligned text container">
-        <p>{{ page_obj.paginator.count }} occurrence{{ page_obj.paginator.count|pluralize }}</p>
+        <p>{{ current_results.paginator.count }} occurrence{{ current_results.paginator.count|pluralize }}</p>
     </div>
     <div class="pagination ui container">
-        {% include 'archive/snippets/pagination.html' %}
+        {% include 'archive/snippets/pagination.html' with page_obj=current_results %}
     </div>
     {% endif %}
     <div class="results-list ui container">
-        {% for page in solr_results %}
+        {% for page in current_results.object_list %}
             {% with highlights=page_highlights|dict_item:page.id%}
             <div class="ui page item">
                 <div class="pages ui twelve wide column">
@@ -31,8 +31,8 @@
         {% endfor %}
     </div>
 {% endif %}
-{% if not error and page_obj.paginator.count > 5 %}
+{% if not error and current_results.paginator.count > 5 %}
 <div class="pagination ui container">
-    {% include 'archive/snippets/pagination.html' %}
+    {% include 'archive/snippets/pagination.html' with page_obj=current_results %}
 </div>
 {% endif %}
