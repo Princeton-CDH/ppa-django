@@ -17,6 +17,7 @@ from flags import Flags
 from pairtree import pairtree_path, pairtree_client, storage_exceptions
 from parasolr.django import SolrQuerySet
 from parasolr.django.indexing import ModelIndexable
+from parasolr.indexing import Indexable
 import requests
 from wagtail.core.fields import RichTextField
 from wagtail.admin.edit_handlers import FieldPanel
@@ -552,6 +553,17 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         '''source id is used as solr identifier'''
         return self.source_id
 
+    @classmethod
+    def items_to_index(cls):
+        '''Queryset of works for indexing everything; excludes
+        suppressed works.'''
+        return DigitizedWork.objects.exclude(status=cls.SUPPRESSED)
+
+    @classmethod
+    def index_item_type(cls):
+        '''override index item type label to just work'''
+        return 'work'
+
     def index_data(self):
         '''data for indexing in Solr'''
 
@@ -811,3 +823,32 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
 
         # count pages now that data is present (required for indexing)
         self.count_pages()
+
+
+class Page(Indexable):
+    '''Indexable for pages to make page data available for indexing with
+    parasolr index manage command.'''
+
+    @classmethod
+    def items_to_index(cls):
+        '''Return a generator of page data to be indexed, with data for
+        pages for all works returned by  :meth:`DigitizedWork.items_to_index`
+        '''
+        for work in DigitizedWork.items_to_index():
+            for page_data in work.page_index_data():
+                yield page_data
+
+    @classmethod
+    def total_to_index(cls):
+        '''Calculate the total number of pages to be indexed by
+        aggregating page count of items to index in thed atabase.'''
+        return DigitizedWork.items_to_index() \
+            .aggregate(total_pages=models.Sum('page_count'))['total_pages']
+
+    @classmethod
+    def index_item_type(cls):
+        '''index item type for parasolr indexing script'''
+        return 'page'
+
+
+
