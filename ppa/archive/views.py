@@ -89,10 +89,19 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
             sort = search_opts.get("sort", None)
             collections = search_opts.get("collections", None)
 
+            solr_pageq = SolrQuerySet()
+            solr_workq = SolrQuerySet()  # .filter(item_type='work')
+
             if self.query:
                 # simple keyword search across all configured fields
                 # group to ensure boolean logic applies to all terms
                 keyword_query = "(%s)" % self.query
+                # FIXME: needs to use this:
+                # {!type=edismax qf=$qf pf=$pf v=$keyword_query}
+
+                solr_pageq = solr_pageq.search(self.query)
+                # solr_workq = solr_workq.search(self.query)
+                solr_workq = solr_workq.search()
 
             work_q = []
 
@@ -100,10 +109,14 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
             if collections:
                 # if *all* collections are selected, no need to filter
                 # (will return everything either way; keep the query simpler)
+                print('####### %d collections selected' % len(collections))
+                print('%d form field choices' % len(self.form.fields['collections'].choices))
                 if len(collections) < len(self.form.fields['collections'].choices):
                     work_q.append(
                         'collections_exact:(%s)' %
                         (' OR '.join(['"%s"' % coll for coll in collections])))
+                    solr_workq = solr_workq \
+                        .filter(collections_exact__in=[str(c) for c in collections])
 
             # For collection exclusion logic to work properly, if no
             # collections are selected, no items should be returned.
@@ -111,17 +124,21 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
             # data to populate the collection filters on the form properly.
             else:
                 work_q.append('item_type:work AND -collections_exact:[* TO *]')
+                solr_workq = solr_workq \
+                    .filter(**{'-collections_exact': '[* TO *]'})
 
-            # filter books by title or author if there is are search terms
+            # filter books by title or author if there are search terms
             title_query = search_opts.get('title', None)
             if title_query:
                 # special syntax to use query field configured in solr conf
                 # to search title and subtitle, with boosting
                 work_q.append(self.search_title_query)
+                solr_workq = solr_workq.filter(self.search_title_query) \
+                    .raw_query_parameters(title_query=title_query)
 
             author_query = search_opts.get('author', None)
             if author_query:
-                work_q.append('author:(%s)' % author_query)
+                solr_workq = solr_workq.filter(author=author_query)
 
         range_opts = {
             'facet.range': self.form.range_facets
@@ -135,6 +152,7 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
                 range_filter = '[%s TO %s]' % (start or '*', end or '*')
                 # find works restricted by range
                 work_q.append('%s:%s' % (range_facet, range_filter))
+                solr_workq = solr_workq.filter(**{range_facet: range_filter})
 
             # get minimum and maximum pub date values from the db
             pubmin, pubmax = self.form.pub_date_minmax()
@@ -159,6 +177,9 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
                 # restrict last range to *actual* maximum value
                 'f.%s.facet.range.hardend' % range_facet: True,
             })
+            solr_workq = solr_workq.facet_range(
+                range_facet, start=start,
+                end=end + 1, gap=max(1, int((end - start) / 24)))
 
         # if there are any queries to filter works  or search by text,
         # combine the queries and construct solr query
@@ -190,6 +211,14 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
                     '(%s OR {!join from=source_id to=id v=$keyword_query})' % keyword_query
                 )
 
+                solr_workq = solr_workq \
+                    .search(
+                        '(({!type=edismax qf=$qf pf=$pf v=$keyword_query})' +
+                        ' OR ({!join from=source_id to=id v=$content_query}))') \
+                    .raw_query_parameters(
+                        content_query='content:%s' % keyword_query,
+                        keyword_query=keyword_query)
+
             # combine work and text queries together with AND
             solr_q = ' AND '.join(query_parts)
             logger.debug("Solr search query: %s", solr_q)
@@ -198,13 +227,28 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
             # return all works (no pages needed)
             solr_q = 'item_type:work'
 
+        # include relevance score in fields returned, sort based on form
         solr_sort = self.form.get_solr_sort_field(sort)
+        # FIXME: this includes content in the return result,
+        # which we really don't need
+        # solr_workq = solr_workq.only('*', 'score').order_by(solr_sort)
+        solr_workq = solr_workq.only(
+            'id', 'author', 'pubdate', 'publisher', 'enumcron', 'order',
+            'source_id', 'label', 'title', 'score').order_by(solr_sort)
+
+        solr_sort = self.form.get_solr_sort_field(sort)
+
         fields = '*,score'
         # NOTE: For now, defaulting to always including score in fields
 
         # use filter query to collapse works and pages into groups
         # sort so work is first, then by page order
         collapse_q = '{!collapse field=source_id sort="order asc"}'
+
+        print('*** get query opts: work')
+        print(solr_workq.query_opts())
+        print('*** get query opts: page')
+        print(solr_pageq.query_opts())
 
         # basic solr options, including filter query
         solr_opts = {
@@ -228,9 +272,40 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
 
         # add facet range options to the solr options
         solr_opts.update(range_opts)
-        self.solrq = PagedSolrQuery(solr_opts)
+        # self.solrq = PagedSolrQuery(solr_opts)
 
-        return self.solrq
+        # return self.solrq
+        # ONLY IF there is a keyword search term
+        solr_joinq = SolrQuerySet()
+        # combine all work filter queries into a single work query
+        # TODO: only IF there are work filters
+        work_query = '(%s)' % ' AND '.join(solr_workq.filter_qs)
+        keyword_query = '(({!type=edismax qf=$qf pf=$pf v=$keyword_query})' + \
+            ' OR ({!join from=source_id to=id v=$content_query}))'
+        solr_joinq = solr_joinq \
+            .search('(%s) AND (%s OR {!join from=id to=source_id v=$work_query})' %
+                    (keyword_query, work_query)) \
+            .raw_query_parameters(
+                work_query=work_query,
+                content_query='content:%s' % keyword_query,
+                keyword_query=keyword_query)
+
+        # copy raw params, facet config, ect
+        solr_joinq.raw_params.update(solr_workq.raw_params)
+        solr_joinq.facet_field_list = solr_workq.facet_field_list
+        solr_joinq.facet_opts = solr_workq.facet_opts
+        solr_joinq.range_facet_fields = solr_workq.range_facet_fields
+
+        solr_joinq = solr_joinq \
+            .filter('{!collapse field=source_id sort="order asc"}') \
+            .raw_query_parameters(expand='true', **{'expand.rows': 3})
+            # why is expand.rows=3 needed when 2 worked before
+
+        # qs_copy.raw_params.update(kwargs)
+
+        # self.solrq = solr_workq
+        self.solrq = solr_joinq
+        return solr_joinq
 
     def get_page_highlights(self, page_groups):
         '''If there is a keyword search, query Solr for matching pages
@@ -244,12 +319,27 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
             return page_highlights
 
         # generate a list of page ids from the grouped results
-        page_ids = [page['id'] for results in page_groups.values()
+        print('page_groups')
+        print(page_groups)
+        # FIXME: this is not all the pages
+        page_ids = ['(%s)' % page['id'] for results in page_groups.values()
                     for page in results['docs']]
 
         if not page_ids:
             # if no page ids were found, bail out
             return page_highlights
+
+        solr_pageq = SolrQuerySet().search(content='(%s)' % self.query) \
+            .search(id__in=page_ids) \
+            .only('id') \
+            .highlight('content', snippets=3, method='unified')
+        # populate the result cache with number of rows specified
+        solr_pageq.get_results(rows=len(page_ids))
+        # print("### %d page ids" % len(page_ids))
+        # solr_pageq.get_results(rows=150)
+
+        # FIXME max rows needed?
+        return solr_pageq.get_highlighting()
 
         # Query solr for the desired pages by id with the same
         # keyword search.
@@ -285,10 +375,12 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
             context = super().get_context_data(**kwargs)
             page_groups = self.solrq.get_expanded()
             facet_dict = self.solrq.get_facets()
+            print('** facets')
+            print(facet_dict)
 
             self.form.set_choices_from_facets(facet_dict)
             # needs to be inside try/catch or it will re-trigger any error
-            facet_ranges = self.solrq.facet_ranges
+            facet_ranges = facet_dict.facet_ranges.as_dict()
             # facet ranges are used for display; when sending to solr we
             # increase the end bound by one so that year is included;
             # subtract it back so display matches user entered dates
