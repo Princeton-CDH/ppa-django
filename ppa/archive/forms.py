@@ -280,7 +280,7 @@ class SearchForm(forms.Form):
         return any(data.get(query_field, None)
                    for query_field in ['query', 'title', 'author'])
 
-    def get_solr_sort_field(self, sort):
+    def get_solr_sort_field(self, sort=None):
         '''
         Set solr sort fields for the query based on sort and query strings.
 
@@ -295,6 +295,9 @@ class SearchForm(forms.Form):
             'author_asc': 'author_exact',
             'author_desc': '-author_exact',
         }
+        # if not specified, use sort value from current form data
+        if sort is None:
+            sort = self.cleaned_data.get('sort')
         # return solr field for requested sort option
         return solr_mapping.get(sort, None)
 
