@@ -287,13 +287,13 @@ class SearchForm(forms.Form):
         :return: solr sort field
         '''
         solr_mapping = {
-            'relevance': 'score desc',
-            'pub_date_asc': 'pub_date asc',
-            'pub_date_desc': 'pub_date desc',
-            'title_asc': 'sort_title asc',
-            'title_desc': 'sort_title desc',
-            'author_asc': 'author_exact asc',
-            'author_desc': 'author_exact desc',
+            'relevance': '-score',
+            'pub_date_asc': 'pub_date',
+            'pub_date_desc': '-pub_date',
+            'title_asc': 'sort_title',
+            'title_desc': '-sort_title',
+            'author_asc': 'author_exact',
+            'author_desc': '-author_exact',
         }
         # return solr field for requested sort option
         return solr_mapping.get(sort, None)
