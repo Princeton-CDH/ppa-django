@@ -1,6 +1,7 @@
 import logging
 
 from parasolr import schema
+from parasolr.django import SolrQuerySet
 
 
 logger = logging.getLogger(__name__)
@@ -60,7 +61,7 @@ class TextKeywordTextAnalyzer(schema.SolrAnalyzer):
 
 
 class SolrSchema(schema.SolrSchema):
-    '''Solr Schema declaration.'''
+    '''Solr Schema declaration with local field types and fields for PPA.'''
 
     # declare custom field types
     text_en = schema.SolrFieldType(
@@ -113,3 +114,106 @@ class SolrSchema(schema.SolrSchema):
         'subtitle': 'subtitle_nostem',
         'content': 'content_nostem',
     }
+
+
+class ArchiveSearchQuerySet(SolrQuerySet):
+
+    # search title query field syntax
+    # (query field configured in solr config; searches title & subtitle with
+    # boosting)
+    _title_search = '{!type=edismax qf=$search_title_qf ' + \
+                    'pf=$search_title_pf v=$title_query}'
+    _keyword_search = '{!type=edismax qf=$qf pf=$pf v=$keyword_query}'
+
+    # minimal set of fields to be returned from Solr for search page
+    field_list = [
+        'id', 'author', 'pubdate', 'publisher', 'enumcron', 'order',
+        'source_id', 'label', 'title', 'score'
+    ]
+
+    keyword_query = None
+
+    def __init__(self, solr=None):
+        self._workq = SolrQuerySet()
+        super().__init__(solr=solr)
+
+    def work_filter(self, *args, **kwargs):
+        # filter out empty values to simplify view logic
+        # for checking whether query terms are present
+        kwargs = dict((opt, val) for opt, val in kwargs.items()
+                      if val not in [None, ''])
+        if args or kwargs:
+            self._workq = self._workq.filter(*args, **kwargs)
+
+    def work_title_search(self, title_query):
+        if not title_query:
+            return
+        # include the edismax title search query in the filters
+        self.work_filter(self._title_search)
+        # add the actual query content as a query parameter
+        # FIXME: maybe all methods should return a new version for consistency
+        self.raw_params.update(title_query=title_query)
+        # return self.raw_query_parameters(title_query=title_query)
+
+    def keyword_search(self, query):
+        # *store* that there is a keyword present but don't do anything
+        # with it yet
+        self.keyword_query = query
+
+    def _clone(self):
+        # preserve local fields when cloning
+        qs_copy = super()._clone()
+        qs_copy.keyword_query = self.keyword_query
+        qs_copy._workq = self._workq
+        return qs_copy
+
+    def query_opts(self):
+        '''Extend default query options method to combine work and keyword
+        search options based on what filters are present.'''
+
+        # if there is no keyword search present, only works should
+        # be returned; add item type filter and use filters from work queryset
+        if not self.keyword_query:
+            self.work_filter(item_type='work')
+            self.filter_qs.extend(self._workq.filter_qs)
+            # use set to ensure we don't duplicate
+            # TODO: maybe keep track if we have already combined filters?
+            # or combine on a cloned queryset?
+            self.filter_qs = list(set(self.filter_qs))
+            return super().query_opts()
+
+        # when there is a keyword query, add it and combine with any work filters
+        else:
+            # combine all work filter queries into a single  query
+            # TODO: only IF there are work filters ?
+
+            # search  across qf fields OR works with pages that match
+            keyword_query = '((%s) OR ({!join from=source_id to=id v=$content_query}))' %  \
+                self._keyword_search
+
+            work_query = None
+            if self._workq.filter_qs:
+                work_query = '(%s)' % ' AND '.join(self._workq.filter_qs)
+                combined_query = '(%s) AND (%s OR {!join from=id to=source_id v=$work_query})' % \
+                    (keyword_query, work_query)
+            else:
+                combined_query = keyword_query
+
+            # search on the combined work/page join query
+            # use collapse to group pages with work by source id
+            # expand and return three rows (* used to be 2?)
+            qs_copy = self.search(combined_query) \
+                .filter('{!collapse field=source_id sort="order asc"}') \
+                .raw_query_parameters(
+                    content_query='content:(%s)' % self.keyword_query,
+                    keyword_query=self.keyword_query,
+                    expand='true', **{'expand.rows': 3})
+
+            if work_query:
+                qs_copy = qs_copy.raw_query_parameters(work_query=work_query)
+
+            return qs_copy._base_query_opts()
+
+    def _base_query_opts(self):
+        # provide access to regular query opts logic, bypassing keyword/join
+        return super().query_opts()
