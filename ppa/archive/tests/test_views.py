@@ -1,20 +1,21 @@
 import csv
-from io import StringIO
 import operator
 import re
+import uuid
+from io import StringIO
 from time import sleep
 from unittest.mock import Mock, patch
-import uuid
 
+import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.db.models.functions import Lower
 from django.template.defaultfilters import escape
-from django.test import TestCase, RequestFactory
+from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.utils.http import urlencode
 from django.utils.timezone import now
-import pytest
+from parasolr.django import SolrQuerySet
 from SolrClient.exceptions import SolrError
 
 from ppa.archive.forms import SearchForm, ModelMultipleChoiceFieldWithEmpty, \
@@ -898,6 +899,7 @@ class TestDigitizedWorkListView(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
 
+    @pytest.mark.usefixtures("mock_solr_queryset")
     def test_get_page_highlights(self):
 
         digworkview = DigitizedWorkListView()
@@ -910,8 +912,8 @@ class TestDigitizedWorkListView(TestCase):
         assert digworkview.get_page_highlights({}) == {}
 
         # mock PagedSolrQuery to inspect that query is generated properly
-        with patch('ppa.archive.views.PagedSolrQuery',
-                   spec=PagedSolrQuery) as mockpsq:
+        with patch('ppa.archive.views.SolrQuerySet',
+                   new=self.mock_solr_queryset) as mock_queryset_cls:
             page_groups = {
                 'group1': {
                     'docs': [
@@ -926,24 +928,18 @@ class TestDigitizedWorkListView(TestCase):
             }
 
             highlights = digworkview.get_page_highlights(page_groups)
-            # inspect the solr call; first arg is a dictionary, no kwargs
-            solr_args = mockpsq.call_args[0]
-            solr_opts = solr_args[0]
-            # highlighting turned on
-            assert solr_opts['hl']
-            # not testing this as strictly while we play around with it
-            # assert solr_opts['hl.snippets'] == 1
-            assert solr_opts['hl.fl'] == 'content'
-            assert solr_opts['hl.method'] == 'unified'
-            # rows should match # of page ids
-            assert solr_opts['rows'] == 4
-            # query includes keyword search term
-            assert '(%s) AND ' % digworkview.query in solr_opts['q']
 
-            # query also inlcudes page ids
-            assert ' AND id:("p1a" "p1b" "p2a" "p2b")' in solr_opts['q']
+            mock_queryset_cls.assert_called_with()
+            mock_qs = mock_queryset_cls.return_value
+            mock_qs.search.assert_any_call(content='(iambic)')
+            mock_qs.search.assert_called_with(
+                id__in=['(p1a)', '(p1b)', '(p2a)', '(p2b)'])
+            mock_qs.only.assert_called_with('id')
+            mock_qs.highlight.assert_called_with(
+                'content', snippets=3, method='unified')
+            mock_qs.get_results.assert_called_with(rows=4)
 
-            assert highlights == mockpsq.return_value.get_highlighting()
+            assert highlights == mock_qs.get_highlighting()
 
     def test_get_queryset(self):
         digworkview = DigitizedWorkListView()
