@@ -15,13 +15,12 @@ from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.utils.http import urlencode
 from django.utils.timezone import now
-from parasolr.django import SolrQuerySet
 from SolrClient.exceptions import SolrError
 
 from ppa.archive.forms import SearchForm, ModelMultipleChoiceFieldWithEmpty, \
     AddFromHathiForm
 from ppa.archive.models import DigitizedWork, Collection, NO_COLLECTION_LABEL
-# from ppa.archive.solr import PagedSolrQuery
+from ppa.archive.solr import ArchiveSearchQuerySet
 from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView, \
     AddFromHathiView
 from ppa.archive.templatetags.ppa_tags import page_image_url, page_url
@@ -913,7 +912,7 @@ class TestDigitizedWorkListView(TestCase):
 
         # mock PagedSolrQuery to inspect that query is generated properly
         with patch('ppa.archive.views.SolrQuerySet',
-                   new=self.mock_solr_queryset) as mock_queryset_cls:
+                   new=self.mock_solr_queryset()) as mock_queryset_cls:
             page_groups = {
                 'group1': {
                     'docs': [
@@ -941,32 +940,36 @@ class TestDigitizedWorkListView(TestCase):
 
             assert highlights == mock_qs.get_highlighting()
 
+    @pytest.mark.usefixtures("mock_solr_queryset")
     def test_get_queryset(self):
         digworkview = DigitizedWorkListView()
 
+        # generate mock solr queryset based on subclass
+        mock_searchqs = self.mock_solr_queryset(spec=ArchiveSearchQuerySet)
+
         # no text query, so solr query should not have page join present
-        with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
+        with patch('ppa.archive.views.ArchiveSearchQuerySet',
+                   new=mock_searchqs) as mock_queryset_cls:
+
+            mock_qs = mock_queryset_cls.return_value
+            # count is required for the paginator
+            # mock_qs.count.return_value = 0
+
+        # solr_q = ArchiveSearchQuerySet() \
+        #     .facet(*self.form.facet_fields) \
+        #     .order_by(self.form.get_solr_sort_field())
+
             # needed for the paginator
-            mockpsq.return_value.count.return_value = 0
+            # mockpsq.return_value.count.return_value = 0
+
             digworkview.request = self.factory.get(
                 reverse('archive:list'), {'author': 'Robert'})
             digworkview.get_queryset()
-            # the call args are very long and not all relevant, cast as
-            # string and look for the offending join
-            print(mockpsq.call_args)
-            assert 'OR {!join from=id to=source_id v=$work_query})' \
-                not in str(mockpsq.call_args)
-
-    def test_get_lastmodified(self):
-        digworkview = DigitizedWorkListView()
-
-        with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
-            # needed for the paginator
-            mockpsq.return_value.__getitem__.side_effect = IndexError
-            # returns nothing if no result
-            assert not digworkview.last_modified()
-            # doesn't call count
-            mockpsq.return_value.count.assert_not_called()
+            # queryset initialized
+            mock_queryset_cls.assert_called_with()
+            mock_qs.facet.assert_called_with(*SearchForm.facet_fields)
+            mock_qs.order_by.assert_called_with('sort_title')  # default sort
+            mock_qs.work_filter.assert_called_with(author='Robert')
 
 
 class TestAddFromHathiView(TestCase):
