@@ -303,7 +303,7 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin,
                     'page_highlights': paged_result.get_highlighting()
                 })
             except requests.exceptions.ConnectionError:
-                context['error'] = 'Something went wrong'
+                context['error'] = 'Something went wrong.'
 
         return context
 

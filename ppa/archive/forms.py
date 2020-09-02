@@ -243,9 +243,9 @@ class SearchForm(forms.Form):
             'sort': 'title_asc',
             # always include uncategorized collections; no harm if not present
             'collections': [ModelMultipleChoiceFieldWithEmpty.EMPTY_ID] + \
-                            list(Collection.objects.filter(exclude=False) \
-                                           .values_list('id', flat=True)),
-    }
+            list(Collection.objects.filter(exclude=False) \
+                 .values_list('id', flat=True)),
+        }
 
     def __init__(self, data=None, *args, **kwargs):
         '''

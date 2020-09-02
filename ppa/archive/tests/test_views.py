@@ -15,7 +15,8 @@ from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.utils.http import urlencode
 from django.utils.timezone import now
-from SolrClient.exceptions import SolrError
+from parasolr.django import SolrClient
+import requests
 
 from ppa.archive.forms import SearchForm, ModelMultipleChoiceFieldWithEmpty, \
     AddFromHathiForm
@@ -26,25 +27,48 @@ from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView, \
 from ppa.archive.templatetags.ppa_tags import page_image_url, page_url
 
 
-class TestArchiveViews(TestCase):
+class TestDigitizedWorkDetailView(TestCase):
     fixtures = ['sample_digitized_works']
 
+    @pytest.fixture(autouse=True)
+    def _admin_client(self, admin_client):
+        # make pytest-django admin client available on the class
+        self.admin_client = admin_client
+
+    @staticmethod
+    def index_page_content():
+        # add sample page content for one of the fixture works
+        # and index it in solr
+        sample_page_content = [
+            'something about dials and clocks',
+            'knobs and buttons',
+        ]
+        htid = 'chi.78013704'
+        solr_page_docs = [
+            {'content': content, 'order': i + 1, 'item_type': 'page',
+             'source_id': htid, 'id': '%s.%s' % (htid, i), 'label': i}
+            for i, content in enumerate(sample_page_content)]
+        # dial = DigitizedWork.objects.get(source_id='chi.78013704')
+        # solr_work_docs = [dial.index_data()]
+        # index_data = solr_work_docs + solr_page_docs
+        SolrClient().update.index(solr_page_docs, commit=True)
+
     def setUp(self):
-        self.admin_pass = 'password'
-        self.admin_user = get_user_model().objects.create_superuser(
-            'admin', 'admin@example.com', self.admin_pass)
-
-    def test_digitizedwork_detailview(self):
         # get a work and its detail page to test with
-        dial = DigitizedWork.objects.get(source_id='chi.78013704')
-        url = reverse('archive:detail', kwargs={'source_id': dial.source_id})
+        self.dial = DigitizedWork.objects.get(source_id='chi.78013704')
+        self.dial_url = reverse('archive:detail',
+                                kwargs={'source_id': self.dial.source_id})
+        self.dial.index()
+        TestDigitizedWorkDetailView.index_page_content()
 
+    def test_anonymous_display(self):
         # index in solr to add last modified for header
-        DigitizedWork.index_items([dial])
-        sleep(1)
+        # FIXME: needed?
+        # DigitizedWork.index_items([dial])
+        # sleep(1)
 
         # get the detail view page and check that the response is 200
-        response = self.client.get(url)
+        response = self.client.get(self.dial_url)
         assert response.status_code == 200
         # no keyword search so no note about that
         # no page_obj or search results reflected
@@ -57,28 +81,20 @@ class TestArchiveViews(TestCase):
 
         # check that the appropriate item is in context
         assert 'object' in response.context
-        assert response.context['object'] == dial
-
-        # last modified header should be set on response
-        assert response.has_header('last-modified')
-
-        # get a work and its detail page to test with
-        # wintry = DigitizedWork.objects.get(source_id='chi.13880510')
-        # url = reverse('archive:detail', kwargs={'source_id': wintry.source_id})
+        assert response.context['object'] == self.dial
 
         # - check that the information we expect is displayed
-        # TODO: Make these HTML when the page is styled
         # hathitrust ID
         self.assertContains(
-            response, dial.title,
+            response, self.dial.title,
             msg_prefix='Missing title'
         )
         self.assertContains(
-            response, dial.source_id,
+            response, self.dial.source_id,
             msg_prefix='Missing HathiTrust ID (source_id)'
         )
         self.assertContains(
-            response, dial.source_url,
+            response, self.dial.source_url,
             msg_prefix='Missing source_url'
         )
         # self.assertContains(  # disabled for now since it's not in design spec
@@ -86,64 +102,30 @@ class TestArchiveViews(TestCase):
         #     msg_prefix='Missing volume/chronology (enumcron)'
         # )
         self.assertContains(
-            response, dial.author,
+            response, self.dial.author,
             msg_prefix='Missing author'
         )
         self.assertContains(
-            response, dial.pub_place,
+            response, self.dial.pub_place,
             msg_prefix='Missing place of publication (pub_place)'
         )
         self.assertContains(
-            response, dial.publisher,
+            response, self.dial.publisher,
             msg_prefix='Missing publisher'
         )
         self.assertContains(
-            response, dial.pub_date,
+            response, self.dial.pub_date,
             msg_prefix='Missing publication date (pub_date)'
         )
-        # only displaying these if logged in currently
-        #
-        # self.assertContains(
-        #     response, dial.added.strftime("%d %b %Y"),
-        #     msg_prefix='Missing added or in wrong format (d M Y in filter)'
-        # )
-        # self.assertContains(
-        #     response, dial.updated.strftime("%d %b %Y"),
-        #     msg_prefix='Missing updated or in wrong format (d M Y in filter)'
-        # )
 
-        # notes not present since none set
+        # notes not present since object has none
         self.assertNotContains(
             response, 'Note on edition',
             msg_prefix='Notes field should not be visible without notes'
         )
 
-        # set a note and re-query to see if it now appears
-        dial.public_notes = 'Nota bene'
-        dial.notes = 'Secret note'
-        dial.save()
-        response = self.client.get(url)
-        self.assertContains(
-            response, 'Note on edition',
-            msg_prefix='Notes field should be visible if notes is set'
-        )
-        self.assertContains(
-            response, dial.public_notes,
-            msg_prefix='The actual value of the notes field should be displayed'
-        )
-        self.assertNotContains(
-            response, dial.notes,
-            msg_prefix='The private notes field should not be displayed'
-        )
-
-        # a logged in user should see the private notes
-        self.client.force_login(get_user_model().objects.create(username='foo'))
-        response = self.client.get(url)
-        self.assertContains(
-            response, dial.notes,
-            msg_prefix='The private notes field should be displayed'
-        )
-
+    def test_unapi(self):
+        response = self.client.get(self.dial_url)
         # unapi server link present
         self.assertContains(
             response, '''<link rel="unapi-server" type="application/xml"
@@ -152,27 +134,70 @@ class TestArchiveViews(TestCase):
         # unapi id present
         self.assertContains(
             response,
-            '<abbr class="unapi-id" title="%s"></abbr>' % dial.source_id,
+            '<abbr class="unapi-id" title="%s"></abbr>' % self.dial.source_id,
             msg_prefix='unapi id should be embedded for each work')
 
-    def test_digitizedwork_detailview_suppressed(self):
-        # suppressed work
-        dial = DigitizedWork.objects.get(source_id='chi.78013704')
-        dial.status = DigitizedWork.SUPPRESSED
-        # don't actually process the data deletion
-        with patch.object(dial, 'hathi') \
-          as mock_delete_pairtree_data:
-            dial.save()
+    def test_admin_display(self):
+        # get the detail view page and check that the response is 200
+        response = self.admin_client.get(self.dial_url)
 
-        response = self.client.get(dial.get_absolute_url())
+        # only displaying these if logged in currently
+        self.assertContains(
+            response, self.dial.added.strftime("%d %b %Y"),
+            msg_prefix='Missing added or in wrong format (d M Y in filter)'
+        )
+        self.assertContains(
+            response, self.dial.updated.strftime("%d %b %Y"),
+            msg_prefix='Missing updated or in wrong format (d M Y in filter)'
+        )
+
+    def test_notes(self):
+        # set a note and re-query to see if it now appears
+        self.dial.public_notes = 'Nota bene'
+        self.dial.notes = 'Secret note'
+        self.dial.save()
+        response = self.client.get(self.dial_url)
+        self.assertContains(
+            response, 'Note on edition',
+            msg_prefix='Notes field should be visible if notes is set'
+        )
+        self.assertContains(
+            response, self.dial.public_notes,
+            msg_prefix='The actual value of the notes field should be displayed'
+        )
+        self.assertNotContains(
+            response, self.dial.notes,
+            msg_prefix='The private notes field should not be displayed'
+        )
+
+    def test_admin_notes(self):
+        # set a note and re-query to see if it now appears
+        self.dial.public_notes = 'Nota bene'
+        self.dial.notes = 'Secret note'
+        self.dial.save()
+
+        response = self.admin_client.get(self.dial_url)
+        self.assertContains(
+            response, self.dial.notes,
+            msg_prefix='The private notes field should be displayed'
+        )
+
+    def test_suppressed(self):
+        # suppressed work
+        self.dial.status = DigitizedWork.SUPPRESSED
+        # don't actually process the data deletion
+        with patch.object(self.dial, 'hathi'):
+            self.dial.save()
+
+        response = self.client.get(self.dial_url)
         # status code should be 410 Gone
         assert response.status_code == 410
         # should use 410 template
         assert '410.html' in [template.name for template in response.templates]
         # should not display item details
-        self.assertNotContains(response, dial.title, status_code=410)
+        self.assertNotContains(response, self.dial.title, status_code=410)
 
-    def test_digitizedwork_detailview_nonhathi(self):
+    def test_nonhathi_display(self):
         # non-hathi work
         thesis = DigitizedWork.objects.create(
             source=DigitizedWork.OTHER, source_id='788423659',
@@ -181,10 +206,6 @@ class TestArchiveViews(TestCase):
             sort_title='study of the accentual structure of caesural phrases in The lady of the lake',
             author='Farley, Odessa', publisher='University of Iowa',
             pub_date=1924, page_count=81)
-
-        # index in solr to add last modified for header
-        DigitizedWork.index_items([thesis])
-        sleep(1)
 
         response = self.client.get(thesis.get_absolute_url())
         # should display item details
@@ -205,45 +226,15 @@ class TestArchiveViews(TestCase):
         self.assertNotContains(response, 'View external record')
 
         # search term should be ignored for items without fulltext
-        with patch('ppa.archive.views.PagedSolrQuery') as mock_paged_solrq:
-            mock_paged_solrq.return_value.count.return_value = 0
-            mock_paged_solrq.return_value.__getitem__.side_effect = IndexError
-            response = self.client.get(thesis.get_absolute_url(), {'query': 'lady'})
-            # called once for last modified, but not for search
-            assert mock_paged_solrq.call_count == 1
+        with patch('ppa.archive.views.SolrQuerySet') as mock_solrq:
+            response = self.client.get(thesis.get_absolute_url(),
+                                       {'query': 'lady'})
+            # not called at all
+            assert mock_solrq.call_count == 0
 
-    def test_digitizedwork_detailview_query(self):
-        '''test digitized work detail page with search query'''
-
-        # get a work and its detail page to test with
-        dial = DigitizedWork.objects.get(source_id='chi.78013704')
-        url = reverse('archive:detail', kwargs={'source_id': dial.source_id})
-
-        # index in solr to add last modified for header
-        DigitizedWork.index_items([dial])
-        sleep(1)
-
-        # make some sample page content
-        # sample page content associated with one of the fixture works
-        sample_page_content = [
-            'something about dials and clocks',
-            'knobs and buttons',
-        ]
-        htid = 'chi.78013704'
-        solr_page_docs = [
-            {'content': content, 'order': i+1, 'item_type': 'page',
-             'source_id': htid, 'id': '%s.%s' % (htid, i), 'label': i}
-            for i, content in enumerate(sample_page_content)]
-        dial = DigitizedWork.objects.get(source_id='chi.78013704')
-        solr_work_docs = [dial.index_data()]
-        index_data = solr_work_docs + solr_page_docs
-        DigitizedWork.index_items(index_data)
-        sleep(2)
-
-        # search should include query in the context and a PageSolrQuery
-
+    def test_search_within_empty(self):
         # search with no matches - test empty search result
-        response = self.client.get(url, {'query': 'thermodynamics'})
+        response = self.client.get(self.dial_url, {'query': 'thermodynamics'})
         assert response.status_code == 200
         # test that the search form is rendered
         assert 'search_form' in response.context
@@ -256,22 +247,22 @@ class TestArchiveViews(TestCase):
         # should be an empty dict
         assert response.context['page_highlights'] == {}
         # assert solr result in query
-        assert 'solr_results' in response.context
-        # should be an empty list
-        assert response.context['solr_results'] == []
+        assert 'current_results' in response.context
+        # object list should be empty
+        assert not response.context['current_results'].object_list.count()
 
+    def test_search_within_snippets(self):
         # test with a word that will produce some snippets
-        response = self.client.get(url, {'query': 'knobs'})
+        response = self.client.get(self.dial_url, {'query': 'knobs'})
         assert response.status_code == 200
-        # paginator should be in context
-        assert 'page_obj' in response.context
-        # it should be one (because we have one result)
-        assert response.context['page_obj'].number == 1
+        # paginated results should be in context
+        assert 'current_results' in response.context
+        # it should be page one (because we have one result)
+        assert response.context['current_results'].number == 1
         # it should have an object list equal in length to the page solr query
-        assert len(response.context['page_obj'].object_list) == \
-            len(response.context['solr_results'])
+        assert len(response.context['current_results'].object_list) == 1
         # get the solr results (should be one)
-        result = response.context['solr_results'][0]
+        result = response.context['current_results'].object_list[0]
         # grab the highlight object that's rendered with our one match
         highlights = response.context['page_highlights'][result['id']]
         # template has the expected information rendered
@@ -307,23 +298,17 @@ class TestArchiveViews(TestCase):
             msg_prefix='should include a link to HathiTrust'
         )
 
-        # bad syntax
-        # no longer a problem with edismax
-        # response = self.client.get(url, {'query': '"incomplete phrase'})
-        # self.assertContains(response, 'Unable to parse search query')
-
+    def test_search_within_error(self):
         # test raising a generic solr error
-        with patch('ppa.archive.views.PagedSolrQuery') as mockpsq:
-            mockpsq.return_value.get_results.side_effect = SolrError
-            # count needed for paginator
-            mockpsq.return_value.count.return_value = 0
-            # error for last-modified
-            mockpsq.return_value.__getitem__.side_effect = SolrError
-            response = self.client.get(url, {'query': 'knobs'})
+        with patch('ppa.archive.views.Paginator') as mock_page:
+
+            mock_page.side_effect = requests.exceptions.ConnectionError
+            response = self.client.get(self.dial_url, {'query': 'knobs'})
             self.assertContains(response, 'Something went wrong.')
 
+    def test_search_within_ajax(self):
         # ajax request for search results
-        response = self.client.get(url, {'query': 'knobs'},
+        response = self.client.get(self.dial_url, {'query': 'knobs'},
                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         assert response.status_code == 200
         # should render the results list partial
@@ -332,15 +317,22 @@ class TestArchiveViews(TestCase):
         self.assertTemplateNotUsed('archive/digitizedwork_detail.html')
         # should have all the results
         assert len(response.context['page_highlights']) == 1
-        print(response.content)
         # should have the results count
         self.assertContains(response, "1 occurrence")
         # should have pagination
         self.assertContains(response, "<div class=\"page-controls")
 
+
+class TestDigitizedWorkListRequest(TestCase):
+    fixtures = ['sample_digitized_works']
+
+    @pytest.fixture(autouse=True)
+    def _admin_client(self, admin_client):
+        # make pytest-django admin client available on the class
+        self.admin_client = admin_client
+
     def test_digitizedwork_listview(self):
         url = reverse('archive:list')
-
         # sample page content associated with one of the fixture works
         sample_page_content = [
             'something about winter and wintry and wintriness',
@@ -373,6 +365,7 @@ class TestArchiveViews(TestCase):
         # no query - should find all
         response = self.client.get(url)
         assert response.status_code == 200
+        print(response)
         self.assertContains(response, '%d digitized works' % len(digitized_works))
         self.assertContains(
             response, '<p class="result-number">1</p>',
@@ -482,7 +475,6 @@ class TestArchiveViews(TestCase):
         response = self.client.get(url, {'author': 'Robert Bridges'})
         self.assertContains(response, wintry.source_id)
         self.assertNotContains(response, dial.source_id)
-
 
         # search title using the title field
         response = self.client.get(url, {'title': 'The Dial'})
@@ -954,10 +946,6 @@ class TestDigitizedWorkListView(TestCase):
             mock_qs = mock_queryset_cls.return_value
             # count is required for the paginator
             # mock_qs.count.return_value = 0
-
-        # solr_q = ArchiveSearchQuerySet() \
-        #     .facet(*self.form.facet_fields) \
-        #     .order_by(self.form.get_solr_sort_field())
 
             # needed for the paginator
             # mockpsq.return_value.count.return_value = 0
