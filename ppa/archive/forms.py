@@ -283,6 +283,9 @@ class SearchForm(forms.Form):
     def get_solr_sort_field(self, sort=None):
         '''
         Set solr sort fields for the query based on sort and query strings.
+        If sort field is not specified, will use sort in the the cleaned
+        data in the current form. If sort is not specified and valid
+        form data is not available, will raise an :class:`AttributeError`.
 
         :return: solr sort field
         '''
