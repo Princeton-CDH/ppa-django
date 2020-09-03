@@ -78,15 +78,16 @@ from os import makedirs
 import os.path
 from progressbar import ProgressBar, NullBar
 
+from django.core.management.base import BaseCommand
+
 from gensim import corpora
 from gensim.corpora.dictionary import Dictionary
 from gensim.parsing.preprocessing import preprocess_string, strip_tags, \
     strip_punctuation, strip_multiple_whitespaces, strip_numeric, \
     remove_stopwords, strip_short, stem_text
 
-from django.core.management.base import BaseCommand
+from parasolr.django import SolrQuerySet
 
-from ppa.archive.solr import get_solr_connection
 
 logger = logging.getLogger(__name__)
 
@@ -109,8 +110,7 @@ class SolrCorpus:
     DOC_CONTENT_FIELD = 'content'  # Solr field name for document content
     PAGE_ORDER_FIELD = 'order'     # Solr field name for page ordering
 
-    def __init__(self, name, client, collection, doc_limit=-1,
-                 preprocess_fns=None, pbar=True):
+    def __init__(self, name, doc_limit=-1, preprocess_fns=None, pbar=True):
         """
         A class encapsulating a Solr Client specification, that yields
         Bag-of-Word vectors on iteration, and thus acts as a Gensim Corpus.
@@ -130,8 +130,6 @@ class SolrCorpus:
             during corpus generation.
         """
         self.name = name
-        self.client = client
-        self.collection = collection
         self.doc_limit = doc_limit
 
         if preprocess_fns is not None:
@@ -152,16 +150,13 @@ class SolrCorpus:
         # list of strings, populated on first doc retrieval
         self.metadata_field_names = None
 
-        results = self.client.query(
-            collection=self.collection,
-            query={
-                'q': '*:*',
-                'facet': 'on',
-                'rows': 0,
-                'facet.field': SolrCorpus.DOC_ID_FIELD,
-                'facet.limit': self.doc_limit
-            }
-        )
+        # facet on document id to get counts of pages by work
+        results = SolrQuerySet() \
+            .facet(SolrCorpus.DOC_ID_FIELD, limit=self.doc_limit)
+
+        print('*** solrqueryset')
+        print(results)
+        print(results.get_facets().facet_fields)
 
         """
         An OrderedDict of doc_id => page count mapping
@@ -169,7 +164,7 @@ class SolrCorpus:
         metadata, in which case rows of metadata would be in the same order as
         the BoW-vectors returned by this object's iterator.
         """
-        self.page_counts = results.get_facets()['source_id']
+        self.page_counts = results.get_facets().facet_fields['source_id']
         self.doc_ids = self.page_counts.keys()
         self.doc_count = len(self.doc_ids)
         if pbar:
@@ -189,17 +184,18 @@ class SolrCorpus:
                                format(doc_id))
                 continue
 
-            result = self.client.query(
-                collection=self.collection,
-                query={
-                    'q': '{}:{}'.format(SolrCorpus.DOC_ID_FIELD, doc_id),
-                    'order': '{} asc'.format(SolrCorpus.PAGE_ORDER_FIELD),
-                    'rows': self.page_counts[doc_id]
-                }
-            )
+            print('*** solrqueryset')
+            print(SolrQuerySet)
 
-            metadata_docs = [d for d in result.docs
+            result = SolrQuerySet() \
+                .search(**{SolrCorpus.DOC_ID_FIELD: doc_id}) \
+                .order_by(SolrCorpus.PAGE_ORDER_FIELD)
+            # populate the result cache with number of rows specified
+            docs = result.get_results(rows=self.page_counts[doc_id])
+
+            metadata_docs = [d for d in docs
                              if d['item_type'] == 'work']
+
             n_metadata_docs = len(metadata_docs)
             if n_metadata_docs > 0:
                 if n_metadata_docs > 1:
@@ -221,7 +217,7 @@ class SolrCorpus:
                 filter(
                     None,
                     (doc.get(SolrCorpus.DOC_CONTENT_FIELD) for doc in
-                     result.docs if doc['item_type'] == 'page')
+                     docs if doc['item_type'] == 'page')
                 )
             ))
             fulltext = preprocess_string(fulltext, filters=self.preprocess_fns)
@@ -268,7 +264,7 @@ class SolrCorpus:
         # serialize - we simply set it's frequency to one more than the no. of
         # documents we have, so it will effectively be shut off.
         corpora.MmCorpus.serialize(corpus_path, self,
-                                   progress_cnt=self.doc_count+1)
+                                   progress_cnt=self.doc_count + 1)
 
         if save_dict:
             self._save_dictionary(corpus_path + '.dict',
@@ -298,7 +294,7 @@ class Command(BaseCommand):
             '--dictionary-as-text', action='store_true',
             help='If saving dictionary, save as a plaintext file.')
         parser.add_argument(
-            '--no-metadata', action='store_true',
+            '--no-metadata', action='store_true', default=False,
             help='Do not save corpus metadata.')
         parser.add_argument(
             '--no-progress', action='store_true',
@@ -312,12 +308,8 @@ class Command(BaseCommand):
                  'Use ALL to apply all pre-processing filters.')
 
     def handle(self, *args, **options):
-        client, collection = get_solr_connection()
-
         corpus = SolrCorpus(
             name=options['name'],
-            client=client,
-            collection=collection,
             doc_limit=options['doc_limit'],
             preprocess_fns=options['preprocess'],
             pbar=not options['no_progress']
