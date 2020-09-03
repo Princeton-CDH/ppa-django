@@ -17,7 +17,6 @@ from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
 from pairtree import pairtree_client, pairtree_path, storage_exceptions
 from parasolr.django.indexing import ModelIndexable
-from parasolr.django.solrclient import SolrClient
 import pytest
 
 from ppa.archive import hathi
@@ -114,29 +113,6 @@ class TestDigitizedWork(TestCase):
         digwork = DigitizedWork(source_id='foobar',
                                 source=DigitizedWork.OTHER)
         assert digwork.hathi is None
-
-    def test_index(self):
-        with open(self.bibdata_brief) as bibdata:
-            brief_bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
-
-        digwork = DigitizedWork(source_id='njp.32101013082597')
-        digwork.populate_from_bibdata(brief_bibdata)
-        digwork.save()
-        solr = SolrClient()
-        # digwork should be unindexed
-        res = solr.query(q='*:*')
-        assert res.numFound == 0
-        # reindex to check that the method works on a saved object
-        digwork.index()
-        # digwork should be unindexed still because no commitWithin
-        res = solr.query(q='*:*')
-        assert res.numFound == 0
-        digwork.index()
-        sleep(1)
-        # digwork should be returned by a query
-        res = solr.query(q='*:*')
-        assert res.numFound == 1
-        assert res.docs[0]['id'] == 'njp.32101013082597'
 
     def test_compare_protected_fields(self):
 
