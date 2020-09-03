@@ -128,7 +128,7 @@ class ArchiveSearchQuerySet(SolrQuerySet):
     # minimal set of fields to be returned from Solr for search page
     field_list = [
         'id', 'author', 'pubdate', 'publisher', 'enumcron', 'order',
-        'source_id', 'label', 'title', 'score'
+        'source_id', 'label', 'title', 'subtitle', 'score', 'pub_date'
     ]
 
     keyword_query = None
