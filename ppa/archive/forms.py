@@ -326,7 +326,8 @@ class SearchForm(forms.Form):
                 for choice in self.fields[formfield].widget.choices:
                     # widget choice is tuple of id, name; check for name in facets
                     if choice[1] not in facet_dict.keys():
-                        new_choice.append((choice[0], {'label': choice[1], 'disabled': True}))
+                        new_choice.append((choice[0], {'label': choice[1],
+                                                       'disabled': True}))
                     else:
                         new_choice.append(choice)
 
@@ -346,7 +347,6 @@ class SearchForm(forms.Form):
             #     self.fields[formfield].choices = [
             #         (val, mark_safe('%s <span>%d</span>' % (val, count)))
             #         for val, count in facet_dict.items()]
-
 
     PUBDATE_CACHE_KEY = 'digitizedwork_pubdate_maxmin'
 

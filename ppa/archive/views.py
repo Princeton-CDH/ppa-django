@@ -18,7 +18,6 @@ from django.views.generic.edit import FormView
 from parasolr.django import SolrQuerySet
 from parasolr.django.views import SolrLastModifiedMixin
 import requests
-from SolrClient.exceptions import SolrError
 
 from ppa.archive.forms import AddToCollectionForm, AddFromHathiForm, \
     SearchForm, SearchWithinWorkForm
@@ -96,8 +95,11 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
                 # if *all* collections are selected, there is no need to filter
                 # (will return everything either way; keep the query simpler)
                 if len(collections) < len(self.form.fields['collections'].choices):
+                    # add quotes so solr will treat as exact phrase
+                    # for multiword collection names
                     solr_q.work_filter(
-                        collections_exact__in=[str(c) for c in collections])
+                        collections_exact__in=['"%s"' % c
+                                               for c in collections])
 
             # For collection exclusion logic to work properly, if no
             # collections are selected, no items should be returned.
@@ -145,9 +147,9 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
 
     def get_page_highlights(self, page_groups):
         '''If there is a keyword search, query Solr for matching pages
-        with text highlighting.  Note that this has to be done as
-        a separate query because Solr doesn't support highlighting on
-        collapsed items.'''
+        with text highlighting.
+        NOTE: This has to be done as a separate query because Solr
+        doesn't support highlighting on collapsed items.'''
 
         page_highlights = {}
         if not self.query or not page_groups:
@@ -189,8 +191,7 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
             context = super().get_context_data(**kwargs)
             page_groups = self.solrq.get_expanded()
             facet_dict = self.solrq.get_facets()
-
-            self.form.set_choices_from_facets(facet_dict)
+            self.form.set_choices_from_facets(facet_dict.facet_fields)
             # needs to be inside try/catch or it will re-trigger any error
             facet_ranges = facet_dict.facet_ranges.as_dict()
             # facet ranges are used for display; when sending to solr we
@@ -198,18 +199,18 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
             # subtract it back so display matches user entered dates
             facet_ranges['pub_date']['end'] -= 1
 
-        except SolrError as solr_err:
+        except requests.exceptions.ConnectionError:
             # override object list with an empty list that can be paginated
             # so that template display will still work properly
-            self.object_list = DigitizedWork.objects.none()
+            self.object_list = self.solrq.none()
+            # DigitizedWork.objects.none()
             context = super().get_context_data(**kwargs)
-            if 'Cannot parse' in str(solr_err):
-                error_msg = 'Unable to parse search query; please revise and try again.'
-            else:
-                # NOTE: this error should possibly be raised; 500 error?
-                # or set status on the response?
-                error_msg = 'Something went wrong.'
-            context['error'] = error_msg
+            # if 'Cannot parse' in str(solr_err):
+            #     error_msg = 'Unable to parse search query; please revise and try again.'
+            # else:
+            # NOTE: this error should possibly be raised; 500 error?
+            # or set status on the response?
+            context['error'] = 'Something went wrong.'
 
         context.update({
             'search_form': self.form,
