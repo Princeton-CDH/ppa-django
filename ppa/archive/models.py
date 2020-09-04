@@ -627,45 +627,6 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
 
         return page_count
 
-    def page_index_data(self):
-        '''Get page content for this work from Hathi pairtree and return
-        data to be indexed in solr.'''
-
-        # If an item has been suppressed or is from a source other than
-        # hathi, bail out. No pages to index.
-        if self.is_suppressed or self.source != self.HATHI:
-            return
-
-        # load mets record to pull metadata about the images
-        try:
-            mmets = load_xmlobject_from_file(self.hathi.metsfile_path(),
-                                             MinimalMETS)
-        except storage_exceptions.ObjectNotFoundException:
-            logger.error('Pairtree data for %s not found but status is %s',
-                         self.source_id, self.get_status_display())
-            return
-
-        # read zipfile contents in place, without unzipping
-        with ZipFile(self.hathi.zipfile_path()) as ht_zip:
-
-            # yield a generator of index data for each page; iterate
-            # over pages in METS structmap
-            for page in mmets.structmap_pages:
-                # zipfile spec uses / for path regardless of OS
-                pagefilename = '/'.join([self.hathi.content_dir, page.text_file_location])
-                with ht_zip.open(pagefilename) as pagefile:
-                    try:
-                        yield {
-                            'id': '%s.%s' % (self.source_id, page.text_file.sequence),
-                            'source_id': self.source_id,   # for grouping with work record
-                            'content': pagefile.read().decode('utf-8'),
-                            'order': page.order,
-                            'label': page.display_label,
-                            'tags': page.label.split(', ') if page.label else [],
-                            'item_type': 'page'
-                        }
-                    except StopIteration:
-                        return
 
     def get_metadata(self, metadata_format):
         '''Get metadata for this item in the specified format.
@@ -835,7 +796,7 @@ class Page(Indexable):
         pages for all works returned by  :meth:`DigitizedWork.items_to_index`
         '''
         for work in DigitizedWork.items_to_index():
-            for page_data in work.page_index_data():
+            for page_data in Page.page_index_data(work):
                 yield page_data
 
     @classmethod
@@ -849,6 +810,47 @@ class Page(Indexable):
     def index_item_type(cls):
         '''index item type for parasolr indexing script'''
         return 'page'
+
+    @classmethod
+    def page_index_data(cls, digwork):
+        '''Get page content for the specified digitized work from Hathi
+        pairtree and return data to be indexed in solr.'''
+
+        # If an item has been suppressed or is from a source other than
+        # hathi, bail out. No pages to index.
+        if digwork.is_suppressed or digwork.source != digwork.HATHI:
+            return
+
+        # load mets record to pull metadata about the images
+        try:
+            mmets = load_xmlobject_from_file(digwork.hathi.metsfile_path(),
+                                             MinimalMETS)
+        except storage_exceptions.ObjectNotFoundException:
+            logger.error('Pairtree data for %s not found but status is %s',
+                         digwork.source_id, digwork.get_status_display())
+            return
+
+        # read zipfile contents in place, without unzipping
+        with ZipFile(digwork.hathi.zipfile_path()) as ht_zip:
+
+            # yield a generator of index data for each page; iterate
+            # over pages in METS structmap
+            for page in mmets.structmap_pages:
+                # zipfile spec uses / for path regardless of OS
+                pagefilename = '/'.join([digwork.hathi.content_dir, page.text_file_location])
+                with ht_zip.open(pagefilename) as pagefile:
+                    try:
+                        yield {
+                            'id': '%s.%s' % (digwork.source_id, page.text_file.sequence),
+                            'source_id': digwork.source_id,   # for grouping with work record
+                            'content': pagefile.read().decode('utf-8'),
+                            'order': page.order,
+                            'label': page.display_label,
+                            'tags': page.label.split(', ') if page.label else [],
+                            'item_type': 'page'
+                        }
+                    except StopIteration:
+                        return
 
 
 
