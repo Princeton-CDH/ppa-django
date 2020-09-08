@@ -171,48 +171,52 @@ class ArchiveSearchQuerySet(SolrQuerySet):
         '''Extend default query options method to combine work and keyword
         search options based on what filters are present.'''
 
+        # create a queryset copy to update
+        qs_copy = self.all()
+
         # if there is no keyword search present, only works should
         # be returned; add item type filter and use filters from work queryset
         if not self.keyword_query:
             self.work_filter(item_type='work')
-            self.filter_qs.extend(self._workq.filter_qs)
-            # use set to ensure we don't duplicate
-            # TODO: maybe keep track if we have already combined filters?
-            # or combine on a cloned queryset?
-            self.filter_qs = list(set(self.filter_qs))
-            return super().query_opts()
-
-        # when there is a keyword query, add it and combine with any work filters
-        else:
-            # combine all work filter queries into a single  query
-            # TODO: only IF there are work filters ?
-
-            # search  across qf fields OR works with pages that match
-            keyword_query = '((%s) OR ({!join from=source_id to=id v=$content_query}))' %  \
-                self._keyword_search
-
-            work_query = None
-            if self._workq.filter_qs:
-                work_query = '(%s)' % ' AND '.join(self._workq.filter_qs)
-                combined_query = '(%s) AND (%s OR {!join from=id to=source_id v=$work_query})' % \
-                    (keyword_query, work_query)
-            else:
-                combined_query = keyword_query
-
-            # search on the combined work/page join query
-            # use collapse to group pages with work by source id
-            # expand and return three rows (* used to be 2?)
-            qs_copy = self.search(combined_query) \
-                .filter('{!collapse field=source_id sort="order asc"}') \
-                .raw_query_parameters(
-                    content_query='content:(%s)' % self.keyword_query,
-                    keyword_query=self.keyword_query,
-                    expand='true', **{'expand.rows': 3})
-
-            if work_query:
-                qs_copy = qs_copy.raw_query_parameters(work_query=work_query)
-
+            qs_copy.filter_qs.extend(self._workq.filter_qs)
+            # use set to ensure we don't duplicate a filter
+            qs_copy.filter_qs = list(set(qs_copy.filter_qs))
             return qs_copy._base_query_opts()
+
+        # when there is a keyword query, add it & combine with any work filters
+        # combine all work filter queries into a single query
+
+        # search across keyword qf fields OR find works with pages that match
+        keyword_query = '((%s) OR ({!join from=source_id to=id v=$content_query}))' %  \
+            self._keyword_search
+        # by default, set combined query to keyword query (= no work filters)
+        combined_query = keyword_query
+
+        # if there are work filters, combine them with keyword
+        work_query = ''
+        if self._workq.filter_qs:
+            # convert filter queries to a single ANDed search query
+            work_query = '(%s)' % ' AND '.join(self._workq.filter_qs)
+            # find works based on filter query but also restrict pages to those
+            # that match works with these filters
+            combined_query = '(%s) AND (%s OR {!join from=id to=source_id v=$work_query})' % \
+                (keyword_query, work_query)
+            # pass combined workfilter query as a raw query parameter
+            qs_copy = qs_copy.raw_query_parameters(work_query=work_query)
+
+        # search on the combined work/page join query
+        # use collapse to group pages with work by source id
+        # expand and return three rows
+        # NOTE: expand param used to be 2, but that wasn't generating
+        # correct display! Not sure why
+        qs_copy = qs_copy.search(combined_query) \
+            .filter('{!collapse field=source_id sort="order asc"}') \
+            .raw_query_parameters(
+                content_query='content:(%s)' % self.keyword_query,
+                keyword_query=self.keyword_query,
+                expand='true', work_query=work_query, **{'expand.rows': 3})
+
+        return qs_copy._base_query_opts()
 
     def _base_query_opts(self):
         # provide access to regular query opts logic, bypassing keyword/join
