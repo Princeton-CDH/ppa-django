@@ -245,11 +245,9 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
     sort_title = models.TextField(
         default='',
         help_text='Sort title from MARC record or title without leading article')
-    #: enumeration/chronology (hathi-specific)
+    #: enumeration/chronology (hathi-specific; contains volume or version)
     enumcron = models.CharField('Enumeration/Chronology', max_length=255,
                                 blank=True)
-    # TODO: what is the generic/non-hathi name for this? volume/version?
-
     # NOTE: may eventually to convert to foreign key
     author = models.CharField(
         max_length=255, blank=True,
@@ -851,6 +849,3 @@ class Page(Indexable):
                         }
                     except StopIteration:
                         return
-
-
-
