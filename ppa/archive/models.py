@@ -791,7 +791,7 @@ class Page(Indexable):
     @classmethod
     def items_to_index(cls):
         '''Return a generator of page data to be indexed, with data for
-        pages for all works returned by  :meth:`DigitizedWork.items_to_index`
+        pages for each work returned by :meth:`Page.page_index_data`
         '''
         for work in DigitizedWork.items_to_index():
             for page_data in Page.page_index_data(work):
