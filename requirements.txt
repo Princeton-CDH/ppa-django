@@ -4,7 +4,7 @@ pucas>=0.6
 django-grappelli
 # expect to need parasolr v0.6 once features for ppa support are released
 #parasolr<=0.6
-git+https://github.com/Princeton-CDH/parasolr.git@feature/ppa-support#egg=parasolr
+git+https://github.com/Princeton-CDH/parasolr.git@develop#egg=parasolr
 pairtree
 py-flags
 pymarc
