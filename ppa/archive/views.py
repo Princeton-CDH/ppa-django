@@ -171,10 +171,8 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
             .highlight('content', snippets=3, method='unified')
         # populate the result cache with number of rows specified
         solr_pageq.get_results(rows=len(page_ids))
-        # print("### %d page ids" % len(page_ids))
-        # solr_pageq.get_results(rows=150)
-
-        # FIXME max rows needed?
+        # NOTE: rows argument is needed until this parasolr bug is fixed
+        # https://github.com/Princeton-CDH/parasolr/issues/43
         return solr_pageq.get_highlighting()
 
     def get_context_data(self, **kwargs):
@@ -203,13 +201,9 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
             # override object list with an empty list that can be paginated
             # so that template display will still work properly
             self.object_list = self.solrq.none()
-            # DigitizedWork.objects.none()
             context = super().get_context_data(**kwargs)
-            # if 'Cannot parse' in str(solr_err):
-            #     error_msg = 'Unable to parse search query; please revise and try again.'
-            # else:
-            # NOTE: this error should possibly be raised; 500 error?
-            # or set status on the response?
+            # NOTE: this error should possibly be raised as a 500 error,
+            # or an error status set on the response
             context['error'] = 'Something went wrong.'
 
         context.update({
