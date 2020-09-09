@@ -56,8 +56,6 @@ class TextKeywordTextAnalyzer(schema.SolrAnalyzer):
         {"class": "solr.LowerCaseFilterFactory"},
         {"class": "solr.ICUFoldingFilterFactory"},
     ]
-    # TODO where do we specify this?
-    # "sortMissingLast": True,
 
 
 class SolrSchema(schema.SolrSchema):
