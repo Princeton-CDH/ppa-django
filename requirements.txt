@@ -2,8 +2,9 @@ django>=2.2,<3.0
 mysqlclient>=1.3.13
 pucas>=0.6
 django-grappelli
-# unreleased version of SolrClient with schema field-type management
-git+https://github.com/rlskoeser/SolrClient.git@7420ab3#egg=SolrClient
+# expect to need parasolr v0.6 once features for ppa support are released
+#parasolr<=0.6
+git+https://github.com/Princeton-CDH/parasolr.git@feature/ppa-support#egg=parasolr
 pairtree
 py-flags
 pymarc

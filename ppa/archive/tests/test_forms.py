@@ -146,17 +146,25 @@ def test_range_field():
         RangeField().compress([200, 100])
 
 
-def test_get_solr_fields():
+@pytest.mark.django_db
+def test_get_solr_sort():
     searchform = SearchForm()
 
     # try relevance, should return values from dictionaries to set
     # solr sort field and form/template field
-    solr_sort = searchform.get_solr_sort_field('relevance')
-    assert solr_sort == 'score desc'
-    # try pub_date_asc, should return fields w/o score and set
+    assert searchform.get_solr_sort_field('relevance') == '-score'
+    # pub_date_asc, should return fields w/o score and set
     # form template field correctly
-    solr_sort = searchform.get_solr_sort_field('pub_date_asc')
-    assert solr_sort == 'pub_date asc'
+    assert searchform.get_solr_sort_field('pub_date_asc') == 'pub_date'
+
+    # when sort not specified, tryies to use sort option from form data
+    # error without cleaned form data
+    with pytest.raises(AttributeError):
+        searchform.get_solr_sort_field()
+
+    searchform = SearchForm({'sort': 'relevance', 'collections': []})
+    assert searchform.is_valid()
+    searchform.get_solr_sort_field() == '-score'
 
 
 class TestRadioWithDisabled(TestCase):

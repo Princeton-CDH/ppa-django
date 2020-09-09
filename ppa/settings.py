@@ -98,6 +98,7 @@ INSTALLED_APPS = [
     'modelcluster',
     'taggit',
     'fullurl',
+    'parasolr',
     'ppa.archive',
     'ppa.common',
     'ppa.unapi',
