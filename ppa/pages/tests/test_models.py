@@ -14,7 +14,6 @@ from wagtail.tests.utils.form_data import (nested_form_data, rich_text,
                                            streamfield)
 
 from ppa.archive.models import Collection, DigitizedWork
-from ppa.archive.solr import get_solr_connection
 from ppa.editorial.models import EditorialIndexPage
 from ppa.pages.models import CollectionPage, ContentPage, ContributorPage, \
     HomePage, ImageWithCaption, LinkableSectionBlock, Person, SVGImageBlock
@@ -63,7 +62,6 @@ class TestHomePage(WagtailPageTests):
             HomePage, [ContentPage, EditorialIndexPage, CollectionPage,
                        ContributorPage, Page])
 
-    @pytest.mark.usefixtures("solr")
     def test_get_context(self):
         # Create test collections to display
         coll1 = Collection.objects.create(name='Random Grabbag')
@@ -87,7 +85,6 @@ class TestHomePage(WagtailPageTests):
         # only two collections should be returned in the response
         assert len(context['collections']) == 2
 
-    @pytest.mark.usefixtures("solr")
     def test_template(self):
         # Check that the template is rendering as expected
         site = Site.objects.first()
@@ -319,7 +316,6 @@ class TestCollectionPage(WagtailPageTests):
         self.assertAllowedSubpageTypes(
             CollectionPage, [])
 
-    @pytest.mark.usefixtures("solr")
     def test_get_context(self):
         # Create test collections to display
         coll1 = Collection.objects.create(name='Random Grabbag')
@@ -338,7 +334,6 @@ class TestCollectionPage(WagtailPageTests):
         assert len(context['collections']) == Collection.objects.count()
         assert 'stats' in context
 
-    @pytest.mark.usefixtures("solr")
     def test_template(self):
         # Check that the template is rendering as expected
         site = Site.objects.first()
@@ -359,9 +354,7 @@ class TestCollectionPage(WagtailPageTests):
         wintry.collections.add(coll2)
 
         # reindex the digitized works so we can check stats
-        solr, solr_collection = get_solr_connection()
-        solr.index(solr_collection, [dw.index_data() for dw in digworks],
-                   params={"commitWithin": 100})
+        DigitizedWork.index_items(digworks)
         sleep(2)
 
         response = self.client.get(self.collection_page.relative_url(site))

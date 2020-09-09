@@ -89,27 +89,19 @@ class TestHathiImporter(TestCase):
         assert htimporter.results[test_htid] == HathiImporter.SUCCESS
 
     @patch('ppa.archive.util.DigitizedWork')
-    @patch('ppa.archive.util.get_solr_connection')
-    def test_index(self, mock_get_solr, mock_digitizedwork):
+    def test_index(self, mock_digitizedwork):
         test_htid = 'a:123'
         htimporter = HathiImporter([test_htid])
         # no imported works, index should do nothing
         htimporter.index()
         mock_digitizedwork.index_items.assert_not_called()
-        mock_get_solr.assert_not_called()
 
         # simulate imported work to index
-        mocksolr = Mock()
-        mockcollection = Mock()
-        mock_get_solr.return_value = mocksolr, mockcollection
         mock_digwork = Mock()
         htimporter.imported_works = [mock_digwork]
         htimporter.index()
         mock_digitizedwork.index_items.assert_any_call(htimporter.imported_works)
         mock_digitizedwork.index_items.assert_any_call(mock_digwork.page_index_data())
-
-        mock_get_solr.assert_called_with()
-        mocksolr.commit.assert_called_with(mockcollection, openSearcher=True)
 
     def test_get_status_message(self):
         htimporter = HathiImporter(['a:123'])
