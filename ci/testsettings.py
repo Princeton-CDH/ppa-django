@@ -30,7 +30,7 @@ ALLOWED_HOSTS = ['*']
 SOLR_CONNECTIONS = {
     'default': {
         'URL': 'http://localhost:8983/solr/',
-        'COLLECTION': 'ppa-pa11y',
+        'COLLECTION': 'ppa',
         'CONFIGSET': 'ppa',
         'TEST': {
             'COLLECTION': 'test-ppa',
