@@ -653,6 +653,8 @@ class TestDigitizedWorkListRequest(TestCase):
             mock_qs = mock_queryset_cls.return_value
             mock_qs.get_expanded.side_effect = \
                 requests.exceptions.ConnectionError
+            # return main mock when paginated
+            mock_qs.__getitem__.return_value = mock_qs
             # count needed for paginator
             mock_qs.count.return_value = 0
             # simulate empty result doc for last modified check
@@ -986,7 +988,7 @@ class TestDigitizedWorkListView(TestCase):
                 id__in=['(p1a)', '(p1b)', '(p2a)', '(p2b)'])
             mock_qs.only.assert_called_with('id')
             mock_qs.highlight.assert_called_with(
-                'content', snippets=3, method='unified')
+                'content*', snippets=3, method='unified')
             mock_qs.get_results.assert_called_with(rows=4)
 
             assert highlights == mock_qs.get_highlighting()
