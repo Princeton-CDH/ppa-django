@@ -157,7 +157,6 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
             return page_highlights
 
         # generate a list of page ids from the grouped results
-        # FIXME: this is not all the pages
         page_ids = ['(%s)' % page['id'] for results in page_groups.values()
                     for page in results['docs']]
 
@@ -168,7 +167,7 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
         solr_pageq = SolrQuerySet().search(content='(%s)' % self.query) \
             .search(id__in=page_ids) \
             .only('id') \
-            .highlight('content', snippets=3, method='unified')
+            .highlight('content*', snippets=3, method='unified')
         # populate the result cache with number of rows specified
         solr_pageq.get_results(rows=len(page_ids))
         # NOTE: rows argument is needed until this parasolr bug is fixed
@@ -184,11 +183,14 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
 
         page_groups = facet_ranges = None
         try:
-            # catch an error querying solr when the search terms cannot be parsed
-            # (e.g., incomplete exact phrase)
+            # catch an error connecting to solr
             context = super().get_context_data(**kwargs)
-            page_groups = self.solrq.get_expanded()
-            facet_dict = self.solrq.get_facets()
+            # get expanded must be called on the *paginated* solr queryset
+            # in order to get the correct number and set of expanded groups
+            # - get everything from the same solr queryset to avoid extra calls
+            solrq = context['page_obj'].object_list
+            page_groups = solrq.get_expanded()
+            facet_dict = solrq.get_facets()
             self.form.set_choices_from_facets(facet_dict.facet_fields)
             # needs to be inside try/catch or it will re-trigger any error
             facet_ranges = facet_dict.facet_ranges.as_dict()
@@ -278,11 +280,11 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin,
             # only return fields needed for page result display,
             # configure highlighting on page text content
             solr_pageq = SolrQuerySet() \
-                .search(content='(%s)' % query) \
+                .search(content='(%s)' % query, content_nostem=('%s)' % query)) \
                 .filter(source_id='(%s)' % digwork.source_id,
                         item_type='page') \
                 .only('id', 'source_id', 'order', 'title', 'label') \
-                .highlight('content', snippets=3, method='unified') \
+                .highlight('content*', snippets=3, method='unified') \
                 .order_by('order')
 
             try:

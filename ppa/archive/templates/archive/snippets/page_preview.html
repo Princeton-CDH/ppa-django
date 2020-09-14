@@ -31,8 +31,15 @@ Expected context variables:
               p. {{ page.label }}
             </a>
           </p>
-        {% for snippet in highlights.content %}
+        {# display unstemmed highlights by preference, since in some cases it includes matches not in content #}
+        {# NOTE: might be possible to rely on content_nostem only #}
+        {% for snippet in highlights.content_nostem %}
         <p class="snippet">{{ snippet|solr_highlight }}</p>
         {% endfor %}
+        {% if not highlights.content_nostem %}
+          {% for snippet in highlights.content %}
+          <p class="snippet">{{ snippet|solr_highlight }}</p>
+          {% endfor %}
+        {% endif %}
     </div>
 </div>
