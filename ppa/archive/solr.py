@@ -99,7 +99,7 @@ class SolrSchema(schema.SolrSchema):
     # fields without stemming for search boosting
     title_nostem = schema.SolrField('text_nostem', stored=False)
     subtitle_nostem = schema.SolrField('text_nostem', stored=False)
-    content_nostem = schema.SolrField('text_nostem', stored=False)
+    content_nostem = schema.SolrField('text_nostem', stored=True)
 
     # have solr automatically track last index time
     last_modified = schema.SolrField('date', default='NOW')
@@ -121,7 +121,7 @@ class ArchiveSearchQuerySet(SolrQuerySet):
     # boosting)
     _title_search = '{!type=edismax qf=$search_title_qf ' + \
                     'pf=$search_title_pf v=$title_query}'
-    _keyword_search = '{!type=edismax qf=$qf pf=$pf v=$keyword_query}'
+    _keyword_search = '{!type=edismax qf=$keyword_qf pf=$keyword_pf v=$keyword_query}'
 
     # minimal set of fields to be returned from Solr for search page
     field_list = [
@@ -210,9 +210,10 @@ class ArchiveSearchQuerySet(SolrQuerySet):
         qs_copy = qs_copy.search(combined_query) \
             .filter('{!collapse field=source_id sort="order asc"}') \
             .raw_query_parameters(
-                content_query='content:(%s)' % self.keyword_query,
+                content_query='content:(%(kw)s) OR content_nostem:(%(kw)s)' %
+                              {'kw': self.keyword_query},
                 keyword_query=self.keyword_query,
-                expand='true', work_query=work_query, **{'expand.rows': 3})
+                expand='true', work_query=work_query, **{'expand.rows': 2})
 
         return qs_copy._base_query_opts()
 
