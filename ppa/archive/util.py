@@ -4,13 +4,22 @@ Utility code related to :mod:`ppa.archives`
 
 '''
 
+import logging
+import os
+import subprocess
+import tempfile
 from collections import OrderedDict
 from json.decoder import JSONDecodeError
 
+from django.conf import settings
+from pairtree.pairtree_path import id_to_dirpath
 from parasolr.django.signals import IndexableSignalHandler
 
 from ppa.archive import hathi
 from ppa.archive.models import DigitizedWork
+
+
+logger = logging.getLogger(__name__)
 
 
 class HathiImporter:
@@ -67,6 +76,47 @@ class HathiImporter:
 
         # filter to ids that are not already present in the database
         self.htids = set(self.htids) - set(self.existing_ids.keys())
+
+    def rsync_file_paths(self):
+        '''Generator of pairtree path list for hathi ids to be imported.'''
+        for htid in self.htids:
+            # split institional prefix from identifier
+            prefix, ident = htid.split('.', 1)
+            # generate pairtree path for the item
+            yield os.path.join(prefix, 'pairtree_root', id_to_dirpath(ident))
+
+    # rsync command adapted from HathiTrust dataset sync documentation:
+    # https://github.com/hathitrust/datasets/wiki/Dataset-rsync-instructions
+    # recursive, copy links, preserve times, delete extra files at destination
+    # NOTE: add -v if needed for debugging
+    rsync_cmd = 'rsync -rLt --delete --ignore-errors ' \
+                + ' --files-from=%(path_file)s %(server)s:%(src)s %(dest)s'
+
+    def rsync_data(self):
+        # create temp file with list of paths to synchronize
+        with tempfile.NamedTemporaryFile(prefix='ppa_hathi_pathlist-',
+                                         suffix='.txt', mode='w+t') as fp:
+            for path in self.rsync_file_paths():
+                fp.write(path)
+
+            # flush to make content available to rsync
+            fp.flush()
+
+            # populate rsync command with path file name,
+            # local hathi data dir, and remote dataset server and source
+            rsync_cmd = self.rsync_cmd % {
+                'path_file': fp.name,
+                'server': settings.HATHITRUST_RSYNC_SERVER,
+                'src': settings.HATHITRUST_RSYNC_PATH,
+                'dest': settings.HATHI_DATA
+            }
+            try:
+                subprocess.run(args=rsync_cmd.split(), check=True)
+                # NOTE: when we get to python 3.7, use capture_output
+                # to report on what was done or any errors
+            except subprocess.CalledProcessError:
+                logger.error('HathiTrust rsync failed (command %s)' %
+                             rsync_cmd)
 
     def add_items(self, log_msg_src=None, user=None):
         '''Add new items from HathiTrust.
