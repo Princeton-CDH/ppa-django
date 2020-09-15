@@ -3,6 +3,11 @@
 CHANGELOG
 =========
 
+3.5
+---
+
+* Removed HathiTrust Data API client code. Configurations for **HATHITRUST_OAUTH_KEY** and  **HATHITRUST_OAUTH_SECRET** are no longer needed in local settings.
+
 3.4
 ---
 
