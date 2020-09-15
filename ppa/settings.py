@@ -252,6 +252,11 @@ PUCAS_LDAP = {
     },
 }
 
+
+# defaults for HathiTrust dataset rsync, per their documentation
+HATHITRUST_RSYNC_SERVER = 'datasets.hathitrust.org'
+HATHITRUST_RSYNC_PATH = ':ht_text_pd'
+
 # django-csp configuration for content security policy definition and
 # violation reporting - https://github.com/mozilla/django-csp
 

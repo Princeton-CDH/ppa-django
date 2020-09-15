@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.admin.models import LogEntry, ADDITION
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
-from django.test import TestCase
+from django.test import TestCase, override_settings
 import pytest
 
 from ppa.archive import hathi
@@ -141,3 +141,31 @@ class TestHathiImporter(TestCase):
             HathiImporter.status_message[HathiImporter.SUCCESS]
         assert output_results[notfound_id] == \
             HathiImporter.status_message[hathi.HathiItemNotFound]
+
+    def test_rsync_file_paths(self):
+        htimporter = HathiImporter(['hvd.1234', 'nyp.334455'])
+        # returns a generator; convert to list for inspetion
+        rsync_paths = list(htimporter.rsync_file_paths())
+        assert rsync_paths[0] == 'hvd/pairtree_root/12/34'
+        assert rsync_paths[1] == 'nyp/pairtree_root/33/44/55'
+
+    @override_settings(HATHI_DATA='/my/test/ppa/ht_data',
+                       HATHITRUST_RSYNC_SERVER='data.ht.org',
+                       HATHITRUST_RSYNC_PATH=':ht_text_pd')
+    @patch('ppa.archive.util.subprocess')
+    def test_rsync_data(self, mocksubprocess):
+        htimporter = HathiImporter(['hvd.1234', 'nyp.334455'])
+        htimporter.rsync_data()
+        assert mocksubprocess.run.call_count == 1
+        args, kwargs = mocksubprocess.run.call_args
+        cmd_args = kwargs['args']
+        # quick check that command is split properly
+        assert cmd_args[0] == 'rsync'
+        assert cmd_args[1] == '-rLt'
+        # last arg is local path for data destination
+        assert cmd_args[-1] == '/my/test/ppa/ht_data'
+        # second to last arg is server:src; use defaults from settings
+        assert cmd_args[-2] == 'data.ht.org::ht_text_pd'
+        # third from last arg is file list
+        assert cmd_args[-3].startswith('--files-from=')
+        assert 'ppa_hathi_pathlist' in cmd_args[-3]
