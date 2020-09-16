@@ -29,6 +29,9 @@ class UnicodeTextAnalyzer(schema.SolrAnalyzer):
             {"class": "solr.KeywordRepeatFilterFactory"},
             {"class": "solr.PorterStemFilterFactory"},
             {"class": "solr.ICUFoldingFilterFactory"},
+            # remove duplicates after repeat since some stemmed and unstemmed
+            # tokens may match
+            {"class": "solr.RemoveDuplicatesTokenFilterFactory"}
         ]
 
 
