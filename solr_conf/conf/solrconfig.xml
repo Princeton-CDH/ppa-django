@@ -753,8 +753,6 @@
       <str name="defType">edismax</str>
       <!-- <str name="df">text</str> -->
       <str name="keyword_qf">
-          title_nostem^40
-          subtitle_nostem^30
           title^20
           subtitle^15
           author^80
@@ -764,31 +762,23 @@
           pub_place
           publisher
           source_id^10
-          content_nostem^60
           content
       </str>
       <str name="keyword_pf">
-          title_nostem^70
-          subtitle_nostem^60
           title^50
           subtitle^35
           author^100
           notes^50
-          content_nostem^60
           content
           pub_place
           publisher
       </str>
       <str name="search_title_qf">
-        title_nostem^100
         title^80
-        subtitle_nostem^50
         subtitle^25
       </str>
       <str name="search_title_pf">
-        title_nostem^100
         title^80
-        subtitle_nostem^50
         subtitle^25
       </str>
     </lst>
