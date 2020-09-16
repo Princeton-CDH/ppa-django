@@ -16,7 +16,7 @@ from pairtree.pairtree_path import id_to_dirpath
 from parasolr.django.signals import IndexableSignalHandler
 
 from ppa.archive import hathi
-from ppa.archive.models import DigitizedWork
+from ppa.archive.models import DigitizedWork, Page
 
 
 logger = logging.getLogger(__name__)
@@ -110,6 +110,7 @@ class HathiImporter:
                 'src': settings.HATHITRUST_RSYNC_PATH,
                 'dest': settings.HATHI_DATA
             }
+            logger.debug('rsync command: %s' % rsync_cmd)
             try:
                 subprocess.run(args=rsync_cmd.split(), check=True)
                 # NOTE: when we get to python 3.7, use capture_output
@@ -128,10 +129,20 @@ class HathiImporter:
         # disconnect indexing signal handler before adding new content
         IndexableSignalHandler.disconnect()
 
+        # use rsync to copy data from HathiTrust dataset server
+        # to the local pairtree datastore for ids to be imported
+        logger.info('rsyncing pairtree data for %s', ', '.join(self.htids))
+        self.rsync_data()
+        # FIXME: need better error handling here! rsync can error
+        # or timeout; should we capture output and report that?
+        # Indexing logs an error if pairtree is not present for an
+        # unsuppressed work; perhaps we could do a similar check here?
+
         for htid in self.htids:
             try:
+                # fetch metadata and add to the database
                 digwork = DigitizedWork.add_from_hathi(
-                    htid, self.bib_api, get_data=True,
+                    htid, self.bib_api,
                     log_msg_src=log_msg_src, user=user)
                 if digwork:
                     self.imported_works.append(digwork)
@@ -160,7 +171,7 @@ class HathiImporter:
             DigitizedWork.index_items(self.imported_works)
             for work in self.imported_works:
                 # index page index data in chunks (returns a generator)
-                DigitizedWork.index_items(work.page_index_data())
+                DigitizedWork.index_items(Page.page_index_data(work))
 
     def get_status_message(self, status):
         '''Get a readable status message for a given status'''
