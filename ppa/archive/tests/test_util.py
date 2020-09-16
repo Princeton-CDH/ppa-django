@@ -39,32 +39,48 @@ class TestHathiImporter(TestCase):
         assert set(htimporter.htids) == set(new_ids)
 
     @patch('ppa.archive.models.DigitizedWork.add_from_hathi')
-    def test_add_items(self, mock_add_from_hathi):
+    def test_add_items_notfound(self, mock_add_from_hathi):
         test_htid = 'a:123'
         htimporter = HathiImporter([test_htid])
-        # simulate record not found
-        mock_add_from_hathi.side_effect = hathi.HathiItemNotFound
-        htimporter.add_items()
-        mock_add_from_hathi.assert_called_with(
-            test_htid, htimporter.bib_api, get_data=True,
-            log_msg_src=None, user=None)
-        assert not htimporter.imported_works
-        # actual error stored in results
-        assert isinstance(htimporter.results[test_htid], hathi.HathiItemNotFound)
-        # no partial record hanging around
-        assert not DigitizedWork.objects.filter(source_id=test_htid)
+        with patch.object(htimporter, 'rsync_data') as mock_rsync_data:
+            # simulate record not found
+            mock_add_from_hathi.side_effect = hathi.HathiItemNotFound
+            htimporter.add_items()
+            mock_rsync_data.assert_called_with()
+            mock_add_from_hathi.assert_called_with(
+                test_htid, htimporter.bib_api,
+                log_msg_src=None, user=None)
+            assert not htimporter.imported_works
+            # actual error stored in results
+            assert isinstance(htimporter.results[test_htid],
+                              hathi.HathiItemNotFound)
+            # no partial record hanging around
+            assert not DigitizedWork.objects.filter(source_id=test_htid)
 
-        # simulate permission denied
-        mock_add_from_hathi.side_effect = hathi.HathiItemForbidden
-        log_msg_src = 'from unit test'
-        htimporter.add_items(log_msg_src)
-        mock_add_from_hathi.assert_called_with(
-            test_htid, htimporter.bib_api, get_data=True,
-            log_msg_src=log_msg_src, user=None)
-        # actual error stored in results
-        assert isinstance(htimporter.results[test_htid], hathi.HathiItemForbidden)
-        # no partial record hanging aruond
-        assert not DigitizedWork.objects.filter(source_id=test_htid)
+    @patch('ppa.archive.models.DigitizedWork.add_from_hathi')
+    def test_add_items_denied(self, mock_add_from_hathi):
+        test_htid = 'a:123'
+        htimporter = HathiImporter([test_htid])
+        with patch.object(htimporter, 'rsync_data') as mock_rsync_data:
+            # simulate permission denied
+            mock_add_from_hathi.side_effect = hathi.HathiItemForbidden
+            log_msg_src = 'from unit test'
+            htimporter.add_items(log_msg_src)
+            mock_rsync_data.assert_called_with()
+
+            mock_add_from_hathi.assert_called_with(
+                test_htid, htimporter.bib_api,
+                log_msg_src=log_msg_src, user=None)
+            # actual error stored in results
+            assert isinstance(htimporter.results[test_htid],
+                              hathi.HathiItemForbidden)
+            # no partial record hanging aruond
+            assert not DigitizedWork.objects.filter(source_id=test_htid)
+
+    @patch('ppa.archive.models.DigitizedWork.add_from_hathi')
+    def test_add_items_success(self, mock_add_from_hathi):
+        test_htid = 'a:123'
+        htimporter = HathiImporter([test_htid])
 
         # simulate success
         def fake_add_from_hathi(htid, *args, **kwargs):
@@ -82,14 +98,17 @@ class TestHathiImporter(TestCase):
                 action_flag=ADDITION)
 
             return digwork
-
         mock_add_from_hathi.side_effect = fake_add_from_hathi
-        htimporter.add_items(log_msg_src)
-        assert len(htimporter.imported_works) == 1
-        assert htimporter.results[test_htid] == HathiImporter.SUCCESS
+
+        with patch.object(htimporter, 'rsync_data'):
+            log_msg_src = 'from unit test'
+            htimporter.add_items(log_msg_src)
+            assert len(htimporter.imported_works) == 1
+            assert htimporter.results[test_htid] == HathiImporter.SUCCESS
 
     @patch('ppa.archive.util.DigitizedWork')
-    def test_index(self, mock_digitizedwork):
+    @patch('ppa.archive.util.Page')
+    def test_index(self, mock_page, mock_digitizedwork):
         test_htid = 'a:123'
         htimporter = HathiImporter([test_htid])
         # no imported works, index should do nothing
@@ -101,7 +120,8 @@ class TestHathiImporter(TestCase):
         htimporter.imported_works = [mock_digwork]
         htimporter.index()
         mock_digitizedwork.index_items.assert_any_call(htimporter.imported_works)
-        mock_digitizedwork.index_items.assert_any_call(mock_digwork.page_index_data())
+        mock_page.page_index_data.assert_called_with(mock_digwork)
+        mock_digitizedwork.index_items.assert_any_call(mock_page.page_index_data())
 
     def test_get_status_message(self):
         htimporter = HathiImporter(['a:123'])

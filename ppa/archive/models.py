@@ -652,9 +652,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         a :class:`DigitizedWork` record, and populates the metadata if
         this is a new record, if the Hathi metadata has changed, or
         if update is requested. Creates admin log entry to document
-        record creation or update.  If `get_data` is specified,
-        will retrieve structure and aggregate data from Hathi Data API
-        and add it to the local pairtree datastore.
+        record creation or update.
 
         Raises :class:`ppa.archive.hathi.HathiItemNotFound` for invalid
         id.
@@ -666,8 +664,6 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             instance, to allow for shared sessions in scripts
         :param update: update bibliographic metadata even if the hathitrust
             record is not newer than the local database record (default: False)
-        :param get_data: retrieve content data from Data API; for new
-            records only (default: False)
         :param log_msg_src: source of the change to be used included
             in log entry messages (optional). Will be used as "Created/updated
             [log_msg_src]".
