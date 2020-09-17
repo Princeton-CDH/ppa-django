@@ -56,6 +56,12 @@ class TestHathiImportCommand(TestCase):
             mock_pairtree_client.PairtreeStorageClient \
                 .assert_any_call(prefix, os.path.join(settings.HATHI_DATA, prefix))
 
+    @override_settings(HATHI_DATA='/nonexistent/hathi/data/dir')
+    def test_initialize_pairtrees_bad_datadir(self):
+        cmd = hathi_import.Command()
+        with pytest.raises(CommandError):
+            cmd.initialize_pairtrees()
+
     @patch('ppa.archive.management.commands.hathi_import.pairtree_client')
     def test_get_hathi_ids(self, mock_pairtree_client):
         # pairtree_client.PairtreeStorageClient().list_ids()
