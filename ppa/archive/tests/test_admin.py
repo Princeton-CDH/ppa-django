@@ -102,7 +102,7 @@ class TestDigitizedWorkAdmin(TestCase):
         # call save_related using mocks for most params we don't use or need
         digadmin.save_related(request, form, [], False)
         # mocked index method of the digwork object should have been called
-        digwork.index.assert_called_with(params={'commitWithin': 10000})
+        digwork.index.assert_called_with()
 
     def test_bulk_add_collection(self):
         # create a DigitizedWorkAdmin object
