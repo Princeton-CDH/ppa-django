@@ -280,7 +280,7 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin,
             # only return fields needed for page result display,
             # configure highlighting on page text content
             solr_pageq = SolrQuerySet() \
-                .search(content='(%s)' % query, content_nostem=('%s)' % query)) \
+                .search(content='(%s)' % query) \
                 .filter(source_id='(%s)' % digwork.source_id,
                         item_type='page') \
                 .only('id', 'source_id', 'order', 'title', 'label') \
