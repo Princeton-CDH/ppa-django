@@ -19,3 +19,8 @@
 dontstems
 zwhacky
 
+# actual words to protect against stemming
+decadence
+decadent
+decadents
+
