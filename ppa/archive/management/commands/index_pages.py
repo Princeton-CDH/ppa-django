@@ -73,7 +73,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--cpus', default=cpu_count(),
+            '--cpus', default=cpu_count(), type=int,
             help='Number of CPUs to use (cpu_count by default: %(default)s)')
 
     def handle(self, *args, **kwargs):
