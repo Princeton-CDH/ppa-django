@@ -23,9 +23,9 @@ class UnicodeTextAnalyzer(schema.SolrAnalyzer):
              "words": "lang/stopwords_en.txt"},
             {"class": "solr.LowerCaseFilterFactory"},
             {"class": "solr.EnglishPossessiveFilterFactory"},
-            # keyword protection not actually in use
-            # (protected list not not modified)
-            # {"class": "solr.KeywordMarkerFilterFactory"},
+            # keyword protection — keep decadence unstemmed
+            {"class": "solr.KeywordMarkerFilterFactory",
+             "protected": "protwords.txt"},
             {"class": "solr.KeywordRepeatFilterFactory"},
             {"class": "solr.PorterStemFilterFactory"},
             {"class": "solr.ICUFoldingFilterFactory"},
