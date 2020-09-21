@@ -190,18 +190,18 @@ class StructMapPage(_METS):
          CHECKSUM="f0a326c10b2a6dc9ae5e3ede261c9897" SEQ="00000496" CHECKSUMTYPE="MD5">
     '''
 
-    @property
+    @cached_property
     def display_label(self):
         '''page display labeel; use order label if present; otherwise use order'''
         return self.orderlabel or str(self.order)
 
-    @property
+    @cached_property
     def text_file(self):
         ''':class:`METSFiile` corresponding to the text file pointer for this page'''
         return METSFile(self.node.xpath('//m:file[@ID="%s"]' % self.text_file_id,
                                         namespaces=self.ROOT_NAMESPACES)[0])
 
-    @property
+    @cached_property
     def text_file_location(self):
         '''location for the text file'''
         return self.text_file.location

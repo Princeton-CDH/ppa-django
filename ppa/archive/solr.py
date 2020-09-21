@@ -13,8 +13,9 @@ class SolrTextField(schema.SolrTypedField):
 
 class UnicodeTextAnalyzer(schema.SolrAnalyzer):
         '''Solr text field analyzer with unicode folding. Includes all standard
-        text field analyzers (stopword filters, lower case, possessive, keyword
-        marker, porter stemming) and adds ICU folding filter factory.
+        text field analyzers (stopword filters, lower case, possessive,
+        porter stemming) and adds ICU folding filter factory.
+        Uses a keyword repeat before stemming to preserve original words.
         '''
         tokenizer = 'solr.StandardTokenizerFactory'
         filters = [
@@ -22,26 +23,16 @@ class UnicodeTextAnalyzer(schema.SolrAnalyzer):
              "words": "lang/stopwords_en.txt"},
             {"class": "solr.LowerCaseFilterFactory"},
             {"class": "solr.EnglishPossessiveFilterFactory"},
-            {"class": "solr.KeywordMarkerFilterFactory"},
+            # keyword protection not actually in use
+            # (protected list not not modified)
+            # {"class": "solr.KeywordMarkerFilterFactory"},
+            {"class": "solr.KeywordRepeatFilterFactory"},
             {"class": "solr.PorterStemFilterFactory"},
             {"class": "solr.ICUFoldingFilterFactory"},
+            # remove duplicates after repeat since some stemmed and unstemmed
+            # tokens may match
+            {"class": "solr.RemoveDuplicatesTokenFilterFactory"}
         ]
-
-
-class UnstemmedTextAnalyzer(schema.SolrAnalyzer):
-    '''Solr text field analyzer without unstemming. Exactly the same as
-    :class:`UnicodeTextAnalyzer` except without PorterStemFilterFactory.
-    Used as a secondary search field, so exact matches can be prioritized
-    over stemmed matches.'''
-    tokenizer = 'solr.StandardTokenizerFactory'
-    filters = [
-        {"class": "solr.StopFilterFactory", "ignoreCase": True,
-         "words": "lang/stopwords_en.txt"},
-        {"class": "solr.LowerCaseFilterFactory"},
-        {"class": "solr.EnglishPossessiveFilterFactory"},
-        {"class": "solr.KeywordMarkerFilterFactory"},
-        {"class": "solr.ICUFoldingFilterFactory"},
-    ]
 
 
 class TextKeywordTextAnalyzer(schema.SolrAnalyzer):
@@ -64,8 +55,6 @@ class SolrSchema(schema.SolrSchema):
     # declare custom field types
     text_en = schema.SolrFieldType(
         'solr.TextField', analyzer=UnicodeTextAnalyzer)
-    text_nostem = schema.SolrFieldType(
-        'solr.TextField', analyzer=UnstemmedTextAnalyzer)
     string_i = schema.SolrFieldType(
         'solr.TextField', analyzer=TextKeywordTextAnalyzer,
         sortMissingLast=True)
@@ -96,21 +85,13 @@ class SolrSchema(schema.SolrSchema):
     author_exact = schema.SolrStringField()
     collections_exact = schema.SolrStringField(multivalued=True)
 
-    # fields without stemming for search boosting
-    title_nostem = schema.SolrField('text_nostem', stored=False)
-    subtitle_nostem = schema.SolrField('text_nostem', stored=False)
-    content_nostem = schema.SolrField('text_nostem', stored=True)
-
     # have solr automatically track last index time
     last_modified = schema.SolrField('date', default='NOW')
 
-    #: define copy fields for facets and unstemmed variants
+    #: define copy fields for facet/sort
     copy_fields = {
         'author': 'author_exact',
         'collections': 'collections_exact',
-        'title': 'title_nostem',
-        'subtitle': 'subtitle_nostem',
-        'content': 'content_nostem',
     }
 
 
@@ -126,7 +107,8 @@ class ArchiveSearchQuerySet(SolrQuerySet):
     # minimal set of fields to be returned from Solr for search page
     field_list = [
         'id', 'author', 'pubdate', 'publisher', 'enumcron', 'order',
-        'source_id', 'label', 'title', 'subtitle', 'score', 'pub_date'
+        'source_id', 'label', 'title', 'subtitle', 'score', 'pub_date',
+        'collections'
     ]
 
     keyword_query = None
@@ -210,8 +192,7 @@ class ArchiveSearchQuerySet(SolrQuerySet):
         qs_copy = qs_copy.search(combined_query) \
             .filter('{!collapse field=source_id sort="order asc"}') \
             .raw_query_parameters(
-                content_query='content:(%(kw)s) OR content_nostem:(%(kw)s)' %
-                              {'kw': self.keyword_query},
+                content_query='content:(%s)' % self.keyword_query,
                 keyword_query=self.keyword_query,
                 expand='true', work_query=work_query, **{'expand.rows': 2})
 

@@ -43,9 +43,8 @@ import time
 
 from django.conf import settings
 from django.contrib.admin.models import LogEntry, ADDITION, CHANGE
-from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.template.defaultfilters import pluralize
 from django.utils.timezone import now
 from pairtree import pairtree_client, storage_exceptions
@@ -158,6 +157,12 @@ class Command(BaseCommand):
     def initialize_pairtrees(self):
         '''Initiaulize pairtree storage clients for each
         subdirectory in the configured **HATHI_DATA** path.'''
+
+        # if the configured directory does not exist or is not
+        # a directory, bail out
+        if not os.path.isdir(settings.HATHI_DATA):
+            raise CommandError('Configuration error for HATHI_DATA dir (%s)'
+                               % settings.HATHI_DATA)
 
         # HathiTrust data is constructed with instutition short name
         # with pairtree root underneath each
