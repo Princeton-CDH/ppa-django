@@ -20,7 +20,7 @@ def page_index_data(work_q, page_data_q):
     while True:
         try:
             digwork = work_q.get(True, 1)
-            # convert to the generator to a list
+            # convert the generator to a list
             # — might be nice to chunk, but most books are small
             # enough it doesn't matter that much
             page_data_q.put(list(Page.page_index_data(digwork)))
