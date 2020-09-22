@@ -38,6 +38,7 @@ class TestHathiImporter(TestCase):
         assert len(htimporter.existing_ids) == len(digwork_ids)
         assert set(htimporter.htids) == set(new_ids)
 
+    @override_settings(HATHI_DATA='/my/test/ppa/ht_data')
     @patch('ppa.archive.util.os.path.isdir')
     @patch('ppa.archive.models.DigitizedWork.add_from_hathi')
     def test_add_items_notfound(self, mock_add_from_hathi, mock_isdir):
@@ -60,6 +61,7 @@ class TestHathiImporter(TestCase):
             # no partial record hanging around
             assert not DigitizedWork.objects.filter(source_id=test_htid)
 
+    @override_settings(HATHI_DATA='/my/test/ppa/ht_data')
     @patch('ppa.archive.models.DigitizedWork.add_from_hathi')
     def test_add_items_rsync_failure(self, mock_add_from_hathi):
         test_htid = 'a.123'
@@ -80,6 +82,7 @@ class TestHathiImporter(TestCase):
     @patch('ppa.archive.util.os.path.isdir')
     @patch('ppa.archive.models.DigitizedWork.page_count')
     @patch('ppa.archive.models.DigitizedWork.add_from_hathi')
+    @override_settings(HATHI_DATA='/my/test/ppa/ht_data')
     def test_add_items_success(self, mock_page_count, mock_add_from_hathi,
                                mock_isdir):
         test_htid = 'a.123'
