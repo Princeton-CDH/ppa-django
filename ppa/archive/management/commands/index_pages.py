@@ -71,6 +71,10 @@ class Command(BaseCommand):
     '''Index page data in Solr (multiprocessor implementation)'''
     help = __doc__
 
+    #: normal verbosity level
+    v_normal = 1
+    verbosity = v_normal
+
     def add_arguments(self, parser):
         parser.add_argument(
             '-p', '--processes', default=cpu_count(), type=int,
@@ -78,9 +82,12 @@ class Command(BaseCommand):
                  '(cpu_count by default: %(default)s)')
 
     def handle(self, *args, **kwargs):
+        self.verbosity = kwargs.get('verbosity', self.v_normal)
+        if self.verbosity >= self.v_normal:
+            self.stdout.write('Indexing with %d processes' %
+                              max(2, kwargs['processes']))
         work_q = Queue()
         page_data_q = Queue()
-
         # populate the work queue with digitized works that have
         # page content to be indexed
         for digwork in DigitizedWork.items_to_index():
