@@ -73,8 +73,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--cpus', default=cpu_count(), type=int,
-            help='Number of CPUs to use (cpu_count by default: %(default)s)')
+            '-p', '--processes', default=cpu_count(), type=int,
+            help='Number of processes to use ' +
+                 '(cpu_count by default: %(default)s)')
 
     def handle(self, *args, **kwargs):
         work_q = Queue()
@@ -86,7 +87,8 @@ class Command(BaseCommand):
             work_q.put(digwork)
 
         # start multiple processes to populate the page index data queue
-        for i in range(kwargs['cpus'] - 1):
+        # (need at least 1 page data process, no matter what was specified)
+        for i in range(max(1, kwargs['processes'] - 1)):
             Process(
                 target=page_index_data, args=(work_q, page_data_q)).start()
 
