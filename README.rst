@@ -1,5 +1,5 @@
 ppa-django
-==============
+==========
 
 .. sphinx-start-marker-do-not-remove
 
