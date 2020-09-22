@@ -96,8 +96,10 @@ class HathiImporter:
         # create temp file with list of paths to synchronize
         with tempfile.NamedTemporaryFile(prefix='ppa_hathi_pathlist-',
                                          suffix='.txt', mode='w+t') as fp:
-            for path in self.rsync_file_paths():
-                fp.write(path)
+            file_paths = list(self.rsync_file_paths())
+            # sorting may make rsync more efficient
+            file_paths.sort()
+            fp.writelines(file_paths)
 
             # flush to make content available to rsync
             fp.flush()
