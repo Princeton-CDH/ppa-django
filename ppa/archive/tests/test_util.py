@@ -38,10 +38,13 @@ class TestHathiImporter(TestCase):
         assert len(htimporter.existing_ids) == len(digwork_ids)
         assert set(htimporter.htids) == set(new_ids)
 
+    @patch('ppa.archive.util.os.path.isdir')
     @patch('ppa.archive.models.DigitizedWork.add_from_hathi')
-    def test_add_items_notfound(self, mock_add_from_hathi):
-        test_htid = 'a:123'
+    def test_add_items_notfound(self, mock_add_from_hathi, mock_isdir):
+        test_htid = 'a.123'
         htimporter = HathiImporter([test_htid])
+        # unlikely scenario, but simulate rsync success with bib api failure
+        mock_isdir.return_value = True
         with patch.object(htimporter, 'rsync_data') as mock_rsync_data:
             # simulate record not found
             mock_add_from_hathi.side_effect = hathi.HathiItemNotFound
@@ -58,29 +61,31 @@ class TestHathiImporter(TestCase):
             assert not DigitizedWork.objects.filter(source_id=test_htid)
 
     @patch('ppa.archive.models.DigitizedWork.add_from_hathi')
-    def test_add_items_denied(self, mock_add_from_hathi):
-        test_htid = 'a:123'
+    def test_add_items_rsync_failure(self, mock_add_from_hathi):
+        test_htid = 'a.123'
         htimporter = HathiImporter([test_htid])
         with patch.object(htimporter, 'rsync_data') as mock_rsync_data:
-            # simulate permission denied
-            mock_add_from_hathi.side_effect = hathi.HathiItemForbidden
+            # do nothing: expected directory not created by rsync
             log_msg_src = 'from unit test'
             htimporter.add_items(log_msg_src)
             mock_rsync_data.assert_called_with()
 
-            mock_add_from_hathi.assert_called_with(
-                test_htid, htimporter.bib_api,
-                log_msg_src=log_msg_src, user=None)
-            # actual error stored in results
-            assert isinstance(htimporter.results[test_htid],
-                              hathi.HathiItemForbidden)
-            # no partial record hanging aruond
+            assert mock_add_from_hathi.call_count == 0
+
+            # error code stored in results
+            assert htimporter.results[test_htid] == htimporter.RSYNC_ERROR
+            # no partial record hanging around
             assert not DigitizedWork.objects.filter(source_id=test_htid)
 
+    @patch('ppa.archive.util.os.path.isdir')
+    @patch('ppa.archive.models.DigitizedWork.page_count')
     @patch('ppa.archive.models.DigitizedWork.add_from_hathi')
-    def test_add_items_success(self, mock_add_from_hathi):
-        test_htid = 'a:123'
+    def test_add_items_success(self, mock_page_count, mock_add_from_hathi,
+                               mock_isdir):
+        test_htid = 'a.123'
         htimporter = HathiImporter([test_htid])
+        # simulate rsync success
+        mock_isdir.return_value = True
 
         # simulate success
         def fake_add_from_hathi(htid, *args, **kwargs):
@@ -124,7 +129,7 @@ class TestHathiImporter(TestCase):
         mock_digitizedwork.index_items.assert_any_call(mock_page.page_index_data())
 
     def test_get_status_message(self):
-        htimporter = HathiImporter(['a:123'])
+        htimporter = HathiImporter(['a.123'])
         # simple status codes
         assert htimporter.get_status_message(HathiImporter.SUCCESS) == \
             HathiImporter.status_message[HathiImporter.SUCCESS]
@@ -143,7 +148,7 @@ class TestHathiImporter(TestCase):
             htimporter.get_status_message('foo')
 
     def test_output_results(self):
-        htimporter = HathiImporter(['a:123'])
+        htimporter = HathiImporter(['a.123'])
         # set sample results to test - one of each
         success_id = 'added:1'
         notfound_id = 'err:404'
@@ -162,12 +167,12 @@ class TestHathiImporter(TestCase):
         assert output_results[notfound_id] == \
             HathiImporter.status_message[hathi.HathiItemNotFound]
 
-    def test_rsync_file_paths(self):
+    def test_pairtree_paths(self):
         htimporter = HathiImporter(['hvd.1234', 'nyp.334455'])
         # returns a generator; convert to list for inspection
-        rsync_paths = list(htimporter.rsync_file_paths())
-        assert rsync_paths[0] == 'hvd/pairtree_root/12/34'
-        assert rsync_paths[1] == 'nyp/pairtree_root/33/44/55'
+        pairtree_paths = htimporter.pairtree_paths
+        assert pairtree_paths['hvd.1234'] == 'hvd/pairtree_root/12/34'
+        assert pairtree_paths['nyp.334455'] == 'nyp/pairtree_root/33/44/55'
 
     @override_settings(HATHI_DATA='/my/test/ppa/ht_data',
                        HATHITRUST_RSYNC_SERVER='data.ht.org',

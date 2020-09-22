@@ -11,6 +11,7 @@ import tempfile
 from collections import OrderedDict
 from json.decoder import JSONDecodeError
 
+from cached_property import cached_property
 from django.conf import settings
 from pairtree.pairtree_path import id_to_dirpath
 from parasolr.django.signals import IndexableSignalHandler
@@ -32,13 +33,17 @@ class HathiImporter:
     SUCCESS = 1
     #: status - skipped because already in the database
     SKIPPED = 2
+    #: rsync error
+    RSYNC_ERROR = 3
 
     #: human-readable message to display for result status
     status_message = {
         SUCCESS: 'Success',
         SKIPPED: 'Skipped; already in the database',
         hathi.HathiItemNotFound: 'Error loading record; check that id is valid.',
+        # possibly irrelevant with removal of data api code
         hathi.HathiItemForbidden: 'Permission denied to download data.',
+        RSYNC_ERROR: 'Failed to sync data',
         # only saw this one on day, but this was what it was
         JSONDecodeError: 'HathiTrust catalog temporarily unavailable (malformed response).'
     }
@@ -77,13 +82,17 @@ class HathiImporter:
         # filter to ids that are not already present in the database
         self.htids = set(self.htids) - set(self.existing_ids.keys())
 
-    def rsync_file_paths(self):
-        '''Generator of pairtree path list for hathi ids to be imported.'''
+    @cached_property
+    def pairtree_paths(self):
+        '''Dictionary of pairtree paths for each hathi id to be imported.'''
+        id_paths = {}
         for htid in self.htids:
             # split institional prefix from identifier
             prefix, ident = htid.split('.', 1)
             # generate pairtree path for the item
-            yield os.path.join(prefix, 'pairtree_root', id_to_dirpath(ident))
+            id_paths[htid] = os.path.join(prefix, 'pairtree_root',
+                                          id_to_dirpath(ident))
+        return id_paths
 
     # rsync command adapted from HathiTrust dataset sync documentation:
     # https://github.com/hathitrust/datasets/wiki/Dataset-rsync-instructions
@@ -92,14 +101,39 @@ class HathiImporter:
     rsync_cmd = 'rsync -rLt --delete --ignore-errors ' \
                 + ' --files-from=%(path_file)s %(server)s:%(src)s %(dest)s'
 
+    RSYNC_RETURN_CODES = {
+        1: 'Syntax or usage error',
+        2: 'Protocol incompatibility',
+        3: 'Errors selecting input/output files, dirs',
+        4: 'Requested action not supported',
+        # ... : an attempt was made to manipulate 64-bit
+        # files on a platform that cannot support them; or an option was specified
+        # that is supported by the client and not by the server.
+        5: 'Error starting client-server protocol',
+        6: 'Daemon unable to append to log-file',
+        10: 'Error in socket I/O',
+        11: 'Error in file I/O',
+        12: 'Error in rsync protocol data stream',
+        13: 'Errors with program diagnostics',
+        14: 'Error in IPC code',
+        20: 'Received SIGUSR1 or SIGINT',
+        21: 'Some error returned by waitpid()',
+        22: 'Error allocating core memory buffers',
+        23: 'Partial transfer due to error',
+        24: 'Partial transfer due to vanished source files',
+        25: 'The --max-delete limit stopped deletions',
+        30: 'Timeout in data send/receive',
+        35: 'Timeout waiting for daemon connection',
+    }
+
     def rsync_data(self):
         # create temp file with list of paths to synchronize
         with tempfile.NamedTemporaryFile(prefix='ppa_hathi_pathlist-',
                                          suffix='.txt', mode='w+t') as fp:
-            file_paths = list(self.rsync_file_paths())
-            # sorting may make rsync more efficient
+            file_paths = list(self.pairtree_paths.values())
+            # sorting makes rsync more efficient
             file_paths.sort()
-            fp.writelines(file_paths)
+            fp.write('\n'.join(file_paths))
 
             # flush to make content available to rsync
             fp.flush()
@@ -115,11 +149,10 @@ class HathiImporter:
             logger.debug('rsync command: %s' % rsync_cmd)
             try:
                 subprocess.run(args=rsync_cmd.split(), check=True)
-                # NOTE: when we get to python 3.7, use capture_output
-                # to report on what was done or any errors
-            except subprocess.CalledProcessError:
-                logger.error('HathiTrust rsync failed (command %s)' %
-                             rsync_cmd)
+            except subprocess.CalledProcessError as err:
+                logger.error('HathiTrust rsync failed — %s / command: %s' %
+                             (self.RSYNC_RETURN_CODES[err.returncode],
+                              rsync_cmd))
 
     def add_items(self, log_msg_src=None, user=None):
         '''Add new items from HathiTrust.
@@ -141,12 +174,22 @@ class HathiImporter:
         # unsuppressed work; perhaps we could do a similar check here?
 
         for htid in self.htids:
+            # if rsync did not create the expected directory,
+            # set error code and bail out
+            expected_path = os.path.join(settings.HATHI_DATA,
+                                         self.pairtree_paths[htid])
+            if not os.path.isdir(expected_path):
+                self.results[htid] = self.RSYNC_ERROR
+                continue
+
             try:
                 # fetch metadata and add to the database
                 digwork = DigitizedWork.add_from_hathi(
                     htid, self.bib_api,
                     log_msg_src=log_msg_src, user=user)
                 if digwork:
+                    # populate page count
+                    digwork.count_pages()
                     self.imported_works.append(digwork)
 
                 self.results[htid] = self.SUCCESS
