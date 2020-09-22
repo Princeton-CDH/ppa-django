@@ -164,7 +164,7 @@ class TestHathiImporter(TestCase):
 
     def test_rsync_file_paths(self):
         htimporter = HathiImporter(['hvd.1234', 'nyp.334455'])
-        # returns a generator; convert to list for inspetion
+        # returns a generator; convert to list for inspection
         rsync_paths = list(htimporter.rsync_file_paths())
         assert rsync_paths[0] == 'hvd/pairtree_root/12/34'
         assert rsync_paths[1] == 'nyp/pairtree_root/33/44/55'
