@@ -23,10 +23,10 @@ class UnicodeTextAnalyzer(schema.SolrAnalyzer):
              "words": "lang/stopwords_en.txt"},
             {"class": "solr.LowerCaseFilterFactory"},
             {"class": "solr.EnglishPossessiveFilterFactory"},
+            {"class": "solr.KeywordRepeatFilterFactory"},
             # customize stemming for decadence
             {"class": "solr.StemmerOverrideFilterFactory",
              "dictionary": "stemdict_ppa.txt"},
-            {"class": "solr.KeywordRepeatFilterFactory"},
             {"class": "solr.PorterStemFilterFactory"},
             {"class": "solr.ICUFoldingFilterFactory"},
             # remove duplicates after repeat since some stemmed and unstemmed
