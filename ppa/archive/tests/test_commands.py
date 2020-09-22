@@ -349,22 +349,27 @@ def test_process_index_queue(mock_solrclient, mock_progbar):
     progbar.finish.assert_called_with()
 
 
+@patch('ppa.archive.management.commands.index_pages.sleep')
+@patch('ppa.archive.management.commands.index_pages.progressbar')
+@patch('ppa.archive.management.commands.index_pages.Process')
 class TestIndexPagesCommand(TestCase):
     fixtures = ['sample_digitized_works']
 
-    @patch('ppa.archive.management.commands.index_pages.sleep')
-    @patch('ppa.archive.management.commands.index_pages.progressbar')
-    def test_index_pages(self, mock_progbar, mock_sleep):
+    def test_index_pages(self, mock_process, mock_progbar, mock_sleep):
         # test calling from command line
         stdout = StringIO()
         call_command('index_pages', stdout=stdout)
+
+        # Process should be called at least twice
+        assert mock_process.call_count > 2
+        # could inspect to confirm called correctly, but probably
+        # requires
+
         output = stdout.getvalue()
         assert 'Indexing with %d processes' % cpu_count() in output
-        assert 'Items in Solr by item type: %d pages' % Page.total_to_index()
+        assert 'Items in Solr by item type:' in output
 
-    @patch('ppa.archive.management.commands.index_pages.sleep')
-    @patch('ppa.archive.management.commands.index_pages.progressbar')
-    def test_index_pages_no_verbosity(self, mock_progbar, mock_sleep):
+    def test_index_pages_quiet(self, mock_process, mock_progbar, mock_sleep):
         # test calling from command line
         stdout = StringIO()
         call_command('index_pages', stdout=stdout, verbosity=0)

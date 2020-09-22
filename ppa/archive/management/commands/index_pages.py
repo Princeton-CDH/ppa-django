@@ -105,5 +105,5 @@ class Command(BaseCommand):
             for item_type, total in facets.facet_fields.item_type.items():
                 item_totals.append('%d %s%s' % (
                     total, item_type, '' if total == 1 else 's'))
-            print('\nItems in Solr by item type: %s' %
-                  (', '.join(item_totals)))
+            self.stdout.write('\nItems in Solr by item type: %s' %
+                              (', '.join(item_totals)))
