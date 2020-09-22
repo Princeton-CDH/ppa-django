@@ -579,7 +579,7 @@ class TestDigitizedWork(TestCase):
         script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
 
         # add new with default opts
-        test_htid = 'abc:12345'
+        test_htid = 'abc.12345'
         digwork = DigitizedWork.add_from_hathi(test_htid)
         assert isinstance(digwork, DigitizedWork)
         mock_hathibib_api.assert_called_with()
