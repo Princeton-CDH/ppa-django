@@ -355,19 +355,27 @@ def test_process_index_queue(mock_solrclient, mock_progbar):
 class TestIndexPagesCommand(TestCase):
     fixtures = ['sample_digitized_works']
 
+    @pytest.mark.usefixtures("mock_solr_queryset")
     def test_index_pages(self, mock_process, mock_progbar, mock_sleep):
-        # test calling from command line
-        stdout = StringIO()
-        call_command('index_pages', stdout=stdout)
+        # generate solrqueryset mock and patch it in
+        mock_solrqs = self.mock_solr_queryset()
+        with patch('ppa.archive.management.commands.index_pages.SolrQuerySet',
+                   new=mock_solrqs):
+            mock_solrqs.return_value.get_facets.return_value \
+                .facet_fields.item_type = {'pages': 153}
 
-        # Process should be called at least twice
-        assert mock_process.call_count > 2
-        # could inspect to confirm called correctly, but probably
-        # requires
+            # test calling from command line
+            stdout = StringIO()
+            call_command('index_pages', stdout=stdout)
 
-        output = stdout.getvalue()
-        assert 'Indexing with %d processes' % cpu_count() in output
-        assert 'Items in Solr by item type:' in output
+            # Process should be called at least twice
+            assert mock_process.call_count > 2
+            # could inspect to confirm called correctly, but probably
+            # requires
+
+            output = stdout.getvalue()
+            assert 'Indexing with %d processes' % cpu_count() in output
+            assert 'Items in Solr by item type:' in output
 
     def test_index_pages_quiet(self, mock_process, mock_progbar, mock_sleep):
         # test calling from command line
