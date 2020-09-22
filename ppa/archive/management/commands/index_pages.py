@@ -19,8 +19,8 @@ def page_index_data(work_q, page_data_q):
     for and a queue where page data will be added.'''
     while True:
         try:
-            digwork = work_q.get(True, 1)
             # convert the generator to a list
+            digwork = work_q.get(timeout=1)
             # — might be nice to chunk, but most books are small
             # enough it doesn't matter that much
             page_data_q.put(list(Page.page_index_data(digwork)))
@@ -53,16 +53,6 @@ def process_index_queue(index_data_q, total_to_index, work_q):
             # indexer has just gotten ahead of page index data
             if work_q.empty():
                 progbar.finish()
-
-                # print a summary of solr totals by item type
-                facets = SolrQuerySet().all().facet('item_type').get_facets()
-                item_totals = []
-                for item_type, total in facets.facet_fields.item_type.items():
-                    item_totals.append('%d %s%s' % (
-                        total, item_type, '' if total == 1 else 's'))
-                print('\nItems in Solr by item type: %s' %
-                      (', '.join(item_totals)))
-
                 # finish indexing process
                 return
 
@@ -102,5 +92,18 @@ class Command(BaseCommand):
         # give the page data a head start, since indexing is faster
         sleep(10)
         # start a single indexing process
-        Process(target=process_index_queue,
-                args=(page_data_q, Page.total_to_index(), work_q)).start()
+        indexer = Process(target=process_index_queue,
+                          args=(page_data_q, Page.total_to_index(), work_q))
+        indexer.start()
+        # block until indexer has completed
+        indexer.join()
+
+        # print a summary of solr totals by item type
+        if self.verbosity >= self.v_normal:
+            facets = SolrQuerySet().all().facet('item_type').get_facets()
+            item_totals = []
+            for item_type, total in facets.facet_fields.item_type.items():
+                item_totals.append('%d %s%s' % (
+                    total, item_type, '' if total == 1 else 's'))
+            print('\nItems in Solr by item type: %s' %
+                  (', '.join(item_totals)))
