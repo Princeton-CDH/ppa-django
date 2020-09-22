@@ -369,7 +369,7 @@ class TestIndexPagesCommand(TestCase):
             call_command('index_pages', stdout=stdout)
 
             # Process should be called at least twice
-            assert mock_process.call_count > 2
+            assert mock_process.call_count >= 2
             # could inspect to confirm called correctly, but probably
             # requires
 
