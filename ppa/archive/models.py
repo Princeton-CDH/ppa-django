@@ -23,8 +23,7 @@ from wagtail.core.fields import RichTextField
 from wagtail.admin.edit_handlers import FieldPanel
 from wagtail.snippets.models import register_snippet
 
-from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS, \
-    HathiDataAPI, HathiObject
+from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS, HathiObject
 
 
 logger = logging.getLogger(__name__)
@@ -647,16 +646,13 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
 
     @staticmethod
     def add_from_hathi(htid, bib_api=None, update=False,
-                       get_data=False, log_msg_src=None,
-                       user=None):
+                       log_msg_src=None, user=None):
         '''Add or update a HathiTrust work in the database.
         Retrieves bibliographic data from Hathi api, retrieves or creates
         a :class:`DigitizedWork` record, and populates the metadata if
         this is a new record, if the Hathi metadata has changed, or
         if update is requested. Creates admin log entry to document
-        record creation or update.  If `get_data` is specified,
-        will retrieve structure and aggregate data from Hathi Data API
-        and add it to the local pairtree datastore.
+        record creation or update.
 
         Raises :class:`ppa.archive.hathi.HathiItemNotFound` for invalid
         id.
@@ -668,8 +664,6 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             instance, to allow for shared sessions in scripts
         :param update: update bibliographic metadata even if the hathitrust
             record is not newer than the local database record (default: False)
-        :param get_data: retrieve content data from Data API; for new
-            records only (default: False)
         :param log_msg_src: source of the change to be used included
             in log entry messages (optional). Will be used as "Created/updated
             [log_msg_src]".
@@ -738,50 +732,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             change_message=log_change_message,
             action_flag=log_action)
 
-        # get data if requested and if this was a new record
-        if get_data and created:
-            digwork.get_hathi_data()
-
         return digwork
-
-    def get_hathi_data(self):
-        '''Use Data API to fetch zipfile and mets and add them to the
-        local pairtree. Intended for use with newly added HathiTrust
-        records not imported from local pairtree data.
-
-        Raises :class:`~ppa.archive.hathi.HathiItemNotFound` for invalid
-        id and :class:`~ppa.archive.hathi.HathiItemForbidden` for a
-        valid record that configured Data API credentials do not allow
-        accessing.
-        '''
-
-        # do nothing for non-hathi records
-        if self.source != DigitizedWork.HATHI:
-            return
-
-        data_api = HathiDataAPI()
-
-        # get pairtree client object for this item, creating if necessary
-        ptree_obj = self.hathi.pairtree_object(create=True)
-        # retrieve mets xml and add to pairtree
-        mets_response = data_api.get_structure(self.source_id)
-        # use filename provided by Hathi in response headers
-        mets_filename = os.path.basename(mets_response.headers['content-disposition'])
-        # file should be under content directory named by hathi id
-        mets_filename = os.path.join(self.hathi.content_dir,
-                                     mets_filename)
-        ptree_obj.add_bytestream_by_path(mets_filename, mets_response.content)
-
-        # get zip file and add to pairtree
-        data_response = data_api.get_aggregate(self.source_id)
-        data_filename = os.path.basename(data_response.headers['content-disposition'])
-        data_filename = data_filename.replace('filename=', '')
-        data_filename = os.path.join(self.hathi.content_dir,
-                                     data_filename)
-        ptree_obj.add_bytestream_by_path(data_filename, data_response.content)
-
-        # count pages now that data is present (required for indexing)
-        self.count_pages()
 
 
 class Page(Indexable):

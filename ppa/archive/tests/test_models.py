@@ -573,22 +573,19 @@ class TestDigitizedWork(TestCase):
         assert work.is_suppressed
 
     @patch('ppa.archive.models.DigitizedWork.populate_from_bibdata')
-    @patch('ppa.archive.models.DigitizedWork.get_hathi_data')
     @patch('ppa.archive.models.HathiBibliographicAPI')
-    def test_add_from_hathi(self, mock_hathibib_api, mock_get_hathi_data,
-                            mock_pop_from_bibdata):
+    def test_add_from_hathi(self, mock_hathibib_api, mock_pop_from_bibdata):
 
         script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
 
         # add new with default opts
-        test_htid = 'abc:12345'
+        test_htid = 'abc.12345'
         digwork = DigitizedWork.add_from_hathi(test_htid)
         assert isinstance(digwork, DigitizedWork)
         mock_hathibib_api.assert_called_with()
         mock_hathibib = mock_hathibib_api.return_value
         mock_hathibib.record.assert_called_with('htid', test_htid)
         mock_pop_from_bibdata.assert_called_with(mock_hathibib.record.return_value)
-        mock_get_hathi_data.assert_not_called()
 
         # log entry should exist for record creation only
         log_entries = LogEntry.objects.filter(object_id=digwork.id)
@@ -606,11 +603,9 @@ class TestDigitizedWork(TestCase):
         mock_hathibib_api.reset_mock()
         test_htid = 'def:678910'
         digwork = DigitizedWork.add_from_hathi(
-            test_htid, bib_api=my_bib_api, get_data=True,
-            log_msg_src='in unit tests')
+            test_htid, bib_api=my_bib_api, log_msg_src='in unit tests')
         mock_hathibib_api.assert_not_called()
         my_bib_api.record.assert_called_with('htid', test_htid)
-        assert mock_get_hathi_data.call_count == 1
         log_entry = LogEntry.objects.get(object_id=digwork.id)
         assert log_entry.change_message == 'Created in unit tests'
 
@@ -656,53 +651,6 @@ class TestDigitizedWork(TestCase):
         # newest log entry should be an update
         assert LogEntry.objects.filter(object_id=digwork.id) \
             .order_by('-action_time').first().action_flag == CHANGE
-
-    @patch('ppa.archive.models.HathiDataAPI')
-    def test_get_hathi_data(self, mock_hathidata_api):
-        # should do nothing for non-hathi record
-        non_hathi_work = DigitizedWork(source=DigitizedWork.OTHER)
-        non_hathi_work.get_hathi_data()
-        mock_hathidata_api.assert_not_called()
-
-        mock_hathidata = mock_hathidata_api.return_value
-        mets_filename = 'ht.12358.mets.xml'
-        mock_hathidata.get_structure.return_value.headers = {
-            'content-disposition': mets_filename
-        }
-        zip_filename = 'ht.12358.zip'
-        mock_hathidata.get_aggregate.return_value.headers = {
-            'content-disposition': 'filename=%s' % zip_filename
-        }
-
-        digwork = DigitizedWork(source_id='ht:12358')
-        with patch.object(digwork, 'hathi') as mock_hathiobj:
-            with patch.object(digwork, 'count_pages') as mock_count_pages:
-                mock_hathiobj.content_dir = 'my/pairtree/content/dir'
-                digwork.get_hathi_data()
-
-                # should initialize hathi data api client
-                mock_hathidata_api.assert_called_with()
-
-                # should get pairtree object & create if necessary
-                mock_hathiobj.pairtree_object.assert_called_with(create=True)
-                pairtree_obj = mock_hathiobj.pairtree_object.return_value
-                # should get structure xml (METS)
-                mock_hathidata.get_structure.assert_called_with(digwork.source_id)
-                # should add mets to pairtree based on filename in response header
-                expect_mets_filename = os.path.join(
-                    mock_hathiobj.content_dir, mets_filename)
-                mets_response = mock_hathidata.get_structure.return_value
-                print(pairtree_obj.add_bytestream_by_path.call_args_list)
-                pairtree_obj.add_bytestream_by_path.assert_any_call(
-                    expect_mets_filename, mets_response.content)
-                # should add zip to pairtree similarly
-                expect_zip_filename = os.path.join(
-                    mock_hathiobj.content_dir, zip_filename)
-                zip_response = mock_hathidata.get_aggregate.return_value
-                pairtree_obj.add_bytestream_by_path.assert_any_call(
-                    expect_zip_filename, zip_response.content)
-
-                mock_count_pages.assert_called_with()
 
 
 class TestCollection(TestCase):
