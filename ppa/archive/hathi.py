@@ -9,12 +9,10 @@ import time
 
 from cached_property import cached_property
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
 from eulxml import xmlmap
-from pairtree import pairtree_path, pairtree_client, storage_exceptions
+from pairtree import pairtree_client, pairtree_path, storage_exceptions
 import pymarc
 import requests
-from requests_oauthlib import OAuth1
 
 
 from ppa import __version__ as ppa_version
@@ -165,42 +163,6 @@ class HathiBibliographicRecord:
             return pymarc.parse_xml_to_array(io.StringIO(marcxml))[0]
 
 
-class HathiDataAPI(HathiBaseAPI):
-    '''Wrapper for HathiTrust DATA API. Pulls OAuth credentials from
-    Django settings.'''
-
-    api_root = 'https://babel.hathitrust.org/cgi/htd'
-
-    cfg_err = 'OAuth key and secret configuration required for HathiDataAPI use'
-
-    def __init__(self):
-        super().__init__()
-        # get oauth configuration and attach to session
-        oauth_key = getattr(settings, 'HATHITRUST_OAUTH_KEY', None)
-        oauth_secret = getattr(settings, 'HATHITRUST_OAUTH_SECRET', None)
-        if not oauth_key or not oauth_secret:
-            raise ImproperlyConfigured(self.cfg_err)
-
-        self.oauth = OAuth1(client_key=oauth_key,
-                            client_secret=oauth_secret,
-                            signature_type='query')
-        self.session.auth = self.oauth
-
-    # NOTE: response headers include filename in content-disposition,
-    # so return the whole response for aggregrate and structure requests
-
-    def get_aggregate(self, htid):
-        '''Get aggregate date package for a HathiTrust record by hathi id.'''
-        # http[s]://babel.hathitrust.org/cgi/htd/aggregate/:ID?v=2
-        return self._make_request('aggregate/%s' % htid, params={'v': 2})
-
-    def get_structure(self, htid, fmt='xml'):
-        '''Get structure information for a HathiTrust record by hathi id.'''
-        # http[s]://babel.hathitrust.org/cgi/htd/structure/:ID?format=xml&v=2
-        return self._make_request('structure/%s' % htid,
-                                  params={'v': 2, 'format': fmt})
-
-
 class _METS(xmlmap.XmlObject):
     '''Base :class:`~eulxml.xmlmap.XmlObject`. with METS namespace configured'''
     ROOT_NAMESPACES = {
@@ -258,6 +220,7 @@ class METSFile(_METS):
         CREATED="2016-06-24T09:04:15Z" CHECKSUM="68b329da9893e34099c7d8ad5cb9c940"
         SEQ="00000001" CHECKSUMTYPE="MD5">
     '''
+
 
 class MinimalMETS(_METS):
     '''Minimal :class:`~eulxml.xmlmap.XmlObject` for METS that maps only
