@@ -35,11 +35,14 @@ class HathiImporter:
     SKIPPED = 2
     #: rsync error
     RSYNC_ERROR = 3
+    #: invalid id
+    INVALID_ID = 4
 
     #: human-readable message to display for result status
     status_message = {
         SUCCESS: 'Success',
         SKIPPED: 'Skipped; already in the database',
+        INVALID_ID: 'Invalid id',
         hathi.HathiItemNotFound: 'Error loading record; check that id is valid.',
         # possibly irrelevant with removal of data api code
         hathi.HathiItemForbidden: 'Permission denied to download data.',
@@ -81,6 +84,19 @@ class HathiImporter:
 
         # filter to ids that are not already present in the database
         self.htids = set(self.htids) - set(self.existing_ids.keys())
+
+        # also check for and remove filter invalid ids
+        self.filter_invalid_ids()
+
+    def filter_invalid_ids(self):
+        # remove any ids that don't look valid
+        # at minimum, must have . separator required for pairtree path
+        invalid_ids = [htid for htid in self.htids if '.' not in htid]
+        # add result code to display in output
+        for htid in invalid_ids:
+            self.results[htid] = self.INVALID_ID
+        # remove from the set of ids to be processed
+        self.htids = set(self.htids) - set(invalid_ids)
 
     @cached_property
     def pairtree_paths(self):
@@ -161,6 +177,11 @@ class HathiImporter:
             log entry message
 
         '''
+
+        # if all ids were invalid or already present, bail out
+        if not self.htids:
+            return
+
         # disconnect indexing signal handler before adding new content
         IndexableSignalHandler.disconnect()
 

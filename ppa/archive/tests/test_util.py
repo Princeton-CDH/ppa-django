@@ -38,6 +38,13 @@ class TestHathiImporter(TestCase):
         assert len(htimporter.existing_ids) == len(digwork_ids)
         assert set(htimporter.htids) == set(new_ids)
 
+    def test_filter_invalid_ids(self):
+        htimporter = HathiImporter(['mdp.1234', 'foobar'])
+        htimporter.filter_invalid_ids()
+        # first should stay, second should be removed
+        assert 'mdp.1234' in htimporter.htids
+        assert 'foobar' not in htimporter.htids
+
     @override_settings(HATHI_DATA='/my/test/ppa/ht_data')
     @patch('ppa.archive.util.os.path.isdir')
     @patch('ppa.archive.models.DigitizedWork.add_from_hathi')
