@@ -292,12 +292,14 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin,
                 page_num = self.request.GET.get('page', 1)
                 current_page = paginator.page(page_num)
                 paged_result = current_page.object_list
+                # don't try to get highlights if there are no results
+                highlights = paged_result.get_highlighting() if paged_result.count() else {}
 
                 context.update({
                     'search_form': form,
                     'current_results': current_page,
                     # add highlights to context
-                    'page_highlights': paged_result.get_highlighting()
+                    'page_highlights': highlights
                 })
             except requests.exceptions.ConnectionError:
                 context['error'] = 'Something went wrong.'
