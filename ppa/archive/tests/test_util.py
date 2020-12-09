@@ -32,7 +32,7 @@ class TestHathiImporter(TestCase):
         assert htimporter.existing_ids[digwork.source_id] == digwork.pk
 
         # mix of new and existing ids
-        new_ids = ['one', 'two', 'three']
+        new_ids = ['one.1', 'two.2', 'three.3']
         htimporter = HathiImporter(new_ids + list(digwork_ids))
         htimporter.filter_existing_ids()
         assert len(htimporter.existing_ids) == len(digwork_ids)
