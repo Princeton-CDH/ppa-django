@@ -3,7 +3,7 @@
 Utility code related to :mod:`ppa.archives`
 
 '''
-
+import glob
 import logging
 import os
 import subprocess
@@ -197,9 +197,12 @@ class HathiImporter:
         for htid in self.htids:
             # if rsync did not create the expected directory,
             # set error code and bail out
+            # if there is a directory but no zip file, bail out
             expected_path = os.path.join(settings.HATHI_DATA,
                                          self.pairtree_paths[htid])
-            if not os.path.isdir(expected_path):
+
+            if not os.path.isdir(expected_path) or \
+               not len(glob.glob(os.path.join(expected_path, '*.zip'))):
                 self.results[htid] = self.RSYNC_ERROR
                 continue
 

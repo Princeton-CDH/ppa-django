@@ -47,12 +47,16 @@ class TestHathiImporter(TestCase):
 
     @override_settings(HATHI_DATA='/my/test/ppa/ht_data')
     @patch('ppa.archive.util.os.path.isdir')
+    @patch('ppa.archive.util.glob.glob')
     @patch('ppa.archive.models.DigitizedWork.add_from_hathi')
-    def test_add_items_notfound(self, mock_add_from_hathi, mock_isdir):
+    def test_add_items_notfound(self, mock_add_from_hathi, mock_glob,
+                                mock_isdir):
         test_htid = 'a.123'
         htimporter = HathiImporter([test_htid])
         # unlikely scenario, but simulate rsync success with bib api failure
-        mock_isdir.return_value = True
+        mock_isdir.return_value = True  # directory exists
+        mock_glob.return_value = ['foo.zip']   # zipfile exists
+
         with patch.object(htimporter, 'rsync_data') as mock_rsync_data:
             # simulate record not found
             mock_add_from_hathi.side_effect = hathi.HathiItemNotFound
@@ -69,11 +73,18 @@ class TestHathiImporter(TestCase):
             assert not DigitizedWork.objects.filter(source_id=test_htid)
 
     @override_settings(HATHI_DATA='/my/test/ppa/ht_data')
+    @patch('ppa.archive.util.os.path.isdir')
+    @patch('ppa.archive.util.glob.glob')
     @patch('ppa.archive.models.DigitizedWork.add_from_hathi')
-    def test_add_items_rsync_failure(self, mock_add_from_hathi):
+    def test_add_items_rsync_failure(self, mock_add_from_hathi, mock_glob,
+                                     mock_isdir):
         test_htid = 'a.123'
         htimporter = HathiImporter([test_htid])
+
         with patch.object(htimporter, 'rsync_data') as mock_rsync_data:
+            # simulate directory not created
+            mock_isdir.return_value = False
+
             # do nothing: expected directory not created by rsync
             log_msg_src = 'from unit test'
             htimporter.add_items(log_msg_src)
@@ -86,16 +97,31 @@ class TestHathiImporter(TestCase):
             # no partial record hanging around
             assert not DigitizedWork.objects.filter(source_id=test_htid)
 
+            # simulate directory created but no zip file
+            # — should still get an rsync error
+            mock_isdir.return_value = True
+            mock_glob.return_value = []
+            log_msg_src = 'from unit test'
+            htimporter.add_items(log_msg_src)
+            mock_rsync_data.assert_called_with()
+
+            assert mock_add_from_hathi.call_count == 0
+
+            # error code stored in results
+            assert htimporter.results[test_htid] == htimporter.RSYNC_ERROR
+
     @patch('ppa.archive.util.os.path.isdir')
+    @patch('ppa.archive.util.glob.glob')
     @patch('ppa.archive.models.DigitizedWork.page_count')
     @patch('ppa.archive.models.DigitizedWork.add_from_hathi')
     @override_settings(HATHI_DATA='/my/test/ppa/ht_data')
     def test_add_items_success(self, mock_page_count, mock_add_from_hathi,
-                               mock_isdir):
+                               mock_glob, mock_isdir):
         test_htid = 'a.123'
         htimporter = HathiImporter([test_htid])
         # simulate rsync success
-        mock_isdir.return_value = True
+        mock_isdir.return_value = True  # directory exists
+        mock_glob.return_value = ['foo.zip']   # zipfile exists
 
         # simulate success
         def fake_add_from_hathi(htid, *args, **kwargs):
