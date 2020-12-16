@@ -281,7 +281,7 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin,
             # configure highlighting on page text content
             solr_pageq = SolrQuerySet() \
                 .search(content='(%s)' % query) \
-                .filter(source_id='(%s)' % digwork.source_id,
+                .filter(source_id='"%s"' % digwork.source_id,
                         item_type='page') \
                 .only('id', 'source_id', 'order', 'title', 'label') \
                 .highlight('content*', snippets=3, method='unified') \
