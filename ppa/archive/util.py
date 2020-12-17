@@ -202,7 +202,7 @@ class HathiImporter:
                                          self.pairtree_paths[htid])
 
             if not os.path.isdir(expected_path) or \
-               not len(glob.glob(os.path.join(expected_path, '*.zip'))):
+               not len(glob.glob(os.path.join(expected_path, '*', '*.zip'))):
                 self.results[htid] = self.RSYNC_ERROR
                 continue
 
