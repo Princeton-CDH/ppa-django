@@ -111,7 +111,9 @@ class HathiImporter:
             # ensure pairtree prefix and version files are included
             # for each prefix, so new prefixes will result in valid pairtrees
             id_paths[prefix] = '%s/pairtree_prefix' % prefix
-            id_paths['%s_version' % prefix] = '%s/pairtree_version*' % prefix
+            # wildcard doesn't work here; if hathitrust ever changes pairtree
+            # version, this will likely need to change!
+            id_paths['%s_version' % prefix] = '%s/pairtree_version0_1' % prefix
         return id_paths
 
     # rsync command adapted from HathiTrust dataset sync documentation:
