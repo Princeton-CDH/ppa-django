@@ -209,6 +209,11 @@ class TestHathiImporter(TestCase):
         pairtree_paths = htimporter.pairtree_paths
         assert pairtree_paths['hvd.1234'] == 'hvd/pairtree_root/12/34'
         assert pairtree_paths['nyp.334455'] == 'nyp/pairtree_root/33/44/55'
+        # includes prefix and version files
+        assert pairtree_paths['hvd'] == 'hvd/pairtree_prefix'
+        assert pairtree_paths['hvd_version'] == 'hvd/pairtree_version*'
+        assert pairtree_paths['nyp'] == 'nyp/pairtree_prefix'
+        assert pairtree_paths['nyp_version'] == 'nyp/pairtree_version*'
 
     @override_settings(HATHI_DATA='/my/test/ppa/ht_data',
                        HATHITRUST_RSYNC_SERVER='data.ht.org',
