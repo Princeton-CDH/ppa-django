@@ -108,6 +108,10 @@ class HathiImporter:
             # generate pairtree path for the item
             id_paths[htid] = os.path.join(prefix, 'pairtree_root',
                                           id_to_dirpath(ident))
+            # ensure pairtree prefix and version files are included
+            # for each prefix, so new prefixes will result in valid pairtrees
+            id_paths[prefix] = '%s/pairtree_prefix' % prefix
+            id_paths['%s_version' % prefix] = '%s/pairtree_version*' % prefix
         return id_paths
 
     # rsync command adapted from HathiTrust dataset sync documentation:
@@ -146,6 +150,7 @@ class HathiImporter:
         # create temp file with list of paths to synchronize
         with tempfile.NamedTemporaryFile(prefix='ppa_hathi_pathlist-',
                                          suffix='.txt', mode='w+t') as fp:
+
             file_paths = list(self.pairtree_paths.values())
             # sorting makes rsync more efficient
             file_paths.sort()
