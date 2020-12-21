@@ -33,7 +33,9 @@ This repo uses `git-flow <https://github.com/nvie/gitflow>`_ conventions; **mast
 contains the most recent release, and work in progress will be on the **develop** branch.
 Pull requests should be made against develop.
 
-Python 3.6 / Django 2.2 / Node 10.5.0 / MariaDB (MySQL) 5.5 w/ timezone info / Solr 6.6 (requires Java 8)
+
+Python 3.6 / Django 1.11 / Node 10.5.0 / MariaDB (MySQL) 5.5 w/ timezone info / Solr 6.6 (requires Java 8)
+
 
 Development instructions
 ------------------------
