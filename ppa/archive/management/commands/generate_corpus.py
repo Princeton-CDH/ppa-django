@@ -154,10 +154,6 @@ class SolrCorpus:
         results = SolrQuerySet() \
             .facet(SolrCorpus.DOC_ID_FIELD, limit=self.doc_limit)
 
-        print('*** solrqueryset')
-        print(results)
-        print(results.get_facets().facet_fields)
-
         """
         An OrderedDict of doc_id => page count mapping
         An OrderedDict is important here in case we want to save document-level
@@ -183,9 +179,6 @@ class SolrCorpus:
                 logger.warning('Unknown page count for doc {}. Skipping.'.
                                format(doc_id))
                 continue
-
-            print('*** solrqueryset')
-            print(SolrQuerySet)
 
             result = SolrQuerySet() \
                 .search(**{SolrCorpus.DOC_ID_FIELD: doc_id}) \
