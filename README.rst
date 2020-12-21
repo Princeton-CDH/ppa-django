@@ -1,5 +1,5 @@
 ppa-django
-==============
+==========
 
 .. sphinx-start-marker-do-not-remove
 
@@ -57,19 +57,18 @@ Initial setup and installation:
 
     python manage.py migrate
 
-- Create two new Solr cores using project specific managed schema and
-  solr config, using the core/collection names for development and
-  testing that you configured in local settings::
+- Create a new Solr configset from the files in ``solr_conf`` ::
 
-    solr create -c ppa -d solr_conf
-    solr create -c ppa-test -d solr_conf
+    cp -r solr_conf /path/to/solr/server/solr/configsets/ppa
+    chown solr:solr -R /path/to/solr/server/solr/configsets/ppa
 
-- Run the manage command to configure the schema::
+  and configure **SOLR_CONNECTIONS** in local settings with your
+  preferred core/collection name and the configset name you created.
+
+- Run the manage command to configure the schema; this will prompt to
+  create the core from your configset if it does not exist::
 
     python manage.py solr_schema
-
-  The manage command will automatically reload the core to ensure schema
-  changes take effect.
 
 - Bulk import (*provisional*): requires a local copy of HathiTrust data as
   pairtree provided by rsync.  Configure the path in `localsettings.py`

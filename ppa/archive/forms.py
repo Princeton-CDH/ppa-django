@@ -243,9 +243,9 @@ class SearchForm(forms.Form):
             'sort': 'title_asc',
             # always include uncategorized collections; no harm if not present
             'collections': [ModelMultipleChoiceFieldWithEmpty.EMPTY_ID] + \
-                            list(Collection.objects.filter(exclude=False) \
-                                           .values_list('id', flat=True)),
-    }
+            list(Collection.objects.filter(exclude=False) \
+                 .values_list('id', flat=True)),
+        }
 
     def __init__(self, data=None, *args, **kwargs):
         '''
@@ -280,21 +280,27 @@ class SearchForm(forms.Form):
         return any(data.get(query_field, None)
                    for query_field in ['query', 'title', 'author'])
 
-    def get_solr_sort_field(self, sort):
+    def get_solr_sort_field(self, sort=None):
         '''
         Set solr sort fields for the query based on sort and query strings.
+        If sort field is not specified, will use sort in the the cleaned
+        data in the current form. If sort is not specified and valid
+        form data is not available, will raise an :class:`AttributeError`.
 
         :return: solr sort field
         '''
         solr_mapping = {
-            'relevance': 'score desc',
-            'pub_date_asc': 'pub_date asc',
-            'pub_date_desc': 'pub_date desc',
-            'title_asc': 'sort_title asc',
-            'title_desc': 'sort_title desc',
-            'author_asc': 'author_exact asc',
-            'author_desc': 'author_exact desc',
+            'relevance': '-score',
+            'pub_date_asc': 'pub_date',
+            'pub_date_desc': '-pub_date',
+            'title_asc': 'sort_title',
+            'title_desc': '-sort_title',
+            'author_asc': 'author_exact',
+            'author_desc': '-author_exact',
         }
+        # if not specified, use sort value from current form data
+        if sort is None:
+            sort = self.cleaned_data.get('sort')
         # return solr field for requested sort option
         return solr_mapping.get(sort, None)
 
@@ -320,7 +326,8 @@ class SearchForm(forms.Form):
                 for choice in self.fields[formfield].widget.choices:
                     # widget choice is tuple of id, name; check for name in facets
                     if choice[1] not in facet_dict.keys():
-                        new_choice.append((choice[0], {'label': choice[1], 'disabled': True}))
+                        new_choice.append((choice[0], {'label': choice[1],
+                                                       'disabled': True}))
                     else:
                         new_choice.append(choice)
 
@@ -340,7 +347,6 @@ class SearchForm(forms.Form):
             #     self.fields[formfield].choices = [
             #         (val, mark_safe('%s <span>%d</span>' % (val, count)))
             #         for val, count in facet_dict.items()]
-
 
     PUBDATE_CACHE_KEY = 'digitizedwork_pubdate_maxmin'
 

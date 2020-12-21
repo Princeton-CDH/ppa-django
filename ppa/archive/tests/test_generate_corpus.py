@@ -1,34 +1,20 @@
-import os.path
-from tempfile import TemporaryDirectory
-import pytest
-from unittest.mock import patch, Mock
+from unittest.mock import patch
+
 from django.core.management import call_command
 from django.core.management.base import CommandError
+import pytest
 
 
-@pytest.fixture
-def temp_dirname():
-    with TemporaryDirectory() as temp_dir:
-        yield temp_dir
-
-
-# ------------------------------
-# Mock objects
-# ------------------------------
-
-# A Mock of JSON data returned by a typical Solr query
-mock_solr_query = Mock()
-
-# A facet query is used to get document IDs and their page counts
-mock_solr_query.get_facets.return_value = {
+# mock results for acet query used to get document IDs and page counts
+mock_solr_facets = {
     "source_id": {
         "doc_1": 2,
         "doc_2": 2
     }
 }
 
-# A regular query is used to get document level data
-mock_solr_query.docs = [
+# mock result for solr document data
+mock_solr_docs = [
     # The first record has item_type='work' and contains metadata for the
     # document
     {
@@ -56,52 +42,49 @@ mock_solr_query.docs = [
     }
 ]
 
-# A Mock of a SolrClient object that provides a Mock query on demand
-mock_solr_client = Mock()
-mock_solr_client.query.return_value = mock_solr_query
 
-# ------------------------------
+@pytest.fixture
+def patched_solr_queryset(mock_solr_queryset):
+    # local fixture that uses parasolr queryset mock
+    # and patches in test docs & facets
+    mock_qs = mock_solr_queryset()
+    with patch('ppa.archive.management.commands.generate_corpus.SolrQuerySet',
+               new=mock_qs) as mock_queryset_cls:
+        mock_qs = mock_queryset_cls.return_value
+        mock_qs.get_results.return_value = mock_solr_docs
+        mock_qs.get_facets.return_value.facet_fields = mock_solr_facets
+
+        yield mock_qs
 
 
-@patch('ppa.archive.solr.get_solr_connection')
-def test_dictionary(mock_get_solr_connection, temp_dirname):
-    mock_get_solr_connection.return_value = (mock_solr_client,
-                                             'mock_collection')
-
-    call_command('generate_corpus', '--path', temp_dirname,
+def test_dictionary(tmpdir, patched_solr_queryset):
+    call_command('generate_corpus', '--path', tmpdir.dirpath(),
                  '--dictionary-as-text')
-    dictionary_file = os.path.join(temp_dirname, 'corpus.mm.dict')
-    assert os.path.exists(dictionary_file)
+
+    dictionary_file = tmpdir.dirpath('corpus.mm.dict')
+    assert dictionary_file.check()
 
     with open(dictionary_file, 'r') as dictfile:
         tokens = dictfile.readlines()
     assert len(tokens) == 29  # 29 unique tokens
 
 
-@patch('ppa.archive.solr.get_solr_connection')
-def test_dictionary_with_preprocessing(mock_get_solr_connection, temp_dirname):
-    mock_get_solr_connection.return_value = (mock_solr_client,
-                                             'mock_collection')
-
-    call_command('generate_corpus', '--path', temp_dirname, '--preprocess',
+def test_dictionary_with_preprocessing(tmpdir, patched_solr_queryset):
+    call_command('generate_corpus', '--path', tmpdir.dirpath(), '--preprocess',
                  'strip_short', '--dictionary-as-text')
-    dictionary_file = os.path.join(temp_dirname, 'corpus.mm.dict')
-    assert os.path.exists(dictionary_file)
+    dictionary_file = tmpdir.dirpath('corpus.mm.dict')
+    assert dictionary_file.check()
 
     with open(dictionary_file, 'r') as dictfile:
         tokens = dictfile.readlines()
     assert len(tokens) == 25  # 25 unique tokens with length>=3
 
 
-@patch('ppa.archive.solr.get_solr_connection')
-def test_metadata_file(mock_get_solr_connection, temp_dirname):
-    mock_get_solr_connection.return_value = (mock_solr_client,
-                                             'mock_collection')
-
-    call_command('generate_corpus', '--path', temp_dirname, '--preprocess',
+def test_metadata_file(tmpdir, patched_solr_queryset):
+    call_command('generate_corpus', '--path', tmpdir.dirpath(), '--preprocess',
                  'strip_short')
-    metadata_file = os.path.join(temp_dirname, 'corpus.mm.metadata')
-    assert os.path.exists(metadata_file)
+    metadata_file = tmpdir.dirpath('corpus.mm.metadata')
+    assert metadata_file.check()
 
     with open(metadata_file, 'r') as mfile:
         lines = mfile.readlines()
@@ -118,12 +101,8 @@ def test_metadata_file(mock_get_solr_connection, temp_dirname):
     assert set(lines[2].rstrip('\n').split(',')) == {'work', '1863'}
 
 
-@patch('ppa.archive.solr.get_solr_connection')
-def test_invalid_preprocess_flags(mock_get_solr_connection, temp_dirname):
-    mock_get_solr_connection.return_value = (mock_solr_client,
-                                             'mock_collection')
-
+def test_invalid_preprocess_flags(tmpdir, patched_solr_queryset):
     # Flags that are not supported
     with pytest.raises(CommandError):
-        call_command('generate_corpus', '--path', temp_dirname, '--preprocess',
-                     'upper')
+        call_command('generate_corpus', '--path', tmpdir.dirpath(),
+                     '--preprocess', 'upper')
