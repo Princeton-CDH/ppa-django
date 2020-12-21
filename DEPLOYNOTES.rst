@@ -15,7 +15,15 @@ Deploy and Upgrade notes
      a new Solr configset, using the same name you put in local settings.
   3. Run `python manage.py solr_schema` to update (and optionally create)
      your configured Solr core with your configured configset.
-  4. Index data into your new solr core: `python manage.py index`
+  4. Index data into your new solr core::
+
+    python manage.py index -i work
+    python manage.py index_pages
+
+* HathiTrust Data API client code has been removed in favor of using rsync.
+  Configurations for **HATHITRUST_OAUTH_KEY** and  **HATHITRUST_OAUTH_SECRET**
+  are no longer needed in local settings.
+
 
 3.2
 ---

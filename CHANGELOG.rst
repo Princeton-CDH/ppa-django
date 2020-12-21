@@ -6,7 +6,11 @@ CHANGELOG
 3.5
 ---
 
-* HathiTrust Data API client code has been removed in favor of using rsync. Configurations for **HATHITRUST_OAUTH_KEY** and  **HATHITRUST_OAUTH_SECRET** are no longer needed in local settings.
+* bugfix: refactor add new works from HathiTrust admin functionality to use rsync instead of API to work around restrictions on Google digitized
+* bugfix: improve overly-aggressive keyword search stemming
+* bugfix: remove page data from search index when suppressing works
+* New manage command ``index_pages`` to reindex pages more efficiently using multiprocessing
+* Refactored to use parasolr instead of SolrClient
 
 3.4
 ---
