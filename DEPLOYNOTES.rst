@@ -3,6 +3,20 @@
 Deploy and Upgrade notes
 ========================
 
+3.5
+---
+
+* Configuration and Solr schema changes are needed, now that PPA uses
+  parasolr for Solr schema management and indexing.
+
+  1. Update local settings with the new solr configuration syntax (see
+    `local_settings.py.sample`)
+  2. Copy all files under `solr_conf` into the `conf` directory of
+     a new Solr configset, using the same name you put in local settings.
+  3. Run `python manage.py solr_schema` to update (and optionally create)
+     your configured Solr core with your configured configset.
+  4. Index data into your new solr core: `python manage.py index`
+
 3.2
 ---
 

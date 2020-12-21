@@ -2,8 +2,9 @@ django>=2.2,<3.0
 mysqlclient>=1.3.13
 pucas>=0.6
 django-grappelli
-# unreleased version of SolrClient with schema field-type management
-git+https://github.com/rlskoeser/SolrClient.git@7420ab3#egg=SolrClient
+# expect to need parasolr v0.6 once features for ppa support are released
+#parasolr<=0.6
+git+https://github.com/Princeton-CDH/parasolr.git@develop#egg=parasolr
 pairtree
 py-flags
 pymarc
@@ -13,13 +14,15 @@ progressbar2
 django-semanticui-forms
 lxml
 eulxml
-wagtail>=2.7
+# wagtail 2.10 drops python 3.5 support; currently needed for qa
+wagtail>=2.9,<2.10
 bleach
 django-fullurl
 django-csp
 django-webpack-loader
 requests_oauthlib
 wand
-beautifulsoup4
+# specify bs4 version to avoid wagtail version conflict
+beautifulsoup4<4.9
 # only needed for the 'generate_corpus' manage command
 gensim

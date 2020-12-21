@@ -28,16 +28,15 @@ ALLOWED_HOSTS = ['*']
 
 # required for integration tests that query Solr
 SOLR_CONNECTIONS = {
-    'test': {
-        'COLLECTION': 'test-ppa',
-        'URL': 'http://localhost:8983/solr/',
-        'ADMIN_URL': 'http://localhost:8983/solr/admin/cores'
-    },
     'default': {
-        'COLLECTION': 'ppa-pa11y',
         'URL': 'http://localhost:8983/solr/',
-        'ADMIN_URL': 'http://localhost:8983/solr/admin/cores'
-    },
+        'COLLECTION': 'ppa-pa11y',
+        'CONFIGSET': 'ppa',
+        'TEST': {
+            'COLLECTION': 'test-ppa',
+            'COMMITWITHIN': 100
+        }
+    }
 }
 
 # secret key added as a travis build step
