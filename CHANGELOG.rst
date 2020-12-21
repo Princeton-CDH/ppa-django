@@ -29,7 +29,6 @@ CHANGELOG
 * Update captioned image to require contextual alternative text
 * Preliminary manage command to generate a token-count corpus; implemented by @vineetbansal
 
-
 3.2.4
 -----
 
