@@ -15,15 +15,15 @@ from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
 from flags import Flags
 from pairtree import pairtree_path, pairtree_client, storage_exceptions
+from parasolr.django import SolrQuerySet
+from parasolr.django.indexing import ModelIndexable
+from parasolr.indexing import Indexable
 import requests
 from wagtail.core.fields import RichTextField
 from wagtail.admin.edit_handlers import FieldPanel
 from wagtail.snippets.models import register_snippet
 
-from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS, \
-    HathiDataAPI, HathiObject
-from ppa.archive.solr import Indexable
-from ppa.archive.solr import PagedSolrQuery
+from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS, HathiObject
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ NO_COLLECTION_LABEL = 'Uncategorized'
 
 
 class TrackChangesModel(models.Model):
-    ''':class:`~django.modles.Model` mixin that keeps a copy of initial
+    ''':class:`~django.models.Model` mixin that keeps a copy of initial
     data in order to check if fields have been changed. Change detection
     only works on the current instance of an object.'''
 
@@ -99,29 +99,18 @@ class Collection(TrackChangesModel):
         '''
 
         # NOTE: if we *only* want counts, could just do a regular facet
-        solr_stats = PagedSolrQuery({
-            'q': '*:*',
-            'facet': True,
-            'facet.pivot': '{!stats=piv1}collections_exact',
-            # NOTE: if we pivot on collection twice, like this, we should
-            # have the information needed to generate a venn diagram
-            # of the collections (based on number of overlap)
-            # 'facet.pivot': '{!stats=piv1}collections_exact,collections_exact'
-            'stats': True,
-            'stats.field': '{!tag=piv1 min=true max=true}pub_date',
-            # don't return any actual items, just the facets
-            'rows': 0
-        })
-        facet_pivot = solr_stats.raw_response['facet_counts']['facet_pivot']
+        sqs = SolrQuerySet().stats('{!tag=piv1 min=true max=true}pub_date') \
+            .facet(pivot='{!stats=piv1}collections_exact')
+        facet_pivot = sqs.get_facets().facet_pivot
         # simplify the pivot stat data for display
         stats = {}
-        for info in facet_pivot['collections_exact']:
-            pub_date_stats = info['stats']['stats_fields']['pub_date']
-            stats[info['value']] = {
-                'count': info['count'],
+        for collection in facet_pivot.collections_exact:
+            pub_date_stats = collection.stats.stats_fields.pub_date
+            stats[collection.value] = {
+                'count': collection.count,
                 'dates': '%(min)d–%(max)d' % pub_date_stats \
-                    if pub_date_stats['max'] != pub_date_stats['min'] \
-                    else '%d' % pub_date_stats['min']
+                    if pub_date_stats.max != pub_date_stats.min \
+                    else '%d' % pub_date_stats.min
             }
 
         return stats
@@ -198,7 +187,7 @@ class CollectionSignalHandlers:
             works = instance.digitizedwork_set.all()
             if works.exists():
                 logger.debug('collection save, reindexing %d related works', works.count())
-                Indexable.index_items(works, params={'commitWithin': 3000})
+                DigitizedWork.index_items(works)
 
     @staticmethod
     def delete(sender, instance, **kwargs):
@@ -213,10 +202,10 @@ class CollectionSignalHandlers:
         # NOTE: this sends pre/post clear signal, but it's not obvious
         # how to take advantage of that
         instance.digitizedwork_set.clear()
-        Indexable.index_items(digworks, params={'commitWithin': 3000})
+        DigitizedWork.index_items(digworks)
 
 
-class DigitizedWork(TrackChangesModel, Indexable):
+class DigitizedWork(TrackChangesModel, ModelIndexable):
     '''
     Record to manage digitized works included in PPA and store their basic
     metadata.
@@ -255,11 +244,9 @@ class DigitizedWork(TrackChangesModel, Indexable):
     sort_title = models.TextField(
         default='',
         help_text='Sort title from MARC record or title without leading article')
-    #: enumeration/chronology (hathi-specific)
+    #: enumeration/chronology (hathi-specific; contains volume or version)
     enumcron = models.CharField('Enumeration/Chronology', max_length=255,
                                 blank=True)
-    # TODO: what is the generic/non-hathi name for this? volume/version?
-
     # NOTE: may eventually to convert to foreign key
     author = models.CharField(
         max_length=255, blank=True,
@@ -360,11 +347,14 @@ class DigitizedWork(TrackChangesModel, Indexable):
         return None
 
     def save(self, *args, **kwargs):
-        # if status has changed so that object is now suppressed and this
-        # is a HathiTrust item, remove pairtree data
-        if self.has_changed('status') and self.status == self.SUPPRESSED \
-          and self.source == DigitizedWork.HATHI:
-            self.hathi.delete_pairtree_data()
+        # if status has changed so that object is now suppressed,
+        # do some cleanup
+        if self.has_changed('status') and self.status == self.SUPPRESSED:
+            # remove indexed page content from Solr
+            self.solr.update.delete_by_query('source_id:"%s"' % self.source_id)
+            # if this is a HathiTrust item, remove pairtree data
+            if self.source == DigitizedWork.HATHI:
+                self.hathi.delete_pairtree_data()
 
         # source id is used as Solr identifier; if it changes, remove
         # the old record from Solr before saving with the new identifier
@@ -373,7 +363,7 @@ class DigitizedWork(TrackChangesModel, Indexable):
         if self.has_changed('source_id'):
             new_source_id = self.source_id
             self.source_id = self.initial_value('source_id')
-            self.remove_from_index(params={"commitWithin": 3000})
+            self.remove_from_index()
             self.source_id = new_source_id
 
         super().save(*args, **kwargs)
@@ -551,14 +541,25 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
     index_depends_on = {
         'collections': {
-            'save': CollectionSignalHandlers.save,
-            'delete': CollectionSignalHandlers.delete,
+            'post_save': CollectionSignalHandlers.save,
+            'pre_delete': CollectionSignalHandlers.delete,
         }
     }
 
     def index_id(self):
         '''source id is used as solr identifier'''
         return self.source_id
+
+    @classmethod
+    def items_to_index(cls):
+        '''Queryset of works for indexing everything; excludes
+        suppressed works.'''
+        return DigitizedWork.objects.exclude(status=cls.SUPPRESSED)
+
+    @classmethod
+    def index_item_type(cls):
+        '''override index item type label to just work'''
+        return 'work'
 
     def index_data(self):
         '''data for indexing in Solr'''
@@ -623,45 +624,6 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
         return page_count
 
-    def page_index_data(self):
-        '''Get page content for this work from Hathi pairtree and return
-        data to be indexed in solr.'''
-
-        # If an item has been suppressed or is from a source other than
-        # hathi, bail out. No pages to index.
-        if self.is_suppressed or self.source != self.HATHI:
-            return
-
-        # load mets record to pull metadata about the images
-        try:
-            mmets = load_xmlobject_from_file(self.hathi.metsfile_path(),
-                                             MinimalMETS)
-        except storage_exceptions.ObjectNotFoundException:
-            logger.error('Pairtree data for %s not found but status is %s',
-                         self.source_id, self.get_status_display())
-            return
-
-        # read zipfile contents in place, without unzipping
-        with ZipFile(self.hathi.zipfile_path()) as ht_zip:
-
-            # yield a generator of index data for each page; iterate
-            # over pages in METS structmap
-            for page in mmets.structmap_pages:
-                # zipfile spec uses / for path regardless of OS
-                pagefilename = '/'.join([self.hathi.content_dir, page.text_file_location])
-                with ht_zip.open(pagefilename) as pagefile:
-                    try:
-                        yield {
-                            'id': '%s.%s' % (self.source_id, page.text_file.sequence),
-                            'source_id': self.source_id,   # for grouping with work record
-                            'content': pagefile.read().decode('utf-8'),
-                            'order': page.order,
-                            'label': page.display_label,
-                            'tags': page.label.split(', ') if page.label else [],
-                            'item_type': 'page'
-                        }
-                    except StopIteration:
-                        return
 
     def get_metadata(self, metadata_format):
         '''Get metadata for this item in the specified format.
@@ -684,16 +646,13 @@ class DigitizedWork(TrackChangesModel, Indexable):
 
     @staticmethod
     def add_from_hathi(htid, bib_api=None, update=False,
-                       get_data=False, log_msg_src=None,
-                       user=None):
+                       log_msg_src=None, user=None):
         '''Add or update a HathiTrust work in the database.
         Retrieves bibliographic data from Hathi api, retrieves or creates
         a :class:`DigitizedWork` record, and populates the metadata if
         this is a new record, if the Hathi metadata has changed, or
         if update is requested. Creates admin log entry to document
-        record creation or update.  If `get_data` is specified,
-        will retrieve structure and aggregate data from Hathi Data API
-        and add it to the local pairtree datastore.
+        record creation or update.
 
         Raises :class:`ppa.archive.hathi.HathiItemNotFound` for invalid
         id.
@@ -705,8 +664,6 @@ class DigitizedWork(TrackChangesModel, Indexable):
             instance, to allow for shared sessions in scripts
         :param update: update bibliographic metadata even if the hathitrust
             record is not newer than the local database record (default: False)
-        :param get_data: retrieve content data from Data API; for new
-            records only (default: False)
         :param log_msg_src: source of the change to be used included
             in log entry messages (optional). Will be used as "Created/updated
             [log_msg_src]".
@@ -775,47 +732,71 @@ class DigitizedWork(TrackChangesModel, Indexable):
             change_message=log_change_message,
             action_flag=log_action)
 
-        # get data if requested and if this was a new record
-        if get_data and created:
-            digwork.get_hathi_data()
-
         return digwork
 
-    def get_hathi_data(self):
-        '''Use Data API to fetch zipfile and mets and add them to the
-        local pairtree. Intended for use with newly added HathiTrust
-        records not imported from local pairtree data.
 
-        Raises :class:`~ppa.archive.hathi.HathiItemNotFound` for invalid
-        id and :class:`~ppa.archive.hathi.HathiItemForbidden` for a
-        valid record that configured Data API credentials do not allow
-        accessing.
+class Page(Indexable):
+    '''Indexable for pages to make page data available for indexing with
+    parasolr index manage command.'''
+
+    @classmethod
+    def items_to_index(cls):
+        '''Return a generator of page data to be indexed, with data for
+        pages for each work returned by :meth:`Page.page_index_data`
         '''
+        for work in DigitizedWork.items_to_index():
+            for page_data in Page.page_index_data(work):
+                yield page_data
 
-        # do nothing for non-hathi records
-        if self.source != DigitizedWork.HATHI:
+    @classmethod
+    def total_to_index(cls):
+        '''Calculate the total number of pages to be indexed by
+        aggregating page count of items to index in thed atabase.'''
+        return DigitizedWork.items_to_index() \
+            .aggregate(total_pages=models.Sum('page_count'))['total_pages']
+
+    @classmethod
+    def index_item_type(cls):
+        '''index item type for parasolr indexing script'''
+        return 'page'
+
+    @classmethod
+    def page_index_data(cls, digwork):
+        '''Get page content for the specified digitized work from Hathi
+        pairtree and return data to be indexed in solr.'''
+
+        # If an item has been suppressed or is from a source other than
+        # hathi, bail out. No pages to index.
+        if digwork.is_suppressed or digwork.source != digwork.HATHI:
             return
 
-        data_api = HathiDataAPI()
+        # load mets record to pull metadata about the images
+        try:
+            mmets = load_xmlobject_from_file(digwork.hathi.metsfile_path(),
+                                             MinimalMETS)
+        except storage_exceptions.ObjectNotFoundException:
+            logger.error('Pairtree data for %s not found but status is %s',
+                         digwork.source_id, digwork.get_status_display())
+            return
 
-        # get pairtree client object for this item, creating if necessary
-        ptree_obj = self.hathi.pairtree_object(create=True)
-        # retrieve mets xml and add to pairtree
-        mets_response = data_api.get_structure(self.source_id)
-        # use filename provided by Hathi in response headers
-        mets_filename = os.path.basename(mets_response.headers['content-disposition'])
-        # file should be under content directory named by hathi id
-        mets_filename = os.path.join(self.hathi.content_dir,
-                                     mets_filename)
-        ptree_obj.add_bytestream_by_path(mets_filename, mets_response.content)
+        # read zipfile contents in place, without unzipping
+        with ZipFile(digwork.hathi.zipfile_path()) as ht_zip:
 
-        # get zip file and add to pairtree
-        data_response = data_api.get_aggregate(self.source_id)
-        data_filename = os.path.basename(data_response.headers['content-disposition'])
-        data_filename = data_filename.replace('filename=', '')
-        data_filename = os.path.join(self.hathi.content_dir,
-                                     data_filename)
-        ptree_obj.add_bytestream_by_path(data_filename, data_response.content)
-
-        # count pages now that data is present (required for indexing)
-        self.count_pages()
+            # yield a generator of index data for each page; iterate
+            # over pages in METS structmap
+            for page in mmets.structmap_pages:
+                # zipfile spec uses / for path regardless of OS
+                pagefilename = '/'.join([digwork.hathi.content_dir, page.text_file_location])
+                with ht_zip.open(pagefilename) as pagefile:
+                    try:
+                        yield {
+                            'id': '%s.%s' % (digwork.source_id, page.text_file.sequence),
+                            'source_id': digwork.source_id,   # for grouping with work record
+                            'content': pagefile.read().decode('utf-8'),
+                            'order': page.order,
+                            'label': page.display_label,
+                            'tags': page.label.split(', ') if page.label else [],
+                            'item_type': 'page'
+                        }
+                    except StopIteration:
+                        return

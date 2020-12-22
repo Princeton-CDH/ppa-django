@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.admin.models import LogEntry, ADDITION
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
-from django.test import TestCase
+from django.test import TestCase, override_settings
 import pytest
 
 from ppa.archive import hathi
@@ -32,39 +32,96 @@ class TestHathiImporter(TestCase):
         assert htimporter.existing_ids[digwork.source_id] == digwork.pk
 
         # mix of new and existing ids
-        new_ids = ['one', 'two', 'three']
+        new_ids = ['one.1', 'two.2', 'three.3']
         htimporter = HathiImporter(new_ids + list(digwork_ids))
         htimporter.filter_existing_ids()
         assert len(htimporter.existing_ids) == len(digwork_ids)
         assert set(htimporter.htids) == set(new_ids)
 
-    @patch('ppa.archive.models.DigitizedWork.add_from_hathi')
-    def test_add_items(self, mock_add_from_hathi):
-        test_htid = 'a:123'
-        htimporter = HathiImporter([test_htid])
-        # simulate record not found
-        mock_add_from_hathi.side_effect = hathi.HathiItemNotFound
-        htimporter.add_items()
-        mock_add_from_hathi.assert_called_with(
-            test_htid, htimporter.bib_api, get_data=True,
-            log_msg_src=None, user=None)
-        assert not htimporter.imported_works
-        # actual error stored in results
-        assert isinstance(htimporter.results[test_htid], hathi.HathiItemNotFound)
-        # no partial record hanging around
-        assert not DigitizedWork.objects.filter(source_id=test_htid)
+    def test_filter_invalid_ids(self):
+        htimporter = HathiImporter(['mdp.1234', 'foobar'])
+        htimporter.filter_invalid_ids()
+        # first should stay, second should be removed
+        assert 'mdp.1234' in htimporter.htids
+        assert 'foobar' not in htimporter.htids
 
-        # simulate permission denied
-        mock_add_from_hathi.side_effect = hathi.HathiItemForbidden
-        log_msg_src = 'from unit test'
-        htimporter.add_items(log_msg_src)
-        mock_add_from_hathi.assert_called_with(
-            test_htid, htimporter.bib_api, get_data=True,
-            log_msg_src=log_msg_src, user=None)
-        # actual error stored in results
-        assert isinstance(htimporter.results[test_htid], hathi.HathiItemForbidden)
-        # no partial record hanging aruond
-        assert not DigitizedWork.objects.filter(source_id=test_htid)
+    @override_settings(HATHI_DATA='/my/test/ppa/ht_data')
+    @patch('ppa.archive.util.os.path.isdir')
+    @patch('ppa.archive.util.glob.glob')
+    @patch('ppa.archive.models.DigitizedWork.add_from_hathi')
+    def test_add_items_notfound(self, mock_add_from_hathi, mock_glob,
+                                mock_isdir):
+        test_htid = 'a.123'
+        htimporter = HathiImporter([test_htid])
+        # unlikely scenario, but simulate rsync success with bib api failure
+        mock_isdir.return_value = True  # directory exists
+        mock_glob.return_value = ['foo.zip']   # zipfile exists
+
+        with patch.object(htimporter, 'rsync_data') as mock_rsync_data:
+            # simulate record not found
+            mock_add_from_hathi.side_effect = hathi.HathiItemNotFound
+            htimporter.add_items()
+            mock_rsync_data.assert_called_with()
+            mock_add_from_hathi.assert_called_with(
+                test_htid, htimporter.bib_api,
+                log_msg_src=None, user=None)
+            assert not htimporter.imported_works
+            # actual error stored in results
+            assert isinstance(htimporter.results[test_htid],
+                              hathi.HathiItemNotFound)
+            # no partial record hanging around
+            assert not DigitizedWork.objects.filter(source_id=test_htid)
+
+    @override_settings(HATHI_DATA='/my/test/ppa/ht_data')
+    @patch('ppa.archive.util.os.path.isdir')
+    @patch('ppa.archive.util.glob.glob')
+    @patch('ppa.archive.models.DigitizedWork.add_from_hathi')
+    def test_add_items_rsync_failure(self, mock_add_from_hathi, mock_glob,
+                                     mock_isdir):
+        test_htid = 'a.123'
+        htimporter = HathiImporter([test_htid])
+
+        with patch.object(htimporter, 'rsync_data') as mock_rsync_data:
+            # simulate directory not created
+            mock_isdir.return_value = False
+
+            # do nothing: expected directory not created by rsync
+            log_msg_src = 'from unit test'
+            htimporter.add_items(log_msg_src)
+            mock_rsync_data.assert_called_with()
+
+            assert mock_add_from_hathi.call_count == 0
+
+            # error code stored in results
+            assert htimporter.results[test_htid] == htimporter.RSYNC_ERROR
+            # no partial record hanging around
+            assert not DigitizedWork.objects.filter(source_id=test_htid)
+
+            # simulate directory created but no zip file
+            # — should still get an rsync error
+            mock_isdir.return_value = True
+            mock_glob.return_value = []
+            log_msg_src = 'from unit test'
+            htimporter.add_items(log_msg_src)
+            mock_rsync_data.assert_called_with()
+
+            assert mock_add_from_hathi.call_count == 0
+
+            # error code stored in results
+            assert htimporter.results[test_htid] == htimporter.RSYNC_ERROR
+
+    @patch('ppa.archive.util.os.path.isdir')
+    @patch('ppa.archive.util.glob.glob')
+    @patch('ppa.archive.models.DigitizedWork.page_count')
+    @patch('ppa.archive.models.DigitizedWork.add_from_hathi')
+    @override_settings(HATHI_DATA='/my/test/ppa/ht_data')
+    def test_add_items_success(self, mock_page_count, mock_add_from_hathi,
+                               mock_glob, mock_isdir):
+        test_htid = 'a.123'
+        htimporter = HathiImporter([test_htid])
+        # simulate rsync success
+        mock_isdir.return_value = True  # directory exists
+        mock_glob.return_value = ['foo.zip']   # zipfile exists
 
         # simulate success
         def fake_add_from_hathi(htid, *args, **kwargs):
@@ -82,37 +139,33 @@ class TestHathiImporter(TestCase):
                 action_flag=ADDITION)
 
             return digwork
-
         mock_add_from_hathi.side_effect = fake_add_from_hathi
-        htimporter.add_items(log_msg_src)
-        assert len(htimporter.imported_works) == 1
-        assert htimporter.results[test_htid] == HathiImporter.SUCCESS
+
+        with patch.object(htimporter, 'rsync_data'):
+            log_msg_src = 'from unit test'
+            htimporter.add_items(log_msg_src)
+            assert len(htimporter.imported_works) == 1
+            assert htimporter.results[test_htid] == HathiImporter.SUCCESS
 
     @patch('ppa.archive.util.DigitizedWork')
-    @patch('ppa.archive.util.get_solr_connection')
-    def test_index(self, mock_get_solr, mock_digitizedwork):
+    @patch('ppa.archive.util.Page')
+    def test_index(self, mock_page, mock_digitizedwork):
         test_htid = 'a:123'
         htimporter = HathiImporter([test_htid])
         # no imported works, index should do nothing
         htimporter.index()
         mock_digitizedwork.index_items.assert_not_called()
-        mock_get_solr.assert_not_called()
 
         # simulate imported work to index
-        mocksolr = Mock()
-        mockcollection = Mock()
-        mock_get_solr.return_value = mocksolr, mockcollection
         mock_digwork = Mock()
         htimporter.imported_works = [mock_digwork]
         htimporter.index()
         mock_digitizedwork.index_items.assert_any_call(htimporter.imported_works)
-        mock_digitizedwork.index_items.assert_any_call(mock_digwork.page_index_data())
-
-        mock_get_solr.assert_called_with()
-        mocksolr.commit.assert_called_with(mockcollection, openSearcher=True)
+        mock_page.page_index_data.assert_called_with(mock_digwork)
+        mock_digitizedwork.index_items.assert_any_call(mock_page.page_index_data())
 
     def test_get_status_message(self):
-        htimporter = HathiImporter(['a:123'])
+        htimporter = HathiImporter(['a.123'])
         # simple status codes
         assert htimporter.get_status_message(HathiImporter.SUCCESS) == \
             HathiImporter.status_message[HathiImporter.SUCCESS]
@@ -131,7 +184,7 @@ class TestHathiImporter(TestCase):
             htimporter.get_status_message('foo')
 
     def test_output_results(self):
-        htimporter = HathiImporter(['a:123'])
+        htimporter = HathiImporter(['a.123'])
         # set sample results to test - one of each
         success_id = 'added:1'
         notfound_id = 'err:404'
@@ -149,3 +202,36 @@ class TestHathiImporter(TestCase):
             HathiImporter.status_message[HathiImporter.SUCCESS]
         assert output_results[notfound_id] == \
             HathiImporter.status_message[hathi.HathiItemNotFound]
+
+    def test_pairtree_paths(self):
+        htimporter = HathiImporter(['hvd.1234', 'nyp.334455'])
+        # returns a generator; convert to list for inspection
+        pairtree_paths = htimporter.pairtree_paths
+        assert pairtree_paths['hvd.1234'] == 'hvd/pairtree_root/12/34'
+        assert pairtree_paths['nyp.334455'] == 'nyp/pairtree_root/33/44/55'
+        # includes prefix and version files
+        assert pairtree_paths['hvd'] == 'hvd/pairtree_prefix'
+        assert pairtree_paths['hvd_version'] == 'hvd/pairtree_version0_1'
+        assert pairtree_paths['nyp'] == 'nyp/pairtree_prefix'
+        assert pairtree_paths['nyp_version'] == 'nyp/pairtree_version0_1'
+
+    @override_settings(HATHI_DATA='/my/test/ppa/ht_data',
+                       HATHITRUST_RSYNC_SERVER='data.ht.org',
+                       HATHITRUST_RSYNC_PATH=':ht_text_pd')
+    @patch('ppa.archive.util.subprocess')
+    def test_rsync_data(self, mocksubprocess):
+        htimporter = HathiImporter(['hvd.1234', 'nyp.334455'])
+        htimporter.rsync_data()
+        assert mocksubprocess.run.call_count == 1
+        args, kwargs = mocksubprocess.run.call_args
+        cmd_args = kwargs['args']
+        # quick check that command is split properly
+        assert cmd_args[0] == 'rsync'
+        assert cmd_args[1] == '-rLt'
+        # last arg is local path for data destination
+        assert cmd_args[-1] == '/my/test/ppa/ht_data'
+        # second to last arg is server:src; use defaults from settings
+        assert cmd_args[-2] == 'data.ht.org::ht_text_pd'
+        # third from last arg is file list
+        assert cmd_args[-3].startswith('--files-from=')
+        assert 'ppa_hathi_pathlist' in cmd_args[-3]

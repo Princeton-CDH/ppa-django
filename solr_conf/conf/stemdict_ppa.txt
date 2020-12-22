@@ -1,0 +1,5 @@
+# Local stemming overrides
+decadence	decaden
+decadences	decaden
+decadent	decaden
+decadents	decaden

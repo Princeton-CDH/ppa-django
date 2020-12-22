@@ -91,7 +91,7 @@ class Command(BaseCommand):
         htimporter.index()
 
         summary = '\nProcessed {:,d} item{}.' + \
-        '\nAdded {:,d}; skipped {:,d}; {:,d} error{}; imported {:,d} page{}.'
+            '\nAdded {:,d}; skipped {:,d}; {:,d} error{}; imported {:,d} page{}.'
         summary = summary.format(
             self.stats['total'], pluralize(self.stats['total']),
             self.stats['created'], self.stats['skipped'],
