@@ -1,5 +1,5 @@
 ppa-django
-==============
+==========
 
 .. sphinx-start-marker-do-not-remove
 
@@ -13,11 +13,11 @@ at `<https://princeton-cdh.github.io/ppa-django/>`_.
    :target: https://doi.org/10.5281/zenodo.2400705
    :alt: DOI: 10.5281/zenodo.2400705
 
-.. image:: https://travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master
+.. image:: https://travis-ci.org/Princeton-CDH/ppa-django.svg?branch=main
    :target: https://travis-ci.org/Princeton-CDH/ppa-django
    :alt: Build status
 
-.. image:: https://codecov.io/gh/Princeton-CDH/ppa-django/branch/master/graph/badge.svg
+.. image:: https://codecov.io/gh/Princeton-CDH/ppa-django/branch/main/graph/badge.svg
    :target: https://codecov.io/gh/Princeton-CDH/ppa-django
    :alt: Code coverage
 
@@ -25,11 +25,11 @@ at `<https://princeton-cdh.github.io/ppa-django/>`_.
    :target: https://www.codefactor.io/repository/github/princeton-cdh/ppa-django
    :alt: CodeFactor
 
-.. image:: https://requires.io/github/Princeton-CDH/ppa-django/requirements.svg?branch=master
-   :target: https://requires.io/github/Princeton-CDH/ppa-django/requirements/?branch=master
+.. image:: https://requires.io/github/Princeton-CDH/ppa-django/requirements.svg?branch=main
+   :target: https://requires.io/github/Princeton-CDH/ppa-django/requirements/?branch=main
    :alt: Requirements Status
 
-This repo uses `git-flow <https://github.com/nvie/gitflow>`_ conventions; **master**
+This repo uses `git-flow <https://github.com/nvie/gitflow>`_ conventions; **main**
 contains the most recent release, and work in progress will be on the **develop** branch.
 Pull requests should be made against develop.
 
@@ -57,19 +57,18 @@ Initial setup and installation:
 
     python manage.py migrate
 
-- Create two new Solr cores using project specific managed schema and
-  solr config, using the core/collection names for development and
-  testing that you configured in local settings::
+- Create a new Solr configset from the files in ``solr_conf`` ::
 
-    solr create -c ppa -d solr_conf
-    solr create -c ppa-test -d solr_conf
+    cp -r solr_conf /path/to/solr/server/solr/configsets/ppa
+    chown solr:solr -R /path/to/solr/server/solr/configsets/ppa
 
-- Run the manage command to configure the schema::
+  and configure **SOLR_CONNECTIONS** in local settings with your
+  preferred core/collection name and the configset name you created.
+
+- Run the manage command to configure the schema; this will prompt to
+  create the core from your configset if it does not exist::
 
     python manage.py solr_schema
-
-  The manage command will automatically reload the core to ensure schema
-  changes take effect.
 
 - Bulk import (*provisional*): requires a local copy of HathiTrust data as
   pairtree provided by rsync.  Configure the path in `localsettings.py`
@@ -191,7 +190,7 @@ Github Pages. After the build completes, push to GitHub from the ``docs`` folder
 
 License
 -------
-This project is licensed under the `Apache 2.0 License <https://github.com/Princeton-CDH/ppa-django/blob/master/LICENSE>`_.
+This project is licensed under the `Apache 2.0 License <https://github.com/Princeton-CDH/ppa-django/blob/main/LICENSE>`_.
 
 ©2019 Trustees of Princeton University.  Permission granted via
 Princeton Docket #20-3624 for distribution online under a standard Open Source

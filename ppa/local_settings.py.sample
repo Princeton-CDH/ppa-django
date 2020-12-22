@@ -48,22 +48,21 @@ DATABASES = {
 
 SOLR_CONNECTIONS = {
     'default': {
+        'URL': 'http://localhost:8983/solr/',
         'COLLECTION': 'ppa',
-        'URL': 'http://127.0.0.1:8983/solr/',
-        'ADMIN_URL': 'http://127.0.0.1:8983/solr/admin/cores'
-    },
-   'test': {
-        'COLLECTION': 'ppa-test',
-        'URL': 'http://127.0.0.1:8983/solr/',
-        'ADMIN_URL': 'http://127.0.0.1:8983/solr/admin/cores'
+        'CONFIGSET': 'ppa',
+        'TEST': {
+            'COMMITWITHIN': 100
+        }
     }
 }
 
 # local path to hathi pairtree data provided via rsync
 HATHI_DATA = '/path/to/hathi_pairtree_root'
-# credentials for Hathi Data API
-HATHITRUST_OAUTH_KEY = ''
-HATHITRUST_OAUTH_SECRET = ''
+# for development, optionally override HathiTrust dataset rsync server and path
+# HATHITRUST_RSYNC_SERVER = ''
+# HATHITRUST_RSYNC_PATH = ''
+
 
 
 # CAS login configuration

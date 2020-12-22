@@ -752,9 +752,7 @@
       <int name="rows">10</int>
       <str name="defType">edismax</str>
       <!-- <str name="df">text</str> -->
-      <str name="qf">
-          title_nostem^40
-          subtitle_nostem^30
+      <str name="keyword_qf">
           title^20
           subtitle^15
           author^80
@@ -766,9 +764,7 @@
           source_id^10
           content
       </str>
-      <str name="pf">
-          title_nostem^70
-          subtitle_nostem^60
+      <str name="keyword_pf">
           title^50
           subtitle^35
           author^100
@@ -778,15 +774,11 @@
           publisher
       </str>
       <str name="search_title_qf">
-        title_nostem^100
         title^80
-        subtitle_nostem^50
         subtitle^25
       </str>
       <str name="search_title_pf">
-        title_nostem^100
         title^80
-        subtitle_nostem^50
         subtitle^25
       </str>
     </lst>

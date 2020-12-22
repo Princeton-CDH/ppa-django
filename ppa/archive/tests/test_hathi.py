@@ -24,9 +24,8 @@ FIXTURES_PATH = os.path.join(settings.BASE_DIR, 'ppa', 'archive', 'fixtures')
 @patch('ppa.archive.hathi.requests')
 class TestHathiBibliographicAPI(TestCase):
 
-    bibdata = os.path.join(FIXTURES_PATH,
-        'bibdata_brief_njp.32101013082597.json')
-
+    bibdata = os.path.join(
+        FIXTURES_PATH, 'bibdata_brief_njp.32101013082597.json')
 
     def test_brief_record(self, mockrequests):
         mockrequests.codes = requests.codes
@@ -43,7 +42,8 @@ class TestHathiBibliographicAPI(TestCase):
 
         # use fixture to simulate result found
         with open(self.bibdata) as sample_bibdata:
-            mocksession.get.return_value.json.return_value = json.load(sample_bibdata)
+            mocksession.get.return_value.json.return_value = \
+                json.load(sample_bibdata)
 
         record = bib_api.brief_record('htid', htid)
         assert isinstance(record, hathi.HathiBibliographicRecord)
@@ -86,10 +86,10 @@ class TestHathiBibliographicAPI(TestCase):
 
 
 class TestHathiBibliographicRecord(TestCase):
-    bibdata_full = os.path.join(FIXTURES_PATH,
-        'bibdata_full_njp.32101013082597.json')
-    bibdata_brief = os.path.join(FIXTURES_PATH,
-        'bibdata_brief_njp.32101013082597.json')
+    bibdata_full = os.path.join(
+        FIXTURES_PATH, 'bibdata_full_njp.32101013082597.json')
+    bibdata_brief = os.path.join(
+        FIXTURES_PATH, 'bibdata_brief_njp.32101013082597.json')
 
     def setUp(self):
         with open(self.bibdata_full) as bibdata:
@@ -169,6 +169,7 @@ class TestMETS(TestCase):
         assert textfile.sequence == '00000001'
         assert textfile.location == '00000001.txt'
 
+
 @patch('ppa.archive.hathi.requests')
 class TestHathiBaseAPI(TestCase):
 
@@ -214,63 +215,6 @@ class TestHathiBaseAPI(TestCase):
         base_api.session.get.return_value.status_code = requests.codes.forbidden
         with pytest.raises(hathi.HathiItemForbidden):
             base_api._make_request('foo')
-
-
-class TestHathiDataAPI(TestCase):
-
-    test_hathi_key = 'mykey'
-    test_hathi_secret = 'mysecret'
-    test_hathi_opts = {
-        'HATHITRUST_OAUTH_KEY': test_hathi_key,
-        'HATHITRUST_OAUTH_SECRET': test_hathi_secret
-    }
-
-    def test_init(self):
-        # test session initialization
-
-        # no oauth key or secret - error
-        with override_settings(HATHITRUST_OAUTH_KEY=None,
-                               HATHITRUST_OAUTH_SECRET=None):
-            with pytest.raises(ImproperlyConfigured) as excinfo:
-                hathi.HathiDataAPI()
-            assert 'configuration required' in str(excinfo.value)
-
-        # with oauth key and secret - init oauth
-        with override_settings(**self.test_hathi_opts):
-            data_api = hathi.HathiDataAPI()
-            assert isinstance(data_api.session.auth, requests_oauthlib.OAuth1)
-            assert data_api.session.auth.client.client_key == \
-                self.test_hathi_key
-            assert data_api.session.auth.client.client_secret == \
-                self.test_hathi_secret
-            assert data_api.session.auth.client.signature_type == 'QUERY'
-
-    @override_settings(**test_hathi_opts)
-    def test_get_aggregate(self):
-        data_api = hathi.HathiDataAPI()
-        htid = 'abc.1235813'
-
-        with patch.object(data_api, '_make_request') as mock_make_request:
-            response = data_api.get_aggregate(htid)
-            assert response == mock_make_request.return_value
-            mock_make_request.assert_called_with('aggregate/%s' % htid,
-                                                 params={'v': 2})
-
-    @override_settings(**test_hathi_opts)
-    def test_get_structure(self):
-        data_api = hathi.HathiDataAPI()
-        htid = 'abc.1235813'
-
-        with patch.object(data_api, '_make_request') as mock_make_request:
-            response = data_api.get_structure(htid)
-            assert response == mock_make_request.return_value
-            # default format is xml
-            mock_make_request.assert_called_with(
-                'structure/%s' % htid, params={'v': 2, 'format': 'xml'})
-
-            response = data_api.get_structure(htid, 'json')
-            mock_make_request.assert_called_with(
-                'structure/%s' % htid, params={'v': 2, 'format': 'json'})
 
 
 class TestHathiObject:
@@ -373,6 +317,6 @@ class TestHathiObject:
 
             # should not raise an exception if deletion fails
             mock_pairtree_client.return_value.delete_object.side_effect \
-                 = storage_exceptions.ObjectNotFoundException
+                = storage_exceptions.ObjectNotFoundException
             hobj.delete_pairtree_data()
             # not currently testing that warning is logged

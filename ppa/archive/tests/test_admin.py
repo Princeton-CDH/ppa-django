@@ -8,14 +8,6 @@ from django.urls import reverse
 from ppa.archive.admin import DigitizedWorkAdmin
 from ppa.archive.models import DigitizedWork, Collection, ProtectedWorkFieldFlags
 
-TEST_SOLR_CONNECTIONS = {
-    'default': {
-        'COLLECTION': 'testppa',
-        'URL': 'http://localhost:191918984/solr/',
-        'ADMIN_URL': 'http://localhost:191918984/solr/admin/cores'
-    }
-}
-
 
 class TestDigitizedWorkAdmin(TestCase):
 
@@ -82,7 +74,7 @@ class TestDigitizedWorkAdmin(TestCase):
         # initially created, so work should just be saved, no flags set
         digadmin.save_model(request, digwork, form, change)
         saved_work = DigitizedWork.objects.get(source_id=digwork.source_id)
-        assert  saved_work == digwork
+        assert saved_work == digwork
         assert saved_work.protected_fields == ProtectedWorkFieldFlags.no_flags
         saved_work.title = 'Test Title'
         saved_work.enumcron = '0001'
@@ -91,13 +83,10 @@ class TestDigitizedWorkAdmin(TestCase):
         digadmin.save_model(request, saved_work, form, change)
         new_work = DigitizedWork.objects.get(pk=saved_work.pk)
         assert new_work.protected_fields == \
-                ProtectedWorkFieldFlags.title | ProtectedWorkFieldFlags.enumcron
+            ProtectedWorkFieldFlags.title | ProtectedWorkFieldFlags.enumcron
 
-
-    @override_settings(SOLR_CONNECTIONS=TEST_SOLR_CONNECTIONS)
-    @patch('ppa.archive.solr.get_solr_connection')
     @patch('ppa.archive.models.DigitizedWork.index')
-    def test_save_related(self, mockindex, mock_get_solr_connection):
+    def test_save_related(self, mockindex):
         '''Test that override of save_related calls index'''
         # fake request
         request = self.factory.get('/madeup/url')
@@ -113,7 +102,7 @@ class TestDigitizedWorkAdmin(TestCase):
         # call save_related using mocks for most params we don't use or need
         digadmin.save_related(request, form, [], False)
         # mocked index method of the digwork object should have been called
-        digwork.index.assert_called_with(params={'commitWithin': 10000})
+        digwork.index.assert_called_with()
 
     def test_bulk_add_collection(self):
         # create a DigitizedWorkAdmin object

@@ -11,7 +11,7 @@ Expected context variables:
 <div class="page">
     <div class="preview">
         <a href="{% page_url item_id page.order %}"
-          target=_blank>
+          target="_blank" rel="noopener noreferrer">
           {% page_image_url item_id page.order 225 as 1x_img %}
           {% page_image_url item_id page.order 450 as 2x_img %}
           {# img with data-src/srcset attributes for lazy-loading  #}
@@ -27,7 +27,7 @@ Expected context variables:
     {% if page.title %}<a>p. {{ page.title }}</a>{% endif %}
     <div class="snippets">
           <p class="page-number">
-            <a href="{% page_url item_id page.order %}" target=_blank>
+            <a href="{% page_url item_id page.order %}" target="_blank" rel="noopener noreferrer">
               p. {{ page.label }}
             </a>
           </p>

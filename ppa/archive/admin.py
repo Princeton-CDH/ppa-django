@@ -94,7 +94,7 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
             request, form, formsets, change
         )
         digwork = DigitizedWork.objects.get(id=form.instance.pk)
-        digwork.index(params={"commitWithin": 10000})
+        digwork.index()
 
     def bulk_add_collection(self, request, queryset):
         '''
