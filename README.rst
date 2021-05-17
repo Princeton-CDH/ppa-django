@@ -13,9 +13,9 @@ at `<https://princeton-cdh.github.io/ppa-django/>`_.
    :target: https://doi.org/10.5281/zenodo.2400705
    :alt: DOI: 10.5281/zenodo.2400705
 
-.. image:: https://travis-ci.org/Princeton-CDH/ppa-django.svg?branch=main
-   :target: https://travis-ci.org/Princeton-CDH/ppa-django
-   :alt: Build status
+.. image:: https://github.com/Princeton-CDH/ppa-django/actions/workflows/unit-tests.yml/badge.svg
+   :target: https://github.com/Princeton-CDH/ppa-django/actions/workflows/unit-tests.yml
+   :alt: Unit test status
 
 .. image:: https://codecov.io/gh/Princeton-CDH/ppa-django/branch/main/graph/badge.svg
    :target: https://codecov.io/gh/Princeton-CDH/ppa-django
@@ -82,27 +82,27 @@ Initial setup and installation:
 
 Frontend development setup:
 
-This project uses the `Semantic UI <https://semantic-ui.com/>`_ library in
+This project uses the `Fomantic UI <https://fomantic-ui.com/>`_ library in
 addition to custom styles and javascript. You need to compile static assets
 before running the server.
 
-- To build all styles and js for production, including semantic UI::
+- To build all styles and js for production, including fomantic UI::
 
     npm install
     npm run build
 
-Alternatively, you can rebuild just the custom files or semantic independently.
+Alternatively, you can rebuild just the custom files or fomantic independently.
 This is useful if you make small changes and need to recompile once::
 
     npm run build:qa # just the custom files, with sourcemaps
     npm run build:prod # just the custom files, no sourcemaps
-    npm run build:semantic # just semantic UI
+    npm run build:semantic # just fomantic UI
 
 Finally, you can run a development server with hot reload if you'll be changing
 either set of assets frequently. These two processes are separate as well::
 
     npm run dev # serve just the custom files from memory, with hot reload
-    npm run dev:semantic # serve just semantic UI files and recompile on changes
+    npm run dev:semantic # serve just fomantic UI files and recompile on changes
 
 - If running this application on MariaDB/MySQL, you must make sure that
   time zone definitions are installed. On most flavors of Linux/MacOS,
@@ -142,6 +142,15 @@ top-level project directory to your python path environment variable::
 
 Make sure you configure a test solr connection and set up an empty
 Solr core using the same instructions as for the development core.
+
+Note that python unit tests access a test server over HTTP, and therefore
+expect static files to be compiled – see "Frontend development setup" above
+for how to do this.
+
+In a CI context, we instead use a ``webpack-stats.json`` file that mocks the
+existence of the static files so they aren't required. This file is located in
+the ``ci/`` directory and needs to be updated if new entrypoints are configured
+in ``webpack.config.js``.
 
 Javascript unit tests are written with `Jasmine <https://jasmine.github.io/>`_
 and run using `Karma <https://karma-runner.github.io/2.0/index.html>`_. To run
