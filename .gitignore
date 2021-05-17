@@ -1,5 +1,6 @@
 # Webpack files
 webpack-stats.json
+!ci/webpack-stats.json
 
 # JS dependencies
 node_modules/
@@ -10,7 +11,6 @@ media/
 bundles/
 sitemedia/fonts
 **/.sass-cache/
-webpack-stats.json
 
 # Sphinx documentation
 docs/
