@@ -279,14 +279,14 @@
     }
 }
 
-@mixin triangle-overlay($color) {
+@mixin triangle-overlay($color, $size) {
     height: 0;
     width: 0;
-    left: calc(100% - 50px);
-    border-right: 25px solid $color;
-    border-bottom: 25px solid $color;
-    border-top: 25px solid transparent;
-    border-left: 25px solid transparent;
+    left: calc(100% - #{$size});
+    border-right: calc(#{$size} / 2) solid $color;
+    border-bottom: calc(#{$size} / 2) solid $color;
+    border-top: calc(#{$size} / 2) solid transparent;
+    border-left: calc(#{$size} / 2) solid transparent;
     z-index: -1;
     opacity: 0.5;
 }
