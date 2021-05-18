@@ -180,24 +180,54 @@
         }
 
         &.about.triangle::before {
-            @include triangle-overlay($rosy-pink);
+            @include triangle-overlay($rosy-pink, 54px);
         }
 
         &.editorial.active::before {
-            @include triangle-overlay($twilight);
+            @include triangle-overlay($twilight, 54px);
         }
 
         &.collections,
         &.archive {
             &.active::before {
-                @include triangle-overlay($seafoam-blue);
+                @include triangle-overlay($seafoam-blue, 54px);
+            }
+        }
+
+        // grey hover/focus triangle overlay for main nav menu items
+        &.collections,
+        &.archive,
+        &.editorial {
+            &.focus::before,
+            &:focus::before,
+            &:hover::before {
+                @include triangle-overlay($white, 54px);
+                opacity: 1;
             }
         }
     }
 
-    a.item:hover {
-        border-bottom: 10px solid $french-blue;
-        padding-bottom: 8px;
+    // smaller hover/focus triangle for items in the about menu
+    .submenu .item:focus-within::before,
+    .about .item:hover::before {
+        display: block;
+        @include triangle-overlay($white, 40px);
+        opacity: 1;
+    }
+
+    // PPA logo/brand has smaller triangle shifted to the bottom; no hover
+    .brand .item:focus::before,
+    .brand .item.focus::before {
+        top: 54px;
+        @include triangle-overlay($white, 42px);
+        opacity: 1;
+    }
+
+    // remove default outline focus indicator
+    a.item:focus,
+    a.item.focus,
+    .item a:focus {
+        outline: none;
     }
 
     .search .search.icon {
