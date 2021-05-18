@@ -133,3 +133,6 @@ LOGGING = {
 # In production, set REPORT_ONLY to False and specify an "enforced" endpoint.
 # CSP_REPORT_ONLY = False
 # CSP_REPORT_URI = ''
+
+# Turn off caching for static assets
+WEBPACK_LOADER['DEFAULT']['CACHE'] = False
