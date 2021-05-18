@@ -32,6 +32,7 @@
 /* Focused */
 @focusBackgroundColor: @primaryColor;
 @focusColor: @invertedTextColor;
+@focusOutline: 2px dashed black;
 
 /* Pressed Down */
 @downBackgroundColor: @primaryColor;
