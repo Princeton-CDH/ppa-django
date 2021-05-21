@@ -10,6 +10,10 @@ const devMode = process.env.NODE_ENV !== 'production' // i.e. not prod or qa
 module.exports = env => ({
     context: path.resolve(__dirname, 'srcmedia'),
     mode: devMode ?  'development' : 'production',
+    // NOTE: if you add/remove bundles (entrypoints), make sure to update the
+    // fake webpack-stats.json in the ci/ folder, since it is required to run
+    // tests that rely on static files. For more info, see:
+    // https://github.com/django-webpack/django-webpack-loader/issues/187
     entry: {
         main: [
             './js/index.js', // main site js
@@ -29,7 +33,10 @@ module.exports = env => ({
             { // compile TypeScript to js
                 test: /\.tsx?$/,
                 loader: 'awesome-typescript-loader',
-                exclude: /node_modules/, // don't transpile dependencies
+                exclude: [
+                    /node_modules/, // don't transpile dependencies
+                    /spec/,         // don't transpile tests
+                ]
             },
             { // ensure output js has preserved sourcemaps
                 enforce: "pre",
@@ -45,7 +52,7 @@ module.exports = env => ({
                 test: /\.(sa|sc|c)ss$/,
                 use: [
                     devMode ? 'style-loader' : MiniCssExtractPlugin.loader, // use style-loader for hot reload in dev
-                    'css-loader',
+                    { loader: 'css-loader', options: { url: false } },
                     'postcss-loader', // for autoprefixer
                     { loader: 'sass-loader', options: { importer: GlobImporter() } }, // allow glob scss imports
                 ],
