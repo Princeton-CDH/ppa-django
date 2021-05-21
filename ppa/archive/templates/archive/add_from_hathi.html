@@ -35,9 +35,9 @@
             <td>{{ htid }}</td>
             <td>{{ result }}</td>
             {% if 'Success' in result or htid in existing_ids %}
-            <td><a href="{{ admin_urls|dict_item:htid }}" target="_blank">
+            <td><a href="{{ admin_urls|dict_item:htid }}" target="_blank" rel="noopener noreferrer">
                 View in Admin</a></td>
-            <td><a href="{% url 'archive:detail' htid %}" target="_blank">
+            <td><a href="{% url 'archive:detail' htid %}" target="_blank" rel="noopener noreferrer">
                 View on Site</a></td>
             {% else %}
             <td></td><td></td>

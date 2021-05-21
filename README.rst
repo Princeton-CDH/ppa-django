@@ -17,7 +17,7 @@ at `<https://princeton-cdh.github.io/ppa-django/>`_.
    :target: https://github.com/Princeton-CDH/ppa-django/actions/workflows/unit-tests.yml
    :alt: Unit test status
 
-.. image:: https://codecov.io/gh/Princeton-CDH/ppa-django/branch/master/graph/badge.svg
+.. image:: https://codecov.io/gh/Princeton-CDH/ppa-django/branch/main/graph/badge.svg
    :target: https://codecov.io/gh/Princeton-CDH/ppa-django
    :alt: Code coverage
 
@@ -25,11 +25,11 @@ at `<https://princeton-cdh.github.io/ppa-django/>`_.
    :target: https://www.codefactor.io/repository/github/princeton-cdh/ppa-django
    :alt: CodeFactor
 
-.. image:: https://requires.io/github/Princeton-CDH/ppa-django/requirements.svg?branch=master
-   :target: https://requires.io/github/Princeton-CDH/ppa-django/requirements/?branch=master
+.. image:: https://requires.io/github/Princeton-CDH/ppa-django/requirements.svg?branch=main
+   :target: https://requires.io/github/Princeton-CDH/ppa-django/requirements/?branch=main
    :alt: Requirements Status
 
-This repo uses `git-flow <https://github.com/nvie/gitflow>`_ conventions; **master**
+This repo uses `git-flow <https://github.com/nvie/gitflow>`_ conventions; **main**
 contains the most recent release, and work in progress will be on the **develop** branch.
 Pull requests should be made against develop.
 
@@ -199,7 +199,7 @@ Github Pages. After the build completes, push to GitHub from the ``docs`` folder
 
 License
 -------
-This project is licensed under the `Apache 2.0 License <https://github.com/Princeton-CDH/ppa-django/blob/master/LICENSE>`_.
+This project is licensed under the `Apache 2.0 License <https://github.com/Princeton-CDH/ppa-django/blob/main/LICENSE>`_.
 
 ©2019 Trustees of Princeton University.  Permission granted via
 Princeton Docket #20-3624 for distribution online under a standard Open Source
