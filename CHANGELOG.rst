@@ -3,6 +3,12 @@
 CHANGELOG
 =========
 
+3.6
+---
+
+* accessibility: update hover and focus styles
+* chore: switch out semantic-ui for fomantic-ui and update js dependencies
+
 3.5
 ---
 
