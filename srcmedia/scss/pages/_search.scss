@@ -150,6 +150,10 @@
             display: none;
         }
 
+        .button.focus {
+            outline: 2px dashed black;
+        }
+
         .button.active {
             order: 1;
             color: white;
