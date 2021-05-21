@@ -216,8 +216,7 @@
     }
 
     // PPA logo/brand has smaller triangle shifted to the bottom; no hover
-    .brand .item:focus::before,
-    .brand .item.focus::before {
+    .brand .item:focus-visible::before {
         top: 54px;
         @include triangle-overlay($white, 42px);
         opacity: 1;
@@ -225,7 +224,6 @@
 
     // remove default outline focus indicator
     a.item:focus,
-    a.item.focus,
     .item a:focus {
         outline: none;
     }

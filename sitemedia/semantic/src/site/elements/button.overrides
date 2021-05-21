@@ -52,8 +52,7 @@
         border-color: @disabledTextColor;
     }
 
-    &.focus,
-    &:focus {
+    &:focus-visible {
         outline: @focusOutline;
     }
 }
