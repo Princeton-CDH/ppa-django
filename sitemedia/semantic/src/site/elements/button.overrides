@@ -35,10 +35,24 @@
                 box-shadow: none !important;
             }
         }
+
+        &.active:hover {
+            background: @basicActiveBackground;
+            color: @basicActiveTextColor;
+        }
+    }
+
+    &.active:hover {
+        background: @activeBackgroundColor;
+        color: @activeColor;
     }
 
     &.disabled {
         color: @disabledTextColor;
         border-color: @disabledTextColor;
+    }
+
+    &:focus-visible {
+        outline: @focusOutline;
     }
 }

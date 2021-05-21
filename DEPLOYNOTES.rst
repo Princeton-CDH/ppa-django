@@ -3,6 +3,14 @@
 Deploy and Upgrade notes
 ========================
 
+3.6
+---
+
+* Updates to javascript build tools used to compile fomantic-UI now require that
+  the version of nodejs be at least v10. This is already specified via the
+  README, but take care that deployment environments respect it or build
+  errors will occur.
+
 3.5
 ---
 

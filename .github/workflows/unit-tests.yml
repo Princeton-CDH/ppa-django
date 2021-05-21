@@ -1,0 +1,82 @@
+name: unit tests
+
+on:
+  push: # run on every push or PR to any branch
+  pull_request:
+  schedule: # run automatically on main branch each Tuesday at 11am
+    - cron: "0 16 * * 2"
+
+env:
+  NODE_VERSION: 10
+
+jobs:
+  js-unit:
+    name: javascript unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - run: npm ci
+      - run: npm run test:unit
+      - uses: codecov/codecov-action@v1
+        with:
+          flags: javascript
+
+  python-unit:
+    name: python unit tests
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: mariadb
+        env:
+          MYSQL_DATABASE: ppa
+          MYSQL_ROOT_PASSWORD: ppa
+        ports:
+          - 3306:3306
+      solr:
+        image: solr:6.6
+        ports:
+          - 8983:8983
+    steps:
+      - uses: actions/checkout@v2
+      - run: docker cp solr_conf ${{ job.services.solr.id }}:/opt/solr/server/solr/configsets/ppa
+      - run: docker exec --user root ${{ job.services.solr.id }} /bin/bash -c "chown -R solr:solr /opt/solr/server/solr/configsets/ppa"
+      - run: echo "PYTHON_VERSION=$(cat .python-version)" >> $GITHUB_ENV
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - run: pip install -r dev-requirements.txt
+      - run: cp ci/testsettings.py ppa/local_settings.py
+      - run: python -c "import uuid; print('SECRET_KEY = \'%s\'' % uuid.uuid4())" >> ppa/local_settings.py
+      - run: py.test --cov=./ --cov-report=xml
+      - uses: codecov/codecov-action@v1
+        with:
+          flags: python
+      - run: echo "SLACK_COLOR=$(if [ "$JOB_STATUS" == "success" ]; then echo "good"; elif [ "$JOB_STATUS" == "failure" ]; then echo "danger"; else echo "warning"; fi)" >> $GITHUB_ENV
+        if: ${{ always() }}
+        env:
+          JOB_STATUS: ${{ job.status }}
+      - uses: rtCamp/action-slack-notify@master
+        if: ${{ always() && (github.event_name == 'schedule' || github.event_name == 'push') }}
+        continue-on-error: true
+        env:
+          SLACK_COLOR: ${{ env.SLACK_COLOR }}
+          SLACK_WEBHOOK: ${{ secrets.ACTIONS_SLACK_WEBHOOK }}
+          SLACK_TITLE: "Workflow `${{ github.workflow }}`: ${{ job.status }}"
+          SLACK_MESSAGE: "Run <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|#${{ github.run_number }}> on <https://github.com/${{ github.repository }}/|${{ github.repository }}@${{ github.ref }}>"
+          SLACK_FOOTER: "<https://github.com/${{ github.repository }}/commit/${{ github.sha }}|View commit>"
+          MSG_MINIMAL: true

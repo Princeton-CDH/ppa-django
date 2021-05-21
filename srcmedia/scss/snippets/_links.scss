@@ -1,4 +1,4 @@
-a:not(.card):not(.headerlink) {
+a:not(.ui):not(.card) {
     text-decoration: underline;
 }
 
@@ -39,6 +39,7 @@ a.archive-link { // "view the archive" button
     width: 30px;
     box-shadow: 0 0 6px 0 $french-blue;
     z-index: 10;
+    text-decoration: none;
 
     @media (min-width: $largeMonitor) {
         left: calc(50% + #{$largeMonitor} / 2 - 4rem);

@@ -30,8 +30,9 @@
 @hoverColor: @invertedTextColor;
 
 /* Focused */
-@focusBackgroundColor: @primaryColor;
-@focusColor: @invertedTextColor;
+@focusBackgroundColor: @backgroundColor;
+@focusColor: @textColor;
+@focusOutline: 2px dashed black;
 
 /* Pressed Down */
 @downBackgroundColor: @primaryColor;
@@ -56,3 +57,6 @@
 @basicActiveBackground: @primaryColor;
 @basicActiveTextColor: @invertedTextColor;
 
+/* Basic Focus */
+@basicFocusBackground: @basicBackground;
+@basicFocusTextColor: @basicTextColor;
