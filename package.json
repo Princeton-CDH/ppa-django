@@ -37,7 +37,7 @@
         "babel-loader": "^8.2.2",
         "clean-webpack-plugin": "^1.0.1",
         "core-js": "^3.12.1",
-        "css-loader": "^2.1.1",
+        "css-loader": "3.6.0",
         "file-loader": "^3.0.1",
         "gulp": "^4.0.2",
         "gulp-help": "^1.6.1",
