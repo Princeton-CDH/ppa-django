@@ -17,7 +17,7 @@ wagtail>=2.9,<2.10
 bleach
 django-fullurl
 django-csp
-django-webpack-loader
+django-webpack-loader>=1
 requests_oauthlib
 wand
 # specify bs4 version to avoid wagtail version conflict
