@@ -4,4 +4,3 @@ pytest-django
 pytest-cov
 django-debug-toolbar
 sphinx
-django-webpack-loader

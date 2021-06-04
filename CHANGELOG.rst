@@ -3,6 +3,11 @@
 CHANGELOG
 =========
 
+3.6.1
+-----
+
+* bugfix: server error when accessing pages that reference built styles via webpack-loader
+
 3.6
 ---
 
