@@ -3,6 +3,11 @@
 CHANGELOG
 =========
 
+3.6.2
+-----
+
+* bugfix: avoid mariadb-specific error when running migrations for django-cas-ng
+
 3.6.1
 -----
 
