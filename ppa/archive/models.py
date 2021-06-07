@@ -23,6 +23,7 @@ from wagtail.core.fields import RichTextField
 from wagtail.admin.edit_handlers import FieldPanel
 from wagtail.snippets.models import register_snippet
 
+from ppa.archive.gale import GaleAPI
 from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS, HathiObject
 
 
@@ -753,9 +754,9 @@ class Page(Indexable):
     @classmethod
     def total_to_index(cls):
         '''Calculate the total number of pages to be indexed by
-        aggregating page count of items to index in thed atabase.'''
+        aggregating page count of items to index in the database.'''
         return DigitizedWork.items_to_index() \
-            .aggregate(total_pages=models.Sum('page_count'))['total_pages']
+            .aggregate(total_pages=models.Sum('page_count'))['total_pages'] or 0
 
     @classmethod
     def index_item_type(cls):
@@ -767,10 +768,20 @@ class Page(Indexable):
         '''Get page content for the specified digitized work from Hathi
         pairtree and return data to be indexed in solr.'''
 
-        # If an item has been suppressed or is from a source other than
-        # hathi, bail out. No pages to index.
-        if digwork.is_suppressed or digwork.source != digwork.HATHI:
+        # If an item has been suppressed, don't index any pages.
+        if digwork.is_suppressed:
             return
+
+        # otherwise, index page data based on the source
+        if digwork.source == digwork.HATHI:
+            return cls.hathi_page_index_data(digwork)
+        if digwork.source == digwork.GALE:
+            return cls.gale_page_index_data(digwork)
+
+    @classmethod
+    def hathi_page_index_data(cls, digwork):
+        '''Get page content for the specified digitized work from Hathi
+        pairtree and return data to be indexed in solr.'''
 
         # load mets record to pull metadata about the images
         try:
@@ -802,3 +813,24 @@ class Page(Indexable):
                         }
                     except StopIteration:
                         return
+
+    @classmethod
+    def gale_page_index_data(cls, digwork):
+        '''Get page content for the specified digitized work from Gale
+        API and return data to be indexed in solr.'''
+        # store api client for reuse?
+        item_record = GaleAPI().get_item(digwork.source_id)
+        for page in item_record['pageResponse']['pages']:
+            page_number = page['pageNumber']
+            page_num_int = int(page_number)
+            yield {
+                'id': '%s.%s' % (digwork.source_id, page_number),
+                'source_id': digwork.source_id,   # for grouping with work record
+                'content': page.get('ocrText'),   # some pages have no text
+                'order': page_num_int,
+                'label': page_num_int,
+                'item_type': 'page',
+                # image id needed for thumbnail url; use solr dynamic field
+                'image_id_s': page['image']['id']
+            }
+
