@@ -211,9 +211,11 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
     metadata.
     '''
     HATHI = 'HT'
+    GALE = 'G'
     OTHER = 'O'
     SOURCE_CHOICES = (
         (HATHI, 'HathiTrust'),
+        (GALE, 'Gale'),
         (OTHER, 'Other'),
     )
     #: source of the record, HathiTrust or elsewhere
