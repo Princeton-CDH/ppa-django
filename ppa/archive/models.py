@@ -772,15 +772,16 @@ class Page(Indexable):
         '''Get page content for the specified digitized work from Hathi
         pairtree and return data to be indexed in solr.'''
 
-        # If an item has been suppressed, don't index any pages.
-        if digwork.is_suppressed:
-            return
+        # Only index pages fo ritems that are not suppressed
+        if not digwork.is_suppressed:
+            # get index page data based on the source
+            if digwork.source == digwork.HATHI:
+                return cls.hathi_page_index_data(digwork)
+            if digwork.source == digwork.GALE:
+                return cls.gale_page_index_data(digwork)
 
-        # otherwise, index page data based on the source
-        if digwork.source == digwork.HATHI:
-            return cls.hathi_page_index_data(digwork)
-        if digwork.source == digwork.GALE:
-            return cls.gale_page_index_data(digwork)
+        # return an empty list for anything else
+        return []
 
     @classmethod
     def hathi_page_index_data(cls, digwork):
