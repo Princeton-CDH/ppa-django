@@ -87,6 +87,10 @@ class GaleAPI:
             return resp
         if resp.status_code == requests.codes.not_found:
             raise GaleItemNotFound
+
+        # TODO: handle 401 / requests.codes.unauthorized
+        # HTTP Status 401 - Authentication Failed: Invalid or Expired API key
+
         if resp.status_code == requests.codes.forbidden:
             # forbidden results return a message
             # NOTE that item requests for invalid ids return 403
@@ -111,8 +115,8 @@ class GaleAPI:
             self._api_key = self.get_api_key()
         return self._api_key
 
-    def get_item(self, id):
+    def get_item(self, item_id):
         # full id looks like GALE|CW###### or GAlE|CB#######
-        response = self._make_request(f"v1/item/GALE%7C{id}")
+        response = self._make_request(f"v1/item/GALE%7C{item_id}")
         if response:
             return response.json()
