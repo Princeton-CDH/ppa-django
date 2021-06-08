@@ -604,6 +604,10 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         Raises :class:`pairtree.storage_exceptions.ObjectNotFoundException`
         if the data is not found in the pairtree storage. Returns page count
         found; saves the object if the count changes.'''
+
+        if not self.source == DigitizedWork.HATHI:
+            raise storage_exceptions.ObjectNotFoundException('Using Hathi-specific page count for non-Hathi item')
+
         if not ptree_client:
             ptree_client = self.hathi.pairtree_client()
 
