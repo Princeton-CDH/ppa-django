@@ -29,8 +29,20 @@ class GaleAPI:
     #: base URL for all API requests
     api_root = "https://api.gale.com/api"
 
+    instance = None
+
+    def __new__(cls):
+        # implement as a singleton
+        # adapted from https://softwareengineering.stackexchange.com/a/333710
+
+        # if no instance has been initialized, create and store on the class
+        if cls.instance is None:
+            cls.instance = super().__new__(cls)
+        # return the instance
+        return cls.instance
+
     def __init__(self):
-        # NOTE: copied from hathi.py base api class; generalize?
+        # NOTE: copied from hathi.py base api class; worth generalizing?
 
         # create a request session, for request pooling
         self.session = requests.Session()
