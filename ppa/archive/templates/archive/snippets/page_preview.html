@@ -12,6 +12,7 @@ Expected context variables:
     <div class="preview">
         <a href="{% page_url item_id page.order %}"
           target="_blank" rel="noopener noreferrer">
+          {% if source == 'Hathi' %}
           {% page_image_url item_id page.order 225 as 1x_img %}
           {% page_image_url item_id page.order 450 as 2x_img %}
           {# img with data-src/srcset attributes for lazy-loading  #}
@@ -22,6 +23,9 @@ Expected context variables:
             <img src="{{ 1x_img }}" srcset="{{ 1x_img}}, {{ 2x_img }} 2x"
               alt="page {{ page.label }}"/>
           </noscript>
+          {% elif source == 'Gale' %}
+          <img src="https://callisto.ggsrv.com/imgsrv/FastFetch/UBER2/{{ image_id }}-T2" alt="page {{ page.label }}"/>
+          {% endif %}
         </a>
     </div>
     {% if page.title %}<a>p. {{ page.title }}</a>{% endif %}
