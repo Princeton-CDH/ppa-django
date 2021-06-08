@@ -12,8 +12,16 @@ from ppa import __version__ as ppa_version
 logger = logging.getLogger(__name__)
 
 
-class GaleItemForbidden(Exception):
-    '''Permission denied to access item in data API'''
+class GaleAPIError(Exception):
+    '''Base exception class for Gale API errors'''
+
+
+class GaleItemForbidden(GaleAPIError):
+    '''Permission denied to access item in Gale API'''
+
+
+class GaleItemNotFound(GaleAPIError):
+    '''Item not found in Gale API'''
 
 
 class GaleAPI:
@@ -59,15 +67,14 @@ class GaleAPI:
             if "params" not in rqst_opts:
                 rqst_opts["params"] = {}
             rqst_opts["params"]["api_key"] = self.api_key
-            print(rqst_opts)
 
         start = time.time()
         resp = self.session.get(url, **rqst_opts)
         logger.debug("get %s %s: %f sec", url, resp.status_code, time.time() - start)
         if resp.status_code == requests.codes.ok:
             return resp
-        # if resp.status_code == requests.codes.not_found:
-        #     raise HathiItemNotFound
+        if resp.status_code == requests.codes.not_found:
+            raise GaleItemNotFound
         if resp.status_code == requests.codes.forbidden:
             # forbidden results return a message
             # NOTE that item requests for invalid ids return 403
@@ -93,6 +100,7 @@ class GaleAPI:
         return self._api_key
 
     def get_item(self, id):
-        # numeric ids need CW added; unclear if that is part of the id or not
+        # full id looks like GALE|CW###### or GAlE|CB#######
         response = self._make_request(f"v1/item/GALE%7C{id}")
-        return response.json()
+        if response:
+            return response.json()
