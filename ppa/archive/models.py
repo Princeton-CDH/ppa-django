@@ -838,4 +838,3 @@ class Page(Indexable):
                 # image id needed for thumbnail url; use solr dynamic field
                 'image_id_s': page['image']['id']
             }
-
