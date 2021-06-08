@@ -84,8 +84,7 @@
             {% endif %}
             {% if object.source_url %}
             <tr class="hathi-link">
-                <th scope="row">View{% if object.source == object.OTHER %} external record
-                    {% else %} on {{ object.get_source_display }}{% endif %}</th>
+                <th scope="row">{{ object.get_source_link_label }}</th>
                 <td>
                     <a href="{{ object.source_url }}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
                 </td>

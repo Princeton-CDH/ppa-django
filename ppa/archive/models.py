@@ -661,6 +661,14 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         # error for unknown
         raise ValueError('Unsupported format %s' % metadata_format)
 
+    def get_source_link_label(self):
+        '''Source-specific label for link on public item detail view.'''
+        if self.source == DigitizedWork.GALE:
+            return 'View on Gale Primary Sources'
+        if self.source == DigitizedWork.OTHER:
+            return 'View external record'
+        return 'View on %s' % self.get_source_display()
+
     @staticmethod
     def add_from_hathi(htid, bib_api=None, update=False,
                        log_msg_src=None, user=None):
