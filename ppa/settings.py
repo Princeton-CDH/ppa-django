@@ -265,9 +265,9 @@ CSP_FONT_SRC = ("'self'", 'https://fonts.gstatic.com data:')
 CSP_STYLE_SRC = ("'self'", 'https://fonts.googleapis.com',
                  '*.glitch.me')
 
-# allow loading local images, hathi page images, google tracking pixel
+# allow loading local images, hathi page images, google tracking pixel, gale images
 CSP_IMG_SRC = ("'self'", 'https://babel.hathitrust.org',
-               'https://www.google-analytics.com')
+               'https://www.google-analytics.com', 'https://callisto.ggsrv.com')
 
 # exclude admin and cms urls from csp directives since they're authenticated
 CSP_EXCLUDE_URL_PREFIXES = ('/admin', '/cms')

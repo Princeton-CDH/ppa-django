@@ -576,6 +576,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         return {
             'id': self.source_id,
             'source_id': self.source_id,
+            'source_t': self.get_source_display(),
             'source_url': self.source_url,
             'title': self.title,
             'subtitle': self.subtitle,
