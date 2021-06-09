@@ -1,5 +1,4 @@
 import logging
-import time
 
 import requests
 
@@ -13,15 +12,15 @@ logger = logging.getLogger(__name__)
 
 
 class GaleAPIError(Exception):
-    '''Base exception class for Gale API errors'''
+    """Base exception class for Gale API errors"""
 
 
 class GaleItemForbidden(GaleAPIError):
-    '''Permission denied to access item in Gale API'''
+    """Permission denied to access item in Gale API"""
 
 
 class GaleItemNotFound(GaleAPIError):
-    '''Item not found in Gale API'''
+    """Item not found in Gale API"""
 
 
 class GaleAPI:
@@ -42,7 +41,8 @@ class GaleAPI:
         return cls.instance
 
     def __init__(self):
-        # NOTE: copied from hathi.py base api class; worth generalizing?
+        # NOTE: copied from hathi.py base api class; should be generalized
+        # into a common base class if/when we add a third provider
 
         # create a request session, for request pooling
         self.session = requests.Session()
@@ -60,7 +60,7 @@ class GaleAPI:
         # username is needed to request an API key
         self.username = settings.GALE_API_USERNAME
 
-    def _make_request(self, url, params=None, requires_api_key=True):
+    def _make_request(self, url, params=None, requires_api_key=True, stream=False):
         """Make a GET request with the configured session. Takes a url
         relative to :attr:`api_root` and optional dictionary of parameters."""
         # NOTE: also copied from hathi.py
@@ -80,9 +80,10 @@ class GaleAPI:
                 rqst_opts["params"] = {}
             rqst_opts["params"]["api_key"] = self.api_key
 
-        start = time.time()
-        resp = self.session.get(url, **rqst_opts)
-        logger.debug("get %s %s: %f sec", url, resp.status_code, time.time() - start)
+        resp = self.session.get(url, stream=stream, **rqst_opts)
+        logger.debug(
+            "get %s %s: %f sec", url, resp.status_code, resp.elapsed.total_seconds()
+        )
         if resp.status_code == requests.codes.ok:
             return resp
         if resp.status_code == requests.codes.not_found:
@@ -96,7 +97,7 @@ class GaleAPI:
             # NOTE that item requests for invalid ids return 403
             # TODO: add logic to check if api key has expired and get a new one?
             # (if we expect to ever have anything that will take longer than 30m)
-            raise GaleItemForbidden(resp.json()['message'])
+            raise GaleItemForbidden(resp.json()["message"])
 
     def get_api_key(self):
         # GALE API requires use of an API key, which lasts for 30 minutes
@@ -110,13 +111,15 @@ class GaleAPI:
 
     @property
     def api_key(self):
-        """Property for curren tapi key. Requests a new one when needed."""
+        """Property for current api key. Requests a new one when needed."""
         if self._api_key is None:
             self._api_key = self.get_api_key()
         return self._api_key
 
     def get_item(self, item_id):
         # full id looks like GALE|CW###### or GAlE|CB#######
-        response = self._make_request(f"v1/item/GALE%7C{item_id}")
+        # using streaming makes a *significant* difference in response time,
+        # especially for larger results
+        response = self._make_request(f"v1/item/GALE%7C{item_id}", stream=True)
         if response:
             return response.json()
