@@ -100,6 +100,7 @@ class GaleAPI:
             raise GaleItemForbidden(resp.json()["message"])
 
     def get_api_key(self):
+        """Get a new API key to use for requests in the next 30 minutes."""
         # GALE API requires use of an API key, which lasts for 30 minutes
         # request a new one when needed using configured username
         response = self._make_request(
@@ -111,12 +112,14 @@ class GaleAPI:
 
     @property
     def api_key(self):
-        """Property for current api key. Requests a new one when needed."""
+        """Property for current api key. Uses :meth:`get_api_key` to
+        request a new one when needed."""
         if self._api_key is None:
             self._api_key = self.get_api_key()
         return self._api_key
 
     def get_item(self, item_id):
+        """Get the full record for a single item"""
         # full id looks like GALE|CW###### or GAlE|CB#######
         # using streaming makes a *significant* difference in response time,
         # especially for larger results
