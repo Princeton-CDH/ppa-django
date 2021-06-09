@@ -25,10 +25,7 @@ class Command(BaseCommand):
 
     help = __doc__
 
-    bib_api = None
-    hathi_pairtree = {}
     stats = None
-    options = {}
     #: normal verbosity level
     v_normal = 1
     verbosity = v_normal
