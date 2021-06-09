@@ -153,17 +153,17 @@ class Command(BaseCommand):
             self.stats["error"] += 1
             return
 
-        # document metadata is under
+        # document metadata is under "doc"
         doc_metadata = item_record["doc"]
-        # gale url includes user and source parameters (sid=gale_api),
-        # but we don't want to keep them
-        gale_url = doc_metadata["isShownAt"].split("?", 1)[0]
+        # NOTE: url provided in "isShownAt" includes user and source parameters;
+        # these are important to preserve because it allows Gale to
+        # monitor traffic source and the linked page is an "auth free" link
 
         # create new stub record and populate it from api response
         digwork = DigitizedWork.objects.create(
             source_id=gale_id,  # or doc_metadata['id']; format GALE|CW###
             source=DigitizedWork.GALE,
-            source_url=gale_url,
+            source_url=doc_metadata["isShownAt"],
             title=doc_metadata["title"],
             # subtitle='',
             # sort_title='', # marc ?
