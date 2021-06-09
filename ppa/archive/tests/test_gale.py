@@ -1,6 +1,8 @@
 from unittest.mock import patch
 
-from django.test import override_settings
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
+from django.test import override_settings, TestCase
 import pytest
 import requests
 
@@ -8,8 +10,10 @@ from ppa import __version__
 from ppa.archive import gale
 
 
+@override_settings(GALE_API_USERNAME="galeuser123")
 @patch("ppa.archive.gale.requests")
-class TestGaleAPI:
+class TestGaleAPI(TestCase):
+
     def test_new(self, mockrequests):
         # test singleton behavior;
         # initializing multiple times should return the same instance
@@ -36,6 +40,12 @@ class TestGaleAPI:
         with override_settings(TECHNICAL_CONTACT=tech_contact):
             gale_api = gale.GaleAPI()
             assert gale_api.session.headers["From"] == tech_contact
+
+    @override_settings()
+    def test_config_error(self, mockrequests):
+        del settings.GALE_API_USERNAME
+        with pytest.raises(ImproperlyConfigured):
+            gale.GaleAPI()
 
     def test_make_request(self, mockrequests):
         gale_api = gale.GaleAPI()
@@ -71,7 +81,6 @@ class TestGaleAPI:
         with pytest.raises(gale.GaleItemForbidden):
             gale_api._make_request("foo")
 
-    @override_settings(GALE_API_USERNAME="galeuser123")
     def test_get_api_key(self, mockrequests):
         gale_api = gale.GaleAPI()
         mockrequests.codes = requests.codes
