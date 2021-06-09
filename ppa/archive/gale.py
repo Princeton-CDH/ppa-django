@@ -3,7 +3,7 @@ import logging
 import requests
 
 from django.conf import settings
-
+from django.core.exceptions import ImproperlyConfigured
 
 from ppa import __version__ as ppa_version
 
@@ -44,6 +44,14 @@ class GaleAPI:
         # NOTE: copied from hathi.py base api class; should be generalized
         # into a common base class if/when we add a third provider
 
+        # first make sure we have a username configured
+        try:
+            self.username = settings.GALE_API_USERNAME
+        except AttributeError:
+            raise ImproperlyConfigured(
+                "GALE_API_USERNAME configuration is required for Gale API"
+            )
+
         # create a request session, for request pooling
         self.session = requests.Session()
         # set a user-agent header, but  preserve requests version information
@@ -56,9 +64,6 @@ class GaleAPI:
         if tech_contact:
             headers["From"] = tech_contact
         self.session.headers.update(headers)
-        # error handling?
-        # username is needed to request an API key
-        self.username = settings.GALE_API_USERNAME
 
     def _make_request(self, url, params=None, requires_api_key=True, stream=False):
         """Make a GET request with the configured session. Takes a url
