@@ -19,7 +19,7 @@ from pairtree import pairtree_client, pairtree_path, storage_exceptions
 from parasolr.django.indexing import ModelIndexable
 import pytest
 
-from ppa.archive import hathi
+from ppa.archive import gale, hathi
 from ppa.archive.models import Collection, CollectionSignalHandlers, \
     DigitizedWork, NO_COLLECTION_LABEL, Page, ProtectedWorkFieldFlags
 
@@ -733,7 +733,7 @@ class TestPage(TestCase):
 
     @patch('ppa.archive.models.ZipFile', spec=ZipFile)
     @override_settings(HATHI_DATA='/tmp/ht_text_pd')
-    def test_page_index_data(self, mockzipfile):
+    def test_hathi_page_index_data(self, mockzipfile):
         mockzip_obj = mockzipfile.return_value.__enter__.return_value
         page_files = ['0001.txt', '00002.txt']
         mockzip_obj.namelist.return_value = page_files
@@ -782,3 +782,36 @@ class TestPage(TestCase):
         # non hathi item - no page data
         nonhathi_work = DigitizedWork(source=DigitizedWork.OTHER)
         assert not list(Page.page_index_data(nonhathi_work))
+
+
+    @patch("ppa.archive.models.GaleAPI", spec=gale.GaleAPI)
+    def test_gale_page_index_data(self, mock_gale_api):
+        gale_work = DigitizedWork(source=DigitizedWork.GALE, source_id="CW123456")
+
+        test_pages = [
+            {
+                "pageNumber": "0001",
+                "image": {"id": "09876001234567"}
+                # some pages have no ocr text
+            },
+            {
+                "pageNumber": "0002",
+                "image": {"id": "08765002345678"},
+                "ocrText": "more test content",
+            },
+        ]
+
+        mock_gale_api.return_value.get_item.return_value = {
+            "doc": {},  # unused for this test
+            "pageResponse": {"pages": test_pages},
+        }
+        page_data = list(Page.page_index_data(gale_work))
+        assert len(page_data) == 2
+        for i, index_data in enumerate(page_data):
+            assert index_data["id"] == f"{gale_work.source_id}.{test_pages[i]['pageNumber']}"
+            assert index_data["source_id"] == gale_work.source_id
+            assert index_data["content"] == test_pages[i].get('ocrText')
+            assert index_data["order"] == i + 1
+            assert index_data["label"] == int(test_pages[i]['pageNumber'])
+            assert index_data["item_type"] == "page"
+            assert index_data["image_id_s"] == test_pages[i]['image']['id']
