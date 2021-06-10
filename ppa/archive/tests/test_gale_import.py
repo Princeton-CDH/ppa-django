@@ -72,7 +72,8 @@ class TestGaleImportCommand:
             assert isinstance(cmd.collections[code], Collection)
             assert cmd.collections[code].name == name
 
-    def test_import_digitizedwork_id(self):
+    @patch("ppa.archive.management.commands.gale_import.DigitizedWork.index_items")
+    def test_import_digitizedwork_id(self, mock_index_items):
         # import with id only
         cmd = gale_import.Command()
         # requires some setup included in handle
@@ -113,6 +114,9 @@ class TestGaleImportCommand:
         # no collections should be associated
         assert digwork.collections.count() == 0
 
+        # pages should be indexed
+        assert mock_index_items.call_count == 1
+
         # log entry should be created
         import_log = LogEntry.objects.get(object_id=digwork.pk)
         assert import_log.user_id == cmd.script_user.pk
@@ -125,8 +129,9 @@ class TestGaleImportCommand:
         assert "skipped" not in cmd.stats
         assert "error" not in cmd.stats
 
+    @patch("ppa.archive.management.commands.gale_import.DigitizedWork.index_items")
     @override_settings(GALE_API_USERNAME="galeuser123")
-    def test_import_digitizedwork_csv(self):
+    def test_import_digitizedwork_csv(self, mock_index_items):
         # simulate csv import with notes and collection membership
         cmd = gale_import.Command()
         # do some setup included in handle method

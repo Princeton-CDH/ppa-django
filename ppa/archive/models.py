@@ -832,7 +832,9 @@ class Page(Indexable):
     @classmethod
     def gale_page_index_data(cls, digwork, gale_record=None):
         '''Get page content for the specified digitized work from Gale
-        API and return data to be indexed in solr.'''
+        API and return data to be indexed in solr. Takes an optional gale_record
+        parameter (item record as returned by Gale API), to avoid
+        making an extra API call if data is already available.'''
         if gale_record is None:
             gale_record = GaleAPI().get_item(digwork.source_id)
         for i, page in enumerate(gale_record['pageResponse']['pages'], 1):
