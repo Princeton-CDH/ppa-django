@@ -662,6 +662,14 @@ class TestDigitizedWork(TestCase):
             work.remove_from_index()
             mocksolr.update.delete_by_query.assert_called_with("source_id:(chi.79279237)")
 
+    def test_get_source_link_label(self):
+        gale_work = DigitizedWork(source_id='CW79279237', source=DigitizedWork.GALE)
+        assert gale_work.get_source_link_label() == "View on Gale Primary Sources"
+        hathi_work = DigitizedWork(source_id='chi.79279237', source=DigitizedWork.HATHI)
+        assert hathi_work.get_source_link_label() == "View on HathiTrust"
+        other_work = DigitizedWork(source_id='chi.79279237', source=DigitizedWork.OTHER)
+        assert other_work.get_source_link_label() == "View external record"
+
 
 class TestCollection(TestCase):
     fixtures = ['sample_digitized_works']
