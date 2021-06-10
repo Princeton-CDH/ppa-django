@@ -728,6 +728,7 @@ class TestDigitizedWorkCSV(TestCase):
             assert '%s' % digwork.added in digwork_data
             assert '%s' % digwork.updated in digwork_data
             assert digwork.get_status_display() in digwork_data
+            assert digwork.get_source_display() in digwork_data
 
 
 class TestAdminViews(TestCase):
