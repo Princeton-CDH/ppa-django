@@ -83,10 +83,7 @@ class Command(BaseCommand):
             raise CommandError("A list of IDs or CSV file for is required for import")
 
         # NOTE: could disconnect indexing signals for more control over indexing
-        # for now, leaving enabled
-        # # disconnect signal handler for on-demand indexing, for efficiency
-        # # (index in bulk after an update, not one at a time)
-        # IndexableSignalHandler.disconnect()
+        # for now, leaving signal-based indexing on
 
         # api initialization will error if username is not in settings
         # catch and output error as command error for readability
