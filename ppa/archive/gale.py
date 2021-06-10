@@ -28,10 +28,23 @@ class GaleItemNotFound(GaleAPIError):
 
 
 class GaleAPI:
+    """Minimal Gale API client with functionality need for PPA import.
+
+    Requires **GALE_API_USERNAME** configured in Django settings. Automatically
+    uses the configured username to retrieve an API key when needed, and has
+    logic to refresh the API key when it expires (30 minutes).
+
+    If **TECHNICAL_CONTACT** is configured in Django settings, it will
+    be included in request headers when making API calls.
+
+    Implemented as a singleton; instanciating the class will return the
+    same shared instance every time.
+    """
 
     #: base URL for all API requests
     api_root = "https://api.gale.com/api"
 
+    #: shared singleton instance; populated on first instantiation
     instance = None
 
     def __new__(cls):
@@ -154,7 +167,7 @@ class GaleAPI:
 
     def get_item(self, item_id):
         """Get the full record for a single item"""
-        # full id looks like GALE|CW###### or GAlE|CB#######
+        # full id looks like GALE|CW###### or GALE|CB#######
         # using streaming makes a *significant* difference in response time,
         # especially for larger results
         response = self._make_request(f"v1/item/GALE%7C{item_id}", stream=True)
