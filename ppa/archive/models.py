@@ -598,6 +598,16 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             'order': '0',
         }
 
+    def remove_from_index(self):
+        """Remove the current work and associated pages from Solr index"""
+        # Default parasolr logic only removes current item record;
+        # we need to remove associated pages as well
+        logger.debug(
+            "Deleting DigitizedWork and associated pages from index with source_id:%s",
+            self.source_id
+        )
+        self.solr.update.delete_by_query(f"source_id:({self.source_id})")
+
     def count_pages(self, ptree_client=None):
         '''Count the number of pages for a digitized work based on the
         number of files in the zipfile within the pairtree content.
@@ -820,18 +830,19 @@ class Page(Indexable):
                         return
 
     @classmethod
-    def gale_page_index_data(cls, digwork):
+    def gale_page_index_data(cls, digwork, gale_record=None):
         '''Get page content for the specified digitized work from Gale
         API and return data to be indexed in solr.'''
-        item_record = GaleAPI().get_item(digwork.source_id)
-        for page in item_record['pageResponse']['pages']:
+        if gale_record is None:
+            gale_record = GaleAPI().get_item(digwork.source_id)
+        for i, page in enumerate(gale_record['pageResponse']['pages'], 1):
             page_number = page['pageNumber']
             page_num_int = int(page_number)
             yield {
                 'id': '%s.%s' % (digwork.source_id, page_number),
                 'source_id': digwork.source_id,   # for grouping with work record
                 'content': page.get('ocrText'),   # some pages have no text
-                'order': page_num_int,
+                'order': i,
                 'label': page_num_int,
                 'item_type': 'page',
                 # image id needed for thumbnail url; use solr dynamic field
