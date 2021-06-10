@@ -656,6 +656,12 @@ class TestDigitizedWork(TestCase):
         assert LogEntry.objects.filter(object_id=digwork.id) \
             .order_by('-action_time').first().action_flag == CHANGE
 
+    def test_remove_from_index(self):
+        work = DigitizedWork(source_id='chi.79279237')
+        with patch.object(work, 'solr') as mocksolr:
+            work.remove_from_index()
+            mocksolr.update.delete_by_query.assert_called_with("source_id:(chi.79279237)")
+
 
 class TestCollection(TestCase):
     fixtures = ['sample_digitized_works']
