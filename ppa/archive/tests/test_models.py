@@ -386,6 +386,7 @@ class TestDigitizedWork(TestCase):
         index_data = digwork.index_data()
         assert index_data['id'] == digwork.source_id
         assert index_data['source_id'] == digwork.source_id
+        assert index_data['source_t'] == digwork.get_source_display()
         assert index_data['item_type'] == 'work'
         assert index_data['title'] == digwork.title
         assert index_data['subtitle'] == digwork.subtitle
