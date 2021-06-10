@@ -46,7 +46,8 @@ class TestDigitizedWorkDetailView(TestCase):
         htid = 'chi.78013704'
         solr_page_docs = [
             {'content': content, 'order': i + 1, 'item_type': 'page',
-             'source_id': htid, 'id': '%s.%s' % (htid, i), 'label': i}
+             'source_id': htid, 'id': '%s.%s' % (htid, i), 'label': i,
+             'source_t': 'HathiTrust'}
             for i, content in enumerate(sample_page_content)]
         # dial = DigitizedWork.objects.get(source_id='chi.78013704')
         # solr_work_docs = [dial.index_data()]
