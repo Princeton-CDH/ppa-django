@@ -19,6 +19,10 @@ class GaleItemForbidden(GaleAPIError):
     """Permission denied to access item in Gale API"""
 
 
+class GaleUnauthorized(GaleAPIError):
+    """Permission not authorized for Gale API access"""
+
+
 class GaleItemNotFound(GaleAPIError):
     """Item not found in Gale API"""
 
@@ -65,19 +69,23 @@ class GaleAPI:
             headers["From"] = tech_contact
         self.session.headers.update(headers)
 
-    def _make_request(self, url, params=None, requires_api_key=True, stream=False):
+    def _make_request(
+        self, url, params=None, requires_api_key=True, stream=False, retry=0
+    ):
         """Make a GET request with the configured session. Takes a url
-        relative to :attr:`api_root` and optional dictionary of parameters."""
+        relative to :attr:`api_root`, optional dictionary of parameters for the request,
+        and flags to indicate if the request needs an API key, should be streamed,
+        or is a retry."""
         # NOTE: also copied from hathi.py
 
         # Returns the response for status 200 OK; raises
         # :class:`HathiItemNotFound` for 404 and :class:`HathiItemForbidden`
         # for 403.
         # '''
-        url = "%s/%s" % (self.api_root, url)
+        rqst_url = "%s/%s" % (self.api_root, url)
         rqst_opts = {}
         if params:
-            rqst_opts["params"] = params
+            rqst_opts["params"] = params.copy()
 
         # add api key to parameters if neded for this request
         if requires_api_key:
@@ -85,17 +93,33 @@ class GaleAPI:
                 rqst_opts["params"] = {}
             rqst_opts["params"]["api_key"] = self.api_key
 
-        resp = self.session.get(url, stream=stream, **rqst_opts)
+        resp = self.session.get(rqst_url, stream=stream, **rqst_opts)
         logger.debug(
-            "get %s %s: %f sec", url, resp.status_code, resp.elapsed.total_seconds()
+            "get %s %s: %f sec", rqst_url, resp.status_code, resp.elapsed.total_seconds()
         )
         if resp.status_code == requests.codes.ok:
             return resp
         if resp.status_code == requests.codes.not_found:
             raise GaleItemNotFound
 
-        # TODO: handle 401 / requests.codes.unauthorized
+        # when api key expires, API returns:
         # HTTP Status 401 - Authentication Failed: Invalid or Expired API key
+        # If we get a 401 on a request that requires an api key, try getting a new one
+        if resp.status_code == requests.codes.unauthorized:
+            # If we get a 401 on a request that requires an api key,
+            # get a fresh key and then try the same request again
+            if requires_api_key and retry < 1:
+                self.refresh_api_key()
+                return self._make_request(
+                    url,
+                    params=params,
+                    requires_api_key=requires_api_key,
+                    stream=stream,
+                    retry=retry + 1
+                )
+            # response is html error, not json; could try
+            # extracting h1, but not sure it's worth parsing
+            raise GaleUnauthorized()
 
         if resp.status_code == requests.codes.forbidden:
             # forbidden results return a message
@@ -122,6 +146,11 @@ class GaleAPI:
         if self._api_key is None:
             self._api_key = self.get_api_key()
         return self._api_key
+
+    def refresh_api_key(self):
+        """clear cached api key and request a new one"""
+        self._api_key = None
+        self.api_key
 
     def get_item(self, item_id):
         """Get the full record for a single item"""
