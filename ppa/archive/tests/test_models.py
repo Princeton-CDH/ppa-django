@@ -102,6 +102,9 @@ class TestDigitizedWork(TestCase):
         digwork.source = DigitizedWork.OTHER
         # for non-hathi items, shouldn't have full text
         assert not digwork.has_fulltext
+        # new Gale/ECCO content is full text
+        digwork.source = DigitizedWork.GALE
+        assert digwork.has_fulltext
 
     def test_hathi(self):
         digwork = DigitizedWork(source_id='njp.32101013082597',
