@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -82,6 +82,73 @@ class TestGaleAPI(TestCase):
         with pytest.raises(gale.GaleItemForbidden):
             gale_api._make_request("foo")
 
+    @patch("ppa.archive.gale.GaleAPI.get_api_key")
+    def test_make_request_refresh_key(self, mock_get_api_key, mockrequests):
+        # test retrying request when api key has expired
+        gale_api = gale.GaleAPI()
+        gale_api.api_root = "http://example.com/api"
+        mockrequests.codes = requests.codes
+        mock_get_api_key.side_effect = ("testkey1", "testkey2", "testkey3", "testkey4")
+
+        # return 401 unauthorized the first time; 200 ok the second
+        # logging requires numeric elapsed seconds
+        unauth_response = Mock(status_code=requests.codes.unauthorized)
+        unauth_response.elapsed.total_seconds.return_value = 1
+        ok_response = Mock(status_code=requests.codes.ok)
+        ok_response.elapsed.total_seconds.return_value = 3
+
+        gale_api.session.get.side_effect = [unauth_response, ok_response]
+        resp = gale_api._make_request("foo", requires_api_key=True)
+        # should be called twice: once for initial request, then for retry
+        assert mock_get_api_key.call_count == 2
+        gale_api.session.get.assert_any_call(
+            "%s/foo" % gale_api.api_root, params={"api_key": "testkey1"}, stream=False
+        )
+        # same request but with the new key
+        gale_api.session.get.assert_any_call(
+            "%s/foo" % gale_api.api_root, params={"api_key": "testkey2"}, stream=False
+        )
+
+        # retry should preserve parameters and streaming option
+        gale_api.session.reset_mock()
+        gale_api.session.get.side_effect = [unauth_response, ok_response]
+        resp = gale_api._make_request(
+            "foo", params={"bar": "baz"}, stream=True, requires_api_key=True
+        )
+        gale_api.session.get.assert_any_call(
+            "%s/foo" % gale_api.api_root,
+            params={"api_key": "testkey2", "bar": "baz"},
+            stream=True,
+        )
+        # same request but with the new key
+        gale_api.session.get.assert_any_call(
+            "%s/foo" % gale_api.api_root,
+            params={"api_key": "testkey3", "bar": "baz"},
+            stream=True,
+        )
+
+        # ** test cases where retry should not happen
+
+        # request that does not require api key
+        mock_get_api_key.reset_mock()
+        gale_api.session.reset_mock()
+        gale_api.session.get.side_effect = [unauth_response, ok_response]
+        with pytest.raises(gale.GaleUnauthorized):
+            resp = gale_api._make_request("foo", requires_api_key=False)
+        # should not get a new key; should only make the request once
+        mock_get_api_key.assert_not_called()
+        assert gale_api.session.get.call_count == 1
+
+        # already on a retry (no infinite loops requesting new keys!)
+        mock_get_api_key.reset_mock()
+        gale_api.session.reset_mock()
+        gale_api.session.get.side_effect = [unauth_response, ok_response]
+        with pytest.raises(gale.GaleUnauthorized):
+            resp = gale_api._make_request("foo", requires_api_key=True, retry=1)
+        # should not get a new key; should only make the request once
+        mock_get_api_key.assert_not_called()
+        assert gale_api.session.get.call_count == 1
+
     def test_get_api_key(self, mockrequests):
         gale_api = gale.GaleAPI()
         mockrequests.codes = requests.codes
@@ -95,11 +162,30 @@ class TestGaleAPI(TestCase):
             params={"user": "galeuser123"},
         )
 
-    @patch('ppa.archive.gale.GaleAPI.get_api_key')
+    def test_refresh_api_key(self, mockrequests):
+        gale_api = gale.GaleAPI()
+        mockrequests.codes = requests.codes
+        gale_api.session.get.return_value.status_code = requests.codes.ok
+        test_api_key1 = "12345abcd"
+        test_api_key2 = "67890ef68"
+        gale_api.session.get.return_value.json.side_effect = (
+            {"apiKey": test_api_key1},
+            {"apiKey": test_api_key2},
+        )
+
+        # first request should be api key 1
+        gale_api.api_key == test_api_key1
+        # get again without refreshing — same
+        gale_api.api_key == test_api_key1
+        # after refreswh we should get a new one
+        gale_api.refresh_api_key()
+        gale_api.api_key == test_api_key2
+
+    @patch("ppa.archive.gale.GaleAPI.get_api_key")
     def test_api_key(self, mock_get_api_key, mockrequests):
         gale_api = gale.GaleAPI()
         gale_api._api_key = None  # ensure unset since shared across instances
-        test_api_key = 'access9876'
+        test_api_key = "access9876"
         mock_get_api_key.return_value = test_api_key
         assert gale_api.api_key == test_api_key
 
@@ -115,7 +201,7 @@ class TestGaleAPI(TestCase):
         # simulate valid request
         gale_api.session.get.return_value.status_code = requests.codes.ok
 
-        item = gale_api.get_item('CW123456')
+        item = gale_api.get_item("CW123456")
         gale_api.session.get.assert_called_with(
             "%s/v1/item/GALE%%7CCW123456" % gale_api.api_root,
             stream=True,
@@ -126,4 +212,4 @@ class TestGaleAPI(TestCase):
 
         # simulate invalid request that doesn't raise an exception
         gale_api.session.get.return_value.status_code = requests.codes.bad_request
-        assert gale_api.get_item('CW123456') is None
+        assert gale_api.get_item("CW123456") is None
