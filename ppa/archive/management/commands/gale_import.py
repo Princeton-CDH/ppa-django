@@ -52,16 +52,10 @@ class Command(BaseCommand):
         parser.add_argument(
             "-c", "--csv", type=str, help="CSV file with items to import be imported."
         )
-        # TODO: do we need to support update?
-        # parser.add_argument(
-        #     '-u', '--update', action='store_true',
-        #     help='Update local content even if source record has not changed.')
-        # parser.add_argument(
-        #     '--progress', action='store_true',
-        #     help='Display a progress bar to track the status of the import.')
+        # NOTE: no support for updating records for now, since Gale/ECCO records
+        # will not change.
 
     def handle(self, *args, **kwargs):
-
         if not (kwargs["ids"] or kwargs["csv"]):
             raise CommandError("A list of IDs or CSV file for is required for import")
 
