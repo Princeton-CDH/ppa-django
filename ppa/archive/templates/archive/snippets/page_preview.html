@@ -12,7 +12,7 @@ Expected context variables:
     <div class="preview">
         <a href="{% page_url item_id page.order %}"
           target="_blank" rel="noopener noreferrer">
-          {% if source == 'Hathi' %}
+          {% if source == 'HathiTrust' %}
           {% page_image_url item_id page.order 225 as 1x_img %}
           {% page_image_url item_id page.order 450 as 2x_img %}
           {# img with data-src/srcset attributes for lazy-loading  #}
