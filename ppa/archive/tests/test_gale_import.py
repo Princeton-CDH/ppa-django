@@ -88,7 +88,16 @@ class TestGaleImportCommand:
                 "isShownAt": "https://link.gale.co/test/ECCO?sid=gale_api&u=utopia9871",
                 "citation": "Ruffhead, Owen. The life…, Accessed 8 June 2021.",
             },
-            "pageResponse": {"pages": [{"pageNumber": "0001"}, {"pageNumber": "0002"}]},
+            "pageResponse": {"pages": [
+                {
+                    "pageNumber": "0001",
+                    "image": {"id": "09876001234567"}
+                },
+                {
+                    "pageNumber": "0002",
+                    "image": {"id": "09876001234568"}
+                }
+            ]},
         }
         test_id = "CW123456"
         digwork = cmd.import_digitizedwork(test_id)
@@ -116,6 +125,7 @@ class TestGaleImportCommand:
         assert "skipped" not in cmd.stats
         assert "error" not in cmd.stats
 
+    @override_settings(GALE_API_USERNAME="galeuser123")
     def test_import_digitizedwork_csv(self):
         # simulate csv import with notes and collection membership
         cmd = gale_import.Command()
@@ -140,7 +150,16 @@ class TestGaleImportCommand:
                 "isShownAt": "https://link.gale.co/test/ECCO?sid=gale_api&u=utopia9871",
                 "citation": "Ruffhead, Owen. The life…, Accessed 8 June 2021.",
             },
-            "pageResponse": {"pages": [{"pageNumber": "0001"}, {"pageNumber": "0002"}]},
+            "pageResponse": {"pages": [
+                {
+                    "pageNumber": "0001",
+                    "image": {"id": "09876001234567"}
+                },
+                {
+                    "pageNumber": "0002",
+                    "image": {"id": "09876001234568"}
+                }
+            ]}
         }
         test_id = "CW123456"
         csv_info = {
@@ -216,6 +235,7 @@ class TestGaleImportCommand:
             cmd.load_csv(badpath)
         assert f'Error loading the specified CSV file: {badpath}' in str(err)
 
+    @override_settings(GALE_API_USERNAME="galeuser123")
     @patch("ppa.archive.management.commands.gale_import.Command.import_digitizedwork")
     def test_call_command(self, mock_import_digwork):
         call_command('gale_import', '1234')
