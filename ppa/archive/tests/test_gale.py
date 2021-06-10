@@ -165,6 +165,7 @@ class TestGaleAPI(TestCase):
 
     def test_refresh_api_key(self, mockrequests):
         gale_api = gale.GaleAPI()
+        gale_api._api_key = None  # make sure unset before testing
         mockrequests.codes = requests.codes
         gale_api.session.get.return_value.status_code = requests.codes.ok
         test_api_key1 = "12345abcd"
@@ -175,12 +176,12 @@ class TestGaleAPI(TestCase):
         )
 
         # first request should be api key 1
-        gale_api.api_key == test_api_key1
+        assert gale_api.api_key == test_api_key1
         # get again without refreshing — same
-        gale_api.api_key == test_api_key1
+        assert gale_api.api_key == test_api_key1
         # after refreswh we should get a new one
         gale_api.refresh_api_key()
-        gale_api.api_key == test_api_key2
+        assert gale_api.api_key == test_api_key2
 
     @patch("ppa.archive.gale.GaleAPI.get_api_key")
     def test_api_key(self, mock_get_api_key, mockrequests):

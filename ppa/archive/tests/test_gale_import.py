@@ -252,5 +252,3 @@ class TestGaleImportCommand:
         # ImproperlyConfigured api error should be raised as command error
         with pytest.raises(CommandError):
             gale_import.Command().handle(ids=[], csv=None)
-
-

@@ -136,9 +136,7 @@ class GaleAPI:
 
         if resp.status_code == requests.codes.forbidden:
             # forbidden results return a message
-            # NOTE that item requests for invalid ids return 403
-            # TODO: add logic to check if api key has expired and get a new one?
-            # (if we expect to ever have anything that will take longer than 30m)
+            # NOTE that item requests for invalid ids may return 403
             raise GaleItemForbidden(resp.json()["message"])
 
     def get_api_key(self):
@@ -163,7 +161,7 @@ class GaleAPI:
     def refresh_api_key(self):
         """clear cached api key and request a new one"""
         self._api_key = None
-        self.api_key
+        assert self.api_key   # populate new key through property
 
     def get_item(self, item_id):
         """Get the full record for a single item"""
