@@ -1,7 +1,30 @@
 """
 **gale_import** is a custom manage command for bulk import of Gale
-materials into the local database for management.
+materials into the local database for management.  It takes either
+a list of Gale item ids or a path to a CSV file.
 
+Items are imported into the database for management and also indexed into
+Solr as part of this import script (both works and pages).
+
+Example usage::
+
+    # import from a csv file
+    python manage.py gale_import -c path/to/import.csv
+    # import specific items
+    python manage.py hathi_import galeid1 galeid2 galeid3
+
+When using a CSV file for import, it *must* include an **ID** field;
+it may also include **NOTES** (any contents will be imported into private notes),
+and fields to indicate collection membership to be set on import.
+These are the supported collection abbreviations:
+
+- OB: Original Bibliography
+- LIT: Literary
+- MUS: Music
+- TYP: Typographically Unique
+- LING: Linguistic
+- DIC: Dictionaries
+- WL: Word Lists
 
 """
 import csv
@@ -18,7 +41,7 @@ from django.template.defaultfilters import pluralize, truncatechars
 from parasolr.django.signals import IndexableSignalHandler
 
 from ppa.archive.gale import GaleAPI, GaleAPIError
-from ppa.archive.models import Collection, DigitizedWork
+from ppa.archive.models import Collection, DigitizedWork, Page
 
 
 class Command(BaseCommand):
@@ -59,9 +82,11 @@ class Command(BaseCommand):
         if not (kwargs["ids"] or kwargs["csv"]):
             raise CommandError("A list of IDs or CSV file for is required for import")
 
-        # disconnect signal handler for on-demand indexing, for efficiency
-        # (index in bulk after an update, not one at a time)
-        IndexableSignalHandler.disconnect()
+        # NOTE: could disconnect indexing signals for more control over indexing
+        # for now, leaving enabled
+        # # disconnect signal handler for on-demand indexing, for efficiency
+        # # (index in bulk after an update, not one at a time)
+        # IndexableSignalHandler.disconnect()
 
         # api initialization will error if username is not in settings
         # catch and output error as command error for readability
@@ -96,7 +121,7 @@ class Command(BaseCommand):
             # send extra details to import method
             # to handle notes and collection membership from CSV
             item_info = item.copy()
-            del item_info['ID']  # don't send ID twice
+            del item_info["ID"]  # don't send ID twice
             self.import_digitizedwork(item["ID"], **item_info)
 
         summary = (
@@ -172,7 +197,7 @@ class Command(BaseCommand):
             # sort_title='', # marc ?
             # authors is multivalued and not listed lastname first;
             # pull from citation? (if not from marc)
-            author=", ".join(doc_metadata["authors"]),
+            author=", ".join(doc_metadata.get("authors", [])),
             # doc_metadata['publication']    includes title and date
             # pub_place
             # publisher
@@ -180,7 +205,7 @@ class Command(BaseCommand):
             # pub_date
             page_count=len(item_record["pageResponse"]["pages"]),
             # import any notes from csv as private notes
-            notes=kwargs.get("NOTES", "")
+            notes=kwargs.get("NOTES", ""),
         )
         # set collection membership based on spreadsheet columns
         digwork_collections = [
@@ -200,8 +225,11 @@ class Command(BaseCommand):
             action_flag=ADDITION,
         )
 
-        # NOTE: item record includes page metadata; would be more
-        # efficient to index at the same time as import, if possible
+        # item record used for import includes page metadata;
+        # for efficiency, index pages at import time with the same api response
+        DigitizedWork.index_items(
+            Page.gale_page_index_data(digwork, item_record)
+        )
 
         self.stats["imported"] += 1
         self.stats["pages"] += digwork.page_count

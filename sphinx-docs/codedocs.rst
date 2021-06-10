@@ -40,6 +40,12 @@ Hathi
 .. automodule:: ppa.archive.hathi
     :members:
 
+Gale
+^^^^
+.. automodule:: ppa.archive.gale
+    :members:
+
+
 Util
 ^^^^^
 .. automodule:: ppa.archive.util
@@ -87,6 +93,12 @@ Hathi Import
 ~~~~~~~~~~~~
 
 .. automodule:: ppa.archive.management.commands.hathi_import
+
+Gale Import
+~~~~~~~~~~~~
+
+.. automodule:: ppa.archive.management.commands.gale_import
+
 
 Index
 ~~~~~

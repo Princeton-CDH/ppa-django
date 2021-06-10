@@ -105,8 +105,12 @@ html_theme_options = {
     'description': 'Django web application for "Princeton Prosody Archive" CDH project',
     'github_user': 'Princeton-CDH',
     'github_repo': 'ppa-django',
-    'travis_button': True,
-    'codecov_button': True,
+    'github_button': True,
+    'logo': 'ppa_logo.png',
+    'logo_name': True,
+    # 'travis_button': True,
+    # 'codecov_button': True,
+    'badge_branch': 'main'
 }
 
 
@@ -187,6 +191,6 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    'https://docs.python.org/': None,
-    'django': ('http://django.readthedocs.org/en/latest/', None),
+    'https://docs.python.org/3/': None,
+    'django': ('https://django.readthedocs.io/en/latest/', None),
 }
