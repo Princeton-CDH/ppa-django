@@ -823,7 +823,6 @@ class Page(Indexable):
     def gale_page_index_data(cls, digwork):
         '''Get page content for the specified digitized work from Gale
         API and return data to be indexed in solr.'''
-        # store api client for reuse?
         item_record = GaleAPI().get_item(digwork.source_id)
         for page in item_record['pageResponse']['pages']:
             page_number = page['pageNumber']
