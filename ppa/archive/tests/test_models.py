@@ -491,7 +491,6 @@ class TestDigitizedWork(TestCase):
         mockzip_obj.namelist.return_value = page_files
         assert digwork.count_pages(mock_pairtree_client) == 2
 
-
         # object not found in pairtree data
         mock_pairtree_client.get_object.side_effect = \
             storage_exceptions.ObjectNotFoundException
@@ -499,6 +498,11 @@ class TestDigitizedWork(TestCase):
         with pytest.raises(storage_exceptions.ObjectNotFoundException):
             digwork.count_pages(mock_pairtree_client)
 
+    def test_count_pages_nonhathi(self):
+        work = DigitizedWork(source_id='CW79279237', source=DigitizedWork.GALE)
+        with pytest.raises(storage_exceptions.ObjectNotFoundException) as err:
+            work.count_pages()
+        assert 'Using Hathi-specific page count' in str(err)
 
     def test_index_id(self):
         work = DigitizedWork(source_id='chi.79279237')
