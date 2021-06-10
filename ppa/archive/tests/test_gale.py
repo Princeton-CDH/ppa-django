@@ -86,6 +86,7 @@ class TestGaleAPI(TestCase):
     def test_make_request_refresh_key(self, mock_get_api_key, mockrequests):
         # test retrying request when api key has expired
         gale_api = gale.GaleAPI()
+        gale_api._api_key = None    # make sure unset for this test
         gale_api.api_root = "http://example.com/api"
         mockrequests.codes = requests.codes
         mock_get_api_key.side_effect = ("testkey1", "testkey2", "testkey3", "testkey4")

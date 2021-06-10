@@ -797,7 +797,6 @@ class TestPage(TestCase):
     @patch("ppa.archive.models.GaleAPI", spec=gale.GaleAPI)
     def test_gale_page_index_data(self, mock_gale_api):
         gale_work = DigitizedWork(source=DigitizedWork.GALE, source_id="CW123456")
-
         test_pages = [
             {
                 "pageNumber": "0001",
@@ -810,11 +809,11 @@ class TestPage(TestCase):
                 "ocrText": "more test content",
             },
         ]
-
-        mock_gale_api.return_value.get_item.return_value = {
+        api_response = {
             "doc": {},  # unused for this test
             "pageResponse": {"pages": test_pages},
         }
+        mock_gale_api.return_value.get_item.return_value = api_response
         page_data = list(Page.page_index_data(gale_work))
         assert len(page_data) == 2
         for i, index_data in enumerate(page_data):
@@ -825,3 +824,9 @@ class TestPage(TestCase):
             assert index_data["label"] == int(test_pages[i]['pageNumber'])
             assert index_data["item_type"] == "page"
             assert index_data["image_id_s"] == test_pages[i]['image']['id']
+
+        # skip api call if item data is passed in
+        mock_gale_api.reset_mock()
+        page_data = list(Page.gale_page_index_data(gale_work, api_response))
+        assert mock_gale_api.return_value.get_item.call_count == 0
+        assert len(page_data) == 2
