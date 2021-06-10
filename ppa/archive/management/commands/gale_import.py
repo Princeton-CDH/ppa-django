@@ -11,6 +11,7 @@ from django.conf import settings
 from django.contrib.admin.models import LogEntry, ADDITION
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand, CommandError
 from django.db.utils import IntegrityError
 from django.template.defaultfilters import pluralize, truncatechars
@@ -68,7 +69,13 @@ class Command(BaseCommand):
         # (index in bulk after an update, not one at a time)
         IndexableSignalHandler.disconnect()
 
-        self.gale_api = GaleAPI()
+        # api initialization will error if username is not in settings
+        # catch and output error as command error for readability
+        try:
+            self.gale_api = GaleAPI()
+        except ImproperlyConfigured as err:
+            raise CommandError(str(err))
+
         self.stats = Counter()
         self.script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
         self.digwork_contentype = ContentType.objects.get_for_model(DigitizedWork)
@@ -92,7 +99,11 @@ class Command(BaseCommand):
                 self.stdout.write(
                     " ".join([item["ID"], truncatechars(item.get("Title", ""), 55)])
                 )
-            self.import_digitizedwork(item["ID"], **item)
+            # send extra details to import method
+            # to handle notes and collection membership from CSV
+            item_info = item.copy()
+            del item_info['ID']  # don't send ID twice
+            self.import_digitizedwork(item["ID"], **item_info)
 
         summary = (
             "\nProcessed {:,d} item{} for import."
@@ -110,10 +121,11 @@ class Command(BaseCommand):
         )
         self.stdout.write(summary)
 
+    collections = {}
+
     def load_collections(self):
         # load collections from the database and create
         # a lookup based on the codes used in the spreadsheet
-        self.collections = {}
         collections = {c.name: c for c in Collection.objects.all()}
         for code, name in self.collection_codes.items():
             self.collections[code] = collections[name]
@@ -146,7 +158,7 @@ class Command(BaseCommand):
         try:
             item_record = self.gale_api.get_item(gale_id)
         except GaleAPIError as err:
-            self.stderr.write("Error loading item : %s" % gale_id)
+            self.stderr.write("Error getting item information for %s" % gale_id)
             self.stats["error"] += 1
             return
 
@@ -173,10 +185,8 @@ class Command(BaseCommand):
             # doc_metadata['publication']['date'] but not solely numeric
             # pub_date
             page_count=len(item_record["pageResponse"]["pages"]),
-            # store citation in notes for now; include any notes from csv
-            notes="\n".join(
-                [n for n in (kwargs.get("NOTES"), doc_metadata["citation"]) if n]
-            ),
+            # import any notes from csv as private notes
+            notes=kwargs.get("NOTES", "")
         )
         # set collection membership based on spreadsheet columns
         digwork_collections = [

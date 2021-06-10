@@ -13,6 +13,7 @@ from ppa.archive import gale
 @override_settings(GALE_API_USERNAME="galeuser123")
 @patch("ppa.archive.gale.requests")
 class TestGaleAPI(TestCase):
+    # NOTE: must extend django's test case to use override_settings on class
 
     def test_new(self, mockrequests):
         # test singleton behavior;
