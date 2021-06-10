@@ -3,6 +3,12 @@
 Deploy and Upgrade notes
 ========================
 
+3.7
+---
+
+* Gale API client requires **GALE_API_USERNAME** in local settings.
+
+
 3.6
 ---
 
