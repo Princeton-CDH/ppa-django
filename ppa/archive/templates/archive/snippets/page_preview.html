@@ -24,8 +24,11 @@ Expected context variables:
               alt="page {{ page.label }}"/>
           </noscript>
           {% elif source == 'Gale' %}
-          {# provisional implementation; waiting on details for slightly higher resolution options #}
-          <img src="https://callisto.ggsrv.com/imgsrv/FastFetch/UBER2/{{ image_id }}-T2" alt="page {{ page.label }}"/>
+          {# TODO: move to template tag? combine or separate from hathi? #}
+          {% with 2x_img="https://callisto.ggsrv.com/imgsrv/FastFetch/UBER2/"|add:image_id|add:"?format=jpg&boundbox=725+450" 1x_img="https://callisto.ggsrv.com/imgsrv/FastFetch/UBER2/"|add:image_id|add:"?format=jpg&boundbox=180+225" %}
+          <img src="{{ 1x_img }}" srcset="{{ 1x_img}}, {{ 2x_img }} 2x"
+              alt="page {{ page.label }}"/>
+          {% endwith %}
           {% endif %}
         </a>
     </div>
