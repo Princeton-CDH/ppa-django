@@ -607,7 +607,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             "Deleting DigitizedWork and associated pages from index with source_id:%s",
             self.source_id
         )
-        self.solr.update.delete_by_query(f"source_id:({self.source_id})")
+        self.solr.update.delete_by_query("source_id:(%s)" % self.source_id)
 
     def count_pages(self, ptree_client=None):
         '''Count the number of pages for a digitized work based on the
