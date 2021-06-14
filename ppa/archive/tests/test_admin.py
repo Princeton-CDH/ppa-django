@@ -132,3 +132,34 @@ class TestDigitizedWorkAdmin(TestCase):
         redirect = digworkadmin.bulk_add_collection(fakerequest, queryset)
         # session variable should be set to an empty list
         assert fakerequest.session['collection-add-ids'] == []
+
+    @patch('ppa.archive.admin.SolrClient')
+    def test_suppress_works(self, mock_solrclient):
+        # initialize DigitizedWorkAdmin
+        digworkadmin = DigitizedWorkAdmin(DigitizedWork, AdminSite())
+        with patch.object(digworkadmin, 'message_user') as mock_message_user:
+            fakerequest = Mock()
+            # test on all fixture objects
+            queryset = DigitizedWork.objects.all()
+            all_ids = list(DigitizedWork.objects.values_list('source_id', flat=True))
+            print(all_ids)
+            digworkadmin.suppress_works(fakerequest, queryset)
+
+            # all items should now be suppressed
+            assert DigitizedWork.objects.filter(status=DigitizedWork.SUPPRESSED).count()\
+                == len(all_ids)
+            # items should be cleared from solr by source id
+            mock_solrclient.return_value.update.delete_by_query.assert_called_with(
+                'source_id:(%s)' % ' OR '.join(['"%s"' % sid for sid in all_ids])
+            )
+            mock_message_user.assert_called_with(
+                fakerequest, 'Suppressed %d digitized works.' % len(all_ids))
+
+            # call again with objects already suppressed
+            mock_solrclient.reset_mock()
+            digworkadmin.suppress_works(fakerequest, DigitizedWork.objects.all())
+            assert mock_solrclient.return_value.update.delete_by_query.call_count == 0
+            mock_message_user.assert_called_with(
+                fakerequest,
+                'Suppressed 0 digitized works. Skipped %d (already suppressed).'
+                % len(all_ids))
