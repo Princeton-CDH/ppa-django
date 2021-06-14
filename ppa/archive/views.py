@@ -272,8 +272,8 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin,
             'query': query
         })
 
-        # search within a volume currently only supported for hathi content
-        if query and digwork.source == DigitizedWork.HATHI:
+        # search within a volume only supported for content with full text
+        if query and digwork.has_fulltext:
             # search on the specified search terms,
             # filter on digitized work source id and page type,
             # sort by page order,
@@ -283,7 +283,7 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin,
                 .search(content='(%s)' % query) \
                 .filter(source_id='"%s"' % digwork.source_id,
                         item_type='page') \
-                .only('id', 'source_id', 'order', 'title', 'label') \
+                .only('id', 'source_id', 'order', 'title', 'label', 'image_id_s') \
                 .highlight('content*', snippets=3, method='unified') \
                 .order_by('order')
 
@@ -301,9 +301,9 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin,
                     # add highlights to context
                     'page_highlights': highlights
                 })
+
             except requests.exceptions.ConnectionError:
                 context['error'] = 'Something went wrong.'
-
         return context
 
 
