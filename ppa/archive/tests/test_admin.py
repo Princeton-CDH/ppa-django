@@ -158,7 +158,8 @@ class TestDigitizedWorkAdmin(TestCase):
             # call again with objects already suppressed
             mock_solrclient.reset_mock()
             digworkadmin.suppress_works(fakerequest, DigitizedWork.objects.all())
-            assert mock_solrclient.return_value.update.delete_by_query.call_count == 0
+            # shouldn't even initialize solr
+            assert mock_solrclient.call_count == 0
             mock_message_user.assert_called_with(
                 fakerequest,
                 'Suppressed 0 digitized works. Skipped %d (already suppressed).'
