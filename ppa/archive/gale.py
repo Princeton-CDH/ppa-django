@@ -139,10 +139,10 @@ class GaleAPI:
             # NOTE that item requests for invalid ids may return 403
             raise GaleItemForbidden(resp.json()["message"])
 
-        else:
-            # getting 406 not acceptable in some cases
-            # (attempt to access item with invalid item id)
-            raise GaleAPIError(resp.status_code)
+        # raise anything else as a generic error with status code
+        # getting 406 not acceptable in some cases
+        # (attempt to access item with invalid item id)
+        raise GaleAPIError(resp.status_code)
 
     def get_api_key(self):
         """Get a new API key to use for requests in the next 30 minutes."""
