@@ -168,6 +168,6 @@ class GaleAPI:
         # full id looks like GALE|CW###### or GALE|CB#######
         # using streaming makes a *significant* difference in response time,
         # especially for larger results
-        response = self._make_request(f"v1/item/GALE%7C{item_id}", stream=True)
+        response = self._make_request("v1/item/GALE%%7C%s" % item_id, stream=True)
         if response:
             return response.json()
