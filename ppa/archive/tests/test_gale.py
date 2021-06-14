@@ -212,6 +212,7 @@ class TestGaleAPI(TestCase):
         # json response is returned on success
         assert item == gale_api.session.get.return_value.json.return_value
 
-        # simulate invalid request that doesn't raise an exception
+        # simulate invalid request that raises a generic exception
         gale_api.session.get.return_value.status_code = requests.codes.bad_request
-        assert gale_api.get_item("CW123456") is None
+        with pytest.raises(gale.GaleAPIError):
+            gale_api.get_item("CW123456")
