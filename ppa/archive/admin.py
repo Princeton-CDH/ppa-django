@@ -122,13 +122,13 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         non_suppressed = queryset.exclude(status=DigitizedWork.SUPPRESSED)
         # save the list of ids being suppressed to update the index after
         ids_to_suppress = list(non_suppressed.values_list('source_id', flat=True))
-        # change statu in the database
+        # change status in the database
         updated = non_suppressed.update(status=DigitizedWork.SUPPRESSED)
         # queryset.update does not trigger save signals;
         # clear suppressed page + work content from the index
-        solr = SolrClient()
         # delete all pages and works associated with any of these source ids
         if ids_to_suppress:
+            solr = SolrClient()
             solr.update.delete_by_query(
                 'source_id:(%s)' %
                 ' OR '.join(['"%s"' % val for val in ids_to_suppress]))
