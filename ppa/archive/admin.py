@@ -3,10 +3,12 @@ from django.contrib import admin
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+from parasolr.django import SolrClient
 
 from ppa.archive.models import DigitizedWork, Collection, \
     ProtectedWorkFieldFlags
 from ppa.archive.views import AddFromHathiView
+
 
 
 class DigitizedWorkAdmin(admin.ModelAdmin):
@@ -38,7 +40,7 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
     filter_horizontal = ('collections',)
     # date_hierarchy = 'added'  # is this useful?
     list_filter = ['collections', 'status', 'source']
-    actions = ['bulk_add_collection']
+    actions = ['add_works_to_collection', 'suppress_works']
 
     def get_readonly_fields(self, request, obj=None):
         """
@@ -96,7 +98,7 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         digwork = DigitizedWork.objects.get(id=form.instance.pk)
         digwork.index()
 
-    def bulk_add_collection(self, request, queryset):
+    def add_works_to_collection(self, request, queryset):
         '''
         Bulk add a queryset of :class:`ppa.archive.DigitizedWork` to
         a :class:`ppa.archive.Collection`.
@@ -109,10 +111,35 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         request.session['collection-add-filters'] = request.GET
         request.session['collection-add-ids'] = selected
         return HttpResponseRedirect(reverse('archive:add-to-collection'))
+    add_works_to_collection.short_description = (
+        'Add selected digitized works to collections')
+    add_works_to_collection.allowed_permissions = ('change',)
 
-    bulk_add_collection.short_description = ('Add selected digitized works '
-                                             'to collections')
-    bulk_add_collection.allowed_permissions = ('change',)
+    def suppress_works(self, request, queryset):
+        # set status to suppressed for every item in the queryset
+        # that is not already suppressed
+        non_suppressed = queryset.exclude(status=DigitizedWork.SUPPRESSED)
+        # save the list of ids being suppressed to update the index after
+        ids_to_suppress = list(non_suppressed.values_list('source_id', flat=True))
+        # change status in the database
+        updated = non_suppressed.update(status=DigitizedWork.SUPPRESSED)
+        # queryset.update does not trigger save signals;
+        # clear suppressed page + work content from the index
+        # delete all pages and works associated with any of these source ids
+        if ids_to_suppress:
+            solr = SolrClient()
+            solr.update.delete_by_query(
+                'source_id:(%s)' %
+                ' OR '.join(['"%s"' % val for val in ids_to_suppress]))
+        # report on what was done, including any skipped
+        skipped = ''
+        qs_total = queryset.count()
+        if qs_total != updated:
+            skipped = ' Skipped %d (already suppressed).' % (qs_total - updated)
+        self.message_user(request, "Suppressed %d digitized work%s.%s" %
+            (updated, '' if updated == 1 else 's', skipped))
+    suppress_works.short_description = "Suppress selected digitized works"
+
 
     def get_urls(self):
         urls = super(DigitizedWorkAdmin, self).get_urls()
