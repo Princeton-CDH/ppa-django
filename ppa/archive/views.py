@@ -395,7 +395,7 @@ class AddToCollection(PermissionRequiredMixin, ListView, FormView):
         '''
         Redirect to the :class:`ppa.archive.models.DigitizedWork`
         change_list in the Django admin with pagination and filters preserved.
-        Expects :meth:`ppa.archive.admin.bulk_add_collection`
+        Expects :meth:`ppa.archive.admin.add_works_to_collection`
         to have set 'collection-add-filters' as a dict in the request's
         session.
         '''
