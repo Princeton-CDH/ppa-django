@@ -104,7 +104,7 @@ class TestDigitizedWorkAdmin(TestCase):
         # mocked index method of the digwork object should have been called
         digwork.index.assert_called_with()
 
-    def test_bulk_add_collection(self):
+    def test_add_works_to_collection(self):
         # create a DigitizedWorkAdmin object
         digworkadmin = DigitizedWorkAdmin(DigitizedWork, AdminSite())
         fakerequest = Mock()
@@ -112,7 +112,7 @@ class TestDigitizedWorkAdmin(TestCase):
         # set some arbitary querystring filters
         fakerequest.GET = {'q': 1, 'foo': 'bar'}
         queryset = DigitizedWork.objects.all()
-        redirect = digworkadmin.bulk_add_collection(fakerequest, queryset)
+        redirect = digworkadmin.add_works_to_collection(fakerequest, queryset)
         # should return a redirect
         assert isinstance(redirect, HttpResponseRedirect)
         # url should reverse the appropriate route
@@ -125,11 +125,11 @@ class TestDigitizedWorkAdmin(TestCase):
             set(queryset.values_list('id', flat=True))
         # the querystring should have been faithfully copied to session as well
         assert fakerequest.session['collection-add-filters'] == fakerequest.GET
-        redirect = digworkadmin.bulk_add_collection(fakerequest, queryset)
+        redirect = digworkadmin.add_works_to_collection(fakerequest, queryset)
         # test against an empty queryset just in case
         DigitizedWork.objects.all().delete()
         queryset = DigitizedWork.objects.all()
-        redirect = digworkadmin.bulk_add_collection(fakerequest, queryset)
+        redirect = digworkadmin.add_works_to_collection(fakerequest, queryset)
         # session variable should be set to an empty list
         assert fakerequest.session['collection-add-ids'] == []
 

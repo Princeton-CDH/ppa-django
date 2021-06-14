@@ -40,7 +40,7 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
     filter_horizontal = ('collections',)
     # date_hierarchy = 'added'  # is this useful?
     list_filter = ['collections', 'status', 'source']
-    actions = ['bulk_add_collection', 'suppress_works']
+    actions = ['add_works_to_collection', 'suppress_works']
 
     def get_readonly_fields(self, request, obj=None):
         """
@@ -98,7 +98,7 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         digwork = DigitizedWork.objects.get(id=form.instance.pk)
         digwork.index()
 
-    def bulk_add_collection(self, request, queryset):
+    def add_works_to_collection(self, request, queryset):
         '''
         Bulk add a queryset of :class:`ppa.archive.DigitizedWork` to
         a :class:`ppa.archive.Collection`.
@@ -111,10 +111,9 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
         request.session['collection-add-filters'] = request.GET
         request.session['collection-add-ids'] = selected
         return HttpResponseRedirect(reverse('archive:add-to-collection'))
-
-    bulk_add_collection.short_description = ('Add selected digitized works '
-                                             'to collections')
-    bulk_add_collection.allowed_permissions = ('change',)
+    add_works_to_collection.short_description = (
+        'Add selected digitized works to collections')
+    add_works_to_collection.allowed_permissions = ('change',)
 
     def suppress_works(self, request, queryset):
         # set status to suppressed for every item in the queryset
