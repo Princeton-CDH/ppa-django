@@ -82,6 +82,12 @@ class Command(BaseCommand):
         if not (kwargs["ids"] or kwargs["csv"]):
             raise CommandError("A list of IDs or CSV file for is required for import")
 
+        # error handling in case user forgets to specify csv file correctly
+        if 'ids' in kwargs and len(kwargs['ids']) == 1 and kwargs['ids'][0].endswith('.csv'):
+            self.stdout.write(self.style.WARNING(
+                '%s is not a valid id; did you forget to specify -c/--csv?' % kwargs['ids'][0]))
+            return
+
         # NOTE: could disconnect indexing signals for more control over indexing
         # for now, leaving signal-based indexing on
 
