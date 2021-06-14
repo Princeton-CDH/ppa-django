@@ -338,8 +338,8 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
     @property
     def has_fulltext(self):
         '''Checks if an item has full text (currently only items from
-        HathiTrust).'''
-        return self.source == self.HATHI
+        HathiTrust or Gale).'''
+        return self.source in [self.HATHI, self.GALE]
 
     @cached_property
     def hathi(self):
@@ -576,6 +576,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         return {
             'id': self.source_id,
             'source_id': self.source_id,
+            'source_t': self.get_source_display(),
             'source_url': self.source_url,
             'title': self.title,
             'subtitle': self.subtitle,

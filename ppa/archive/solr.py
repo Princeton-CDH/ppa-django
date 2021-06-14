@@ -108,7 +108,7 @@ class ArchiveSearchQuerySet(SolrQuerySet):
     field_list = [
         'id', 'author', 'pubdate', 'publisher', 'enumcron', 'order',
         'source_id', 'label', 'title', 'subtitle', 'score', 'pub_date',
-        'collections'
+        'collections', 'source_t', 'image_id_s'
     ]
 
     keyword_query = None
