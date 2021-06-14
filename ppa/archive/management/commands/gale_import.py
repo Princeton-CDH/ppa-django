@@ -159,7 +159,7 @@ class Command(BaseCommand):
                 csvreader = csv.DictReader(csvfile)
                 data = [row for row in csvreader]
         except FileNotFoundError:
-            raise CommandError(f"Error loading the specified CSV file: {path}")
+            raise CommandError("Error loading the specified CSV file: %s" % path)
 
         if "ID" not in data[0].keys():
             raise CommandError("ID column is required in CSV file")
