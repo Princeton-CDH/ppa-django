@@ -49,7 +49,7 @@ class TestGaleImportCommand:
 
         stdout = StringIO()
         cmd = gale_import.Command(stdout=stdout)
-        cmd.handle(ids=None, csv=csvfile)
+        cmd.handle(ids=[], csv=csvfile)
         mock_import_digwork.assert_any_call("12345", NOTES="brief mention in footnotes")
         assert cmd.stats["total"] == 1
         output = stdout.getvalue()
@@ -252,3 +252,9 @@ class TestGaleImportCommand:
         # ImproperlyConfigured api error should be raised as command error
         with pytest.raises(CommandError):
             gale_import.Command().handle(ids=[], csv=None)
+
+    def test_call_with_csv_as_id(self):
+        stdout = StringIO()
+        gale_import.Command(stdout=stdout).handle(ids=['path/to/file.csv'], csv=None)
+        output = stdout.getvalue()
+        assert 'not a valid id; did you forget to specify -c/--csv?' in output
