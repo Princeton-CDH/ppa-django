@@ -87,6 +87,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(
                 '%s is not a valid id; did you forget to specify -c/--csv?' % kwargs['ids'][0]))
             return
+        self.verbosity = kwargs.get('verbosity', self.v_normal)
 
         # NOTE: could disconnect indexing signals for more control over indexing
         # for now, leaving signal-based indexing on
