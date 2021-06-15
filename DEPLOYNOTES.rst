@@ -7,7 +7,9 @@ Deploy and Upgrade notes
 ---
 
 * Gale API client requires **GALE_API_USERNAME** in local settings.
+* Reindex all works to ensure that thumbnails display based on source::
 
+    python manage.py index -i work
 
 3.6
 ---
