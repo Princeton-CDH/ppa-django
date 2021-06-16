@@ -417,6 +417,10 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
                 setattr(self, field, value)
 
     def metadata_from_marc(self, marc_record, populate=True):
+        """Get metadata from MARC record and return a dictionary
+        of the data. When populate is True, calls `populate_fields`
+        to set values."""
+
         # create dictionary to store bibliographic information
         field_data = {}
         # set title and subtitle from marc if possible
@@ -663,7 +667,6 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             self.save()
 
         return page_count
-
 
     def get_metadata(self, metadata_format):
         '''Get metadata for this item in the specified format.
