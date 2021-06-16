@@ -29,6 +29,8 @@ These are the supported collection abbreviations:
 """
 import csv
 from collections import Counter
+import logging
+import time
 
 from django.conf import settings
 from django.contrib.admin.models import LogEntry, ADDITION
@@ -39,9 +41,14 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db.utils import IntegrityError
 from django.template.defaultfilters import pluralize, truncatechars
 from parasolr.django.signals import IndexableSignalHandler
+import pymarc
+from pairtree import PairtreeStorageFactory
 
-from ppa.archive.gale import GaleAPI, GaleAPIError
+from ppa.archive.gale import GaleAPI, GaleAPIError, get_marc_record
 from ppa.archive.models import Collection, DigitizedWork, Page
+
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -87,10 +94,11 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(
                 '%s is not a valid id; did you forget to specify -c/--csv?' % kwargs['ids'][0]))
             return
+
         self.verbosity = kwargs.get('verbosity', self.v_normal)
 
-        # NOTE: could disconnect indexing signals for more control over indexing
-        # for now, leaving signal-based indexing on
+        # disconnect signal-based indexing to avoid unnecessary indexing
+        IndexableSignalHandler.disconnect()
 
         # api initialization will error if username is not in settings
         # catch and output error as command error for readability
@@ -192,32 +200,27 @@ class Command(BaseCommand):
         # monitor traffic source and the linked page is an "auth free" link
 
         # create new stub record and populate it from api response
-        digwork = DigitizedWork.objects.create(
+        digwork = DigitizedWork(
             source_id=gale_id,  # or doc_metadata['id']; format GALE|CW###
             source=DigitizedWork.GALE,
             source_url=doc_metadata["isShownAt"],
             title=doc_metadata["title"],
-            # subtitle='',
-            # sort_title='', # marc ?
-            # authors is multivalued and not listed lastname first;
-            # pull from citation? (if not from marc)
-            author=", ".join(doc_metadata.get("authors", [])),
-            # doc_metadata['publication']    includes title and date
-            # pub_place
-            # publisher
-            # doc_metadata['publication']['date'] but not solely numeric
-            # pub_date
             page_count=len(item_record["pageResponse"]["pages"]),
             # import any notes from csv as private notes
             notes=kwargs.get("NOTES", ""),
         )
+        # populate titles, author, publication info from marc record
+        digwork.metadata_from_marc(get_marc_record(gale_id))
+        digwork.save()
+
         # set collection membership based on spreadsheet columns
         digwork_collections = [
             collection
             for code, collection in self.collections.items()
             if kwargs.get(code)
         ]
-        digwork.collections.set(digwork_collections)
+        if digwork_collections:
+            digwork.collections.set(digwork_collections)
 
         # create log entry to document import
         LogEntry.objects.log_action(
@@ -228,6 +231,9 @@ class Command(BaseCommand):
             change_message="Created from Gale API",
             action_flag=ADDITION,
         )
+
+        # index the work once (signals index twice becuase of m2m change)
+        DigitizedWork.index_items([digwork])
 
         # item record used for import includes page metadata;
         # for efficiency, index pages at import time with the same api response
