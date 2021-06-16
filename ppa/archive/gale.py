@@ -180,6 +180,7 @@ class GaleAPI:
         if response:
             return response.json()
 
+
 # MARC records needed for import and metadata are stored in a local pairtree.
 # currently used for Gale/ECCO content
 
@@ -196,9 +197,6 @@ def get_marc_record(item_id):
     start_time = time.time()
     marc_object = get_marc_storage().get_object(item_id)
     with marc_object.get_bytestream('marc.json', streamable=True) as marcfile:
-        json_reader = pymarc.JSONReader(marcfile, encoding='utf-8')
-        handler = pymarc.JsonHandler()
-        record = handler.elements(json_reader.records)[0]
-        # record = pymarc.parse_json_to_array(marcfile, unicode=True)[0]
+        record = pymarc.parse_json_to_array(marcfile)[0]
     logger.debug("Loaded JSON MARC record for %s in %.4fs" % (item_id, time.time() - start_time))
     return record
