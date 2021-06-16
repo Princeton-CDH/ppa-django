@@ -11,6 +11,7 @@ from ppa.archive.gale import get_marc_storage
 class Command(BaseCommand):
     """Split MARC records out so they are easily accessible by item id
     for import and Zotero metadata."""
+
     help = __doc__
 
     #: normal verbosity level
@@ -28,8 +29,8 @@ class Command(BaseCommand):
         marc_store = get_marc_storage()
         stats = Counter()
         for filepath in kwargs["marcfiles"]:
-            stats['files'] += 1
-            with open(filepath, 'rb') as marcfile:
+            stats["files"] += 1
+            with open(filepath, "rb") as marcfile:
                 reader = pymarc.MARCReader(marcfile, to_unicode=True)
                 for record in reader:
                     # Gale item id used for API is only available in the
@@ -44,9 +45,14 @@ class Command(BaseCommand):
                     writer.close(close_fh=False)  # important for valid json!
                     # add the JSON marc record to pairtree storage
                     pmarc.add_bytestream("marc.json", output.getvalue().encode("utf-8"))
-                    stats['records'] += 1
+                    stats["records"] += 1
 
         self.stdout.write(
-            "Split out %d records from %s file%s"
-            % (stats['records'], stats['files'], "" if stats['files'] == 1 else "s")
+            "Split out %d record%s from %s file%s"
+            % (
+                stats["records"],
+                "" if stats["records"] == 1 else "s",
+                stats["files"],
+                "" if stats["files"] == 1 else "s",
+            )
         )
