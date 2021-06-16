@@ -23,7 +23,7 @@ from wagtail.core.fields import RichTextField
 from wagtail.admin.edit_handlers import FieldPanel
 from wagtail.snippets.models import register_snippet
 
-from ppa.archive.gale import GaleAPI
+from ppa.archive.gale import GaleAPI, get_marc_record
 from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS, HathiObject
 
 
@@ -334,6 +334,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
     printed_by_re = r'^(Printed)?( and )?(Pub(.|lished|lisht)?)?( and sold)? (by|for|at)( the)? ?'
     # Printed by/for (the); Printed and sold by; Printed and published by;
     # Pub./Published/Publisht at/by/for the
+    pubyear_re = re.compile(r'(?P<year>\d{4})')
 
     @property
     def has_fulltext(self):
@@ -415,6 +416,110 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             if field not in protected_fields:
                 setattr(self, field, value)
 
+    def metadata_from_marc(self, marc_record, populate=True):
+        # create dictionary to store bibliographic information
+        field_data = {}
+        # set title and subtitle from marc if possible
+        # - clean title: strip trailing space & slash and initial bracket
+        field_data['title'] = marc_record['245']['a'].rstrip(' /') \
+            .lstrip('[')
+
+        # according to PUL CAMS,
+        # 245 subfield contains the subtitle *if* the preceding field
+        # ends with a colon. (Otherwise could be a parallel title,
+        # e.g. title in another language).
+        # HOWEVER: metadata from Hathi doesn't seem to follow this
+        # pattern (possibly due to records being older?)
+
+        # subfields is a list of code, value, code, value
+        # iterate in paired steps of two starting with first and second
+        # for code, value in zip(marc_record['245'].subfields[0::2],
+        #                        marc_record['245'].subfields[1::2]):
+        #     if code == 'b':
+        #         break
+        #     preceding_character = value[-1:]
+
+        # if preceding_character == ':':
+        #     self.subtitle = marc_record['245']['b'] or ''
+        # NOTE: skipping preceding character check for now
+        field_data['subtitle'] = marc_record['245']['b'] or ''
+            # strip trailing space & slash from subtitle
+        field_data['subtitle'] = field_data['subtitle'].rstrip(' /')
+        # indicator 2 provides the number of characters to be
+        # skipped when sorting (could be 0)
+        try:
+            non_sort = int(marc_record['245'].indicators[1])
+        except ValueError:
+            # at least one record has a space here instead of a number
+            # probably a data error, but handle it
+            # - assuming no non-sort characters
+            non_sort = 0
+
+        # strip whitespace, since a small number of records have a
+        # nonsort value that doesn't include a space after a
+        # definite article.
+        # Also strip punctuation, since MARC only includes it in
+        # non-sort count when there is a definite article.
+        field_data['sort_title'] = marc_record.title()[non_sort:]\
+                .strip(' "[')
+        field_data['author'] = marc_record.author() or ''
+        # remove a note present on some records and strip whitespace
+        field_data['author'] = field_data['author'].replace('[from old catalog]', '').strip()
+        # removing trailing period, except when it is part of an
+        # initial or known abbreviation (i.e, Esq.)
+        # Look for single initial, but support initials with no spaces
+        if field_data['author'].endswith('.') and not \
+        re.search(r'( ([A-Z]\.)*[A-Z]| Esq)\.$', field_data['author']):
+            field_data['author'] = field_data['author'].rstrip('.')
+
+        # field 260 includes publication information
+        if '260' in marc_record:
+            # strip trailing punctuation from publisher and pub place
+            # subfield $a is place of publication
+            field_data['pub_place'] = marc_record['260']['a'] or ''
+            field_data['pub_place'] = field_data['pub_place'].rstrip(';:,')
+            # if place is marked as unknown ("sine loco"), leave empty
+            if field_data['pub_place'].lower() == '[s.l.]':
+                field_data['pub_place'] = ''
+            # subfield $b is name of publisher
+            field_data['publisher'] = marc_record['260']['b'] or ''
+            field_data['publisher'] = field_data['publisher'].rstrip(';:,')
+            # if publisher is marked as unknown ("sine nomine"), leave empty
+            if field_data['publisher'].lower() == '[s.n.]':
+                field_data['publisher'] = ''
+
+            # remove printed by statement before publisher name
+            field_data['publisher'] = re.sub(
+                self.printed_by_re,
+                '',
+                field_data['publisher'],
+                flags=re.IGNORECASE
+            )
+
+        # Gale/ECCO dates may include non-numeric, e.g. MDCCLXXXVIII. [1788]
+        # try as numeric first, then extract year with regex
+        pubdate = marc_record.pubyear()
+        try:
+            field_data['pub_date'] = int(pubdate)
+        except ValueError:
+            yearmatch = self.pubyear_re.search(pubdate)
+            if yearmatch:
+                field_data['pub_date'] = int(yearmatch.groupdict()['year'])
+
+        # remove brackets around inferred publishers, place of publication
+        # *only* if they wrap the whole text
+        for field in ['publisher', 'pub_place']:
+            if field in field_data:
+                field_data[field] = \
+                    re.sub(r'^\[(.*)\]$', r'\1', field_data[field])
+
+        if populate:
+            # conditionally update fields that are protected (or not)
+            self.populate_fields(field_data)
+
+        return field_data
+
+
     def populate_from_bibdata(self, bibdata):
         '''Update record fields based on Hathi bibdata information.
         Full record is required in order to set all fields
@@ -428,95 +533,19 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         # store hathi record id
         field_data['record_id']= bibdata.record_id
 
+        # TODO: split out marc logic from hathi bibdata
+        # so we can call metadata_from_marc for both
+
         # set fields from marc if available, since it has more details
         if bibdata.marcxml:
-            # set title and subtitle from marc if possible
-            # - clean title: strip trailing space & slash and initial bracket
-            field_data['title'] = bibdata.marcxml['245']['a'].rstrip(' /') \
-                .lstrip('[')
-
-            # according to PUL CAMS,
-            # 245 subfield contains the subtitle *if* the preceding field
-            # ends with a colon. (Otherwise could be a parallel title,
-            # e.g. title in another language).
-            # HOWEVER: metadata from Hathi doesn't seem to follow this
-            # pattern (possibly due to records being older?)
-
-            # subfields is a list of code, value, code, value
-            # iterate in paired steps of two starting with first and second
-            # for code, value in zip(bibdata.marcxml['245'].subfields[0::2],
-            #                        bibdata.marcxml['245'].subfields[1::2]):
-            #     if code == 'b':
-            #         break
-            #     preceding_character = value[-1:]
-
-            # if preceding_character == ':':
-            #     self.subtitle = bibdata.marcxml['245']['b'] or ''
-            # NOTE: skipping preceding character check for now
-            field_data['subtitle'] = bibdata.marcxml['245']['b'] or ''
-                # strip trailing space & slash from subtitle
-            field_data['subtitle'] = field_data['subtitle'].rstrip(' /')
-            # indicator 2 provides the number of characters to be
-            # skipped when sorting (could be 0)
-            try:
-                non_sort = int(bibdata.marcxml['245'].indicators[1])
-            except ValueError:
-                # at least one record has a space here instead of a number
-                # probably a data error, but handle it
-                # - assuming no non-sort characters
-                non_sort = 0
-
-            # strip whitespace, since a small number of records have a
-            # nonsort value that doesn't include a space after a
-            # definite article.
-            # Also strip punctuation, since MARC only includes it in
-            # non-sort count when there is a definite article.
-            field_data['sort_title'] = bibdata.marcxml.title()[non_sort:]\
-                    .strip(' "[')
-            field_data['author'] = bibdata.marcxml.author() or ''
-            # remove a note present on some records and strip whitespace
-            field_data['author'] = field_data['author'].replace('[from old catalog]', '').strip()
-            # removing trailing period, except when it is part of an
-            # initial or known abbreviation (i.e, Esq.)
-            # Look for single initial, but support initials with no spaces
-            if field_data['author'].endswith('.') and not \
-            re.search(r'( ([A-Z]\.)*[A-Z]| Esq)\.$', field_data['author']):
-                field_data['author'] = field_data['author'].rstrip('.')
-
-            # field 260 includes publication information
-            if '260' in bibdata.marcxml:
-                # strip trailing punctuation from publisher and pub place
-                # subfield $a is place of publication
-                field_data['pub_place'] = bibdata.marcxml['260']['a'] or ''
-                field_data['pub_place'] = field_data['pub_place'].rstrip(';:,')
-                # if place is marked as unknown ("sine loco"), leave empty
-                if field_data['pub_place'].lower() == '[s.l.]':
-                    field_data['pub_place'] = ''
-                # subfield $b is name of publisher
-                field_data['publisher'] = bibdata.marcxml['260']['b'] or ''
-                field_data['publisher'] = field_data['publisher'].rstrip(';:,')
-                # if publisher is marked as unknown ("sine nomine"), leave empty
-                if field_data['publisher'].lower() == '[s.n.]':
-                    field_data['publisher'] = ''
-
-                # remove printed by statement before publisher name
-                field_data['publisher'] = re.sub(
-                    self.printed_by_re,
-                    '',
-                    field_data['publisher'],
-                    flags=re.IGNORECASE
-                )
-
-            # maybe: consider getting volume & series directly from
-            # marc rather than relying on hathi enumcron ()
-
+            # get metadata from marcxml, but don't save it yet
+            field_data.update(self.metadata_from_marc(bibdata.marcxml, populate=False))
         else:
             # fallback behavior, if marc is not availiable
             # use dublin core title
             field_data['title'] = bibdata.title
             # could guess at non-sort, but hopefully unnecessary
 
-        # NOTE: might also want to store sort title
         # pub date returned in api JSON is list; use first for now (if available)
         if bibdata.pub_dates:
             field_data['pub_date'] = bibdata.pub_dates[0]
@@ -526,13 +555,6 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         # hathi source url can currently be inferred from htid, but is
         # included in the bibdata in case it changes - so let's just store it
         field_data['source_url'] = copy_details['itemURL']
-
-        # remove brackets around inferred publishers, place of publication
-        # *only* if they wrap the whole text
-        for field in ['publisher', 'pub_place']:
-            if field in field_data:
-                field_data[field] = \
-                    re.sub(r'^\[(.*)\]$', r'\1', field_data[field])
 
         # should also consider storing:
         # - last update, rights code / rights string, item url
@@ -654,8 +676,12 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
                 bibdata = bib_api.record('htid', self.source_id)
                 return bibdata.marcxml.as_marc()
 
-            # TBD: can we get MARC records from oclc?
-            # or should we generate dublin core from db metadata?
+            if self.source == DigitizedWork.GALE:
+                # get record from local marc pairtree storage
+                record = get_marc_record(self.source_id)
+                # specify encoding to avoid errors
+                record.force_utf8 = True
+                return record.as_marc()
 
             return ''
 
