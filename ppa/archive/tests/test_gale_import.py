@@ -73,7 +73,10 @@ class TestGaleImportCommand:
             assert cmd.collections[code].name == name
 
     @patch("ppa.archive.management.commands.gale_import.DigitizedWork.index_items")
-    def test_import_digitizedwork_id(self, mock_index_items):
+    @patch("ppa.archive.management.commands.gale_import.DigitizedWork.metadata_from_marc")
+    @patch("ppa.archive.management.commands.gale_import.get_marc_record")
+    def test_import_digitizedwork_id(self, mock_get_marc_record,
+                                     mock_metadata_from_marc, mock_index_items):
         # import with id only
         cmd = gale_import.Command()
         # requires some setup included in handle
@@ -106,16 +109,18 @@ class TestGaleImportCommand:
         assert isinstance(digwork, DigitizedWork)
         assert digwork.source_id == test_id
         assert digwork.title == "The life of Alexander Pope"
-        assert digwork.author == "Owen Ruffhead"
         assert digwork.source == DigitizedWork.GALE
         assert digwork.page_count == 2
         cmd.gale_api.get_item.assert_called_with(test_id)
+        # should retrieve marc record and use to populate metadata
+        mock_get_marc_record.assert_called_with(test_id)
+        mock_metadata_from_marc.assert_called_with(mock_get_marc_record.return_value)
 
         # no collections should be associated
         assert digwork.collections.count() == 0
 
-        # pages should be indexed
-        assert mock_index_items.call_count == 1
+        # work and pages should be indexed
+        assert mock_index_items.call_count == 2
 
         # log entry should be created
         import_log = LogEntry.objects.get(object_id=digwork.pk)
@@ -130,8 +135,11 @@ class TestGaleImportCommand:
         assert "error" not in cmd.stats
 
     @patch("ppa.archive.management.commands.gale_import.DigitizedWork.index_items")
+    @patch("ppa.archive.management.commands.gale_import.DigitizedWork.metadata_from_marc")
+    @patch("ppa.archive.management.commands.gale_import.get_marc_record")
     @override_settings(GALE_API_USERNAME="galeuser123")
-    def test_import_digitizedwork_csv(self, mock_index_items):
+    def test_import_digitizedwork_csv(self, mock_get_marc_record,
+                                     mock_metadata_from_marc, mock_index_items):
         # simulate csv import with notes and collection membership
         cmd = gale_import.Command()
         # do some setup included in handle method

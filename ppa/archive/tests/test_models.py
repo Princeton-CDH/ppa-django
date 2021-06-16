@@ -371,6 +371,27 @@ class TestDigitizedWork(TestCase):
         assert digwork.publisher != 'Not a publisher'
         assert digwork.pub_date != 2200
 
+    def test_metadata_from_marc(self):
+        # majority of logic is tested through test_populate_from_bibdata;
+        # explicitly test only what is different from HathiTrust logic
+
+        # use hathitrust fixture for testing
+        with open(self.bibdata_full) as bibdata:
+            bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
+
+        digwork = DigitizedWork(source_id='njp.32101013082597')
+        print('year = %s' % bibdata.marcxml.pubyear())
+        field_data = digwork.metadata_from_marc(bibdata.marcxml, populate=False)
+        # shoud not populate fields from metadata
+        assert not digwork.author
+        # should parse numeric year from publication date
+        assert field_data['pub_date'] == 1882
+
+        # re-run with populate metadata
+        digwork.metadata_from_marc(bibdata.marcxml)
+        assert digwork.author
+        assert digwork.pub_date == 1882
+
     def test_index_data(self):
         digwork = DigitizedWork.objects.create(
             source_id='njp.32101013082597',
@@ -429,7 +450,7 @@ class TestDigitizedWork(TestCase):
             reverse('archive:detail', kwargs={'source_id': work.source_id})
 
     @patch('ppa.archive.models.HathiBibliographicAPI')
-    def test_get_metadata(self, mock_hathibib):
+    def test_get_metadata_hathi(self, mock_hathibib):
         work = DigitizedWork(source_id='ht:1234')
 
         # unsupported metadata format should error
@@ -445,11 +466,23 @@ class TestDigitizedWork(TestCase):
         mock_bibdata.marcxml.as_marc.assert_any_call()
         assert mdata == mock_bibdata.marcxml.as_marc.return_value
 
+    def test_get_metadata_other(self):
         # non-hathi record: for now, not supported
         nonhathi_work = DigitizedWork(source=DigitizedWork.OTHER, source_id='788423659')
         # should not error, but nothing to return
         assert not nonhathi_work.get_metadata('marc')
 
+    @patch('ppa.archive.models.get_marc_record')
+    def test_get_metadata_gale(self, mock_get_marc_record):
+        work = DigitizedWork(source_id='CW123456', source=DigitizedWork.GALE)
+
+        # for marc, should call hathi bib api and return marc in binary form
+        mdata = work.get_metadata('marc')
+        mock_get_marc_record.assert_called_with(work.source_id)
+        assert mock_get_marc_record.return_value.force_utf8
+        mock_get_marc_record.return_value.as_marc.assert_called_with()
+
+        assert mdata == mock_get_marc_record.return_value.as_marc.return_value
 
     @patch('ppa.archive.models.ZipFile', spec=ZipFile)
     def test_count_pages(self, mockzipfile):
