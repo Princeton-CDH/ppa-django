@@ -245,4 +245,3 @@ def test_get_marc_record(mock_get_marc_storage):
 
         # confirm we loaded the MARC record and can read it
         assert record.title() == 'ActivePerl with ASP and ADO /'
-

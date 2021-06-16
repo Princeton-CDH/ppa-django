@@ -537,9 +537,6 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         # store hathi record id
         field_data['record_id']= bibdata.record_id
 
-        # TODO: split out marc logic from hathi bibdata
-        # so we can call metadata_from_marc for both
-
         # set fields from marc if available, since it has more details
         if bibdata.marcxml:
             # get metadata from marcxml, but don't save it yet
