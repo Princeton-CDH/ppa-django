@@ -1,9 +1,12 @@
 import logging
+import time
 
 import requests
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from pairtree import PairtreeStorageFactory
+import pymarc
 
 from ppa import __version__ as ppa_version
 
@@ -176,3 +179,26 @@ class GaleAPI:
         response = self._make_request("v1/item/GALE%%7C%s" % item_id, stream=True)
         if response:
             return response.json()
+
+# MARC records needed for import and metadata are stored in a local pairtree.
+# currently used for Gale/ECCO content
+
+
+def get_marc_storage():
+    """return pairtree storage for marc records"""
+    return PairtreeStorageFactory().get_store(
+        store_dir=settings.MARC_DATA, uri_base="info:local/"
+    )
+
+
+def get_marc_record(item_id):
+    """get a marc record from the pairtree storage by Gale item id"""
+    start_time = time.time()
+    marc_object = get_marc_storage().get_object(item_id)
+    with marc_object.get_bytestream('marc.json', streamable=True) as marcfile:
+        json_reader = pymarc.JSONReader(marcfile, encoding='utf-8')
+        handler = pymarc.JsonHandler()
+        record = handler.elements(json_reader.records)[0]
+        # record = pymarc.parse_json_to_array(marcfile, unicode=True)[0]
+    logger.debug("Loaded JSON MARC record for %s in %.4fs" % (item_id, time.time() - start_time))
+    return record
