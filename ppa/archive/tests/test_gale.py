@@ -232,8 +232,8 @@ def test_get_marc_storage(mock_pairtree_storage_factory):
 
 @patch('ppa.archive.gale.get_marc_storage')
 def test_get_marc_record(mock_get_marc_storage):
-    test_marc_json = os.path.join(FIXTURES_PATH, 'test_marc.json')
-    with open(test_marc_json) as marcfile:
+    test_marc_file = os.path.join(FIXTURES_PATH, 'test_marc.dat')
+    with open(test_marc_file, 'rb') as marcfile:
         ptree_obj = mock_get_marc_storage.return_value.get_object.return_value
         ptree_obj.get_bytestream.return_value.__enter__.return_value = marcfile
 
@@ -241,7 +241,7 @@ def test_get_marc_record(mock_get_marc_storage):
         record = gale.get_marc_record(test_id)
         mock_get_marc_storage.assert_called_with()
         mock_get_marc_storage.return_value.get_object.assert_called_with(test_id)
-        ptree_obj.get_bytestream.assert_called_with('marc.json', streamable=True)
+        ptree_obj.get_bytestream.assert_called_with('marc.dat', streamable=True)
 
         # confirm we loaded the MARC record and can read it
-        assert record.title() == 'ActivePerl with ASP and ADO /'
+        assert record.title() == 'Cross-platform Perl /'

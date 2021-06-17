@@ -5,7 +5,7 @@ import requests
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from pairtree import PairtreeStorageFactory
+from pairtree import PairtreeStorageFactory, storage_exceptions
 import pymarc
 
 from ppa import __version__ as ppa_version
@@ -192,11 +192,19 @@ def get_marc_storage():
     )
 
 
+class MARCRecordNotFound(Exception):
+    """record not found in local MARC record storage"""
+
+
 def get_marc_record(item_id):
     """get a marc record from the pairtree storage by Gale item id"""
     start_time = time.time()
-    marc_object = get_marc_storage().get_object(item_id)
-    with marc_object.get_bytestream('marc.json', streamable=True) as marcfile:
-        record = pymarc.parse_json_to_array(marcfile)[0]
-    logger.debug("Loaded JSON MARC record for %s in %.4fs" % (item_id, time.time() - start_time))
+    try:
+        marc_object = get_marc_storage().get_object(item_id)
+        with marc_object.get_bytestream('marc.dat', streamable=True) as marcfile:
+            reader = pymarc.MARCReader(marcfile, to_unicode=True)
+            record = [rec for rec in reader][0]
+            logger.debug("Loaded MARC record for %s in %.5fs" % (item_id, time.time() - start_time))
+    except storage_exceptions.PartNotFoundException:
+        raise MARCRecordNotFound(item_id)
     return record
