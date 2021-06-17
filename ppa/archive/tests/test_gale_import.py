@@ -11,7 +11,7 @@ from django.core.management.base import CommandError
 from django.test import override_settings
 import pytest
 
-from ppa.archive.gale import GaleAPI, GaleAPIError
+from ppa.archive.gale import GaleAPI, GaleAPIError, MARCRecordNotFound
 from ppa.archive.models import Collection, DigitizedWork
 from ppa.archive.management.commands import gale_import
 
@@ -188,7 +188,6 @@ class TestGaleImportCommand:
         assert literary in digwork.collections.all()
         assert music in digwork.collections.all()
 
-
     def test_import_digitizedwork_error(self):
         # import with api error
         stderr = StringIO()
@@ -204,6 +203,42 @@ class TestGaleImportCommand:
             assert no_stat not in cmd.stats
         output = stderr.getvalue()
         assert "Error getting item information for test_id" in output
+
+    @patch("ppa.archive.management.commands.gale_import.get_marc_record")
+    def test_import_digitizedwork_marc_notfound(self, mock_get_marc_record):
+        mock_get_marc_record.side_effect = MARCRecordNotFound
+        stderr = StringIO()
+        cmd = gale_import.Command(stderr=stderr)
+        # requires some setup included in handle
+        cmd.script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
+        cmd.digwork_contentype = ContentType.objects.get_for_model(DigitizedWork)
+        cmd.gale_api = Mock(GaleAPI)
+        cmd.stats = Counter()
+        # simulate success
+        cmd.gale_api.get_item.return_value = {
+            "doc": {
+                "title": "The life of Alexander Pope",
+                "authors": ["Owen Ruffhead"],
+                "isShownAt": "https://link.gale.co/test/ECCO?sid=gale_api&u=utopia9871",
+                "citation": "Ruffhead, Owen. The life…, Accessed 8 June 2021.",
+            },
+            "pageResponse": {"pages": [
+                {
+                    "pageNumber": "0001",
+                    "image": {"id": "09876001234567"}
+                },
+                {
+                    "pageNumber": "0002",
+                    "image": {"id": "09876001234568"}
+                }
+            ]},
+        }
+        test_id = "CW123456"
+        digwork = cmd.import_digitizedwork(test_id)
+        assert digwork
+        assert isinstance(digwork, DigitizedWork)
+        output = stderr.getvalue()
+        assert 'MARC record not found' in output
 
     def test_import_digitizedwork_exists(self):
         # skip without api call if digwork already exists

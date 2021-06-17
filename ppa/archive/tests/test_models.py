@@ -380,7 +380,6 @@ class TestDigitizedWork(TestCase):
             bibdata = hathi.HathiBibliographicRecord(json.load(bibdata))
 
         digwork = DigitizedWork(source_id='njp.32101013082597')
-        print('year = %s' % bibdata.marcxml.pubyear())
         field_data = digwork.metadata_from_marc(bibdata.marcxml, populate=False)
         # shoud not populate fields from metadata
         assert not digwork.author
@@ -483,6 +482,10 @@ class TestDigitizedWork(TestCase):
         mock_get_marc_record.return_value.as_marc.assert_called_with()
 
         assert mdata == mock_get_marc_record.return_value.as_marc.return_value
+
+        # simulate not found; should not error
+        mock_get_marc_record.side_effect = gale.MARCRecordNotFound
+        assert not work.get_metadata('marc')
 
     @patch('ppa.archive.models.ZipFile', spec=ZipFile)
     def test_count_pages(self, mockzipfile):

@@ -1,8 +1,9 @@
 from collections import Counter
-from io import StringIO
+from io import StringIO, BytesIO
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from django.template.defaultfilters import pluralize
 import pymarc
 
 from ppa.archive.gale import get_marc_storage
@@ -38,21 +39,19 @@ class Command(BaseCommand):
                     gale_id = record["856"]["u"].split("/")[5]
                     # create an object in the pairtree
                     pmarc = marc_store.get_object(gale_id, create_if_doesnt_exist=True)
-                    # use pymarc to export as JSON (more compact & faster than XML)
-                    output = StringIO()
-                    writer = pymarc.JSONWriter(output)
-                    writer.write(record)
-                    writer.close(close_fh=False)  # important for valid json!
-                    # add the JSON marc record to pairtree storage
-                    pmarc.add_bytestream("marc.json", output.getvalue().encode("utf-8"))
+                    # add individual binary marc record to pairtree storage
+                    output = BytesIO()
+                    record.force_utf8 = True
+                    output.write(record.as_marc())
+                    pmarc.add_bytestream("marc.dat", output.getvalue())
                     stats["records"] += 1
 
         self.stdout.write(
             "Split out %d record%s from %s file%s"
             % (
                 stats["records"],
-                "" if stats["records"] == 1 else "s",
+                pluralize(stats["records"]),
                 stats["files"],
-                "" if stats["files"] == 1 else "s",
+                pluralize(stats["files"]),
             )
         )

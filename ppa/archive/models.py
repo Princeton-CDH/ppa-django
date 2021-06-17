@@ -23,7 +23,7 @@ from wagtail.core.fields import RichTextField
 from wagtail.admin.edit_handlers import FieldPanel
 from wagtail.snippets.models import register_snippet
 
-from ppa.archive.gale import GaleAPI, get_marc_record
+from ppa.archive.gale import GaleAPI, get_marc_record, MARCRecordNotFound
 from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS, HathiObject
 
 
@@ -416,6 +416,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             if field not in protected_fields:
                 setattr(self, field, value)
 
+
     def metadata_from_marc(self, marc_record, populate=True):
         """Get metadata from MARC record and return a dictionary
         of the data. When populate is True, calls `populate_fields`
@@ -678,10 +679,14 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
 
             if self.source == DigitizedWork.GALE:
                 # get record from local marc pairtree storage
-                record = get_marc_record(self.source_id)
-                # specify encoding to avoid errors
-                record.force_utf8 = True
-                return record.as_marc()
+                try:
+                    record = get_marc_record(self.source_id)
+                    # specify encoding to avoid errors
+                    record.force_utf8 = True
+                    return record.as_marc()
+                except MARCRecordNotFound:
+                    logger.warn('MARC record for %s not found' % self.source_id)
+                    return ''
 
             return ''
 

@@ -44,7 +44,7 @@ from parasolr.django.signals import IndexableSignalHandler
 import pymarc
 from pairtree import PairtreeStorageFactory
 
-from ppa.archive.gale import GaleAPI, GaleAPIError, get_marc_record
+from ppa.archive.gale import GaleAPI, GaleAPIError, get_marc_record, MARCRecordNotFound
 from ppa.archive.models import Collection, DigitizedWork, Page
 
 
@@ -210,7 +210,10 @@ class Command(BaseCommand):
             notes=kwargs.get("NOTES", ""),
         )
         # populate titles, author, publication info from marc record
-        digwork.metadata_from_marc(get_marc_record(gale_id))
+        try:
+            digwork.metadata_from_marc(get_marc_record(gale_id))
+        except MARCRecordNotFound:
+            self.stderr.write(self.style.WARNING('MARC record not found for %s' % gale_id))
         digwork.save()
 
         # set collection membership based on spreadsheet columns
