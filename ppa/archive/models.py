@@ -111,7 +111,7 @@ class Collection(TrackChangesModel):
                 'count': collection.count,
                 'dates': '%(min)d–%(max)d' % pub_date_stats \
                     if pub_date_stats.max != pub_date_stats.min \
-                    else '%d' % pub_date_stats.min
+                    else '%d' % (pub_date_stats.min or 0, )
             }
 
         return stats
