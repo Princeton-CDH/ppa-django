@@ -6,8 +6,16 @@ Deploy and Upgrade notes
 3.7
 ---
 
-* Gale API client requires **GALE_API_USERNAME** in local settings.
-* Reindex all works to ensure that thumbnails display based on source::
+* Gale API client requires **GALE_API_USERNAME** and **MARC_DATA** in local 
+  settings.
+
+* Gale/ECCO MARC records must be made available for import
+  by splitting out binary MARC into a local pairtree storage::
+
+    python manage.py split_marc ECCO1a-prin77918.mrc ECCO1b-prin77918.mrc ECCO2-prin77918.mrc
+
+* Reindex all works to ensure that thumbnails for HathiTrust materials display 
+  correctly::
 
     python manage.py index -i work
 

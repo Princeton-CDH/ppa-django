@@ -1,3 +1,4 @@
+import os.path
 from unittest.mock import patch, Mock
 
 from django.conf import settings
@@ -8,6 +9,7 @@ import requests
 
 from ppa import __version__
 from ppa.archive import gale
+from ppa.archive.tests.test_models import FIXTURES_PATH
 
 
 @override_settings(GALE_API_USERNAME="galeuser123")
@@ -216,3 +218,30 @@ class TestGaleAPI(TestCase):
         gale_api.session.get.return_value.status_code = requests.codes.bad_request
         with pytest.raises(gale.GaleAPIError):
             gale_api.get_item("CW123456")
+
+
+@override_settings(MARC_DATA='/path/to/data/marc')
+@patch('ppa.archive.gale.PairtreeStorageFactory')
+def test_get_marc_storage(mock_pairtree_storage_factory):
+    mstore = gale.get_marc_storage()
+    mock_pairtree_storage_factory.assert_called_with()
+    mock_pairtree_storage_factory.return_value.get_store.assert_called_with(
+        store_dir=settings.MARC_DATA, uri_base="info:local/"
+    )
+
+
+@patch('ppa.archive.gale.get_marc_storage')
+def test_get_marc_record(mock_get_marc_storage):
+    test_marc_file = os.path.join(FIXTURES_PATH, 'test_marc.dat')
+    with open(test_marc_file, 'rb') as marcfile:
+        ptree_obj = mock_get_marc_storage.return_value.get_object.return_value
+        ptree_obj.get_bytestream.return_value.__enter__.return_value = marcfile
+
+        test_id = 'CW123456'
+        record = gale.get_marc_record(test_id)
+        mock_get_marc_storage.assert_called_with()
+        mock_get_marc_storage.return_value.get_object.assert_called_with(test_id)
+        ptree_obj.get_bytestream.assert_called_with('marc.dat', streamable=True)
+
+        # confirm we loaded the MARC record and can read it
+        assert record.title() == 'Cross-platform Perl /'
