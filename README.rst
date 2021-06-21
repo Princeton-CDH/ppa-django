@@ -178,8 +178,8 @@ file and look for a sitemap at ``localhost:8000/sitemap.xml`` to use to crawl th
 site. Additional URLs to test can be added to the `urls` property of the
 ``.pa11yci.json`` file.
 
-Setup Black
-~~~~~~~~~~~
+Setup pre-commit hooks
+~~~~~~~~~~~~~~~~~~~~~~
 
 If you plan to contribute to this repository, please run the following command:
 
@@ -191,7 +191,7 @@ Because these styling conventions were instituted after multiple releases of dev
 
     git blame <FILE> --ignore-revs-file .git-blame-ignore-revs
 
-Or configure your git to always ignore the black revision commit:
+Or configure your git to always ignore styling revision commits:
 
     git config blame.ignoreRevsFile .git-blame-ignore-revs
 
