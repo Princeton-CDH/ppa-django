@@ -9,13 +9,13 @@ import wagtail.core.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('archive', '0002_add_collections_m2m'),
+        ("archive", "0002_add_collections_m2m"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='collection',
-            name='description',
+            model_name="collection",
+            name="description",
             field=wagtail.core.fields.RichTextField(blank=True),
         ),
     ]

@@ -9,25 +9,49 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='DigitizedWork',
+            name="DigitizedWork",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('source_id', models.CharField(max_length=255, unique=True)),
-                ('source_url', models.URLField(max_length=255)),
-                ('title', models.TextField()),
-                ('enumcron', models.CharField(max_length=255, blank=True, verbose_name='Enumeration/Chronology')),
-                ('author', models.CharField(max_length=255, blank=True)),
-                ('pub_place', models.CharField(max_length=255, verbose_name='Place of Publication', blank=True)),
-                ('publisher', models.TextField(blank=True)),
-                ('pub_date', models.CharField(max_length=255, verbose_name='Publication Date', blank=True)),
-                ('page_count', models.PositiveIntegerField(blank=True, null=True)),
-                ('added', models.DateTimeField(auto_now_add=True)),
-                ('updated', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("source_id", models.CharField(max_length=255, unique=True)),
+                ("source_url", models.URLField(max_length=255)),
+                ("title", models.TextField()),
+                (
+                    "enumcron",
+                    models.CharField(
+                        max_length=255,
+                        blank=True,
+                        verbose_name="Enumeration/Chronology",
+                    ),
+                ),
+                ("author", models.CharField(max_length=255, blank=True)),
+                (
+                    "pub_place",
+                    models.CharField(
+                        max_length=255, verbose_name="Place of Publication", blank=True
+                    ),
+                ),
+                ("publisher", models.TextField(blank=True)),
+                (
+                    "pub_date",
+                    models.CharField(
+                        max_length=255, verbose_name="Publication Date", blank=True
+                    ),
+                ),
+                ("page_count", models.PositiveIntegerField(blank=True, null=True)),
+                ("added", models.DateTimeField(auto_now_add=True)),
+                ("updated", models.DateTimeField(auto_now=True)),
             ],
         ),
     ]

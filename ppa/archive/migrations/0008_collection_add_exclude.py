@@ -8,31 +8,37 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('archive', '0007_merge_20181015_1343'),
+        ("archive", "0007_merge_20181015_1343"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='collection',
-            options={'ordering': ('name',)},
+            name="collection",
+            options={"ordering": ("name",)},
         ),
         migrations.AlterModelOptions(
-            name='digitizedwork',
-            options={'ordering': ('sort_title',)},
+            name="digitizedwork",
+            options={"ordering": ("sort_title",)},
         ),
         migrations.AddField(
-            model_name='collection',
-            name='exclude',
-            field=models.BooleanField(default=False, help_text='Exclude by default on public search.'),
+            model_name="collection",
+            name="exclude",
+            field=models.BooleanField(
+                default=False, help_text="Exclude by default on public search."
+            ),
         ),
         migrations.AlterField(
-            model_name='digitizedwork',
-            name='public_notes',
-            field=models.TextField(blank=True, default='', help_text='Notes on edition or other details (displayed on public site)'),
+            model_name="digitizedwork",
+            name="public_notes",
+            field=models.TextField(
+                blank=True,
+                default="",
+                help_text="Notes on edition or other details (displayed on public site)",
+            ),
         ),
         migrations.AlterField(
-            model_name='digitizedwork',
-            name='sort_title',
-            field=models.TextField(default='', help_text='Sort title from MARC record'),
+            model_name="digitizedwork",
+            name="sort_title",
+            field=models.TextField(default="", help_text="Sort title from MARC record"),
         ),
     ]

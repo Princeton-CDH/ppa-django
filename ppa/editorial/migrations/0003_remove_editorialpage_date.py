@@ -8,12 +8,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('editorial', '0002_editorialpage_body_streamfield'),
+        ("editorial", "0002_editorialpage_body_streamfield"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='editorialpage',
-            name='date',
+            model_name="editorialpage",
+            name="date",
         ),
     ]

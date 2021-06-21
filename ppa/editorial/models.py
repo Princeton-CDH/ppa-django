@@ -6,34 +6,33 @@ from wagtail.core.models import Page
 from wagtail.core.fields import RichTextField, StreamField
 from wagtail.snippets.blocks import SnippetChooserBlock
 
-from ppa.pages.models import BodyContentBlock, PagePreviewDescriptionMixin, \
-    Person
+from ppa.pages.models import BodyContentBlock, PagePreviewDescriptionMixin, Person
 
 
 class EditorialIndexPage(Page):
-    '''Editorial index page; list recent editorial articles.'''
+    """Editorial index page; list recent editorial articles."""
+
     intro = RichTextField(blank=True)
 
-    content_panels = Page.content_panels + [
-        FieldPanel('intro', classname="full")
-    ]
+    content_panels = Page.content_panels + [FieldPanel("intro", classname="full")]
 
     # can only be created under home page; can only have
     # editorial pages as subpages
-    parent_page_types = ['pages.HomePage']
-    subpage_types = ['editorial.EditorialPage']
+    parent_page_types = ["pages.HomePage"]
+    subpage_types = ["editorial.EditorialPage"]
 
     def get_context(self, request):
         context = super().get_context(request)
 
         # Add extra variables and return the updated context
-        context['posts'] = EditorialPage.objects.child_of(self).live() \
-                                        .order_by('-first_published_at')
+        context["posts"] = (
+            EditorialPage.objects.child_of(self).live().order_by("-first_published_at")
+        )
         return context
 
     def route(self, request, path_components):
-        '''Customize editorial page routing to serve editorial pages
-        by year/month/slug.'''
+        """Customize editorial page routing to serve editorial pages
+        by year/month/slug."""
 
         # NOTE: might be able to use RoutablePageMixin for this,
         # but could not get that to work
@@ -70,7 +69,8 @@ class EditorialIndexPage(Page):
                     subpage = self.get_children().get(
                         first_published_at__year=year,
                         first_published_at__month=month,
-                        slug=child_slug)
+                        slug=child_slug,
+                    )
                 except Page.DoesNotExist:
                     raise Http404
 
@@ -83,25 +83,25 @@ class EditorialIndexPage(Page):
 
 
 class EditorialPage(Page, PagePreviewDescriptionMixin):
-    '''Editorial page, for scholarly, educational, or other essay-like
-    content related to the site'''
+    """Editorial page, for scholarly, educational, or other essay-like
+    content related to the site"""
 
     # preliminary streamfield; we may need other options for content
     # (maybe a footnotes block?)
     body = StreamField(BodyContentBlock)
     authors = StreamField(
-        [('author', SnippetChooserBlock(Person))],
+        [("author", SnippetChooserBlock(Person))],
         blank=True,
-        help_text='Select or create people snippets to add as authors.'
+        help_text="Select or create people snippets to add as authors.",
     )
     content_panels = Page.content_panels + [
-        FieldPanel('description'),
-        StreamFieldPanel('authors'),
-        StreamFieldPanel('body'),
+        FieldPanel("description"),
+        StreamFieldPanel("authors"),
+        StreamFieldPanel("body"),
     ]
 
     # can only be under editorial, cannot have subpages
-    parent_page_types = ['editorial.EditorialIndexPage']
+    parent_page_types = ["editorial.EditorialIndexPage"]
     subpage_types = []
 
     def set_url_path(self, parent):
@@ -114,10 +114,11 @@ class EditorialPage(Page, PagePreviewDescriptionMixin):
         # use current date for preview if first published is not set
         post_date = self.first_published_at or date.today()
         if parent:
-            self.url_path = '{}{}/{}/'.format(
-                parent.url_path, post_date.strftime('%Y/%m'), self.slug)
+            self.url_path = "{}{}/{}/".format(
+                parent.url_path, post_date.strftime("%Y/%m"), self.slug
+            )
         else:
             # a page without a parent is the tree root, which always has a url_path of '/'
-            self.url_path = '/'
+            self.url_path = "/"
 
         return self.url_path

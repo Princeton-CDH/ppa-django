@@ -82,33 +82,42 @@ from django.core.management.base import BaseCommand
 
 from gensim import corpora
 from gensim.corpora.dictionary import Dictionary
-from gensim.parsing.preprocessing import preprocess_string, strip_tags, \
-    strip_punctuation, strip_multiple_whitespaces, strip_numeric, \
-    remove_stopwords, strip_short, stem_text
+from gensim.parsing.preprocessing import (
+    preprocess_string,
+    strip_tags,
+    strip_punctuation,
+    strip_multiple_whitespaces,
+    strip_numeric,
+    remove_stopwords,
+    strip_short,
+    stem_text,
+)
 
 from parasolr.django import SolrQuerySet
 
 
 logger = logging.getLogger(__name__)
 
-PREPROCESS_FUNCTIONS = OrderedDict([
-    ('strip_short', strip_short),
-    ('strip_multiple_whitespaces', strip_multiple_whitespaces),
-    ('strip_punctuation', strip_punctuation),
-    ('strip_tags', strip_tags),
-    ('strip_numeric', strip_numeric),
-    ('lower', lambda x: x.lower()),
-    ('remove_stopwords', remove_stopwords),
-    ('stem_text', stem_text)
-])
+PREPROCESS_FUNCTIONS = OrderedDict(
+    [
+        ("strip_short", strip_short),
+        ("strip_multiple_whitespaces", strip_multiple_whitespaces),
+        ("strip_punctuation", strip_punctuation),
+        ("strip_tags", strip_tags),
+        ("strip_numeric", strip_numeric),
+        ("lower", lambda x: x.lower()),
+        ("remove_stopwords", remove_stopwords),
+        ("stem_text", stem_text),
+    ]
+)
 
 
 class SolrCorpus:
 
     # Class attributes that rarely, if ever, need to change
-    DOC_ID_FIELD = 'source_id'     # Solr field name for document identifier
-    DOC_CONTENT_FIELD = 'content'  # Solr field name for document content
-    PAGE_ORDER_FIELD = 'order'     # Solr field name for page ordering
+    DOC_ID_FIELD = "source_id"  # Solr field name for document identifier
+    DOC_CONTENT_FIELD = "content"  # Solr field name for document content
+    PAGE_ORDER_FIELD = "order"  # Solr field name for page ordering
 
     def __init__(self, name, doc_limit=-1, preprocess_fns=None, pbar=True):
         """
@@ -133,11 +142,10 @@ class SolrCorpus:
         self.doc_limit = doc_limit
 
         if preprocess_fns is not None:
-            if 'ALL' in preprocess_fns:
+            if "ALL" in preprocess_fns:
                 self.preprocess_fns = PREPROCESS_FUNCTIONS.values()
             else:
-                self.preprocess_fns = [PREPROCESS_FUNCTIONS[k] for k in
-                                       preprocess_fns]
+                self.preprocess_fns = [PREPROCESS_FUNCTIONS[k] for k in preprocess_fns]
         else:
             self.preprocess_fns = []
 
@@ -151,8 +159,7 @@ class SolrCorpus:
         self.metadata_field_names = None
 
         # facet on document id to get counts of pages by work
-        results = SolrQuerySet() \
-            .facet(SolrCorpus.DOC_ID_FIELD, limit=self.doc_limit)
+        results = SolrQuerySet().facet(SolrCorpus.DOC_ID_FIELD, limit=self.doc_limit)
 
         """
         An OrderedDict of doc_id => page count mapping
@@ -160,14 +167,11 @@ class SolrCorpus:
         metadata, in which case rows of metadata would be in the same order as
         the BoW-vectors returned by this object's iterator.
         """
-        self.page_counts = results.get_facets().facet_fields['source_id']
+        self.page_counts = results.get_facets().facet_fields["source_id"]
         self.doc_ids = self.page_counts.keys()
         self.doc_count = len(self.doc_ids)
         if pbar:
-            self.pbar = ProgressBar(
-                redirect_stderr=True,
-                max_value=self.doc_count
-            )
+            self.pbar = ProgressBar(redirect_stderr=True, max_value=self.doc_count)
         else:
             self.pbar = NullBar()
 
@@ -176,43 +180,50 @@ class SolrCorpus:
         for doc_id in self.doc_ids:
 
             if doc_id not in self.page_counts:
-                logger.warning('Unknown page count for doc {}. Skipping.'.
-                               format(doc_id))
+                logger.warning(
+                    "Unknown page count for doc {}. Skipping.".format(doc_id)
+                )
                 continue
 
-            result = SolrQuerySet() \
-                .search(**{SolrCorpus.DOC_ID_FIELD: doc_id}) \
+            result = (
+                SolrQuerySet()
+                .search(**{SolrCorpus.DOC_ID_FIELD: doc_id})
                 .order_by(SolrCorpus.PAGE_ORDER_FIELD)
+            )
             # populate the result cache with number of rows specified
             docs = result.get_results(rows=self.page_counts[doc_id])
 
-            metadata_docs = [d for d in docs
-                             if d['item_type'] == 'work']
+            metadata_docs = [d for d in docs if d["item_type"] == "work"]
 
             n_metadata_docs = len(metadata_docs)
             if n_metadata_docs > 0:
                 if n_metadata_docs > 1:
-                    logger.warning('Multiple metadata records found for doc ID'
-                                   '{}. Using the first.'.format(doc_id))
+                    logger.warning(
+                        "Multiple metadata records found for doc ID"
+                        "{}. Using the first.".format(doc_id)
+                    )
 
                 metadata_doc = metadata_docs[0]
-                self._metadata[doc_id] = {k: v for k, v in
-                                          metadata_doc.items()}
+                self._metadata[doc_id] = {k: v for k, v in metadata_doc.items()}
                 if self.metadata_field_names is None:
                     self.metadata_field_names = list(metadata_doc.keys())
             else:
-                logger.warning('No metadata record found for doc ID {}.'.
-                               format(doc_id))
+                logger.warning("No metadata record found for doc ID {}.".format(doc_id))
 
             # filter out pages that have no content;
             # combine all pages into one string
-            fulltext = ' '.join(list(
-                filter(
-                    None,
-                    (doc.get(SolrCorpus.DOC_CONTENT_FIELD) for doc in
-                     docs if doc['item_type'] == 'page')
+            fulltext = " ".join(
+                list(
+                    filter(
+                        None,
+                        (
+                            doc.get(SolrCorpus.DOC_CONTENT_FIELD)
+                            for doc in docs
+                            if doc["item_type"] == "page"
+                        ),
+                    )
                 )
-            ))
+            )
             fulltext = preprocess_string(fulltext, filters=self.preprocess_fns)
 
             yield self.dictionary.doc2bow(fulltext, allow_update=True)
@@ -228,89 +239,105 @@ class SolrCorpus:
         :return: None
         """
         if as_text:
-            with open(filepath, 'w', encoding='utf8') as f:
-                f.writelines([self.dictionary[i] + '\n' for i in
-                              range(len(self.dictionary))])
+            with open(filepath, "w", encoding="utf8") as f:
+                f.writelines(
+                    [self.dictionary[i] + "\n" for i in range(len(self.dictionary))]
+                )
         else:
             self.dictionary.save(filepath)
 
     def _save_metadata(self, filepath):
         if self.metadata_field_names is None:
-            raise RuntimeError('Unable to determine metadata field names!')
+            raise RuntimeError("Unable to determine metadata field names!")
 
-        with open(filepath, 'w', encoding='utf8', newline='') as f:
+        with open(filepath, "w", encoding="utf8", newline="") as f:
             writer = csv.writer(f)
             writer.writerow(self.metadata_field_names)  # header row
 
             for doc_id in self.doc_ids:
                 metadata = self._metadata[doc_id]
-                writer.writerow([metadata.get(field_name) for field_name in
-                                 self.metadata_field_names])
+                writer.writerow(
+                    [
+                        metadata.get(field_name)
+                        for field_name in self.metadata_field_names
+                    ]
+                )
 
-    def save(self, path, save_dict=True, save_dict_as_text=False,
-             save_metadata=False):
+    def save(self, path, save_dict=True, save_dict_as_text=False, save_metadata=False):
         if not os.path.isdir(path):
             makedirs(path)
-        corpus_path = os.path.join(path, '{}.mm'.format(self.name))
+        corpus_path = os.path.join(path, "{}.mm".format(self.name))
 
         # There's no way to completely turn off the progress ticker for Gensim
         # serialize - we simply set it's frequency to one more than the no. of
         # documents we have, so it will effectively be shut off.
-        corpora.MmCorpus.serialize(corpus_path, self,
-                                   progress_cnt=self.doc_count + 1)
+        corpora.MmCorpus.serialize(corpus_path, self, progress_cnt=self.doc_count + 1)
 
         if save_dict:
-            self._save_dictionary(corpus_path + '.dict',
-                                  as_text=save_dict_as_text)
+            self._save_dictionary(corpus_path + ".dict", as_text=save_dict_as_text)
         if save_metadata:
-            self._save_metadata(corpus_path + '.metadata')
+            self._save_metadata(corpus_path + ".metadata")
 
 
 class Command(BaseCommand):
-
     def add_arguments(self, parser):
         parser.add_argument(
-            '--path', required=True,
-            help='Directory path to save corpus file(s).')
+            "--path", required=True, help="Directory path to save corpus file(s)."
+        )
         parser.add_argument(
-            '--name', default='corpus',
-            help='Name prefix to use for all saved corpus file(s).')
+            "--name",
+            default="corpus",
+            help="Name prefix to use for all saved corpus file(s).",
+        )
 
         parser.add_argument(
-            '--doc-limit', type=int, default=-1,
-            help='Limit on the number of documents for corpus generation.'
-                 'The default of -1 considers ALL documents.')
+            "--doc-limit",
+            type=int,
+            default=-1,
+            help="Limit on the number of documents for corpus generation."
+            "The default of -1 considers ALL documents.",
+        )
         parser.add_argument(
-            '--no-dictionary', action='store_true',
-            help='Do not save corpus dictionary.')
+            "--no-dictionary",
+            action="store_true",
+            help="Do not save corpus dictionary.",
+        )
         parser.add_argument(
-            '--dictionary-as-text', action='store_true',
-            help='If saving dictionary, save as a plaintext file.')
+            "--dictionary-as-text",
+            action="store_true",
+            help="If saving dictionary, save as a plaintext file.",
+        )
         parser.add_argument(
-            '--no-metadata', action='store_true', default=False,
-            help='Do not save corpus metadata.')
+            "--no-metadata",
+            action="store_true",
+            default=False,
+            help="Do not save corpus metadata.",
+        )
         parser.add_argument(
-            '--no-progress', action='store_true',
-            help='Do not display progress bar to track the status of the'
-                 'command.')
+            "--no-progress",
+            action="store_true",
+            help="Do not display progress bar to track the status of the" "command.",
+        )
         parser.add_argument(
-            '--preprocess', action="append",
-            choices=list(PREPROCESS_FUNCTIONS.keys()) + ['ALL'],
-            help='Pre-processing filter(s) to apply. Multiple filters can be'
-                 'applied (in order) by adding multiple --preprocess flags.'
-                 'Use ALL to apply all pre-processing filters.')
+            "--preprocess",
+            action="append",
+            choices=list(PREPROCESS_FUNCTIONS.keys()) + ["ALL"],
+            help="Pre-processing filter(s) to apply. Multiple filters can be"
+            "applied (in order) by adding multiple --preprocess flags."
+            "Use ALL to apply all pre-processing filters.",
+        )
 
     def handle(self, *args, **options):
         corpus = SolrCorpus(
-            name=options['name'],
-            doc_limit=options['doc_limit'],
-            preprocess_fns=options['preprocess'],
-            pbar=not options['no_progress']
+            name=options["name"],
+            doc_limit=options["doc_limit"],
+            preprocess_fns=options["preprocess"],
+            pbar=not options["no_progress"],
         )
 
         corpus.save(
-            options['path'],
-            save_dict=not options['no_dictionary'],
-            save_dict_as_text=options['dictionary_as_text'],
-            save_metadata=not options['no_metadata']
+            options["path"],
+            save_dict=not options["no_dictionary"],
+            save_dict_as_text=options["dictionary_as_text"],
+            save_metadata=not options["no_metadata"],
         )

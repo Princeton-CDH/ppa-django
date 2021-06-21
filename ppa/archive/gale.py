@@ -111,7 +111,10 @@ class GaleAPI:
 
         resp = self.session.get(rqst_url, stream=stream, **rqst_opts)
         logger.debug(
-            "get %s %s: %f sec", rqst_url, resp.status_code, resp.elapsed.total_seconds()
+            "get %s %s: %f sec",
+            rqst_url,
+            resp.status_code,
+            resp.elapsed.total_seconds(),
         )
         if resp.status_code == requests.codes.ok:
             return resp
@@ -131,7 +134,7 @@ class GaleAPI:
                     params=params,
                     requires_api_key=requires_api_key,
                     stream=stream,
-                    retry=retry + 1
+                    retry=retry + 1,
                 )
             # response is html error, not json; could try
             # extracting h1, but not sure it's worth parsing
@@ -169,7 +172,7 @@ class GaleAPI:
     def refresh_api_key(self):
         """clear cached api key and request a new one"""
         self._api_key = None
-        assert self.api_key   # populate new key through property
+        assert self.api_key  # populate new key through property
 
     def get_item(self, item_id):
         """Get the full record for a single item"""
@@ -201,10 +204,13 @@ def get_marc_record(item_id):
     start_time = time.time()
     try:
         marc_object = get_marc_storage().get_object(item_id)
-        with marc_object.get_bytestream('marc.dat', streamable=True) as marcfile:
+        with marc_object.get_bytestream("marc.dat", streamable=True) as marcfile:
             reader = pymarc.MARCReader(marcfile, to_unicode=True)
             record = [rec for rec in reader][0]
-            logger.debug("Loaded MARC record for %s in %.5fs" % (item_id, time.time() - start_time))
+            logger.debug(
+                "Loaded MARC record for %s in %.5fs"
+                % (item_id, time.time() - start_time)
+            )
     except storage_exceptions.PartNotFoundException:
         raise MARCRecordNotFound(item_id)
     return record

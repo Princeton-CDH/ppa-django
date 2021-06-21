@@ -9,13 +9,16 @@ import wagtail.core.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pages', '0005_merge_20181116_1144'),
+        ("pages", "0005_merge_20181116_1144"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='contentpage',
-            name='description',
-            field=wagtail.core.fields.RichTextField(blank=True, help_text='Optional. Brief description for preview display. Will also be used for search description without tags, if none is entered'),
+            model_name="contentpage",
+            name="description",
+            field=wagtail.core.fields.RichTextField(
+                blank=True,
+                help_text="Optional. Brief description for preview display. Will also be used for search description without tags, if none is entered",
+            ),
         ),
     ]

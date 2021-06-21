@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class CommonConfig(AppConfig):
-    name = 'ppa.common'
+    name = "ppa.common"
