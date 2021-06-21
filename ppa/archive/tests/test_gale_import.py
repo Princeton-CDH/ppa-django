@@ -38,7 +38,7 @@ class TestGaleImportCommand:
         output = stdout.getvalue()
         assert "Processed 3 items for import." in output
         # numbers are all 0 because import method was mocked
-        assert "Imported 0; skipped 0; 0 errors; imported 0 pages." in output
+        assert "Imported 0; 0 missing MARC records; skipped 0; 0 errors; imported 0 pages." in output
 
     @override_settings(GALE_API_USERNAME="galeuser123")
     @patch("ppa.archive.management.commands.gale_import.Command.import_digitizedwork")
