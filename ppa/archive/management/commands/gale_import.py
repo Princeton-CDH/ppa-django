@@ -138,12 +138,15 @@ class Command(BaseCommand):
 
         summary = (
             "\nProcessed {:,d} item{} for import."
-            + "\nImported {:,d}; skipped {:,d}; {:,d} error{}; imported {:,d} page{}."
+            + "\nImported {:,d}; {:,d} missing MARC record{}; "
+            + "skipped {:,d}; {:,d} error{}; imported {:,d} page{}."
         )
         summary = summary.format(
             self.stats["total"],
             pluralize(self.stats["total"]),
             self.stats["imported"],
+            self.stats["no_marc"],
+            pluralize(self.stats["no_marc"]),
             self.stats["skipped"],
             self.stats["error"],
             pluralize(self.stats["error"]),
@@ -213,6 +216,7 @@ class Command(BaseCommand):
         try:
             digwork.metadata_from_marc(get_marc_record(gale_id))
         except MARCRecordNotFound:
+            self.stats["no_marc"] += 1
             self.stderr.write(self.style.WARNING('MARC record not found for %s' % gale_id))
         digwork.save()
 
