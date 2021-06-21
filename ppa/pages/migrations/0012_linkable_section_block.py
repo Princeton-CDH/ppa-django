@@ -13,18 +13,241 @@ import wagtail.images.blocks
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pages', '0011_svg_image_block'),
+        ("pages", "0011_svg_image_block"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='contentpage',
-            name='body',
-            field=wagtail.core.fields.StreamField([('paragraph', wagtail.core.blocks.RichTextBlock(features=['h2', 'h3', 'bold', 'italic', 'link', 'ol', 'ul', 'hr', 'blockquote', 'document'])), ('captioned_image', wagtail.core.blocks.StructBlock([('image', wagtail.images.blocks.ImageChooserBlock()), ('alternative_text', wagtail.core.blocks.TextBlock(help_text='Alternative text for visually impaired users to\nbriefly communicate the intended message of the image in this context.', required=True)), ('caption', wagtail.core.blocks.RichTextBlock(features=['bold', 'italic', 'link'], required=False)), ('style', wagtail.core.blocks.ChoiceBlock(choices=[('full', 'Full Width'), ('left', 'Floated Left'), ('right', 'Floated Right')], help_text='Controls how other content flows around the image. Note         that this will only take effect on larger screens. Float consecutive         images in opposite directions for side-by-side display.'))], label='image')), ('svg_image', wagtail.core.blocks.StructBlock([('image', wagtail.documents.blocks.DocumentChooserBlock()), ('alternative_text', wagtail.core.blocks.TextBlock(help_text='Alternative text for visually impaired users to\nbriefly communicate the intended message of the image in this context.', required=True)), ('caption', wagtail.core.blocks.RichTextBlock(features=['bold', 'italic', 'link'], required=False)), ('extended_description', wagtail.core.blocks.RichTextBlock(features=['p'], help_text='This text will only be read to     non-sighted users and should describe the major insights or     takeaways from the graphic. Multiple paragraphs are allowed.', required=False))])), ('footnotes', wagtail.core.blocks.RichTextBlock(classname='footnotes', features=['ol', 'ul', 'bold', 'italic', 'link'])), ('document', wagtail.documents.blocks.DocumentChooserBlock()), ('linkable_section', wagtail.core.blocks.StructBlock([('title', wagtail.core.blocks.CharBlock()), ('anchor_text', wagtail.core.blocks.CharBlock(help_text='Short label for anchor link')), ('body', wagtail.core.blocks.RichTextBlock())])), ('embed', wagtail.embeds.blocks.EmbedBlock())]),
+            model_name="contentpage",
+            name="body",
+            field=wagtail.core.fields.StreamField(
+                [
+                    (
+                        "paragraph",
+                        wagtail.core.blocks.RichTextBlock(
+                            features=[
+                                "h2",
+                                "h3",
+                                "bold",
+                                "italic",
+                                "link",
+                                "ol",
+                                "ul",
+                                "hr",
+                                "blockquote",
+                                "document",
+                            ]
+                        ),
+                    ),
+                    (
+                        "captioned_image",
+                        wagtail.core.blocks.StructBlock(
+                            [
+                                ("image", wagtail.images.blocks.ImageChooserBlock()),
+                                (
+                                    "alternative_text",
+                                    wagtail.core.blocks.TextBlock(
+                                        help_text="Alternative text for visually impaired users to\nbriefly communicate the intended message of the image in this context.",
+                                        required=True,
+                                    ),
+                                ),
+                                (
+                                    "caption",
+                                    wagtail.core.blocks.RichTextBlock(
+                                        features=["bold", "italic", "link"],
+                                        required=False,
+                                    ),
+                                ),
+                                (
+                                    "style",
+                                    wagtail.core.blocks.ChoiceBlock(
+                                        choices=[
+                                            ("full", "Full Width"),
+                                            ("left", "Floated Left"),
+                                            ("right", "Floated Right"),
+                                        ],
+                                        help_text="Controls how other content flows around the image. Note         that this will only take effect on larger screens. Float consecutive         images in opposite directions for side-by-side display.",
+                                    ),
+                                ),
+                            ],
+                            label="image",
+                        ),
+                    ),
+                    (
+                        "svg_image",
+                        wagtail.core.blocks.StructBlock(
+                            [
+                                (
+                                    "image",
+                                    wagtail.documents.blocks.DocumentChooserBlock(),
+                                ),
+                                (
+                                    "alternative_text",
+                                    wagtail.core.blocks.TextBlock(
+                                        help_text="Alternative text for visually impaired users to\nbriefly communicate the intended message of the image in this context.",
+                                        required=True,
+                                    ),
+                                ),
+                                (
+                                    "caption",
+                                    wagtail.core.blocks.RichTextBlock(
+                                        features=["bold", "italic", "link"],
+                                        required=False,
+                                    ),
+                                ),
+                                (
+                                    "extended_description",
+                                    wagtail.core.blocks.RichTextBlock(
+                                        features=["p"],
+                                        help_text="This text will only be read to     non-sighted users and should describe the major insights or     takeaways from the graphic. Multiple paragraphs are allowed.",
+                                        required=False,
+                                    ),
+                                ),
+                            ]
+                        ),
+                    ),
+                    (
+                        "footnotes",
+                        wagtail.core.blocks.RichTextBlock(
+                            classname="footnotes",
+                            features=["ol", "ul", "bold", "italic", "link"],
+                        ),
+                    ),
+                    ("document", wagtail.documents.blocks.DocumentChooserBlock()),
+                    (
+                        "linkable_section",
+                        wagtail.core.blocks.StructBlock(
+                            [
+                                ("title", wagtail.core.blocks.CharBlock()),
+                                (
+                                    "anchor_text",
+                                    wagtail.core.blocks.CharBlock(
+                                        help_text="Short label for anchor link"
+                                    ),
+                                ),
+                                ("body", wagtail.core.blocks.RichTextBlock()),
+                            ]
+                        ),
+                    ),
+                    ("embed", wagtail.embeds.blocks.EmbedBlock()),
+                ]
+            ),
         ),
         migrations.AlterField(
-            model_name='contributorpage',
-            name='body',
-            field=wagtail.core.fields.StreamField([('paragraph', wagtail.core.blocks.RichTextBlock(features=['h2', 'h3', 'bold', 'italic', 'link', 'ol', 'ul', 'hr', 'blockquote', 'document'])), ('captioned_image', wagtail.core.blocks.StructBlock([('image', wagtail.images.blocks.ImageChooserBlock()), ('alternative_text', wagtail.core.blocks.TextBlock(help_text='Alternative text for visually impaired users to\nbriefly communicate the intended message of the image in this context.', required=True)), ('caption', wagtail.core.blocks.RichTextBlock(features=['bold', 'italic', 'link'], required=False)), ('style', wagtail.core.blocks.ChoiceBlock(choices=[('full', 'Full Width'), ('left', 'Floated Left'), ('right', 'Floated Right')], help_text='Controls how other content flows around the image. Note         that this will only take effect on larger screens. Float consecutive         images in opposite directions for side-by-side display.'))], label='image')), ('svg_image', wagtail.core.blocks.StructBlock([('image', wagtail.documents.blocks.DocumentChooserBlock()), ('alternative_text', wagtail.core.blocks.TextBlock(help_text='Alternative text for visually impaired users to\nbriefly communicate the intended message of the image in this context.', required=True)), ('caption', wagtail.core.blocks.RichTextBlock(features=['bold', 'italic', 'link'], required=False)), ('extended_description', wagtail.core.blocks.RichTextBlock(features=['p'], help_text='This text will only be read to     non-sighted users and should describe the major insights or     takeaways from the graphic. Multiple paragraphs are allowed.', required=False))])), ('footnotes', wagtail.core.blocks.RichTextBlock(classname='footnotes', features=['ol', 'ul', 'bold', 'italic', 'link'])), ('document', wagtail.documents.blocks.DocumentChooserBlock()), ('linkable_section', wagtail.core.blocks.StructBlock([('title', wagtail.core.blocks.CharBlock()), ('anchor_text', wagtail.core.blocks.CharBlock(help_text='Short label for anchor link')), ('body', wagtail.core.blocks.RichTextBlock())])), ('embed', wagtail.embeds.blocks.EmbedBlock())], blank=True),
+            model_name="contributorpage",
+            name="body",
+            field=wagtail.core.fields.StreamField(
+                [
+                    (
+                        "paragraph",
+                        wagtail.core.blocks.RichTextBlock(
+                            features=[
+                                "h2",
+                                "h3",
+                                "bold",
+                                "italic",
+                                "link",
+                                "ol",
+                                "ul",
+                                "hr",
+                                "blockquote",
+                                "document",
+                            ]
+                        ),
+                    ),
+                    (
+                        "captioned_image",
+                        wagtail.core.blocks.StructBlock(
+                            [
+                                ("image", wagtail.images.blocks.ImageChooserBlock()),
+                                (
+                                    "alternative_text",
+                                    wagtail.core.blocks.TextBlock(
+                                        help_text="Alternative text for visually impaired users to\nbriefly communicate the intended message of the image in this context.",
+                                        required=True,
+                                    ),
+                                ),
+                                (
+                                    "caption",
+                                    wagtail.core.blocks.RichTextBlock(
+                                        features=["bold", "italic", "link"],
+                                        required=False,
+                                    ),
+                                ),
+                                (
+                                    "style",
+                                    wagtail.core.blocks.ChoiceBlock(
+                                        choices=[
+                                            ("full", "Full Width"),
+                                            ("left", "Floated Left"),
+                                            ("right", "Floated Right"),
+                                        ],
+                                        help_text="Controls how other content flows around the image. Note         that this will only take effect on larger screens. Float consecutive         images in opposite directions for side-by-side display.",
+                                    ),
+                                ),
+                            ],
+                            label="image",
+                        ),
+                    ),
+                    (
+                        "svg_image",
+                        wagtail.core.blocks.StructBlock(
+                            [
+                                (
+                                    "image",
+                                    wagtail.documents.blocks.DocumentChooserBlock(),
+                                ),
+                                (
+                                    "alternative_text",
+                                    wagtail.core.blocks.TextBlock(
+                                        help_text="Alternative text for visually impaired users to\nbriefly communicate the intended message of the image in this context.",
+                                        required=True,
+                                    ),
+                                ),
+                                (
+                                    "caption",
+                                    wagtail.core.blocks.RichTextBlock(
+                                        features=["bold", "italic", "link"],
+                                        required=False,
+                                    ),
+                                ),
+                                (
+                                    "extended_description",
+                                    wagtail.core.blocks.RichTextBlock(
+                                        features=["p"],
+                                        help_text="This text will only be read to     non-sighted users and should describe the major insights or     takeaways from the graphic. Multiple paragraphs are allowed.",
+                                        required=False,
+                                    ),
+                                ),
+                            ]
+                        ),
+                    ),
+                    (
+                        "footnotes",
+                        wagtail.core.blocks.RichTextBlock(
+                            classname="footnotes",
+                            features=["ol", "ul", "bold", "italic", "link"],
+                        ),
+                    ),
+                    ("document", wagtail.documents.blocks.DocumentChooserBlock()),
+                    (
+                        "linkable_section",
+                        wagtail.core.blocks.StructBlock(
+                            [
+                                ("title", wagtail.core.blocks.CharBlock()),
+                                (
+                                    "anchor_text",
+                                    wagtail.core.blocks.CharBlock(
+                                        help_text="Short label for anchor link"
+                                    ),
+                                ),
+                                ("body", wagtail.core.blocks.RichTextBlock()),
+                            ]
+                        ),
+                    ),
+                    ("embed", wagtail.embeds.blocks.EmbedBlock()),
+                ],
+                blank=True,
+            ),
         ),
     ]

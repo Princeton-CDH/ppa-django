@@ -12,13 +12,19 @@ import wagtail.images.blocks
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('editorial', '0001_initial'),
+        ("editorial", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='editorialpage',
-            name='body',
-            field=wagtail.core.fields.StreamField([('paragraph', wagtail.core.blocks.RichTextBlock()), ('image', wagtail.images.blocks.ImageChooserBlock()), ('document', wagtail.documents.blocks.DocumentChooserBlock())]),
+            model_name="editorialpage",
+            name="body",
+            field=wagtail.core.fields.StreamField(
+                [
+                    ("paragraph", wagtail.core.blocks.RichTextBlock()),
+                    ("image", wagtail.images.blocks.ImageChooserBlock()),
+                    ("document", wagtail.documents.blocks.DocumentChooserBlock()),
+                ]
+            ),
         ),
     ]

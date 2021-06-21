@@ -50,7 +50,7 @@ STATICFILES_DIRS = [
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     os.path.join(BASE_DIR, "sitemedia"),
-    os.path.join(BASE_DIR, "bundles")
+    os.path.join(BASE_DIR, "bundles"),
 ]
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
@@ -63,105 +63,103 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
 
 STATICFILES_FINDERS = (
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 )
 
 # Application definition
 
 INSTALLED_APPS = [
-    'grappelli',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.humanize',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.sites',
-    'django.contrib.staticfiles',
-    'django.contrib.redirects',
-    'django.contrib.sitemaps',
-    'django_cas_ng',
-    'pucas',
-    'semanticuiforms',
-    'webpack_loader',
+    "grappelli",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.humanize",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.sites",
+    "django.contrib.staticfiles",
+    "django.contrib.redirects",
+    "django.contrib.sitemaps",
+    "django_cas_ng",
+    "pucas",
+    "semanticuiforms",
+    "webpack_loader",
     # 'wagtail.contrib.forms',
-    'wagtail.contrib.redirects',
-    'wagtail.sites',
-    'wagtail.users',
-    'wagtail.snippets',
-    'wagtail.documents',
-    'wagtail.embeds',
-    'wagtail.images',
+    "wagtail.contrib.redirects",
+    "wagtail.sites",
+    "wagtail.users",
+    "wagtail.snippets",
+    "wagtail.documents",
+    "wagtail.embeds",
+    "wagtail.images",
     # 'wagtail.search',
-    'wagtail.admin',
-    'wagtail.core',
-    'modelcluster',
-    'taggit',
-    'fullurl',
-    'parasolr',
-    'ppa.archive',
-    'ppa.common',
-    'ppa.unapi',
-    'ppa.pages',
-    'ppa.editorial',
+    "wagtail.admin",
+    "wagtail.core",
+    "modelcluster",
+    "taggit",
+    "fullurl",
+    "parasolr",
+    "ppa.archive",
+    "ppa.common",
+    "ppa.unapi",
+    "ppa.pages",
+    "ppa.editorial",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'wagtail.core.middleware.SiteMiddleware',
-    'wagtail.contrib.redirects.middleware.RedirectMiddleware',
-    'csp.middleware.CSPMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "wagtail.core.middleware.SiteMiddleware",
+    "wagtail.contrib.redirects.middleware.RedirectMiddleware",
+    "csp.middleware.CSPMiddleware",
 ]
 
 AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',
-    'django_cas_ng.backends.CASBackend',
+    "django.contrib.auth.backends.ModelBackend",
+    "django_cas_ng.backends.CASBackend",
 )
 
-ROOT_URLCONF = 'ppa.urls'
+ROOT_URLCONF = "ppa.urls"
 
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            os.path.join(BASE_DIR, "templates")
-        ],
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-                'ppa.context_extras',
-                'ppa.context_processors.template_globals',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+                "ppa.context_extras",
+                "ppa.context_processors.template_globals",
             ],
-            'loaders': [
-                'apptemplates.Loader',
-                'django.template.loaders.filesystem.Loader',
-                'django.template.loaders.app_directories.Loader',
-            ]
+            "loaders": [
+                "apptemplates.Loader",
+                "django.template.loaders.filesystem.Loader",
+                "django.template.loaders.app_directories.Loader",
+            ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'ppa.wsgi.application'
+WSGI_APPLICATION = "ppa.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
     }
 }
 
@@ -171,16 +169,16 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -188,12 +186,12 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
-TIME_ZONE = 'America/New_York'
+TIME_ZONE = "America/New_York"
 
 USE_I18N = True
 
@@ -203,50 +201,46 @@ USE_TZ = True
 
 SITE_ID = 1
 
-WAGTAIL_SITE_NAME = 'Princeton Prosody Archive'
+WAGTAIL_SITE_NAME = "Princeton Prosody Archive"
 
 WAGTAILEMBEDS_FINDERS = [
-    {
-        'class': 'wagtail.embeds.finders.oembed'
-    },
-    {
-        'class': 'ppa.pages.embed_finders.GlitchEmbedFinder'
-    },
+    {"class": "wagtail.embeds.finders.oembed"},
+    {"class": "ppa.pages.embed_finders.GlitchEmbedFinder"},
 ]
 
-GRAPPELLI_ADMIN_TITLE = 'Princeton Prosody Archive Admin'
+GRAPPELLI_ADMIN_TITLE = "Princeton Prosody Archive Admin"
 
 # username for logging activity by local scripts
-SCRIPT_USERNAME = 'script'
+SCRIPT_USERNAME = "script"
 
 
 # PUCAS configuration for CAS/LDAP login and user provisioning.
 # Only includes non-sensitive configurations that do not change
 PUCAS_LDAP = {
     # basic user profile attributes
-    'ATTRIBUTES': ['givenName', 'sn', 'mail'],
-    'ATTRIBUTE_MAP': {
-        'first_name': 'givenName',
-        'last_name': 'sn',
-        'email': 'mail',
+    "ATTRIBUTES": ["givenName", "sn", "mail"],
+    "ATTRIBUTE_MAP": {
+        "first_name": "givenName",
+        "last_name": "sn",
+        "email": "mail",
     },
 }
 
 # Django webpack loader
 WEBPACK_LOADER = {
-    'DEFAULT': {
-        'CACHE': True,
-        'BUNDLE_DIR_NAME': 'bundles/',  # must end with slash
-        'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.json'),
-        'POLL_INTERVAL': 0.1,
-        'TIMEOUT': None,
-        'IGNORE': [r'.+\.hot-update.js', r'.+\.map']
+    "DEFAULT": {
+        "CACHE": True,
+        "BUNDLE_DIR_NAME": "bundles/",  # must end with slash
+        "STATS_FILE": os.path.join(BASE_DIR, "webpack-stats.json"),
+        "POLL_INTERVAL": 0.1,
+        "TIMEOUT": None,
+        "IGNORE": [r".+\.hot-update.js", r".+\.map"],
     }
 }
 
 # defaults for HathiTrust dataset rsync, per their documentation
-HATHITRUST_RSYNC_SERVER = 'datasets.hathitrust.org'
-HATHITRUST_RSYNC_PATH = ':ht_text_pd'
+HATHITRUST_RSYNC_SERVER = "datasets.hathitrust.org"
+HATHITRUST_RSYNC_PATH = ":ht_text_pd"
 
 # django-csp configuration for content security policy definition and
 # violation reporting - https://github.com/mozilla/django-csp
@@ -255,25 +249,32 @@ HATHITRUST_RSYNC_PATH = ':ht_text_pd'
 CSP_DEFAULT_SRC = "'none'"
 
 # allow loading js locally, from a cdn, and from google (for analytics)
-CSP_SCRIPT_SRC = ("'self'", 'https://cdnjs.cloudflare.com',
-                  'https://www.googletagmanager.com', "*.glitch.me")
+CSP_SCRIPT_SRC = (
+    "'self'",
+    "https://cdnjs.cloudflare.com",
+    "https://www.googletagmanager.com",
+    "*.glitch.me",
+)
 
 # allow loading fonts locally and from google (via data: url)
-CSP_FONT_SRC = ("'self'", 'https://fonts.gstatic.com data:')
+CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com data:")
 
 # allow loading css locally and from google (for fonts)
-CSP_STYLE_SRC = ("'self'", 'https://fonts.googleapis.com',
-                 '*.glitch.me')
+CSP_STYLE_SRC = ("'self'", "https://fonts.googleapis.com", "*.glitch.me")
 
 # allow loading local images, hathi page images, google tracking pixel, gale images
-CSP_IMG_SRC = ("'self'", 'https://babel.hathitrust.org',
-               'https://www.google-analytics.com', 'https://callisto.ggsrv.com')
+CSP_IMG_SRC = (
+    "'self'",
+    "https://babel.hathitrust.org",
+    "https://www.google-analytics.com",
+    "https://callisto.ggsrv.com",
+)
 
 # exclude admin and cms urls from csp directives since they're authenticated
-CSP_EXCLUDE_URL_PREFIXES = ('/admin', '/cms')
+CSP_EXCLUDE_URL_PREFIXES = ("/admin", "/cms")
 
 # allow usage of nonce for inline js (for analytics)
-CSP_INCLUDE_NONCE_IN = ('script-src',)
+CSP_INCLUDE_NONCE_IN = ("script-src",)
 
 # allow local scripts to connect to source (i.e. searchLoading)
 CSP_CONNECT_SRC = ("'self'", "https://www.google-analytics.com", "*.glitch.me")
@@ -299,6 +300,7 @@ f = os.path.join(BASE_DIR, "ppa", "local_settings.py")
 if os.path.exists(f):
     import sys
     import imp
+
     module_name = "ppa.local_settings"
     module = imp.new_module(module_name)
     module.__file__ = f
@@ -309,12 +311,16 @@ if os.path.exists(f):
 if DEBUG:
     try:
         import debug_toolbar
-        INSTALLED_APPS.append('debug_toolbar')
-        MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
+
+        INSTALLED_APPS.append("debug_toolbar")
+        MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware")
     except ImportError:
         pass
 
     # allow webpack dev server through CSP when in DEBUG
-    CSP_SCRIPT_SRC += ('http://localhost:3000', "'unsafe-eval'", "'unsafe-inline'")
-    CSP_STYLE_SRC += ('http://localhost:3000', "'unsafe-inline'")
-    CSP_CONNECT_SRC += ('http://localhost:3000', 'ws://localhost:3000',)
+    CSP_SCRIPT_SRC += ("http://localhost:3000", "'unsafe-eval'", "'unsafe-inline'")
+    CSP_STYLE_SRC += ("http://localhost:3000", "'unsafe-inline'")
+    CSP_CONNECT_SRC += (
+        "http://localhost:3000",
+        "ws://localhost:3000",
+    )

@@ -8,9 +8,8 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pages', '0004_collectionpage'),
-        ('pages', '0004_contentpage_body_streamfield'),
+        ("pages", "0004_collectionpage"),
+        ("pages", "0004_contentpage_body_streamfield"),
     ]
 
-    operations = [
-    ]
+    operations = []

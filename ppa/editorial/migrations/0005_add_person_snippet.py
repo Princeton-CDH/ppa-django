@@ -11,13 +11,24 @@ import wagtail.snippets.blocks
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('editorial', '0004_editorialpage_description'),
+        ("editorial", "0004_editorialpage_description"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='editorialpage',
-            name='authors',
-            field=wagtail.core.fields.StreamField([('author', wagtail.snippets.blocks.SnippetChooserBlock(ppa.pages.models.Person))], blank=True, help_text='Optional. Brief description for preview display. Will also be used for search description without tags, if none is entered'),
+            model_name="editorialpage",
+            name="authors",
+            field=wagtail.core.fields.StreamField(
+                [
+                    (
+                        "author",
+                        wagtail.snippets.blocks.SnippetChooserBlock(
+                            ppa.pages.models.Person
+                        ),
+                    )
+                ],
+                blank=True,
+                help_text="Optional. Brief description for preview display. Will also be used for search description without tags, if none is entered",
+            ),
         ),
     ]

@@ -9,13 +9,16 @@ import wagtail.core.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('editorial', '0003_remove_editorialpage_date'),
+        ("editorial", "0003_remove_editorialpage_date"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='editorialpage',
-            name='description',
-            field=wagtail.core.fields.RichTextField(blank=True, help_text='Optional. Brief description for preview display. Will also be used for search description (without tags), if one is not entered.'),
+            model_name="editorialpage",
+            name="description",
+            field=wagtail.core.fields.RichTextField(
+                blank=True,
+                help_text="Optional. Brief description for preview display. Will also be used for search description (without tags), if one is not entered.",
+            ),
         ),
     ]

@@ -90,12 +90,20 @@ class Command(BaseCommand):
             raise CommandError("A list of IDs or CSV file for is required for import")
 
         # error handling in case user forgets to specify csv file correctly
-        if 'ids' in kwargs and len(kwargs['ids']) == 1 and kwargs['ids'][0].endswith('.csv'):
-            self.stdout.write(self.style.WARNING(
-                '%s is not a valid id; did you forget to specify -c/--csv?' % kwargs['ids'][0]))
+        if (
+            "ids" in kwargs
+            and len(kwargs["ids"]) == 1
+            and kwargs["ids"][0].endswith(".csv")
+        ):
+            self.stdout.write(
+                self.style.WARNING(
+                    "%s is not a valid id; did you forget to specify -c/--csv?"
+                    % kwargs["ids"][0]
+                )
+            )
             return
 
-        self.verbosity = kwargs.get('verbosity', self.v_normal)
+        self.verbosity = kwargs.get("verbosity", self.v_normal)
 
         # disconnect signal-based indexing to avoid unnecessary indexing
         IndexableSignalHandler.disconnect()
@@ -217,7 +225,9 @@ class Command(BaseCommand):
             digwork.metadata_from_marc(get_marc_record(gale_id))
         except MARCRecordNotFound:
             self.stats["no_marc"] += 1
-            self.stderr.write(self.style.WARNING('MARC record not found for %s' % gale_id))
+            self.stderr.write(
+                self.style.WARNING("MARC record not found for %s" % gale_id)
+            )
         digwork.save()
 
         # set collection membership based on spreadsheet columns
@@ -244,9 +254,7 @@ class Command(BaseCommand):
 
         # item record used for import includes page metadata;
         # for efficiency, index pages at import time with the same api response
-        DigitizedWork.index_items(
-            Page.gale_page_index_data(digwork, item_record)
-        )
+        DigitizedWork.index_items(Page.gale_page_index_data(digwork, item_record))
 
         self.stats["imported"] += 1
         self.stats["pages"] += digwork.page_count

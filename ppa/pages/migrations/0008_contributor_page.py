@@ -15,33 +15,95 @@ import wagtail.snippets.blocks
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('wagtailcore', '0040_page_draft_title'),
-        ('pages', '0007_add_person_snippet'),
+        ("wagtailcore", "0040_page_draft_title"),
+        ("pages", "0007_add_person_snippet"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ContributorPage',
+            name="ContributorPage",
             fields=[
-                ('page_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='wagtailcore.Page')),
-                ('description', wagtail.core.fields.RichTextField(blank=True, help_text='Optional. Brief description for preview display. Will also be used for search description (without tags), if one is not entered.')),
-                ('contributors', wagtail.core.fields.StreamField([('person', wagtail.snippets.blocks.SnippetChooserBlock(ppa.pages.models.Person))], blank=True, help_text='Select and order people to be listed as project contributors.')),
-                ('board', wagtail.core.fields.StreamField([('person', wagtail.snippets.blocks.SnippetChooserBlock(ppa.pages.models.Person))], blank=True, help_text='Select and order people to be listed as board members.')),
-                ('body', wagtail.core.fields.StreamField([('paragraph', wagtail.core.blocks.RichTextBlock()), ('image', wagtail.images.blocks.ImageChooserBlock()), ('document', wagtail.documents.blocks.DocumentChooserBlock())])),
+                (
+                    "page_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="wagtailcore.Page",
+                    ),
+                ),
+                (
+                    "description",
+                    wagtail.core.fields.RichTextField(
+                        blank=True,
+                        help_text="Optional. Brief description for preview display. Will also be used for search description (without tags), if one is not entered.",
+                    ),
+                ),
+                (
+                    "contributors",
+                    wagtail.core.fields.StreamField(
+                        [
+                            (
+                                "person",
+                                wagtail.snippets.blocks.SnippetChooserBlock(
+                                    ppa.pages.models.Person
+                                ),
+                            )
+                        ],
+                        blank=True,
+                        help_text="Select and order people to be listed as project contributors.",
+                    ),
+                ),
+                (
+                    "board",
+                    wagtail.core.fields.StreamField(
+                        [
+                            (
+                                "person",
+                                wagtail.snippets.blocks.SnippetChooserBlock(
+                                    ppa.pages.models.Person
+                                ),
+                            )
+                        ],
+                        blank=True,
+                        help_text="Select and order people to be listed as board members.",
+                    ),
+                ),
+                (
+                    "body",
+                    wagtail.core.fields.StreamField(
+                        [
+                            ("paragraph", wagtail.core.blocks.RichTextBlock()),
+                            ("image", wagtail.images.blocks.ImageChooserBlock()),
+                            (
+                                "document",
+                                wagtail.documents.blocks.DocumentChooserBlock(),
+                            ),
+                        ]
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
-            bases=('wagtailcore.page', models.Model),
+            bases=("wagtailcore.page", models.Model),
         ),
         migrations.AddField(
-            model_name='person',
-            name='description',
-            field=wagtail.core.fields.RichTextField(blank=True, help_text='Title & affiliation, or other relevant context.'),
+            model_name="person",
+            name="description",
+            field=wagtail.core.fields.RichTextField(
+                blank=True, help_text="Title & affiliation, or other relevant context."
+            ),
         ),
         migrations.AddField(
-            model_name='person',
-            name='project_role',
-            field=models.CharField(blank=True, help_text='Project role, if any, for display on contributor list.', max_length=255),
+            model_name="person",
+            name="project_role",
+            field=models.CharField(
+                blank=True,
+                help_text="Project role, if any, for display on contributor list.",
+                max_length=255,
+            ),
         ),
     ]

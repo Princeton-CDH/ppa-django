@@ -19,8 +19,12 @@ from parasolr.django import SolrQuerySet
 from parasolr.django.views import SolrLastModifiedMixin
 import requests
 
-from ppa.archive.forms import AddToCollectionForm, AddFromHathiForm, \
-    SearchForm, SearchWithinWorkForm
+from ppa.archive.forms import (
+    AddToCollectionForm,
+    AddFromHathiForm,
+    SearchForm,
+    SearchWithinWorkForm,
+)
 from ppa.archive.models import DigitizedWork, NO_COLLECTION_LABEL
 from ppa.archive.solr import ArchiveSearchQuerySet
 from ppa.archive.util import HathiImporter
@@ -30,23 +34,22 @@ from ppa.common.views import AjaxTemplateMixin
 logger = logging.getLogger(__name__)
 
 
-class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
-                            ListView):
-    '''Search and browse digitized works.  Based on Solr index
-    of works and pages.'''
+class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
+    """Search and browse digitized works.  Based on Solr index
+    of works and pages."""
 
     model = DigitizedWork
     # FIXME should auto-determine this
-    template_name = 'archive/digitizedwork_list.html'
-    ajax_template_name = 'archive/snippets/results_list.html'
+    template_name = "archive/digitizedwork_list.html"
+    ajax_template_name = "archive/snippets/results_list.html"
     form_class = SearchForm
     paginate_by = 50
     #: title for metadata / preview
-    meta_title = 'Princeton Prosody Archive'
+    meta_title = "Princeton Prosody Archive"
     #: page description for metadata/preview
-    meta_description = '''The Princeton Prosody Archive is a full-text
+    meta_description = """The Princeton Prosody Archive is a full-text
     searchable database of thousands of historical documents about the
-    study of language and the study of poetry.'''
+    study of language and the study of poetry."""
 
     # keyword query; assume no search terms unless set
     query = None
@@ -56,8 +59,8 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
         # if relevance sort is requested but there is no keyword search
         # term present, clear it out and fallback to default sort
         if not self.form_class().has_keyword_query(form_opts):
-            if 'sort' in form_opts and form_opts['sort'] == 'relevance':
-                del form_opts['sort']
+            if "sort" in form_opts and form_opts["sort"] == "relevance":
+                del form_opts["sort"]
 
         searchform_defaults = self.form_class.defaults()
 
@@ -78,9 +81,11 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
         if not self.form.is_valid():
             return DigitizedWork.objects.none()
 
-        solr_q = ArchiveSearchQuerySet() \
-            .facet(*self.form.facet_fields) \
+        solr_q = (
+            ArchiveSearchQuerySet()
+            .facet(*self.form.facet_fields)
             .order_by(self.form.get_solr_sort_field())
+        )
 
         # components of query to filter digitized works
         if self.form.is_valid():
@@ -94,12 +99,12 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
             if collections:
                 # if *all* collections are selected, there is no need to filter
                 # (will return everything either way; keep the query simpler)
-                if len(collections) < len(self.form.fields['collections'].choices):
+                if len(collections) < len(self.form.fields["collections"].choices):
                     # add quotes so solr will treat as exact phrase
                     # for multiword collection names
                     solr_q.work_filter(
-                        collections_exact__in=['"%s"' % c
-                                               for c in collections])
+                        collections_exact__in=['"%s"' % c for c in collections]
+                    )
 
             # For collection exclusion logic to work properly, if no
             # collections are selected, no items should be returned.
@@ -109,17 +114,17 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
                 solr_q.work_filter(collections_exact__exists=False)
 
             # filter books by title or author if there are search terms
-            solr_q.work_title_search(search_opts.get('title', None))
-            solr_q.work_filter(author=search_opts.get('author', None))
+            solr_q.work_title_search(search_opts.get("title", None))
+            solr_q.work_filter(author=search_opts.get("author", None))
 
         for range_facet in self.form.range_facets:
             # range filter requested in search options
             start = end = None
             # if start or end is specified on the form, add a filter query
             if range_facet in search_opts and search_opts[range_facet]:
-                start, end = search_opts[range_facet].split('-')
+                start, end = search_opts[range_facet].split("-")
                 # find works restricted by range
-                solr_q.work_filter(**{'%s__range' % range_facet: (start, end)})
+                solr_q.work_filter(**{"%s__range" % range_facet: (start, end)})
 
             # get minimum and maximum pub date values from the db
             pubmin, pubmax = self.form.pub_date_minmax()
@@ -138,18 +143,21 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
             # ideally, generate 24 slices; minimum gap size of 1
             # Use hardend to restrict last range to *actual* maximum value
             solr_q = solr_q.facet_range(
-                range_facet, start=start,
-                end=end + 1, gap=max(1, int((end - start) / 24)),
-                hardend=True)
+                range_facet,
+                start=start,
+                end=end + 1,
+                gap=max(1, int((end - start) / 24)),
+                hardend=True,
+            )
 
         self.solrq = solr_q
         return solr_q
 
     def get_page_highlights(self, page_groups):
-        '''If there is a keyword search, query Solr for matching pages
+        """If there is a keyword search, query Solr for matching pages
         with text highlighting.
         NOTE: This has to be done as a separate query because Solr
-        doesn't support highlighting on collapsed items.'''
+        doesn't support highlighting on collapsed items."""
 
         page_highlights = {}
         if not self.query or not page_groups:
@@ -157,17 +165,23 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
             return page_highlights
 
         # generate a list of page ids from the grouped results
-        page_ids = ['(%s)' % page['id'] for results in page_groups.values()
-                    for page in results['docs']]
+        page_ids = [
+            "(%s)" % page["id"]
+            for results in page_groups.values()
+            for page in results["docs"]
+        ]
 
         if not page_ids:
             # if no page ids were found, bail out
             return page_highlights
 
-        solr_pageq = SolrQuerySet().search(content='(%s)' % self.query) \
-            .search(id__in=page_ids) \
-            .only('id') \
-            .highlight('content*', snippets=3, method='unified')
+        solr_pageq = (
+            SolrQuerySet()
+            .search(content="(%s)" % self.query)
+            .search(id__in=page_ids)
+            .only("id")
+            .highlight("content*", snippets=3, method="unified")
+        )
         # populate the result cache with number of rows specified
         solr_pageq.get_results(rows=len(page_ids))
         # NOTE: rows argument is needed until this parasolr bug is fixed
@@ -178,7 +192,7 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
         # if the form is not valid, bail out
         if not self.form.is_valid():
             context = super().get_context_data(**kwargs)
-            context['search_form'] = self.form
+            context["search_form"] = self.form
             return context
 
         page_groups = facet_ranges = None
@@ -188,7 +202,7 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
             # get expanded must be called on the *paginated* solr queryset
             # in order to get the correct number and set of expanded groups
             # - get everything from the same solr queryset to avoid extra calls
-            solrq = context['page_obj'].object_list
+            solrq = context["page_obj"].object_list
             page_groups = solrq.get_expanded()
             facet_dict = solrq.get_facets()
             self.form.set_choices_from_facets(facet_dict.facet_fields)
@@ -197,7 +211,7 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
             # facet ranges are used for display; when sending to solr we
             # increase the end bound by one so that year is included;
             # subtract it back so display matches user entered dates
-            facet_ranges['pub_date']['end'] -= 1
+            facet_ranges["pub_date"]["end"] -= 1
 
         except requests.exceptions.ConnectionError:
             # override object list with an empty list that can be paginated
@@ -206,42 +220,44 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin,
             context = super().get_context_data(**kwargs)
             # NOTE: this error should possibly be raised as a 500 error,
             # or an error status set on the response
-            context['error'] = 'Something went wrong.'
+            context["error"] = "Something went wrong."
 
-        context.update({
-            'search_form': self.form,
-            # total and object_list provided by paginator
-            'page_groups': page_groups,
-            # range facet data for publication date
-            'facet_ranges': facet_ranges,
-            'page_highlights': self.get_page_highlights(page_groups),
-            # query for use template links to detail view with search
-            'query': self.query,
-            'NO_COLLECTION_LABEL': NO_COLLECTION_LABEL,
-            'page_title': self.meta_title,
-            'page_description': self.meta_description
-        })
+        context.update(
+            {
+                "search_form": self.form,
+                # total and object_list provided by paginator
+                "page_groups": page_groups,
+                # range facet data for publication date
+                "facet_ranges": facet_ranges,
+                "page_highlights": self.get_page_highlights(page_groups),
+                # query for use template links to detail view with search
+                "query": self.query,
+                "NO_COLLECTION_LABEL": NO_COLLECTION_LABEL,
+                "page_title": self.meta_title,
+                "page_description": self.meta_description,
+            }
+        )
         return context
 
 
-class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin,
-                              DetailView):
-    '''Display details for a single digitized work. If a work has been
-    surpressed, returns a 410 Gone response.'''
-    ajax_template_name = 'archive/snippets/results_within_list.html'
+class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailView):
+    """Display details for a single digitized work. If a work has been
+    surpressed, returns a 410 Gone response."""
+
+    ajax_template_name = "archive/snippets/results_within_list.html"
     model = DigitizedWork
-    slug_field = 'source_id'
-    slug_url_kwarg = 'source_id'
+    slug_field = "source_id"
+    slug_url_kwarg = "source_id"
     form_class = SearchWithinWorkForm
     paginate_by = 50
 
     def get_template_names(self):
         if self.object.status == DigitizedWork.SUPPRESSED:
-            return '410.html'
+            return "410.html"
         return super().get_template_names()
 
     def get_solr_lastmodified_filters(self):
-        return {'source_id': self.object.source_id}
+        return {"source_id": self.object.source_id}
 
     def get(self, *args, **kwargs):
         response = super().get(*args, **kwargs)
@@ -253,24 +269,20 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin,
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        digwork = context['object']
+        digwork = context["object"]
         # if suppressed, don't do any further processing
         if digwork.is_suppressed:
             return context
 
-        context.update({
-            'page_title': digwork.title,
-            'page_description': digwork.public_notes
-        })
+        context.update(
+            {"page_title": digwork.title, "page_description": digwork.public_notes}
+        )
 
         # pull in the query if it exists to use
-        query = self.request.GET.get('query', '')
+        query = self.request.GET.get("query", "")
         form_opts = self.request.GET.copy()
         form = self.form_class(form_opts)
-        context.update({
-            'search_form': form,
-            'query': query
-        })
+        context.update({"search_form": form, "query": query})
 
         # search within a volume only supported for content with full text
         if query and digwork.has_fulltext:
@@ -279,96 +291,134 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin,
             # sort by page order,
             # only return fields needed for page result display,
             # configure highlighting on page text content
-            solr_pageq = SolrQuerySet() \
-                .search(content='(%s)' % query) \
-                .filter(source_id='"%s"' % digwork.source_id,
-                        item_type='page') \
-                .only('id', 'source_id', 'order', 'title', 'label', 'image_id_s') \
-                .highlight('content*', snippets=3, method='unified') \
-                .order_by('order')
+            solr_pageq = (
+                SolrQuerySet()
+                .search(content="(%s)" % query)
+                .filter(source_id='"%s"' % digwork.source_id, item_type="page")
+                .only("id", "source_id", "order", "title", "label", "image_id_s")
+                .highlight("content*", snippets=3, method="unified")
+                .order_by("order")
+            )
 
             try:
                 paginator = Paginator(solr_pageq, per_page=self.paginate_by)
-                page_num = self.request.GET.get('page', 1)
+                page_num = self.request.GET.get("page", 1)
                 current_page = paginator.page(page_num)
                 paged_result = current_page.object_list
                 # don't try to get highlights if there are no results
-                highlights = paged_result.get_highlighting() if paged_result.count() else {}
+                highlights = (
+                    paged_result.get_highlighting() if paged_result.count() else {}
+                )
 
-                context.update({
-                    'search_form': form,
-                    'current_results': current_page,
-                    # add highlights to context
-                    'page_highlights': highlights
-                })
+                context.update(
+                    {
+                        "search_form": form,
+                        "current_results": current_page,
+                        # add highlights to context
+                        "page_highlights": highlights,
+                    }
+                )
 
             except requests.exceptions.ConnectionError:
-                context['error'] = 'Something went wrong.'
+                context["error"] = "Something went wrong."
         return context
 
 
 class DigitizedWorkByRecordId(RedirectView):
-    '''Redirect from DigitizedWork record id to detail view when possible.
-    If there is only one record found, redirect. If multiple are found, 404.'''
+    """Redirect from DigitizedWork record id to detail view when possible.
+    If there is only one record found, redirect. If multiple are found, 404."""
+
     permanent = False
     query_string = False
 
     def get_redirect_url(self, *args, **kwargs):
         try:
-            work = get_object_or_404(DigitizedWork, record_id=kwargs['record_id'])
+            work = get_object_or_404(DigitizedWork, record_id=kwargs["record_id"])
             return work.get_absolute_url()
         except MultipleObjectsReturned:
             raise Http404
 
 
 class DigitizedWorkCSV(ListView):
-    '''Export of digitized work details as CSV download.'''
+    """Export of digitized work details as CSV download."""
+
     # NOTE: csv logic could be extracted as a view mixin for reuse
     model = DigitizedWork
     # order by id for now, for simplicity
-    ordering = 'id'
+    ordering = "id"
     header_row = [
-        'Database ID', 'Source ID', 'Record ID', 'Title', 'Subtitle',
-        'Sort title', 'Author', 'Publication Date', 'Publication Place',
-        'Publisher', 'Enumcron', 'Collection', 'Public Notes', 'Notes',
-        'Page Count', 'Status', 'Source', 'Date Added', 'Last Updated'
+        "Database ID",
+        "Source ID",
+        "Record ID",
+        "Title",
+        "Subtitle",
+        "Sort title",
+        "Author",
+        "Publication Date",
+        "Publication Place",
+        "Publisher",
+        "Enumcron",
+        "Collection",
+        "Public Notes",
+        "Notes",
+        "Page Count",
+        "Status",
+        "Source",
+        "Date Added",
+        "Last Updated",
     ]
 
     def get_csv_filename(self):
-        '''Return the CSV file name based on the current datetime.
+        """Return the CSV file name based on the current datetime.
 
         :returns: the filename for the CSV to be generated
         :rtype: str
-        '''
-        return 'ppa-digitizedworks-%s.csv' % now().strftime('%Y%m%dT%H:%M:%S')
+        """
+        return "ppa-digitizedworks-%s.csv" % now().strftime("%Y%m%dT%H:%M:%S")
 
     def get_data(self):
-        '''Get data for the CSV.
+        """Get data for the CSV.
 
         :returns: rows for CSV columns
         :rtype: tuple
-        '''
-        return ((dw.id, dw.source_id, dw.record_id, dw.title, dw.subtitle,
-                 dw.sort_title, dw.author, dw.pub_date, dw.pub_place,
-                 dw.publisher, dw.enumcron,
-                 ';'.join([coll.name for coll in dw.collections.all()]),
-                 dw.public_notes, dw.notes, dw.page_count,
-                 dw.get_status_display(), dw.get_source_display(),
-                 dw.added, dw.updated
-                 )
-                for dw in self.get_queryset().prefetch_related('collections'))
+        """
+        return (
+            (
+                dw.id,
+                dw.source_id,
+                dw.record_id,
+                dw.title,
+                dw.subtitle,
+                dw.sort_title,
+                dw.author,
+                dw.pub_date,
+                dw.pub_place,
+                dw.publisher,
+                dw.enumcron,
+                ";".join([coll.name for coll in dw.collections.all()]),
+                dw.public_notes,
+                dw.notes,
+                dw.page_count,
+                dw.get_status_display(),
+                dw.get_source_display(),
+                dw.added,
+                dw.updated,
+            )
+            for dw in self.get_queryset().prefetch_related("collections")
+        )
         # NOTE: prefetch collections so they are retrieved more efficiently
         # all at once, rather than one at a time for each item
 
     def render_to_csv(self, data):
-        '''
+        """
         Render the CSV as an HTTP response.
 
         :rtype: :class:`django.http.HttpResponse`
-        '''
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="%s"' % \
-            self.get_csv_filename()
+        """
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = (
+            'attachment; filename="%s"' % self.get_csv_filename()
+        )
 
         writer = csv.writer(response)
         writer.writerow(self.header_row)
@@ -377,66 +427,69 @@ class DigitizedWorkCSV(ListView):
         return response
 
     def get(self, *args, **kwargs):
-        '''Return CSV file on GET request.'''
+        """Return CSV file on GET request."""
         return self.render_to_csv(self.get_data())
 
 
 class AddToCollection(PermissionRequiredMixin, ListView, FormView):
-    '''
+    """
     View to bulk add a queryset of :class:`ppa.archive.models.DigitizedWork`
     to a set of :class:`ppa.archive.models.Collection instances`.
-    '''
-    permission_required = 'archive.change_digitizedwork'
+    """
+
+    permission_required = "archive.change_digitizedwork"
     model = DigitizedWork
-    template_name = 'archive/add_to_collection.html'
+    template_name = "archive/add_to_collection.html"
     form_class = AddToCollectionForm
 
     def get_success_url(self):
-        '''
+        """
         Redirect to the :class:`ppa.archive.models.DigitizedWork`
         change_list in the Django admin with pagination and filters preserved.
         Expects :meth:`ppa.archive.admin.add_works_to_collection`
         to have set 'collection-add-filters' as a dict in the request's
         session.
-        '''
-        change_list = reverse('admin:archive_digitizedwork_changelist')
+        """
+        change_list = reverse("admin:archive_digitizedwork_changelist")
         # get request.session's querystring filter, and if it exists
         # use it to set the querystring
-        querystring = ''
-        filter_dict = self.request.session.get('collection-add-filters', None)
+        querystring = ""
+        filter_dict = self.request.session.get("collection-add-filters", None)
         if filter_dict:
-            querystring = '?%s' % urlencode(filter_dict)
-        return '%s%s' % (change_list, querystring)
+            querystring = "?%s" % urlencode(filter_dict)
+        return "%s%s" % (change_list, querystring)
 
     def get_queryset(self, *args, **kwargs):
-        '''Return a queryset filtered by id, or empty list if no ids'''
+        """Return a queryset filtered by id, or empty list if no ids"""
         # get ids from session if there are any
-        ids = self.request.session.get('collection-add-ids', [])
+        ids = self.request.session.get("collection-add-ids", [])
         # if somehow a problematic non-pk is pushed, will be ignored in filter
-        digworks = DigitizedWork.objects.filter(id__in=ids
-                                                if ids else []).order_by('id')
+        digworks = DigitizedWork.objects.filter(id__in=ids if ids else []).order_by(
+            "id"
+        )
         # revise the stored list in session to eliminate any pks
         # that don't exist
-        self.request.session['collection-add-ids'] = \
-            list(digworks.values_list('id', flat=True))
+        self.request.session["collection-add-ids"] = list(
+            digworks.values_list("id", flat=True)
+        )
         return digworks
 
     def post(self, request, *args, **kwargs):
-        '''
+        """
         Add :class:`ppa.archive.models.DigitizedWork` instances passed in form
         data to selected instances of :class:`ppa.archive.models.Collection`,
         then return to change_list view.
 
         Expects a list of DigitizedWork ids to be set in the request session.
 
-        '''
+        """
         form = AddToCollectionForm(request.POST)
-        if form.is_valid() and request.session['collection-add-ids']:
+        if form.is_valid() and request.session["collection-add-ids"]:
             data = form.cleaned_data
             # get digitzed works from validated form
             digitized_works = self.get_queryset()
-            del request.session['collection-add-ids']
-            for collection in data['collections']:
+            del request.session["collection-add-ids"]
+            for collection in data["collections"]:
                 # add rather than set to ensure add does not replace
                 # previous digitized works in set.
                 collection.digitizedwork_set.add(*digitized_works)
@@ -446,18 +499,20 @@ class AddToCollection(PermissionRequiredMixin, ListView, FormView):
             # create a success message to add to message framework stating
             # what happened
             num_works = digitized_works.count()
-            collections = ', '.join(collection.name for
-                                    collection in data['collections'])
-            messages.success(request, 'Successfully added %d works to: %s.'
-                             % (num_works, collections))
+            collections = ", ".join(
+                collection.name for collection in data["collections"]
+            )
+            messages.success(
+                request,
+                "Successfully added %d works to: %s." % (num_works, collections),
+            )
             # redirect to the change list with the message intact
             return redirect(self.get_success_url())
         # make form error more descriptive, default to an error re: pks
-        if 'collections' in form.errors:
-            del form.errors['collections']
+        if "collections" in form.errors:
+            del form.errors["collections"]
             form.add_error(
-                'collections',
-                ValidationError('Please select at least one Collection')
+                "collections", ValidationError("Please select at least one Collection")
             )
         # Provide an object list for ListView and emulate CBV calling
         # render_to_response to pass form with errors; just calling super
@@ -467,17 +522,18 @@ class AddToCollection(PermissionRequiredMixin, ListView, FormView):
 
 
 class AddFromHathiView(PermissionRequiredMixin, FormView):
-    '''Admin view to add new HathiTrust records by providing a list
-    of ids.'''
-    permission_required = 'archive.add_digitizedwork'
-    template_name = 'archive/add_from_hathi.html'
+    """Admin view to add new HathiTrust records by providing a list
+    of ids."""
+
+    permission_required = "archive.add_digitizedwork"
+    template_name = "archive/add_from_hathi.html"
     form_class = AddFromHathiForm
-    page_title = 'Add new records from HathiTrust'
+    page_title = "Add new records from HathiTrust"
 
     def get_context_data(self, *args, **kwargs):
         # Add page title to template context data
         context = super().get_context_data(*args, **kwargs)
-        context['page_title'] = self.page_title
+        context["page_title"] = self.page_title
         return context
 
     def form_valid(self, form):
@@ -489,33 +545,39 @@ class AddFromHathiView(PermissionRequiredMixin, FormView):
         htimporter = HathiImporter(htids)
         htimporter.filter_existing_ids()
         # add items, and create log entries associated with current user
-        htimporter.add_items(log_msg_src='via django admin',
-                             user=self.request.user)
+        htimporter.add_items(log_msg_src="via django admin", user=self.request.user)
         htimporter.index()
 
         # generate lookup for admin urls keyed on source id to simplify
         # template logic needed
-        admin_urls = {htid: reverse('admin:archive_digitizedwork_change', args=[pk])
-                      for htid, pk in htimporter.existing_ids.items()}
+        admin_urls = {
+            htid: reverse("admin:archive_digitizedwork_change", args=[pk])
+            for htid, pk in htimporter.existing_ids.items()
+        }
         for work in htimporter.imported_works:
-            admin_urls[work.source_id] = \
-                reverse('admin:archive_digitizedwork_change', args=[work.pk])
+            admin_urls[work.source_id] = reverse(
+                "admin:archive_digitizedwork_change", args=[work.pk]
+            )
 
         # Default form_valid behavior is to redirect to success url,
         # but we actually want to redisplay the template with results
         # and allow submitting the form again with a new batch.
-        return render(self.request, self.template_name, context={
-            'results': htimporter.output_results(),
-            'existing_ids': htimporter.existing_ids,
-            'form': self.form_class(),  # new form instance
-            'page_title': self.page_title,
-            'admin_urls': admin_urls
-            })
+        return render(
+            self.request,
+            self.template_name,
+            context={
+                "results": htimporter.output_results(),
+                "existing_ids": htimporter.existing_ids,
+                "form": self.form_class(),  # new form instance
+                "page_title": self.page_title,
+                "admin_urls": admin_urls,
+            },
+        )
 
 
 class OpenSearchDescriptionView(TemplateView):
-    '''Basic open search description for searching the archive
-    via browser or other tools.'''
+    """Basic open search description for searching the archive
+    via browser or other tools."""
 
     template_name = "archive/opensearch_description.xml"
-    content_type = 'application/opensearchdescription+xml'
+    content_type = "application/opensearchdescription+xml"

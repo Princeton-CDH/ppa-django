@@ -16,18 +16,19 @@ def load_group_fixture(apps, schema_editor):
         create_permissions(app_config, apps=apps, verbosity=0)
         app_config.models_module = None
 
-    call_command('loaddata', 'initial_groups', app_label='common', verbosity=0)
+    call_command("loaddata", "initial_groups", app_label="common", verbosity=0)
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('auth', '0001_initial'),
-        ('archive', '0001_initial'),
-        ('redirects', '0001_initial'),
+        ("auth", "0001_initial"),
+        ("archive", "0001_initial"),
+        ("redirects", "0001_initial"),
     ]
 
     operations = [
-        migrations.RunPython(load_group_fixture, reverse_code=migrations.RunPython.noop),
+        migrations.RunPython(
+            load_group_fixture, reverse_code=migrations.RunPython.noop
+        ),
     ]
-

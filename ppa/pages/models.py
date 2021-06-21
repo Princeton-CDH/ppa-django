@@ -6,8 +6,7 @@ from wagtail.core import blocks
 from wagtail.core.models import Page
 from wagtail.core.fields import RichTextField, StreamField
 
-from wagtail.admin.edit_handlers import FieldPanel, PageChooserPanel, \
-    StreamFieldPanel
+from wagtail.admin.edit_handlers import FieldPanel, PageChooserPanel, StreamFieldPanel
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.images.edit_handlers import ImageChooserPanel
 from wagtail.images.models import Image
@@ -21,14 +20,13 @@ from ppa.archive.models import Collection
 
 @register_snippet
 class Person(models.Model):
-    '''Common model for a person, currently used to document authorship for
-    instances of :class:`ppa.editorial.models.EditorialPage`.'''
+    """Common model for a person, currently used to document authorship for
+    instances of :class:`ppa.editorial.models.EditorialPage`."""
 
     #: the display name of an individual
     name = models.CharField(
         max_length=255,
-        help_text='Full name for the person as it should appear in the author '
-                  'list.'
+        help_text="Full name for the person as it should appear in the author " "list.",
     )
     #: Optional profile image to be associated with a person
     photo = models.ForeignKey(
@@ -36,32 +34,36 @@ class Person(models.Model):
         null=True,
         blank=True,
         on_delete=models.CASCADE,
-        help_text='Image to use as a profile photo for a person, '
-                  'displayed on contributor list.'
+        help_text="Image to use as a profile photo for a person, "
+        "displayed on contributor list.",
     )
     #: identifying URI for a person (VIAF, ORCID iD, personal website, etc.)
     url = models.URLField(
         blank=True,
-        default='',
-        help_text='Personal website, profile page, or social media profile page '
-                  'for this person.'
-        )
+        default="",
+        help_text="Personal website, profile page, or social media profile page "
+        "for this person.",
+    )
     #: description (affiliation, etc.)
     description = RichTextField(
-        blank=True, features=['bold', 'italic'],
-        help_text='Title & affiliation, or other relevant context.')
+        blank=True,
+        features=["bold", "italic"],
+        help_text="Title & affiliation, or other relevant context.",
+    )
 
     #: project role
     project_role = models.CharField(
-        max_length=255, blank=True,
-        help_text='Project role, if any, for display on contributor list.')
+        max_length=255,
+        blank=True,
+        help_text="Project role, if any, for display on contributor list.",
+    )
 
     panels = [
-        FieldPanel('name'),
-        ImageChooserPanel('photo'),
-        FieldPanel('url'),
-        FieldPanel('description'),
-        FieldPanel('project_role'),
+        FieldPanel("name"),
+        ImageChooserPanel("photo"),
+        FieldPanel("url"),
+        FieldPanel("description"),
+        FieldPanel("project_role"),
     ]
 
     def __str__(self):
@@ -69,30 +71,31 @@ class Person(models.Model):
 
 
 class HomePage(Page):
-    ''':class:`wagtail.core.models.Page` model for PPA home page'''
+    """:class:`wagtail.core.models.Page` model for PPA home page"""
+
     body = RichTextField(blank=True)
 
     page_preview_1 = models.ForeignKey(
-        'wagtailcore.Page',
+        "wagtailcore.Page",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name='+',
-        help_text='First page to preview on the home page as a card'
+        related_name="+",
+        help_text="First page to preview on the home page as a card",
     )
     page_preview_2 = models.ForeignKey(
-        'wagtailcore.Page',
+        "wagtailcore.Page",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name='+',
-        help_text='Second page to preview on the home page as card'
+        related_name="+",
+        help_text="Second page to preview on the home page as card",
     )
 
     content_panels = Page.content_panels + [
-        PageChooserPanel('page_preview_1'),
-        PageChooserPanel('page_preview_2'),
-        FieldPanel('body', classname="full"),
+        PageChooserPanel("page_preview_1"),
+        PageChooserPanel("page_preview_2"),
+        FieldPanel("body", classname="full"),
     ]
 
     # only generic parent page allowed, so homepage can be created under
@@ -105,26 +108,30 @@ class HomePage(Page):
     def get_context(self, request):
         context = super().get_context(request)
 
-        preview_pages = [page for page in [self.page_preview_1,
-                                           self.page_preview_2] if page]
+        preview_pages = [
+            page for page in [self.page_preview_1, self.page_preview_2] if page
+        ]
 
         # if no preview pages are associated, look for history and prosody
         # by slug url (preliminary urls!)
         if not preview_pages:
-            preview_pages = ContentPage.objects.filter(slug__in=['history', 'prosody'])
+            preview_pages = ContentPage.objects.filter(slug__in=["history", "prosody"])
 
         # grab collection page for displaying collection overview
         collection_page = CollectionPage.objects.live().first()
 
         # include 2 random collections
         # along with stats for all collections
-        context.update({
-            'collections': Collection.objects.order_by('?')[:2],
-            'stats': Collection.stats(),
-            'preview_pages': preview_pages,
-            'collection_page': collection_page
-        })
+        context.update(
+            {
+                "collections": Collection.objects.order_by("?")[:2],
+                "stats": Collection.stats(),
+                "preview_pages": preview_pages,
+                "collection_page": collection_page,
+            }
+        )
         return context
+
 
 #: help text for image alternative text
 ALT_TEXT_HELP = """Alternative text for visually impaired users to
@@ -132,86 +139,106 @@ briefly communicate the intended message of the image in this context."""
 
 
 class ImageWithCaption(blocks.StructBlock):
-    ''':class:`~wagtail.core.blocks.StructBlock` for an image with
+    """:class:`~wagtail.core.blocks.StructBlock` for an image with
     a formatted caption, so caption can be context-specific. Also allows images
-    to be floated right, left, or take up the width of the page.'''
+    to be floated right, left, or take up the width of the page."""
+
     image = ImageChooserBlock()
     alternative_text = blocks.TextBlock(required=True, help_text=ALT_TEXT_HELP)
-    caption = blocks.RichTextBlock(required=False,
-                                   features=['bold', 'italic', 'link'])
-    style = blocks.ChoiceBlock(required=True, default='full', choices=[
-        ('full', 'Full Width'),
-        ('left', 'Floated Left'),
-        ('right', 'Floated Right'),
-    ], help_text='Controls how other content flows around the image. Note \
+    caption = blocks.RichTextBlock(required=False, features=["bold", "italic", "link"])
+    style = blocks.ChoiceBlock(
+        required=True,
+        default="full",
+        choices=[
+            ("full", "Full Width"),
+            ("left", "Floated Left"),
+            ("right", "Floated Right"),
+        ],
+        help_text="Controls how other content flows around the image. Note \
         that this will only take effect on larger screens. Float consecutive \
-        images in opposite directions for side-by-side display.')
+        images in opposite directions for side-by-side display.",
+    )
 
     class Meta:
-        icon = 'image'
-        template = 'pages/blocks/image_caption_block.html'
+        icon = "image"
+        template = "pages/blocks/image_caption_block.html"
 
 
 class SVGImageBlock(blocks.StructBlock):
-    ''':class:`~wagtail.core.blocks.StructBlock` for an SVG image with
+    """:class:`~wagtail.core.blocks.StructBlock` for an SVG image with
     alternative text and optional formatted caption. Separate from
     :class:`CaptionedImageBlock` because Wagtail image handling
-    does not work with SVG.'''
-    extended_description_help = '''This text will only be read to \
+    does not work with SVG."""
+
+    extended_description_help = """This text will only be read to \
     non-sighted users and should describe the major insights or \
-    takeaways from the graphic. Multiple paragraphs are allowed.'''
+    takeaways from the graphic. Multiple paragraphs are allowed."""
 
     image = DocumentChooserBlock()
     alternative_text = blocks.TextBlock(required=True, help_text=ALT_TEXT_HELP)
-    caption = blocks.RichTextBlock(features=['bold', 'italic', 'link'],
-                                   required=False)
+    caption = blocks.RichTextBlock(features=["bold", "italic", "link"], required=False)
     extended_description = blocks.RichTextBlock(
-        features=['p'], required=False, help_text=extended_description_help)
+        features=["p"], required=False, help_text=extended_description_help
+    )
 
     class Meta:
-        icon = 'image'
-        label = 'SVG'
-        template = 'pages/blocks/svg_image_block.html'
+        icon = "image"
+        label = "SVG"
+        template = "pages/blocks/svg_image_block.html"
 
 
 class LinkableSectionBlock(blocks.StructBlock):
-    ''':class:`~wagtail.core.blocks.StructBlock` for a rich text block and an
+    """:class:`~wagtail.core.blocks.StructBlock` for a rich text block and an
     associated `title` that will render as an <h2>. Creates an anchor (<a>)
-    so that the section can be directly linked to using a url fragment.'''
+    so that the section can be directly linked to using a url fragment."""
+
     title = blocks.CharBlock()
-    anchor_text = blocks.CharBlock(help_text='Short label for anchor link')
+    anchor_text = blocks.CharBlock(help_text="Short label for anchor link")
     body = blocks.RichTextBlock()
     panels = [
-        FieldPanel('title'),
-        FieldPanel('slug'),
-        FieldPanel('body'),
+        FieldPanel("title"),
+        FieldPanel("slug"),
+        FieldPanel("body"),
     ]
 
     class Meta:
-        icon = 'form'
-        label = 'Linkable Section'
-        template = 'pages/blocks/linkable_section.html'
+        icon = "form"
+        label = "Linkable Section"
+        template = "pages/blocks/linkable_section.html"
 
     def clean(self, value):
         cleaned_values = super().clean(value)
         # run slugify to ensure anchor text is a slug
-        cleaned_values['anchor_text'] = slugify(cleaned_values['anchor_text'])
+        cleaned_values["anchor_text"] = slugify(cleaned_values["anchor_text"])
         return cleaned_values
 
 
 class BodyContentBlock(blocks.StreamBlock):
-    '''Common set of content blocks to be used on both content pages
-    and editorial pages'''
+    """Common set of content blocks to be used on both content pages
+    and editorial pages"""
+
     paragraph = blocks.RichTextBlock(
-        features=['h2', 'h3', 'bold', 'italic', 'link', 'ol', 'ul',
-                  'hr', 'blockquote', 'document', 'superscript', 'subscript',
-                  'strikethrough', 'code']
+        features=[
+            "h2",
+            "h3",
+            "bold",
+            "italic",
+            "link",
+            "ol",
+            "ul",
+            "hr",
+            "blockquote",
+            "document",
+            "superscript",
+            "subscript",
+            "strikethrough",
+            "code",
+        ]
     )
-    captioned_image = ImageWithCaption(label='image')  # lavel as image
+    captioned_image = ImageWithCaption(label="image")  # lavel as image
     svg_image = SVGImageBlock()
     footnotes = blocks.RichTextBlock(
-        features=['ol', 'ul', 'bold', 'italic', 'link'],
-        classname='footnotes'
+        features=["ol", "ul", "bold", "italic", "link"], classname="footnotes"
     )
     document = DocumentChooserBlock()
     linkable_section = LinkableSectionBlock()
@@ -219,32 +246,33 @@ class BodyContentBlock(blocks.StreamBlock):
 
 
 class PagePreviewDescriptionMixin(models.Model):
-    '''Page mixin with logic for page preview content. Adds an optional
+    """Page mixin with logic for page preview content. Adds an optional
     richtext description field, and methods to get description and plain-text
     description, for use in previews on the site and plain-text metadata
-    previews.'''
+    previews."""
 
-    description = RichTextField(blank=True,
-        help_text='Optional. Brief description for preview display. Will ' +
-        'also be used for search description (without tags), if one is not entered.',
-        features=['bold', 'italic'])
+    description = RichTextField(
+        blank=True,
+        help_text="Optional. Brief description for preview display. Will "
+        + "also be used for search description (without tags), if one is not entered.",
+        features=["bold", "italic"],
+    )
 
     #: maximum length for description to be displayed
     max_length = 250
 
     # ('a' is omitted by subsetting and p is added to default ALLOWED_TAGS)
     #: allowed tags for bleach html stripping in description
-    allowed_tags = list((set(bleach.sanitizer.ALLOWED_TAGS) |
-                        set(['p'])) - set(['a']))
+    allowed_tags = list((set(bleach.sanitizer.ALLOWED_TAGS) | set(["p"])) - set(["a"]))
 
     class Meta:
         abstract = True
 
     def get_description(self):
-        '''Get formatted description for preview. Uses description field
-        if there is content, otherwise uses the beginning of the body content.'''
+        """Get formatted description for preview. Uses description field
+        if there is content, otherwise uses the beginning of the body content."""
 
-        description = ''
+        description = ""
 
         # use description field if set
         # use striptags to check for empty paragraph)
@@ -255,23 +283,19 @@ class PagePreviewDescriptionMixin(models.Model):
         else:
             # Iterate over blocks and use content from the first paragraph content
             for block in self.body:
-                if block.block_type == 'paragraph':
+                if block.block_type == "paragraph":
                     description = block
                     # break so we stop after the first instead of using last
                     break
 
-        description = bleach.clean(
-            str(description),
-            tags=self.allowed_tags,
-            strip=True
-        )
+        description = bleach.clean(str(description), tags=self.allowed_tags, strip=True)
         # truncate either way
         return truncatechars_html(description, self.max_length)
 
     def get_plaintext_description(self):
-        '''Get plain-text description for use in metadata. Uses
+        """Get plain-text description for use in metadata. Uses
         search_description field if set; otherwise uses the result of
-        :meth:`get_description` with tags stripped.'''
+        :meth:`get_description` with tags stripped."""
 
         if self.search_description.strip():
             return self.search_description
@@ -279,21 +303,23 @@ class PagePreviewDescriptionMixin(models.Model):
 
 
 class ContentPage(Page, PagePreviewDescriptionMixin):
-    '''Basic content page model.'''
+    """Basic content page model."""
+
     body = StreamField(BodyContentBlock)
 
     content_panels = Page.content_panels + [
-        FieldPanel('description'),
-        StreamFieldPanel('body'),
+        FieldPanel("description"),
+        StreamFieldPanel("body"),
     ]
 
 
 class CollectionPage(Page):
-    '''Collection list page, with editable text content'''
+    """Collection list page, with editable text content"""
+
     body = RichTextField(blank=True)
 
     content_panels = Page.content_panels + [
-        FieldPanel('body', classname="full"),
+        FieldPanel("body", classname="full"),
     ]
 
     # only allow creating directly under home page
@@ -305,34 +331,37 @@ class CollectionPage(Page):
         context = super().get_context(request)
 
         # include all collections with stats
-        context.update({
-            'collections': Collection.objects.all(),
-            'stats': Collection.stats(),
-        })
+        context.update(
+            {
+                "collections": Collection.objects.all(),
+                "stats": Collection.stats(),
+            }
+        )
         return context
 
 
 class ContributorPage(Page, PagePreviewDescriptionMixin):
-    '''Project contributor and advisory board page.'''
+    """Project contributor and advisory board page."""
+
     contributors = StreamField(
-        [('person', SnippetChooserBlock(Person))],
+        [("person", SnippetChooserBlock(Person))],
         blank=True,
-        help_text='Select and order people to be listed as project \
-        contributors.'
+        help_text="Select and order people to be listed as project \
+        contributors.",
     )
     board = StreamField(
-        [('person', SnippetChooserBlock(Person))],
+        [("person", SnippetChooserBlock(Person))],
         blank=True,
-        help_text='Select and order people to be listed as board members.'
+        help_text="Select and order people to be listed as board members.",
     )
 
     body = StreamField(BodyContentBlock, blank=True)
 
     content_panels = Page.content_panels + [
-        FieldPanel('description'),
-        StreamFieldPanel('contributors'),
-        StreamFieldPanel('board'),
-        StreamFieldPanel('body'),
+        FieldPanel("description"),
+        StreamFieldPanel("contributors"),
+        StreamFieldPanel("board"),
+        StreamFieldPanel("body"),
     ]
 
     # only allow creating directly under home page
