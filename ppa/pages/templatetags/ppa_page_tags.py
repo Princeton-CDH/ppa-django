@@ -1,7 +1,6 @@
 from django import template
-from django.utils.timezone import now
 from django.template.defaultfilters import stringfilter
-
+from django.utils.timezone import now
 
 register = template.Library()
 

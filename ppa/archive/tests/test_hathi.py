@@ -1,22 +1,21 @@
-from datetime import date
-import os.path
-from unittest.mock import patch, Mock
 import json
+import os.path
 import tempfile
+from datetime import date
+from unittest.mock import Mock, patch
 
+import pymarc
+import pytest
+import requests
+import requests_oauthlib
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, override_settings
 from eulxml.xmlmap import load_xmlobject_from_file
 from pairtree import pairtree_client, pairtree_path, storage_exceptions
-import pymarc
-import pytest
-import requests
-import requests_oauthlib
 
 from ppa import __version__
 from ppa.archive import hathi
-
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, "ppa", "archive", "fixtures")
 

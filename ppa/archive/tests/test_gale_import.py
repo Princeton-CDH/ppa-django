@@ -1,7 +1,8 @@
 from collections import Counter
-from unittest.mock import patch, Mock
 from io import StringIO
+from unittest.mock import Mock, patch
 
+import pytest
 from django.conf import settings
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth.models import User
@@ -9,11 +10,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import override_settings
-import pytest
 
 from ppa.archive.gale import GaleAPI, GaleAPIError, MARCRecordNotFound
-from ppa.archive.models import Collection, DigitizedWork
 from ppa.archive.management.commands import gale_import
+from ppa.archive.models import Collection, DigitizedWork
 
 
 @pytest.mark.django_db

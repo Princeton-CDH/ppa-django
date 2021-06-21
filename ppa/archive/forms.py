@@ -5,8 +5,8 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db.models import Max, Min
-from django.utils.safestring import mark_safe
 from django.utils.html import conditional_escape
+from django.utils.safestring import mark_safe
 
 from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork
 

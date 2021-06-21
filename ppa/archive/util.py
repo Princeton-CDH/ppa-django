@@ -19,7 +19,6 @@ from parasolr.django.signals import IndexableSignalHandler
 from ppa.archive import hathi
 from ppa.archive.models import DigitizedWork, Page
 
-
 logger = logging.getLogger(__name__)
 
 

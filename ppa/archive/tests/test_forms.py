@@ -1,19 +1,19 @@
+import pytest
 from django import forms
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.test import TestCase
-import pytest
 
 from ppa.archive.forms import (
-    FacetChoiceField,
-    SearchForm,
-    RangeWidget,
-    RangeField,
-    RadioSelectWithDisabled,
-    ModelMultipleChoiceFieldWithEmpty,
     AddFromHathiForm,
+    FacetChoiceField,
+    ModelMultipleChoiceFieldWithEmpty,
+    RadioSelectWithDisabled,
+    RangeField,
+    RangeWidget,
+    SearchForm,
 )
-from ppa.archive.models import DigitizedWork, Collection
+from ppa.archive.models import Collection, DigitizedWork
 
 
 class TestFacetChoiceField(TestCase):

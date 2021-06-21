@@ -8,6 +8,7 @@ from io import StringIO
 from multiprocessing import cpu_count
 from unittest.mock import Mock, patch
 
+import pytest
 from django.conf import settings
 from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
 from django.contrib.auth.models import User
@@ -15,13 +16,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
-import pytest
 
 from ppa.archive import hathi
-from ppa.archive.models import DigitizedWork, Page
 from ppa.archive.management.commands import hathi_add, hathi_import, index_pages
+from ppa.archive.models import DigitizedWork, Page
 from ppa.archive.util import HathiImporter
-
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, "ppa", "archive", "fixtures")
 

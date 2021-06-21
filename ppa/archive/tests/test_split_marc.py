@@ -1,9 +1,9 @@
-from io import StringIO
 import os.path
+from io import StringIO
 
+import pymarc
 from django.core.management import call_command
 from django.test import override_settings
-import pymarc
 
 from ppa.archive.gale import get_marc_record
 from ppa.archive.tests.test_models import FIXTURES_PATH

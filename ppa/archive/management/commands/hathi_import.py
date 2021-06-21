@@ -35,25 +35,24 @@ Example usage::
 """
 
 
-from collections import defaultdict
-from glob import glob
 import logging
 import os
 import time
+from collections import defaultdict
+from glob import glob
 
+import progressbar
 from django.conf import settings
-from django.contrib.admin.models import LogEntry, ADDITION, CHANGE
+from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand, CommandError
 from django.template.defaultfilters import pluralize
 from django.utils.timezone import now
 from pairtree import pairtree_client, storage_exceptions
 from parasolr.django.signals import IndexableSignalHandler
-import progressbar
 
 from ppa.archive.hathi import HathiBibliographicAPI, HathiItemNotFound
 from ppa.archive.models import DigitizedWork
-
 
 logger = logging.getLogger(__name__)
 

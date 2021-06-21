@@ -8,13 +8,14 @@ Example usage::
     python manage.py setup_site_pages
 """
 from django.conf import settings
-from django.contrib.sites.models import Site
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
-from wagtail.core.models import Site as WagtailSite, Page
+from wagtail.core.models import Page
+from wagtail.core.models import Site as WagtailSite
 
-from ppa.pages.models import HomePage, ContentPage, CollectionPage, ContributorPage
 from ppa.editorial.models import EditorialIndexPage
+from ppa.pages.models import CollectionPage, ContentPage, ContributorPage, HomePage
 
 
 class Command(BaseCommand):

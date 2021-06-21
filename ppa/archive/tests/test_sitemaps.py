@@ -1,6 +1,7 @@
+from unittest.mock import patch
+
 from django.test import TestCase
 from django.urls import reverse
-from unittest.mock import patch
 
 from ppa.archive.models import DigitizedWork
 from ppa.archive.sitemaps import ArchiveViewsSitemap, DigitizedWorkSitemap

@@ -1,35 +1,34 @@
-from collections import OrderedDict
 import csv
-from json.decoder import JSONDecodeError
 import logging
+from collections import OrderedDict
+from json.decoder import JSONDecodeError
 
+import requests
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.core.exceptions import ValidationError, MultipleObjectsReturned
+from django.core.exceptions import MultipleObjectsReturned, ValidationError
 from django.core.paginator import Paginator
-from django.http import HttpResponse, Http404
-from django.shortcuts import redirect, get_object_or_404, render
+from django.http import Http404, HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.http import urlencode
 from django.utils.timezone import now
-from django.urls import reverse
-from django.views.generic import ListView, DetailView
+from django.views.generic import DetailView, ListView
 from django.views.generic.base import RedirectView, TemplateView
 from django.views.generic.edit import FormView
 from parasolr.django import SolrQuerySet
 from parasolr.django.views import SolrLastModifiedMixin
-import requests
 
 from ppa.archive.forms import (
-    AddToCollectionForm,
     AddFromHathiForm,
+    AddToCollectionForm,
     SearchForm,
     SearchWithinWorkForm,
 )
-from ppa.archive.models import DigitizedWork, NO_COLLECTION_LABEL
+from ppa.archive.models import NO_COLLECTION_LABEL, DigitizedWork
 from ppa.archive.solr import ArchiveSearchQuerySet
 from ppa.archive.util import HathiImporter
 from ppa.common.views import AjaxTemplateMixin
-
 
 logger = logging.getLogger(__name__)
 

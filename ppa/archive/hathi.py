@@ -1,22 +1,20 @@
 """
 Utilities for working with HathiTrust materials and APIs.
 """
-from datetime import datetime
+import io
 import logging
 import os.path
-import io
 import time
+from datetime import datetime
 
+import pymarc
+import requests
 from cached_property import cached_property
 from django.conf import settings
 from eulxml import xmlmap
 from pairtree import pairtree_client, pairtree_path, storage_exceptions
-import pymarc
-import requests
-
 
 from ppa import __version__ as ppa_version
-
 
 logger = logging.getLogger(__name__)
 

@@ -1,8 +1,8 @@
 from json import JSONDecodeError
 from unittest.mock import Mock, patch
 
-import requests
 import pytest
+import requests
 from wagtail.embeds.exceptions import EmbedException
 
 from ppa.pages.embed_finders import GlitchEmbedFinder

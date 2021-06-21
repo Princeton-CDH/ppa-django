@@ -2,8 +2,8 @@ from datetime import date
 
 from django.http import Http404
 from wagtail.admin.edit_handlers import FieldPanel, StreamFieldPanel
-from wagtail.core.models import Page
 from wagtail.core.fields import RichTextField, StreamField
+from wagtail.core.models import Page
 from wagtail.snippets.blocks import SnippetChooserBlock
 
 from ppa.pages.models import BodyContentBlock, PagePreviewDescriptionMixin, Person

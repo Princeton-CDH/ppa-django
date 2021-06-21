@@ -6,10 +6,10 @@ for embedding content in wagtail pages.
 from json import JSONDecodeError
 from urllib.parse import urljoin
 
-from bs4 import BeautifulSoup
 import requests
-from wagtail.embeds.finders.base import EmbedFinder
+from bs4 import BeautifulSoup
 from wagtail.embeds.exceptions import EmbedException
+from wagtail.embeds.finders.base import EmbedFinder
 
 
 class GlitchEmbedFinder(EmbedFinder):

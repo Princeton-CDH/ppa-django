@@ -2,18 +2,18 @@
 
 """
 from django.conf import settings
-from django.conf.urls import url, include
+from django.conf.urls import include, url
 from django.conf.urls.static import serve
 from django.contrib import admin
-from django.views.generic.base import TemplateView, RedirectView
+from django.views.generic.base import RedirectView, TemplateView
 from wagtail.admin import urls as wagtailadmin_urls
+from wagtail.contrib.sitemaps import Sitemap
+from wagtail.contrib.sitemaps import views as sitemap_views
 from wagtail.core import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
-from wagtail.contrib.sitemaps import views as sitemap_views, Sitemap
 
+from ppa.archive.sitemaps import ArchiveViewsSitemap, DigitizedWorkSitemap
 from ppa.unapi.views import UnAPIView
-from ppa.archive.sitemaps import DigitizedWorkSitemap, ArchiveViewsSitemap
-
 
 # sitemap configuration for sections of the site
 sitemaps = {

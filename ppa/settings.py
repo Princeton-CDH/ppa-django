@@ -298,8 +298,8 @@ CSP_MANIFEST_SRC = "'self'"
 
 f = os.path.join(BASE_DIR, "ppa", "local_settings.py")
 if os.path.exists(f):
-    import sys
     import imp
+    import sys
 
     module_name = "ppa.local_settings"
     module = imp.new_module(module_name)

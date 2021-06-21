@@ -1,11 +1,10 @@
+import json
 import re
 
 from django.template.defaultfilters import stringfilter
 from django.template.defaulttags import register
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
-
-import json
 
 
 @register.filter

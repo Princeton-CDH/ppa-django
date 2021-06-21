@@ -1,9 +1,8 @@
 from unittest.mock import patch
 
+import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
-import pytest
-
 
 # mock results for acet query used to get document IDs and page counts
 mock_solr_facets = {"source_id": {"doc_1": 2, "doc_2": 2}}

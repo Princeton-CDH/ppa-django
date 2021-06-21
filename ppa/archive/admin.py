@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from parasolr.django import SolrClient
 
-from ppa.archive.models import DigitizedWork, Collection, ProtectedWorkFieldFlags
+from ppa.archive.models import Collection, DigitizedWork, ProtectedWorkFieldFlags
 from ppa.archive.views import AddFromHathiView
 
 

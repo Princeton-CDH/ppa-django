@@ -6,9 +6,9 @@ import queue
 from multiprocessing import Process, Queue, cpu_count
 from time import sleep
 
+import progressbar
 from django.core.management.base import BaseCommand
 from parasolr.django import SolrClient, SolrQuerySet
-import progressbar
 
 from ppa.archive.models import DigitizedWork, Page
 
