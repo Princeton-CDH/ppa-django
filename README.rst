@@ -30,8 +30,12 @@ at `<https://princeton-cdh.github.io/ppa-django/>`_.
    :alt: Requirements Status
 
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
-   :target: https://github.com/psf/black   
+   :target: https://github.com/psf/black
    :alt: code style Black
+
+.. image:: https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336
+  :target: https://pycqa.github.io/isort/
+  :alt: imports: isort
 
 This repo uses `git-flow <https://github.com/nvie/gitflow>`_ conventions; **main**
 contains the most recent release, and work in progress will be on the **develop** branch.
@@ -181,9 +185,9 @@ If you plan to contribute to this repository, please run the following command:
 
     pre-commit install
 
-This will add a pre-commit hook to automatically style your python code with `black <https://github.com/psf/black>`_.
+This will add a pre-commit hook to automatically style your python code with `black <https://github.com/psf/black>`_ and sort your imports with `isort <https://pycqa.github.io/isort/>`_.
 
-Black styling was instituted after development had begun on this project. Consequently, ``git blame`` may not reflect the true author of a given line. In order to see a more accurate ``git blame`` execute the following command:
+Because these styling conventions were instituted after multiple releases of development on this project, ``git blame`` may not reflect the true author of a given line. In order to see a more accurate ``git blame`` execute the following command:
 
     git blame <FILE> --ignore-revs-file .git-blame-ignore-revs
 
