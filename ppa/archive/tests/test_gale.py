@@ -1,11 +1,11 @@
 import os.path
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
-from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
-from django.test import override_settings, TestCase
 import pytest
 import requests
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
+from django.test import TestCase, override_settings
 
 from ppa import __version__
 from ppa.archive import gale

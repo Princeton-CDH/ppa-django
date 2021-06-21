@@ -4,12 +4,12 @@ from django.http import QueryDict
 from django.utils.safestring import SafeString
 
 from ppa.archive.templatetags.ppa_tags import (
+    HATHI_BASE_URL,
     dict_item,
-    querystring_replace,
     page_image_url,
     page_url,
+    querystring_replace,
     solr_highlight,
-    HATHI_BASE_URL,
 )
 
 

@@ -1,10 +1,10 @@
 from collections import Counter
-from io import StringIO, BytesIO
+from io import BytesIO, StringIO
 
+import pymarc
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.template.defaultfilters import pluralize
-import pymarc
 
 from ppa.archive.gale import get_marc_storage
 

@@ -1,13 +1,13 @@
 from collections import OrderedDict
-from unittest.mock import patch, Mock
 from json.decoder import JSONDecodeError
+from unittest.mock import Mock, patch
 
+import pytest
 from django.conf import settings
-from django.contrib.admin.models import LogEntry, ADDITION
+from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase, override_settings
-import pytest
 
 from ppa.archive import hathi
 from ppa.archive.models import DigitizedWork

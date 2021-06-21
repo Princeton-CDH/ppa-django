@@ -1,15 +1,16 @@
-from datetime import date, timedelta
 import json
 import os.path
-from time import sleep
 import types
-from unittest.mock import patch, Mock
+from datetime import date, timedelta
+from time import sleep
+from unittest.mock import Mock, patch
 from zipfile import ZipFile
 
+import pytest
 from django.conf import settings
-from django.contrib.admin.models import LogEntry, ADDITION, CHANGE
-from django.contrib.contenttypes.models import ContentType
+from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db.models.query import QuerySet
 from django.test import TestCase, override_settings
@@ -17,18 +18,16 @@ from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
 from pairtree import pairtree_client, pairtree_path, storage_exceptions
 from parasolr.django.indexing import ModelIndexable
-import pytest
 
 from ppa.archive import gale, hathi
 from ppa.archive.models import (
+    NO_COLLECTION_LABEL,
     Collection,
     CollectionSignalHandlers,
     DigitizedWork,
-    NO_COLLECTION_LABEL,
     Page,
     ProtectedWorkFieldFlags,
 )
-
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, "ppa", "archive", "fixtures")
 

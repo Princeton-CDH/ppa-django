@@ -1,12 +1,12 @@
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from django.contrib.admin.sites import AdminSite
 from django.http import HttpResponseRedirect
-from django.test import TestCase, override_settings, RequestFactory
+from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 
 from ppa.archive.admin import DigitizedWorkAdmin
-from ppa.archive.models import DigitizedWork, Collection, ProtectedWorkFieldFlags
+from ppa.archive.models import Collection, DigitizedWork, ProtectedWorkFieldFlags
 
 
 class TestDigitizedWorkAdmin(TestCase):

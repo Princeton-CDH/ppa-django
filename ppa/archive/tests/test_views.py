@@ -6,6 +6,8 @@ from io import StringIO
 from time import sleep
 from unittest.mock import Mock, patch
 
+import pytest
+import requests
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.db.models.functions import Lower
@@ -15,18 +17,16 @@ from django.urls import reverse
 from django.utils.http import urlencode
 from django.utils.timezone import now
 from parasolr.django import SolrClient, SolrQuerySet
-import pytest
-import requests
 
 from ppa.archive.forms import (
-    SearchForm,
-    ModelMultipleChoiceFieldWithEmpty,
     AddFromHathiForm,
+    ModelMultipleChoiceFieldWithEmpty,
+    SearchForm,
 )
-from ppa.archive.models import DigitizedWork, Collection, NO_COLLECTION_LABEL
+from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork
 from ppa.archive.solr import ArchiveSearchQuerySet
-from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView, AddFromHathiView
 from ppa.archive.templatetags.ppa_tags import page_image_url, page_url
+from ppa.archive.views import AddFromHathiView, DigitizedWorkCSV, DigitizedWorkListView
 
 
 class TestDigitizedWorkDetailView(TestCase):

@@ -4,28 +4,27 @@ import re
 import time
 from zipfile import ZipFile
 
+import requests
 from cached_property import cached_property
 from django.conf import settings
-from django.contrib.admin.models import LogEntry, ADDITION, CHANGE
-from django.core.exceptions import ValidationError
+from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
 from flags import Flags
-from pairtree import pairtree_path, pairtree_client, storage_exceptions
+from pairtree import pairtree_client, pairtree_path, storage_exceptions
 from parasolr.django import SolrQuerySet
 from parasolr.django.indexing import ModelIndexable
 from parasolr.indexing import Indexable
-import requests
-from wagtail.core.fields import RichTextField
 from wagtail.admin.edit_handlers import FieldPanel
+from wagtail.core.fields import RichTextField
 from wagtail.snippets.models import register_snippet
 
-from ppa.archive.gale import GaleAPI, get_marc_record, MARCRecordNotFound
-from ppa.archive.hathi import HathiBibliographicAPI, MinimalMETS, HathiObject
-
+from ppa.archive.gale import GaleAPI, MARCRecordNotFound, get_marc_record
+from ppa.archive.hathi import HathiBibliographicAPI, HathiObject, MinimalMETS
 
 logger = logging.getLogger(__name__)
 

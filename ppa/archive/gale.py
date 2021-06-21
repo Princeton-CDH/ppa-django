@@ -1,15 +1,13 @@
 import logging
 import time
 
+import pymarc
 import requests
-
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from pairtree import PairtreeStorageFactory, storage_exceptions
-import pymarc
 
 from ppa import __version__ as ppa_version
-
 
 logger = logging.getLogger(__name__)
 

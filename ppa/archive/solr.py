@@ -3,7 +3,6 @@ import logging
 from parasolr import schema
 from parasolr.django import SolrQuerySet
 
-
 logger = logging.getLogger(__name__)
 
 

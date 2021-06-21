@@ -71,30 +71,27 @@ Example usage::
 
 """
 
-import logging
-from collections import OrderedDict
 import csv
-from os import makedirs
+import logging
 import os.path
-from progressbar import ProgressBar, NullBar
+from collections import OrderedDict
+from os import makedirs
 
 from django.core.management.base import BaseCommand
-
 from gensim import corpora
 from gensim.corpora.dictionary import Dictionary
 from gensim.parsing.preprocessing import (
     preprocess_string,
-    strip_tags,
-    strip_punctuation,
+    remove_stopwords,
+    stem_text,
     strip_multiple_whitespaces,
     strip_numeric,
-    remove_stopwords,
+    strip_punctuation,
     strip_short,
-    stem_text,
+    strip_tags,
 )
-
 from parasolr.django import SolrQuerySet
-
+from progressbar import NullBar, ProgressBar
 
 logger = logging.getLogger(__name__)
 
