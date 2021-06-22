@@ -180,7 +180,7 @@ class TestGaleImportCommand:
             },
         }
         test_id = "CW123456"
-        cmd.id_lookup = {test_id: {"estc_id": "T012345", "volume": "Volume 2"}}
+        cmd.id_lookup = {test_id: {"estc_id": "T012345", "volume": "2"}}
         csv_info = {"LIT": "x", "MUS": "x", "NOTES": "just some mention in footnotes"}
         digwork = cmd.import_digitizedwork(test_id, **csv_info)
         assert csv_info["NOTES"] == digwork.notes
@@ -189,7 +189,7 @@ class TestGaleImportCommand:
         assert digwork.collections.count() == 2
         assert literary in digwork.collections.all()
         assert music in digwork.collections.all()
-        assert digwork.enumcron == "Volume 2"
+        assert digwork.enumcron == "2"
 
     def test_import_digitizedwork_error(self):
         # import with api error
