@@ -203,7 +203,7 @@ def get_marc_record(marc_id):
     try:
         marc_object = get_marc_storage().get_object(marc_id)
         with marc_object.get_bytestream("marc.dat", streamable=True) as marcfile:
-            reader = pymarc.MARCReader(marcfile, to_unicode=True)
+            reader = pymarc.MARCReader(marcfile, to_unicode=True, file_encoding="utf-8")
             record = [rec for rec in reader][0]
             logger.debug(
                 "Loaded MARC record for %s in %.5fs"
