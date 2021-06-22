@@ -8,25 +8,33 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('archive', '0001_initial'),
+        ("archive", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Collection',
+            name="Collection",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
             ],
         ),
         migrations.AlterField(
-            model_name='digitizedwork',
-            name='publisher',
+            model_name="digitizedwork",
+            name="publisher",
             field=models.TextField(blank=True, max_length=255),
         ),
         migrations.AddField(
-            model_name='digitizedwork',
-            name='collections',
-            field=models.ManyToManyField(blank=True, to='archive.Collection'),
+            model_name="digitizedwork",
+            name="collections",
+            field=models.ManyToManyField(blank=True, to="archive.Collection"),
         ),
     ]

@@ -1,7 +1,8 @@
 from collections import Counter
-from unittest.mock import patch, Mock
 from io import StringIO
+from unittest.mock import Mock, patch
 
+import pytest
 from django.conf import settings
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth.models import User
@@ -9,11 +10,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import override_settings
-import pytest
 
 from ppa.archive.gale import GaleAPI, GaleAPIError, MARCRecordNotFound
-from ppa.archive.models import Collection, DigitizedWork
 from ppa.archive.management.commands import gale_import
+from ppa.archive.models import Collection, DigitizedWork
 
 
 @pytest.mark.django_db
@@ -38,7 +38,10 @@ class TestGaleImportCommand:
         output = stdout.getvalue()
         assert "Processed 3 items for import." in output
         # numbers are all 0 because import method was mocked
-        assert "Imported 0; 0 missing MARC records; skipped 0; 0 errors; imported 0 pages." in output
+        assert (
+            "Imported 0; 0 missing MARC records; skipped 0; 0 errors; imported 0 pages."
+            in output
+        )
 
     @override_settings(GALE_API_USERNAME="galeuser123")
     @patch("ppa.archive.management.commands.gale_import.Command.import_digitizedwork")
@@ -73,10 +76,13 @@ class TestGaleImportCommand:
             assert cmd.collections[code].name == name
 
     @patch("ppa.archive.management.commands.gale_import.DigitizedWork.index_items")
-    @patch("ppa.archive.management.commands.gale_import.DigitizedWork.metadata_from_marc")
+    @patch(
+        "ppa.archive.management.commands.gale_import.DigitizedWork.metadata_from_marc"
+    )
     @patch("ppa.archive.management.commands.gale_import.get_marc_record")
-    def test_import_digitizedwork_id(self, mock_get_marc_record,
-                                     mock_metadata_from_marc, mock_index_items):
+    def test_import_digitizedwork_id(
+        self, mock_get_marc_record, mock_metadata_from_marc, mock_index_items
+    ):
         # import with id only
         cmd = gale_import.Command()
         # requires some setup included in handle
@@ -92,16 +98,12 @@ class TestGaleImportCommand:
                 "isShownAt": "https://link.gale.co/test/ECCO?sid=gale_api&u=utopia9871",
                 "citation": "Ruffhead, Owen. The life…, Accessed 8 June 2021.",
             },
-            "pageResponse": {"pages": [
-                {
-                    "pageNumber": "0001",
-                    "image": {"id": "09876001234567"}
-                },
-                {
-                    "pageNumber": "0002",
-                    "image": {"id": "09876001234568"}
-                }
-            ]},
+            "pageResponse": {
+                "pages": [
+                    {"pageNumber": "0001", "image": {"id": "09876001234567"}},
+                    {"pageNumber": "0002", "image": {"id": "09876001234568"}},
+                ]
+            },
         }
         test_id = "CW123456"
         digwork = cmd.import_digitizedwork(test_id)
@@ -135,11 +137,14 @@ class TestGaleImportCommand:
         assert "error" not in cmd.stats
 
     @patch("ppa.archive.management.commands.gale_import.DigitizedWork.index_items")
-    @patch("ppa.archive.management.commands.gale_import.DigitizedWork.metadata_from_marc")
+    @patch(
+        "ppa.archive.management.commands.gale_import.DigitizedWork.metadata_from_marc"
+    )
     @patch("ppa.archive.management.commands.gale_import.get_marc_record")
     @override_settings(GALE_API_USERNAME="galeuser123")
-    def test_import_digitizedwork_csv(self, mock_get_marc_record,
-                                     mock_metadata_from_marc, mock_index_items):
+    def test_import_digitizedwork_csv(
+        self, mock_get_marc_record, mock_metadata_from_marc, mock_index_items
+    ):
         # simulate csv import with notes and collection membership
         cmd = gale_import.Command()
         # do some setup included in handle method
@@ -163,27 +168,19 @@ class TestGaleImportCommand:
                 "isShownAt": "https://link.gale.co/test/ECCO?sid=gale_api&u=utopia9871",
                 "citation": "Ruffhead, Owen. The life…, Accessed 8 June 2021.",
             },
-            "pageResponse": {"pages": [
-                {
-                    "pageNumber": "0001",
-                    "image": {"id": "09876001234567"}
-                },
-                {
-                    "pageNumber": "0002",
-                    "image": {"id": "09876001234568"}
-                }
-            ]}
+            "pageResponse": {
+                "pages": [
+                    {"pageNumber": "0001", "image": {"id": "09876001234567"}},
+                    {"pageNumber": "0002", "image": {"id": "09876001234568"}},
+                ]
+            },
         }
         test_id = "CW123456"
-        csv_info = {
-            'LIT': 'x',
-            'MUS': 'x',
-            'NOTES': 'just some mention in footnotes'
-        }
+        csv_info = {"LIT": "x", "MUS": "x", "NOTES": "just some mention in footnotes"}
         digwork = cmd.import_digitizedwork(test_id, **csv_info)
-        assert csv_info['NOTES'] == digwork.notes
-        literary = Collection.objects.get(name='Literary')
-        music = Collection.objects.get(name='Music')
+        assert csv_info["NOTES"] == digwork.notes
+        literary = Collection.objects.get(name="Literary")
+        music = Collection.objects.get(name="Music")
         assert digwork.collections.count() == 2
         assert literary in digwork.collections.all()
         assert music in digwork.collections.all()
@@ -222,23 +219,19 @@ class TestGaleImportCommand:
                 "isShownAt": "https://link.gale.co/test/ECCO?sid=gale_api&u=utopia9871",
                 "citation": "Ruffhead, Owen. The life…, Accessed 8 June 2021.",
             },
-            "pageResponse": {"pages": [
-                {
-                    "pageNumber": "0001",
-                    "image": {"id": "09876001234567"}
-                },
-                {
-                    "pageNumber": "0002",
-                    "image": {"id": "09876001234568"}
-                }
-            ]},
+            "pageResponse": {
+                "pages": [
+                    {"pageNumber": "0001", "image": {"id": "09876001234567"}},
+                    {"pageNumber": "0002", "image": {"id": "09876001234568"}},
+                ]
+            },
         }
         test_id = "CW123456"
         digwork = cmd.import_digitizedwork(test_id)
         assert digwork
         assert isinstance(digwork, DigitizedWork)
         output = stderr.getvalue()
-        assert 'MARC record not found' in output
+        assert "MARC record not found" in output
 
     def test_import_digitizedwork_exists(self):
         # skip without api call if digwork already exists
@@ -281,12 +274,12 @@ class TestGaleImportCommand:
         with pytest.raises(CommandError) as err:
             badpath = "/bad/path/does/not/exist.csv"
             cmd.load_csv(badpath)
-        assert f'Error loading the specified CSV file: {badpath}' in str(err)
+        assert f"Error loading the specified CSV file: {badpath}" in str(err)
 
     @override_settings(GALE_API_USERNAME="galeuser123")
     @patch("ppa.archive.management.commands.gale_import.Command.import_digitizedwork")
     def test_call_command(self, mock_import_digwork):
-        call_command('gale_import', '1234')
+        call_command("gale_import", "1234")
         assert mock_import_digwork.call_count == 1
 
     @override_settings()
@@ -298,6 +291,6 @@ class TestGaleImportCommand:
 
     def test_call_with_csv_as_id(self):
         stdout = StringIO()
-        gale_import.Command(stdout=stdout).handle(ids=['path/to/file.csv'], csv=None)
+        gale_import.Command(stdout=stdout).handle(ids=["path/to/file.csv"], csv=None)
         output = stdout.getvalue()
-        assert 'not a valid id; did you forget to specify -c/--csv?' in output
+        assert "not a valid id; did you forget to specify -c/--csv?" in output

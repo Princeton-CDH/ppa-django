@@ -6,13 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('archive', '0013_revise_protected_field'),
+        ("archive", "0013_revise_protected_field"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='digitizedwork',
-            name='source',
-            field=models.CharField(choices=[('HT', 'HathiTrust'), ('G', 'Gale'), ('O', 'Other')], default='HT', help_text='Source of the record.', max_length=2),
+            model_name="digitizedwork",
+            name="source",
+            field=models.CharField(
+                choices=[("HT", "HathiTrust"), ("G", "Gale"), ("O", "Other")],
+                default="HT",
+                help_text="Source of the record.",
+                max_length=2,
+            ),
         ),
     ]

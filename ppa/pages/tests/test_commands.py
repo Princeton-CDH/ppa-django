@@ -1,14 +1,13 @@
-from django.test import TestCase
 from django.contrib.sites.models import Site
+from django.test import TestCase
 from wagtail.core.models import Page
 
 from ppa.editorial.models import EditorialIndexPage
-from ppa.pages.models import HomePage, ContentPage, CollectionPage
 from ppa.pages.management.commands import setup_site_pages
+from ppa.pages.models import CollectionPage, ContentPage, HomePage
 
 
 class TestSetupSitePagesCommand(TestCase):
-
     def setUp(self):
         self.cmd = setup_site_pages.Command()
 
@@ -26,22 +25,21 @@ class TestSetupSitePagesCommand(TestCase):
         assert wagtail_site.is_default_site
 
         # port should be split out when present
-        site.domain = 'localhost:8000'
+        site.domain = "localhost:8000"
         site.save()
         wagtail_site = self.cmd.create_wagtail_site(root_page)
-        assert wagtail_site.hostname == 'localhost'
-        assert wagtail_site.port == '8000'
+        assert wagtail_site.hostname == "localhost"
+        assert wagtail_site.port == "8000"
 
     def test_create_pages(self):
         self.cmd.handle()
 
         # initial welcome to wagtail home page should be gone
-        assert not Page.objects.filter(slug='home',
-                                       title__contains='Welcome').count()
+        assert not Page.objects.filter(slug="home", title__contains="Welcome").count()
 
         # should be one of each: home page, editorial index, collection
         for page_type in [HomePage, EditorialIndexPage, CollectionPage]:
-            assert page_type.objects.count() ==  1
+            assert page_type.objects.count() == 1
 
         # one content stub page created based on content page dictionary
         assert ContentPage.objects.count() == len(self.cmd.content_pages)
@@ -56,10 +54,7 @@ class TestSetupSitePagesCommand(TestCase):
 
         # still only one of each: home page, editorial index, collection
         for page_type in [HomePage, EditorialIndexPage, CollectionPage]:
-            assert page_type.objects.count() ==  1
+            assert page_type.objects.count() == 1
 
         # one content stub page created based on content page dictionary
         assert ContentPage.objects.count() == len(self.cmd.content_pages)
-
-
-

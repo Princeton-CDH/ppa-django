@@ -8,9 +8,8 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('archive', '0006_digitizedwork_add_record_id'),
-        ('archive', '0005_add_notes_fields'),
+        ("archive", "0006_digitizedwork_add_record_id"),
+        ("archive", "0005_add_notes_fields"),
     ]
 
-    operations = [
-    ]
+    operations = []
