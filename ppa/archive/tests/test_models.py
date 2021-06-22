@@ -480,11 +480,13 @@ class TestDigitizedWork(TestCase):
 
     @patch("ppa.archive.models.get_marc_record")
     def test_get_metadata_gale(self, mock_get_marc_record):
-        work = DigitizedWork(source_id="CW123456", source=DigitizedWork.GALE)
+        work = DigitizedWork(
+            source_id="CW123456", source=DigitizedWork.GALE, record_id="T012345"
+        )
 
         # for marc, should call hathi bib api and return marc in binary form
         mdata = work.get_metadata("marc")
-        mock_get_marc_record.assert_called_with(work.source_id)
+        mock_get_marc_record.assert_called_with(work.record_id)
         assert mock_get_marc_record.return_value.force_utf8
         mock_get_marc_record.return_value.as_marc.assert_called_with()
 
