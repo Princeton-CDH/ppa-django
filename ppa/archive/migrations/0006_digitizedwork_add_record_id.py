@@ -8,33 +8,41 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('archive', '0005_add_subtitle_sort_title'),
+        ("archive", "0005_add_subtitle_sort_title"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='digitizedwork',
-            options={'ordering': ('sort_title',)},
+            name="digitizedwork",
+            options={"ordering": ("sort_title",)},
         ),
         migrations.AddField(
-            model_name='digitizedwork',
-            name='record_id',
-            field=models.CharField(default='', help_text='For HathiTrust materials, record id (use to aggregate copies or volumes).', max_length=255),
+            model_name="digitizedwork",
+            name="record_id",
+            field=models.CharField(
+                default="",
+                help_text="For HathiTrust materials, record id (use to aggregate copies or volumes).",
+                max_length=255,
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='digitizedwork',
-            name='sort_title',
-            field=models.TextField(blank=True, default='', help_text='Sort title from MARC record'),
+            model_name="digitizedwork",
+            name="sort_title",
+            field=models.TextField(
+                blank=True, default="", help_text="Sort title from MARC record"
+            ),
         ),
         migrations.AlterField(
-            model_name='digitizedwork',
-            name='subtitle',
-            field=models.TextField(blank=True, default='', help_text='Subtitle, if any (optional)'),
+            model_name="digitizedwork",
+            name="subtitle",
+            field=models.TextField(
+                blank=True, default="", help_text="Subtitle, if any (optional)"
+            ),
         ),
         migrations.AlterField(
-            model_name='digitizedwork',
-            name='title',
-            field=models.TextField(help_text='Main title'),
+            model_name="digitizedwork",
+            name="title",
+            field=models.TextField(help_text="Main title"),
         ),
     ]

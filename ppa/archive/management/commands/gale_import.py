@@ -28,25 +28,24 @@ These are the supported collection abbreviations:
 
 """
 import csv
-from collections import Counter
 import logging
 import time
+from collections import Counter
 
+import pymarc
 from django.conf import settings
-from django.contrib.admin.models import LogEntry, ADDITION
+from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand, CommandError
 from django.db.utils import IntegrityError
 from django.template.defaultfilters import pluralize, truncatechars
-from parasolr.django.signals import IndexableSignalHandler
-import pymarc
 from pairtree import PairtreeStorageFactory
+from parasolr.django.signals import IndexableSignalHandler
 
-from ppa.archive.gale import GaleAPI, GaleAPIError, get_marc_record, MARCRecordNotFound
+from ppa.archive.gale import GaleAPI, GaleAPIError, MARCRecordNotFound, get_marc_record
 from ppa.archive.models import Collection, DigitizedWork, Page
-
 
 logger = logging.getLogger(__name__)
 
@@ -90,12 +89,20 @@ class Command(BaseCommand):
             raise CommandError("A list of IDs or CSV file for is required for import")
 
         # error handling in case user forgets to specify csv file correctly
-        if 'ids' in kwargs and len(kwargs['ids']) == 1 and kwargs['ids'][0].endswith('.csv'):
-            self.stdout.write(self.style.WARNING(
-                '%s is not a valid id; did you forget to specify -c/--csv?' % kwargs['ids'][0]))
+        if (
+            "ids" in kwargs
+            and len(kwargs["ids"]) == 1
+            and kwargs["ids"][0].endswith(".csv")
+        ):
+            self.stdout.write(
+                self.style.WARNING(
+                    "%s is not a valid id; did you forget to specify -c/--csv?"
+                    % kwargs["ids"][0]
+                )
+            )
             return
 
-        self.verbosity = kwargs.get('verbosity', self.v_normal)
+        self.verbosity = kwargs.get("verbosity", self.v_normal)
 
         # disconnect signal-based indexing to avoid unnecessary indexing
         IndexableSignalHandler.disconnect()
@@ -217,7 +224,9 @@ class Command(BaseCommand):
             digwork.metadata_from_marc(get_marc_record(gale_id))
         except MARCRecordNotFound:
             self.stats["no_marc"] += 1
-            self.stderr.write(self.style.WARNING('MARC record not found for %s' % gale_id))
+            self.stderr.write(
+                self.style.WARNING("MARC record not found for %s" % gale_id)
+            )
         digwork.save()
 
         # set collection membership based on spreadsheet columns
@@ -244,9 +253,7 @@ class Command(BaseCommand):
 
         # item record used for import includes page metadata;
         # for efficiency, index pages at import time with the same api response
-        DigitizedWork.index_items(
-            Page.gale_page_index_data(digwork, item_record)
-        )
+        DigitizedWork.index_items(Page.gale_page_index_data(digwork, item_record))
 
         self.stats["imported"] += 1
         self.stats["pages"] += digwork.page_count

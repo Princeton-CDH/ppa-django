@@ -1,11 +1,11 @@
 import os.path
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
-from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
-from django.test import override_settings, TestCase
 import pytest
 import requests
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
+from django.test import TestCase, override_settings
 
 from ppa import __version__
 from ppa.archive import gale
@@ -88,7 +88,7 @@ class TestGaleAPI(TestCase):
     def test_make_request_refresh_key(self, mock_get_api_key, mockrequests):
         # test retrying request when api key has expired
         gale_api = gale.GaleAPI()
-        gale_api._api_key = None    # make sure unset for this test
+        gale_api._api_key = None  # make sure unset for this test
         gale_api.api_root = "http://example.com/api"
         mockrequests.codes = requests.codes
         mock_get_api_key.side_effect = ("testkey1", "testkey2", "testkey3", "testkey4")
@@ -220,8 +220,8 @@ class TestGaleAPI(TestCase):
             gale_api.get_item("CW123456")
 
 
-@override_settings(MARC_DATA='/path/to/data/marc')
-@patch('ppa.archive.gale.PairtreeStorageFactory')
+@override_settings(MARC_DATA="/path/to/data/marc")
+@patch("ppa.archive.gale.PairtreeStorageFactory")
 def test_get_marc_storage(mock_pairtree_storage_factory):
     mstore = gale.get_marc_storage()
     mock_pairtree_storage_factory.assert_called_with()
@@ -230,18 +230,18 @@ def test_get_marc_storage(mock_pairtree_storage_factory):
     )
 
 
-@patch('ppa.archive.gale.get_marc_storage')
+@patch("ppa.archive.gale.get_marc_storage")
 def test_get_marc_record(mock_get_marc_storage):
-    test_marc_file = os.path.join(FIXTURES_PATH, 'test_marc.dat')
-    with open(test_marc_file, 'rb') as marcfile:
+    test_marc_file = os.path.join(FIXTURES_PATH, "test_marc.dat")
+    with open(test_marc_file, "rb") as marcfile:
         ptree_obj = mock_get_marc_storage.return_value.get_object.return_value
         ptree_obj.get_bytestream.return_value.__enter__.return_value = marcfile
 
-        test_id = 'CW123456'
+        test_id = "CW123456"
         record = gale.get_marc_record(test_id)
         mock_get_marc_storage.assert_called_with()
         mock_get_marc_storage.return_value.get_object.assert_called_with(test_id)
-        ptree_obj.get_bytestream.assert_called_with('marc.dat', streamable=True)
+        ptree_obj.get_bytestream.assert_called_with("marc.dat", streamable=True)
 
         # confirm we loaded the MARC record and can read it
-        assert record.title() == 'Cross-platform Perl /'
+        assert record.title() == "Cross-platform Perl /"
