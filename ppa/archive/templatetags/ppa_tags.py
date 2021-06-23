@@ -66,13 +66,20 @@ def page_image_url(item_id, order, width):
 
 
 @register.simple_tag
-def page_url(item_id, order):
+def hathi_page_url(item_id, order):
     """Generate a link to HathiTrust for an individual page
     Example use::
 
         {% page_url item_id page.order %}
     """
     return "{}/pt?id={};view=1up;seq={}".format(HATHI_BASE_URL, item_id, order)
+
+
+@register.simple_tag
+def gale_page_url(item_url, order):
+    # add page number to existing source url (i.e., isShownAt URL from API);
+    # (assumes that url already has some query parameters, as they currently always do)
+    return "{}&pg={}".format(item_url, order)
 
 
 #: regular expression to identify open and close <em> tags in solr

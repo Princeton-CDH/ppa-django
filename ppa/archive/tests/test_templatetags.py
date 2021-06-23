@@ -6,8 +6,9 @@ from django.utils.safestring import SafeString
 from ppa.archive.templatetags.ppa_tags import (
     HATHI_BASE_URL,
     dict_item,
+    gale_page_url,
+    hathi_page_url,
     page_image_url,
-    page_url,
     querystring_replace,
     solr_highlight,
 )
@@ -67,12 +68,27 @@ def test_page_image_url():
     assert img_url.startswith("%s/imgsrv/thumbnail?" % HATHI_BASE_URL)
 
 
-def test_page_url():
+def test_hathi_page_url():
     item_id = "mdp.39015031594768"
     order = 50
-    hathi_url = page_url(item_id, order)
+    hathi_url = hathi_page_url(item_id, order)
     assert hathi_url.startswith("%s/pt" % HATHI_BASE_URL)
     assert hathi_url.endswith("?id=%s;view=1up;seq=%s" % (item_id, order))
+
+
+def test_hathi_page_url():
+    item_id = "mdp.39015031594768"
+    order = 50
+    hathi_url = hathi_page_url(item_id, order)
+    assert hathi_url.startswith("%s/pt" % HATHI_BASE_URL)
+    assert hathi_url.endswith("?id=%s;view=1up;seq=%s" % (item_id, order))
+
+
+def test_gale_page_url():
+    source_url = "https://link.gale.com/apps/doc/CW0123455/ECCO?u=abc123&sid=gale_api&xid=1605fa6c"
+    order = 248
+    gale_url = gale_page_url(source_url, order)
+    assert gale_url == "%s&pg=248" % source_url
 
 
 def test_solr_highlight():
