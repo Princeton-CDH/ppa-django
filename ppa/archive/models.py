@@ -11,6 +11,7 @@ from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.db import models
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
@@ -215,6 +216,12 @@ class CollectionSignalHandlers:
         DigitizedWork.index_items(digworks)
 
 
+#: regex to validate page range for selecting pages from digital edition
+page_range_format = RegexValidator(
+    "^\d+-\d+(, \d+-\d+)*$", message="Invalid page range."
+)
+
+
 class DigitizedWork(TrackChangesModel, ModelIndexable):
     """
     Record to manage digitized works included in PPA and store their basic
@@ -335,6 +342,43 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         + "currently not reversible; use with caution.",
     )
 
+    FULL = "F"
+    EXCERPT = "E"
+    ARTICLE = "A"
+    ITEMTYPE_CHOICES = (
+        (FULL, "Full work"),
+        (EXCERPT, "Excerpt"),
+        (ARTICLE, "Article"),
+    )
+    #: type of record, whether excerpt, article, or full; defaults to full
+    item_type = models.CharField(
+        max_length=1,
+        choices=ITEMTYPE_CHOICES,
+        default=FULL,
+        help_text="Portion of the work that is included; used to determine icon for public display.",
+    )
+    #: book or journal title for excerpt or article
+    book_journal = models.TextField(
+        "Book/Journal title",
+        help_text="title of the book or journal that includes this content (excerpt/article only)",
+        blank=True,
+    )
+    pages_orig = models.CharField(
+        "Page range (original)",
+        max_length=255,
+        help_text="Page range in the original work (for display and citation).",
+        blank=True,
+    )
+    pages_digital = models.CharField(
+        "Page range (digital edition)",
+        max_length=255,
+        help_text="Sequence of pages in the digital edition. "
+        + "Use full digits for start and end separated by a dash (##-##); "
+        + "for multiple sequences, separate ranges by a comma (##-##, ##-##).",
+        blank=True,
+        validators=[page_range_format],
+    )
+
     class Meta:
         ordering = ("sort_title",)
 
@@ -348,6 +392,12 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
     def __str__(self):
         """Default string display. Uses :attr:`source_id`"""
         return self.source_id
+
+    def clean_fields(self, exclude=None):
+        if not exclude or "pages_digital" not in exclude:
+            # normalize whitespace in pages digital field before applying regex validation
+            self.pages_digital = " ".join(self.pages_digital.strip().split())
+        super().clean_fields(exclude=exclude)
 
     @property
     def is_suppressed(self):
