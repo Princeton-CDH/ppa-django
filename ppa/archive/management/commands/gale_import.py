@@ -28,7 +28,9 @@ These are the supported collection abbreviations:
 
 """
 import csv
+import json
 import logging
+import os.path
 import time
 from collections import Counter
 
@@ -71,6 +73,16 @@ class Command(BaseCommand):
         "DIC": "Dictionaries",
         "WL": "Word Lists",
     }
+
+    # path to gale id lookup file
+    gale_id_path = os.path.join(
+        settings.BASE_DIR, "ppa", "archive", "fixtures", "gale_id_lookup.json"
+    )
+    # NOTE: as of June 2021, Gale API item details does not include the ESTC id needed
+    # for accessing the correct MARC record, nor does it include volume information.
+    # For now, we use a lookup file generated from a spreadsheet provided by Gale
+    # for the records we plan to import. We will revisit this when the information
+    # is made available through their API.
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -117,6 +129,9 @@ class Command(BaseCommand):
         self.stats = Counter()
         self.script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
         self.digwork_contentype = ContentType.objects.get_for_model(DigitizedWork)
+        # load json gale id lookup file so we can get ESTC ids from document id
+        with open(self.gale_id_path) as idfile:
+            self.id_lookup = json.load(idfile)
 
         # if ids are specified on the command line, create a list
         # of dictionaries so import will look similar to csv
@@ -211,9 +226,11 @@ class Command(BaseCommand):
 
         # create new stub record and populate it from api response
         digwork = DigitizedWork(
-            source_id=gale_id,  # or doc_metadata['id']; format GALE|CW###
+            source_id=gale_id,  # or doc_metadata['id']; format CW###
             source=DigitizedWork.GALE,
+            record_id=self.id_lookup[gale_id]["estc_id"],
             source_url=doc_metadata["isShownAt"],
+            enumcron=self.id_lookup[gale_id].get("volume", ""),
             title=doc_metadata["title"],
             page_count=len(item_record["pageResponse"]["pages"]),
             # import any notes from csv as private notes
@@ -221,11 +238,13 @@ class Command(BaseCommand):
         )
         # populate titles, author, publication info from marc record
         try:
-            digwork.metadata_from_marc(get_marc_record(gale_id))
+            digwork.metadata_from_marc(get_marc_record(digwork.record_id))
         except MARCRecordNotFound:
             self.stats["no_marc"] += 1
             self.stderr.write(
-                self.style.WARNING("MARC record not found for %s" % gale_id)
+                self.style.WARNING(
+                    "MARC record not found for %s/%s" % (gale_id, digwork.record_id)
+                )
             )
         digwork.save()
 

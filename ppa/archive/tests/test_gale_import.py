@@ -3,6 +3,7 @@ from io import StringIO
 from unittest.mock import Mock, patch
 
 import pytest
+from django import test
 from django.conf import settings
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth.models import User
@@ -106,6 +107,7 @@ class TestGaleImportCommand:
             },
         }
         test_id = "CW123456"
+        cmd.id_lookup = {test_id: {"estc_id": "T012345"}}  # no volume
         digwork = cmd.import_digitizedwork(test_id)
         assert digwork
         assert isinstance(digwork, DigitizedWork)
@@ -113,9 +115,11 @@ class TestGaleImportCommand:
         assert digwork.title == "The life of Alexander Pope"
         assert digwork.source == DigitizedWork.GALE
         assert digwork.page_count == 2
+        assert digwork.record_id == cmd.id_lookup[test_id]["estc_id"]
+        assert not digwork.enumcron
         cmd.gale_api.get_item.assert_called_with(test_id)
         # should retrieve marc record and use to populate metadata
-        mock_get_marc_record.assert_called_with(test_id)
+        mock_get_marc_record.assert_called_with(cmd.id_lookup[test_id]["estc_id"])
         mock_metadata_from_marc.assert_called_with(mock_get_marc_record.return_value)
 
         # no collections should be associated
@@ -176,6 +180,7 @@ class TestGaleImportCommand:
             },
         }
         test_id = "CW123456"
+        cmd.id_lookup = {test_id: {"estc_id": "T012345", "volume": "2"}}
         csv_info = {"LIT": "x", "MUS": "x", "NOTES": "just some mention in footnotes"}
         digwork = cmd.import_digitizedwork(test_id, **csv_info)
         assert csv_info["NOTES"] == digwork.notes
@@ -184,6 +189,7 @@ class TestGaleImportCommand:
         assert digwork.collections.count() == 2
         assert literary in digwork.collections.all()
         assert music in digwork.collections.all()
+        assert digwork.enumcron == "2"
 
     def test_import_digitizedwork_error(self):
         # import with api error
@@ -211,6 +217,8 @@ class TestGaleImportCommand:
         cmd.digwork_contentype = ContentType.objects.get_for_model(DigitizedWork)
         cmd.gale_api = Mock(GaleAPI)
         cmd.stats = Counter()
+        test_id = "CW123456"
+        cmd.id_lookup = {test_id: {"estc_id": "T012345"}}  # no volume
         # simulate success
         cmd.gale_api.get_item.return_value = {
             "doc": {
@@ -226,12 +234,14 @@ class TestGaleImportCommand:
                 ]
             },
         }
-        test_id = "CW123456"
+
         digwork = cmd.import_digitizedwork(test_id)
         assert digwork
         assert isinstance(digwork, DigitizedWork)
+        assert digwork.record_id == cmd.id_lookup[test_id]["estc_id"]
         output = stderr.getvalue()
         assert "MARC record not found" in output
+        mock_get_marc_record.assert_called_with(digwork.record_id)
 
     def test_import_digitizedwork_exists(self):
         # skip without api call if digwork already exists
