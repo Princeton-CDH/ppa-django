@@ -76,14 +76,6 @@ def test_hathi_page_url():
     assert hathi_url.endswith("?id=%s;view=1up;seq=%s" % (item_id, order))
 
 
-def test_hathi_page_url():
-    item_id = "mdp.39015031594768"
-    order = 50
-    hathi_url = hathi_page_url(item_id, order)
-    assert hathi_url.startswith("%s/pt" % HATHI_BASE_URL)
-    assert hathi_url.endswith("?id=%s;view=1up;seq=%s" % (item_id, order))
-
-
 def test_gale_page_url():
     source_url = "https://link.gale.com/apps/doc/CW0123455/ECCO?u=abc123&sid=gale_api&xid=1605fa6c"
     order = 248
