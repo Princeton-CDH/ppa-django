@@ -32,13 +32,18 @@ class Command(BaseCommand):
         for filepath in kwargs["marcfiles"]:
             stats["files"] += 1
             with open(filepath, "rb") as marcfile:
-                reader = pymarc.MARCReader(marcfile, to_unicode=True)
+                reader = pymarc.MARCReader(
+                    marcfile, to_unicode=True, utf8_handling="replace"
+                )
                 for record in reader:
-                    # Gale item id used for API is only available in the
-                    # access url; split the url and get the id
-                    gale_id = record["856"]["u"].split("/")[5]
+                    # use ESTC id from 001 as identifier
+                    # (need a mapping from Gale item id to ESTC; only
+                    # one marc record for each volume in a multivolume set)
+                    gale_estc_id = record["001"].value().strip()
                     # create an object in the pairtree
-                    pmarc = marc_store.get_object(gale_id, create_if_doesnt_exist=True)
+                    pmarc = marc_store.get_object(
+                        gale_estc_id, create_if_doesnt_exist=True
+                    )
                     # add individual binary marc record to pairtree storage
                     output = BytesIO()
                     record.force_utf8 = True

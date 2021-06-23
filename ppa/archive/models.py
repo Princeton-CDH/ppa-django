@@ -257,7 +257,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         max_length=255,
         blank=True,
         help_text="For HathiTrust materials, record id (use to aggregate "
-        + "copies or volumes).",
+        + "copies or volumes); for Gale materials, ESTC id.",
     )
     #: title of the work; using TextField to allow for long titles
     title = models.TextField(help_text="Main title")
@@ -271,7 +271,12 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         help_text="Sort title from MARC record or title without leading article",
     )
     #: enumeration/chronology (hathi-specific; contains volume or version)
-    enumcron = models.CharField("Enumeration/Chronology", max_length=255, blank=True)
+    enumcron = models.CharField(
+        "Enumeration/Chronology/Volume",
+        max_length=255,
+        blank=True,
+        help_text="Enumcron for HathiTrust material; volume for Gale material",
+    )
     # NOTE: may eventually to convert to foreign key
     author = models.CharField(
         max_length=255,
@@ -717,14 +722,18 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
                 return bibdata.marcxml.as_marc()
 
             if self.source == DigitizedWork.GALE:
-                # get record from local marc pairtree storage
+                # get record from local marc pairtree storage using ESTC id
+                # (stored as record id)
                 try:
-                    record = get_marc_record(self.source_id)
+                    record = get_marc_record(self.record_id)
                     # specify encoding to avoid errors
                     record.force_utf8 = True
                     return record.as_marc()
                 except MARCRecordNotFound:
-                    logger.warn("MARC record for %s not found" % self.source_id)
+                    logger.warn(
+                        "MARC record for %s/%s not found"
+                        % (self.source_id, self.record_id)
+                    )
                     return ""
 
             return ""

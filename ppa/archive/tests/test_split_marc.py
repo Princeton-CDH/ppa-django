@@ -17,7 +17,7 @@ def test_split_marc(tmpdir):
         assert "Split out 1 record from 1 file" in output.getvalue()
 
         # instead of testing the specifics of the implementation,
-        # just test retrieval based on test id set as url in the marc record
-        record = get_marc_record("CB0123456789")
+        # just test retrieval based on test id set as 001 in the marc record
+        record = get_marc_record("fol05882032")
         assert isinstance(record, pymarc.Record)
         assert record.title() == "Cross-platform Perl /"

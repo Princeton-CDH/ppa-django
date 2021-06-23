@@ -197,18 +197,18 @@ class MARCRecordNotFound(Exception):
     """record not found in local MARC record storage"""
 
 
-def get_marc_record(item_id):
-    """get a marc record from the pairtree storage by Gale item id"""
+def get_marc_record(marc_id):
+    """get a marc record from the pairtree storage by Gale ESTC id"""
     start_time = time.time()
     try:
-        marc_object = get_marc_storage().get_object(item_id)
+        marc_object = get_marc_storage().get_object(marc_id)
         with marc_object.get_bytestream("marc.dat", streamable=True) as marcfile:
-            reader = pymarc.MARCReader(marcfile, to_unicode=True)
+            reader = pymarc.MARCReader(marcfile, to_unicode=True, file_encoding="utf-8")
             record = [rec for rec in reader][0]
             logger.debug(
                 "Loaded MARC record for %s in %.5fs"
-                % (item_id, time.time() - start_time)
+                % (marc_id, time.time() - start_time)
             )
     except storage_exceptions.PartNotFoundException:
-        raise MARCRecordNotFound(item_id)
+        raise MARCRecordNotFound(marc_id)
     return record
