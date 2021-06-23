@@ -622,6 +622,27 @@ class TestDigitizedWork(TestCase):
         work.source = DigitizedWork.OTHER
         work.clean()
 
+    def test_clean_fields(self):
+        work = DigitizedWork(
+            source_id="chi.79279237",
+            title="A book of grammar",
+            sort_title="book of grammar",
+            pages_digital="1-3,   5-7 ",
+        )
+        work.clean_fields()
+        # should have whitespace normalized; no validation error
+        assert work.pages_digital == "1-3, 5-7"
+
+    def test_page_range_validation(self):
+        work = DigitizedWork(
+            source_id="chi.79279237",
+            title="A book of grammar",
+            sort_title="book of grammar",
+            pages_digital="1-3b",
+        )
+        with pytest.raises(ValidationError):
+            work.clean_fields()
+
     def test_is_suppressed(self):
         work = DigitizedWork(source_id="chi.79279237")
         assert not work.is_suppressed
