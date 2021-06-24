@@ -789,7 +789,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
 
         return page_count
 
-    @cached_property
+    @property
     def page_span(self):
         # convert the specified page numbers into an intspan
         # if empty, returns an empty set
@@ -986,6 +986,9 @@ class Page(Indexable):
             )
             return
 
+        # get page span from digitized work
+        page_span = digwork.page_span
+
         # read zipfile contents in place, without unzipping
         with ZipFile(digwork.hathi.zipfile_path()) as ht_zip:
 
@@ -993,7 +996,7 @@ class Page(Indexable):
             # over pages in METS structmap
             for i, page in enumerate(mmets.structmap_pages, 1):
                 # if the document has a page range defined, skip any pages not in range
-                if digwork.page_span and i not in digwork.page_span:
+                if page_span and i not in page_span:
                     continue
                 # zipfile spec uses / for path regardless of OS
                 pagefilename = "/".join(
@@ -1022,11 +1025,15 @@ class Page(Indexable):
         making an extra API call if data is already available."""
         if gale_record is None:
             gale_record = GaleAPI().get_item(digwork.source_id)
+
+        # get page span from digitized work
+        page_span = digwork.page_span
+
         for i, page in enumerate(gale_record["pageResponse"]["pages"], 1):
             page_number = page["pageNumber"]
             page_num_int = int(page_number)
             # if the document has a page range defined, skip any pages not in range
-            if digwork.page_span and i not in digwork.page_span:
+            if page_span and i not in page_span:
                 continue
             yield {
                 "id": "%s.%s" % (digwork.source_id, page_number),
