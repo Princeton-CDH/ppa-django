@@ -253,9 +253,8 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
     #: source identifier; hathi id for HathiTrust materials
     source_id = models.CharField(
         max_length=255,
-        unique=True,
         verbose_name="Source ID",
-        help_text="Source identifier. Unique identifier without spaces; "
+        help_text="Source identifier. Must be unique when combined with page range; "
         + "used for site URL. (HT id for HathiTrust materials.)",
     )
     #: source url where the original can be accessed
@@ -388,6 +387,13 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
 
     class Meta:
         ordering = ("sort_title",)
+        # require unique combination of source id + page range,
+        # since we need to allow multiple excerpts from the same source
+        constraints = [
+            models.UniqueConstraint(
+                fields=["source_id", "pages_digital"], name="unique_sourceid_pagerange"
+            )
+        ]
 
     def get_absolute_url(self):
         """
