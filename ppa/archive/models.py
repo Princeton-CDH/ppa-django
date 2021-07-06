@@ -11,10 +11,13 @@ from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.db import models
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
 from flags import Flags
+from intspan import ParseError as IntSpanParseError
+from intspan import intspan
 from pairtree import pairtree_client, pairtree_path, storage_exceptions
 from parasolr.django import SolrQuerySet
 from parasolr.django.indexing import ModelIndexable
@@ -215,6 +218,17 @@ class CollectionSignalHandlers:
         DigitizedWork.index_items(digworks)
 
 
+def validate_page_range(value):
+    """Ensure page range can be parsed as an integer span"""
+    try:
+        intspan(value)
+    except IntSpanParseError as err:
+        raise ValidationError(
+            "Parse error: %(message)s",
+            params={"message": err},
+        )
+
+
 class DigitizedWork(TrackChangesModel, ModelIndexable):
     """
     Record to manage digitized works included in PPA and store their basic
@@ -335,6 +349,44 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         + "currently not reversible; use with caution.",
     )
 
+    FULL = "F"
+    EXCERPT = "E"
+    ARTICLE = "A"
+    ITEMTYPE_CHOICES = (
+        (FULL, "Full work"),
+        (EXCERPT, "Excerpt"),
+        (ARTICLE, "Article"),
+    )
+    #: type of record, whether excerpt, article, or full; defaults to full
+    item_type = models.CharField(
+        max_length=1,
+        choices=ITEMTYPE_CHOICES,
+        default=FULL,
+        help_text="Portion of the work that is included; used to determine icon for public display.",
+    )
+    #: book or journal title for excerpt or article
+    book_journal = models.TextField(
+        "Book/Journal title",
+        help_text="title of the book or journal that includes this content (excerpt/article only)",
+        blank=True,
+    )
+    pages_orig = models.CharField(
+        "Page range (original)",
+        max_length=255,
+        help_text="Page range in the original work (for display and citation).",
+        blank=True,
+    )
+    pages_digital = models.CharField(
+        "Page range (digital edition)",
+        max_length=255,
+        help_text="Sequence of pages in the digital edition. "
+        + "Use full digits for start and end separated by a dash (##-##); "
+        + "for multiple sequences, separate ranges by a comma (##-##, ##-##)."
+        + "NOTE: removing page range may have unexpected results.",
+        blank=True,
+        validators=[validate_page_range],
+    )
+
     class Meta:
         ordering = ("sort_title",)
 
@@ -348,6 +400,12 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
     def __str__(self):
         """Default string display. Uses :attr:`source_id`"""
         return self.source_id
+
+    def clean_fields(self, exclude=None):
+        if not exclude or "pages_digital" not in exclude:
+            # normalize whitespace in pages digital field before applying regex validation
+            self.pages_digital = " ".join(self.pages_digital.strip().split())
+        super().clean_fields(exclude=exclude)
 
     @property
     def is_suppressed(self):
@@ -400,6 +458,21 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             # if this is a HathiTrust item, remove pairtree data
             if self.source == DigitizedWork.HATHI:
                 self.hathi.delete_pairtree_data()
+
+        if self.has_changed("pages_digital"):
+            # if there is a page range set now, update page count and index
+            if self.pages_digital:
+                # recalculate page total based on current range
+                self.page_count = self.count_pages()
+                # update index to remove all pages that are no longer in range
+                self.solr.update.delete_by_query(
+                    "source_id:(%s) AND item_type:page NOT order:(%s)"
+                    % (self.source_id, " OR ".join(str(p) for p in self.page_span))
+                )
+            # any page range change requires reindexing (potentially slow)
+            self.index_items(Page.page_index_data(self))
+            # NOTE: removing a page range may not work as expected
+            # (does not recalculate page count; cannot recalculate for Gale items)
 
         # source id is used as Solr identifier; if it changes, remove
         # the old record from Solr before saving with the new identifier
@@ -670,11 +743,18 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         self.solr.update.delete_by_query("source_id:(%s)" % self.source_id)
 
     def count_pages(self, ptree_client=None):
-        """Count the number of pages for a digitized work based on the
-        number of files in the zipfile within the pairtree content.
+        """Count the number of pages for a digitized work. If a pages are specified
+        for an excerpt or article, page count is determined based on the number of pages
+        in the combined ranges. Otherwise, page count is based on the
+        number of files in the zipfile within the pairtree content (Hathi-specific).
         Raises :class:`pairtree.storage_exceptions.ObjectNotFoundException`
         if the data is not found in the pairtree storage. Returns page count
         found; saves the object if the count changes."""
+
+        # if this item has a page span defined, calculate number of pages
+        # based on the number of pages across all spans
+        if self.page_span:
+            return len(self.page_span)
 
         if not self.source == DigitizedWork.HATHI:
             raise storage_exceptions.ObjectNotFoundException(
@@ -709,6 +789,12 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             self.save()
 
         return page_count
+
+    @property
+    def page_span(self):
+        # convert the specified page numbers into an intspan
+        # if empty, returns an empty set
+        return intspan(self.pages_digital)
 
     def get_metadata(self, metadata_format):
         """Get metadata for this item in the specified format.
@@ -901,12 +987,18 @@ class Page(Indexable):
             )
             return
 
+        # get page span from digitized work
+        page_span = digwork.page_span
+
         # read zipfile contents in place, without unzipping
         with ZipFile(digwork.hathi.zipfile_path()) as ht_zip:
 
             # yield a generator of index data for each page; iterate
             # over pages in METS structmap
-            for page in mmets.structmap_pages:
+            for i, page in enumerate(mmets.structmap_pages, 1):
+                # if the document has a page range defined, skip any pages not in range
+                if page_span and i not in page_span:
+                    continue
                 # zipfile spec uses / for path regardless of OS
                 pagefilename = "/".join(
                     [digwork.hathi.content_dir, page.text_file_location]
@@ -934,18 +1026,26 @@ class Page(Indexable):
         making an extra API call if data is already available."""
         if gale_record is None:
             gale_record = GaleAPI().get_item(digwork.source_id)
-        # NOTE when adding support for excerpts from Gale, we should
-        # ensure that order is set based on the sequence of images within the volume
-        # (not within the excerpt), since order is used to generate
-        # the link directly to specific pages on Gale
+
+        # get page span from digitized work
+        page_span = digwork.page_span
+
+        # NOTE when adding support for excerpts from Gale, order must be
+        # set based on the sequence of images within the volume
+        # (NOT within the excerpt), since order is used to generate
+        # the link to a specific page result on Gale
         for i, page in enumerate(gale_record["pageResponse"]["pages"], 1):
             page_number = page["pageNumber"]
             page_num_int = int(page_number)
+            # if the document has a page range defined, skip any pages not in range
+            if page_span and i not in page_span:
+                continue
             yield {
                 "id": "%s.%s" % (digwork.source_id, page_number),
                 "source_id": digwork.source_id,  # for grouping with work record
                 "content": page.get("ocrText"),  # some pages have no text
                 "order": i,
+                # NOTE: Gale API doesn't include labels for original page number
                 "label": page_num_int,
                 "item_type": "page",
                 # image id needed for thumbnail url; use solr dynamic field

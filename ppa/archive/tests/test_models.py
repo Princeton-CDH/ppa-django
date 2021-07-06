@@ -3,6 +3,7 @@ import os.path
 import types
 from datetime import date, timedelta
 from time import sleep
+from unittest import mock
 from unittest.mock import Mock, patch
 from zipfile import ZipFile
 
@@ -556,11 +557,15 @@ class TestDigitizedWork(TestCase):
             work.count_pages()
         assert "Using Hathi-specific page count" in str(err)
 
+    def test_count_pages_excerpt(self):
+        work = DigitizedWork(source_id="CW79279237", pages_digital="1-10")
+        assert work.count_pages() == 10
+
     def test_index_id(self):
         work = DigitizedWork(source_id="chi.79279237")
         assert work.index_id() == work.source_id
 
-    def test_save(self):
+    def test_save_suppress(self):
         work = DigitizedWork(source_id="chi.79279237")
         with patch.object(work, "hathi") as mock_hathiobj:
             # no change in status - nothing should happen
@@ -585,6 +590,7 @@ class TestDigitizedWork(TestCase):
             work.save()
             mock_hathiobj.delete_pairtree_data.assert_not_called()
 
+    def test_save_sourceid(self):
         # if source_id changes, old id should be removed from solr index
         work = DigitizedWork.objects.create(
             source=DigitizedWork.OTHER, source_id="12345"
@@ -593,6 +599,19 @@ class TestDigitizedWork(TestCase):
             work.source_id = "abcdef"
             work.save()
             mock_rm_from_index.assert_called()
+
+    def test_save_page_range(self):
+        work = DigitizedWork.objects.create(
+            source=DigitizedWork.OTHER, source_id="12345", page_count=256
+        )
+        with patch.object(work, "solr") as mock_solr:
+            work.pages_digital = "1-5"
+            work.save()
+            # should recalculate page count for this range
+            assert work.page_count == 5
+            mock_solr.update.delete_by_query.assert_called_with(
+                "source_id:(12345) AND item_type:page NOT order:(1 OR 2 OR 3 OR 4 OR 5)"
+            )
 
     def test_clean(self):
         work = DigitizedWork(source_id="chi.79279237")
@@ -621,6 +640,33 @@ class TestDigitizedWork(TestCase):
         # not an error for non-hathi
         work.source = DigitizedWork.OTHER
         work.clean()
+
+    def test_clean_fields(self):
+        work = DigitizedWork(
+            source_id="chi.79279237",
+            title="A book of grammar",
+            sort_title="book of grammar",
+            pages_digital="1-3,   5-7 ",
+        )
+        work.clean_fields()
+        # should have whitespace normalized; no validation error
+        assert work.pages_digital == "1-3, 5-7"
+
+    def test_page_range_validation(self):
+        work = DigitizedWork(
+            source_id="chi.79279237",
+            title="A book of grammar",
+            sort_title="book of grammar",
+            pages_digital="1-3b",  # non-numeric
+        )
+        with pytest.raises(ValidationError) as err:
+            work.clean_fields()
+        assert "Can't parse" in str(err)
+
+        work.pages_digital = "355-35"  # non-sequential range
+        with pytest.raises(ValidationError) as err:
+            work.clean_fields()
+        assert "start value should exceed stop (355-35)" in str(err)
 
     def test_is_suppressed(self):
         work = DigitizedWork(source_id="chi.79279237")
@@ -854,6 +900,19 @@ class TestPage(TestCase):
                 assert "tags" in data
                 assert data["tags"] == mets_page.label.split(", ")
 
+            # limit pages if specified
+            excerpt = DigitizedWork(source_id="chi.79279237", pages_digital="2-3")
+            # repopulate mocks
+            mockzip_obj = mockzipfile.return_value.__enter__.return_value
+            mockzip_obj.namelist.return_value = page_files
+            # simulate reading zip file contents
+            contents = ("page content for one", "hello! pshaw! what?")
+            mockzip_obj.open.return_value.__enter__.return_value.read.return_value.decode.side_effect = (
+                contents
+            )
+            page_data = list(Page.page_index_data(excerpt))
+            assert len(page_data) == 2
+
             # not suppressed but no data
             mock_hathiobj.metsfile_path.side_effect = (
                 storage_exceptions.ObjectNotFoundException
@@ -911,3 +970,10 @@ class TestPage(TestCase):
         page_data = list(Page.gale_page_index_data(gale_work, api_response))
         assert mock_gale_api.return_value.get_item.call_count == 0
         assert len(page_data) == 2
+
+        # limit if page range specified
+        gale_excerpt = DigitizedWork(
+            source=DigitizedWork.GALE, source_id="CW123456", pages_digital="2-3"
+        )
+        page_data = list(Page.gale_page_index_data(gale_excerpt, api_response))
+        assert len(page_data) == 1
