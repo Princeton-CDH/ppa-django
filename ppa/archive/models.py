@@ -1029,6 +1029,10 @@ class Page(Indexable):
         # get page span from digitized work
         page_span = digwork.page_span
 
+        # NOTE when adding support for excerpts from Gale, order must be
+        # set based on the sequence of images within the volume
+        # (NOT within the excerpt), since order is used to generate
+        # the link to a specific page result on Gale
         for i, page in enumerate(gale_record["pageResponse"]["pages"], 1):
             page_number = page["pageNumber"]
             page_num_int = int(page_number)

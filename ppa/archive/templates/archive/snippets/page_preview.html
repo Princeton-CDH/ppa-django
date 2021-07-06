@@ -9,8 +9,14 @@ Expected context variables:
 {% endcomment %}
 {% load ppa_tags %}
 <div class="page">
+  {% if source == 'HathiTrust' %}
+    {% hathi_page_url item_id page.order as page_link %}
+  {% elif source == 'Gale' %}
+    {% gale_page_url source_url page.order as page_link %}
+  {# currently no other sources with page level content, so no other case needed #}
+  {% endif %}
     <div class="preview">
-        <a href="{% page_url item_id page.order %}"
+        <a href="{{ page_link }}"
           target="_blank" rel="noopener noreferrer">
           {% if source == 'HathiTrust' %}
           {% page_image_url item_id page.order 225 as 1x_img %}
@@ -35,7 +41,7 @@ Expected context variables:
     {% if page.title %}<a>p. {{ page.title }}</a>{% endif %}
     <div class="snippets">
           <p class="page-number">
-            <a href="{% page_url item_id page.order %}" target="_blank" rel="noopener noreferrer">
+            <a href="{{ page_link }}" target="_blank" rel="noopener noreferrer">
               p. {{ page.label }}
             </a>
           </p>
