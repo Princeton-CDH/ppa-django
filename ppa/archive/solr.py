@@ -126,6 +126,7 @@ class ArchiveSearchQuerySet(SolrQuerySet):
         "collections",
         "source_t",
         "image_id_s",
+        "first_page_i",
     ]
 
     keyword_query = None
@@ -186,7 +187,7 @@ class ArchiveSearchQuerySet(SolrQuerySet):
 
         # search across keyword qf fields OR find works with pages that match
         keyword_query = (
-            "((%s) OR ({!join from=source_id to=id v=$content_query}))"
+            "((%s) OR ({!join from=group_id_s to=id v=$content_query}))"
             % self._keyword_search
         )
         # by default, set combined query to keyword query (= no work filters)
@@ -200,7 +201,7 @@ class ArchiveSearchQuerySet(SolrQuerySet):
             # find works based on filter query but also restrict pages to those
             # that match works with these filters
             combined_query = (
-                "(%s) AND (%s OR {!join from=id to=source_id v=$work_query})"
+                "(%s) AND (%s OR {!join from=id to=group_id_s v=$work_query})"
                 % (keyword_query, work_query)
             )
             # pass combined workfilter query as a raw query parameter
@@ -213,7 +214,7 @@ class ArchiveSearchQuerySet(SolrQuerySet):
         # correct display! Not sure why
         qs_copy = (
             qs_copy.search(combined_query)
-            .filter('{!collapse field=source_id sort="order asc"}')
+            .filter('{!collapse field=group_id_s sort="order asc"}')
             .raw_query_parameters(
                 content_query="content:(%s)" % self.keyword_query,
                 keyword_query=self.keyword_query,

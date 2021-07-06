@@ -258,6 +258,14 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
     def get_solr_lastmodified_filters(self):
         return {"source_id": self.object.source_id}
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        # if start page is specified, filter to make sure we get the correct
+        # excerpt
+        if self.kwargs.get("start_page"):
+            qs.filter(pages_digital__startswith=self.kwargs["start_page"])
+        return qs
+
     def get(self, *args, **kwargs):
         response = super().get(*args, **kwargs)
         # set status code to 410 gone for suppressed works

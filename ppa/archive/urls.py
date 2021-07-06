@@ -1,5 +1,6 @@
 from django.conf.urls import url
 from django.contrib.admin.views.decorators import staff_member_required
+from django.urls import path
 
 from ppa.archive import views
 
@@ -22,8 +23,15 @@ urlpatterns = [
         views.DigitizedWorkByRecordId.as_view(),
         name="record-id",
     ),
-    url(
-        r"^(?P<source_id>.+)/$", views.DigitizedWorkDetailView.as_view(), name="detail"
+    path(
+        "<str:source_id>-p<int:start_page>/",
+        views.DigitizedWorkDetailView.as_view(),
+        name="detail",
+    ),
+    path(
+        "<str:source_id>/",
+        views.DigitizedWorkDetailView.as_view(),
+        name="detail",
     ),
     url(r"^$", views.DigitizedWorkListView.as_view(), name="list"),
 ]
