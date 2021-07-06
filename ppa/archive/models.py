@@ -934,6 +934,10 @@ class Page(Indexable):
         making an extra API call if data is already available."""
         if gale_record is None:
             gale_record = GaleAPI().get_item(digwork.source_id)
+        # NOTE when adding support for excerpts from Gale, we should
+        # ensure that order is set based on the sequence of images within the volume
+        # (not within the excerpt), since order is used to generate
+        # the link directly to specific pages on Gale
         for i, page in enumerate(gale_record["pageResponse"]["pages"], 1):
             page_number = page["pageNumber"]
             page_num_int = int(page_number)
