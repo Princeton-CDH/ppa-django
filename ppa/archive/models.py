@@ -381,7 +381,8 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         max_length=255,
         help_text="Sequence of pages in the digital edition. "
         + "Use full digits for start and end separated by a dash (##-##); "
-        + "for multiple sequences, separate ranges by a comma (##-##, ##-##).",
+        + "for multiple sequences, separate ranges by a comma (##-##, ##-##)."
+        + "NOTE: removing page range may have unexpected results.",
         blank=True,
         validators=[validate_page_range],
     )
