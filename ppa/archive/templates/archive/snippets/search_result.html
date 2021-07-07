@@ -93,7 +93,7 @@
                 <div class="wrapper">
                     {% for page in results.docs %}
                     {% with highlights=page_highlights|dict_item:page.id %}
-                        {% include 'archive/snippets/page_preview.html' with item_id=item.source_id source=item.source_t.0 image_id=page.image_id_s%
+                        {% include 'archive/snippets/page_preview.html' with item_id=item.source_id source=item.source_t.0 image_id=page.image_id_s %}
 
                     {% endwith %}
                     {% endfor %}
