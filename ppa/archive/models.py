@@ -729,7 +729,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             "id": index_id,
             "source_id": self.source_id,
             "first_page_i": list(self.page_span)[0] if self.pages_digital else None,
-            "group_id_t": index_id,  # for grouping pages — excerpt specific
+            "group_id_s": index_id,  # for grouping pages — excerpt specific
             "source_t": self.get_source_display(),
             "source_url": self.source_url,
             "title": self.title,
@@ -1062,7 +1062,7 @@ class Page(Indexable):
             yield {
                 "id": "%s.%s" % (digwork.source_id, page_number),
                 "source_id": digwork.source_id,
-                "group_id_t": digwork_index_id,  # for grouping with work record
+                "group_id_s": digwork_index_id,  # for grouping with work record
                 "content": page.get("ocrText"),  # some pages have no text
                 "order": i,
                 # NOTE: Gale API doesn't include labels for original page number

@@ -367,6 +367,7 @@ class TestDigitizedWorkListRequest(TestCase):
                 "item_type": "page",
                 "source_id": htid,
                 "id": "%s.%s" % (htid, i),
+                "group_id_s": htid,  # group id for non-excerpt = source id
             }
             for i, content in enumerate(sample_page_content)
         ]
