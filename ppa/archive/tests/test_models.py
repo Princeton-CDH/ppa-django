@@ -456,6 +456,11 @@ class TestDigitizedWork(TestCase):
             "archive:detail", kwargs={"source_id": work.source_id}
         )
 
+        work.pages_digital = "11-13"
+        assert work.get_absolute_url() == reverse(
+            "archive:detail", kwargs={"source_id": work.source_id, "start_page": 11}
+        )
+
     @patch("ppa.archive.models.HathiBibliographicAPI")
     def test_get_metadata_hathi(self, mock_hathibib):
         work = DigitizedWork(source_id="ht:1234")
