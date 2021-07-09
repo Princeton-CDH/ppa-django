@@ -127,6 +127,7 @@ class ArchiveSearchQuerySet(SolrQuerySet):
         "source_t",
         "image_id_s",
         "first_page_i",
+        "source_url",
     ]
 
     keyword_query = None

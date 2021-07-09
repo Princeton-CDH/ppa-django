@@ -381,7 +381,8 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         max_length=255,
         help_text="Sequence of pages in the digital edition. "
         + "Use full digits for start and end separated by a dash (##-##); "
-        + "for multiple sequences, separate ranges by a comma (##-##, ##-##).",
+        + "for multiple sequences, separate ranges by a comma (##-##, ##-##)."
+        + "NOTE: removing page range may have unexpected results.",
         blank=True,
         validators=[validate_page_range],
     )
@@ -1053,6 +1054,10 @@ class Page(Indexable):
         page_span = digwork.page_span
         digwork_index_id = digwork.index_id()
 
+        # NOTE when adding support for excerpts from Gale, order must be
+        # set based on the sequence of images within the volume
+        # (NOT within the excerpt), since order is used to generate
+        # the link to a specific page result on Gale
         for i, page in enumerate(gale_record["pageResponse"]["pages"], 1):
             page_number = page["pageNumber"]
             page_num_int = int(page_number)
