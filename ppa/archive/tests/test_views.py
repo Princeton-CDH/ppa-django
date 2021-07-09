@@ -25,7 +25,7 @@ from ppa.archive.forms import (
 )
 from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork
 from ppa.archive.solr import ArchiveSearchQuerySet
-from ppa.archive.templatetags.ppa_tags import page_image_url, page_url
+from ppa.archive.templatetags.ppa_tags import hathi_page_url, page_image_url
 from ppa.archive.views import AddFromHathiView, DigitizedWorkCSV, DigitizedWorkListView
 
 
@@ -310,7 +310,7 @@ class TestDigitizedWorkDetailView(TestCase):
         # image should have a link to hathitrust as should the page number
         self.assertContains(
             response,
-            page_url(result["source_id"], result["order"]),
+            hathi_page_url(result["source_id"], result["order"]),
             count=2,
             msg_prefix="should include a link to HathiTrust",
         )
