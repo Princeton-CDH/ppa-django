@@ -340,6 +340,48 @@ class TestDigitizedWorkDetailView(TestCase):
         # should have pagination
         self.assertContains(response, '<div class="page-controls')
 
+    def test_get_queryset(self):
+        # requesting non-excerpt with start page specified should return 404 not found
+        bogus_dial_excerpt_url = reverse(
+            "archive:detail",
+            kwargs={"source_id": self.dial.source_id, "start_page": 15},
+        )
+        assert self.client.get(bogus_dial_excerpt_url).status_code == 404
+        # create and retrieve an excerpt; should return 200 ok with correct object
+        dial_excerpt = DigitizedWork.objects.create(
+            source_id=self.dial.source_id, pages_digital="200-250"
+        )
+        print(dial_excerpt.get_absolute_url())
+        response = self.client.get(dial_excerpt.get_absolute_url())
+        assert response.status_code == 200
+        print(response.context["object"])
+        assert response.context["object"] == dial_excerpt
+
+        # getting the full work should not return the excerpt
+        response = self.client.get(self.dial_url)
+        assert response.status_code == 200
+        assert response.context["object"] == self.dial
+
+        # create excerpt where there is no existing work
+        excerpt = DigitizedWork.objects.create(
+            source_id="abc.123456", pages_digital="10-20"
+        )
+        response = self.client.get(excerpt.get_absolute_url())
+        # retrieve url for source id with no start apge
+        nonexistent_source_url = reverse(
+            "archive:detail", kwargs={"source_id": excerpt.source_id}
+        )
+        # should redirect with 303 see other to the single excerpt
+        response = self.client.get(nonexistent_source_url)
+        assert response.status_code == 303
+        assert response["Location"] == excerpt.get_absolute_url()
+
+        # if there are *TWO* excerpts for the same source, should 404 instead of redirecting
+        excerpt2 = DigitizedWork.objects.create(
+            source_id="abc.123456", pages_digital="30-45"
+        )
+        assert self.client.get(nonexistent_source_url).status_code == 404
+
 
 class TestDigitizedWorkListRequest(TestCase):
     fixtures = ["sample_digitized_works"]
@@ -360,6 +402,7 @@ class TestDigitizedWorkListRequest(TestCase):
             "an alternate thing with words like blood and bone not in the title",
         ]
         htid = "chi.13880510"
+        # NOTE: sample page index data must be updated if page indexing changes
         solr_page_docs = [
             {
                 "content": content,
