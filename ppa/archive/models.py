@@ -753,6 +753,9 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             # hard-coded to distinguish from & sort with pages
             "item_type": "work",
             "order": "0",
+            "work_type_s": self.get_item_type_display()
+            .lower()
+            .replace(" ", "-"),  # full, excerpt, or article
         }
 
     def remove_from_index(self):
