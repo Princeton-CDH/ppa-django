@@ -433,6 +433,7 @@ class TestDigitizedWork(TestCase):
         assert index_data["source_url"] == digwork.source_url
         assert digwork.public_notes in index_data["notes"]
         assert digwork.notes not in index_data["notes"]
+        assert index_data["work_type_s"] == "full-work"
         assert not index_data["enumcron"]
 
         # with enumcron
@@ -442,6 +443,10 @@ class TestDigitizedWork(TestCase):
         # not in a collection
         digwork.collections.clear()
         assert digwork.index_data()["collections"] == [NO_COLLECTION_LABEL]
+
+        # excerpt work type
+        digwork.item_type = DigitizedWork.EXCERPT
+        assert digwork.index_data()["work_type_s"] == "excerpt"
 
         # suppressed
         digwork.status = digwork.SUPPRESSED
