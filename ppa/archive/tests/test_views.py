@@ -371,9 +371,9 @@ class TestDigitizedWorkDetailView(TestCase):
         nonexistent_source_url = reverse(
             "archive:detail", kwargs={"source_id": excerpt.source_id}
         )
-        # should redirect with 303 see other to the single excerpt
+        # should return permanent redirect to the single excerpt
         response = self.client.get(nonexistent_source_url)
-        assert response.status_code == 303
+        assert response.status_code == 301
         assert response["Location"] == excerpt.get_absolute_url()
 
         # if there are *TWO* excerpts for the same source, should 404 instead of redirecting

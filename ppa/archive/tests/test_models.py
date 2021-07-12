@@ -97,6 +97,10 @@ class TestDigitizedWork(TestCase):
         digwork = DigitizedWork(source_id="njp.32101013082597")
         assert str(digwork) == digwork.source_id
 
+        # with pages
+        digwork.pages_orig = "20-25"
+        assert str(digwork) == "%s (20-25)" % digwork.source_id
+
     def test_display_title(self):
         digwork = DigitizedWork(title="Elocutionary Language")
         assert digwork.display_title() == digwork.title

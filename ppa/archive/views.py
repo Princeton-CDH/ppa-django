@@ -9,7 +9,12 @@ from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import MultipleObjectsReturned, ValidationError
 from django.core.paginator import Paginator
-from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponsePermanentRedirect,
+    HttpResponseRedirect,
+)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import urlencode
@@ -240,12 +245,6 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
         return context
 
 
-class HttpResponseSeeOther(HttpResponseRedirect):
-    """Redirect response with status code 303 See Other"""
-
-    status_code = HTTPStatus.SEE_OTHER
-
-
 class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailView):
     """Display details for a single digitized work. If a work has been
     surpressed, returns a 410 Gone response."""
@@ -256,8 +255,8 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
     slug_url_kwarg = "source_id"
     form_class = SearchWithinWorkForm
     paginate_by = 50
-    # see other redirect url that may be set in some cases
-    see_other_url = None
+    # redirect url for a full volume converted to a single excerpt
+    redirect_url = None
 
     def get_template_names(self):
         if self.object.status == DigitizedWork.SUPPRESSED:
@@ -285,23 +284,21 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
             qs = source_qs.filter(pages_digital__exact="")
 
         #  if qs is empty and start page is not set, check if there is _one_ excerpt
-        # for the source id; if there is, we want to redirect with status 303 See Other
+        # for the source id; if there is, we want to return a permanent redirect
         if not qs.exists() and not start_page:
             if source_qs.count() == 1:
-                self.see_other_url = source_qs.first().get_absolute_url()
-
-            # otherwise, return a 404
-
+                self.redirect_url = source_qs.first().get_absolute_url()
+        # otherwise, return a 404
         return qs
 
     def get(self, *args, **kwargs):
         try:
             response = super().get(*args, **kwargs)
         except Http404:
-            # if see other url is set (i.e., tried to retrieve a non-existent
+            # if redirect url is set (i.e., tried to retrieve a non-existent
             # full work, but there is one excerpt with that source id)
-            if self.see_other_url:
-                return HttpResponseSeeOther(self.see_other_url)
+            if self.redirect_url:
+                return HttpResponsePermanentRedirect(self.redirect_url)
             # otherwise, let the 404 propagate
             raise
 
