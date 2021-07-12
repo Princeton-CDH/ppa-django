@@ -44,7 +44,6 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
     of works and pages."""
 
     model = DigitizedWork
-    # FIXME should auto-determine this
     template_name = "archive/digitizedwork_list.html"
     ajax_template_name = "archive/snippets/results_list.html"
     form_class = SearchForm
