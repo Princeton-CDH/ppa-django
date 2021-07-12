@@ -1,6 +1,7 @@
 import csv
 import logging
 from collections import OrderedDict
+from http import HTTPStatus
 from json.decoder import JSONDecodeError
 
 import requests
@@ -8,7 +9,12 @@ from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import MultipleObjectsReturned, ValidationError
 from django.core.paginator import Paginator
-from django.http import Http404, HttpResponse
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponsePermanentRedirect,
+    HttpResponseRedirect,
+)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import urlencode
@@ -249,6 +255,8 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
     slug_url_kwarg = "source_id"
     form_class = SearchWithinWorkForm
     paginate_by = 50
+    # redirect url for a full volume converted to a single excerpt
+    redirect_url = None
 
     def get_template_names(self):
         if self.object.status == DigitizedWork.SUPPRESSED:
@@ -256,13 +264,48 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
         return super().get_template_names()
 
     def get_solr_lastmodified_filters(self):
-        return {"source_id": self.object.source_id}
+        if hasattr(self, "object"):
+            return {"id": self.object.index_id()}
+        # solr last modified mixin requires a filter; we don't want to return a header
+        # if we don't have an object, so return a bogus id
+        return {"id": "NOTFOUND"}
+
+    def get_queryset(self):
+        # get default queryset and filter by source id
+        source_qs = (
+            super().get_queryset().filter(source_id=self.kwargs.get("source_id"))
+        )
+        start_page = self.kwargs.get("start_page")
+        # if start page is specified, filter to get the correct excerpt
+        if start_page:
+            qs = source_qs.filter(pages_digital__startswith=start_page)
+        # if start page is NOT specified, ensure we do not retrieve an excerpt
+        else:
+            qs = source_qs.filter(pages_digital__exact="")
+
+        #  if qs is empty and start page is not set, check if there is _one_ excerpt
+        # for the source id; if there is, we want to return a permanent redirect
+        if not qs.exists() and not start_page:
+            if source_qs.count() == 1:
+                self.redirect_url = source_qs.first().get_absolute_url()
+        # otherwise, return a 404
+        return qs
 
     def get(self, *args, **kwargs):
-        response = super().get(*args, **kwargs)
+        try:
+            response = super().get(*args, **kwargs)
+        except Http404:
+            # if redirect url is set (i.e., tried to retrieve a non-existent
+            # full work, but there is one excerpt with that source id)
+            if self.redirect_url:
+                return HttpResponsePermanentRedirect(self.redirect_url)
+            # otherwise, let the 404 propagate
+            raise
+
         # set status code to 410 gone for suppressed works
         if self.object.is_suppressed:
             response.status_code = 410
+
         return response
 
     def get_context_data(self, **kwargs):
