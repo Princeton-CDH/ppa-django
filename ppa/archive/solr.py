@@ -1,7 +1,7 @@
 import logging
 
 from parasolr import schema
-from parasolr.django import SolrQuerySet
+from parasolr.django import AliasedSolrQuerySet, SolrQuerySet
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ class SolrSchema(schema.SolrSchema):
     }
 
 
-class ArchiveSearchQuerySet(SolrQuerySet):
+class ArchiveSearchQuerySet(AliasedSolrQuerySet):
 
     # search title query field syntax
     # (query field configured in solr config; searches title & subtitle with
@@ -110,7 +110,7 @@ class ArchiveSearchQuerySet(SolrQuerySet):
     _keyword_search = "{!type=edismax qf=$keyword_qf pf=$keyword_pf v=$keyword_query}"
 
     # minimal set of fields to be returned from Solr for search page
-    field_list = [
+    return_fields = [
         "id",
         "author",
         "pubdate",
@@ -128,11 +128,26 @@ class ArchiveSearchQuerySet(SolrQuerySet):
         "image_id_s",
         "first_page_i",
         "source_url",
+        "work_type_s",
     ]
+    # aliases for any fields we want to rename for search and display
+    # (must also be included in return_fields list)
+    aliases = {
+        "source_t": "source",
+        "image_id_s": "image_id",
+        "first_page_i": "first_page",
+        "work_type_s": "work_type",
+    }
 
     keyword_query = None
 
     def __init__(self, solr=None):
+        # field aliases: keys return the fields that will be returned from Solr for search page;
+        # values provide an aliased name if it should be different than solr index field.
+        # use alias if one is set, otherwise use field name
+        self.field_aliases = {
+            self.aliases.get(key, key): key for key in self.return_fields
+        }
         self._workq = SolrQuerySet()
         super().__init__(solr=solr)
 
