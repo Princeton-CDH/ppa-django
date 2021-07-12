@@ -75,7 +75,7 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
     )
     filter_horizontal = ("collections",)
     # date_hierarchy = 'added'  # is this useful?
-    list_filter = ["collections", "status", "source"]
+    list_filter = ["collections", "status", "source", "item_type"]
     actions = ["add_works_to_collection", "suppress_works"]
 
     def get_readonly_fields(self, request, obj=None):
