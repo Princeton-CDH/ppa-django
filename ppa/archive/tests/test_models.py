@@ -97,6 +97,10 @@ class TestDigitizedWork(TestCase):
         digwork = DigitizedWork(source_id="njp.32101013082597")
         assert str(digwork) == digwork.source_id
 
+        # with pages
+        digwork.pages_orig = "20-25"
+        assert str(digwork) == "%s (20-25)" % digwork.source_id
+
     def test_display_title(self):
         digwork = DigitizedWork(title="Elocutionary Language")
         assert digwork.display_title() == digwork.title
@@ -454,6 +458,11 @@ class TestDigitizedWork(TestCase):
         work = DigitizedWork.objects.first()
         assert work.get_absolute_url() == reverse(
             "archive:detail", kwargs={"source_id": work.source_id}
+        )
+
+        work.pages_digital = "11-13"
+        assert work.get_absolute_url() == reverse(
+            "archive:detail", kwargs={"source_id": work.source_id, "start_page": 11}
         )
 
     @patch("ppa.archive.models.HathiBibliographicAPI")

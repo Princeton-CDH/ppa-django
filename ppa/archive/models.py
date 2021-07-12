@@ -7,6 +7,7 @@ from zipfile import ZipFile
 import requests
 from cached_property import cached_property
 from django.conf import settings
+from django.conf.urls import url
 from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
@@ -253,9 +254,8 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
     #: source identifier; hathi id for HathiTrust materials
     source_id = models.CharField(
         max_length=255,
-        unique=True,
         verbose_name="Source ID",
-        help_text="Source identifier. Unique identifier without spaces; "
+        help_text="Source identifier. Must be unique when combined with page range; "
         + "used for site URL. (HT id for HathiTrust materials.)",
     )
     #: source url where the original can be accessed
@@ -381,7 +381,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         max_length=255,
         help_text="Sequence of pages in the digital edition. "
         + "Use full digits for start and end separated by a dash (##-##); "
-        + "for multiple sequences, separate ranges by a comma (##-##, ##-##)."
+        + "for multiple sequences, separate ranges by a comma (##-##, ##-##). "
         + "NOTE: removing page range may have unexpected results.",
         blank=True,
         validators=[validate_page_range],
@@ -389,16 +389,29 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
 
     class Meta:
         ordering = ("sort_title",)
+        # require unique combination of source id + page range,
+        # since we need to allow multiple excerpts from the same source
+        constraints = [
+            models.UniqueConstraint(
+                fields=["source_id", "pages_digital"], name="unique_sourceid_pagerange"
+            )
+        ]
 
     def get_absolute_url(self):
         """
         Return object's url for
         :class:`ppa.archive.views.DigitizedWorkDetailView`
         """
-        return reverse("archive:detail", kwargs={"source_id": self.source_id})
+        url_opts = {"source_id": self.source_id}
+        # start page must be specified if set but must not be included if empty
+        if self.pages_digital:
+            url_opts["start_page"] = self.first_page()
+        return reverse("archive:detail", kwargs=url_opts)
 
     def __str__(self):
-        """Default string display. Uses :attr:`source_id`"""
+        """Default string display. Uses :attr:`source_id` and :attr:`pages_orig` if any"""
+        if self.pages_orig:
+            return "%s (%s)" % (self.source_id, self.pages_orig)
         return self.source_id
 
     def clean_fields(self, exclude=None):
@@ -683,8 +696,15 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         }
     }
 
+    def first_page(self):
+        if self.pages_digital:
+            return list(self.page_span)[0]
+
     def index_id(self):
-        """source id is used as solr identifier"""
+        """use source id + first page in range (if any) as solr identifier"""
+        first_page = self.first_page()
+        if first_page:
+            return "%s-p%d" % (self.source_id, first_page)
         return self.source_id
 
     @classmethod
@@ -707,9 +727,12 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         if self.status == self.SUPPRESSED:
             return {"id": self.source_id}
 
+        index_id = self.index_id()
         return {
-            "id": self.source_id,
+            "id": index_id,
             "source_id": self.source_id,
+            "first_page_i": self.first_page(),
+            "group_id_s": index_id,  # for grouping pages — excerpt specific
             "source_t": self.get_source_display(),
             "source_url": self.source_url,
             "title": self.title,
@@ -989,6 +1012,7 @@ class Page(Indexable):
 
         # get page span from digitized work
         page_span = digwork.page_span
+        digwork_index_id = digwork.index_id()
 
         # read zipfile contents in place, without unzipping
         with ZipFile(digwork.hathi.zipfile_path()) as ht_zip:
@@ -1008,7 +1032,8 @@ class Page(Indexable):
                         yield {
                             "id": "%s.%s"
                             % (digwork.source_id, page.text_file.sequence),
-                            "source_id": digwork.source_id,  # for grouping with work record
+                            "source_id": digwork.source_id,
+                            "group_id_t": digwork_index_id,  # for grouping with work record
                             "content": pagefile.read().decode("utf-8"),
                             "order": page.order,
                             "label": page.display_label,
@@ -1029,11 +1054,8 @@ class Page(Indexable):
 
         # get page span from digitized work
         page_span = digwork.page_span
+        digwork_index_id = digwork.index_id()
 
-        # NOTE when adding support for excerpts from Gale, order must be
-        # set based on the sequence of images within the volume
-        # (NOT within the excerpt), since order is used to generate
-        # the link to a specific page result on Gale
         for i, page in enumerate(gale_record["pageResponse"]["pages"], 1):
             page_number = page["pageNumber"]
             page_num_int = int(page_number)
@@ -1042,7 +1064,8 @@ class Page(Indexable):
                 continue
             yield {
                 "id": "%s.%s" % (digwork.source_id, page_number),
-                "source_id": digwork.source_id,  # for grouping with work record
+                "source_id": digwork.source_id,
+                "group_id_s": digwork_index_id,  # for grouping with work record
                 "content": page.get("ocrText"),  # some pages have no text
                 "order": i,
                 # NOTE: Gale API doesn't include labels for original page number
