@@ -55,6 +55,7 @@ class TestDigitizedWorkDetailView(TestCase):
                 "id": "%s.%s" % (htid, i),
                 "label": i,
                 "source_t": "HathiTrust",
+                "group_id_s": htid,
             }
             for i, content in enumerate(sample_page_content)
         ]

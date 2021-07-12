@@ -336,7 +336,7 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
             solr_pageq = (
                 SolrQuerySet()
                 .search(content="(%s)" % query)
-                .filter(source_id='"%s"' % digwork.source_id, item_type="page")
+                .filter(group_id_s='"%s"' % digwork.index_id(), item_type="page")
                 .only("id", "source_id", "order", "title", "label", "image_id_s")
                 .highlight("content*", snippets=3, method="unified")
                 .order_by("order")
