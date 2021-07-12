@@ -381,7 +381,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         max_length=255,
         help_text="Sequence of pages in the digital edition. "
         + "Use full digits for start and end separated by a dash (##-##); "
-        + "for multiple sequences, separate ranges by a comma (##-##, ##-##)."
+        + "for multiple sequences, separate ranges by a comma (##-##, ##-##). "
         + "NOTE: removing page range may have unexpected results.",
         blank=True,
         validators=[validate_page_range],
@@ -409,7 +409,9 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         return reverse("archive:detail", kwargs=url_opts)
 
     def __str__(self):
-        """Default string display. Uses :attr:`source_id`"""
+        """Default string display. Uses :attr:`source_id` and :attr:`pages_orig` if any"""
+        if self.pages_orig:
+            return "%s (%s)" % (self.source_id, self.pages_orig)
         return self.source_id
 
     def clean_fields(self, exclude=None):
@@ -729,7 +731,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         return {
             "id": index_id,
             "source_id": self.source_id,
-            "first_page_i": list(self.page_span)[0] if self.pages_digital else None,
+            "first_page_i": self.first_page(),
             "group_id_s": index_id,  # for grouping pages — excerpt specific
             "source_t": self.get_source_display(),
             "source_url": self.source_url,
@@ -1054,10 +1056,6 @@ class Page(Indexable):
         page_span = digwork.page_span
         digwork_index_id = digwork.index_id()
 
-        # NOTE when adding support for excerpts from Gale, order must be
-        # set based on the sequence of images within the volume
-        # (NOT within the excerpt), since order is used to generate
-        # the link to a specific page result on Gale
         for i, page in enumerate(gale_record["pageResponse"]["pages"], 1):
             page_number = page["pageNumber"]
             page_num_int = int(page_number)
