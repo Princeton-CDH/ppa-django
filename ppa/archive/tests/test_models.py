@@ -624,7 +624,7 @@ class TestDigitizedWork(TestCase):
             # should recalculate page count for this range
             assert work.page_count == 5
             mock_solr.update.delete_by_query.assert_called_with(
-                "source_id:(12345) AND item_type:page NOT order:(1 OR 2 OR 3 OR 4 OR 5)"
+                'source_id:"12345" AND item_type:page NOT order:(1 OR 2 OR 3 OR 4 OR 5)'
             )
 
     def test_clean(self):
