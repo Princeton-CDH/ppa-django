@@ -787,6 +787,18 @@ class TestDigitizedWorkCSV(TestCase):
         first_dw.notes = "private notes"
         first_dw.public_notes = "public notes"
         first_dw.save()
+
+        # add an excerpt to check new fields are included
+        excerpt = DigitizedWork.objects.create(
+            source_id="njp.32101023869397",
+            title="The Old and the New in Metrics",
+            pub_date=1905,
+            book_journal="The Classical journal",
+            pages_orig="212-221",
+            pages_digital="220-229",
+            page_count=9,
+        )
+
         # get the csv export and inspect the response
         response = self.client.get(reverse("archive:csv"))
         assert response.status_code == 200
@@ -830,6 +842,13 @@ class TestDigitizedWorkCSV(TestCase):
             assert "%s" % digwork.updated in digwork_data
             assert digwork.get_status_display() in digwork_data
             assert digwork.get_source_display() in digwork_data
+            # excerpt fields
+            assert digwork.get_item_type_display() in digwork_data
+            # check optional fields if set
+            for opt_field in ("book_journal", "pages_orig", "pages_digital"):
+                value = getattr(digwork, opt_field)
+                if value:
+                    assert value in digwork_data
 
 
 class TestAdminViews(TestCase):
