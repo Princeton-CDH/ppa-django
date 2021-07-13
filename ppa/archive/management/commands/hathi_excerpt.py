@@ -42,6 +42,12 @@ class Command(BaseCommand):
         self.load_collections()
         self.excerpt(excerpt_info)
 
+        self.stdout.write(
+            "\nExcerpted {excerpted:,d} existing records; created {created:,d} new excerpts. {error:,d} errors.".format_map(
+                self.stats
+            )
+        )
+
     def load_collections(self):
         # load collections from the database and create
         # a lookup based on collection names
@@ -93,6 +99,8 @@ class Command(BaseCommand):
                 self.stderr.write(
                     self.style.WARNING("Error saving %s: %s" % (source_id, err))
                 )
+                self.stats["error"] += 1
+                continue
 
             # set collection membership based on spreadsheet data:
             # collection is a single field with collection names delimited by semicolon
@@ -108,7 +116,7 @@ class Command(BaseCommand):
                 log_message = "Created via hathi_excerpt script"
                 log_action = ADDITION
             else:
-                self.stats["updated"] += 1
+                self.stats["excerpted"] += 1
                 log_message = "Converted to excerpt"
                 log_action = CHANGE
 
