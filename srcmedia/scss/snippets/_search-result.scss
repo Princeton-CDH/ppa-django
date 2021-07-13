@@ -4,6 +4,18 @@
         background-color: $white-two;
     }
 
+    &.article {
+        padding-top: 55px;
+        @media (min-width: $tablet) { padding-top: 60px; }
+        @media (min-width: $computer) { padding-top: 0; }
+    }
+
+    &.excerpt {
+        padding-top: 30px;
+        @media (min-width: $tablet) { padding-top: 20px; }
+        @media (min-width: $computer) { padding-top: 0; }
+    }
+
     a.detail {
         text-decoration: none;
         display: block;
@@ -39,6 +51,7 @@
         .labels {
             width: 100%;
             display: block;
+            position: relative;
             margin-bottom: 1rem;
             flex: none;
 
@@ -50,6 +63,53 @@
             .result-number {
                 line-height: normal;
                 padding-top: 2px;
+            }
+
+            .work-type {
+                background-position: center center;
+                background-repeat: no-repeat;
+                background-size: contain;
+                position: absolute;
+                left: 0;
+
+                @media (min-width: $computer) {
+                    right: 200%;
+                    left: unset;
+                }
+                
+                &[aria-label=article] {
+                    background-image: url("/static/img/icons/article.svg");
+                    width: 40px;
+                    height: 56px;
+                    top: -70px;
+    
+                    @media (min-width: $tablet) {
+                        top: -75px;
+                    }
+                    
+                    @media (min-width: $computer) {
+                        top: 0;
+                        width: 62px;
+                        height: 88px;
+                    }
+                }
+
+                &[aria-label=excerpt] {
+                    background-image: url("/static/img/icons/excerpt.svg");
+                    width: 58px;
+                    height: 35px;
+                    top: -55px;
+
+                    @media (min-width: $tablet) {
+                        top: -45px;
+                    }
+
+                    @media (min-width: $computer) {
+                        top: 0;
+                        width: 92px;
+                        height: 65px;
+                    }
+                }
             }
         }
 
