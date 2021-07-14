@@ -121,11 +121,20 @@ class Command(BaseCommand):
 
         if created:
             self.stats["created"] += 1
-            # log entry details
+        else:
+            self.stats["excerpted"] += 1
+
+        self.log_action(digwork, created)
+
+        # TODO: make sure work & pages are updated in solr index
+
+    def log_action(self, digwork, created=True):
+        """Create a log entry to document excerpting or creating the record.
+        Message and action flag are determined by created boolean."""
+        if created:
             log_message = "Created via hathi_excerpt script"
             log_action = ADDITION
         else:
-            self.stats["excerpted"] += 1
             log_message = "Converted to excerpt"
             log_action = CHANGE
 
@@ -138,8 +147,6 @@ class Command(BaseCommand):
             change_message=log_message,
             action_flag=log_action,
         )
-
-        # TODO: make sure work & pages are updated in solr index
 
     csv_required_fields = [
         "Item Type",
