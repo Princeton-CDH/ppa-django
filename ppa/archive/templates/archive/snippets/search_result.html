@@ -14,7 +14,9 @@
                     {% if page_obj %}
                         <p class="result-number">{{ page_obj.start_index|add:forloop.counter0 }}</p>
                     {% endif %}
-                    <div class="work-type" aria-label="{{ item.work_type }}"></div>
+                    {% if item.work_type != "full-work" %}
+                    <div class="work-type icon" aria-label="{{ item.work_type }}"></div>
+                    {% endif %}
                 </div>
                 <p>
                     {% spaceless %}
