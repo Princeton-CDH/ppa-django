@@ -27,20 +27,26 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("csv", help="CSV file with excerpt information")
 
+    def setup(self):
+        # common setup steps for running the script or testing
+        self.stats = Counter()
+        self.script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
+        self.digwork_contentype = ContentType.objects.get_for_model(DigitizedWork)
+        # load collections from the database
+        self.load_collections()
+
     def handle(self, *args, **kwargs):
         # disconnect signal handler so indexing can be controlled
         IndexableSignalHandler.disconnect()
 
         self.verbosity = kwargs.get("verbosity", self.v_normal)
-        self.stats = Counter()
-        self.script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
-        self.digwork_contentype = ContentType.objects.get_for_model(DigitizedWork)
 
         # load csv file and check required fields
         excerpt_info = self.load_csv(kwargs["csv"])
-        # load collections from the database
-        self.load_collections()
-        self.excerpt(excerpt_info)
+
+        self.setup()
+        for row in excerpt_info:
+            self.excerpt(row)
 
         self.stdout.write(
             "\nExcerpted {excerpted:,d} existing records; created {created:,d} new excerpts. {error:,d} errors.".format_map(
@@ -49,86 +55,91 @@ class Command(BaseCommand):
         )
 
     def load_collections(self):
-        # load collections from the database and create
-        # a lookup based on collection names
+        """load collections from the database and create a lookup
+        based on collection names"""
         self.collections = {c.name: c for c in Collection.objects.all()}
 
-    def excerpt(self, rows):
-        for row in rows:
-            # volume id in spreadsheet is our source id
-            source_id = row["Volume ID"]
-            # by default, assume we're modifying an existing record
-            created = False
-            # first look for an existing full work to convert to excerpt
-            digwork = DigitizedWork.objects.filter(
-                source_id=source_id,
-                item_type=DigitizedWork.FULL,
-                source=DigitizedWork.HATHI,
-            ).first()
+    def excerpt(self, row):
+        """Process a row of the spreadsheet, and either convert an existing full
+        work to an excerpt or create a new excerpt."""
 
-            # if there is no existing work to convert, create a new one
-            if not digwork:
-                digwork = DigitizedWork(source_id=source_id, source=DigitizedWork.HATHI)
-                # set created flag to true
-                created = True
+        # volume id in spreadsheet is our source id
+        source_id = row["Volume ID"]
+        # by default, assume we're modifying an existing record
+        created = False
+        # first look for an existing full work to convert to excerpt
+        digwork = DigitizedWork.objects.filter(
+            source_id=source_id,
+            item_type=DigitizedWork.FULL,
+            source=DigitizedWork.HATHI,
+        ).first()
 
-            # update all fields from spreadsheet data
-            # - required fields
-            digwork.item_type = self.item_type[row["Item Type"]]
-            digwork.title = row["Title"]
-            digwork.sort_title = row["Sort Title"]
-            digwork.book_journal = row["Book/Journal Title"]
-            # intspan requires commas; allow semicolons in input but convert to commas
-            digwork.pages_digital = row["Digital Page Range"].replace(";", ",")
-            digwork.record_id = row["Record ID"]
-            # - optional fields
-            digwork.author = row.get("Author", "")
-            digwork.pub_date = row.get("Publication Date", "")
-            digwork.pub_place = row.get("Publication Place", "")
-            digwork.publisher = row.get("Publisher", "")
-            digwork.enumcron = row.get("Enumcron", "")
-            digwork.pages_orig = row.get("Original Page Range", "")
+        # if there is no existing work to convert, create a new one
+        if not digwork:
+            digwork = DigitizedWork(source_id=source_id, source=DigitizedWork.HATHI)
+            # set created flag to true
+            created = True
 
-            digwork.notes = row.get("Notes", "")
-            digwork.public_notes = row.get("Public Notes", "")
+        # update all fields from spreadsheet data
+        # - required fields
+        digwork.item_type = self.item_type[row["Item Type"]]
+        digwork.title = row["Title"]
+        digwork.sort_title = row["Sort Title"]
+        digwork.book_journal = row["Book/Journal Title"]
+        # intspan requires commas; allow semicolons in input but convert to commas
+        digwork.pages_digital = row["Digital Page Range"].replace(";", ",")
+        digwork.record_id = row["Record ID"]
+        # - optional fields
+        digwork.author = row.get("Author", "")
+        digwork.pub_date = row.get("Publication Date", None)  # numeric, not string
+        digwork.pub_place = row.get("Publication Place", "")
+        digwork.publisher = row.get("Publisher", "")
+        digwork.enumcron = row.get("Enumcron", "")
+        digwork.pages_orig = row.get("Original Page Range", "")
 
-            # save to create or update
-            try:
-                digwork.save()
-            except intspan.ParseError as err:
-                self.stderr.write(
-                    self.style.WARNING("Error saving %s: %s" % (source_id, err))
-                )
-                self.stats["error"] += 1
-                continue
+        digwork.notes = row.get("Notes", "")
+        digwork.public_notes = row.get("Public Notes", "")
 
-            # set collection membership based on spreadsheet data:
-            # collection is a single field with collection names delimited by semicolon
+        # save to create or update
+        try:
+            digwork.save()
+        except intspan.ParseError as err:
+            self.stderr.write(
+                self.style.WARNING("Error saving %s: %s" % (source_id, err))
+            )
+            self.stats["error"] += 1
+            return
+
+        # set collection membership based on spreadsheet data:
+        # collection is a single field with collection names delimited by semicolon
+        if row["Collection"]:
             digwork_collections = [
                 self.collections[coll] for coll in row["Collection"].split(";")
             ]
             if digwork_collections:
                 digwork.collections.set(digwork_collections)
 
-            if created:
-                self.stats["created"] += 1
-                # log entry details
-                log_message = "Created via hathi_excerpt script"
-                log_action = ADDITION
-            else:
-                self.stats["excerpted"] += 1
-                log_message = "Converted to excerpt"
-                log_action = CHANGE
+        if created:
+            self.stats["created"] += 1
+            # log entry details
+            log_message = "Created via hathi_excerpt script"
+            log_action = ADDITION
+        else:
+            self.stats["excerpted"] += 1
+            log_message = "Converted to excerpt"
+            log_action = CHANGE
 
-            # create log entry to record what was done
-            LogEntry.objects.log_action(
-                user_id=self.script_user.pk,
-                content_type_id=self.digwork_contentype.pk,
-                object_id=digwork.pk,
-                object_repr=str(digwork),
-                change_message=log_message,
-                action_flag=log_action,
-            )
+        # create log entry to record what was done
+        LogEntry.objects.log_action(
+            user_id=self.script_user.pk,
+            content_type_id=self.digwork_contentype.pk,
+            object_id=digwork.pk,
+            object_repr=str(digwork),
+            change_message=log_message,
+            action_flag=log_action,
+        )
+
+        # TODO: make sure work & pages are updated in solr index
 
     csv_required_fields = [
         "Item Type",
