@@ -756,6 +756,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             "work_type_s": self.get_item_type_display()
             .lower()
             .replace(" ", "-"),  # full, excerpt, or article
+            "book_journal_s": self.book_journal,
         }
 
     def remove_from_index(self):

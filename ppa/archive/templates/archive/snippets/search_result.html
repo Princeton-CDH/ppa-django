@@ -17,8 +17,14 @@
                     <div class="work-type" aria-label="{{ item.work_type }}"></div>
                 </div>
                 <p>
+                    {% spaceless %}
                     <span class="ui header">{{ item.title }}</span>
+                    {% if item.work_type != "full-work" and item.book_journal %}
+                    <span class="ui sub header book-journal">{{ item.book_journal }}</span>
+                    {% else %}
                     <span class="ui sub header">{{ item.subtitle}}</span>
+                    {% endif %}
+                    {% endspaceless %}
                 </p>
             </div>
             <div class="metadata column">
