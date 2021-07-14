@@ -45,6 +45,12 @@
                 <td>{{ object.subtitle }}</td>
             </tr>
             {% endif %}
+            {% if object.book_journal %}
+            <tr class="book-journal">
+                <th scope="row">{% if object.item_type == "A" %}Journal{% elif object.item_type == "E" %}Book{% endif %} Title</th>
+                <td>{{ object.book_journal }}</td>
+            </tr>
+            {% endif %}
             {% if object.pub_date %}
             <tr>
                 <th scope="row">Publication Date</th>
@@ -75,6 +81,12 @@
                 <td>{{ object.page_count }}</td>
             </tr>
             {% endif %}
+            {% if object.pages_orig %}
+            <tr>
+                <th scope="row">Pages</th>
+                <td>{{ object.pages_orig }}</td>
+            </tr>
+            {% endif %}
             {% if object.collections.exists %}
             <tr>
                 <th scope="row">PPA Collection{{ object.collections.count|pluralize }}</th>
@@ -90,7 +102,13 @@
             <tr class="source-link">
                 <th scope="row">{{ object.get_source_link_label }}</th>
                 <td>
+                    {% if object.source == "G" %}
+                    <a href="{% gale_page_url object.source_url object.first_page %}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
+                    {% elif object.source == "HT" %}
+                    <a href="{% hathi_page_url object.source_id object.first_page %}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
+                    {% else %}
                     <a href="{{ object.source_url }}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
+                    {% endif %}
                 </td>
             </tr>
             {% endif %}
