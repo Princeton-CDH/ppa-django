@@ -102,6 +102,9 @@ class TestHathiExcerptCommand:
         # spreadsheet collection membership should replace any existing association
         assert excerpt.collections.count() == 2
         assert set(c.name for c in excerpt.collections.all()) == set(["Two", "Three"])
+        # page count populated
+        assert excerpt.page_count == 4
+
         # check that optional fields are blank
         for field in [
             "author",
@@ -121,6 +124,9 @@ class TestHathiExcerptCommand:
         assert log.action_flag == CHANGE
         assert log.change_message == "Converted to excerpt"
         assert log.user.username == "script"
+
+        # index should be called once for pages, once for work
+        assert mock_index_items.call_count == 2
 
     @patch("ppa.archive.models.DigitizedWork.index_items")
     def test_excerpt_no_existing_work(self, mock_index_items):
@@ -164,12 +170,17 @@ class TestHathiExcerptCommand:
         assert excerpt.pages_orig == excerpt_info["Original Page Range"]
         assert excerpt.notes == excerpt_info["Notes"]
         assert excerpt.public_notes == excerpt_info["Public Notes"]
+        # page count populated
+        assert excerpt.page_count == 4
 
         # check that log entry was created to document the change
         log = LogEntry.objects.get(object_id=excerpt.pk)
         assert log.action_flag == ADDITION
         assert log.change_message == "Created via hathi_excerpt script"
         assert log.user.username == "script"
+
+        # index should be called once for pages, once for work
+        assert mock_index_items.call_count == 2
 
     def test_excerpt_parse_error(self):
         source_id = "abc.123-456"
