@@ -119,14 +119,16 @@ class Command(BaseCommand):
             if digwork_collections:
                 digwork.collections.set(digwork_collections)
 
+        self.log_action(digwork, created)
+
         if created:
             self.stats["created"] += 1
         else:
             self.stats["excerpted"] += 1
 
-        self.log_action(digwork, created)
-
-        # TODO: make sure work & pages are updated in solr index
+        # Pages are automatically indexed due to page range check in save method.
+        # Index the new or updated work in solr
+        DigitizedWork.index_items([digwork])
 
     def log_action(self, digwork, created=True):
         """Create a log entry to document excerpting or creating the record.
