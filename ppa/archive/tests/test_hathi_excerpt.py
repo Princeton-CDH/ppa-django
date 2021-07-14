@@ -71,6 +71,7 @@ class TestHathiExcerptCommand:
         work = DigitizedWork.objects.create(
             source_id=source_id,
             title="Saturday review of literature",
+            subtitle="arts, politics, and poetry",
             author="Else, Someone",
         )
         # associate with collection 1
@@ -104,6 +105,8 @@ class TestHathiExcerptCommand:
         assert set(c.name for c in excerpt.collections.all()) == set(["Two", "Three"])
         # page count populated
         assert excerpt.page_count == 4
+        # subtitle cleared
+        assert not excerpt.subtitle
 
         # check that optional fields are blank
         for field in [
