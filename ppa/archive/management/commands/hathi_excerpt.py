@@ -91,7 +91,9 @@ class Command(BaseCommand):
         digwork.record_id = row["Record ID"]
         # - optional fields
         digwork.author = row.get("Author", "")
-        digwork.pub_date = row.get("Publication Date", None)  # numeric, not string
+        digwork.pub_date = (
+            row.get("Publication Date", "") or None
+        )  # numeric, not string
         digwork.pub_place = row.get("Publication Place", "")
         digwork.publisher = row.get("Publisher", "")
         digwork.enumcron = row.get("Enumcron", "")
