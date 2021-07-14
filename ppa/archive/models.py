@@ -409,9 +409,9 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         return reverse("archive:detail", kwargs=url_opts)
 
     def __str__(self):
-        """Default string display. Uses :attr:`source_id` and :attr:`pages_orig` if any"""
-        if self.pages_orig:
-            return "%s (%s)" % (self.source_id, self.pages_orig)
+        """Default string display. Uses :attr:`source_id` and :attr:`pages_digital` if any"""
+        if self.pages_digital:
+            return "%s (%s)" % (self.source_id, self.pages_digital)
         return self.source_id
 
     def clean_fields(self, exclude=None):
