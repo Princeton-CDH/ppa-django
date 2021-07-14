@@ -84,6 +84,9 @@ class Command(BaseCommand):
         # - required fields
         digwork.item_type = self.item_type[row["Item Type"]]
         digwork.title = row["Title"]
+        digwork.subtitle = (
+            ""  # clear out any existing subtitle; excerpts don't have them
+        )
         digwork.sort_title = row["Sort Title"]
         digwork.book_journal = row["Book/Journal Title"]
         # intspan requires commas; allow semicolons in input but convert to commas
