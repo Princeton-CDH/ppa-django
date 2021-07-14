@@ -479,7 +479,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
                 self.page_count = self.count_pages()
                 # update index to remove all pages that are no longer in range
                 self.solr.update.delete_by_query(
-                    "source_id:(%s) AND item_type:page NOT order:(%s)"
+                    'source_id:"%s" AND item_type:page NOT order:(%s)'
                     % (self.source_id, " OR ".join(str(p) for p in self.page_span))
                 )
             # any page range change requires reindexing (potentially slow)
