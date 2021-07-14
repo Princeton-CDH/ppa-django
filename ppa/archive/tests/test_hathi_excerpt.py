@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
+from django.core.management import call_command
 from django.core.management.base import CommandError
 
 from ppa.archive.management.commands import hathi_excerpt
@@ -199,3 +200,26 @@ class TestHathiExcerptCommand:
         error_output = stderr.getvalue()
         assert "Error saving %s" % source_id in error_output
         assert "start value should exceed stop (100-13)" in error_output
+
+    @patch("ppa.archive.management.commands.gale_import.Command.import_digitizedwork")
+    def test_call_command(self, mock_import_digwork):
+        call_command("gale_import", "1234")
+        assert mock_import_digwork.call_count == 1
+
+    def test_call_commmand(self, tmp_path):
+        stdout = StringIO()
+        # create minimal valid CSV with all required fields
+        csvfile = tmp_path / "hathi_articles.csv"
+        csvfile.write_text(
+            "\n".join(
+                [
+                    "Item Type,Volume ID,Title,Sort Title,Book/Journal Title,Digital Page Range,Collection,Record ID",
+                    "Article,abc.12345,About Rhyme,,Lit Review,10-12,,910192837",
+                ]
+            )
+        )
+        call_command("hathi_excerpt", csvfile, stdout=stdout)
+        output = stdout.getvalue()
+        assert "Excerpted 0 existing records" in output
+        assert "created 1 new excerpt" in output
+        assert "0 errors" in output
