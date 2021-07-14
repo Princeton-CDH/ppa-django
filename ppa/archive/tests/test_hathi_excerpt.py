@@ -12,13 +12,6 @@ from ppa.archive.models import Collection, DigitizedWork
 
 @pytest.mark.django_db
 class TestHathiExcerptCommand:
-    # @override_settings()
-    # def test_config_error(self):
-    #     cmd = gale_import.Command()
-    #     del settings.GALE_API_USERNAME
-    #     with pytest.raises(CommandError):
-    #         cmd.handle(ids=[], csv=None)
-
     def test_load_collections(self):
         # create test collections
         collections = ["Grab bag", "Junk drawer"]
@@ -129,7 +122,8 @@ class TestHathiExcerptCommand:
         assert log.change_message == "Converted to excerpt"
         assert log.user.username == "script"
 
-    def test_excerpt_no_existing_work(self):
+    @patch("ppa.archive.models.DigitizedWork.index_items")
+    def test_excerpt_no_existing_work(self, mock_index_items):
         source_id = "abc.98763134"
         cmd = hathi_excerpt.Command()
         cmd.setup()
@@ -201,12 +195,8 @@ class TestHathiExcerptCommand:
         assert "Error saving %s" % source_id in error_output
         assert "start value should exceed stop (100-13)" in error_output
 
-    @patch("ppa.archive.management.commands.gale_import.Command.import_digitizedwork")
-    def test_call_command(self, mock_import_digwork):
-        call_command("gale_import", "1234")
-        assert mock_import_digwork.call_count == 1
-
-    def test_call_commmand(self, tmp_path):
+    @patch("ppa.archive.models.DigitizedWork.index_items")
+    def test_call_commmand(self, mock_index_items, tmp_path):
         stdout = StringIO()
         # create minimal valid CSV with all required fields
         csvfile = tmp_path / "hathi_articles.csv"
