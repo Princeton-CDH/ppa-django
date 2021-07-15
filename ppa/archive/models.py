@@ -487,15 +487,20 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             # NOTE: removing a page range may not work as expected
             # (does not recalculate page count; cannot recalculate for Gale items)
 
-        # source id is used as Solr identifier; if it changes, remove
-        # the old record from Solr before saving with the new identifier
-        # NOTE: source id edit only supported for non-hathi content; should
-        # be prevented by validation in clean method
-        if self.has_changed("source_id"):
+        # Solr identifier is based on combination of source id and first page;
+        # if either changes, remove the old record from Solr before saving
+        # with the new identifier
+        if self.has_changed("source_id") or self.has_changed("pages_digital"):
+            # store the updated values
             new_source_id = self.source_id
+            new_pages_digital = self.pages_digital
+            # temporarily revert to previous value to remove from index
             self.source_id = self.initial_value("source_id")
+            self.pages_digital = self.initial_value("pages_digital")
             self.remove_from_index()
+            # restore new values
             self.source_id = new_source_id
+            self.pages_digital = new_pages_digital
 
         super().save(*args, **kwargs)
 
@@ -767,7 +772,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             "Deleting DigitizedWork and associated pages from index with source_id:%s",
             self.source_id,
         )
-        self.solr.update.delete_by_query("source_id:(%s)" % self.source_id)
+        self.solr.update.delete_by_query("group_id_s:(%s)" % self.index_id())
 
     def count_pages(self, ptree_client=None):
         """Count the number of pages for a digitized work. If a pages are specified
