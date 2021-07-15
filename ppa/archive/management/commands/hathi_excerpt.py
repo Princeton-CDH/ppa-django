@@ -79,8 +79,10 @@ class Command(BaseCommand):
         # if there is no existing work to convert, create a new one
         if not digwork:
             digwork = DigitizedWork(source_id=source_id, source=DigitizedWork.HATHI)
-            # get source url from existing source in the database
-            digwork.source_url = source_works.first().source_url
+            # get source url from existing record for same source in the database
+            # (we expect this to be present, except for in some unit tests)
+            if source_works.first():
+                digwork.source_url = source_works.first().source_url
             # set created flag to true
             created = True
 
