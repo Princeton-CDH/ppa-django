@@ -23,13 +23,13 @@ urlpatterns = [
         views.DigitizedWorkByRecordId.as_view(),
         name="record-id",
     ),
-    path(
-        "<str:source_id>-p<int:start_page>/",
+    url(
+        "(?P<source_id>[^-]+)-p(?P<start_page>\d+)/",
         views.DigitizedWorkDetailView.as_view(),
         name="detail",
     ),
-    path(
-        "<str:source_id>/",
+    url(
+        "^(?P<source_id>[^-]+)/",
         views.DigitizedWorkDetailView.as_view(),
         name="detail",
     ),
