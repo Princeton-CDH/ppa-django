@@ -106,6 +106,7 @@
                         {% if object.source == object.HATHI %}
                         <a href="{% hathi_page_url object.source_id object.first_page %}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
                         {% elif object.source == object.GALE %}
+                        GALE url
                         <a href="{% gale_page_url object.source_url object.first_page %}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
                         {% endif %}
                     {% else %} {# when there is no page range, use source url #}

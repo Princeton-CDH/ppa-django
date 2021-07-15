@@ -755,7 +755,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             "order": "0",
             "work_type_s": self.get_item_type_display()
             .lower()
-            .replace(" ", "-"),  # full, excerpt, or article
+            .replace(" ", "-"),  # full-work, excerpt, or article
             "book_journal_s": self.book_journal,
         }
 

@@ -25,7 +25,11 @@ from ppa.archive.forms import (
 )
 from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork
 from ppa.archive.solr import ArchiveSearchQuerySet
-from ppa.archive.templatetags.ppa_tags import hathi_page_url, page_image_url
+from ppa.archive.templatetags.ppa_tags import (
+    gale_page_url,
+    hathi_page_url,
+    page_image_url,
+)
 from ppa.archive.views import AddFromHathiView, DigitizedWorkCSV, DigitizedWorkListView
 
 
@@ -127,6 +131,65 @@ class TestDigitizedWorkDetailView(TestCase):
             "Note on edition",
             msg_prefix="Notes field should not be visible without notes",
         )
+
+    def test_anonymous_display_excerpt_hathi(self):
+        # create an excerpt
+        excerpt = DigitizedWork.objects.create(
+            source_id="abc.1234",
+            source_url="https://hdl.example.co/9823/abc.1234",
+            title="Additional note",
+            book_journal="Works",
+            pages_orig="151-58",
+            pages_digital="151-158",
+            item_type=DigitizedWork.EXCERPT,
+        )
+
+        response = self.client.get(excerpt.get_absolute_url())
+        self.assertContains(response, """<th scope="row">Book Title</th>""", html=True)
+        self.assertContains(response, excerpt.title)
+        self.assertContains(response, excerpt.book_journal)
+        self.assertContains(
+            response, hathi_page_url(excerpt.source_id, excerpt.first_page())
+        )
+
+    def test_anonymous_display_excerpt_gale(self):
+        # create a gale excerpt to test link logic
+        excerpt = DigitizedWork.objects.create(
+            source_id="abc.1234",
+            source_url="https://hdl.example.co/9823/abc.1234",
+            title="Additional note",
+            book_journal="Works",
+            pages_orig="151-58",
+            pages_digital="151-158",
+            item_type=DigitizedWork.EXCERPT,
+            source=DigitizedWork.GALE,
+        )
+        response = self.client.get(excerpt.get_absolute_url())
+        self.assertContains(
+            response,
+            gale_page_url(excerpt.source_url, excerpt.first_page()).replace(
+                "&", "&amp;"  # without escaping the ampersand, check fails
+            ),
+        )
+
+    def test_anonymous_display_article_hathi(self):
+        # create an article
+        article = DigitizedWork.objects.create(
+            source_id="abc.1234",
+            source_url="https://hdl.example.co/9823/abc.1234",
+            title="About Rhyme",
+            book_journal="Saturday review",
+            pages_orig="151-58",
+            pages_digital="151-158",
+            item_type=DigitizedWork.ARTICLE,
+        )
+
+        response = self.client.get(article.get_absolute_url())
+        self.assertContains(
+            response, """<th scope="row">Journal Title</th>""", html=True
+        )
+        self.assertContains(response, article.title)
+        self.assertContains(response, article.book_journal)
 
     def test_unapi(self):
         response = self.client.get(self.dial_url)
