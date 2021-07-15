@@ -614,6 +614,17 @@ class TestDigitizedWork(TestCase):
             work.save()
             mock_rm_from_index.assert_called()
 
+    def test_save_sourceid_pagerange(self):
+        # if page range changes, old id should be removed from solr index
+        work = DigitizedWork.objects.create(
+            source=DigitizedWork.OTHER, source_id="12345"
+        )
+        index_id = work.index_id()
+        with patch.object(work, "remove_from_index") as mock_rm_from_index:
+            work.pages_digital = "12-300"
+            work.save()
+            mock_rm_from_index.assert_called()
+
     def test_save_page_range(self):
         work = DigitizedWork.objects.create(
             source=DigitizedWork.OTHER, source_id="12345", page_count=256
@@ -789,7 +800,15 @@ class TestDigitizedWork(TestCase):
         with patch.object(work, "solr") as mocksolr:
             work.remove_from_index()
             mocksolr.update.delete_by_query.assert_called_with(
-                "source_id:(chi.79279237)"
+                "group_id_s:(chi.79279237)"
+            )
+
+    def test_remove_from_index_excerpt(self):
+        work = DigitizedWork(source_id="chi.79279237", pages_digital="10-30")
+        with patch.object(work, "solr") as mocksolr:
+            work.remove_from_index()
+            mocksolr.update.delete_by_query.assert_called_with(
+                "group_id_s:(%s)" % work.index_id()
             )
 
     def test_get_source_link_label(self):
