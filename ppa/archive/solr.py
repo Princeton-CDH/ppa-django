@@ -129,6 +129,7 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         "first_page_i",
         "source_url",
         "work_type_s",
+        "book_journal_s",
     ]
     # aliases for any fields we want to rename for search and display
     # (must also be included in return_fields list)
@@ -137,6 +138,7 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         "image_id_s": "image_id",
         "first_page_i": "first_page",
         "work_type_s": "work_type",
+        "book_journal_s": "book_journal",
     }
 
     keyword_query = None
