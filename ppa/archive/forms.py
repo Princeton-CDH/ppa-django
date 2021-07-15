@@ -194,7 +194,7 @@ class SearchForm(forms.Form):
         ),
     )
     title = forms.CharField(
-        label="Book Title",
+        label="Title",
         required=False,
         widget=forms.TextInput(
             attrs={
