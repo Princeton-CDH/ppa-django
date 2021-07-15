@@ -600,6 +600,8 @@ class TestDigitizedWorkListRequest(TestCase):
         # confirm link to excerpt url works properly
         with patch("ppa.archive.models.DigitizedWork.index_items"):
             # skip reindexing pages normally triggered by change to page range
+            # test with an ARK identifier because most problematic
+            self.wintry.source_id = "aeu.ark:/13960/t1pg22p71"
             self.wintry.pages_digital = "10-15"
             self.wintry.item_type = DigitizedWork.EXCERPT
             self.wintry.save()
