@@ -409,9 +409,9 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         return reverse("archive:detail", kwargs=url_opts)
 
     def __str__(self):
-        """Default string display. Uses :attr:`source_id` and :attr:`pages_orig` if any"""
-        if self.pages_orig:
-            return "%s (%s)" % (self.source_id, self.pages_orig)
+        """Default string display. Uses :attr:`source_id` and :attr:`pages_digital` if any"""
+        if self.pages_digital:
+            return "%s (%s)" % (self.source_id, self.pages_digital)
         return self.source_id
 
     def clean_fields(self, exclude=None):
@@ -732,7 +732,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             "id": index_id,
             "source_id": self.source_id,
             "first_page_i": self.first_page(),
-            "group_id_s": index_id,  # for grouping pages — excerpt specific
+            "group_id_s": index_id,  # for grouping pages by work or excerpt
             "source_t": self.get_source_display(),
             "source_url": self.source_url,
             "title": self.title,
@@ -1037,7 +1037,7 @@ class Page(Indexable):
                             "id": "%s.%s"
                             % (digwork.source_id, page.text_file.sequence),
                             "source_id": digwork.source_id,
-                            "group_id_t": digwork_index_id,  # for grouping with work record
+                            "group_id_s": digwork_index_id,  # for grouping with work record
                             "content": pagefile.read().decode("utf-8"),
                             "order": page.order,
                             "label": page.display_label,

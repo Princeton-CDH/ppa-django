@@ -98,7 +98,7 @@ class TestDigitizedWork(TestCase):
         assert str(digwork) == digwork.source_id
 
         # with pages
-        digwork.pages_orig = "20-25"
+        digwork.pages_digital = "20-25"
         assert str(digwork) == "%s (20-25)" % digwork.source_id
 
     def test_display_title(self):

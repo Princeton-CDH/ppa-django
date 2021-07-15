@@ -6,7 +6,7 @@ Deploy and Upgrade notes
 3.7
 ---
 
-* Gale API client requires **GALE_API_USERNAME** and **MARC_DATA** in local 
+* Gale API client requires **GALE_API_USERNAME** and **MARC_DATA** in local
   settings.
 
 * Gale/ECCO MARC records must be made available for import
@@ -14,10 +14,19 @@ Deploy and Upgrade notes
 
     python manage.py split_marc ECCO1a-prin77918.mrc ECCO1b-prin77918.mrc ECCO2-prin77918.mrc
 
-* Reindex all works to ensure that thumbnails for HathiTrust materials display 
-  correctly::
+* Reindex all works and pages to ensure that thumbnails for HathiTrust materials display
+  correctly, and pages and works are grouped correctly in search results::
 
     python manage.py index -i work
+    python manage.py index_pages
+
+* Import Gale/ECCO records using the CSV file provided by the project team::
+
+    python manage.py gale_import -c ecco_works.csv
+
+* Convert HathiTrust records to Excerpts or Articles using CSV files provided by the team::
+
+    python manage.py hathi_excerpt hathitrust_excerpts.csv
 
 3.6
 ---
