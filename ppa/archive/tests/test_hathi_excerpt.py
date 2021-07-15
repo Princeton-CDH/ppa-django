@@ -133,7 +133,17 @@ class TestHathiExcerptCommand:
 
     @patch("ppa.archive.models.DigitizedWork.index_items")
     def test_excerpt_no_existing_work(self, mock_index_items):
+        # no full work exists, but there is another excerpt with the same source id
+        # AND a source url to copy
         source_id = "abc.98763134"
+        source_url = "http://hdl.example.co/%s" % source_id
+        other_excerpt = DigitizedWork.objects.create(
+            source_id=source_id,
+            source_url=source_url,
+            # for convenience, set a different type to easily get the record created by the script
+            item_type=DigitizedWork.ARTICLE,
+        )
+
         cmd = hathi_excerpt.Command()
         cmd.setup()
 
@@ -158,7 +168,9 @@ class TestHathiExcerptCommand:
         }
         cmd.excerpt(excerpt_info)
         # chould create a NEW work
-        excerpt = DigitizedWork.objects.get(source_id=source_id)
+        excerpt = DigitizedWork.objects.get(
+            source_id=source_id, item_type=DigitizedWork.EXCERPT
+        )
         assert excerpt.item_type == DigitizedWork.EXCERPT
         assert excerpt.title == excerpt_info["Title"]
         assert excerpt.sort_title == excerpt_info["Sort Title"]
@@ -175,6 +187,8 @@ class TestHathiExcerptCommand:
         assert excerpt.public_notes == excerpt_info["Public Notes"]
         # page count populated
         assert excerpt.page_count == 4
+        # source url set from another record with the same source id
+        assert excerpt.source_url == source_url
 
         # check that log entry was created to document the change
         log = LogEntry.objects.get(object_id=excerpt.pk)

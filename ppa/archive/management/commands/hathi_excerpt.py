@@ -67,16 +67,20 @@ class Command(BaseCommand):
         source_id = row["Volume ID"]
         # by default, assume we're modifying an existing record
         created = False
+        # get a queryset for all works from this source
+        source_works = DigitizedWork.objects.filter(
+            source_id=source_id, source=DigitizedWork.HATHI
+        )
         # first look for an existing full work to convert to excerpt
-        digwork = DigitizedWork.objects.filter(
-            source_id=source_id,
+        digwork = source_works.filter(
             item_type=DigitizedWork.FULL,
-            source=DigitizedWork.HATHI,
         ).first()
 
         # if there is no existing work to convert, create a new one
         if not digwork:
             digwork = DigitizedWork(source_id=source_id, source=DigitizedWork.HATHI)
+            # get source url from existing source in the database
+            digwork.source_url = source_works.first().source_url
             # set created flag to true
             created = True
 
