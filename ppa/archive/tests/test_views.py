@@ -598,9 +598,11 @@ class TestDigitizedWorkListRequest(TestCase):
     def test_search_excerpt(self):
         # convert one of the fixtures into an excerpt
         # confirm link to excerpt url works properly
-        self.wintry.pages_digital = "10-15"
-        self.wintry.item_type = DigitizedWork.EXCERPT
-        self.wintry.save()
+        with patch("ppa.archive.models.DigitizedWork.index_items"):
+            # skip reindexing pages normally triggered by change to page range
+            self.wintry.pages_digital = "10-15"
+            self.wintry.item_type = DigitizedWork.EXCERPT
+            self.wintry.save()
         DigitizedWork.index_items([self.wintry])
         sleep(1)
         response = self.client.get(self.url, {"query": "wintry"})
