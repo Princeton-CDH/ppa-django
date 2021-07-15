@@ -495,6 +495,7 @@ class TestDigitizedWorkListRequest(TestCase):
         # get a work and its detail page to test with
         self.dial = DigitizedWork.objects.get(source_id="chi.78013704")
         self.wintry = DigitizedWork.objects.get(title__icontains="Wintry")
+
         # add a collection to use in testing the view
         self.collection = Collection.objects.create(name="Test Collection")
         self.wintry.collections.add(self.collection)
@@ -593,6 +594,17 @@ class TestDigitizedWorkListRequest(TestCase):
             "winter and <em>wintry</em> and",
             msg_prefix="highlight snippet from page content displayed",
         )
+
+    def test_search_excerpt(self):
+        # convert one of the fixtures into an excerpt
+        # confirm link to excerpt url works properly
+        self.wintry.pages_digital = "10-15"
+        self.wintry.item_type = DigitizedWork.EXCERPT
+        self.wintry.save()
+        DigitizedWork.index_items([self.wintry])
+        sleep(1)
+        response = self.client.get(self.url, {"query": "wintry"})
+        self.assertContains(response, self.wintry.get_absolute_url())
 
     def test_year_filter(self):
         # page image and text highlight should still display with year filter

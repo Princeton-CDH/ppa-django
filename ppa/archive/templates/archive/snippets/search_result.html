@@ -2,12 +2,7 @@
 
 <li class="item {{ item.work_type }}">
     <abbr class="unapi-id" title="{{ item.source_id }}" aria-hidden="true"></abbr>
-    {% if item.first_page %}
-        {% url 'archive:detail' source_id=item.source_id start_page=item.first_page as item_url %}
-    {% else %}
-        {% url 'archive:detail' item.source_id as item_url %}
-    {% endif %}
-    <a href="{{ item_url }}{% if query %}?query={{ query }}{% endif %}" class="detail">
+    <a href="{% if item.first_page %}{% url 'archive:detail' source_id=item.source_id start_page=item.first_page %}{% else %}{% url 'archive:detail' item.source_id %}{% endif %}{% if query %}?query={{ query }}{% endif %}" class="detail">
         <div class="brief-result container">
             <div class="title column">
                 <div class="labels">
