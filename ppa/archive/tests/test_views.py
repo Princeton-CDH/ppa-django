@@ -46,6 +46,8 @@ class TestDigitizedWorkDetailView(TestCase):
             "knobs and buttons",
         ]
         htid = "chi.78013704"
+        # NOTE: this test is brittle; should refactor to use
+        # actual page indexing logic somehow, to reflect actual indexed fields
         solr_page_docs = [
             {
                 "content": content,
