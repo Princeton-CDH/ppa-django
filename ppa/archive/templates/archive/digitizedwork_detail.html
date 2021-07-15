@@ -32,7 +32,7 @@
 
 {% block content %}
 <section class="meta ui basic vertical segment container">
-    {% if object.item_type != 'F' %}
+    {% if object.item_type != object.FULL %}
     <div class="work-type icon" aria-label="{{ object.get_item_type_display|lower }}"></div>
     {% endif %}
     <h1 class="header">{{ object.title }}</h1>
@@ -47,7 +47,7 @@
             {% endif %}
             {% if object.book_journal %}
             <tr class="book-journal">
-                <th scope="row">{% if object.item_type == "A" %}Journal{% elif object.item_type == "E" %}Book{% endif %} Title</th>
+                <th scope="row">{% if object.item_type == object.ARTICLE %}Journal{% elif object.item_type == object.EXCERPT %}Book{% endif %} Title</th>
                 <td>{{ object.book_journal }}</td>
             </tr>
             {% endif %}
@@ -102,11 +102,13 @@
             <tr class="source-link">
                 <th scope="row">{{ object.get_source_link_label }}</th>
                 <td>
-                    {% if object.source == "G" %}
-                    <a href="{% gale_page_url object.source_url object.first_page %}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
-                    {% elif object.source == "HT" %}
-                    <a href="{% hathi_page_url object.source_id object.first_page %}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
-                    {% else %}
+                    {% if object.pages_digital %}  {# if page range is defined (excerpt/article), link to first page in range #}
+                        {% if object.source == object.HATHI %}
+                        <a href="{% hathi_page_url object.source_id object.first_page %}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
+                        {% elif object.source == object.GALE %}
+                        <a href="{% gale_page_url object.source_url object.first_page %}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
+                        {% endif %}
+                    {% else %} {# when there is no page range, use source url #}
                     <a href="{{ object.source_url }}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
                     {% endif %}
                 </td>
