@@ -772,7 +772,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             "Deleting DigitizedWork and associated pages from index with source_id:%s",
             self.source_id,
         )
-        self.solr.update.delete_by_query("group_id_s:(%s)" % self.index_id())
+        self.solr.update.delete_by_query('group_id_s:("%s")' % self.index_id())
 
     def count_pages(self, ptree_client=None):
         """Count the number of pages for a digitized work. If a pages are specified
@@ -1039,8 +1039,7 @@ class Page(Indexable):
                 with ht_zip.open(pagefilename) as pagefile:
                     try:
                         yield {
-                            "id": "%s.%s"
-                            % (digwork.source_id, page.text_file.sequence),
+                            "id": "%s.%s" % (digwork.source_id, page.text_file.sequence),
                             "source_id": digwork.source_id,
                             "group_id_s": digwork_index_id,  # for grouping with work record
                             "content": pagefile.read().decode("utf-8"),

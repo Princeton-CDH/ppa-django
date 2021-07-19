@@ -800,7 +800,7 @@ class TestDigitizedWork(TestCase):
         with patch.object(work, "solr") as mocksolr:
             work.remove_from_index()
             mocksolr.update.delete_by_query.assert_called_with(
-                "group_id_s:(chi.79279237)"
+                'group_id_s:("chi.79279237")'
             )
 
     def test_remove_from_index_excerpt(self):
@@ -808,7 +808,7 @@ class TestDigitizedWork(TestCase):
         with patch.object(work, "solr") as mocksolr:
             work.remove_from_index()
             mocksolr.update.delete_by_query.assert_called_with(
-                "group_id_s:(%s)" % work.index_id()
+                'group_id_s:("%s")' % work.index_id()
             )
 
     def test_get_source_link_label(self):
