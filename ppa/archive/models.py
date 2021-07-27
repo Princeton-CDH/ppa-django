@@ -473,21 +473,6 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             if self.source == DigitizedWork.HATHI:
                 self.hathi.delete_pairtree_data()
 
-        if self.has_changed("pages_digital"):
-            # if there is a page range set now, update page count and index
-            if self.pages_digital:
-                # recalculate page total based on current range
-                self.page_count = self.count_pages()
-                # update index to remove all pages that are no longer in range
-                self.solr.update.delete_by_query(
-                    'source_id:"%s" AND item_type:page NOT order:(%s)'
-                    % (self.source_id, " OR ".join(str(p) for p in self.page_span))
-                )
-            # any page range change requires reindexing (potentially slow)
-            self.index_items(Page.page_index_data(self))
-            # NOTE: removing a page range may not work as expected
-            # (does not recalculate page count; cannot recalculate for Gale items)
-
         # Solr identifier is based on combination of source id and first page;
         # if either changes, remove the old record from Solr before saving
         # with the new identifier
@@ -502,6 +487,22 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             # restore new values
             self.source_id = new_source_id
             self.pages_digital = new_pages_digital
+
+        if self.has_changed("pages_digital"):
+            # if there is a page range set now, update page count and index
+            if self.pages_digital:
+                # recalculate page total based on current range
+                self.page_count = self.count_pages()
+                # update index to remove all pages that are no longer in range
+                self.solr.update.delete_by_query(
+                    'source_id:"%s" AND item_type:page NOT order:(%s)'
+                    % (self.source_id, " OR ".join(str(p) for p in self.page_span))
+                )
+            # any page range change requires reindexing (potentially slow)
+            logger.debug("Reindexing pages for %s after change to page range", self)
+            self.index_items(Page.page_index_data(self))
+            # NOTE: removing a page range may not work as expected
+            # (does not recalculate page count; cannot recalculate for Gale items)
 
         super().save(*args, **kwargs)
 
@@ -770,8 +771,8 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
         # Default parasolr logic only removes current item record;
         # we need to remove associated pages as well
         logger.debug(
-            "Deleting DigitizedWork and associated pages from index with source_id:%s",
-            self.source_id,
+            "Deleting DigitizedWork and associated pages from index with group_id %s",
+            self.index_id(),
         )
         self.solr.update.delete_by_query('group_id_s:("%s")' % self.index_id())
 
