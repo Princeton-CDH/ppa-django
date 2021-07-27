@@ -59,7 +59,8 @@ class TrackChangesModel(models.Model):
 
     def has_changed(self, field):
         """check if a field has been changed"""
-        return getattr(self, field) != self.__initial[field]
+        # Only consider the field changed if the object has been saved
+        return self.pk and getattr(self, field) != self.__initial[field]
 
     def initial_value(self, field):
         """return the initial value for a field"""
@@ -1039,7 +1040,8 @@ class Page(Indexable):
                 with ht_zip.open(pagefilename) as pagefile:
                     try:
                         yield {
-                            "id": "%s.%s" % (digwork.source_id, page.text_file.sequence),
+                            "id": "%s.%s"
+                            % (digwork.source_id, page.text_file.sequence),
                             "source_id": digwork.source_id,
                             "group_id_s": digwork_index_id,  # for grouping with work record
                             "content": pagefile.read().decode("utf-8"),

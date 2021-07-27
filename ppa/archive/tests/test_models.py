@@ -83,6 +83,40 @@ class TestCollectionSignalHandlers:
         assert digwork in args[0]
 
 
+class TestTrackChangesModel(TestCase):
+    # testing via DigitizedWork since TrackChangesModel is abstract
+
+    def test_has_changed(self):
+        digwork = DigitizedWork.objects.create(source_id="njp.32101013082597")
+        assert not digwork.has_changed("source_id")
+        digwork.source_id = "aeu.ark:/13960/t1pg22p71"
+        assert digwork.has_changed("source_id")
+
+    def test_has_changed_unsaved(self):
+        # unsaved record should not be considered changed
+        digwork = DigitizedWork()
+        digwork.source_id = "njp.32101013082597"
+        assert not digwork.has_changed("source_id")
+
+    def test_initial_value(self):
+        init_source_id = "njp.32101013082597"
+        digwork = DigitizedWork.objects.create(source_id=init_source_id)
+        digwork.source_id = "aeu.ark:/13960/t1pg22p71"
+        assert digwork.initial_value("source_id") == init_source_id
+
+    def test_save(self):
+        # create an object
+        digwork = DigitizedWork.objects.create(source_id="njp.32101013082597")
+        # change something and save it
+        new_source_id = "aeu.ark:/13960/t1pg22p71"
+        digwork.source_id = new_source_id
+        digwork.save()
+        # after save, should not be considered changed
+        assert not digwork.has_changed("source_id")
+        # initial value should be updated with saved value
+        assert digwork.initial_value("source_id") == new_source_id
+
+
 class TestDigitizedWork(TestCase):
     fixtures = ["sample_digitized_works"]
 
@@ -828,7 +862,7 @@ class TestCollection(TestCase):
         assert str(collection) == "Random Assortment"
 
     def test_name_changed(self):
-        collection = Collection(name="Random Assortment")
+        collection = Collection.objects.create(name="Random Assortment")
         assert not collection.name_changed
         # change the name
         collection.name = "Randomer"
