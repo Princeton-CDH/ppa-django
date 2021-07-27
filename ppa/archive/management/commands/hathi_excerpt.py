@@ -1,4 +1,5 @@
 import csv
+import logging
 from collections import Counter
 
 import intspan
@@ -9,7 +10,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand, CommandError
 from parasolr.django.signals import IndexableSignalHandler
 
-from ppa.archive.models import Collection, DigitizedWork
+from ppa.archive.models import Collection, DigitizedWork, Page
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -111,8 +114,13 @@ class Command(BaseCommand):
         digwork.notes = row.get("Notes", "")
         digwork.public_notes = row.get("Public Notes", "")
 
-        # save to create or update
         try:
+            # Calculate & save number of pages based on page range.
+            # (automatically calculated on save for excerpt but not
+            # for newly created items)
+            # Could trigger parse error if page span is invalid.
+            digwork.page_count = digwork.count_pages()
+            # save to create or update in the database
             digwork.save()
         except intspan.ParseError as err:
             self.stderr.write(
@@ -134,11 +142,15 @@ class Command(BaseCommand):
 
         if created:
             self.stats["created"] += 1
+            # any page range change requires reindexing (potentially slow)
+            logger.debug("Indexing pages for new excerpt %s", digwork)
+            DigitizedWork.index_items(Page.page_index_data(digwork))
+
         else:
+            # Indexed pages are automatically updated for existing records on save
+            # when page range has changed.
             self.stats["excerpted"] += 1
 
-        # Pages are automatically indexed due to page range check in save method.
-        # Index the new or updated work in solr
         DigitizedWork.index_items([digwork])
 
     def log_action(self, digwork, created=True):
