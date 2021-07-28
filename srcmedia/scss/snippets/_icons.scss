@@ -8,7 +8,7 @@
         width: 40px;
         height: 56px;
 
-        @media (min-width: $computer) {
+        @media (min-width: 1280px) {
             width: 62px;
             height: 88px;
         }
@@ -19,7 +19,7 @@
         width: 58px;
         height: 35px;
 
-        @media (min-width: $computer) {
+        @media (min-width: 1280px) {
             width: 92px;
             height: 65px;
         }

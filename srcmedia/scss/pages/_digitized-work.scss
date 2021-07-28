@@ -13,21 +13,22 @@
             padding: 0 2rem;
         }
 
+        // NOTE usage of 1280px breakpoint here to avoid icons getting cut off
         .work-type {
             position: absolute;
             top: -50px;
             left: 10px;
 
             @media (min-width: $tablet) { left: 25px; }
-            @media (min-width: $computer) { top: 0; }
+            @media (min-width: 1280px) { top: 0; }
             
             &[aria-label=article] {
-                @media (min-width: $computer) { left: -80px; }
+                @media (min-width: 1280px) { left: -80px; }
             }
 
             &[aria-label=excerpt] {
                 @media (min-width: $tablet) { left: 25px; }
-                @media (min-width: $computer) { left: -100px; }
+                @media (min-width: 1280px) { left: -100px; }
             }
         }
 
@@ -38,7 +39,7 @@
 
         .work-type[aria-label=article] ~ .header {
             padding-top: 30px;
-            @media (min-width: $computer) { padding-top: 0; }
+            @media (min-width: 1280px) { padding-top: 0; }
         }
     }
 
