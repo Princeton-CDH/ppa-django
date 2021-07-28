@@ -7,13 +7,13 @@
     &.article {
         padding-top: 55px;
         @media (min-width: $tablet) { padding-top: 60px; }
-        @media (min-width: $computer) { padding-top: 0; }
+        @media (min-width: 1280px) { padding-top: 0; }
     }
 
     &.excerpt {
         padding-top: 30px;
         @media (min-width: $tablet) { padding-top: 20px; }
-        @media (min-width: $computer) { padding-top: 0; }
+        @media (min-width: 1280px) { padding-top: 0; }
     }
 
     a.detail {
@@ -65,25 +65,22 @@
                 padding-top: 2px;
             }
 
+            // NOTE usage of 1280px breakpoint here to avoid icons getting cut off
             .work-type {
                 position: absolute;
                 left: 0;
-
-                @media (min-width: $computer) {
-                    right: 200%;
-                    left: unset;
-                }
+                @media (min-width: 1280px) { left: unset; }
 
                 &[aria-label=article] {
                     top: -70px;
                     @media (min-width: $tablet) { top: -75px; }
-                    @media (min-width: $computer) { top: 0; }
+                    @media (min-width: 1280px) { top: 0; right: 230%; }
                 }
 
                 &[aria-label=excerpt] {
                     top: -55px;
                     @media (min-width: $tablet) { top: -45px; }
-                    @media (min-width: $computer) { top: 0; }
+                    @media (min-width: 1280px) { top: 0; right: 200%; }
                 }
             }
         }
