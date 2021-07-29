@@ -979,6 +979,12 @@ class TestPage(TestCase):
             )
             page_data = list(Page.page_index_data(excerpt))
             assert len(page_data) == 2
+            # should use index id instead of source id as basis for solr id
+            # first page data (0) is index 1 in mets because excerpt starts at page 2
+            assert page_data[0]["id"] == "%s.%s" % (
+                excerpt.index_id(),
+                mets.structmap_pages[1].text_file.sequence,
+            )
 
             # not suppressed but no data
             mock_hathiobj.metsfile_path.side_effect = (
