@@ -23,7 +23,9 @@
         </div>
         <div class="media">
             <div class="left">
-                <a class="license" href="https://creativecommons.org/licenses/by/4.0/"><img src="{% static 'img/logos/cc-by.svg' %}"></a>
+                <a class="license" href="https://creativecommons.org/licenses/by/4.0/">
+                    <img src="{% static 'img/logos/cc-by.svg' %}" alt="content licensed under Creative Commons CC-BY">
+                </a>
                 <span class="issn">ISSN: 2769-3619</span>
             </div>
             <div class="right">
@@ -39,7 +41,7 @@
             </div>
         </div>
         <div class="contact ui inverted horizontal link list">
-            <span class="item">©2018 Trustees of Princeton University</span>
+            <span class="item">&copy; {% now 'Y' %} Trustees of Princeton University</span>
             <a class="item" href="https://accessibility.princeton.edu/accessibility-assistance">Accessibility Assistance</a>
 
             {# link to technical documentation page, if it exists #}
