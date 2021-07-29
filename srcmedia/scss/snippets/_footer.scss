@@ -83,18 +83,32 @@
         }
     }
 
-    // social links
-    section.social {
-        text-align: center;
+    // ISSN, CC-BY logo, social links
+    .media {
+        display: flex;
+        justify-content: center;
         margin-top: 1rem;
 
         @media (min-width: $tablet) {
-            text-align: right;
+            justify-content: space-between;
         }
-        
-        img {
-            width: 2rem;
-            height: 2rem;
+
+        .license {
+            vertical-align: top;
+            margin-right: 1rem;
+        }
+
+        .left {
+            flex: none;
+        }
+
+        .right {
+            flex: none;
+
+            img {
+                width: 2rem;
+                height: 2rem;
+            }
         }
     }
 
@@ -103,12 +117,12 @@
         display: flex;
         justify-content: center;
         flex-direction: column;
-        padding-bottom: 0;
+        padding: 0;
+        margin-top: 1rem;
 
         @media only screen and (min-width: 768px) {
             flex-direction: row;
             justify-content: flex-start;
-            padding: 1rem;
         }
     }
 
