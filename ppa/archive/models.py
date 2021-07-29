@@ -1041,8 +1041,7 @@ class Page(Indexable):
                 with ht_zip.open(pagefilename) as pagefile:
                     try:
                         yield {
-                            "id": "%s.%s"
-                            % (digwork.source_id, page.text_file.sequence),
+                            "id": "%s.%s" % (digwork_index_id, page.text_file.sequence),
                             "source_id": digwork.source_id,
                             "group_id_s": digwork_index_id,  # for grouping with work record
                             "content": pagefile.read().decode("utf-8"),
@@ -1074,7 +1073,7 @@ class Page(Indexable):
             if page_span and i not in page_span:
                 continue
             yield {
-                "id": "%s.%s" % (digwork.source_id, page_number),
+                "id": "%s.%s" % (digwork_index_id, page_number),
                 "source_id": digwork.source_id,
                 "group_id_s": digwork_index_id,  # for grouping with work record
                 "content": page.get("ocrText"),  # some pages have no text
