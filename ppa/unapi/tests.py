@@ -29,7 +29,9 @@ class TestUnAPIViews(TestCase):
         assert response.status_code == 404
 
         # excerpt id should 404
-        response = self.client.get(unapi_url, {"id": test_id, "format": "marc"})
+        response = self.client.get(
+            unapi_url, {"id": "%s-p43" % test_id, "format": "marc"}
+        )
         assert response.status_code == 404
 
         # valid id and format
