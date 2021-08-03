@@ -1,7 +1,7 @@
 {% load static humanize %}
 
 <li class="item {{ item.work_type }}">
-    <abbr class="unapi-id" title="{{ item.source_id }}" aria-hidden="true"></abbr>
+    <abbr class="unapi-id" title="{{ item.group_id }}" aria-hidden="true"></abbr>
     <a href="{% if item.first_page %}{% url 'archive:detail' source_id=item.source_id start_page=item.first_page %}{% else %}{% url 'archive:detail' item.source_id %}{% endif %}{% if query %}?query={{ query }}{% endif %}" class="detail">
         <div class="brief-result container">
             <div class="title column">

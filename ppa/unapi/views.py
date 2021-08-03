@@ -1,4 +1,5 @@
 from django.http import HttpResponse
+from django.http.response import Http404
 from django.shortcuts import get_object_or_404
 from django.views.generic.base import TemplateView
 
@@ -58,5 +59,12 @@ class UnAPIView(TemplateView):
 
     def get_metadata(self, item_id, data_format):
         """get item and requested metadata"""
+        # To distinguish excerpts, unapi id uses index/group id,
+        # which combines source id with first page number.
+        # We currently don't have MARC records for excerpts/articles,
+        # so just 404 for any excerpt ids.
+        if "-p" in item_id:
+            raise Http404
+        # for non-excerpt, index id is equivalent to source id
         item = get_object_or_404(DigitizedWork, source_id=item_id)
         return item.get_metadata(data_format)

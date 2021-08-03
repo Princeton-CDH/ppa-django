@@ -556,7 +556,7 @@ class TestDigitizedWorkListRequest(TestCase):
             # unapi identifier for each work
             self.assertContains(
                 response,
-                '<abbr class="unapi-id" title="%s"' % digwork.source_id,
+                '<abbr class="unapi-id" title="%s"' % digwork.index_id(),
                 msg_prefix="unapi id should be embedded for each work",
             )
 
