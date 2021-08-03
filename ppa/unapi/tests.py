@@ -28,6 +28,10 @@ class TestUnAPIViews(TestCase):
         response = self.client.get(unapi_url, {"id": test_id, "format": "marc"})
         assert response.status_code == 404
 
+        # excerpt id should 404
+        response = self.client.get(unapi_url, {"id": test_id, "format": "marc"})
+        assert response.status_code == 404
+
         # valid id and format
         digwork = DigitizedWork.objects.first()
         with patch("ppa.unapi.views.get_object_or_404") as mock_getobj:
@@ -35,7 +39,7 @@ class TestUnAPIViews(TestCase):
             mock_getobj.return_value.get_metadata.return_value = mock_metadata_result
 
             response = self.client.get(
-                unapi_url, {"id": digwork.source_id, "format": "marc"}
+                unapi_url, {"id": digwork.index_id(), "format": "marc"}
             )
 
             mock_getobj.return_value.get_metadata.assert_called_with("marc")
