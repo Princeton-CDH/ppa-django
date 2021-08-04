@@ -3,6 +3,40 @@
 CHANGELOG
 =========
 
+3.7
+---
+
+Excerpt support:
+
+* As an admin, I want to include book excerpts and articles as well as full volumes, so that I can include material that is specifically about prosody from longer works about other subjects.
+* As an admin, I want to convert existing full HathiTrust items into excerpts so that I can include just the parts of those document that are about prosody.
+* As an admin, I want the option of importing two different sections from the same HathiTrust work so I can include multiple articles or chapters from a single journal issue or book.
+* As a user, I want to search and browse content across all types so that I can find any results in full volumes as well as excerpts.
+* As a user, when I'm looking at search results I want to see an indicator when something is an excerpt or an article, so that I can tell what kind of content I'm looking at.
+* As a user, when I'm looking at the details for an item I want to see an indicator if it's an excerpt or article so I understand the content better.
+* As a user, I want to search within a book excerpt or article so that I can see more than two results for my search terms in context.
+* As an admin, I want item type and book excerpt/article metadata included in admin CSV exports so I can review all information in the system.
+
+Gale/ECCO support:
+
+* As an admin, I want a bulk import of content from Gale/ECCO so that I can add content to the site that is not available from HathiTrust.
+* As an admin, I want a bulk import of MARC metadata from Gale/ECCO so that I can view and search each record by its metadata.
+* As a user, I want to search and browse digitized volumes across all sources so that I can find any materials in the archive, whether from HathiTrust or Gale/ECCO.
+* As a user viewing keyword search results, I want to see a few text snippets from the full text of a works from Gale/ECCO so that I can see how my search terms are used in context.
+* As a user viewing an item from ECCO in keyword search results, I want to see page image thumbnails and text snippets that match my search terms so I can see how many and what kind of pages match my search terms.
+* As a user, I want to view a page for content from ECCO in Gale Primary Sources by clicking its thumbnail or page number in a search result so that I can quickly and easily see my search result in its full context.
+* As a user, I want to add a Gale/ECCO work to my Zotero library from the item page or the search results page, so that I can save references for later research or citation.
+* As a user, when I'm viewing an item from Gale/ECCO, I want to see the Gale identifier and link to view the item on Gale Primary Sources so that I can get to the Gale version of the document.
+* As a user, I want to search within a single Gale/ECCO item so that I can find more page results and keywords in context than are available on the main archive search.
+* As an admin, I want the CSV export to include source so that I can distinguish content from HathiTrust, Gale/ECCO, etc.
+* As an admin, I want a way to suppress items in bulk from the admin digitized works list so that I can manage the content if an agreement for content expires.
+
+Other items:
+
+* New ISSN assigned for PPA; added to footer
+* Added CC-BY license to footer
+
+
 3.6.2
 -----
 

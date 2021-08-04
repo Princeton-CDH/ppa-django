@@ -6,7 +6,9 @@ from django.contrib.auth.management import create_permissions
 from django.db import migrations
 
 new_archive_manager_perms = [
-    'add_collection', 'change_collection', 'delete_collection',
+    "add_collection",
+    "change_collection",
+    "delete_collection",
 ]
 
 
@@ -22,7 +24,7 @@ def update_archive_manager_group(apps, schema_editor):
         create_permissions(app_config, apps=apps, verbosity=0)
         app_config.models_module = None
 
-    archive_mgr = Group.objects.get(name='Archive Manager')
+    archive_mgr = Group.objects.get(name="Archive Manager")
     permissions = []
     for codename in new_archive_manager_perms:
         # using explicit get so that there will be an error if an
@@ -37,10 +39,11 @@ def update_archive_manager_group(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('common', '0002_create_script_user'),
+        ("common", "0002_create_script_user"),
     ]
 
     operations = [
-            migrations.RunPython(update_archive_manager_group,
-                reverse_code=migrations.RunPython.noop),
+        migrations.RunPython(
+            update_archive_manager_group, reverse_code=migrations.RunPython.noop
+        ),
     ]

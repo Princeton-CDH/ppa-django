@@ -8,22 +8,30 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('archive', '0004_digitizedwork_pubdate_to_integer'),
+        ("archive", "0004_digitizedwork_pubdate_to_integer"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='digitizedwork',
-            options={'ordering': ('title',)},
+            name="digitizedwork",
+            options={"ordering": ("title",)},
         ),
         migrations.AddField(
-            model_name='digitizedwork',
-            name='notes',
-            field=models.TextField(blank=True, default='', help_text='Internal curation notes (not displayed on public site)'),
+            model_name="digitizedwork",
+            name="notes",
+            field=models.TextField(
+                blank=True,
+                default="",
+                help_text="Internal curation notes (not displayed on public site)",
+            ),
         ),
         migrations.AddField(
-            model_name='digitizedwork',
-            name='public_notes',
-            field=models.TextField(blank=True, default='', help_text='Notes on edition or other details to be displayed on the site.'),
+            model_name="digitizedwork",
+            name="public_notes",
+            field=models.TextField(
+                blank=True,
+                default="",
+                help_text="Notes on edition or other details to be displayed on the site.",
+            ),
         ),
     ]

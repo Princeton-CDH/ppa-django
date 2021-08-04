@@ -29,6 +29,14 @@ at `<https://princeton-cdh.github.io/ppa-django/>`_.
    :target: https://requires.io/github/Princeton-CDH/ppa-django/requirements/?branch=main
    :alt: Requirements Status
 
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :target: https://github.com/psf/black
+   :alt: code style Black
+
+.. image:: https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336
+  :target: https://pycqa.github.io/isort/
+  :alt: imports: isort
+
 This repo uses `git-flow <https://github.com/nvie/gitflow>`_ conventions; **main**
 contains the most recent release, and work in progress will be on the **develop** branch.
 Pull requests should be made against develop.
@@ -64,6 +72,14 @@ Initial setup and installation:
 
   and configure **SOLR_CONNECTIONS** in local settings with your
   preferred core/collection name and the configset name you created.
+
+  If using docker with `solr:6` image, use docker cp. To add::
+
+    docker cp solr_conf/ CONTAINER:/opt/solr/server/solr/configsets/ppa
+
+  To copy in changes to the configset::
+
+    docker cp solr_conf/* CONTAINER:/opt/solr/server/solr/configsets/ppa/
 
 - Run the manage command to configure the schema; this will prompt to
   create the core from your configset if it does not exist::
@@ -119,6 +135,7 @@ either set of assets frequently. These two processes are separate as well::
   See `MariaDB <https://mariadb.com/kb/en/library/mysql_tzinfo_to_sql/>`_'s
   info on the utility for more information.
 
+
 Tests
 ~~~~~
 
@@ -169,6 +186,22 @@ file and look for a sitemap at ``localhost:8000/sitemap.xml`` to use to crawl th
 site. Additional URLs to test can be added to the `urls` property of the
 ``.pa11yci.json`` file.
 
+Setup pre-commit hooks
+~~~~~~~~~~~~~~~~~~~~~~
+
+If you plan to contribute to this repository, please run the following command:
+
+    pre-commit install
+
+This will add a pre-commit hook to automatically style your python code with `black <https://github.com/psf/black>`_ and sort your imports with `isort <https://pycqa.github.io/isort/>`_.
+
+Because these styling conventions were instituted after multiple releases of development on this project, ``git blame`` may not reflect the true author of a given line. In order to see a more accurate ``git blame`` execute the following command:
+
+    git blame <FILE> --ignore-revs-file .git-blame-ignore-revs
+
+Or configure your git to always ignore styling revision commits:
+
+    git config blame.ignoreRevsFile .git-blame-ignore-revs
 
 Documentation
 -------------

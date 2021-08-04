@@ -32,14 +32,25 @@
 
 {% block content %}
 <section class="meta ui basic vertical segment container">
+    {% if object.item_type != object.FULL %}
+    <div class="work-type icon" aria-label="{{ object.get_item_type_display|lower }}"></div>
+    {% endif %}
     <h1 class="header">{{ object.title }}</h1>
-    <abbr class="unapi-id" title="{{ object.source_id }}"></abbr>
+    {% if object.item_type == object.FULL %} {# unapi metadata only available for full works #}
+    <abbr class="unapi-id" title="{{ object.index_id }}"></abbr>
+    {% endif %}
     <table class="metadata ui very basic table">
         <tbody>
             {% if object.subtitle %}
             <tr class="secondary-title">
                 <th scope="row">Secondary Title</th>
                 <td>{{ object.subtitle }}</td>
+            </tr>
+            {% endif %}
+            {% if object.book_journal %}
+            <tr class="book-journal">
+                <th scope="row">{% if object.item_type == object.ARTICLE %}Journal{% elif object.item_type == object.EXCERPT %}Book{% endif %} Title</th>
+                <td>{{ object.book_journal }}</td>
             </tr>
             {% endif %}
             {% if object.pub_date %}
@@ -72,6 +83,12 @@
                 <td>{{ object.page_count }}</td>
             </tr>
             {% endif %}
+            {% if object.pages_orig %}
+            <tr>
+                <th scope="row">Pages</th>
+                <td>{{ object.pages_orig }}</td>
+            </tr>
+            {% endif %}
             {% if object.collections.exists %}
             <tr>
                 <th scope="row">PPA Collection{{ object.collections.count|pluralize }}</th>
@@ -82,12 +99,21 @@
                 </td>
             </tr>
             {% endif %}
+
             {% if object.source_url %}
-            <tr class="hathi-link">
-                <th scope="row">View{% if object.source == object.OTHER %} external record
-                    {% else %} on {{ object.get_source_display }}{% endif %}</th>
+            <tr class="source-link">
+                <th scope="row">{{ object.get_source_link_label }}</th>
                 <td>
+                    {% if object.pages_digital %}  {# if page range is defined (excerpt/article), link to first page in range #}
+                        {% if object.source == object.HATHI %}
+                        <a href="{% hathi_page_url object.source_id object.first_page %}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
+                        {% elif object.source == object.GALE %}
+                        GALE url
+                        <a href="{% gale_page_url object.source_url object.first_page %}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
+                        {% endif %}
+                    {% else %} {# when there is no page range, use source url #}
                     <a href="{{ object.source_url }}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
+                    {% endif %}
                 </td>
             </tr>
             {% endif %}

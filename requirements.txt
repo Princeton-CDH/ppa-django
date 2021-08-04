@@ -23,6 +23,7 @@ django-csp
 django-webpack-loader<1
 requests_oauthlib
 wand
+intspan
 # specify bs4 version to avoid wagtail version conflict
 beautifulsoup4<4.9
 # only needed for the 'generate_corpus' manage command

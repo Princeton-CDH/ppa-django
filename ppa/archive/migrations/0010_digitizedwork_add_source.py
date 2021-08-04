@@ -8,38 +8,63 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('archive', '0009_digitizedwork_status'),
+        ("archive", "0009_digitizedwork_status"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='digitizedwork',
-            name='source',
-            field=models.CharField(choices=[('HT', 'HathiTrust'), ('O', 'Other')], default='HT', help_text='Source of the record.', max_length=2),
+            model_name="digitizedwork",
+            name="source",
+            field=models.CharField(
+                choices=[("HT", "HathiTrust"), ("O", "Other")],
+                default="HT",
+                help_text="Source of the record.",
+                max_length=2,
+            ),
         ),
         migrations.AlterField(
-            model_name='digitizedwork',
-            name='author',
-            field=models.CharField(blank=True, help_text='Authorized name of the author, last name first.', max_length=255),
+            model_name="digitizedwork",
+            name="author",
+            field=models.CharField(
+                blank=True,
+                help_text="Authorized name of the author, last name first.",
+                max_length=255,
+            ),
         ),
         migrations.AlterField(
-            model_name='digitizedwork',
-            name='record_id',
-            field=models.CharField(blank=True, help_text='For HathiTrust materials, record id (use to aggregate copies or volumes).', max_length=255),
+            model_name="digitizedwork",
+            name="record_id",
+            field=models.CharField(
+                blank=True,
+                help_text="For HathiTrust materials, record id (use to aggregate copies or volumes).",
+                max_length=255,
+            ),
         ),
         migrations.AlterField(
-            model_name='digitizedwork',
-            name='sort_title',
-            field=models.TextField(default='', help_text='Sort title from MARC record or title without leading article'),
+            model_name="digitizedwork",
+            name="sort_title",
+            field=models.TextField(
+                default="",
+                help_text="Sort title from MARC record or title without leading article",
+            ),
         ),
         migrations.AlterField(
-            model_name='digitizedwork',
-            name='source_id',
-            field=models.CharField(help_text='Source identifier; HT id for HathiTrust materials', max_length=255, unique=True, verbose_name='Source ID'),
+            model_name="digitizedwork",
+            name="source_id",
+            field=models.CharField(
+                help_text="Source identifier; HT id for HathiTrust materials",
+                max_length=255,
+                unique=True,
+                verbose_name="Source ID",
+            ),
         ),
         migrations.AlterField(
-            model_name='digitizedwork',
-            name='source_url',
-            field=models.URLField(help_text='URL where the source item can be accessd', max_length=255, verbose_name='Source URL'),
+            model_name="digitizedwork",
+            name="source_url",
+            field=models.URLField(
+                help_text="URL where the source item can be accessd",
+                max_length=255,
+                verbose_name="Source URL",
+            ),
         ),
     ]
