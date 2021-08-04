@@ -8,22 +8,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('archive', '0004_digitizedwork_pubdate_to_integer'),
+        ("archive", "0004_digitizedwork_pubdate_to_integer"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='digitizedwork',
-            options={'ordering': ('title',)},
+            name="digitizedwork",
+            options={"ordering": ("title",)},
         ),
         migrations.AddField(
-            model_name='digitizedwork',
-            name='sort_title',
-            field=models.TextField(blank=True, default=''),
+            model_name="digitizedwork",
+            name="sort_title",
+            field=models.TextField(blank=True, default=""),
         ),
         migrations.AddField(
-            model_name='digitizedwork',
-            name='subtitle',
-            field=models.TextField(blank=True, default=''),
+            model_name="digitizedwork",
+            name="subtitle",
+            field=models.TextField(blank=True, default=""),
         ),
     ]

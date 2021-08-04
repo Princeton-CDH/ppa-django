@@ -4,6 +4,16 @@
         background-color: $white-two;
     }
 
+    &.article {
+        padding-top: 60px;
+        @media (min-width: 1280px) { padding-top: 0; }
+    }
+
+    &.excerpt {
+        padding-top: 30px;
+        @media (min-width: 1280px) { padding-top: 0; }
+    }
+
     a.detail {
         text-decoration: none;
         display: block;
@@ -39,6 +49,7 @@
         .labels {
             width: 100%;
             display: block;
+            position: relative;
             margin-bottom: 1rem;
             flex: none;
 
@@ -50,6 +61,25 @@
             .result-number {
                 line-height: normal;
                 padding-top: 2px;
+            }
+
+            // NOTE usage of 1280px breakpoint here to avoid icons getting cut off
+            .work-type {
+                position: absolute;
+                left: 0;
+                @media (min-width: 1280px) { left: unset; }
+
+                &[aria-label=article] {
+                    top: -70px;
+                    @media (min-width: $tablet) { top: -75px; }
+                    @media (min-width: 1280px) { top: 0; right: 230%; }
+                }
+
+                &[aria-label=excerpt] {
+                    top: -55px;
+                    @media (min-width: $tablet) { top: -45px; }
+                    @media (min-width: 1280px) { top: 0; right: 200%; }
+                }
             }
         }
 
@@ -68,6 +98,13 @@
             font-weight: normal;
             font-style: italic;
             text-transform: none;
+
+            &::before { content: " "; }
+
+            &.book-journal::before {
+                font-style: normal;
+                content: " in ";
+            }
         }
     }
 

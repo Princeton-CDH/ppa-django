@@ -21,19 +21,27 @@
                 <img src="{% static 'img/logos/cdh-logo.svg' %}" alt="The Center for Digital Humanities at Princeton" />
             </a>
         </div>
-        <section class="social">
-            <a href="https://www.facebook.com/ProsodyArchive/">
-                <img src="{% static 'img/icons/facebook.svg' %}" alt="ProsodyArchive on Facebook"/>
-            </a>
-            <a href="https://twitter.com/ProsodyArchive">
-                <img src="{% static 'img/icons/twitter.svg' %}" alt="ProsodyArchive on Twitter"/>
-            </a>
-            <a href="https://www.instagram.com/prosodyarchive/">
-                <img src="{% static 'img/icons/instagram.svg' %}" alt="ProsodyArchive on  Instagram"/>
-            </a>
-        </section>
+        <div class="media">
+            <div class="left">
+                <a class="license" href="https://creativecommons.org/licenses/by/4.0/">
+                    <img src="{% static 'img/logos/cc-by.svg' %}" alt="content licensed under Creative Commons CC-BY">
+                </a>
+                <span class="issn">ISSN: 2769-3619</span>
+            </div>
+            <div class="right">
+                <a href="https://www.facebook.com/ProsodyArchive/">
+                    <img src="{% static 'img/icons/facebook.svg' %}" alt="ProsodyArchive on Facebook"/>
+                </a>
+                <a href="https://twitter.com/ProsodyArchive">
+                    <img src="{% static 'img/icons/twitter.svg' %}" alt="ProsodyArchive on Twitter"/>
+                </a>
+                <a href="https://www.instagram.com/prosodyarchive/">
+                    <img src="{% static 'img/icons/instagram.svg' %}" alt="ProsodyArchive on  Instagram"/>
+                </a>
+            </div>
+        </div>
         <div class="contact ui inverted horizontal link list">
-            <span class="item">©2018 Trustees of Princeton University</span>
+            <span class="item">&copy; {% now 'Y' %} Trustees of Princeton University</span>
             <a class="item" href="https://accessibility.princeton.edu/accessibility-assistance">Accessibility Assistance</a>
 
             {# link to technical documentation page, if it exists #}

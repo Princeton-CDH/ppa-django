@@ -1,0 +1,69 @@
+{
+    "language": "eng",
+    "license": "Apache-2.0",
+    "related_identifiers": [
+        {
+            "scheme": "url",
+            "identifier": "https://prosody.princeton.edu/",
+            "relation": "compiles"
+        }
+    ],
+    "upload_type": "software",
+    "contributors": [
+        {
+            "orcid": "0000-0003-0214-8757",
+            "affiliation": "Princeton University",
+            "type": "Editor",
+            "name": "Martin, Meredith"
+        },
+        {
+            "orcid": "0000-0002-7960-3175",
+            "affiliation": "Princeton University",
+            "type": "Editor",
+            "name": "Naydan, Mary"
+        },
+        {
+            "orcid": "0000-0002-8735-8405",
+            "affiliation": "Princeton University",
+            "type": "Editor",
+            "name": "Munson, Rebecca"
+        },
+        {
+            "orcid": "0000-0002-6114-3182",
+            "type": "ProjectMember",
+            "name": "Li, Xinyi"
+        }
+    ],
+    "publication_date": "2018-12-18",
+    "creators": [
+        {
+            "orcid": "0000-0002-8762-8057",
+            "affiliation": "Princeton University",
+            "name": "Koeser, Rebecca Sutton"
+        },
+        {
+            "orcid": "0000-0002-4542-0899",
+            "affiliation": "Princeton University",
+            "name": "Budak, Nick"
+        },
+        {
+            "orcid": "0000-0002-9973-560X",
+            "name": "Hicks, Benjamin W."
+        },
+        {
+            "orcid": "0000-0002-6702-6964",
+            "affiliation": "Princeton University",
+            "name": "Doroudian, Gissoo"
+        },
+        {
+            "orcid": "0000-0003-2577-8102",
+            "affiliation": "Princeton University",
+            "name": "Kevin McElwee"
+        },
+        {
+            "affiliation": "Princeton University",
+            "name": "Vineet Bansal"
+        }
+    ],
+    "access_right": "open"
+}

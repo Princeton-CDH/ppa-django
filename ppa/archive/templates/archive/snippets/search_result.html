@@ -1,18 +1,29 @@
 {% load static humanize %}
 
-<li class="item">
-    <abbr class="unapi-id" title="{{ item.source_id }}" aria-hidden="true"></abbr>
-    <a href="{% url 'archive:detail' item.source_id %}{% if query %}?query={{ query }}{% endif %}" class="detail">
+<li class="item {{ item.work_type }}">
+    {% if item.work_type == "full-work" %} {# unapi metadata only available for full works #}
+    <abbr class="unapi-id" title="{{ item.group_id }}" aria-hidden="true"></abbr>
+    {% endif %}
+    <a href="{% if item.first_page %}{% url 'archive:detail' source_id=item.source_id start_page=item.first_page %}{% else %}{% url 'archive:detail' item.source_id %}{% endif %}{% if query %}?query={{ query }}{% endif %}" class="detail">
         <div class="brief-result container">
             <div class="title column">
                 <div class="labels">
                     {% if page_obj %}
                         <p class="result-number">{{ page_obj.start_index|add:forloop.counter0 }}</p>
                     {% endif %}
+                    {% if item.work_type != "full-work" %}
+                    <div class="work-type icon" aria-label="{{ item.work_type }}"></div>
+                    {% endif %}
                 </div>
                 <p>
+                    {% spaceless %}
                     <span class="ui header">{{ item.title }}</span>
+                    {% if item.work_type != "full-work" and item.book_journal %}
+                    <span class="ui sub header book-journal">{{ item.book_journal }}</span>
+                    {% else %}
                     <span class="ui sub header">{{ item.subtitle}}</span>
+                    {% endif %}
+                    {% endspaceless %}
                 </p>
             </div>
             <div class="metadata column">
@@ -88,7 +99,7 @@
                 <div class="wrapper">
                     {% for page in results.docs %}
                     {% with highlights=page_highlights|dict_item:page.id %}
-                        {% include 'archive/snippets/page_preview.html' with item_id=item.source_id  %}
+                        {% include 'archive/snippets/page_preview.html' with item_id=item.source_id source=item.source.0 image_id=page.image_id source_url=item.source_url %}
                     {% endwith %}
                     {% endfor %}
                 </div>

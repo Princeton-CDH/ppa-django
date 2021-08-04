@@ -9,9 +9,16 @@ Expected context variables:
 {% endcomment %}
 {% load ppa_tags %}
 <div class="page">
+  {% if source == 'HathiTrust' %}
+    {% hathi_page_url item_id page.order as page_link %}
+  {% elif source == 'Gale' %}
+    {% gale_page_url source_url page.order as page_link %}
+  {# currently no other sources with page level content, so no other case needed #}
+  {% endif %}
     <div class="preview">
-        <a href="{% page_url item_id page.order %}"
+        <a href="{{ page_link }}"
           target="_blank" rel="noopener noreferrer">
+          {% if source == 'HathiTrust' %}
           {% page_image_url item_id page.order 225 as 1x_img %}
           {% page_image_url item_id page.order 450 as 2x_img %}
           {# img with data-src/srcset attributes for lazy-loading  #}
@@ -22,12 +29,19 @@ Expected context variables:
             <img src="{{ 1x_img }}" srcset="{{ 1x_img}}, {{ 2x_img }} 2x"
               alt="page {{ page.label }}"/>
           </noscript>
+          {% elif source == 'Gale' %}
+          {# NOTE: may want to move to a template tag at some point #}
+          {% with 2x_img="https://callisto.ggsrv.com/imgsrv/FastFetch/UBER2/"|add:image_id|add:"?format=png&boundbox=725+450" 1x_img="https://callisto.ggsrv.com/imgsrv/FastFetch/UBER2/"|add:image_id|add:"?format=png&boundbox=225+350" %}
+          <img src="{{ 1x_img }}" srcset="{{ 1x_img}}, {{ 2x_img }} 2x"
+              alt="page {{ page.label }}"/>
+          {% endwith %}
+          {% endif %}
         </a>
     </div>
     {% if page.title %}<a>p. {{ page.title }}</a>{% endif %}
     <div class="snippets">
           <p class="page-number">
-            <a href="{% page_url item_id page.order %}" target="_blank" rel="noopener noreferrer">
+            <a href="{{ page_link }}" target="_blank" rel="noopener noreferrer">
               p. {{ page.label }}
             </a>
           </p>

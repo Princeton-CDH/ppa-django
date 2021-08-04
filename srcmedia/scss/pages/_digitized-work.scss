@@ -4,17 +4,42 @@
     .container:not(.message) {
         @include wide-container;
     }
-
+    
     .meta {
+        position: relative;
         padding: 0 1rem;
 
         @media (min-width: $tablet) {
             padding: 0 2rem;
         }
 
+        // NOTE usage of 1280px breakpoint here to avoid icons getting cut off
+        .work-type {
+            position: absolute;
+            top: -50px;
+            left: 10px;
+
+            @media (min-width: $tablet) { left: 25px; }
+            @media (min-width: 1280px) { top: 0; }
+            
+            &[aria-label=article] {
+                @media (min-width: 1280px) { left: -80px; }
+            }
+
+            &[aria-label=excerpt] {
+                @media (min-width: $tablet) { left: 25px; }
+                @media (min-width: 1280px) { left: -100px; }
+            }
+        }
+
         .header {
             font-size: 1.5rem;
             font-family: $headerFont;
+        }
+
+        .work-type[aria-label=article] ~ .header {
+            padding-top: 30px;
+            @media (min-width: 1280px) { padding-top: 0; }
         }
     }
 
@@ -54,7 +79,7 @@
             font-family: $headerFont;
         }
 
-        .hathi-link a {
+        .source-link a {
             @include blue-link;
         }
     }
