@@ -156,6 +156,7 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         super().__init__(solr=solr)
 
     def work_filter(self, *args, **kwargs):
+        """Add filters to the work query"""
         # filter out empty values to simplify view logic
         # for checking whether query terms are present
         kwargs = dict(
@@ -165,6 +166,7 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
             self._workq = self._workq.filter(*args, **kwargs)
 
     def work_title_search(self, title_query):
+        """search works by title"""
         if not title_query:
             return
         # include the edismax title search query in the filters
@@ -175,6 +177,7 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         # return self.raw_query_parameters(title_query=title_query)
 
     def keyword_search(self, query):
+        """add keyword search"""
         # *store* that there is a keyword present but don't do anything
         # with it yet
         self.keyword_query = query

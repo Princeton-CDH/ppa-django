@@ -110,6 +110,7 @@ PREPROCESS_FUNCTIONS = OrderedDict(
 
 
 class SolrCorpus:
+    """Custom class to generate a text corpus from Solr"""
 
     # Class attributes that rarely, if ever, need to change
     DOC_ID_FIELD = "source_id"  # Solr field name for document identifier
@@ -277,6 +278,8 @@ class SolrCorpus:
 
 
 class Command(BaseCommand):
+    """Custom manage command to generate a token corpus from text indexed in Solr"""
+
     def add_arguments(self, parser):
         parser.add_argument(
             "--path", required=True, help="Directory path to save corpus file(s)."

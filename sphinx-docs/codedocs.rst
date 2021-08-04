@@ -52,58 +52,26 @@ Util
     :members:
 
 
-Pages
------
-
-.. automodule:: ppa.pages
-    :members:
-
-Models
-^^^^^^
-.. automodule:: ppa.pages.models
-    :members:
-
-Embed Finders
-^^^^^^^^^^^^^
-.. automodule:: ppa.pages.embed_finders
-    :members:
-
-
-Editorial
----------
-
-.. automodule:: ppa.editorial
-    :members:
-
-Models
-^^^^^^
-.. automodule:: ppa.editorial.models
-    :members:
-
-
 Manage Commands
 ^^^^^^^^^^^^^^^
-
-Solr schema
-~~~~~~~~~~~
-
-.. automodule:: ppa.archive.management.commands.solr_schema
 
 Hathi Import
 ~~~~~~~~~~~~
 
 .. automodule:: ppa.archive.management.commands.hathi_import
+    :members:
+
+Hathi Excerpt
+~~~~~~~~~~~~~
+
+.. automodule:: ppa.archive.management.commands.hathi_excerpt
+    :members:
 
 Gale Import
 ~~~~~~~~~~~~
 
 .. automodule:: ppa.archive.management.commands.gale_import
-
-
-Index
-~~~~~
-
-.. automodule:: ppa.archive.management.commands.index
+    :members:
 
 Generate Corpus
 ~~~~~~~~~~~~~~~
@@ -126,17 +94,6 @@ Views
 .. automodule:: ppa.common.views
     :members:
 
-
-Editorial
----------
-.. automodule:: ppa.editorial
-    :members:
-
-Models
-^^^^^^
-.. automodule:: ppa.editorial.models
-    :members:
-
 Pages
 -----
 .. automodule:: ppa.pages
@@ -147,12 +104,29 @@ Models
 .. automodule:: ppa.pages.models
     :members:
 
+Embed Finders
+^^^^^^^^^^^^^
+.. automodule:: ppa.pages.embed_finders
+    :members:
+
 Manage Commands
 ^^^^^^^^^^^^^^^
 
 Setup Site Pages
 ~~~~~~~~~~~~~~~~
 .. automodule:: ppa.pages.management.commands.setup_site_pages
+
+
+Editorial
+---------
+
+.. automodule:: ppa.editorial
+    :members:
+
+Models
+^^^^^^
+.. automodule:: ppa.editorial.models
+    :members:
 
 
 Unapi

@@ -90,8 +90,8 @@ class HathiImporter:
         self.filter_invalid_ids()
 
     def filter_invalid_ids(self):
-        # remove any ids that don't look valid
-        # at minimum, must have . separator required for pairtree path
+        """Rmove any ids that don't look valid. At minimum, must
+        include `.` separator required for pairtree path."""
         invalid_ids = [htid for htid in self.htids if "." not in htid]
         # add result code to display in output
         for htid in invalid_ids:
@@ -151,6 +151,7 @@ class HathiImporter:
     }
 
     def rsync_data(self):
+        """Use rsync to retrieve data for the volumes to be imported."""
         # create temp file with list of paths to synchronize
         with tempfile.NamedTemporaryFile(
             prefix="ppa_hathi_pathlist-", suffix=".txt", mode="w+t"
