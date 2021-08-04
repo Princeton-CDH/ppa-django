@@ -12,6 +12,14 @@ page content.
 Database
 --------
 
+3.7 updates
+^^^^^^^^^^^
+* :class:`~ppa.archive.models.DigitizedWork` has new fields to support excerpts and articles as well as full works:
+  * Item Type (full work, article, or excerpt, required)
+  * Book/Journal Title
+  * Digital Page Range (used to determine pages to be indexed for the excerpt)
+  * Original page range (used for display)
+
 3.1 Updates
 ^^^^^^^^^^^
 
