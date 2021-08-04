@@ -21,7 +21,7 @@ docs:
 	@make html
 	mv $(BUILDDIR)/html/* ../docs/
 	touch ../docs/.nojekyll
-	cd ../docs && git add --all && git commit -m "Publishing updated documentation on gh-pages" && cd ..
+	cd ../docs && git add --all && PRE_COMMIT_ALLOW_NO_CONFIG=1 git commit -m "Publishing updated documentation on gh-pages" && cd ..
 
 
 # Catch-all target: route all unknown targets to Sphinx using the new
