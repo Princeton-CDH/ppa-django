@@ -12,12 +12,6 @@
 @pageFont              : 'Open Sans', Helvetica, sans-serif;
 @headerFont            : 'Gentium Book Basic', Palatino, serif;
 
-@googleFontSizes       : '400,400i,700,700i';
-@googleFontSizesHeader : '400,400i,700,700i';
-@googleFont            : %('%s:@{googleFontSizes}', escape(@fontName));
-@googleFontHeader      : %('%s:@{googleFontSizesHeader}', escape(@headerFontName));
-@googleFontRequest     : '@{googleFont}|@{googleFontHeader}';
-
 /*-------------------
       Base Sizes
 --------------------*/
