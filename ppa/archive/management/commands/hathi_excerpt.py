@@ -1,3 +1,34 @@
+"""
+**hathi_excerpt** is a custom manage command to convert existing
+HathiTrust items into excerpts or articles. It takes a CSV file
+with information about the items to excerpt. It does handle
+multiple excerpts for the same source id, as long as that
+source id is present in the database and data is available
+in the HathiTrust pairtree data.
+
+The CSV **must** include the following fields:
+    * Item Type
+    * Volume ID
+    * Title
+    * Sort Title
+    * Book/Journal Title
+    * Digital Page Range
+    * Collection
+    * Record ID
+
+If the CSV includes these **optional** fields, they will be used:
+    * Author
+    * Publication Date
+    * Publication Place
+    * Publisher
+    * Enumcron
+    * Original Page Range
+    * Notes
+    * Public Notes
+
+Updated and added records are automatically indexed in Solr.
+"""
+
 import csv
 import logging
 from collections import Counter

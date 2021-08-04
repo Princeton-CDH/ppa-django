@@ -153,8 +153,8 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
     add_works_to_collection.allowed_permissions = ("change",)
 
     def suppress_works(self, request, queryset):
-        # set status to suppressed for every item in the queryset
-        # that is not already suppressed
+        """Set status to suppressed for every item in the queryset
+        that is not already suppressed."""
         non_suppressed = queryset.exclude(status=DigitizedWork.SUPPRESSED)
         # save the list of ids being suppressed to update the index after
         ids_to_suppress = list(non_suppressed.values_list("source_id", flat=True))
@@ -183,6 +183,7 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
     suppress_works.short_description = "Suppress selected digitized works"
 
     def get_urls(self):
+        """Add url for add from HathiTrust admin feature"""
         urls = super(DigitizedWorkAdmin, self).get_urls()
         my_urls = [
             url(
