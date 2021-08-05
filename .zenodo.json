@@ -4,8 +4,19 @@
     "related_identifiers": [
         {
             "scheme": "url",
+            "identifier": "https://github.com/Princeton-CDH/ppa-django",
+            "relation": "isSupplementTo"
+        },
+        {
+            "scheme": "url",
             "identifier": "https://prosody.princeton.edu/",
             "relation": "compiles"
+        },
+        {
+            "scheme": "doi",
+            "identifier": "10.5281/zenodo.2400705",
+            "relation": "isPreviousVersionOf",
+            "resource_type": "software"
         }
     ],
     "upload_type": "software",
@@ -34,7 +45,6 @@
             "name": "Li, Xinyi"
         }
     ],
-    "publication_date": "2018-12-18",
     "creators": [
         {
             "orcid": "0000-0002-8762-8057",
@@ -56,13 +66,13 @@
             "name": "Doroudian, Gissoo"
         },
         {
-            "orcid": "0000-0003-2577-8102",
             "affiliation": "Princeton University",
-            "name": "Kevin McElwee"
+            "name": "Bansal, Vineet"
         },
         {
+            "orcid": "0000-0003-2577-8102",
             "affiliation": "Princeton University",
-            "name": "Vineet Bansal"
+            "name": "McElwee, Kevin"
         }
     ],
     "access_right": "open"
