@@ -6,7 +6,7 @@ CHANGELOG
 3.7.1
 ------
 
-* bufix: use updated syntax for loading Google fonts
+* bugfix: use updated syntax for loading Google fonts
 
 3.7
 ---
