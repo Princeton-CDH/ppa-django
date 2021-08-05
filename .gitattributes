@@ -1,2 +1,3 @@
-sitemedia/semantic/* linguist-vendored=true
-docs/* linguist-documentation=true
+sitemedia/semantic/** linguist-vendored
+sphinx-docs/** linguist-documentation
+manage.py linguist-generated
