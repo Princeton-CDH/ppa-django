@@ -179,6 +179,7 @@ class SearchForm(forms.Form):
     #: (appears when you hover over the question mark icon)
     QUESTION_POPUP_TEXT = """
     Boolean search within a field is supported. Operators must be capitalized (AND, OR).
+    Use quotes for exact phrase.
     """
 
     # text inputs
@@ -187,7 +188,7 @@ class SearchForm(forms.Form):
         required=False,
         widget=forms.TextInput(
             attrs={
-                "placeholder": "Search full text and metadata",
+                "placeholder": "Search full-text and metadata, including approximate titles.",
                 "_icon": "search",
                 "_align": "left",
             }
@@ -198,7 +199,7 @@ class SearchForm(forms.Form):
         required=False,
         widget=forms.TextInput(
             attrs={
-                "placeholder": "Search the archive by book title",
+                "placeholder": "Search by exact title or subtitle.",
                 "_icon": "search",
                 "_align": "left",
             }
@@ -209,7 +210,7 @@ class SearchForm(forms.Form):
         required=False,
         widget=forms.TextInput(
             attrs={
-                "placeholder": "Search the archive by author",
+                "placeholder": "Search by exact author (last name, first name).",
                 "_icon": "search",
                 "_align": "left",
             }
