@@ -14,7 +14,7 @@ django-semanticui-forms
 lxml
 eulxml
 # wagtail 2.10 drops python 3.5 support; currently needed for qa
-wagtail>=2.10,<2.11
+wagtail>=2.11,<2.12
 bleach
 django-fullurl
 django-csp
