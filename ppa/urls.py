@@ -2,9 +2,9 @@
 
 """
 from django.conf import settings
-from django.conf.urls import include, url
 from django.conf.urls.static import serve
 from django.contrib import admin
+from django.urls import include, path, re_path
 from django.views.generic.base import RedirectView, TemplateView
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.contrib.sitemaps import Sitemap
@@ -24,38 +24,38 @@ sitemaps = {
 
 
 urlpatterns = [
-    url(
+    re_path(
         r"^robots\.txt$",
         TemplateView.as_view(template_name="robots.txt", content_type="text/plain"),
     ),
-    url(
+    re_path(
         r"^favicon\.ico$",
         RedirectView.as_view(url="/static/favicon.ico", permanent=True),
     ),
-    url(r"^admin/", admin.site.urls),
+    path("admin/", admin.site.urls),
     # grappelli URLS for admin related lookups & autocompletes
-    url(r"^grappelli/", include("grappelli.urls")),
+    # path(r"^grappelli/", include("grappelli.urls")),
     # pucas urls for CAS login
-    url(r"^accounts/", include("pucas.cas_urls")),
-    url(r"^archive/", include("ppa.archive.urls", namespace="archive")),
+    path("accounts/", include("pucas.cas_urls")),
+    path("archive/", include("ppa.archive.urls", namespace="archive")),
     # unapi service endpoint for Zotero
-    url(r"^unapi/$", UnAPIView.as_view(), name="unapi"),
-    url(r"^cms/", include(wagtailadmin_urls)),
-    url(r"^documents/", include(wagtaildocs_urls)),
+    path("unapi/", UnAPIView.as_view(), name="unapi"),
+    path("cms/", include(wagtailadmin_urls)),
+    path("documents/", include(wagtaildocs_urls)),
     # sitemaps
-    url(
+    re_path(
         r"^sitemap\.xml$",
         sitemap_views.index,
         {"sitemaps": sitemaps},
         name="sitemap-index",
     ),
-    url(
+    re_path(
         r"^sitemap-(?P<section>.+)\.xml$",
         sitemap_views.sitemap,
         {"sitemaps": sitemaps},
         name="django.contrib.sitemaps.views.sitemap",
     ),
-    url(r"", include(wagtail_urls)),
+    path("", include(wagtail_urls)),
 ]
 
 # serve media content for development
@@ -64,8 +64,8 @@ if settings.DEBUG:
 
     urlpatterns = [
         # include debug toolbar urls first to avoid getting caught by other urls
-        url(r"^__debug__/", include(debug_toolbar.urls)),
-        url(
+        re_path(r"^__debug__/", include(debug_toolbar.urls)),
+        re_path(
             r"^media/(?P<path>.*)$",
             serve,
             {

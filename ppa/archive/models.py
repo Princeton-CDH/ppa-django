@@ -850,7 +850,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
                     record.force_utf8 = True
                     return record.as_marc()
                 except MARCRecordNotFound:
-                    logger.warn(
+                    logger.warning(
                         "MARC record for %s/%s not found"
                         % (self.source_id, self.record_id)
                     )
