@@ -18,7 +18,7 @@ urlpatterns = [
         name="opensearch-description",
     ),
     re_path(
-        r"$record/(?P<record_id>\d+)/",
+        r"^record/(?P<record_id>\d+)/",
         views.DigitizedWorkByRecordId.as_view(),
         name="record-id",
     ),

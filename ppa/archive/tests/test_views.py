@@ -417,10 +417,8 @@ class TestDigitizedWorkDetailView(TestCase):
         dial_excerpt = DigitizedWork.objects.create(
             source_id=self.dial.source_id, pages_digital="200-250"
         )
-        print(dial_excerpt.get_absolute_url())
         response = self.client.get(dial_excerpt.get_absolute_url())
         assert response.status_code == 200
-        print(response.context["object"])
         assert response.context["object"] == dial_excerpt
 
         # getting the full work should not return the excerpt
