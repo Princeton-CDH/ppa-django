@@ -1228,7 +1228,7 @@ class TestDigitizedWorkListView(TestCase):
 
 class TestAddFromHathiView(TestCase):
 
-    superuser = {"username": "super", "password": uuid.uuid4()}
+    superuser = {"username": "super", "password": str(uuid.uuid4())}
 
     def setUp(self):
         self.factory = RequestFactory()

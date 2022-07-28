@@ -70,8 +70,7 @@ STATICFILES_FINDERS = (
 # Application definition
 
 INSTALLED_APPS = [
-    "grappelli",
-    "django.contrib.admin",
+    "ppa.apps.LocalAdminConfig",  # replaces 'django.contrib.admin'
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.humanize",
