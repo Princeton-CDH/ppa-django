@@ -493,6 +493,12 @@ class AddToCollection(PermissionRequiredMixin, ListView, FormView):
     template_name = "archive/add_to_collection.html"
     form_class = AddToCollectionForm
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Add Digitized Works to Collections"
+        context["page_title"] = "Add Digitized Works to Collections"
+        return context
+
     def get_success_url(self):
         """
         Redirect to the :class:`ppa.archive.models.DigitizedWork`
