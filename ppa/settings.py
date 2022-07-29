@@ -85,6 +85,7 @@ INSTALLED_APPS = [
     "semanticuiforms",
     "webpack_loader",
     # 'wagtail.contrib.forms',
+    "wagtail.contrib.legacy.richtext",
     "wagtail.contrib.redirects",
     "wagtail.sites",
     "wagtail.users",
