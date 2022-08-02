@@ -231,7 +231,7 @@ def validate_page_range(value):
         )
 
 
-class DigitizedWork(TrackChangesModel, ModelIndexable):
+class DigitizedWork(ModelIndexable, TrackChangesModel):
     """
     Record to manage digitized works included in PPA and store their basic
     metadata.
@@ -850,7 +850,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
                     record.force_utf8 = True
                     return record.as_marc()
                 except MARCRecordNotFound:
-                    logger.warn(
+                    logger.warning(
                         "MARC record for %s/%s not found"
                         % (self.source_id, self.record_id)
                     )

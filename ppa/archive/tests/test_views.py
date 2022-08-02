@@ -417,10 +417,8 @@ class TestDigitizedWorkDetailView(TestCase):
         dial_excerpt = DigitizedWork.objects.create(
             source_id=self.dial.source_id, pages_digital="200-250"
         )
-        print(dial_excerpt.get_absolute_url())
         response = self.client.get(dial_excerpt.get_absolute_url())
         assert response.status_code == 200
-        print(response.context["object"])
         assert response.context["object"] == dial_excerpt
 
         # getting the full work should not return the excerpt
@@ -1060,7 +1058,7 @@ class TestAddToCollection(TestCase):
             response, '<option value="%d">Random Grabbag</option>' % coll1.id, html=True
         )
 
-    @patch.object(DigitizedWork, "index")
+    @patch.object(DigitizedWork, "index_items")
     def test_post(self, mockindex):
         self.client.login(**self.admin_credentials)
 
@@ -1228,7 +1226,7 @@ class TestDigitizedWorkListView(TestCase):
 
 class TestAddFromHathiView(TestCase):
 
-    superuser = {"username": "super", "password": uuid.uuid4()}
+    superuser = {"username": "super", "password": str(uuid.uuid4())}
 
     def setUp(self):
         self.factory = RequestFactory()
