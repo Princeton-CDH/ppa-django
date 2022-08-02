@@ -458,22 +458,35 @@ class AddToCollectionForm(forms.Form):
     )
 
 
-class AddFromHathiForm(forms.Form):
-    """Form to input HathiTrust IDs for items to be added."""
+class ImportForm(forms.Form):
+    """Form to import records from sources that support import."""
 
-    hathi_ids = forms.CharField(
-        label="HathiTrust Identifiers",
+    # only a subset of DigitizedWork.SOURCE_CHOICES can be imported
+    importable_sources = (
+        (DigitizedWork.HATHI, "HathiTrust"),
+        (DigitizedWork.GALE, "Gale"),
+    )
+
+    source = forms.ChoiceField(
+        label="Source",
+        choices=importable_sources,
+        help_text="Where should records be imported from?",
+        required=True,
+    )
+
+    source_ids = forms.CharField(
+        label="Record Identifiers",
         required=True,
         widget=forms.Textarea,
-        help_text="List of HathiTrust IDs for items to add, one per line. "
+        help_text="List of source IDs for items to add, one per line. "
         + "Existing records and invalid IDs will be skipped.",
     )
 
-    def get_hathi_ids(self):
+    def get_source_ids(self):
         """Get list of ids from valid form input. Splits on newlines,
         strips whitespace, and ignores empty lines."""
         return [
             line.strip()
-            for line in self.cleaned_data["hathi_ids"].split("\n")
+            for line in self.cleaned_data["source_ids"].split("\n")
             if line.strip()
         ]

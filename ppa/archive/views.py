@@ -26,8 +26,8 @@ from parasolr.django import SolrQuerySet
 from parasolr.django.views import SolrLastModifiedMixin
 
 from ppa.archive.forms import (
-    AddFromHathiForm,
     AddToCollectionForm,
+    ImportForm,
     SearchForm,
     SearchWithinWorkForm,
 )
@@ -578,26 +578,38 @@ class AddToCollection(PermissionRequiredMixin, ListView, FormView):
         return self.render_to_response(self.get_context_data(form=form))
 
 
-class AddFromHathiView(PermissionRequiredMixin, FormView):
-    """Admin view to add new HathiTrust records by providing a list
-    of ids."""
+class ImportView(PermissionRequiredMixin, FormView):
+    """Admin view to import new records from sources that support
+    import (HathiTrust, Gale) by providing a list of ids."""
 
     permission_required = "archive.add_digitizedwork"
-    template_name = "archive/add_from_hathi.html"
-    form_class = AddFromHathiForm
-    page_title = "Add new records from HathiTrust"
+    template_name = "archive/import.html"
+    form_class = ImportForm
+    page_title = "Import new records"
 
     def get_context_data(self, *args, **kwargs):
         # Add page title to template context data
         context = super().get_context_data(*args, **kwargs)
-        context["page_title"] = self.page_title
+        context.update(
+            {
+                "page_title": self.page_title,
+                "title": self.page_title,  # html head title
+            }
+        )
         return context
 
     def form_valid(self, form):
         # Process valid form data; should return an HttpResponse.
 
+        # existing hathitrust import behavior
+        if form.cleaned_data["source"] == DigitizedWork.HATHI:
+            return self.hathi_import(form)
+        elif form.cleaned_data["source"] == DigitizedWork.GALE:
+            pass
+
+    def hathi_import(self, form):
         # get list of ids from form input
-        htids = form.get_hathi_ids()
+        htids = form.get_source_ids()
 
         htimporter = HathiImporter(htids)
         htimporter.filter_existing_ids()
@@ -627,6 +639,7 @@ class AddFromHathiView(PermissionRequiredMixin, FormView):
                 "existing_ids": htimporter.existing_ids,
                 "form": self.form_class(),  # new form instance
                 "page_title": self.page_title,
+                "title": self.page_title,
                 "admin_urls": admin_urls,
             },
         )
