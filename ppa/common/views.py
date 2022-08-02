@@ -32,6 +32,7 @@ class AjaxTemplateMixin(TemplateResponseMixin, VaryOnHeadersMixin):
     def get_template_names(self):
         """Return :attr:`ajax_template_name` if this is an ajax request;
         otherwise return default template name."""
-        if self.request.is_ajax():
+        # check if requested via ajax
+        if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
             return self.ajax_template_name
         return super().get_template_names()
