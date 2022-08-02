@@ -231,7 +231,7 @@ def validate_page_range(value):
         )
 
 
-class DigitizedWork(TrackChangesModel, ModelIndexable):
+class DigitizedWork(ModelIndexable, TrackChangesModel):
     """
     Record to manage digitized works included in PPA and store their basic
     metadata.

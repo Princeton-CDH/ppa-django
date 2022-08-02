@@ -551,7 +551,7 @@ class AddToCollection(PermissionRequiredMixin, ListView, FormView):
                 # previous digitized works in set.
                 collection.digitizedwork_set.add(*digitized_works)
             # reindex solr with the new collection data
-            DigitizedWork.index(digitized_works)
+            DigitizedWork.index_items(digitized_works)
 
             # create a success message to add to message framework stating
             # what happened

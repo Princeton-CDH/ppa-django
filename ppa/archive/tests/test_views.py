@@ -1058,7 +1058,7 @@ class TestAddToCollection(TestCase):
             response, '<option value="%d">Random Grabbag</option>' % coll1.id, html=True
         )
 
-    @patch.object(DigitizedWork, "index")
+    @patch.object(DigitizedWork, "index_items")
     def test_post(self, mockindex):
         self.client.login(**self.admin_credentials)
 
