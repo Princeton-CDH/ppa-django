@@ -73,13 +73,7 @@ Initial setup and installation:
   and configure **SOLR_CONNECTIONS** in local settings with your
   preferred core/collection name and the configset name you created.
 
-  If using docker with `solr:6` image, use docker cp. To add::
-
-    docker cp solr_conf/ CONTAINER:/opt/solr/server/solr/configsets/ppa
-
-  To copy in changes to the configset::
-
-    docker cp solr_conf/* CONTAINER:/opt/solr/server/solr/configsets/ppa/
+  See developer notes for setup instructions for using docker with `solr:6` image.
 
 - Run the manage command to configure the schema; this will prompt to
   create the core from your configset if it does not exist::
@@ -94,7 +88,8 @@ Initial setup and installation:
 
 - Then index the imported content into Solr::
 
-    python manage.py index
+    python manage.py index -i work
+    python manage.py index_pages
 
 Frontend development setup:
 
