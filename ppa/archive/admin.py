@@ -6,7 +6,7 @@ from django.utils.safestring import mark_safe
 from parasolr.django import SolrClient
 
 from ppa.archive.models import Collection, DigitizedWork, ProtectedWorkFieldFlags
-from ppa.archive.views import AddFromHathiView
+from ppa.archive.views import ImportView
 
 
 class DigitizedWorkAdmin(admin.ModelAdmin):
@@ -183,13 +183,13 @@ class DigitizedWorkAdmin(admin.ModelAdmin):
     suppress_works.short_description = "Suppress selected digitized works"
 
     def get_urls(self):
-        """Add url for add from HathiTrust admin feature"""
+        """Add url for import admin form"""
         urls = super(DigitizedWorkAdmin, self).get_urls()
         my_urls = [
             url(
-                r"^add-hathi/$",
-                self.admin_site.admin_view(AddFromHathiView.as_view()),
-                name="add-from-hathi",
+                r"^import/$",
+                self.admin_site.admin_view(ImportView.as_view()),
+                name="import",
             ),
         ]
         return my_urls + urls

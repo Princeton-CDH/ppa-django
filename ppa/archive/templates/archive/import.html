@@ -1,5 +1,8 @@
 {% extends 'admin/base_site.html'  %}
-{% load i18n ppa_tags %}
+{% load i18n static ppa_tags %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static "admin/css/forms.css" %}">{% endblock %}
+
 {% block breadcrumbs %}
     <div class="breadcrumbs">
         <a href="{% url 'admin:index' %}">{% trans "Home" %}</a>
@@ -52,9 +55,23 @@
 {% endif %}
 
 <form method="post" style="padding-top: 2em;">{% csrf_token %}
-    <fieldset class="module">
-        {# TODO: revise for django admin styles #}
-        {{ form.as_p }}
+    <fieldset class="module aligned">
+        {# layout based on django admin styles #}
+        {% for field in form %}
+        <div class="form-row">
+            <div>
+            <label for="{{ field.id }}">{{ field.label }}</label>
+            {{ field }}
+
+            {% if field.field.help_text %}
+                <div class="help"{% if field.field.id_for_label %} id="{{ field.field.id_for_label }}_helptext"{% endif %}>
+                    {{ field.field.help_text|safe }}
+                </div>
+            {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
          <div class="form-row">
             <input type="submit" value="Submit">
         </div>
