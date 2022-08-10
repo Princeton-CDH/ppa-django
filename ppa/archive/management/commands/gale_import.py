@@ -228,9 +228,11 @@ class Command(BaseCommand):
         digwork = DigitizedWork(
             source_id=gale_id,  # or doc_metadata['id']; format CW###
             source=DigitizedWork.GALE,
-            record_id=self.id_lookup[gale_id]["estc_id"],
+            # Gale API now includes ESTC id (updated June 2022)
+            record_id=doc_metadata["estc"],
             source_url=doc_metadata["isShownAt"],
-            enumcron=self.id_lookup[gale_id].get("volume", ""),
+            # volume information should be included as volumeNumber when available
+            enumcron=doc_metadata.get("volumeNumber", ""),
             title=doc_metadata["title"],
             page_count=len(item_record["pageResponse"]["pages"]),
             # import any notes from csv as private notes
