@@ -1010,6 +1010,7 @@ class TestPage(TestCase):
         test_pages = [
             {
                 "pageNumber": "0001",
+                "folioNumber": "i",
                 "image": {"id": "09876001234567"}
                 # some pages have no ocr text
             },
@@ -1034,7 +1035,11 @@ class TestPage(TestCase):
             assert index_data["source_id"] == gale_work.source_id
             assert index_data["content"] == test_pages[i].get("ocrText")
             assert index_data["order"] == i + 1
-            assert index_data["label"] == int(test_pages[i]["pageNumber"])
+            # should use folio number when set
+            if "folioNumber" in test_pages[i]:
+                assert index_data["label"] == test_pages[i]["folioNumber"]
+            else:
+                assert index_data["label"] == int(test_pages[i]["pageNumber"])
             assert index_data["item_type"] == "page"
             assert index_data["image_id_s"] == test_pages[i]["image"]["id"]
 

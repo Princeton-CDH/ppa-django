@@ -75,11 +75,12 @@ class DigitizedWorkImporter:
         self.source_ids = set(self.source_ids) - set(self.existing_ids.keys())
 
         # also check for and remove filter invalid ids
-        self.source_ids = self.filter_invalid_ids()
+        self.filter_invalid_ids()
 
     def filter_invalid_ids(self):
         # optional filtering hook for subclasses; by default, no filtering
-        return self.source_ids
+        # when implementing, should update self.source_ids
+        pass
 
     def index(self):
         """Index newly imported content, both metadata and full text."""
@@ -149,7 +150,7 @@ class HathiImporter(DigitizedWorkImporter):
         for htid in invalid_ids:
             self.results[htid] = self.INVALID_ID
         # remove from the set of ids to be processed and return the rest
-        return set(self.source_ids) - set(invalid_ids)
+        self.source_ids = set(self.source_ids) - set(invalid_ids)
 
     @cached_property
     def pairtree_paths(self):
