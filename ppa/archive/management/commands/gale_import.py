@@ -28,10 +28,7 @@ These are the supported collection abbreviations:
 
 """
 import csv
-import json
 import logging
-import os.path
-import time
 from collections import Counter
 
 import pymarc
@@ -41,7 +38,6 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand, CommandError
-from django.db.utils import IntegrityError
 from django.template.defaultfilters import pluralize, truncatechars
 from pairtree import PairtreeStorageFactory
 from parasolr.django.signals import IndexableSignalHandler
@@ -256,7 +252,7 @@ class Command(BaseCommand):
             action_flag=ADDITION,
         )
 
-        # index the work once (signals index twice becuase of m2m change)
+        # index the work once (signals index twice because of m2m change)
         DigitizedWork.index_items([digwork])
 
         # item record used for import includes page metadata;

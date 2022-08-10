@@ -13,10 +13,14 @@ from json.decoder import JSONDecodeError
 
 from cached_property import cached_property
 from django.conf import settings
+from django.contrib.admin.models import ADDITION, LogEntry
+from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from pairtree.pairtree_path import id_to_dirpath
 from parasolr.django.signals import IndexableSignalHandler
 
 from ppa.archive import hathi
+from ppa.archive.gale import GaleAPI, GaleAPIError, MARCRecordNotFound, get_marc_record
 from ppa.archive.models import DigitizedWork, Page
 
 logger = logging.getLogger(__name__)
@@ -92,8 +96,6 @@ class DigitizedWorkImporter:
 
     def get_status_message(self, status):
         """Get a readable status message for a given status"""
-        print(self)
-        print(self.status_message)
         try:
             # try message for simple states (success, skipped)
             return self.status_message[status]
@@ -246,17 +248,16 @@ class HathiImporter(DigitizedWorkImporter):
         :params user: optional user to be included in log entry message
 
         """
-
-        # initialize a bibliographic api client to use the same
-        # session when adding multiple items
-        self.bib_api = hathi.HathiBibliographicAPI()
-
         # not calling filter_existing_ids here because it is
         # probably not desirable behavior for current hathi_import script
 
         # if all ids were invalid or already present, bail out
         if not self.source_ids:
             return
+
+        # initialize a bibliographic api client to use the same
+        # session when adding multiple items
+        self.bib_api = hathi.HathiBibliographicAPI()
 
         # disconnect indexing signal handler before adding new content
         IndexableSignalHandler.disconnect()
@@ -316,3 +317,102 @@ class HathiImporter(DigitizedWorkImporter):
 class GaleImporter(DigitizedWorkImporter):
     """Logic for creating new :class:`~ppa.archive.models.DigitizedWork`
     records from Gale/ECCO. For use in views and manage commands."""
+
+    #: augment base status messages with hathi-specific codes and messages
+    status_message = DigitizedWorkImporter.status_message.copy()
+    status_message.update(
+        {
+            GaleAPIError: "Error getting item information from Gale API",
+            MARCRecordNotFound: "MARC record not found",
+        }
+    )
+
+    def add_items(self, log_msg_src=None, user=None):
+        """Add new items from Gale/ECCO.
+
+        :params log_msg_src: optional source of change to be included in
+            log entry message
+        :params user: optional user to be included in log entry message
+
+        """
+        # assumes filter_existing_ids has already been called
+
+        # if all ids were invalid or already present, bail out
+        if not self.source_ids:
+            return
+
+        # disconnect indexing signal handler before adding new content
+        IndexableSignalHandler.disconnect()
+
+        if user is None:
+            user = User.objects.get(username=settings.SCRIPT_USERNAME)
+
+        self.digwork_contentype = ContentType.objects.get_for_model(DigitizedWork)
+
+        self.gale_api = GaleAPI()
+
+        for gale_id in self.source_ids:
+            self.import_digitizedwork(gale_id, log_msg_src, user)
+
+    def import_digitizedwork(self, gale_id, log_msg_src="", user=None, **kwargs):
+        """Import a single work into the database.
+        Retrieves bibliographic data from Gale API."""
+        # NOTE: significant overlap with similar method in import script
+
+        try:
+            item_record = self.gale_api.get_item(gale_id)
+        except GaleAPIError as err:
+            # store the error in results for reporting
+            self.results[gale_id] = err
+            return
+
+        # document metadata is under "doc"
+        doc_metadata = item_record["doc"]
+
+        # create new stub record and populate it from api response
+        digwork = DigitizedWork(
+            source_id=gale_id,  # or doc_metadata['id']; format CW###
+            source=DigitizedWork.GALE,
+            # Gale API now includes ESTC id (updated June 2022)
+            record_id=doc_metadata["estc"],
+            source_url=doc_metadata["isShownAt"],
+            # volume information should be included as volumeNumber when available
+            enumcron=doc_metadata.get("volumeNumber", ""),
+            title=doc_metadata["title"],
+            page_count=len(item_record["pageResponse"]["pages"]),
+            # import any notes from csv as private notes
+            notes=kwargs.get("NOTES", ""),
+        )
+        # populate titles, author, publication info from marc record
+        try:
+            digwork.metadata_from_marc(get_marc_record(digwork.record_id))
+        except MARCRecordNotFound as err:
+            # store the error in results for reporting
+            self.results[gale_id] = err
+            return
+        digwork.save()
+        self.imported_works.append(digwork)
+
+        # create log entry to document import
+        LogEntry.objects.log_action(
+            user_id=user.pk,
+            content_type_id=self.digwork_contentype.pk,
+            object_id=digwork.pk,
+            object_repr=str(digwork),
+            change_message="Created from Gale API %s" % log_msg_src,
+            action_flag=ADDITION,
+        )
+
+        # add to list of imported works
+        self.results[gale_id] = self.SUCCESS
+
+        # index the work once (signals index twice because of m2m change)
+        DigitizedWork.index_items([digwork])
+
+        # item record used for import includes page metadata;
+        # for efficiency, index pages at import time with the same api response
+        DigitizedWork.index_items(Page.gale_page_index_data(digwork, item_record))
+
+    def index(self):
+        # gale records are indexed at import time, to avoid making multiple API calls
+        pass
