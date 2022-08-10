@@ -586,6 +586,7 @@ class ImportView(PermissionRequiredMixin, FormView):
     template_name = "archive/import.html"
     form_class = ImportForm
     page_title = "Import new records"
+    import_mode = None
 
     def get_context_data(self, *args, **kwargs):
         # Add page title to template context data
@@ -594,19 +595,27 @@ class ImportView(PermissionRequiredMixin, FormView):
             {
                 "page_title": self.page_title,
                 "title": self.page_title,  # html head title
+                "import_mode": self.import_mode,
             }
         )
         return context
+
+    importer_class = {
+        DigitizedWork.HATHI: HathiImporter,
+        DigitizedWork.GALE: GaleImporter,
+    }
 
     def form_valid(self, form):
         # Process valid form data; should return an HttpResponse.
 
         source_ids = form.get_source_ids()
-        # existing hathitrust import behavior
-        if form.cleaned_data["source"] == DigitizedWork.HATHI:
-            importer = HathiImporter(source_ids)
-        elif form.cleaned_data["source"] == DigitizedWork.GALE:
-            importer = GaleImporter(source_ids)
+        source = form.cleaned_data["source"]
+
+        # set readable import mode for display in template
+        self.import_mode = dict(form.fields["source"].choices)[source]
+
+        # initialize appropriate importer class according to source
+        importer = self.importer_class[source](source_ids)
 
         # import the records and report
         return self.import_records(importer)
@@ -641,6 +650,7 @@ class ImportView(PermissionRequiredMixin, FormView):
                 "page_title": self.page_title,
                 "title": self.page_title,
                 "admin_urls": admin_urls,
+                "import_mode": self.import_mode,  # readable version of hathi/gale
             },
         )
 

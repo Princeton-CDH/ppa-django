@@ -18,27 +18,28 @@
 
 {% block content %}
 {% if results %}
-<h2>Processed {{ results|length }} HathiTrust Identifier{{ results|pluralize}}.</h2>
+
+<h2>Processed {{ results|length }} {{ import_mode }} Identifier{{ results|pluralize}}.</h2>
 {# TODO: revise for django admin styles #}
 <table id="result_list" cellspacing="0" class="grp-table grp-sortable">
     <thead>
         <tr>
-            <th scope="col">HathiTrust ID</th>
+            <th scope="col">Souce ID</th>
             <th scope="col">Status</th>
             <th scope="col">Admin View</th>
             <th scope="col">View on Site</th>
         </tr>
     </thead>
     <tbody>
-        {% for htid, result in results.items %}
+        {% for source_id, result in results.items %}
         <tr>
             {# link to admin record here if success/skipped #}
-            <td>{{ htid }}</td>
+            <td>{{ source_id }}</td>
             <td>{{ result }}</td>
-            {% if 'Success' in result or htid in existing_ids %}
-            <td><a href="{{ admin_urls|dict_item:htid }}" target="_blank" rel="noopener noreferrer">
+            {% if 'Success' in result or source_id in existing_ids %}
+            <td><a href="{{ admin_urls|dict_item:source_id }}" target="_blank" rel="noopener noreferrer">
                 View in Admin</a></td>
-            <td><a href="{% url 'archive:detail' htid %}" target="_blank" rel="noopener noreferrer">
+            <td><a href="{% url 'archive:detail' source_id %}" target="_blank" rel="noopener noreferrer">
                 View on Site</a></td>
             {% else %}
             <td></td><td></td>
