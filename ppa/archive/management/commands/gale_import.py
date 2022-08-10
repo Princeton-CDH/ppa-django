@@ -74,16 +74,6 @@ class Command(BaseCommand):
         "WL": "Word Lists",
     }
 
-    # path to gale id lookup file
-    gale_id_path = os.path.join(
-        settings.BASE_DIR, "ppa", "archive", "fixtures", "gale_id_lookup.json"
-    )
-    # NOTE: as of June 2021, Gale API item details does not include the ESTC id needed
-    # for accessing the correct MARC record, nor does it include volume information.
-    # For now, we use a lookup file generated from a spreadsheet provided by Gale
-    # for the records we plan to import. We will revisit this when the information
-    # is made available through their API.
-
     def add_arguments(self, parser):
         parser.add_argument(
             "ids",
@@ -129,9 +119,6 @@ class Command(BaseCommand):
         self.stats = Counter()
         self.script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
         self.digwork_contentype = ContentType.objects.get_for_model(DigitizedWork)
-        # load json gale id lookup file so we can get ESTC ids from document id
-        with open(self.gale_id_path) as idfile:
-            self.id_lookup = json.load(idfile)
 
         # if ids are specified on the command line, create a list
         # of dictionaries so import will look similar to csv
