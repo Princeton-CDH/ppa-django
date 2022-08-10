@@ -18,11 +18,7 @@ from django.utils.http import urlencode
 from django.utils.timezone import now
 from parasolr.django import SolrClient, SolrQuerySet
 
-from ppa.archive.forms import (
-    AddFromHathiForm,
-    ModelMultipleChoiceFieldWithEmpty,
-    SearchForm,
-)
+from ppa.archive.forms import ImportForm, ModelMultipleChoiceFieldWithEmpty, SearchForm
 from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork
 from ppa.archive.solr import ArchiveSearchQuerySet
 from ppa.archive.templatetags.ppa_tags import (
@@ -30,7 +26,7 @@ from ppa.archive.templatetags.ppa_tags import (
     hathi_page_url,
     page_image_url,
 )
-from ppa.archive.views import AddFromHathiView, DigitizedWorkCSV, DigitizedWorkListView
+from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView, ImportView
 
 
 class TestDigitizedWorkDetailView(TestCase):
@@ -1224,13 +1220,13 @@ class TestDigitizedWorkListView(TestCase):
             mock_qs.work_filter.assert_called_with(author="Robert")
 
 
-class TestAddFromHathiView(TestCase):
+class TestImportView(TestCase):
 
     superuser = {"username": "super", "password": str(uuid.uuid4())}
 
     def setUp(self):
         self.factory = RequestFactory()
-        self.add_from_hathi_url = reverse("admin:add-from-hathi")
+        self.add_from_hathi_url = reverse("admin:import")
 
         self.user = get_user_model().objects.create_superuser(
             email="su@example.com", **self.superuser
@@ -1245,29 +1241,28 @@ class TestAddFromHathiView(TestCase):
         self.test_credentials = {"username": testuser, "password": test_pass}
 
     def test_get_context(self):
-        add_from_hathi = AddFromHathiView()
+        add_from_hathi = ImportView()
         add_from_hathi.request = self.factory.get(self.add_from_hathi_url)
         context = add_from_hathi.get_context_data()
-        assert context["page_title"] == AddFromHathiView.page_title
+        assert context["page_title"] == ImportView.page_title
 
     @patch("ppa.archive.views.HathiImporter")
     def test_form_valid(self, mock_hathi_importer):
-        add_form = AddFromHathiForm({"hathi_ids": "old\nnew"})
-        add_form.is_valid()
+        post_data = {"source_ids": "old\nnew", "source": DigitizedWork.HATHI}
+        add_form = ImportForm(post_data)
+        assert add_form.is_valid()
 
         mock_htimporter = mock_hathi_importer.return_value
         # set mock existing id & imported work on the mock importer
         mock_htimporter.existing_ids = {"old": 1}
         mock_htimporter.imported_works = [Mock(source_id="new", pk=2)]
 
-        add_from_hathi = AddFromHathiView()
-        add_from_hathi.request = self.factory.post(
-            self.add_from_hathi_url, {"hathi_ids": "old\nnew"}
-        )
+        add_from_hathi = ImportView()
+        add_from_hathi.request = self.factory.post(self.add_from_hathi_url, post_data)
         add_from_hathi.request.user = self.user
         response = add_from_hathi.form_valid(add_form)
 
-        mock_hathi_importer.assert_called_with(add_form.get_hathi_ids())
+        mock_hathi_importer.assert_called_with(add_form.get_source_ids())
         mock_htimporter.filter_existing_ids.assert_called_with()
         mock_htimporter.add_items.assert_called_with(
             log_msg_src="via django admin", user=self.user
@@ -1292,10 +1287,10 @@ class TestAddFromHathiView(TestCase):
         response = self.client.get(self.add_from_hathi_url)
         assert response.status_code == 200
 
-        self.assertTemplateUsed(response, AddFromHathiView.template_name)
+        self.assertTemplateUsed(response, ImportView.template_name)
         # sanity check that form display
         self.assertContains(response, "<form")
-        self.assertContains(response, '<textarea name="hathi_ids"')
+        self.assertContains(response, '<textarea name="source_ids"')
 
     @patch("ppa.archive.views.HathiImporter")
     def test_post(self, mock_hathi_importer):
@@ -1309,14 +1304,17 @@ class TestAddFromHathiView(TestCase):
         }
 
         self.client.login(**self.superuser)
-        response = self.client.post(self.add_from_hathi_url, {"hathi_ids": "old\nnew"})
+        response = self.client.post(
+            self.add_from_hathi_url,
+            {"source_ids": "old\nnew", "source": DigitizedWork.HATHI},
+        )
         assert response.status_code == 200
         self.assertContains(response, "Processed 2 HathiTrust Identifiers")
         # inspect context
         assert response.context["results"] == mock_htimporter.output_results()
         assert response.context["existing_ids"] == mock_htimporter.existing_ids
-        assert isinstance(response.context["form"], AddFromHathiForm)
-        assert response.context["page_title"] == AddFromHathiView.page_title
+        assert isinstance(response.context["form"], ImportForm)
+        assert response.context["page_title"] == ImportView.page_title
         assert "admin_urls" in response.context
         assert response.context["admin_urls"]["old"] == reverse(
             "admin:archive_digitizedwork_change", args=[1]
@@ -1327,4 +1325,4 @@ class TestAddFromHathiView(TestCase):
 
         # should redisplay the form
         self.assertContains(response, "<form")
-        self.assertContains(response, '<textarea name="hathi_ids"')
+        self.assertContains(response, '<textarea name="source_ids"')

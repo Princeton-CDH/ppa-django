@@ -5,8 +5,8 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from ppa.archive.forms import (
-    AddFromHathiForm,
     FacetChoiceField,
+    ImportForm,
     ModelMultipleChoiceFieldWithEmpty,
     RadioSelectWithDisabled,
     RangeField,
@@ -239,11 +239,13 @@ class TestModelMultipleChoiceFieldWithEmpty(TestCase):
             collections.clean(['1" or (1,2)=(select*from(select '])
 
 
-class TestAddFromHathiForm(TestCase):
+class TestImportForm(TestCase):
     def test_get_hathi_ids(self):
         # list of input lines, some with whitespace and some empty
         test_ids = ["one", " two ", "three", "", " ", " "]
-        add_form = AddFromHathiForm({"hathi_ids": "\n".join(test_ids)})
+        add_form = ImportForm(
+            {"source_ids": "\n".join(test_ids), "source": DigitizedWork.HATHI}
+        )
         assert add_form.is_valid()
         expected_ids = [line.strip() for line in test_ids if line.strip()]
-        assert add_form.get_hathi_ids() == expected_ids
+        assert add_form.get_source_ids() == expected_ids

@@ -22,9 +22,11 @@ from ppa.archive.models import DigitizedWork, Page
 logger = logging.getLogger(__name__)
 
 
-class HathiImporter:
-    """Logic for creating new :class:`~ppa.archive.models.DigitizedWork`
-    records from HathiTrust. For use in views and manage commands."""
+class DigitizedWorkImporter:
+    """Logic for importing content from external sources (e.g. HathiTrust, Gale/ECCO)
+    to create :class:`~ppa.archive.models.DigitizedWork`
+    records. Should be extended for specific source logic.
+    For use in views and manage commands."""
 
     existing_ids = None
 
@@ -32,78 +34,128 @@ class HathiImporter:
     SUCCESS = 1
     #: status - skipped because already in the database
     SKIPPED = 2
-    #: rsync error
-    RSYNC_ERROR = 3
     #: invalid id
-    INVALID_ID = 4
+    INVALID_ID = 3
 
     #: human-readable message to display for result status
     status_message = {
         SUCCESS: "Success",
         SKIPPED: "Skipped; already in the database",
         INVALID_ID: "Invalid id",
-        hathi.HathiItemNotFound: "Error loading record; check that id is valid.",
-        # possibly irrelevant with removal of data api code
-        hathi.HathiItemForbidden: "Permission denied to download data.",
-        RSYNC_ERROR: "Failed to sync data",
-        # only saw this one on day, but this was what it was
-        JSONDecodeError: "HathiTrust catalog temporarily unavailable (malformed response).",
     }
 
-    def __init__(self, htids):
+    def __init__(self, source_ids):
         self.imported_works = []
         self.results = {}
-        self.htids = htids
-        # initialize a bibliographic api client to use the same
-        # session when adding multiple items
-        self.bib_api = hathi.HathiBibliographicAPI()
-
-        # not calling filter_existing_ids here because it is
-        # probably not desirable behavior for current hathi_import script
+        self.source_ids = source_ids
 
     def filter_existing_ids(self):
         """Check for any ids that are in the database so they can
         be skipped for import.  Populates :attr:`existing_ids`
-        with an :class:`~collections.OrderedDict` of htid -> id for
-        ids already in the database and filters :attr:`htids`.
+        with an :class:`~collections.OrderedDict` of source_id -> id for
+        ids already in the database and filters :attr:`source_ids`.
 
-        :param htids: list of HathiTrust Identifiers (correspending to
-            :attr:`~ppa.archive.models.DigitizedWork.source_id`)
+        :param source_ids: list of source identifiers correspending to
+            :attr:`~ppa.archive.models.DigitizedWork.source_id`
         """
         # query for digitized work with these ids and return
         # source id, db id and generate an ordered dict
         self.existing_ids = OrderedDict(
-            DigitizedWork.objects.filter(source_id__in=self.htids).values_list(
+            DigitizedWork.objects.filter(source_id__in=self.source_ids).values_list(
                 "source_id", "id"
             )
         )
 
         # create initial results dict, marking any skipped ids
         self.results = OrderedDict(
-            (htid, self.SKIPPED) for htid in self.existing_ids.keys()
+            (id, self.SKIPPED) for id in self.existing_ids.keys()
         )
 
         # filter to ids that are not already present in the database
-        self.htids = set(self.htids) - set(self.existing_ids.keys())
+        self.source_ids = set(self.source_ids) - set(self.existing_ids.keys())
 
         # also check for and remove filter invalid ids
-        self.filter_invalid_ids()
+        self.source_ids = self.filter_invalid_ids()
 
     def filter_invalid_ids(self):
-        """Rmove any ids that don't look valid. At minimum, must
+        # optional filtering hook for subclasses; by default, no filtering
+        return self.source_ids
+
+    def index(self):
+        """Index newly imported content, both metadata and full text."""
+        if self.imported_works:
+            DigitizedWork.index_items(self.imported_works)
+            for work in self.imported_works:
+                # index page index data in chunks (returns a generator)
+                DigitizedWork.index_items(Page.page_index_data(work))
+
+    def get_status_message(self, status):
+        """Get a readable status message for a given status"""
+        print(self)
+        print(self.status_message)
+        try:
+            # try message for simple states (success, skipped)
+            return self.status_message[status]
+        except KeyError:
+            # if that fails, check for error message
+            return self.status_message[status.__class__]
+
+    def output_results(self):
+        """Provide human-readable report of results for each
+        id that was processed."""
+        return OrderedDict(
+            [
+                (source_id, self.get_status_message(status))
+                for source_id, status in self.results.items()
+            ]
+        )
+
+    def add_items(self, log_msg_src=None, user=None):
+        """Add new items from source. Must be implemented in subclass.
+
+        :params log_msg_src: optional source of change to be included in
+            log entry message
+        :params user: optional user to be included in log entry message
+
+        """
+        raise NotImplementedError
+
+
+class HathiImporter(DigitizedWorkImporter):
+    """Logic for creating new :class:`~ppa.archive.models.DigitizedWork`
+    records from HathiTrust. For use in views and manage commands."""
+
+    #: rsync error
+    RSYNC_ERROR = 4
+
+    #: augment base status messages with hathi-specific codes and messages
+    status_message = DigitizedWorkImporter.status_message.copy()
+    status_message.update(
+        {
+            hathi.HathiItemNotFound: "Error loading record; check that id is valid.",
+            # possibly irrelevant with removal of data api code
+            hathi.HathiItemForbidden: "Permission denied to download data.",
+            RSYNC_ERROR: "Failed to sync data",
+            # only saw this one on day, but this was what it was
+            JSONDecodeError: "HathiTrust catalog temporarily unavailable (malformed response).",
+        }
+    )
+
+    def filter_invalid_ids(self):
+        """Remove any ids that don't look valid. At minimum, must
         include `.` separator required for pairtree path."""
-        invalid_ids = [htid for htid in self.htids if "." not in htid]
+        invalid_ids = [htid for htid in self.source_ids if "." not in htid]
         # add result code to display in output
         for htid in invalid_ids:
             self.results[htid] = self.INVALID_ID
-        # remove from the set of ids to be processed
-        self.htids = set(self.htids) - set(invalid_ids)
+        # remove from the set of ids to be processed and return the rest
+        return set(self.source_ids) - set(invalid_ids)
 
     @cached_property
     def pairtree_paths(self):
         """Dictionary of pairtree paths for each hathi id to be imported."""
         id_paths = {}
-        for htid in self.htids:
+        for htid in self.source_ids:
             # split institional prefix from identifier
             prefix, ident = htid.split(".", 1)
             # generate pairtree path for the item
@@ -152,6 +204,9 @@ class HathiImporter:
 
     def rsync_data(self):
         """Use rsync to retrieve data for the volumes to be imported."""
+
+        logger.info("rsyncing pairtree data for %s", ", ".join(self.source_ids))
+
         # create temp file with list of paths to synchronize
         with tempfile.NamedTemporaryFile(
             prefix="ppa_hathi_pathlist-", suffix=".txt", mode="w+t"
@@ -187,11 +242,19 @@ class HathiImporter:
 
         :params log_msg_src: optional source of change to be included in
             log entry message
+        :params user: optional user to be included in log entry message
 
         """
 
+        # initialize a bibliographic api client to use the same
+        # session when adding multiple items
+        self.bib_api = hathi.HathiBibliographicAPI()
+
+        # not calling filter_existing_ids here because it is
+        # probably not desirable behavior for current hathi_import script
+
         # if all ids were invalid or already present, bail out
-        if not self.htids:
+        if not self.source_ids:
             return
 
         # disconnect indexing signal handler before adding new content
@@ -199,14 +262,13 @@ class HathiImporter:
 
         # use rsync to copy data from HathiTrust dataset server
         # to the local pairtree datastore for ids to be imported
-        logger.info("rsyncing pairtree data for %s", ", ".join(self.htids))
         self.rsync_data()
         # FIXME: need better error handling here! rsync can error
         # or timeout; should we capture output and report that?
         # Indexing logs an error if pairtree is not present for an
         # unsuppressed work; perhaps we could do a similar check here?
 
-        for htid in self.htids:
+        for htid in self.source_ids:
             # if rsync did not create the expected directory,
             # set error code and bail out
             # if there is a directory but no zip file, bail out
@@ -249,29 +311,7 @@ class HathiImporter:
         # reconnect indexing signal handler
         IndexableSignalHandler.connect()
 
-    def index(self):
-        """Index newly imported content, both metadata and full text."""
-        if self.imported_works:
-            DigitizedWork.index_items(self.imported_works)
-            for work in self.imported_works:
-                # index page index data in chunks (returns a generator)
-                DigitizedWork.index_items(Page.page_index_data(work))
 
-    def get_status_message(self, status):
-        """Get a readable status message for a given status"""
-        try:
-            # try message for simple states (success, skipped)
-            return self.status_message[status]
-        except KeyError:
-            # if that fails, check for error message
-            return self.status_message[status.__class__]
-
-    def output_results(self):
-        """Provide human-readable report of results for each
-        id that was processed."""
-        return OrderedDict(
-            [
-                (htid, self.get_status_message(status))
-                for htid, status in self.results.items()
-            ]
-        )
+class GaleImporter(DigitizedWorkImporter):
+    """Logic for creating new :class:`~ppa.archive.models.DigitizedWork`
+    records from Gale/ECCO. For use in views and manage commands."""
