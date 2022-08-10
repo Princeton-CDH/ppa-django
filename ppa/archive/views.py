@@ -33,7 +33,7 @@ from ppa.archive.forms import (
 )
 from ppa.archive.models import NO_COLLECTION_LABEL, DigitizedWork
 from ppa.archive.solr import ArchiveSearchQuerySet
-from ppa.archive.util import HathiImporter
+from ppa.archive.util import GaleImporter, HathiImporter
 from ppa.common.views import AjaxTemplateMixin
 
 logger = logging.getLogger(__name__)
@@ -601,29 +601,29 @@ class ImportView(PermissionRequiredMixin, FormView):
     def form_valid(self, form):
         # Process valid form data; should return an HttpResponse.
 
+        source_ids = form.get_source_ids()
         # existing hathitrust import behavior
         if form.cleaned_data["source"] == DigitizedWork.HATHI:
-            return self.hathi_import(form)
+            importer = HathiImporter(source_ids)
         elif form.cleaned_data["source"] == DigitizedWork.GALE:
-            pass
+            importer = GaleImporter(source_ids)
 
-    def hathi_import(self, form):
-        # get list of ids from form input
-        htids = form.get_source_ids()
+        # import the records and report
+        return self.import_records(importer)
 
-        htimporter = HathiImporter(htids)
-        htimporter.filter_existing_ids()
+    def import_records(self, importer):
+        importer.filter_existing_ids()
         # add items, and create log entries associated with current user
-        htimporter.add_items(log_msg_src="via django admin", user=self.request.user)
-        htimporter.index()
+        importer.add_items(log_msg_src="via django admin", user=self.request.user)
+        importer.index()
 
         # generate lookup for admin urls keyed on source id to simplify
         # template logic needed
         admin_urls = {
             htid: reverse("admin:archive_digitizedwork_change", args=[pk])
-            for htid, pk in htimporter.existing_ids.items()
+            for htid, pk in importer.existing_ids.items()
         }
-        for work in htimporter.imported_works:
+        for work in importer.imported_works:
             admin_urls[work.source_id] = reverse(
                 "admin:archive_digitizedwork_change", args=[work.pk]
             )
@@ -635,8 +635,8 @@ class ImportView(PermissionRequiredMixin, FormView):
             self.request,
             self.template_name,
             context={
-                "results": htimporter.output_results(),
-                "existing_ids": htimporter.existing_ids,
+                "results": importer.output_results(),
+                "existing_ids": importer.existing_ids,
                 "form": self.form_class(),  # new form instance
                 "page_title": self.page_title,
                 "title": self.page_title,
