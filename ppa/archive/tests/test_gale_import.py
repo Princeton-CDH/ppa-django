@@ -92,12 +92,14 @@ class TestGaleImportCommand:
         cmd.gale_api = Mock(GaleAPI)
         cmd.stats = Counter()
         # simulate success
+        estc_id = "T012345"  # no volume
         cmd.gale_api.get_item.return_value = {
             "doc": {
                 "title": "The life of Alexander Pope",
                 "authors": ["Owen Ruffhead"],
                 "isShownAt": "https://link.gale.co/test/ECCO?sid=gale_api&u=utopia9871",
                 "citation": "Ruffhead, Owen. The life…, Accessed 8 June 2021.",
+                "estc": estc_id,
             },
             "pageResponse": {
                 "pages": [
@@ -107,7 +109,6 @@ class TestGaleImportCommand:
             },
         }
         test_id = "CW123456"
-        cmd.id_lookup = {test_id: {"estc_id": "T012345"}}  # no volume
         digwork = cmd.import_digitizedwork(test_id)
         assert digwork
         assert isinstance(digwork, DigitizedWork)
@@ -115,11 +116,11 @@ class TestGaleImportCommand:
         assert digwork.title == "The life of Alexander Pope"
         assert digwork.source == DigitizedWork.GALE
         assert digwork.page_count == 2
-        assert digwork.record_id == cmd.id_lookup[test_id]["estc_id"]
+        assert digwork.record_id == estc_id
         assert not digwork.enumcron
         cmd.gale_api.get_item.assert_called_with(test_id)
         # should retrieve marc record and use to populate metadata
-        mock_get_marc_record.assert_called_with(cmd.id_lookup[test_id]["estc_id"])
+        mock_get_marc_record.assert_called_with(estc_id)
         mock_metadata_from_marc.assert_called_with(mock_get_marc_record.return_value)
 
         # no collections should be associated
@@ -165,12 +166,15 @@ class TestGaleImportCommand:
         )
         cmd.load_collections()
         # simulate success
+        estc_id = "T012345"
         cmd.gale_api.get_item.return_value = {
             "doc": {
                 "title": "The life of Alexander Pope",
                 "authors": ["Owen Ruffhead"],
                 "isShownAt": "https://link.gale.co/test/ECCO?sid=gale_api&u=utopia9871",
                 "citation": "Ruffhead, Owen. The life…, Accessed 8 June 2021.",
+                "estc": estc_id,
+                "volumeNumber": "2",
             },
             "pageResponse": {
                 "pages": [
@@ -180,7 +184,6 @@ class TestGaleImportCommand:
             },
         }
         test_id = "CW123456"
-        cmd.id_lookup = {test_id: {"estc_id": "T012345", "volume": "2"}}
         csv_info = {"LIT": "x", "MUS": "x", "NOTES": "just some mention in footnotes"}
         digwork = cmd.import_digitizedwork(test_id, **csv_info)
         assert csv_info["NOTES"] == digwork.notes
@@ -218,7 +221,8 @@ class TestGaleImportCommand:
         cmd.gale_api = Mock(GaleAPI)
         cmd.stats = Counter()
         test_id = "CW123456"
-        cmd.id_lookup = {test_id: {"estc_id": "T012345"}}  # no volume
+        # Gale API now includes ESTC id (updated June 2022)
+        estc_id = "T012345"  # no volume
         # simulate success
         cmd.gale_api.get_item.return_value = {
             "doc": {
@@ -226,6 +230,7 @@ class TestGaleImportCommand:
                 "authors": ["Owen Ruffhead"],
                 "isShownAt": "https://link.gale.co/test/ECCO?sid=gale_api&u=utopia9871",
                 "citation": "Ruffhead, Owen. The life…, Accessed 8 June 2021.",
+                "estc": estc_id,
             },
             "pageResponse": {
                 "pages": [
@@ -238,7 +243,7 @@ class TestGaleImportCommand:
         digwork = cmd.import_digitizedwork(test_id)
         assert digwork
         assert isinstance(digwork, DigitizedWork)
-        assert digwork.record_id == cmd.id_lookup[test_id]["estc_id"]
+        assert digwork.record_id == estc_id
         output = stderr.getvalue()
         assert "MARC record not found" in output
         mock_get_marc_record.assert_called_with(digwork.record_id)

@@ -25,7 +25,7 @@ class TestHathiImporter(TestCase):
         htimporter = HathiImporter(digwork_ids)
         htimporter.filter_existing_ids()
         # no ht ids left, all marked existing
-        assert not htimporter.htids
+        assert not htimporter.source_ids
         assert len(htimporter.existing_ids) == len(digwork_ids)
         # existing_ids should be dict with source id -> pk
         digwork = DigitizedWork.objects.first()
@@ -36,14 +36,14 @@ class TestHathiImporter(TestCase):
         htimporter = HathiImporter(new_ids + list(digwork_ids))
         htimporter.filter_existing_ids()
         assert len(htimporter.existing_ids) == len(digwork_ids)
-        assert set(htimporter.htids) == set(new_ids)
+        assert set(htimporter.source_ids) == set(new_ids)
 
     def test_filter_invalid_ids(self):
         htimporter = HathiImporter(["mdp.1234", "foobar"])
         htimporter.filter_invalid_ids()
         # first should stay, second should be removed
-        assert "mdp.1234" in htimporter.htids
-        assert "foobar" not in htimporter.htids
+        assert "mdp.1234" in htimporter.source_ids
+        assert "foobar" not in htimporter.source_ids
 
     @override_settings(HATHI_DATA="/my/test/ppa/ht_data")
     @patch("ppa.archive.util.os.path.isdir")
