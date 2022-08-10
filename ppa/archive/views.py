@@ -600,11 +600,6 @@ class ImportView(PermissionRequiredMixin, FormView):
         )
         return context
 
-    importer_class = {
-        DigitizedWork.HATHI: HathiImporter,
-        DigitizedWork.GALE: GaleImporter,
-    }
-
     def form_valid(self, form):
         # Process valid form data; should return an HttpResponse.
 
@@ -615,7 +610,11 @@ class ImportView(PermissionRequiredMixin, FormView):
         self.import_mode = dict(form.fields["source"].choices)[source]
 
         # initialize appropriate importer class according to source
-        importer = self.importer_class[source](source_ids)
+        if source == DigitizedWork.HATHI:
+            importer_class = HathiImporter
+        elif source == DigitizedWork.GALE:
+            importer_class = GaleImporter
+        importer = importer_class(source_ids)
 
         # import the records and report
         return self.import_records(importer)
