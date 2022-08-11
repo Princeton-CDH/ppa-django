@@ -1226,7 +1226,7 @@ class TestImportView(TestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
-        self.add_from_hathi_url = reverse("admin:import")
+        self.import_url = reverse("admin:import")
 
         self.user = get_user_model().objects.create_superuser(
             email="su@example.com", **self.superuser
@@ -1242,7 +1242,7 @@ class TestImportView(TestCase):
 
     def test_get_context(self):
         add_from_hathi = ImportView()
-        add_from_hathi.request = self.factory.get(self.add_from_hathi_url)
+        add_from_hathi.request = self.factory.get(self.import_url)
         context = add_from_hathi.get_context_data()
         assert context["page_title"] == ImportView.page_title
 
@@ -1258,7 +1258,7 @@ class TestImportView(TestCase):
         mock_htimporter.imported_works = [Mock(source_id="new", pk=2)]
 
         add_from_hathi = ImportView()
-        add_from_hathi.request = self.factory.post(self.add_from_hathi_url, post_data)
+        add_from_hathi.request = self.factory.post(self.import_url, post_data)
         add_from_hathi.request.user = self.user
         response = add_from_hathi.form_valid(add_form)
 
@@ -1275,16 +1275,16 @@ class TestImportView(TestCase):
 
     def test_get(self):
         # denied to anonymous user; django redirects to login
-        assert self.client.get(self.add_from_hathi_url).status_code == 302
+        assert self.client.get(self.import_url).status_code == 302
 
         # denied to logged in staff user
         self.client.login(**self.test_credentials)
-        assert self.client.get(self.add_from_hathi_url).status_code == 403
+        assert self.client.get(self.import_url).status_code == 403
 
         # works for user with add permission on digitized work
         add_digwork_perm = Permission.objects.get(codename="add_digitizedwork")
         self.user.user_permissions.add(add_digwork_perm)
-        response = self.client.get(self.add_from_hathi_url)
+        response = self.client.get(self.import_url)
         assert response.status_code == 200
 
         self.assertTemplateUsed(response, ImportView.template_name)
@@ -1305,7 +1305,7 @@ class TestImportView(TestCase):
 
         self.client.login(**self.superuser)
         response = self.client.post(
-            self.add_from_hathi_url,
+            self.import_url,
             {"source_ids": "old\nnew", "source": DigitizedWork.HATHI},
         )
         assert response.status_code == 200
@@ -1326,3 +1326,26 @@ class TestImportView(TestCase):
         # should redisplay the form
         self.assertContains(response, "<form")
         self.assertContains(response, '<textarea name="source_ids"')
+
+    @patch("ppa.archive.views.GaleImporter")
+    def test_post_gale(self, mock_gale_importer):
+        mock_importer = mock_gale_importer.return_value
+        # set mock existing id & imported work on the mock importer
+        mock_importer.existing_ids = {"old": 1}
+        mock_importer.imported_works = [Mock(source_id="new", pk=2)]
+        mock_importer.output_results.return_value = {
+            "old": mock_gale_importer.SKIPPED,
+            "new": mock_gale_importer.SUCCESS,
+        }
+
+        self.client.login(**self.superuser)
+        response = self.client.post(
+            self.import_url,
+            {"source_ids": "old\nnew", "source": DigitizedWork.GALE},
+        )
+        assert response.status_code == 200
+        self.assertContains(response, "Processed 2 Gale Identifiers")
+        # inspect context briefly
+        assert response.context["results"] == mock_importer.output_results()
+        assert response.context["existing_ids"] == mock_importer.existing_ids
+        assert isinstance(response.context["form"], ImportForm)
