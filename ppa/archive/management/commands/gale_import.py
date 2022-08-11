@@ -31,7 +31,6 @@ import csv
 import logging
 from collections import Counter
 
-import pymarc
 from django.conf import settings
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth.models import User
@@ -39,7 +38,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand, CommandError
 from django.template.defaultfilters import pluralize, truncatechars
-from pairtree import PairtreeStorageFactory
 from parasolr.django.signals import IndexableSignalHandler
 
 from ppa.archive.gale import GaleAPI, GaleAPIError, MARCRecordNotFound, get_marc_record
@@ -220,6 +218,8 @@ class Command(BaseCommand):
             page_count=len(item_record["pageResponse"]["pages"]),
             # import any notes from csv as private notes
             notes=kwargs.get("NOTES", ""),
+            # set page range for excerpts
+            pages_digital=kwargs.get("EXCERPT PAGE RANGE", ""),
         )
         # populate titles, author, publication info from marc record
         try:
