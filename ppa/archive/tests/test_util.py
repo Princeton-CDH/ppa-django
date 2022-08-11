@@ -16,9 +16,9 @@ from ppa.archive.util import DigitizedWorkImporter, GaleImporter, HathiImporter
 
 
 class TestDigitizedWorkImporter:
-    def test_add_items(self):
+    def test_import_digitizedwork(self):
         with pytest.raises(NotImplementedError):
-            DigitizedWorkImporter(["id1", "id2"]).add_items()
+            DigitizedWorkImporter(["id1", "id2"]).import_digitizedwork()
 
 
 class TestHathiImporter(TestCase):
@@ -282,10 +282,10 @@ class TestGaleImporter(TestCase):
     def test_add_items_success(self, mock_gale_api):
         importer = GaleImporter(["cw123", "cw456"])
         mockuser = Mock()
+        log_message = "unit test"
         with patch.object(
             importer, "import_digitizedwork"
         ) as mock_import_digitizedwork:
-            log_message = "unit test"
             importer.add_items(log_msg_src=log_message, user=mockuser)
             # gale api should be initialized
             mock_gale_api.assert_called_once_with()
@@ -293,10 +293,13 @@ class TestGaleImporter(TestCase):
             mock_import_digitizedwork.assert_any_call("cw123", log_message, mockuser)
             mock_import_digitizedwork.assert_any_call("cw456", log_message, mockuser)
 
-            # not called with a user, should use script user
+        # not called with a user, should use script user
+        importer = GaleImporter(["cw123"])
+        with patch.object(
+            importer, "import_digitizedwork"
+        ) as mock_import_digitizedwork:
             importer.add_items(log_msg_src=log_message)
-            script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
-            mock_import_digitizedwork.assert_any_call("cw123", log_message, script_user)
+            mock_import_digitizedwork.assert_any_call("cw123", log_message, None)
 
     @patch("ppa.archive.util.GaleAPI")
     def test_import_digitizedwork_api_error(self, mock_gale_api):
