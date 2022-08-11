@@ -48,10 +48,10 @@ class DigitizedWorkImporter:
         INVALID_ID: "Invalid id",
     }
 
-    def __init__(self, source_ids):
+    def __init__(self, source_ids=None):
         self.imported_works = []
         self.results = {}
-        self.source_ids = source_ids
+        self.source_ids = source_ids or []
 
     def filter_existing_ids(self):
         """Check for any ids that are in the database so they can
@@ -113,15 +113,35 @@ class DigitizedWorkImporter:
             ]
         )
 
+    def add_item_prep(self, user=None):
+        """Do any prep needed before calling :meth:`import_digitizedwork`;
+        extend in subclass when needed.
+
+        :params user: optional user to be included in log entry message
+        """
+        pass
+
     def add_items(self, log_msg_src=None, user=None):
-        """Add new items from source. Must be implemented in subclass.
+        """Add new items from source.
 
         :params log_msg_src: optional source of change to be included in
             log entry message
         :params user: optional user to be included in log entry message
 
         """
-        raise NotImplementedError
+        # assumes filter_existing_ids has already been called
+        # if all ids were invalid or already present, bail out
+        if not self.source_ids:
+            return
+
+        # disconnect indexing signal handler before adding new content
+        IndexableSignalHandler.disconnect()
+        self.add_item_prep(user=user)
+        for source_id in self.source_ids:
+            self.import_digitizedwork(source_id, log_msg_src, user)
+
+        # reconnect indexing signal handler
+        IndexableSignalHandler.connect()
 
 
 class HathiImporter(DigitizedWorkImporter):
@@ -240,27 +260,15 @@ class HathiImporter(DigitizedWorkImporter):
                     % (self.RSYNC_RETURN_CODES[err.returncode], rsync_cmd)
                 )
 
-    def add_items(self, log_msg_src=None, user=None):
-        """Add new items from HathiTrust.
+    def add_item_prep(self, user=None):
+        """Prep before adding new items from HathiTrust.
 
-        :params log_msg_src: optional source of change to be included in
-            log entry message
         :params user: optional user to be included in log entry message
 
         """
-        # not calling filter_existing_ids here because it is
-        # probably not desirable behavior for current hathi_import script
-
-        # if all ids were invalid or already present, bail out
-        if not self.source_ids:
-            return
-
         # initialize a bibliographic api client to use the same
         # session when adding multiple items
         self.bib_api = hathi.HathiBibliographicAPI()
-
-        # disconnect indexing signal handler before adding new content
-        IndexableSignalHandler.disconnect()
 
         # use rsync to copy data from HathiTrust dataset server
         # to the local pairtree datastore for ids to be imported
@@ -270,48 +278,45 @@ class HathiImporter(DigitizedWorkImporter):
         # Indexing logs an error if pairtree is not present for an
         # unsuppressed work; perhaps we could do a similar check here?
 
-        for htid in self.source_ids:
-            # if rsync did not create the expected directory,
-            # set error code and bail out
-            # if there is a directory but no zip file, bail out
-            expected_path = os.path.join(settings.HATHI_DATA, self.pairtree_paths[htid])
+    def import_digitizedwork(self, htid, log_msg_src, user):
+        # if rsync did not create the expected directory,
+        # set error code and bail out
+        # if there is a directory but no zip file, bail out
+        expected_path = os.path.join(settings.HATHI_DATA, self.pairtree_paths[htid])
 
-            if not os.path.isdir(expected_path) or not len(
-                glob.glob(os.path.join(expected_path, "*", "*.zip"))
-            ):
-                self.results[htid] = self.RSYNC_ERROR
-                continue
+        if not os.path.isdir(expected_path) or not len(
+            glob.glob(os.path.join(expected_path, "*", "*.zip"))
+        ):
+            self.results[htid] = self.RSYNC_ERROR
+            return
 
-            try:
-                # fetch metadata and add to the database
-                digwork = DigitizedWork.add_from_hathi(
-                    htid, self.bib_api, log_msg_src=log_msg_src, user=user
-                )
-                if digwork:
-                    # populate page count
-                    digwork.count_pages()
-                    self.imported_works.append(digwork)
+        try:
+            # fetch metadata and add to the database
+            digwork = DigitizedWork.add_from_hathi(
+                htid, self.bib_api, log_msg_src=log_msg_src, user=user
+            )
+            if digwork:
+                # populate page count
+                digwork.count_pages()
+                self.imported_works.append(digwork)
 
-                self.results[htid] = self.SUCCESS
-            except (
-                hathi.HathiItemNotFound,
-                JSONDecodeError,
-                hathi.HathiItemForbidden,
-            ) as err:
-                # json decode error occurred 3/26/2019 - catalog was broken
-                # and gave a 200 Ok response with PHP error content
-                # hopefully temporary, but could occur again...
+            self.results[htid] = self.SUCCESS
+        except (
+            hathi.HathiItemNotFound,
+            JSONDecodeError,
+            hathi.HathiItemForbidden,
+        ) as err:
+            # json decode error occurred 3/26/2019 - catalog was broken
+            # and gave a 200 Ok response with PHP error content
+            # hopefully temporary, but could occur again...
 
-                # store the actual error as the results, so that
-                # downstream code can report as desired
-                self.results[htid] = err
+            # store the actual error as the results, so that
+            # downstream code can report as desired
+            self.results[htid] = err
 
-                # remove the partial record if one was created
-                # (i.e. if metadata succeeded but data failed)
-                DigitizedWork.objects.filter(source_id=htid).delete()
-
-        # reconnect indexing signal handler
-        IndexableSignalHandler.connect()
+            # remove the partial record if one was created
+            # (i.e. if metadata succeeded but data failed)
+            DigitizedWork.objects.filter(source_id=htid).delete()
 
 
 class GaleImporter(DigitizedWorkImporter):
@@ -327,6 +332,24 @@ class GaleImporter(DigitizedWorkImporter):
         }
     )
 
+    def add_item_prep(self, user=None):
+        """Prepare for adding new items from Gale.
+
+        :params user: optional user to be included in log entry
+        """
+        # disconnect indexing signal handler before adding new content
+        IndexableSignalHandler.disconnect()
+
+        # find script user if needed
+        if user is None:
+            self.script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
+
+        self.digwork_contentype = ContentType.objects.get_for_model(DigitizedWork)
+        self.gale_api = GaleAPI()
+
+        # disconnect indexing signal handler before adding new content
+        IndexableSignalHandler.disconnect()
+
     def add_items(self, log_msg_src=None, user=None):
         """Add new items from Gale/ECCO.
 
@@ -336,24 +359,18 @@ class GaleImporter(DigitizedWorkImporter):
 
         """
         # assumes filter_existing_ids has already been called
-
         # if all ids were invalid or already present, bail out
         if not self.source_ids:
             return
 
-        # disconnect indexing signal handler before adding new content
-        IndexableSignalHandler.disconnect()
-
-        if user is None:
-            user = User.objects.get(username=settings.SCRIPT_USERNAME)
-
-        self.digwork_contentype = ContentType.objects.get_for_model(DigitizedWork)
-        self.gale_api = GaleAPI()
+        self.add_item_prep(user=user)
 
         for gale_id in self.source_ids:
             self.import_digitizedwork(gale_id, log_msg_src, user)
 
-    def import_digitizedwork(self, gale_id, log_msg_src="", user=None, **kwargs):
+    def import_digitizedwork(
+        self, gale_id, log_msg_src="", user=None, collections=None, **kwargs
+    ):
         """Import a single work into the database.
         Retrieves bibliographic data from Gale API."""
         # NOTE: significant overlap with similar method in import script
@@ -381,6 +398,8 @@ class GaleImporter(DigitizedWorkImporter):
             page_count=len(item_record["pageResponse"]["pages"]),
             # import any notes from csv as private notes
             notes=kwargs.get("NOTES", ""),
+            # set page range for excerpts from csv when set
+            pages_digital=kwargs.get("EXCERPT PAGE RANGE", ""),
         )
         # populate titles, author, publication info from marc record
         try:
@@ -388,22 +407,33 @@ class GaleImporter(DigitizedWorkImporter):
         except MARCRecordNotFound as err:
             # store the error in results for reporting
             self.results[gale_id] = err
-            return
+            return digwork
+
         digwork.save()
         self.imported_works.append(digwork)
 
+        # use user if specified, otherwise fall back to script user
+        user = user or self.script_user
+
         # create log entry to document import
+        change_message = "Created from Gale API"
+        if log_msg_src:
+            change_message = ("Created from Gale API %s" % log_msg_src,)
         LogEntry.objects.log_action(
             user_id=user.pk,
             content_type_id=self.digwork_contentype.pk,
             object_id=digwork.pk,
             object_repr=str(digwork),
-            change_message="Created from Gale API %s" % log_msg_src,
+            change_message=change_message,
             action_flag=ADDITION,
         )
 
         # add to list of imported works
         self.results[gale_id] = self.SUCCESS
+
+        # set collection membership if any were specified
+        if collections:
+            digwork.collections.set(collections)
 
         # index the work once (signals index twice because of m2m change)
         DigitizedWork.index_items([digwork])
@@ -412,7 +442,7 @@ class GaleImporter(DigitizedWorkImporter):
         # for efficiency, index pages at import time with the same api response
         DigitizedWork.index_items(Page.gale_page_index_data(digwork, item_record))
 
-        # return the nelwy created record
+        # return the newly created record
         return digwork
 
     def index(self):
