@@ -10,8 +10,15 @@ from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase, override_settings
 
 from ppa.archive import hathi
+from ppa.archive.gale import GaleAPIError, MARCRecordNotFound
 from ppa.archive.models import DigitizedWork
-from ppa.archive.util import HathiImporter
+from ppa.archive.util import DigitizedWorkImporter, GaleImporter, HathiImporter
+
+
+class TestDigitizedWorkImporter:
+    def test_add_items(self):
+        with pytest.raises(NotImplementedError):
+            DigitizedWorkImporter(["id1", "id2"]).add_items()
 
 
 class TestHathiImporter(TestCase):
@@ -44,6 +51,14 @@ class TestHathiImporter(TestCase):
         # first should stay, second should be removed
         assert "mdp.1234" in htimporter.source_ids
         assert "foobar" not in htimporter.source_ids
+
+    @patch("ppa.archive.hathi.HathiBibliographicAPI")
+    def test_add_items_noop(self, mock_hathi_bib_api):
+        htimporter = HathiImporter([])
+        # no source ids to process (e.g., all skipped)
+        htimporter.add_items()
+        # bib api client should not be initialized
+        assert not mock_hathi_bib_api.called
 
     @override_settings(HATHI_DATA="/my/test/ppa/ht_data")
     @patch("ppa.archive.util.os.path.isdir")
@@ -252,3 +267,107 @@ class TestHathiImporter(TestCase):
         # third from last arg is file list
         assert cmd_args[-3].startswith("--files-from=")
         assert "ppa_hathi_pathlist" in cmd_args[-3]
+
+
+class TestGaleImporter(TestCase):
+    @patch("ppa.archive.util.GaleAPI")
+    def test_add_items_noop(self, mock_gale_api):
+        importer = GaleImporter([])
+        # no source ids to process (e.g., all skipped)
+        importer.add_items()
+        # gale api should not be initialized
+        assert not mock_gale_api.called
+
+    @patch("ppa.archive.util.GaleAPI")
+    def test_add_items_success(self, mock_gale_api):
+        importer = GaleImporter(["cw123", "cw456"])
+        mockuser = Mock()
+        with patch.object(
+            importer, "import_digitizedwork"
+        ) as mock_import_digitizedwork:
+            log_message = "unit test"
+            importer.add_items(log_msg_src=log_message, user=mockuser)
+            # gale api should be initialized
+            mock_gale_api.assert_called_once_with()
+            assert mock_import_digitizedwork.call_count == 2
+            mock_import_digitizedwork.assert_any_call("cw123", log_message, mockuser)
+            mock_import_digitizedwork.assert_any_call("cw456", log_message, mockuser)
+
+            # not called with a user, should use script user
+            importer.add_items(log_msg_src=log_message)
+            script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
+            mock_import_digitizedwork.assert_any_call("cw123", log_message, script_user)
+
+    @patch("ppa.archive.util.GaleAPI")
+    def test_import_digitizedwork_api_error(self, mock_gale_api):
+        test_id = "CW123456"
+        importer = GaleImporter([test_id])
+        importer.gale_api = mock_gale_api()
+
+        api_error = GaleAPIError("test error")
+        mock_gale_api().get_item.side_effect = api_error
+        assert not importer.import_digitizedwork(test_id)  # returns none
+        # should set status in results dict for reporting
+        assert importer.results[test_id] == api_error
+
+    @patch("ppa.archive.util.get_marc_record")
+    @patch("ppa.archive.util.GaleAPI")
+    def test_import_digitizedwork_marc_error(self, mock_gale_api, mock_get_marc_record):
+        test_id = "CW123456"
+        importer = GaleImporter([test_id])
+        importer.gale_api = mock_gale_api()
+        not_found_error = MARCRecordNotFound("test error")
+        mock_get_marc_record.side_effect = not_found_error
+        importer.import_digitizedwork(test_id, "via unit test")
+        # should set status in results dict for reporting
+        assert importer.results[test_id] == not_found_error
+
+    @patch("ppa.archive.util.get_marc_record")
+    @patch("ppa.archive.util.GaleAPI")
+    def test_import_digitizedwork_success(self, mock_gale_api, mock_get_marc_record):
+        test_id = "CW123456"
+        importer = GaleImporter([test_id])
+        importer.gale_api = mock_gale_api()
+        estc_id = "T012345"
+        mock_gale_api().get_item.return_value = {
+            "doc": {
+                "title": "The life of Alexander Pope",
+                "authors": ["Owen Ruffhead"],
+                "isShownAt": "https://link.gale.co/test/ECCO?sid=gale_api&u=utopia9871",
+                "citation": "Ruffhead, Owen. The life…, Accessed 8 June 2021.",
+                "estc": estc_id,
+                "volumeNumber": "2",
+            },
+            "pageResponse": {
+                "pages": [
+                    {"pageNumber": "0001", "image": {"id": "09876001234567"}},
+                    {"pageNumber": "0002", "image": {"id": "09876001234568"}},
+                ]
+            },
+        }
+
+        # usually set by importer before calling
+        script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
+        importer.digwork_contentype = ContentType.objects.get_for_model(DigitizedWork)
+
+        with patch.object(DigitizedWork, "metadata_from_marc"):
+            digwork = importer.import_digitizedwork(test_id, user=script_user)
+            # record initialized
+            assert digwork
+            assert digwork.record_id == estc_id
+            assert digwork.title == "The life of Alexander Pope"
+            assert (
+                digwork.source_url
+                == "https://link.gale.co/test/ECCO?sid=gale_api&u=utopia9871"
+            )
+            assert digwork.enumcron == "2"
+            assert digwork.source == DigitizedWork.GALE
+            assert importer.imported_works[-1] == digwork
+
+            # log entry should be created
+            assert LogEntry.objects.filter(
+                content_type=importer.digwork_contentype,
+                object_id=digwork.id,
+                action_flag=ADDITION,
+                user=script_user,
+            ).exists()

@@ -348,7 +348,6 @@ class GaleImporter(DigitizedWorkImporter):
             user = User.objects.get(username=settings.SCRIPT_USERNAME)
 
         self.digwork_contentype = ContentType.objects.get_for_model(DigitizedWork)
-
         self.gale_api = GaleAPI()
 
         for gale_id in self.source_ids:
@@ -412,6 +411,9 @@ class GaleImporter(DigitizedWorkImporter):
         # item record used for import includes page metadata;
         # for efficiency, index pages at import time with the same api response
         DigitizedWork.index_items(Page.gale_page_index_data(digwork, item_record))
+
+        # return the nelwy created record
+        return digwork
 
     def index(self):
         # gale records are indexed at import time, to avoid making multiple API calls
