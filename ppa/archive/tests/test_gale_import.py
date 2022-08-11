@@ -74,6 +74,7 @@ class TestGaleImportCommand:
             assert isinstance(cmd.collections[code], Collection)
             assert cmd.collections[code].name == name
 
+    @override_settings(GALE_API_USERNAME="galeuser123")
     @patch("ppa.archive.models.DigitizedWork.index_items")
     @patch("ppa.archive.models.DigitizedWork.metadata_from_marc")
     @patch("ppa.archive.util.get_marc_record")
@@ -193,6 +194,7 @@ class TestGaleImportCommand:
         assert music in digwork.collections.all()
         assert digwork.enumcron == "2"
 
+    @override_settings(GALE_API_USERNAME="galeuser123")
     def test_import_record_error(self):
         # import with api error
         stderr = StringIO()
@@ -211,6 +213,7 @@ class TestGaleImportCommand:
         output = stderr.getvalue()
         assert "Error getting item information for test_id" in output
 
+    @override_settings(GALE_API_USERNAME="example1234")
     @patch("ppa.archive.util.get_marc_record")
     def test_import_record_marc_notfound(self, mock_get_marc_record):
         mock_get_marc_record.side_effect = MARCRecordNotFound
@@ -249,6 +252,7 @@ class TestGaleImportCommand:
         assert "MARC record not found" in output
         mock_get_marc_record.assert_called_with(digwork.record_id)
 
+    @override_settings(GALE_API_USERNAME="example1234")
     def test_import_record_exists(self):
         # skip without api call if digwork already exists
         stderr = StringIO()

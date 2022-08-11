@@ -143,6 +143,10 @@ class DigitizedWorkImporter:
         # reconnect indexing signal handler
         IndexableSignalHandler.connect()
 
+    def import_digitizedwork(self, log_msg_src=None, user=None):
+        """Import a single item from source. Must be implemented in subclass."""
+        raise NotImplementedError
+
 
 class HathiImporter(DigitizedWorkImporter):
     """Logic for creating new :class:`~ppa.archive.models.DigitizedWork`
@@ -349,24 +353,6 @@ class GaleImporter(DigitizedWorkImporter):
 
         # disconnect indexing signal handler before adding new content
         IndexableSignalHandler.disconnect()
-
-    def add_items(self, log_msg_src=None, user=None):
-        """Add new items from Gale/ECCO.
-
-        :params log_msg_src: optional source of change to be included in
-            log entry message
-        :params user: optional user to be included in log entry message
-
-        """
-        # assumes filter_existing_ids has already been called
-        # if all ids were invalid or already present, bail out
-        if not self.source_ids:
-            return
-
-        self.add_item_prep(user=user)
-
-        for gale_id in self.source_ids:
-            self.import_digitizedwork(gale_id, log_msg_src, user)
 
     def import_digitizedwork(
         self, gale_id, log_msg_src="", user=None, collections=None, **kwargs
