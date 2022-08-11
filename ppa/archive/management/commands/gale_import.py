@@ -42,6 +42,7 @@ from parasolr.django.signals import IndexableSignalHandler
 
 from ppa.archive.gale import GaleAPI, GaleAPIError, MARCRecordNotFound, get_marc_record
 from ppa.archive.models import Collection, DigitizedWork, Page
+from ppa.archive.util import GaleImporter
 
 logger = logging.getLogger(__name__)
 
@@ -111,8 +112,6 @@ class Command(BaseCommand):
             raise CommandError(str(err))
 
         self.stats = Counter()
-        self.script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
-        self.digwork_contentype = ContentType.objects.get_for_model(DigitizedWork)
 
         # if ids are specified on the command line, create a list
         # of dictionaries so import will look similar to csv
@@ -127,6 +126,10 @@ class Command(BaseCommand):
         # total is needed for progessbar (if we add it)
         self.stats["total"] = len(to_import)
 
+        # initialize importer and run pre-steps needed before importi
+        self.importer = GaleImporter()
+        self.importer.add_item_prep()
+
         for item in to_import:
             if self.verbosity >= self.v_normal:
                 # include title in output if present, but truncate since many are long
@@ -137,7 +140,7 @@ class Command(BaseCommand):
             # to handle notes and collection membership from CSV
             item_info = item.copy()
             del item_info["ID"]  # don't send ID twice
-            self.import_digitizedwork(item["ID"], **item_info)
+            self.import_record(item["ID"], **item_info)
 
         summary = (
             "\nProcessed {:,d} item{} for import."
@@ -180,9 +183,9 @@ class Command(BaseCommand):
             raise CommandError("ID column is required in CSV file")
         return data
 
-    def import_digitizedwork(self, gale_id, **kwargs):
+    def import_record(self, gale_id, **kwargs):
         """Import a single work into the database.
-        Retrieves bibliographic data from Gale API."""
+        Retrieves record data from Gale API."""
 
         # if an item with this source id exists, skip
         # (check local db first because API call is slow for large items)
@@ -192,73 +195,35 @@ class Command(BaseCommand):
             self.stats["skipped"] += 1
             return
 
-        try:
-            item_record = self.gale_api.get_item(gale_id)
-        except GaleAPIError as err:
-            self.stderr.write("Error getting item information for %s" % gale_id)
-            self.stats["error"] += 1
-            return
-
-        # document metadata is under "doc"
-        doc_metadata = item_record["doc"]
-        # NOTE: url provided in "isShownAt" includes user and source parameters;
-        # these are important to preserve because it allows Gale to
-        # monitor traffic source and the linked page is an "auth free" link
-
-        # create new stub record and populate it from api response
-        digwork = DigitizedWork(
-            source_id=gale_id,  # or doc_metadata['id']; format CW###
-            source=DigitizedWork.GALE,
-            # Gale API now includes ESTC id (updated June 2022)
-            record_id=doc_metadata["estc"],
-            source_url=doc_metadata["isShownAt"],
-            # volume information should be included as volumeNumber when available
-            enumcron=doc_metadata.get("volumeNumber", ""),
-            title=doc_metadata["title"],
-            page_count=len(item_record["pageResponse"]["pages"]),
-            # import any notes from csv as private notes
-            notes=kwargs.get("NOTES", ""),
-            # set page range for excerpts
-            pages_digital=kwargs.get("EXCERPT PAGE RANGE", ""),
-        )
-        # populate titles, author, publication info from marc record
-        try:
-            digwork.metadata_from_marc(get_marc_record(digwork.record_id))
-        except MARCRecordNotFound:
-            self.stats["no_marc"] += 1
-            self.stderr.write(
-                self.style.WARNING(
-                    "MARC record not found for %s/%s" % (gale_id, digwork.record_id)
-                )
-            )
-        digwork.save()
-
-        # set collection membership based on spreadsheet columns
+        print(self.collections)
+        # determine collection membership based on spreadsheet columns
         digwork_collections = [
             collection
             for code, collection in self.collections.items()
             if kwargs.get(code)
         ]
-        if digwork_collections:
-            digwork.collections.set(digwork_collections)
+        print("digwork_collections:", digwork_collections)
 
-        # create log entry to document import
-        LogEntry.objects.log_action(
-            user_id=self.script_user.pk,
-            content_type_id=self.digwork_contentype.pk,
-            object_id=digwork.pk,
-            object_repr=str(digwork),
-            change_message="Created from Gale API",
-            action_flag=ADDITION,
+        digwork = self.importer.import_digitizedwork(
+            gale_id, collections=digwork_collections, **kwargs
         )
 
-        # index the work once (signals index twice because of m2m change)
-        DigitizedWork.index_items([digwork])
+        # if import failed, check status
+        if not digwork:
+            if isinstance(self.importer.results[gale_id], GaleAPIError):
+                self.stderr.write("Error getting item information for %s" % gale_id)
+                self.stats["error"] += 1
+                return
 
-        # item record used for import includes page metadata;
-        # for efficiency, index pages at import time with the same api response
-        DigitizedWork.index_items(Page.gale_page_index_data(digwork, item_record))
+        # check for marc record not found error
+        if isinstance(self.importer.results[gale_id], MARCRecordNotFound):
+            self.stats["no_marc"] += 1
+            self.stderr.write(
+                self.style.WARNING("MARC record not found for %s" % (gale_id))
+            )
 
-        self.stats["imported"] += 1
-        self.stats["pages"] += digwork.page_count
-        return digwork
+        # if record was created successfully, update stats
+        if digwork:
+            self.stats["imported"] += 1
+            self.stats["pages"] += digwork.page_count
+            return digwork
