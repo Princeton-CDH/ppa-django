@@ -1068,7 +1068,8 @@ class Page(Indexable):
 
         for i, page in enumerate(gale_record["pageResponse"]["pages"], 1):
             page_number = page["pageNumber"]
-            page_num_int = int(page_number)
+            # folio number not yet set for all volumes; fallback to page number
+            page_label = page.get("folioNumber", int(page_number))
             # if the document has a page range defined, skip any pages not in range
             if page_span and i not in page_span:
                 continue
@@ -1078,8 +1079,7 @@ class Page(Indexable):
                 "group_id_s": digwork_index_id,  # for grouping with work record
                 "content": page.get("ocrText"),  # some pages have no text
                 "order": i,
-                # NOTE: Gale API doesn't include labels for original page number
-                "label": page_num_int,
+                "label": page_label,
                 "item_type": "page",
                 # image id needed for thumbnail url; use solr dynamic field
                 "image_id_s": page["image"]["id"],
