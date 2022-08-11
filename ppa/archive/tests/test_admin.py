@@ -145,7 +145,6 @@ class TestDigitizedWorkAdmin(TestCase):
             # test on all fixture objects
             queryset = DigitizedWork.objects.all()
             all_ids = list(DigitizedWork.objects.values_list("source_id", flat=True))
-            print(all_ids)
             digworkadmin.suppress_works(fakerequest, queryset)
 
             # all items should now be suppressed
