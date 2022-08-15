@@ -387,6 +387,11 @@ class GaleImporter(DigitizedWorkImporter):
             # set page range for excerpts from csv when set
             pages_digital=kwargs.get("EXCERPT PAGE RANGE", ""),
         )
+        # set item type when specified and not null;
+        # otherwise use default as specified in model field
+        if "item_type" in kwargs and kwargs["item_type"]:
+            digwork.item_type = kwargs["item_type"]
+
         # populate titles, author, publication info from marc record
         try:
             digwork.metadata_from_marc(get_marc_record(digwork.record_id))
