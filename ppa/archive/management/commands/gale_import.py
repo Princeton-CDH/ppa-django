@@ -69,6 +69,13 @@ class Command(BaseCommand):
         "WL": "Word Lists",
     }
 
+    # item type lookup for supported types — adapted from hathi excerpt script
+    item_type = {
+        "Excerpt": DigitizedWork.EXCERPT,
+        "Article": DigitizedWork.ARTICLE,
+        "Full work": DigitizedWork.FULL,
+    }
+
     def add_arguments(self, parser):
         parser.add_argument(
             "ids",
@@ -190,19 +197,24 @@ class Command(BaseCommand):
         # if an item with this source id exists, skip
         # (check local db first because API call is slow for large items)
         # NOTE: revisit if we decide to support update logic
-        if DigitizedWork.objects.filter(source_id=gale_id).exists():
+        if DigitizedWork.objects.filter(
+            source_id=gale_id, pages_digital=kwargs.get("EXCERPT PAGE RANGE", "")
+        ).exists():
             self.stderr.write("%s is already in the database; skipping" % gale_id)
             self.stats["skipped"] += 1
             return
 
-        print(self.collections)
         # determine collection membership based on spreadsheet columns
         digwork_collections = [
             collection
             for code, collection in self.collections.items()
             if kwargs.get(code)
         ]
-        print("digwork_collections:", digwork_collections)
+
+        # translate item type in spreadsheet to digitized work item type code
+        # FIXME: does excerpt Y= excerpt ?
+        kwargs["item_type"] = self.item_type.get(kwargs.get("Item Type"))
+        # TODO: override item title from excerpt title if present
 
         digwork = self.importer.import_digitizedwork(
             gale_id, collections=digwork_collections, **kwargs

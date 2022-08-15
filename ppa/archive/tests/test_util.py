@@ -366,6 +366,8 @@ class TestGaleImporter(TestCase):
             assert digwork.enumcron == "2"
             assert digwork.source == DigitizedWork.GALE
             assert importer.imported_works[-1] == digwork
+            # default item type
+            assert digwork.item_type == DigitizedWork.FULL
 
             # log entry should be created
             assert LogEntry.objects.filter(
@@ -374,3 +376,9 @@ class TestGaleImporter(TestCase):
                 action_flag=ADDITION,
                 user=script_user,
             ).exists()
+
+            digwork = importer.import_digitizedwork(
+                "t1234", user=script_user, item_type=DigitizedWork.ARTICLE
+            )
+            # specified item type should be used
+            assert digwork.item_type == DigitizedWork.Article
