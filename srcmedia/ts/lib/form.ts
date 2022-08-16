@@ -7,7 +7,7 @@ interface RxFormState {
 }
 
 class RxForm extends Component implements Reactive<RxFormState> {
-    element: HTMLFormElement
+    declare element: HTMLFormElement
     state: Subject<RxFormState>
     target: string
 
