@@ -1,15 +1,15 @@
 const path = require('path')
+
 const BundleTracker = require('webpack-bundle-tracker')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const CleanWebpackPlugin = require('clean-webpack-plugin')
-const GlobImporter = require('node-sass-glob-importer')
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
-const TerserPlugin = require('terser-webpack-plugin')
+// const CleanWebpackPlugin = require('clean-webpack-plugin')
+// const GlobImporter = require('node-sass-glob-importer')
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 const devMode = process.env.NODE_ENV !== 'production' // i.e. not prod or qa
 
 module.exports = env => ({
     context: path.resolve(__dirname, 'srcmedia'),
-    mode: devMode ?  'development' : 'production',
+    mode: devMode ? 'development' : 'production',
     // NOTE: if you add/remove bundles (entrypoints), make sure to update the
     // fake webpack-stats.json in the ci/ folder, since it is required to run
     // tests that rely on static files. For more info, see:
@@ -27,12 +27,13 @@ module.exports = env => ({
         path: path.resolve(__dirname, 'bundles'), // where to output bundles
         publicPath: devMode ? 'http://localhost:3000/' : '/static/', // tell Django where to serve bundles from
         filename: devMode ? 'js/[name].js' : 'js/[name]-[hash].min.js', // append hashes in prod
+        clean: true,
     },
     module: {
         rules: [
             { // compile TypeScript to js
                 test: /\.tsx?$/,
-                loader: 'awesome-typescript-loader',
+                loader: 'ts-loader',
                 exclude: [
                     /node_modules/, // don't transpile dependencies
                     /spec/,         // don't transpile tests
@@ -54,24 +55,49 @@ module.exports = env => ({
                     devMode ? 'style-loader' : MiniCssExtractPlugin.loader, // use style-loader for hot reload in dev
                     { loader: 'css-loader', options: { url: false } },
                     'postcss-loader', // for autoprefixer
-                    { loader: 'sass-loader', options: { importer: GlobImporter() } }, // allow glob scss imports
+                    {
+                        loader: 'sass-loader', options: {
+                            // Material Design prefers Dart Sass
+                            implementation: require("sass"),
+
+                            // See https://github.com/webpack-contrib/sass-loader/issues/804
+                            webpackImporter: false,
+                            sassOptions: {
+                                includePaths: ["./node_modules"],
+                            },
+                        }
+                    },
                 ],
             },
-            { // load images
-                test: /\.(png|jpg|gif|svg)$/,
-                loader: 'file-loader',
-                options: {
-                  name: devMode ? 'img/[name].[ext]' : 'img/[name]-[hash].[ext]', // append hashes in prod
-                }
-            }
+            {
+                // load images
+                test: /\.(png|svg|jpg|jpeg|gif)$/i,
+                type: 'asset/resource',
+                // previously had hashing depending on env; not supported by new loader
+                //     options: {
+                //         name: devMode ? 'img/[name].[ext]' : 'img/[name]-[hash].[ext]', // append hashes in prod
+                //     }
+            },
         ]
     },
     plugins: [
-        new BundleTracker({ filename: 'webpack-stats.json' }), // tells Django where to find webpack output
-        new MiniCssExtractPlugin({ // extracts CSS to a single file per entrypoint
-            filename: devMode ? 'css/[name].css' : 'css/[name]-[hash].min.css', // append hashes in prod
+        new BundleTracker({
+            filename: 'webpack-stats.json', // tells Django where to find webpack output
+            relativePath: true,
+            indent: 2
         }),
-        ...(devMode ? [] : [new CleanWebpackPlugin('bundles')]), // clear out bundle dir when rebuilding in prod/qa
+        // extract css into a single file
+        // https://webpack.js.org/plugins/mini-css-extract-plugin/
+        new MiniCssExtractPlugin({
+            filename:
+                devMode
+                    ? "css/[name].css"
+                    : "css/[name]-[contenthash].min.css"
+        }),
+        // new MiniCssExtractPlugin({ // extracts CSS to a single file per entrypoint
+        // filename: devMode ? 'css/[name].css' : 'css/[name]-[hash].min.css', // append hashes in prod
+        // }),
+        // ...(devMode ? [] : [new CleanWebpackPlugin('bundles')]), // clear out bundle dir when rebuilding in prod/qa
     ],
     resolve: {
         extensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.scss'] // enables importing these without extensions
@@ -87,23 +113,19 @@ module.exports = env => ({
             'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization',
         },
         stats: { // hides file-level verbose output when server is running
-            children: false, 
+            children: false,
             modules: false,
         }
     },
     devtool: devMode ? 'eval-source-map' : 'source-map', // allow sourcemaps in dev & qa
     optimization: {
         minimizer: [
-            new TerserPlugin({ // minify JS in prod
-                cache: true, // cache unchanged assets
-                parallel: true, // run in parallel (recommended)
-                sourceMap: env.maps // preserve sourcemaps if env.maps was passed
-            }),
-            new OptimizeCSSAssetsPlugin({ // minify CSS in prod
-                ... (env.maps && { cssProcessorOptions: { // if env.maps was passed, 
-                    map: { inline: false, annotation: true } // preserve sourcemaps
-                }})
-            })
+            "...", // shorthand; minify JS using the default TerserPlugin
+            new CssMinimizerPlugin() // also minify CSS
+            // ... (env.maps && { cssProcessorOptions: { // if env.maps was passed,
+            // map: { inline: false, annotation: true } // preserve sourcemaps
+            // }})
+            // })
         ]
     }
 })
