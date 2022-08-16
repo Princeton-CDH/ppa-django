@@ -28,4 +28,4 @@ beautifulsoup4<4.9
 # only needed for the 'generate_corpus' manage command
 # 4.2 is not compatible with py3.6
 gensim<4.2
-admin_log_entries
+django-adminlogentries
