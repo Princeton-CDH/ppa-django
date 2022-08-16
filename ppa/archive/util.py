@@ -384,13 +384,7 @@ class GaleImporter(DigitizedWorkImporter):
             page_count=len(item_record["pageResponse"]["pages"]),
             # import any notes from csv as private notes
             notes=kwargs.get("NOTES", ""),
-            # set page range for excerpts from csv when set
-            pages_digital=kwargs.get("EXCERPT PAGE RANGE", ""),
         )
-        # set item type when specified and not null;
-        # otherwise use default as specified in model field
-        if "item_type" in kwargs and kwargs["item_type"]:
-            digwork.item_type = kwargs["item_type"]
 
         # populate titles, author, publication info from marc record
         try:
@@ -399,6 +393,30 @@ class GaleImporter(DigitizedWorkImporter):
             # store the error in results for reporting
             self.results[gale_id] = err
             return digwork
+
+        # set item type when specified and not null;
+        # otherwise use default as specified in model field
+        if kwargs.get("item_type"):
+            digwork.item_type = kwargs["item_type"]
+
+            # if item type is article/excerpt,
+            # override metadata with spreadsheet values
+            if kwargs["item_type"] != DigitizedWork.FULL:
+                digwork.title = kwargs["Title"]
+                # clear out any existing subtitle; excerpts don't have them
+                digwork.subtitle = ""
+                digwork.sort_title = kwargs["Sort Title"]
+                digwork.book_journal = kwargs["Book/Journal Title"]
+                # set page range for excerpts from csv when set
+                # intspan requires commas; allow semicolons in input but convert to commas
+                digwork.pages_digital = kwargs["Digital Page Range"].replace(";", ",")
+                digwork.pages_orig = kwargs.get("Original Page Range", "")
+                # - optional fields
+                digwork.author = kwargs.get("Author", "")
+                digwork.public_notes = kwargs.get("Public Notes", "")
+
+                # calculate page count for the excerpt
+                digwork.count_pages()
 
         digwork.save()
         self.imported_works.append(digwork)
