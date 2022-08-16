@@ -15,7 +15,7 @@ describe('Histogram', () => {
         it('should store the associated canvas element', function() {
             expect(this.h.$canvas).toEqual($('#histogram canvas')[0])
         })
-        
+
         it('should store associated min/max date display elements', function() {
             expect(this.h.$minDisplay).toEqual($('#histogram .min-date')[0])
             expect(this.h.$maxDisplay).toEqual($('#histogram .max-date')[0])
@@ -26,7 +26,7 @@ describe('Histogram', () => {
         })
 
         it('should store its data as a reactive subject', function() {
-            expect(this.h.dataStream instanceof Subject).toBe(true)
+            expect(this.h.dataStream).toBeInstanceOf(Subject)
         })
 
         it('should accept an options object', function() {
@@ -54,7 +54,7 @@ describe('Histogram', () => {
                 start: '2006',
                 end: '2009', // mimic different end value
                 gap: '1'
-            } 
+            }
             spyOn(this.h, 'update').and.callThrough() // spy on the function itself
             spyOn(this.h, 'render').and.callThrough() // spy on the render() function
             spyOn(this.h.dataStream, 'next').and.callThrough() // spy on the calls to update the data
