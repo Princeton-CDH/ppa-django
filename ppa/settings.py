@@ -99,6 +99,7 @@ INSTALLED_APPS = [
     "modelcluster",
     "taggit",
     "fullurl",
+    "admin_log_entries",
     "parasolr",
     "ppa.archive",
     "ppa.common",
