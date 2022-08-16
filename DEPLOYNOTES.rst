@@ -3,6 +3,12 @@
 Deploy and Upgrade notes
 ========================
 
+3.8
+---
+
+* Now using nodejs v16.14; should be installed on destination servers.
+  On CentOS, `sudo yum install nodejs-16.15.0` should work.
+
 3.7
 ---
 

@@ -7,7 +7,7 @@ interface RxFormState {
 }
 
 class RxForm extends Component implements Reactive<RxFormState> {
-    element: HTMLFormElement
+    declare element: HTMLFormElement
     state: Subject<RxFormState>
     target: string
 
@@ -41,9 +41,9 @@ class RxForm extends Component implements Reactive<RxFormState> {
      * @memberof ReactiveForm
      */
     serialize(): string {
-        let data = new FormData(this.element)
-        let output: { [key: string]: any } = {}
-        for (let pair of data.entries()) {
+        const data = new FormData(this.element)
+        const output: { [key: string]: any } = {}
+        for (const pair of data.entries()) {
             output[pair[0]] = pair[1]
         }
         return new URLSearchParams(output).toString()
