@@ -29,7 +29,7 @@ $(function(){
             onHidden: () => $('.header.brand .item').removeClass('hidden'),
         })
 
-    $mobileDropdown.click(() => $mobileDropdown.toggleClass('active'))
+    $mobileDropdown.on("click", () => $mobileDropdown.toggleClass('active'))
 
 
 })
