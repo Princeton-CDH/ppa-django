@@ -156,7 +156,7 @@ describe('Reactive Form', () => {
             }, 500)
         })
 
-        it('should ignore repeated values for number inputs', function(done) {
+        xit('should ignore repeated values for number inputs', function(done) {
             $('#number').val('1990')
             $('#number')[0].dispatchEvent(new Event('input'))
             $('#number')[0].dispatchEvent(new Event('input'))
