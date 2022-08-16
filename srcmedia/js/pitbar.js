@@ -2,10 +2,10 @@ export default class PitBar {
     /**
      * A basic "pit bar" behavior: hide the element when the user scrolls down
      * quickly and bring it back when the user scrolls up quickly.
-     * 
+     *
      * Optional second param is for another menu, e.g. for mobile, that when
      * visible should disable the "pit bar" behavior.
-     * 
+     *
      * @param {jQuery} pitbar jQuery element to use as pitbar
      * @param {jQuery} mobileNav jQuery element that freezes pitbar when visible
      */
@@ -14,7 +14,7 @@ export default class PitBar {
         this.pitbar = pitbar
         this.mobileNav = mobileNav || false
         this.scroll = 0
-        $('.pusher').scroll(this.checkScroll.bind(this)) // prevents using scroll event as context
+        $('.pusher').on("scroll", this.checkScroll.bind(this)) // prevents using scroll event as context
     }
 
     checkScroll() {
