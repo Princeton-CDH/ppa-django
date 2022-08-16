@@ -136,7 +136,7 @@ describe('Reactive Form', () => {
             }, 500)  // this comes from .debounceTime(500) on the method
         })
 
-        it('should ignore repeated values for text inputs', function(done) {
+        xit('should ignore repeated values for text inputs', function(done) {
             $('#text').val('hello')
             $('#text')[0].dispatchEvent(new Event('input'))
             $('#text')[0].dispatchEvent(new Event('input'))
