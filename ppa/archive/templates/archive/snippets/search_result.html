@@ -2,8 +2,9 @@
 
 <li class="item {{ item.work_type }}">
     {% if item.work_type == "full-work" %} {# unapi metadata only available for full works #}
-    <abbr class="unapi-id" title="{{ item.group_id }}" aria-hidden="true"></abbr>
+    <abbr class="unapi-id" title="{{ item.work_page_group }}" aria-hidden="true"></abbr> {# TODO: check that title is right #}
     {% endif %}
+
     <a href="{% if item.first_page %}{% url 'archive:detail' source_id=item.source_id start_page=item.first_page %}{% else %}{% url 'archive:detail' item.source_id %}{% endif %}{% if query %}?query={{ query }}{% endif %}" class="detail">
         <div class="brief-result container">
             <div class="title column">
@@ -83,9 +84,14 @@
                         {% include 'snippets/chevron.svg' %}
                     </div>
                 </div>
+
             </div>
         </div>
     </a>
+    {# if the cluster id is set and differs from item id, work is part of a cluster #}
+    {% if item.cluster_id and item.cluster_id != item.id %}
+        {% include "archive/snippets/cluster_work.html" with cluster_id=item.cluster_id %}
+    {% endif %}
     <div class="page-previews container">
         {% if page_groups and page_highlights %}
         {% with results=page_groups|dict_item:item.id %}

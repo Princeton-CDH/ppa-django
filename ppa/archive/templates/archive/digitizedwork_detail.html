@@ -108,6 +108,7 @@
                         {% if object.source == object.HATHI %}
                         <a href="{% hathi_page_url object.source_id object.first_page %}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
                         {% elif object.source == object.GALE %}
+                        GALE url
                         <a href="{% gale_page_url object.source_url object.first_page %}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
                         {% endif %}
                     {% else %} {# when there is no page range, use source url #}
@@ -144,6 +145,15 @@
             {% endif %}
         </tbody>
     </table>
+
+    {# if cluster  is set, this work is part of a reprint/edition group #}
+    {% if object.cluster %}
+    {# TODO: if we can get count from solr, here's how to get count from db #}
+    {# {{ object.cluster.digitizedwork_set.count }} #}
+        {% include "archive/snippets/cluster_work.html" with cluster_id=object.cluster %}
+
+    {% endif %}
+
 </section>
 {# search within a volume currently only supported for hathi content #}
 {% if object.has_fulltext %}
