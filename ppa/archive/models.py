@@ -779,6 +779,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             "collections": [collection.name for collection in self.collections.all()]
             if self.collections.exists()
             else [NO_COLLECTION_LABEL],
+            "cluster_id_s": str(self.cluster) if self.cluster else None,
             # public notes field for display on site_name
             "notes": self.public_notes,
             # hard-coded to distinguish from & sort with pages
@@ -1018,7 +1019,9 @@ class Page(Indexable):
         """Get page content for the specified digitized work from Hathi
         pairtree and return data to be indexed in solr."""
 
-        # Only index pages fo ritems that are not suppressed
+        # TODO: how to share common fields/logic across sources?
+
+        # Only index pages for items that are not suppressed
         if not digwork.is_suppressed:
             # get index page data based on the source
             if digwork.source == digwork.HATHI:
@@ -1048,6 +1051,7 @@ class Page(Indexable):
         # get page span from digitized work
         page_span = digwork.page_span
         digwork_index_id = digwork.index_id()
+        cluster_id = str(digwork.cluster) if digwork.cluster else None
 
         # read zipfile contents in place, without unzipping
         with ZipFile(digwork.hathi.zipfile_path()) as ht_zip:
@@ -1068,6 +1072,7 @@ class Page(Indexable):
                             "id": "%s.%s" % (digwork_index_id, page.text_file.sequence),
                             "source_id": digwork.source_id,
                             "group_id_s": digwork_index_id,  # for grouping with work record
+                            "cluster_id_s": cluster_id,  # for grouping with cluster
                             "content": pagefile.read().decode("utf-8"),
                             "order": page.order,
                             "label": page.display_label,
@@ -1089,6 +1094,7 @@ class Page(Indexable):
         # get page span from digitized work
         page_span = digwork.page_span
         digwork_index_id = digwork.index_id()
+        cluster_id = str(digwork.cluster) if digwork.cluster else None
 
         for i, page in enumerate(gale_record["pageResponse"]["pages"], 1):
             page_number = page["pageNumber"]
@@ -1101,6 +1107,7 @@ class Page(Indexable):
                 "id": "%s.%s" % (digwork_index_id, page_number),
                 "source_id": digwork.source_id,
                 "group_id_s": digwork_index_id,  # for grouping with work record
+                "cluster_id_s": cluster_id,  # for grouping with cluster
                 "content": page.get("ocrText"),  # some pages have no text
                 "order": i,
                 "label": page_label,
