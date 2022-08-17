@@ -411,21 +411,24 @@ class GaleImporter(DigitizedWorkImporter):
             # if item type is article/excerpt,
             # override metadata with spreadsheet values
             if kwargs["item_type"] != DigitizedWork.FULL:
-                digwork.title = kwargs["Title"]
+                digwork.title = kwargs.get("Title", digwork.title)
                 # clear out any existing subtitle; excerpts don't have them
                 digwork.subtitle = ""
-                digwork.sort_title = kwargs["Sort Title"]
-                digwork.book_journal = kwargs["Book/Journal Title"]
+                digwork.sort_title = kwargs.get("Sort Title", "")
+                digwork.book_journal = kwargs.get("Book/Journal Title", "")
                 # set page range for excerpts from csv when set
                 # intspan requires commas; allow semicolons in input but convert to commas
-                digwork.pages_digital = kwargs["Digital Page Range"].replace(";", ",")
+                digwork.pages_digital = kwargs.get("Digital Page Range", "").replace(
+                    ";", ","
+                )
                 digwork.pages_orig = kwargs.get("Original Page Range", "")
                 # - optional fields
                 digwork.author = kwargs.get("Author", "")
                 digwork.public_notes = kwargs.get("Public Notes", "")
 
-                # calculate page count for the excerpt
-                digwork.count_pages()
+                # recalculate page count for the excerpt if page range is set
+                if digwork.pages_digital:
+                    digwork.count_pages()
 
         digwork.save()
         self.imported_works.append(digwork)
