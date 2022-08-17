@@ -197,9 +197,10 @@ class Command(BaseCommand):
         # check if an item with this source id + page range exists
         # (check local db first because API call is slow for large items)
 
-        # use an unsaved digitized work to parse the page range for search filter
+        # use an unsaved digitized work to parse the page range (if any)
+        # for queryset filter to check for duplicates
         dw_pages = DigitizedWork(
-            pages_digital=kwargs["Digital Page Range"].replace(";", ",")
+            pages_digital=kwargs.get("Digital Page Range", "").replace(";", ",")
         )
 
         if DigitizedWork.objects.filter(
@@ -218,7 +219,7 @@ class Command(BaseCommand):
 
         # translate item type in spreadsheet to digitized work item type code
         # strip whitespace in case any was added in the spreadsheet
-        kwargs["item_type"] = self.item_type.get(kwargs.get("Item Type").strip())
+        kwargs["item_type"] = self.item_type.get(kwargs.get("Item Type", "").strip())
         # TODO: override item title from excerpt title if present
 
         digwork = self.importer.import_digitizedwork(

@@ -381,4 +381,4 @@ class TestGaleImporter(TestCase):
                 "t1234", user=script_user, item_type=DigitizedWork.ARTICLE
             )
             # specified item type should be used
-            assert digwork.item_type == DigitizedWork.Article
+            assert digwork.item_type == DigitizedWork.ARTICLE
