@@ -183,16 +183,70 @@ class TestGaleImportCommand:
         csv_info = {"LIT": "x", "MUS": "x", "NOTES": "just some mention in footnotes"}
 
         digwork = cmd.import_record(test_id, **csv_info)
-        print(digwork)
-        print(cmd.importer.results)
         assert csv_info["NOTES"] == digwork.notes
         literary = Collection.objects.get(name="Literary")
         music = Collection.objects.get(name="Music")
-        print(digwork.collections.all())
         assert digwork.collections.count() == 2
         assert literary in digwork.collections.all()
         assert music in digwork.collections.all()
         assert digwork.enumcron == "2"
+
+    @patch("ppa.archive.models.DigitizedWork.index_items")
+    @patch("ppa.archive.models.DigitizedWork.metadata_from_marc")
+    @patch("ppa.archive.import_util.get_marc_record")
+    @override_settings(GALE_API_USERNAME="galeuser123")
+    def test_import_excerpt_csv(
+        self, mock_get_marc_record, mock_metadata_from_marc, mock_index_items
+    ):
+        # simulate csv import of excerpt record with override metadata fields
+        cmd = gale_import.Command()
+        # do setup steps
+        cmd.importer = GaleImporter()
+        cmd.importer.add_item_prep()
+        cmd.importer.gale_api = Mock(GaleAPI)
+        cmd.stats = Counter()
+        # create collections that are expected to exist
+        Collection.objects.bulk_create(
+            [
+                Collection(name=value)
+                for value in gale_import.Command.collection_codes.values()
+            ]
+        )
+        cmd.load_collections()
+        # simulate success
+        estc_id = "T012345"
+        cmd.importer.gale_api.get_item.return_value = {
+            "doc": {
+                "title": "A collection of original poems, essays and epistles",
+                "isShownAt": "https://link.gale.co/test/ECCO?sid=gale_api&u=utopia9871",
+                "estc": estc_id,
+            },
+            "pageResponse": {
+                "pages": [
+                    {"pageNumber": "0001", "image": {"id": "09876001234567"}},
+                    {"pageNumber": "0002", "image": {"id": "09876001234568"}},
+                ]
+            },
+        }
+        test_id = "CW0113164666"
+        csv_info = {
+            "Item Type": "Excerpt",
+            "Book/Journal Title": "A collection of original poems, essays and epistles",
+            "Title": "ON THE ANTIENT AND MODERN DRAMA",
+            "Sort Title": "ON THE ANTIENT AND MODERN DRAMA",
+            "Original Page Range": "183-203",
+            "Digital Page Range": "188-208",
+        }
+
+        digwork = cmd.import_record(test_id, **csv_info)
+        assert digwork.get_item_type_display() == csv_info["Item Type"]
+        assert digwork.book_journal == csv_info["Book/Journal Title"]
+        assert digwork.title == csv_info["Title"]
+        assert digwork.sort_title == csv_info["Sort Title"]
+        assert digwork.pages_digital == csv_info["Digital Page Range"]
+        assert digwork.pages_orig == csv_info["Original Page Range"]
+        # page count should be set by page range, not by API return
+        assert digwork.page_count == 21
 
     @override_settings(GALE_API_USERNAME="galeuser123")
     def test_import_record_error(self):
