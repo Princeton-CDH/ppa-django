@@ -13,7 +13,6 @@ progressbar2
 django-semanticui-forms
 lxml
 eulxml
-# wagtail 2.10 drops python 3.5 support; currently needed for qa
 # wagtail 2.16 drops python 3.6 support
 wagtail>=2.15,<2.16
 bleach
@@ -29,3 +28,4 @@ beautifulsoup4<4.9
 # only needed for the 'generate_corpus' manage command
 # 4.2 is not compatible with py3.6
 gensim<4.2
+django-adminlogentries

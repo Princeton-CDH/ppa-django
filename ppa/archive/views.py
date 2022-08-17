@@ -31,9 +31,9 @@ from ppa.archive.forms import (
     SearchForm,
     SearchWithinWorkForm,
 )
+from ppa.archive.import_util import GaleImporter, HathiImporter
 from ppa.archive.models import NO_COLLECTION_LABEL, DigitizedWork
 from ppa.archive.solr import ArchiveSearchQuerySet
-from ppa.archive.util import GaleImporter, HathiImporter
 from ppa.common.views import AjaxTemplateMixin
 
 logger = logging.getLogger(__name__)

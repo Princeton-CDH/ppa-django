@@ -41,8 +41,8 @@ from django.template.defaultfilters import pluralize, truncatechars
 from parasolr.django.signals import IndexableSignalHandler
 
 from ppa.archive.gale import GaleAPI, GaleAPIError, MARCRecordNotFound, get_marc_record
+from ppa.archive.import_util import GaleImporter
 from ppa.archive.models import Collection, DigitizedWork, Page
-from ppa.archive.util import GaleImporter
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +67,13 @@ class Command(BaseCommand):
         "LING": "Linguistic",
         "DIC": "Dictionaries",
         "WL": "Word Lists",
+    }
+
+    # item type lookup for supported types — adapted from hathi excerpt script
+    item_type = {
+        "Excerpt": DigitizedWork.EXCERPT,
+        "Article": DigitizedWork.ARTICLE,
+        "Full work": DigitizedWork.FULL,
     }
 
     def add_arguments(self, parser):
@@ -187,22 +194,32 @@ class Command(BaseCommand):
         """Import a single work into the database.
         Retrieves record data from Gale API."""
 
-        # if an item with this source id exists, skip
+        # check if an item with this source id + page range exists
         # (check local db first because API call is slow for large items)
-        # NOTE: revisit if we decide to support update logic
-        if DigitizedWork.objects.filter(source_id=gale_id).exists():
+
+        # use an unsaved digitized work to parse the page range (if any)
+        # for queryset filter to check for duplicates
+        dw_pages = DigitizedWork(
+            pages_digital=kwargs.get("Digital Page Range", "").replace(";", ",")
+        )
+
+        if DigitizedWork.objects.filter(
+            source_id=gale_id, pages_digital=dw_pages.pages_digital
+        ).exists():
             self.stderr.write("%s is already in the database; skipping" % gale_id)
             self.stats["skipped"] += 1
             return
 
-        print(self.collections)
         # determine collection membership based on spreadsheet columns
         digwork_collections = [
             collection
             for code, collection in self.collections.items()
             if kwargs.get(code)
         ]
-        print("digwork_collections:", digwork_collections)
+
+        # translate item type in spreadsheet to digitized work item type code
+        # strip whitespace in case any was added in the spreadsheet
+        kwargs["item_type"] = self.item_type.get(kwargs.get("Item Type", "").strip())
 
         digwork = self.importer.import_digitizedwork(
             gale_id, collections=digwork_collections, **kwargs
