@@ -1,6 +1,7 @@
 """
 
-Utility code related to :mod:`ppa.archives`
+Import utility classes for creating :mod:`ppa.archives` records from
+external sources.
 
 """
 import glob

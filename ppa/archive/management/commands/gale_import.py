@@ -41,8 +41,8 @@ from django.template.defaultfilters import pluralize, truncatechars
 from parasolr.django.signals import IndexableSignalHandler
 
 from ppa.archive.gale import GaleAPI, GaleAPIError, MARCRecordNotFound, get_marc_record
+from ppa.archive.import_util import GaleImporter
 from ppa.archive.models import Collection, DigitizedWork, Page
-from ppa.archive.util import GaleImporter
 
 logger = logging.getLogger(__name__)
 
@@ -220,7 +220,6 @@ class Command(BaseCommand):
         # translate item type in spreadsheet to digitized work item type code
         # strip whitespace in case any was added in the spreadsheet
         kwargs["item_type"] = self.item_type.get(kwargs.get("Item Type", "").strip())
-        # TODO: override item title from excerpt title if present
 
         digwork = self.importer.import_digitizedwork(
             gale_id, collections=digwork_collections, **kwargs
