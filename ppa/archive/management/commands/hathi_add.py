@@ -18,7 +18,7 @@ from collections import defaultdict
 from django.core.management.base import BaseCommand
 from django.template.defaultfilters import pluralize
 
-from ppa.archive.util import HathiImporter
+from ppa.archive.import_util import HathiImporter
 
 logger = logging.getLogger(__name__)
 

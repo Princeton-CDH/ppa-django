@@ -18,9 +18,9 @@ from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
 
 from ppa.archive import hathi
+from ppa.archive.import_util import HathiImporter
 from ppa.archive.management.commands import hathi_add, hathi_import, index_pages
 from ppa.archive.models import DigitizedWork, Page
-from ppa.archive.util import HathiImporter
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, "ppa", "archive", "fixtures")
 
