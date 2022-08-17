@@ -126,6 +126,24 @@ class Collection(TrackChangesModel):
         return stats
 
 
+class Cluster(models.Model):
+    """A model to collect groups of works such as reprints or editions that should
+    be collapsed in the main archive search and accessible together."""
+
+    cluster_id = models.CharField(
+        "Cluster ID",
+        help_text="Unique identifier for a cluster of digitized works",
+        unique=True,
+        max_length=255,
+    )
+
+    def __str__(self):
+        return self.cluster_id
+
+    def __repr__(self):
+        return "<cluster %s>" % str(self)
+
+
 class ProtectedWorkFieldFlags(Flags):
     """:class:`flags.Flags` instance to indicate which :class:`DigitizedWork`
     fields should be protected if edited in the admin."""
@@ -329,6 +347,12 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
     )
     #: collections that this work is part of
     collections = models.ManyToManyField(Collection, blank=True)
+
+    #: optional cluster for aggregating works
+    cluster = models.ForeignKey(
+        Cluster, blank=True, null=True, on_delete=models.SET_NULL
+    )
+
     #: date added to the archive
     added = models.DateTimeField(auto_now_add=True)
     #: date of last modification of the local record
