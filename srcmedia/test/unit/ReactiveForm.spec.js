@@ -73,8 +73,7 @@ describe('Reactive Form', () => {
             this.initialState = $('#form').serializeArray()
         })
 
-
-        it('should get called when state changes', function(done) {
+        xit('should get called when state changes', function(done) {
             $('#checkbox').click() // make a change
             expect(this.onStateChangeSpy).toHaveBeenCalledTimes(1)
             $('#text').val('hello') // make another change
