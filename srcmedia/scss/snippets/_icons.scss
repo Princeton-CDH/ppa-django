@@ -2,7 +2,7 @@
     background-position: center center;
     background-repeat: no-repeat;
     background-size: contain;
-    
+
     &[aria-label=article] {
         background-image: url("/static/img/icons/article.svg");
         width: 40px;
@@ -23,5 +23,44 @@
             width: 92px;
             height: 65px;
         }
+    }
+}
+
+.cluster-work.icon::before {
+    content: "";
+    display: inline-block;
+    background-image: url("/static/img/icons/multiple-version-work.svg");
+    background-position: left center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    height: 40px;
+    width: 60px;
+}
+
+
+/* included in search results and document details */
+.cluster-work {
+    margin-bottom: 42px;
+
+    // search results placement
+    .results-list .item & {
+        // top padding is 19px from buttons,
+        // default result details padding above this is 1rem = 28px
+        margin-top: -9px;
+
+    }
+
+    // item detail placement
+    #digitized-work & {
+        // we want ~100px, table above has 1rem bottom padding
+        margin-top: 70px;
+        margin-bottom: 64px;
+    }
+
+    a {
+        &:link, &:visited, &:hover {
+            color: $french-blue;
+        }
+
     }
 }
