@@ -11,8 +11,8 @@ from django.test import TestCase, override_settings
 
 from ppa.archive import hathi
 from ppa.archive.gale import GaleAPIError, MARCRecordNotFound
+from ppa.archive.import_util import DigitizedWorkImporter, GaleImporter, HathiImporter
 from ppa.archive.models import DigitizedWork
-from ppa.archive.util import DigitizedWorkImporter, GaleImporter, HathiImporter
 
 
 class TestDigitizedWorkImporter:
@@ -61,8 +61,8 @@ class TestHathiImporter(TestCase):
         assert not mock_hathi_bib_api.called
 
     @override_settings(HATHI_DATA="/my/test/ppa/ht_data")
-    @patch("ppa.archive.util.os.path.isdir")
-    @patch("ppa.archive.util.glob.glob")
+    @patch("ppa.archive.import_util.os.path.isdir")
+    @patch("ppa.archive.import_util.glob.glob")
     @patch("ppa.archive.models.DigitizedWork.add_from_hathi")
     def test_add_items_notfound(self, mock_add_from_hathi, mock_glob, mock_isdir):
         test_htid = "a.123"
@@ -86,8 +86,8 @@ class TestHathiImporter(TestCase):
             assert not DigitizedWork.objects.filter(source_id=test_htid)
 
     @override_settings(HATHI_DATA="/my/test/ppa/ht_data")
-    @patch("ppa.archive.util.os.path.isdir")
-    @patch("ppa.archive.util.glob.glob")
+    @patch("ppa.archive.import_util.os.path.isdir")
+    @patch("ppa.archive.import_util.glob.glob")
     @patch("ppa.archive.models.DigitizedWork.add_from_hathi")
     def test_add_items_rsync_failure(self, mock_add_from_hathi, mock_glob, mock_isdir):
         test_htid = "a.123"
@@ -122,8 +122,8 @@ class TestHathiImporter(TestCase):
             # error code stored in results
             assert htimporter.results[test_htid] == htimporter.RSYNC_ERROR
 
-    @patch("ppa.archive.util.os.path.isdir")
-    @patch("ppa.archive.util.glob.glob")
+    @patch("ppa.archive.import_util.os.path.isdir")
+    @patch("ppa.archive.import_util.glob.glob")
     @patch("ppa.archive.models.DigitizedWork.page_count")
     @patch("ppa.archive.models.DigitizedWork.add_from_hathi")
     @override_settings(HATHI_DATA="/my/test/ppa/ht_data")
@@ -161,8 +161,8 @@ class TestHathiImporter(TestCase):
             assert len(htimporter.imported_works) == 1
             assert htimporter.results[test_htid] == HathiImporter.SUCCESS
 
-    @patch("ppa.archive.util.DigitizedWork")
-    @patch("ppa.archive.util.Page")
+    @patch("ppa.archive.import_util.DigitizedWork")
+    @patch("ppa.archive.import_util.Page")
     def test_index(self, mock_page, mock_digitizedwork):
         test_htid = "a:123"
         htimporter = HathiImporter([test_htid])
@@ -250,7 +250,7 @@ class TestHathiImporter(TestCase):
         HATHITRUST_RSYNC_SERVER="data.ht.org",
         HATHITRUST_RSYNC_PATH=":ht_text_pd",
     )
-    @patch("ppa.archive.util.subprocess")
+    @patch("ppa.archive.import_util.subprocess")
     def test_rsync_data(self, mocksubprocess):
         htimporter = HathiImporter(["hvd.1234", "nyp.334455"])
         htimporter.rsync_data()
@@ -270,7 +270,7 @@ class TestHathiImporter(TestCase):
 
 
 class TestGaleImporter(TestCase):
-    @patch("ppa.archive.util.GaleAPI")
+    @patch("ppa.archive.import_util.GaleAPI")
     def test_add_items_noop(self, mock_gale_api):
         importer = GaleImporter([])
         # no source ids to process (e.g., all skipped)
@@ -278,7 +278,7 @@ class TestGaleImporter(TestCase):
         # gale api should not be initialized
         assert not mock_gale_api.called
 
-    @patch("ppa.archive.util.GaleAPI")
+    @patch("ppa.archive.import_util.GaleAPI")
     def test_add_items_success(self, mock_gale_api):
         importer = GaleImporter(["cw123", "cw456"])
         mockuser = Mock()
@@ -301,7 +301,7 @@ class TestGaleImporter(TestCase):
             importer.add_items(log_msg_src=log_message)
             mock_import_digitizedwork.assert_any_call("cw123", log_message, None)
 
-    @patch("ppa.archive.util.GaleAPI")
+    @patch("ppa.archive.import_util.GaleAPI")
     def test_import_digitizedwork_api_error(self, mock_gale_api):
         test_id = "CW123456"
         importer = GaleImporter([test_id])
@@ -313,8 +313,8 @@ class TestGaleImporter(TestCase):
         # should set status in results dict for reporting
         assert importer.results[test_id] == api_error
 
-    @patch("ppa.archive.util.get_marc_record")
-    @patch("ppa.archive.util.GaleAPI")
+    @patch("ppa.archive.import_util.get_marc_record")
+    @patch("ppa.archive.import_util.GaleAPI")
     def test_import_digitizedwork_marc_error(self, mock_gale_api, mock_get_marc_record):
         test_id = "CW123456"
         importer = GaleImporter([test_id])
@@ -325,8 +325,8 @@ class TestGaleImporter(TestCase):
         # should set status in results dict for reporting
         assert importer.results[test_id] == not_found_error
 
-    @patch("ppa.archive.util.get_marc_record")
-    @patch("ppa.archive.util.GaleAPI")
+    @patch("ppa.archive.import_util.get_marc_record")
+    @patch("ppa.archive.import_util.GaleAPI")
     def test_import_digitizedwork_success(self, mock_gale_api, mock_get_marc_record):
         test_id = "CW123456"
         importer = GaleImporter([test_id])

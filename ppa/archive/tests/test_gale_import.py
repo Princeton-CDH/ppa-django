@@ -10,9 +10,9 @@ from django.core.management.base import CommandError
 from django.test import override_settings
 
 from ppa.archive.gale import GaleAPI, GaleAPIError, MARCRecordNotFound
+from ppa.archive.import_util import GaleImporter
 from ppa.archive.management.commands import gale_import
 from ppa.archive.models import Collection, DigitizedWork
-from ppa.archive.util import GaleImporter
 
 
 @pytest.mark.django_db
@@ -77,7 +77,7 @@ class TestGaleImportCommand:
     @override_settings(GALE_API_USERNAME="galeuser123")
     @patch("ppa.archive.models.DigitizedWork.index_items")
     @patch("ppa.archive.models.DigitizedWork.metadata_from_marc")
-    @patch("ppa.archive.util.get_marc_record")
+    @patch("ppa.archive.import_util.get_marc_record")
     def test_import_record_id(
         self, mock_get_marc_record, mock_metadata_from_marc, mock_index_items
     ):
@@ -141,7 +141,7 @@ class TestGaleImportCommand:
 
     @patch("ppa.archive.models.DigitizedWork.index_items")
     @patch("ppa.archive.models.DigitizedWork.metadata_from_marc")
-    @patch("ppa.archive.util.get_marc_record")
+    @patch("ppa.archive.import_util.get_marc_record")
     @override_settings(GALE_API_USERNAME="galeuser123")
     def test_import_record_csv(
         self, mock_get_marc_record, mock_metadata_from_marc, mock_index_items
@@ -214,7 +214,7 @@ class TestGaleImportCommand:
         assert "Error getting item information for test_id" in output
 
     @override_settings(GALE_API_USERNAME="example1234")
-    @patch("ppa.archive.util.get_marc_record")
+    @patch("ppa.archive.import_util.get_marc_record")
     def test_import_record_marc_notfound(self, mock_get_marc_record):
         mock_get_marc_record.side_effect = MARCRecordNotFound
         stderr = StringIO()
