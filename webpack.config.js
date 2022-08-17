@@ -26,7 +26,7 @@ module.exports = env => ({
     output: {
         path: path.resolve(__dirname, 'bundles'), // where to output bundles
         publicPath: devMode ? 'http://localhost:3000/' : '/static/', // tell Django where to serve bundles from
-        filename: devMode ? 'js/[name].js' : 'js/[name]-[hash].min.js', // append hashes in prod
+        filename: devMode ? 'js/[name].js' : 'js/[name]-[contenthash].min.js', // append hashes in prod
         clean: true,
     },
     module: {
@@ -121,11 +121,7 @@ module.exports = env => ({
     optimization: {
         minimizer: [
             "...", // shorthand; minify JS using the default TerserPlugin
-            new CssMinimizerPlugin() // also minify CSS
-            // ... (env.maps && { cssProcessorOptions: { // if env.maps was passed,
-            // map: { inline: false, annotation: true } // preserve sourcemaps
-            // }})
-            // })
+            new CssMinimizerPlugin(), // also minify CSS
         ]
     }
 })

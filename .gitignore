@@ -1,3 +1,6 @@
+# local ignores
+data/
+
 # Webpack files
 webpack-stats.json
 !ci/webpack-stats.json

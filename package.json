@@ -16,8 +16,8 @@
         "test:unit": "karma start --single-run && jest --collectCoverage",
         "test:a11y": "pa11y-ci --sitemap http://localhost:8000/sitemap-pages.xml",
         "build": "npm run build:prod && npm run build:semantic",
-        "build:qa": "NODE_ENV=production webpack --env.maps",
-        "build:prod": "NODE_ENV=production webpack --env",
+        "build:qa": "NODE_ENV=production webpack",
+        "build:prod": "NODE_ENV=production webpack",
         "build:semantic": "gulp --gulpfile sitemedia/semantic/gulpfile.js build"
     },
     "dependencies": {
@@ -68,6 +68,6 @@
         "whatwg-fetch": "^3.6.2"
     },
     "volta": {
-        "node": "16.14.2"
+        "node": "16.15.1"
     }
 }

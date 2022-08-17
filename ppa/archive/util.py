@@ -20,7 +20,14 @@ from pairtree.pairtree_path import id_to_dirpath
 from parasolr.django.signals import IndexableSignalHandler
 
 from ppa.archive import hathi
-from ppa.archive.gale import GaleAPI, GaleAPIError, MARCRecordNotFound, get_marc_record
+from ppa.archive.gale import (
+    GaleAPI,
+    GaleAPIError,
+    GaleItemForbidden,
+    GaleItemNotFound,
+    MARCRecordNotFound,
+    get_marc_record,
+)
 from ppa.archive.models import DigitizedWork, Page
 
 logger = logging.getLogger(__name__)
@@ -332,6 +339,8 @@ class GaleImporter(DigitizedWorkImporter):
     status_message.update(
         {
             GaleAPIError: "Error getting item information from Gale API",
+            GaleItemForbidden: "Item forbidden (could be invalid id)",
+            GaleItemNotFound: "Item not found in Gale API",
             MARCRecordNotFound: "MARC record not found",
         }
     )
@@ -363,7 +372,7 @@ class GaleImporter(DigitizedWorkImporter):
 
         try:
             item_record = self.gale_api.get_item(gale_id)
-        except GaleAPIError as err:
+        except (GaleAPIError, GaleItemForbidden) as err:
             # store the error in results for reporting
             self.results[gale_id] = err
             return
