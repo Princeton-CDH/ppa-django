@@ -411,6 +411,7 @@ class GaleImporter(DigitizedWorkImporter):
 
             # if item type is article/excerpt,
             # override metadata with spreadsheet values
+            # NOTE: some duplication with hathi_excerpt script
             if kwargs["item_type"] != DigitizedWork.FULL:
                 digwork.title = kwargs.get("Title", digwork.title)
                 # clear out any existing subtitle; excerpts don't have them
@@ -429,7 +430,7 @@ class GaleImporter(DigitizedWorkImporter):
 
                 # recalculate page count for the excerpt if page range is set
                 if digwork.pages_digital:
-                    digwork.count_pages()
+                    digwork.page_count = digwork.count_pages()
 
         digwork.save()
         self.imported_works.append(digwork)
