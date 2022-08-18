@@ -100,10 +100,8 @@ class Command(BaseCommand):
                     action_flag=CHANGE,
                 )
 
-            # reindex pages to ensure they have the new group id
-            # TODO: maybe optional?
-            # FIXME: index pages after using optimized script!
-            digwork.index_items(Page.page_index_data(digwork))
+            # pages should be reindexed to get the new cluster id,
+            # but more efficient to do that with index_pages script
 
         # summarize what was done
         summary = (
@@ -117,6 +115,8 @@ class Command(BaseCommand):
             pluralize(self.stats["clusters_created"]),
         )
         self.stdout.write(summary)
+        if self.stats["updated"]:
+            self.stdout.write(self.style.SUCCESS("Remember to reindex pages in Solr"))
 
     def get_cluster(self, cluster_id):
         # if we don't have a cluster cached yet, get it
