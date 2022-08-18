@@ -649,7 +649,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         # *only* if they wrap the whole text
         for field in ["publisher", "pub_place"]:
             if field in field_data:
-                field_data[field] = re.sub(r"^\[(.*)\]$", r"\1", field_data[field])
+                field_data[field] = re.sub(
+                    r"^\[(.*)\]$", r"\1", field_data[field]
+                ).strip()
 
         if populate:
             # conditionally update fields that are protected (or not)
