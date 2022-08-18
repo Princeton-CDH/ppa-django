@@ -137,6 +137,9 @@ class Cluster(models.Model):
         max_length=255,
     )
 
+    class Meta:
+        ordering = ("cluster_id",)
+
     def __str__(self):
         return self.cluster_id
 
