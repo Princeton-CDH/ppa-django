@@ -1051,7 +1051,9 @@ class Page(Indexable):
         # get page span from digitized work
         page_span = digwork.page_span
         digwork_index_id = digwork.index_id()
-        cluster_id = str(digwork.cluster) if digwork.cluster else None
+        # digwork index id is fallback for cluster, since it is used
+        # to collapse works and pages that belong together
+        cluster_id = str(digwork.cluster) if digwork.cluster else digwork_index_id
 
         # read zipfile contents in place, without unzipping
         with ZipFile(digwork.hathi.zipfile_path()) as ht_zip:
@@ -1094,7 +1096,9 @@ class Page(Indexable):
         # get page span from digitized work
         page_span = digwork.page_span
         digwork_index_id = digwork.index_id()
-        cluster_id = str(digwork.cluster) if digwork.cluster else None
+        # digwork index id is fallback for cluster, since it is used
+        # to collapse works and pages that belong together
+        cluster_id = str(digwork.cluster) if digwork.cluster else digwork_index_id
 
         for i, page in enumerate(gale_record["pageResponse"]["pages"], 1):
             page_number = page["pageNumber"]

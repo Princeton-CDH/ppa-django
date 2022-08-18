@@ -142,7 +142,7 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         "work_type_s": "work_type",
         "book_journal_s": "book_journal",
         "group_id_s": "group_id",
-        "cluster_id": "cluster_id_s",
+        "cluster_id_s": "cluster_id",
     }
 
     keyword_query = None
@@ -205,6 +205,10 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
             qs_copy.filter_qs.extend(self._workq.filter_qs)
             # use set to ensure we don't duplicate a filter
             qs_copy.filter_qs = list(set(qs_copy.filter_qs))
+
+            # by default, group clustered works
+            # (not expanding, since we only display the first)
+            qs_copy = qs_copy.filter("{!collapse field=cluster_id_s}")
             return qs_copy._base_query_opts()
 
         # when there is a keyword query, add it & combine with any work filters
@@ -233,13 +237,13 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
             qs_copy = qs_copy.raw_query_parameters(work_query=work_query)
 
         # search on the combined work/page join query
-        # use collapse to group pages with work by source id
-        # expand and return three rows
-        # NOTE: expand param used to be 2, but that wasn't generating
-        # correct display! Not sure why
+        # expand/collapse on cluster id to group works in the same
+        # cluster AND to group cluster pages; for non-cluster works,
+        # this is equivalent to the existing group id and will
+        # group pages with works
         qs_copy = (
             qs_copy.search(combined_query)
-            .filter('{!collapse field=group_id_s sort="order asc"}')
+            .filter('{!collapse field=cluster_id_s sort="order asc"}')
             .raw_query_parameters(
                 content_query="content:(%s)" % self.keyword_query,
                 keyword_query=self.keyword_query,
