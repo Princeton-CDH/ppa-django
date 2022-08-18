@@ -89,7 +89,8 @@
         </div>
     </a>
     {# if the cluster id is set and differs from item id, work is part of a cluster #}
-    {% if not within_cluster and item.cluster_id and item.cluster_id != item.id %}
+    {# only display when not searching within a cluster  #}
+    {% if not search_form.cluster.value and item.cluster_id and item.cluster_id != item.id %}
         {% include "archive/snippets/cluster_work.html" with cluster_id=item.cluster_id %}
     {% endif %}
     <div class="page-previews container">
