@@ -40,21 +40,43 @@
 
 /* included in search results and document details */
 .cluster-work {
-    margin-bottom: 42px;
+    padding-bottom: 32px;
+
+    @media (min-width: $computer) {
+        padding-bottom: 42px;
+    }
 
     // search results placement
     .results-list .item & {
-        // top padding is 19px from buttons,
-        // default result details padding above this is 1rem = 28px
-        margin-top: -9px;
+        padding-left: 13px;
 
+        @media (min-width: $tablet) {
+            // top padding is 15px from buttons
+            margin-top: -13px;
+            padding-left: 13px;
+        }
+
+        @media (min-width: $computer) {
+            // top padding is 19px from buttons,
+            // default result details padding above this is 1rem = 28px
+            margin-top: -9px;
+            padding-left: 0;
+        }
     }
 
-    // item detail placement
+    // placement on digitized work detail page
     #digitized-work & {
-        // we want ~100px, table above has 1rem bottom padding
-        margin-top: 70px;
-        margin-bottom: 64px;
+        margin-top: 53px;
+        margin-bottom: 38px;
+
+        @media (min-width: $tablet) {
+            margin-top: 58px;
+        }
+
+        @media (min-width: $computer) {
+            // we want ~100px, table above has 1rem bottom padding
+            margin-top: 70px;
+        }
     }
 
     a {
