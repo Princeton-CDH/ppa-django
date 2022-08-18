@@ -2,7 +2,7 @@
 
 <li class="item {{ item.work_type }}">
     {% if item.work_type == "full-work" %} {# unapi metadata only available for full works #}
-    <abbr class="unapi-id" title="{{ item.work_page_group }}" aria-hidden="true"></abbr> {# TODO: check that title is right #}
+    <abbr class="unapi-id" title="{{ item.group_id }}" aria-hidden="true"></abbr>
     {% endif %}
 
     <a href="{% if item.first_page %}{% url 'archive:detail' source_id=item.source_id start_page=item.first_page %}{% else %}{% url 'archive:detail' item.source_id %}{% endif %}{% if query %}?query={{ query }}{% endif %}" class="detail">
