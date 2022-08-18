@@ -134,6 +134,24 @@ class TestSearchForm(TestCase):
             {"query": "reading", "title": "elocution"}
         )
 
+    def test_clean_quotes(self):
+        form = SearchForm()
+        form.cleaned_data = {}
+        # no error if keyword not set
+        assert form.clean_query() is None
+        # empty string should also be ok
+        form.cleaned_data["query"] = ""
+        assert form.clean_query() == ""
+
+        # exact phrase with curly quotes
+        form.cleaned_data["query"] = "“common meter”"
+        assert form.clean_query() == '"common meter"'
+        # works on other fields too
+        form.cleaned_data["author"] = "“hugh blair”"
+        assert form.clean_author() == '"hugh blair"'
+        form.cleaned_data["title"] = "“murray’s english”"
+        assert form.clean_title() == '"murray\'s english"'
+
 
 # range widget and field tests copied from derrida, like the objects tested
 
