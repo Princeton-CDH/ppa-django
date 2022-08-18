@@ -638,12 +638,15 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         # Gale/ECCO dates may include non-numeric, e.g. MDCCLXXXVIII. [1788]
         # try as numeric first, then extract year with regex
         pubdate = marc_record.pubyear()
-        try:
-            field_data["pub_date"] = int(pubdate)
-        except ValueError:
-            yearmatch = self.pubyear_re.search(pubdate)
-            if yearmatch:
-                field_data["pub_date"] = int(yearmatch.groupdict()["year"])
+        # at least one case returns None here,
+        # which results in a TypeError on attemped conversion to integer
+        if pubdate:
+            try:
+                field_data["pub_date"] = int(pubdate)
+            except ValueError:
+                yearmatch = self.pubyear_re.search(pubdate)
+                if yearmatch:
+                    field_data["pub_date"] = int(yearmatch.groupdict()["year"])
 
         # remove brackets around inferred publishers, place of publication
         # *only* if they wrap the whole text
