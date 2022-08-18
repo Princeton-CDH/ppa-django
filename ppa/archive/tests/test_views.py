@@ -26,7 +26,7 @@ from ppa.archive.templatetags.ppa_tags import (
     hathi_page_url,
     page_image_url,
 )
-from ppa.archive.views import DigitizedWorkCSV, DigitizedWorkListView, ImportView
+from ppa.archive.views import DigitizedWorkListView, ImportView
 
 
 class TestDigitizedWorkDetailView(TestCase):
@@ -850,112 +850,6 @@ def test_archive_list_empty_solr(client, empty_solr):
     response = client.get(reverse("archive:list"))
     assert response.status_code == 200
     assert "No matching works" in response.content.decode()
-
-
-class TestDigitizedWorkCSV(TestCase):
-    fixtures = ["sample_digitized_works"]
-
-    def test_csv(self):
-        # add an arbitrary note to one digital work so that the field is
-        # populated in at least one case
-        first_dw = DigitizedWork.objects.first()
-        first_dw.notes = "private notes"
-        first_dw.public_notes = "public notes"
-        first_dw.save()
-
-        # add an excerpt to check new fields are included
-        excerpt = DigitizedWork.objects.create(
-            source_id="njp.32101023869397",
-            title="The Old and the New in Metrics",
-            pub_date=1905,
-            book_journal="The Classical journal",
-            pages_orig="212-221",
-            pages_digital="220-229",
-            page_count=9,
-        )
-
-        # get the csv export and inspect the response
-        response = self.client.get(reverse("archive:csv"))
-        assert response.status_code == 200
-        assert response["content-type"] == "text/csv"
-        content_disposition = response["content-disposition"]
-        assert content_disposition.startswith('attachment; filename="')
-        assert "ppa-digitizedworks-" in content_disposition
-        assert content_disposition.endswith('.csv"')
-        assert now().strftime("%Y%m%d") in content_disposition
-        assert re.search(r"\d{8}T\d{2}:\d{2}:\d{2}", content_disposition)
-
-        # read content as csv and inspect
-        csvreader = csv.reader(StringIO(response.content.decode()))
-        rows = [row for row in csvreader]
-        digworks = DigitizedWork.objects.order_by("id").all()
-        # check for header row
-        assert rows[0] == DigitizedWorkCSV.header_row
-        # check for expected number of records - header + one row for each work
-        assert len(rows) == digworks.count() + 1
-        # check expected data in CSV output
-        for digwork, digwork_data in zip(digworks, rows[1:]):
-            assert digwork.source_id in digwork_data
-            assert digwork.record_id in digwork_data
-            assert digwork.title in digwork_data
-            assert digwork.subtitle in digwork_data
-            assert digwork.sort_title in digwork_data
-            assert digwork.author in digwork_data
-            assert str(digwork.pub_date) in digwork_data
-            assert digwork.pub_place in digwork_data
-            assert digwork.publisher in digwork_data
-            assert digwork.publisher in digwork_data
-            assert digwork.enumcron in digwork_data
-            assert (
-                ";".join([coll.name for coll in digwork.collections.all()])
-                in digwork_data
-            )
-            assert digwork.notes in digwork_data
-            assert digwork.public_notes in digwork_data
-            assert "%d" % digwork.page_count in digwork_data
-            assert "%s" % digwork.added in digwork_data
-            assert "%s" % digwork.updated in digwork_data
-            assert digwork.get_status_display() in digwork_data
-            assert digwork.get_source_display() in digwork_data
-            # excerpt fields
-            assert digwork.get_item_type_display() in digwork_data
-            # check optional fields if set
-            for opt_field in ("book_journal", "pages_orig", "pages_digital"):
-                value = getattr(digwork, opt_field)
-                if value:
-                    assert value in digwork_data
-
-
-class TestAdminViews(TestCase):
-    @pytest.fixture(autouse=True)
-    def _admin_client(self, admin_client):
-        # make pytest-django admin client available on the class
-        self.admin_client = admin_client
-
-    def test_digitizedwork_changelist_csv(self):
-        # request digitized work change list as admin
-        response = self.admin_client.get(
-            reverse("admin:archive_digitizedwork_changelist")
-        )
-        self.assertContains(
-            response,
-            reverse("archive:csv"),
-            msg_prefix="digitized work change list should include CSV download link",
-        )
-        self.assertContains(
-            response,
-            "Download as CSV",
-            msg_prefix="digitized work change list should include CSV download button",
-        )
-
-    def test_other_changelist_no_csv(self):
-        # link should not be on other change lists
-        response = self.admin_client.get(reverse("admin:auth_user_changelist"))
-        self.assertNotContains(
-            response,
-            reverse("archive:csv"),
-            msg_prefix="CSV download link should only be on digitized work list",
-        )
 
 
 class TestDigitizedWorkByRecordId(TestCase):
