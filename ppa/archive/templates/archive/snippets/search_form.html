@@ -20,7 +20,7 @@
             <span class="validation">
                 {{ search_form.pubdate_validation_msg }}
             </span>
-            <button class="clear-selection" type="button">Clear Selection</button>
+            <button class="clear-selection" type="button">Reset Dates</button>
         </div>
         <div class="eight wide column" id="histogram">
             <canvas class="visualization" height="60" width="600"></canvas>
@@ -69,7 +69,7 @@
     </div>
     <input type="submit" class="sr-only sr-only-focusable" aria-label="submit search">
     <div class="workscount ui center aligned text container">
-        <p class="count">Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}</p>
+        <p class="count">Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }} or clusters of works</p>
         <p class="zotero">Work citations can be exported to <a href="https://www.zotero.org/support/getting_stuff_into_your_library">Zotero</a></p>
         <div class="loader">
             <img src="{% static 'img/loader/search-loader.gif' %}" alt="">
