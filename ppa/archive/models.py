@@ -629,10 +629,11 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             if field_data["publisher"].lower() == "[s.n.]":
                 field_data["publisher"] = ""
 
-            # remove printed by statement before publisher name
+            # remove printed by statement before publisher name,
+            # then strip any remaining whitespace
             field_data["publisher"] = re.sub(
                 self.printed_by_re, "", field_data["publisher"], flags=re.IGNORECASE
-            )
+            ).strip()
 
         # Gale/ECCO dates may include non-numeric, e.g. MDCCLXXXVIII. [1788]
         # try as numeric first, then extract year with regex
