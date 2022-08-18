@@ -196,7 +196,8 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
     def within_cluster(self, cluster_id):
         """Search within a group of reprints/editions"""
         qs_copy = self.all()
-        qs_copy.filter(cluster_id=cluster_id)
+        qs_copy.filter(cluster_id_s=cluster_id)
+        qs_copy.work_filter(cluster_id_s=cluster_id)
         # store the cluster id since it impacts expand/collapse behavior
         qs_copy.within_cluster = cluster_id
         return qs_copy
