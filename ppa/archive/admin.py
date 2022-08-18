@@ -3,13 +3,67 @@ from django.contrib import admin
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+from import_export import fields, resources, widgets
+from import_export.admin import ExportActionMixin, ExportMixin
 from parasolr.django import SolrClient
 
 from ppa.archive.models import Collection, DigitizedWork, ProtectedWorkFieldFlags
 from ppa.archive.views import ImportView
 
 
-class DigitizedWorkAdmin(admin.ModelAdmin):
+# import/export resource
+class DigitizedWorkResource(resources.ModelResource):
+    # declare export fields to customize output
+    # - get display value for choice fields
+    item_type = fields.Field(
+        attribute="get_item_type_display",
+    )
+    source = fields.Field(
+        attribute="get_source_display",
+    )
+    status = fields.Field(
+        attribute="get_status_display",
+    )
+
+    class Meta:
+        model = DigitizedWork
+        exclude = ("protected_fields",)
+        export_order = (
+            "id",
+            "source_id",
+            "record_id",
+            "title",
+            "subtitle",
+            "sort_title",
+            "author",
+            "item_type",  # display
+            "book_journal",
+            "pub_date",
+            "pub_place",
+            "publisher",
+            "enumcron",
+            "collections",  # multiple, names
+            # ";".join([coll.name for coll in
+            # 'collections.all()])',
+            "public_notes",
+            "notes",
+            "pages_orig",
+            "pages_digital",
+            "page_count",
+            "status",
+            "source",
+            "added",
+            "updated",
+        )
+        widgets = {
+            # customize many-to-many output for collections
+            "collections": {"separator": "; ", "field": "name"}
+        }
+
+
+class DigitizedWorkAdmin(ExportActionMixin, ExportMixin, admin.ModelAdmin):
+    resource_class = DigitizedWorkResource  # resource for export
+
     list_display = (
         "display_title",
         "subtitle",
