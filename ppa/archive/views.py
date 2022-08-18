@@ -222,9 +222,6 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             # subtract it back so display matches user entered dates
             facet_ranges["pub_date"]["end"] -= 1
 
-            # searching within cluster or not
-            context["within_cluster"] = solrq.within_cluster
-
         except requests.exceptions.ConnectionError:
             # override object list with an empty list that can be paginated
             # so that template display will still work properly
