@@ -1,8 +1,7 @@
-{% extends 'admin/change_list.html' %}
-
+{# extend import-export template to get export all button  #}
+{% extends 'admin/import_export/change_list_export.html' %}
 
 {% block object-tools-items %}
-    <li><a href="{% url 'archive:csv' %}">Download as CSV</a></li>
     {% if perms.archive.add_digitizedwork %}
     <li><a class="addlink" href="{% url 'admin:import' %}">Import</a></li>
     {% endif %}
