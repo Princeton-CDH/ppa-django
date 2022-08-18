@@ -96,8 +96,13 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             search_opts = self.form.cleaned_data
             self.query = search_opts.get("query", None)
             collections = search_opts.get("collections", None)
+            cluster_id = search_opts.get("group", None)
 
             solr_q.keyword_search(self.query)
+
+            if cluster_id:
+                # filter by group id if set
+                solr_q = solr_q.within_cluster(cluster_id)
 
             # restrict by collection
             if collections:

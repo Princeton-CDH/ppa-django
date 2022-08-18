@@ -1,4 +1,4 @@
-# local ignores
+# local / project specific ignores
 data/
 
 # Webpack files
