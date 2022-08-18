@@ -53,6 +53,12 @@
                 <td>{{ object.book_journal }}</td>
             </tr>
             {% endif %}
+            {% if object.enumcron %}
+            <tr>
+                <th scope="row">Volume</th>
+                <td>{{ object.enumcron }}</td>
+            </tr>
+            {% endif %}
             {% if object.pub_date %}
             <tr>
                 <th scope="row">Publication Date</th>
