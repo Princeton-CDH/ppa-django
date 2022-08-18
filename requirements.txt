@@ -29,3 +29,4 @@ beautifulsoup4<4.9
 # 4.2 is not compatible with py3.6
 gensim<4.2
 django-adminlogentries
+django-import-export
