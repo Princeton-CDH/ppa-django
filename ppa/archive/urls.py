@@ -11,7 +11,6 @@ urlpatterns = [
         staff_member_required(views.AddToCollection.as_view()),
         name="add-to-collection",
     ),
-    path("csv/", views.DigitizedWorkCSV.as_view(), name="csv"),
     path(
         "opensearch-description/",
         views.OpenSearchDescriptionView.as_view(),
