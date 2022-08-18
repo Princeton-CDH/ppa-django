@@ -389,11 +389,11 @@ class GaleImporter(DigitizedWorkImporter):
             record_id=doc_metadata["estc"],
             source_url=doc_metadata["isShownAt"],
             # volume information should be included as volumeNumber when available
-            enumcron=doc_metadata.get("volumeNumber", ""),
-            title=doc_metadata["title"],
+            enumcron=doc_metadata.get("volumeNumber", "").strip(),
+            title=doc_metadata["title"].strip(),
             page_count=len(item_record["pageResponse"]["pages"]),
             # import any notes from csv as private notes
-            notes=kwargs.get("NOTES", ""),
+            notes=kwargs.get("NOTES", "").strip(),
         )
 
         # populate titles, author, publication info from marc record
@@ -416,17 +416,17 @@ class GaleImporter(DigitizedWorkImporter):
                 digwork.title = kwargs.get("Title", digwork.title)
                 # clear out any existing subtitle; excerpts don't have them
                 digwork.subtitle = ""
-                digwork.sort_title = kwargs.get("Sort Title", "")
-                digwork.book_journal = kwargs.get("Book/Journal Title", "")
+                digwork.sort_title = kwargs.get("Sort Title", "").strip()
+                digwork.book_journal = kwargs.get("Book/Journal Title", "").strip()
                 # set page range for excerpts from csv when set
                 # intspan requires commas; allow semicolons in input but convert to commas
-                digwork.pages_digital = kwargs.get("Digital Page Range", "").replace(
-                    ";", ","
+                digwork.pages_digital = (
+                    kwargs.get("Digital Page Range", "").replace(";", ",").strip()
                 )
-                digwork.pages_orig = kwargs.get("Original Page Range", "")
+                digwork.pages_orig = kwargs.get("Original Page Range", "").strip()
                 # - optional fields
-                digwork.author = kwargs.get("Author", "")
-                digwork.public_notes = kwargs.get("Public Notes", "")
+                digwork.author = kwargs.get("Author", "").strip()
+                digwork.public_notes = kwargs.get("Public Notes", "").strip()
 
                 # recalculate page count for the excerpt if page range is set
                 if digwork.pages_digital:

@@ -100,6 +100,7 @@ INSTALLED_APPS = [
     "taggit",
     "fullurl",
     "admin_log_entries",
+    "import_export",
     "parasolr",
     "ppa.archive",
     "ppa.common",

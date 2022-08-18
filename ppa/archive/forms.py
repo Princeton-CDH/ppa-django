@@ -5,6 +5,7 @@ from django.core.validators import RegexValidator
 from django.db.models import Max, Min
 
 from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork
+from ppa.common.utils import simplify_quotes
 
 
 class SelectDisabledMixin(object):
@@ -416,6 +417,29 @@ class SearchForm(forms.Form):
 
         # return just the min and max values
         return maxmin["pub_date__min"], maxmin["pub_date__max"]
+
+    def _clean_quotes(self, field):
+        value = self.cleaned_data.get(field)
+        if value:
+            return simplify_quotes(value)
+        return value  # return since could be None or empty string
+
+    # query, author, and title could all have quotes for exact phrase
+
+    def clean_query(self):
+        """Clean keyword search query term; converts any typographic
+        quotes to straight quotes"""
+        return self._clean_quotes("query")
+
+    def clean_title(self):
+        """Clean keyword search query term; converts any typographic
+        quotes to straight quotes"""
+        return self._clean_quotes("title")
+
+    def clean_author(self):
+        """Clean keyword search query term; converts any typographic
+        quotes to straight quotes"""
+        return self._clean_quotes("author")
 
 
 class SearchWithinWorkForm(forms.Form):
