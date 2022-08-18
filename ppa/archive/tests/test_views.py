@@ -130,6 +130,33 @@ class TestDigitizedWorkDetailView(TestCase):
             msg_prefix="Notes field should not be visible without notes",
         )
 
+        # volume should be present twice: field label + search within
+        self.assertContains(
+            response,
+            "Volume",
+            count=2,
+            msg_prefix="Volume field should not display if no enumcron is set",
+        )
+
+        self.assertContains(
+            response,
+            self.dial.enumcron,
+            msg_prefix="Volume field should display if enumcron is set",
+        )
+
+    def test_anonymous_display_no_volume(self):
+        # test a fixture record with no enumcron
+        digwork = DigitizedWork.objects.get(source_id="chi.13880510")
+        response = self.client.get(digwork.get_absolute_url())
+        assert not digwork.enumcron
+        #
+        self.assertContains(
+            response,
+            "Volume",
+            count=1,
+            msg_prefix="Volume metadata should not display if no enumcron",
+        )
+
     def test_anonymous_display_excerpt_hathi(self):
         # create an excerpt
         excerpt = DigitizedWork.objects.create(
