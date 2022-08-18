@@ -102,6 +102,7 @@ class Command(BaseCommand):
 
             # reindex pages to ensure they have the new group id
             # TODO: maybe optional?
+            # FIXME: index pages after using optimized script!
             digwork.index_items(Page.page_index_data(digwork))
 
         # summarize what was done
