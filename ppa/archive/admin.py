@@ -237,8 +237,8 @@ class ClusterAdmin(admin.ModelAdmin):
         return qs.annotate(Count("digitizedwork"))
 
     @admin.display(
-        ordering="digitizedwork_set__count",
-        description="number of works in this cluster",
+        ordering="digitizedwork__count",
+        description="# works in this cluster",
     )
     def works(self, obj):
         return format_html(
