@@ -96,7 +96,7 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             search_opts = self.form.cleaned_data
             self.query = search_opts.get("query", None)
             collections = search_opts.get("collections", None)
-            cluster_id = search_opts.get("group", None)
+            cluster_id = search_opts.get("cluster", None)
 
             solr_q.keyword_search(self.query)
 
@@ -221,6 +221,9 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             # increase the end bound by one so that year is included;
             # subtract it back so display matches user entered dates
             facet_ranges["pub_date"]["end"] -= 1
+
+            # searching within cluster or not
+            context["within_cluster"] = solrq.within_cluster
 
         except requests.exceptions.ConnectionError:
             # override object list with an empty list that can be paginated
