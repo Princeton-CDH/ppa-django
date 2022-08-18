@@ -1,6 +1,17 @@
 {% load semanticui humanize static %}
 <form class="ui form{% if error %} error{% endif %}">
     <div class="ui vertical stackable grid segment">
+
+        {% if search_form.cluster.value %}
+        <div class="twelve wide column">
+            {# TODO: icon, text and remove filter here  #}
+            <div class="cluster-work icon container" >
+                You are searching and browsing within a cluster.
+                <a href="?{% querystring_replace cluster='' %}">Search the full archive.</a>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="twelve wide column">
             {% render_field search_form.query %}
             <span class="question-popup" data-html="{{ search_form.QUESTION_POPUP_TEXT }}" data-position="top center">
