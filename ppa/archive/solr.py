@@ -146,7 +146,7 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
     }
 
     keyword_query = None
-    within_cluster = None
+    within_cluster_id = None
 
     def __init__(self, solr=None):
         # field aliases: keys return the fields that will be returned from Solr for search page;
@@ -189,7 +189,7 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         # preserve local fields when cloning
         qs_copy = super()._clone()
         qs_copy.keyword_query = self.keyword_query
-        qs_copy.within_cluster = self.within_cluster
+        qs_copy.within_cluster_id = self.within_cluster_id
         qs_copy._workq = self._workq
         return qs_copy
 
@@ -199,7 +199,7 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         qs_copy = self.filter(cluster_id_s=cluster_id)
         qs_copy.work_filter(cluster_id_s=cluster_id)
         # store the cluster id since it impacts expand/collapse behavior
-        qs_copy.within_cluster = cluster_id
+        qs_copy.within_cluster_id = cluster_id
         return qs_copy
 
     def query_opts(self):
@@ -218,7 +218,7 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
             qs_copy.filter_qs = list(set(qs_copy.filter_qs))
 
             # if not searching within a group, collapse reprints/editions
-            if not qs_copy.within_cluster:
+            if not qs_copy.within_cluster_id:
                 # (not expanding, since we only display the first)
                 qs_copy = qs_copy.filter("{!collapse field=cluster_id_s}")
 
@@ -254,7 +254,7 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         # for main archive search, by default we collapse on
         # cluster id to collect all reprints/editions and their pages;
         # when searching within a cluster, collapse on group id
-        collapse_on = "group_id_s" if self.within_cluster else "cluster_id_s"
+        collapse_on = "group_id_s" if self.within_cluster_id else "cluster_id_s"
 
         qs_copy = (
             qs_copy.search(combined_query)
