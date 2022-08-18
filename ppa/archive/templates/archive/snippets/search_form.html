@@ -1,6 +1,8 @@
 {% load semanticui humanize static %}
 <form class="ui form{% if error %} error{% endif %}">
     <div class="ui vertical stackable grid segment">
+        {# include hidden cluster field value for form submission #}
+        {{ search_form.cluster }}
 
         {% if search_form.cluster.value %}
         <div class="twelve wide column">
