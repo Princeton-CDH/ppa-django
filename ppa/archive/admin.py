@@ -50,8 +50,7 @@ class DigitizedWorkResource(resources.ModelResource):
             "publisher",
             "enumcron",
             "collections",  # multiple, names
-            # ";".join([coll.name for coll in
-            # 'collections.all()])',
+            "cluster",
             "public_notes",
             "notes",
             "pages_orig",
@@ -64,8 +63,14 @@ class DigitizedWorkResource(resources.ModelResource):
         )
         widgets = {
             # customize many-to-many output for collections
-            "collections": {"separator": "; ", "field": "name"}
+            "collections": {"separator": "; ", "field": "name"},
+            # output cluster id instead of pk
+            "cluster": {"field": "cluster_id"},
         }
+
+    def get_queryset(self):
+        # prefetch related object to make download more efficient
+        return super().get_queryset().prefetch_related("collections", "cluster")
 
 
 class DigitizedWorkAdmin(ExportActionMixin, ExportMixin, admin.ModelAdmin):
