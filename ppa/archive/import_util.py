@@ -10,6 +10,7 @@ import os
 import subprocess
 import tempfile
 from collections import OrderedDict
+from datetime import datetime
 from json.decoder import JSONDecodeError
 
 from cached_property import cached_property
@@ -176,6 +177,11 @@ class HathiImporter(DigitizedWorkImporter):
         }
     )
 
+    def __init__(self, source_ids=None, rsync_output=False):
+        super().__init__(source_ids)
+        # track whether (and how much) rsync output is desired
+        self.rsync_output = rsync_output
+
     def filter_invalid_ids(self):
         """Remove any ids that don't look valid. At minimum, must
         include `.` separator required for pairtree path."""
@@ -208,7 +214,7 @@ class HathiImporter(DigitizedWorkImporter):
     # recursive, copy links, preserve times, delete extra files at destination
     # NOTE: add -v if needed for debugging
     rsync_cmd = (
-        "rsync -rLt --delete --ignore-errors "
+        "rsync -rLt %(output)s --delete --ignore-errors "
         + " --files-from=%(path_file)s %(server)s:%(src)s %(dest)s"
     )
 
@@ -244,7 +250,11 @@ class HathiImporter(DigitizedWorkImporter):
 
         # create temp file with list of paths to synchronize
         with tempfile.NamedTemporaryFile(
-            prefix="ppa_hathi_pathlist-", suffix=".txt", mode="w+t"
+            prefix="ppa_hathi_pathlist-",
+            suffix=".txt",
+            mode="w+t",
+            # temporary preserve file for dev
+            delete=False,
         ) as fp:
 
             file_paths = list(self.pairtree_paths.values())
@@ -257,11 +267,25 @@ class HathiImporter(DigitizedWorkImporter):
 
             # populate rsync command with path file name,
             # local hathi data dir, and remote dataset server and source
+
+            # if rsync output requested, include itemize and log fileargs
+            output_opts = ""
+            if self.rsync_output:
+                outputfilename = "ppa_hathi_rsync_%s.log" % datetime.now().strftime(
+                    "%Y%m%d-%H%M%S"
+                )
+                # output requested: always log content to a file
+                output_opts = "--log-file=%s" % outputfilename
+                # if verbose output requested, itemize report while running
+                if int(self.rsync_output) >= 2:
+                    output_opts = "-i %s" % output_opts
+
             rsync_cmd = self.rsync_cmd % {
                 "path_file": fp.name,
                 "server": settings.HATHITRUST_RSYNC_SERVER,
                 "src": settings.HATHITRUST_RSYNC_PATH,
                 "dest": settings.HATHI_DATA,
+                "output": output_opts,
             }
             logger.debug("rsync command: %s" % rsync_cmd)
             try:
@@ -271,6 +295,9 @@ class HathiImporter(DigitizedWorkImporter):
                     "HathiTrust rsync failed — %s / command: %s"
                     % (self.RSYNC_RETURN_CODES[err.returncode], rsync_cmd)
                 )
+
+            if self.rsync_output:
+                return outputfilename
 
     def add_item_prep(self, user=None):
         """Prep before adding new items from HathiTrust.
