@@ -18,11 +18,7 @@ from django.utils.http import urlencode
 from django.utils.timezone import now
 from parasolr.django import SolrClient, SolrQuerySet
 
-from ppa.archive.forms import (
-    AddFromHathiForm,
-    ModelMultipleChoiceFieldWithEmpty,
-    SearchForm,
-)
+from ppa.archive.forms import ImportForm, ModelMultipleChoiceFieldWithEmpty, SearchForm
 from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork
 from ppa.archive.solr import ArchiveSearchQuerySet
 from ppa.archive.templatetags.ppa_tags import (
@@ -30,7 +26,7 @@ from ppa.archive.templatetags.ppa_tags import (
     hathi_page_url,
     page_image_url,
 )
-from ppa.archive.views import AddFromHathiView, DigitizedWorkCSV, DigitizedWorkListView
+from ppa.archive.views import DigitizedWorkListView, ImportView
 
 
 class TestDigitizedWorkDetailView(TestCase):
@@ -132,6 +128,33 @@ class TestDigitizedWorkDetailView(TestCase):
             response,
             "Note on edition",
             msg_prefix="Notes field should not be visible without notes",
+        )
+
+        # volume should be present twice: field label + search within
+        self.assertContains(
+            response,
+            "Volume",
+            count=2,
+            msg_prefix="Volume field should not display if no enumcron is set",
+        )
+
+        self.assertContains(
+            response,
+            self.dial.enumcron,
+            msg_prefix="Volume field should display if enumcron is set",
+        )
+
+    def test_anonymous_display_no_volume(self):
+        # test a fixture record with no enumcron
+        digwork = DigitizedWork.objects.get(source_id="chi.13880510")
+        response = self.client.get(digwork.get_absolute_url())
+        assert not digwork.enumcron
+        #
+        self.assertContains(
+            response,
+            "Volume",
+            count=1,
+            msg_prefix="Volume metadata should not display if no enumcron",
         )
 
     def test_anonymous_display_excerpt_hathi(self):
@@ -417,10 +440,8 @@ class TestDigitizedWorkDetailView(TestCase):
         dial_excerpt = DigitizedWork.objects.create(
             source_id=self.dial.source_id, pages_digital="200-250"
         )
-        print(dial_excerpt.get_absolute_url())
         response = self.client.get(dial_excerpt.get_absolute_url())
         assert response.status_code == 200
-        print(response.context["object"])
         assert response.context["object"] == dial_excerpt
 
         # getting the full work should not return the excerpt
@@ -858,112 +879,6 @@ def test_archive_list_empty_solr(client, empty_solr):
     assert "No matching works" in response.content.decode()
 
 
-class TestDigitizedWorkCSV(TestCase):
-    fixtures = ["sample_digitized_works"]
-
-    def test_csv(self):
-        # add an arbitrary note to one digital work so that the field is
-        # populated in at least one case
-        first_dw = DigitizedWork.objects.first()
-        first_dw.notes = "private notes"
-        first_dw.public_notes = "public notes"
-        first_dw.save()
-
-        # add an excerpt to check new fields are included
-        excerpt = DigitizedWork.objects.create(
-            source_id="njp.32101023869397",
-            title="The Old and the New in Metrics",
-            pub_date=1905,
-            book_journal="The Classical journal",
-            pages_orig="212-221",
-            pages_digital="220-229",
-            page_count=9,
-        )
-
-        # get the csv export and inspect the response
-        response = self.client.get(reverse("archive:csv"))
-        assert response.status_code == 200
-        assert response["content-type"] == "text/csv"
-        content_disposition = response["content-disposition"]
-        assert content_disposition.startswith('attachment; filename="')
-        assert "ppa-digitizedworks-" in content_disposition
-        assert content_disposition.endswith('.csv"')
-        assert now().strftime("%Y%m%d") in content_disposition
-        assert re.search(r"\d{8}T\d{2}:\d{2}:\d{2}", content_disposition)
-
-        # read content as csv and inspect
-        csvreader = csv.reader(StringIO(response.content.decode()))
-        rows = [row for row in csvreader]
-        digworks = DigitizedWork.objects.order_by("id").all()
-        # check for header row
-        assert rows[0] == DigitizedWorkCSV.header_row
-        # check for expected number of records - header + one row for each work
-        assert len(rows) == digworks.count() + 1
-        # check expected data in CSV output
-        for digwork, digwork_data in zip(digworks, rows[1:]):
-            assert digwork.source_id in digwork_data
-            assert digwork.record_id in digwork_data
-            assert digwork.title in digwork_data
-            assert digwork.subtitle in digwork_data
-            assert digwork.sort_title in digwork_data
-            assert digwork.author in digwork_data
-            assert str(digwork.pub_date) in digwork_data
-            assert digwork.pub_place in digwork_data
-            assert digwork.publisher in digwork_data
-            assert digwork.publisher in digwork_data
-            assert digwork.enumcron in digwork_data
-            assert (
-                ";".join([coll.name for coll in digwork.collections.all()])
-                in digwork_data
-            )
-            assert digwork.notes in digwork_data
-            assert digwork.public_notes in digwork_data
-            assert "%d" % digwork.page_count in digwork_data
-            assert "%s" % digwork.added in digwork_data
-            assert "%s" % digwork.updated in digwork_data
-            assert digwork.get_status_display() in digwork_data
-            assert digwork.get_source_display() in digwork_data
-            # excerpt fields
-            assert digwork.get_item_type_display() in digwork_data
-            # check optional fields if set
-            for opt_field in ("book_journal", "pages_orig", "pages_digital"):
-                value = getattr(digwork, opt_field)
-                if value:
-                    assert value in digwork_data
-
-
-class TestAdminViews(TestCase):
-    @pytest.fixture(autouse=True)
-    def _admin_client(self, admin_client):
-        # make pytest-django admin client available on the class
-        self.admin_client = admin_client
-
-    def test_digitizedwork_changelist_csv(self):
-        # request digitized work change list as admin
-        response = self.admin_client.get(
-            reverse("admin:archive_digitizedwork_changelist")
-        )
-        self.assertContains(
-            response,
-            reverse("archive:csv"),
-            msg_prefix="digitized work change list should include CSV download link",
-        )
-        self.assertContains(
-            response,
-            "Download as CSV",
-            msg_prefix="digitized work change list should include CSV download button",
-        )
-
-    def test_other_changelist_no_csv(self):
-        # link should not be on other change lists
-        response = self.admin_client.get(reverse("admin:auth_user_changelist"))
-        self.assertNotContains(
-            response,
-            reverse("archive:csv"),
-            msg_prefix="CSV download link should only be on digitized work list",
-        )
-
-
 class TestDigitizedWorkByRecordId(TestCase):
     fixtures = ["sample_digitized_works"]
 
@@ -1060,7 +975,7 @@ class TestAddToCollection(TestCase):
             response, '<option value="%d">Random Grabbag</option>' % coll1.id, html=True
         )
 
-    @patch.object(DigitizedWork, "index")
+    @patch.object(DigitizedWork, "index_items")
     def test_post(self, mockindex):
         self.client.login(**self.admin_credentials)
 
@@ -1190,7 +1105,7 @@ class TestDigitizedWorkListView(TestCase):
             )
             mock_qs.only.assert_called_with("id")
             mock_qs.highlight.assert_called_with(
-                "content*", snippets=3, method="unified"
+                "content", snippets=3, method="unified"
             )
             mock_qs.get_results.assert_called_with(rows=4)
 
@@ -1226,13 +1141,13 @@ class TestDigitizedWorkListView(TestCase):
             mock_qs.work_filter.assert_called_with(author="Robert")
 
 
-class TestAddFromHathiView(TestCase):
+class TestImportView(TestCase):
 
-    superuser = {"username": "super", "password": uuid.uuid4()}
+    superuser = {"username": "super", "password": str(uuid.uuid4())}
 
     def setUp(self):
         self.factory = RequestFactory()
-        self.add_from_hathi_url = reverse("admin:add-from-hathi")
+        self.import_url = reverse("admin:import")
 
         self.user = get_user_model().objects.create_superuser(
             email="su@example.com", **self.superuser
@@ -1247,29 +1162,28 @@ class TestAddFromHathiView(TestCase):
         self.test_credentials = {"username": testuser, "password": test_pass}
 
     def test_get_context(self):
-        add_from_hathi = AddFromHathiView()
-        add_from_hathi.request = self.factory.get(self.add_from_hathi_url)
+        add_from_hathi = ImportView()
+        add_from_hathi.request = self.factory.get(self.import_url)
         context = add_from_hathi.get_context_data()
-        assert context["page_title"] == AddFromHathiView.page_title
+        assert context["page_title"] == ImportView.page_title
 
     @patch("ppa.archive.views.HathiImporter")
     def test_form_valid(self, mock_hathi_importer):
-        add_form = AddFromHathiForm({"hathi_ids": "old\nnew"})
-        add_form.is_valid()
+        post_data = {"source_ids": "old\nnew", "source": DigitizedWork.HATHI}
+        add_form = ImportForm(post_data)
+        assert add_form.is_valid()
 
         mock_htimporter = mock_hathi_importer.return_value
         # set mock existing id & imported work on the mock importer
         mock_htimporter.existing_ids = {"old": 1}
         mock_htimporter.imported_works = [Mock(source_id="new", pk=2)]
 
-        add_from_hathi = AddFromHathiView()
-        add_from_hathi.request = self.factory.post(
-            self.add_from_hathi_url, {"hathi_ids": "old\nnew"}
-        )
+        add_from_hathi = ImportView()
+        add_from_hathi.request = self.factory.post(self.import_url, post_data)
         add_from_hathi.request.user = self.user
         response = add_from_hathi.form_valid(add_form)
 
-        mock_hathi_importer.assert_called_with(add_form.get_hathi_ids())
+        mock_hathi_importer.assert_called_with(add_form.get_source_ids())
         mock_htimporter.filter_existing_ids.assert_called_with()
         mock_htimporter.add_items.assert_called_with(
             log_msg_src="via django admin", user=self.user
@@ -1282,22 +1196,22 @@ class TestAddFromHathiView(TestCase):
 
     def test_get(self):
         # denied to anonymous user; django redirects to login
-        assert self.client.get(self.add_from_hathi_url).status_code == 302
+        assert self.client.get(self.import_url).status_code == 302
 
         # denied to logged in staff user
         self.client.login(**self.test_credentials)
-        assert self.client.get(self.add_from_hathi_url).status_code == 403
+        assert self.client.get(self.import_url).status_code == 403
 
         # works for user with add permission on digitized work
         add_digwork_perm = Permission.objects.get(codename="add_digitizedwork")
         self.user.user_permissions.add(add_digwork_perm)
-        response = self.client.get(self.add_from_hathi_url)
+        response = self.client.get(self.import_url)
         assert response.status_code == 200
 
-        self.assertTemplateUsed(response, AddFromHathiView.template_name)
+        self.assertTemplateUsed(response, ImportView.template_name)
         # sanity check that form display
         self.assertContains(response, "<form")
-        self.assertContains(response, '<textarea name="hathi_ids"')
+        self.assertContains(response, '<textarea name="source_ids"')
 
     @patch("ppa.archive.views.HathiImporter")
     def test_post(self, mock_hathi_importer):
@@ -1311,14 +1225,17 @@ class TestAddFromHathiView(TestCase):
         }
 
         self.client.login(**self.superuser)
-        response = self.client.post(self.add_from_hathi_url, {"hathi_ids": "old\nnew"})
+        response = self.client.post(
+            self.import_url,
+            {"source_ids": "old\nnew", "source": DigitizedWork.HATHI},
+        )
         assert response.status_code == 200
         self.assertContains(response, "Processed 2 HathiTrust Identifiers")
         # inspect context
         assert response.context["results"] == mock_htimporter.output_results()
         assert response.context["existing_ids"] == mock_htimporter.existing_ids
-        assert isinstance(response.context["form"], AddFromHathiForm)
-        assert response.context["page_title"] == AddFromHathiView.page_title
+        assert isinstance(response.context["form"], ImportForm)
+        assert response.context["page_title"] == ImportView.page_title
         assert "admin_urls" in response.context
         assert response.context["admin_urls"]["old"] == reverse(
             "admin:archive_digitizedwork_change", args=[1]
@@ -1329,4 +1246,27 @@ class TestAddFromHathiView(TestCase):
 
         # should redisplay the form
         self.assertContains(response, "<form")
-        self.assertContains(response, '<textarea name="hathi_ids"')
+        self.assertContains(response, '<textarea name="source_ids"')
+
+    @patch("ppa.archive.views.GaleImporter")
+    def test_post_gale(self, mock_gale_importer):
+        mock_importer = mock_gale_importer.return_value
+        # set mock existing id & imported work on the mock importer
+        mock_importer.existing_ids = {"old": 1}
+        mock_importer.imported_works = [Mock(source_id="new", pk=2)]
+        mock_importer.output_results.return_value = {
+            "old": mock_gale_importer.SKIPPED,
+            "new": mock_gale_importer.SUCCESS,
+        }
+
+        self.client.login(**self.superuser)
+        response = self.client.post(
+            self.import_url,
+            {"source_ids": "old\nnew", "source": DigitizedWork.GALE},
+        )
+        assert response.status_code == 200
+        self.assertContains(response, "Processed 2 Gale Identifiers")
+        # inspect context briefly
+        assert response.context["results"] == mock_importer.output_results()
+        assert response.context["existing_ids"] == mock_importer.existing_ids
+        assert isinstance(response.context["form"], ImportForm)

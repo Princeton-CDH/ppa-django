@@ -3,6 +3,45 @@
 CHANGELOG
 =========
 
+3.8
+---
+
+public site:
+
+* As a user, I want to see the actual rather than digital page number on
+  keyword search results of Gale/ECCO items so that I can more
+  accurately cite items.
+* As a user, I want volume information to appear on both list view and
+  item detail view so that my experience is  consistent across the
+  search pages.  
+
+admin: 
+
+* As an admin, I want to add one or several new items from Gale/ECCO via
+  the admin interface so that I can add content to the site after
+  initial bulk import without developer assistance.
+* As an admin, I want to include book excerpts and articles as well as
+  full volumes from Gale/ECCO, so that I can include material that is
+  specifically about prosody from longer works about other subjects.
+* As an admin, I want to export a custom CSV after searching in the
+  backend so that I can use the backend’s search functionality to
+  create targeted data sets.  
+
+accessibility:
+
+   * As a motion-sensitive user, I want my browser reduced motion preference honored and the parallax effect on the site homepage not enabled, so that the parallax doesn't make me feel unwell.
+
+other:
+
+  * Transform typographic quotes in searches to work as exact phrase search
+  * Clarify help text on search page 
+  * Correct template display issue for admin bulk add to collections page
+  * Upgrade to Django 3.2
+  * Upgrade to Wagtail 2.15
+  * Upgrade to Node 16.15
+
+
+
 3.7.1
 ------
 

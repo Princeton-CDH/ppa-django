@@ -250,70 +250,6 @@ class TestContentPage(WagtailPageTests):
             'class="footnotes"',
             msg_prefix="footnotes block should get footnotes class",
         )
-        # NOTE default wagtail image block type no longer supported
-        # add image (without caption) + check template
-        content_page.body.stream_data.append(
-            {
-                "type": "captioned_image",
-                "value": {"image": 1, "caption": ""},
-                "id": "img1",
-            }
-        )
-        content_page.save()
-        response = self.client.get(content_page.relative_url(site))
-        # will always use <figure>
-        self.assertTemplateUsed(response, "pages/blocks/image_caption_block.html")
-        self.assertTemplateUsed(response, "pages/snippets/responsive_image.html")
-        self.assertContains(response, "<img")
-        self.assertContains(response, "srcset")
-        # no caption was specified; shouldn't render figcaption
-        self.assertNotContains(response, "<figcaption>")
-        # NOTE: not currently testing image srcset logic
-
-        # add image + caption to check template
-        caption_text = "a very detailed caption"
-        content_page.body.stream_data.append(
-            {
-                "type": "captioned_image",
-                # pseudo data, not a real image object
-                "value": {"image": 1, "caption": caption_text},
-                "id": "imgcapt1",
-            }
-        )
-        content_page.save()
-        response = self.client.get(content_page.relative_url(site))
-        self.assertTemplateUsed(response, "pages/blocks/image_caption_block.html")
-        self.assertTemplateUsed(response, "pages/snippets/responsive_image.html")
-        # should default to full-width image
-        self.assertContains(response, '<figure class="full">')
-        self.assertContains(
-            response,
-            '<figcaption><div class="rich-text">%s</div></figcaption>' % caption_text,
-        )
-
-        # test image floating logic
-        # left float
-        content_page.body.stream_data.append(
-            {
-                "type": "captioned_image",
-                "value": {"image": 1, "caption": caption_text, "style": "left"},
-                "id": "leftimg",
-            }
-        )
-        content_page.save()
-        response = self.client.get(content_page.relative_url(site))
-        self.assertContains(response, '<figure class="left">')
-        # right float
-        content_page.body.stream_data.append(
-            {
-                "type": "captioned_image",
-                "value": {"image": 1, "caption": caption_text, "style": "right"},
-                "id": "rightimg",
-            }
-        )
-        content_page.save()
-        response = self.client.get(content_page.relative_url(site))
-        self.assertContains(response, '<figure class="right">')
 
 
 class TestCollectionPage(WagtailPageTests):
@@ -478,8 +414,8 @@ class TestContributorPage(WagtailPageTests):
         # add people as project & board members
         person_a = Person.objects.get(name="Person A")
         person_b = Person.objects.get(name="Person B")
-        contrib.contributors.stream_data.append(("person", person_a, "p1"))
-        contrib.board.stream_data.append(("person", person_b, "p2"))
+        contrib.contributors.append(("person", person_a, "p1"))
+        contrib.board.append(("person", person_b, "p2"))
         contrib.save()
 
         response = self.client.get(contrib.relative_url(site))

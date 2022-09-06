@@ -1,14 +1,11 @@
-import json
-
 from django import forms
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db.models import Max, Min
-from django.utils.html import conditional_escape
-from django.utils.safestring import mark_safe
 
 from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork
+from ppa.common.utils import simplify_quotes
 
 
 class SelectDisabledMixin(object):
@@ -179,6 +176,7 @@ class SearchForm(forms.Form):
     #: (appears when you hover over the question mark icon)
     QUESTION_POPUP_TEXT = """
     Boolean search within a field is supported. Operators must be capitalized (AND, OR).
+    Use quotes for exact phrase.
     """
 
     # text inputs
@@ -187,7 +185,7 @@ class SearchForm(forms.Form):
         required=False,
         widget=forms.TextInput(
             attrs={
-                "placeholder": "Search full text and metadata",
+                "placeholder": "Search full-text and metadata, including approximate titles.",
                 "_icon": "search",
                 "_align": "left",
             }
@@ -198,7 +196,7 @@ class SearchForm(forms.Form):
         required=False,
         widget=forms.TextInput(
             attrs={
-                "placeholder": "Search the archive by book title",
+                "placeholder": "Search by exact title or subtitle.",
                 "_icon": "search",
                 "_align": "left",
             }
@@ -209,7 +207,7 @@ class SearchForm(forms.Form):
         required=False,
         widget=forms.TextInput(
             attrs={
-                "placeholder": "Search the archive by author",
+                "placeholder": "Search by exact author (last name, first name).",
                 "_icon": "search",
                 "_align": "left",
             }
@@ -417,6 +415,29 @@ class SearchForm(forms.Form):
         # return just the min and max values
         return maxmin["pub_date__min"], maxmin["pub_date__max"]
 
+    def _clean_quotes(self, field):
+        value = self.cleaned_data.get(field)
+        if value:
+            return simplify_quotes(value)
+        return value  # return since could be None or empty string
+
+    # query, author, and title could all have quotes for exact phrase
+
+    def clean_query(self):
+        """Clean keyword search query term; converts any typographic
+        quotes to straight quotes"""
+        return self._clean_quotes("query")
+
+    def clean_title(self):
+        """Clean keyword search query term; converts any typographic
+        quotes to straight quotes"""
+        return self._clean_quotes("title")
+
+    def clean_author(self):
+        """Clean keyword search query term; converts any typographic
+        quotes to straight quotes"""
+        return self._clean_quotes("author")
+
 
 class SearchWithinWorkForm(forms.Form):
     """
@@ -458,22 +479,36 @@ class AddToCollectionForm(forms.Form):
     )
 
 
-class AddFromHathiForm(forms.Form):
-    """Form to input HathiTrust IDs for items to be added."""
+class ImportForm(forms.Form):
+    """Form to import records from sources that support import."""
 
-    hathi_ids = forms.CharField(
-        label="HathiTrust Identifiers",
+    # only a subset of DigitizedWork.SOURCE_CHOICES can be imported
+    importable_sources = (
+        (DigitizedWork.HATHI, "HathiTrust"),
+        (DigitizedWork.GALE, "Gale"),
+    )
+
+    source = forms.ChoiceField(
+        label="Source",
+        choices=importable_sources,
+        help_text="Where should records be imported from?",
+        required=True,
+        widget=forms.RadioSelect,
+    )
+
+    source_ids = forms.CharField(
+        label="Record Identifiers",
         required=True,
         widget=forms.Textarea,
-        help_text="List of HathiTrust IDs for items to add, one per line. "
+        help_text="List of source IDs for items to add, one per line. "
         + "Existing records and invalid IDs will be skipped.",
     )
 
-    def get_hathi_ids(self):
+    def get_source_ids(self):
         """Get list of ids from valid form input. Splits on newlines,
         strips whitespace, and ignores empty lines."""
         return [
             line.strip()
-            for line in self.cleaned_data["hathi_ids"].split("\n")
+            for line in self.cleaned_data["source_ids"].split("\n")
             if line.strip()
         ]

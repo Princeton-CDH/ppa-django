@@ -66,10 +66,10 @@ class TestAjaxTemplateMixin(TestCase):
             template_name = "my_normal_template.html"
 
         myview = MyAjaxyView()
-        myview.request = Mock()
-        myview.request.is_ajax.return_value = False
+        myview.request = Mock(headers={})
         assert myview.get_template_names() == [MyAjaxyView.template_name]
 
+        myview.request.headers["x-requested-with"] = "XMLHttpRequest"
         myview.request.is_ajax.return_value = True
         assert myview.get_template_names() == MyAjaxyView.ajax_template_name
 
