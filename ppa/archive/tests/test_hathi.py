@@ -79,7 +79,6 @@ class TestHathiBibliographicAPI(TestCase):
         record = bib_api.record("htid", htid)
         assert isinstance(record, hathi.HathiBibliographicRecord)
 
-        print(mocksession.get.call_args_list)
         # check expected url was called - full instead of brief
         mocksession.get.assert_any_call(
             "http://catalog.hathitrust.org/api/volumes/full/htid/%s.json" % htid

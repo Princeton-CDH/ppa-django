@@ -70,8 +70,7 @@ STATICFILES_FINDERS = (
 # Application definition
 
 INSTALLED_APPS = [
-    "grappelli",
-    "django.contrib.admin",
+    "ppa.apps.LocalAdminConfig",  # replaces 'django.contrib.admin'
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.humanize",
@@ -86,6 +85,7 @@ INSTALLED_APPS = [
     "semanticuiforms",
     "webpack_loader",
     # 'wagtail.contrib.forms',
+    "wagtail.contrib.legacy.richtext",
     "wagtail.contrib.redirects",
     "wagtail.sites",
     "wagtail.users",
@@ -99,6 +99,8 @@ INSTALLED_APPS = [
     "modelcluster",
     "taggit",
     "fullurl",
+    "admin_log_entries",
+    "import_export",
     "parasolr",
     "ppa.archive",
     "ppa.common",
@@ -115,7 +117,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "wagtail.core.middleware.SiteMiddleware",
+    "wagtail.contrib.legacy.sitemiddleware.SiteMiddleware",
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
     "csp.middleware.CSPMiddleware",
 ]
@@ -163,6 +165,8 @@ DATABASES = {
     }
 }
 
+# preserve django 3.1 behavior
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators

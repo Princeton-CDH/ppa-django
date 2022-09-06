@@ -19,7 +19,7 @@ interface RxCheckboxInputState extends RxInputState {
 /**
  * An ancestor for all reactive <input> elements. These elements should always
  * have a `type` attribute, so the class is abstract.
- * 
+ *
  * The update() method has a default implementation that updates the `value` and
  * `name` attributes; simple types of <input> may not need to override it.
  *
@@ -29,7 +29,7 @@ interface RxCheckboxInputState extends RxInputState {
  * @implements {Reactive<RxInputState>}
  */
 abstract class RxInput extends Component implements Reactive<RxInputState> {
-    element: HTMLInputElement
+    declare element: HTMLInputElement
     state: Subject<RxInputState>
 
     constructor(element: HTMLInputElement) {
@@ -63,7 +63,7 @@ abstract class RxInput extends Component implements Reactive<RxInputState> {
  * @implements {Reactive<RxTextInputState>}
  */
 class RxTextInput extends RxInput implements Reactive<RxTextInputState> {
-    state: Subject<RxTextInputState>
+    declare state: Subject<RxTextInputState>
 
     constructor(element: HTMLInputElement) {
         super(element)
@@ -84,7 +84,7 @@ class RxTextInput extends RxInput implements Reactive<RxTextInputState> {
  * @implements {Reactive<RxCheckboxInputState>}
  */
 class RxCheckboxInput extends RxInput implements Reactive<RxCheckboxInputState>{
-    state: Subject<RxCheckboxInputState>
+    declare state: Subject<RxCheckboxInputState>
 
     constructor(element: HTMLInputElement) {
         super(element)

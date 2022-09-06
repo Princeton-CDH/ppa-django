@@ -26,19 +26,19 @@ $(function(){
 
     /* bindings */
     archiveSearchForm.onStateChange(submitForm)
-    $$clearDatesLink.click(onClearDates)
-    $$advancedSearchButton.click(toggleAdvancedSearch)
-    $$textInputs.keyup(onTextInputChange)
+    $$clearDatesLink.on("click", onClearDates)
+    $$advancedSearchButton.on("click", toggleAdvancedSearch)
+    $$textInputs.on("keyup", onTextInputChange)
 
     new ImageLazyLoader($$pagePreviews.get()) // lazy load images
 
     onPageLoad() // misc functions that run once on page load
 
     $$collectionInputs
-        .focus(e => $(e.target).parent().addClass('focus')) // make collection buttons focusable
-        .blur(e => $(e.target).parent().removeClass('focus'))
-        .change(e => $(e.target).parent().toggleClass('active'))
-        .keypress(e => { if (e.which == 13) $(e.target).click() }) // pressing enter "clicks" them
+        .on("focus", e => $(e.target).parent().addClass('focus')) // make collection buttons focusable
+        .on("blur", e => $(e.target).parent().removeClass('focus'))
+        .on("change", e => $(e.target).parent().toggleClass('active'))
+        .on("keypress", e => { if (e.which == 13) e.target.click() }) // pressing enter "clicks" them
 
     /* functions */
     function submitForm(state) {
@@ -120,7 +120,7 @@ $(function(){
         $$sortDropdown.dropdown('setting', {
             onChange: () => $$sortInput[0].dispatchEvent(new Event('input')) // make sure sort changes trigger a submission
         })
-        $('.form').keydown(e => { if (e.which === 13) e.preventDefault() }) // don't allow enter key to submit the search
+        $('.form').on("keydown", e => { if (e.which === 13) e.preventDefault() }) // don't allow enter key to submit the search
         $$textInputs.each((_, el) => clearable(el)) // make text inputs clearable
         validate()
         if (sessionStorage.getItem('ppa-adv-search') == 'open') { // open advanced search without animating it

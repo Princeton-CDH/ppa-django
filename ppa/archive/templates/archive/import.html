@@ -1,0 +1,81 @@
+{% extends 'admin/base_site.html'  %}
+{% load i18n static ppa_tags %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static "admin/css/forms.css" %}">{% endblock %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{% url 'admin:index' %}">{% trans "Home" %}</a>
+        &rsaquo; <a href="{% url 'admin:app_list' app_label='archive' %}">Archive</a>
+        &rsaquo; <a href="{% url 'admin:archive_digitizedwork_changelist'%}">Digitized Works</a>
+        &rsaquo; {{ page_title }}
+    </div>
+{% endblock %}
+
+{% block content_title %}
+    <h1>{{ page_title }}</h1>
+{% endblock %}
+
+{% block content %}
+{% if results %}
+
+<h2>Processed {{ results|length }} {{ import_mode }} Identifier{{ results|pluralize}}.</h2>
+{# TODO: revise for django admin styles #}
+<table id="result_list" cellspacing="0" class="grp-table grp-sortable">
+    <thead>
+        <tr>
+            <th scope="col">Souce ID</th>
+            <th scope="col">Status</th>
+            <th scope="col">Admin View</th>
+            <th scope="col">View on Site</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for source_id, result in results.items %}
+        <tr>
+            {# link to admin record here if success/skipped #}
+            <td>{{ source_id }}</td>
+            <td>{{ result }}</td>
+            {% if 'Success' in result or source_id in existing_ids %}
+            <td><a href="{{ admin_urls|dict_item:source_id }}" target="_blank" rel="noopener noreferrer">
+                View in Admin</a></td>
+            <td><a href="{% url 'archive:detail' source_id %}" target="_blank" rel="noopener noreferrer">
+                View on Site</a></td>
+            {% else %}
+            <td></td><td></td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{# redisplay the form to allow adding another set #}
+<div>
+<h2>Add more records?</h2>
+</div>
+{% endif %}
+
+<form method="post" style="padding-top: 2em;">{% csrf_token %}
+    <fieldset class="module aligned">
+        {# layout based on django admin styles #}
+        {% for field in form %}
+        <div class="form-row">
+            <div>
+            <label for="{{ field.id }}">{{ field.label }}</label>
+            {{ field }}
+
+            {% if field.field.help_text %}
+                <div class="help"{% if field.field.id_for_label %} id="{{ field.field.id_for_label }}_helptext"{% endif %}>
+                    {{ field.field.help_text|safe }}
+                </div>
+            {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+         <div class="form-row">
+            <input type="submit" value="Submit">
+        </div>
+    </fieldset>
+</form>
+{% endblock %}

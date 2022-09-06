@@ -231,7 +231,7 @@ def validate_page_range(value):
         )
 
 
-class DigitizedWork(TrackChangesModel, ModelIndexable):
+class DigitizedWork(ModelIndexable, TrackChangesModel):
     """
     Record to manage digitized works included in PPA and store their basic
     metadata.
@@ -629,26 +629,32 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
             if field_data["publisher"].lower() == "[s.n.]":
                 field_data["publisher"] = ""
 
-            # remove printed by statement before publisher name
+            # remove printed by statement before publisher name,
+            # then strip any remaining whitespace
             field_data["publisher"] = re.sub(
                 self.printed_by_re, "", field_data["publisher"], flags=re.IGNORECASE
-            )
+            ).strip()
 
         # Gale/ECCO dates may include non-numeric, e.g. MDCCLXXXVIII. [1788]
         # try as numeric first, then extract year with regex
         pubdate = marc_record.pubyear()
-        try:
-            field_data["pub_date"] = int(pubdate)
-        except ValueError:
-            yearmatch = self.pubyear_re.search(pubdate)
-            if yearmatch:
-                field_data["pub_date"] = int(yearmatch.groupdict()["year"])
+        # at least one case returns None here,
+        # which results in a TypeError on attemped conversion to integer
+        if pubdate:
+            try:
+                field_data["pub_date"] = int(pubdate)
+            except ValueError:
+                yearmatch = self.pubyear_re.search(pubdate)
+                if yearmatch:
+                    field_data["pub_date"] = int(yearmatch.groupdict()["year"])
 
         # remove brackets around inferred publishers, place of publication
         # *only* if they wrap the whole text
         for field in ["publisher", "pub_place"]:
             if field in field_data:
-                field_data[field] = re.sub(r"^\[(.*)\]$", r"\1", field_data[field])
+                field_data[field] = re.sub(
+                    r"^\[(.*)\]$", r"\1", field_data[field]
+                ).strip()
 
         if populate:
             # conditionally update fields that are protected (or not)
@@ -850,7 +856,7 @@ class DigitizedWork(TrackChangesModel, ModelIndexable):
                     record.force_utf8 = True
                     return record.as_marc()
                 except MARCRecordNotFound:
-                    logger.warn(
+                    logger.warning(
                         "MARC record for %s/%s not found"
                         % (self.source_id, self.record_id)
                     )
@@ -1068,7 +1074,8 @@ class Page(Indexable):
 
         for i, page in enumerate(gale_record["pageResponse"]["pages"], 1):
             page_number = page["pageNumber"]
-            page_num_int = int(page_number)
+            # folio number not yet set for all volumes; fallback to page number
+            page_label = page.get("folioNumber", int(page_number))
             # if the document has a page range defined, skip any pages not in range
             if page_span and i not in page_span:
                 continue
@@ -1078,8 +1085,7 @@ class Page(Indexable):
                 "group_id_s": digwork_index_id,  # for grouping with work record
                 "content": page.get("ocrText"),  # some pages have no text
                 "order": i,
-                # NOTE: Gale API doesn't include labels for original page number
-                "label": page_num_int,
+                "label": page_label,
                 "item_type": "page",
                 # image id needed for thumbnail url; use solr dynamic field
                 "image_id_s": page["image"]["id"],

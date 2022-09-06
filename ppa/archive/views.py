@@ -26,14 +26,14 @@ from parasolr.django import SolrQuerySet
 from parasolr.django.views import SolrLastModifiedMixin
 
 from ppa.archive.forms import (
-    AddFromHathiForm,
     AddToCollectionForm,
+    ImportForm,
     SearchForm,
     SearchWithinWorkForm,
 )
+from ppa.archive.import_util import GaleImporter, HathiImporter
 from ppa.archive.models import NO_COLLECTION_LABEL, DigitizedWork
 from ppa.archive.solr import ArchiveSearchQuerySet
-from ppa.archive.util import HathiImporter
 from ppa.common.views import AjaxTemplateMixin
 
 logger = logging.getLogger(__name__)
@@ -184,7 +184,7 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             .search(content="(%s)" % self.query)
             .search(id__in=page_ids)
             .only("id")
-            .highlight("content*", snippets=3, method="unified")
+            .highlight("content", snippets=3, method="unified")
         )
         # populate the result cache with number of rows specified
         solr_pageq.get_results(rows=len(page_ids))
@@ -339,7 +339,7 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
                 .only(
                     "id", "source_id", "order", "title", "label", "image_id:image_id_s"
                 )
-                .highlight("content*", snippets=3, method="unified")
+                .highlight("content", snippets=3, method="unified")
                 .order_by("order")
             )
 
@@ -382,106 +382,6 @@ class DigitizedWorkByRecordId(RedirectView):
             raise Http404
 
 
-class DigitizedWorkCSV(ListView):
-    """Export of digitized work details as CSV download."""
-
-    # NOTE: csv logic could be extracted as a view mixin for reuse
-    model = DigitizedWork
-    # order by id for now, for simplicity
-    ordering = "id"
-    header_row = [
-        "Database ID",
-        "Source ID",
-        "Record ID",
-        "Title",
-        "Subtitle",
-        "Sort title",
-        "Author",
-        "Item Type",
-        "Book/Journal",
-        "Publication Date",
-        "Publication Place",
-        "Publisher",
-        "Enumcron",
-        "Collection",
-        "Public Notes",
-        "Notes",
-        "Pages (original)",
-        "Pages (digital)",
-        "Page Count",
-        "Status",
-        "Source",
-        "Date Added",
-        "Last Updated",
-    ]
-
-    def get_csv_filename(self):
-        """Return the CSV file name based on the current datetime.
-
-        :returns: the filename for the CSV to be generated
-        :rtype: str
-        """
-        return "ppa-digitizedworks-%s.csv" % now().strftime("%Y%m%dT%H:%M:%S")
-
-    def get_data(self):
-        """Get data for the CSV.
-
-        :returns: rows for CSV columns
-        :rtype: tuple
-        """
-        return (
-            (
-                dw.id,
-                dw.source_id,
-                dw.record_id,
-                dw.title,
-                dw.subtitle,
-                dw.sort_title,
-                dw.author,
-                dw.get_item_type_display(),
-                dw.book_journal,
-                dw.pub_date,
-                dw.pub_place,
-                dw.publisher,
-                dw.enumcron,
-                ";".join([coll.name for coll in dw.collections.all()]),
-                dw.public_notes,
-                dw.notes,
-                dw.pages_orig,
-                dw.pages_digital,
-                dw.page_count,
-                dw.get_status_display(),
-                dw.get_source_display(),
-                dw.added,
-                dw.updated,
-            )
-            for dw in self.get_queryset().prefetch_related("collections")
-        )
-        # NOTE: prefetch collections so they are retrieved more efficiently
-        # all at once, rather than one at a time for each item
-
-    def render_to_csv(self, data):
-        """
-        Render the CSV as an HTTP response.
-
-        :rtype: :class:`django.http.HttpResponse`
-        """
-        response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = (
-            'attachment; filename="%s"' % self.get_csv_filename()
-        )
-
-        writer = csv.writer(response)
-        writer.writerow(self.header_row)
-        for row in data:
-            writer.writerow(row)
-        return response
-
-    def get(self, *args, **kwargs):
-        """Return CSV file on GET request."""
-        return self.render_to_csv(self.get_data())
-
-
 class AddToCollection(PermissionRequiredMixin, ListView, FormView):
     """
     View to bulk add a queryset of :class:`ppa.archive.models.DigitizedWork`
@@ -492,6 +392,12 @@ class AddToCollection(PermissionRequiredMixin, ListView, FormView):
     model = DigitizedWork
     template_name = "archive/add_to_collection.html"
     form_class = AddToCollectionForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Add Digitized Works to Collections"
+        context["page_title"] = "Add Digitized Works to Collections"
+        return context
 
     def get_success_url(self):
         """
@@ -545,7 +451,7 @@ class AddToCollection(PermissionRequiredMixin, ListView, FormView):
                 # previous digitized works in set.
                 collection.digitizedwork_set.add(*digitized_works)
             # reindex solr with the new collection data
-            DigitizedWork.index(digitized_works)
+            DigitizedWork.index_items(digitized_works)
 
             # create a success message to add to message framework stating
             # what happened
@@ -572,40 +478,60 @@ class AddToCollection(PermissionRequiredMixin, ListView, FormView):
         return self.render_to_response(self.get_context_data(form=form))
 
 
-class AddFromHathiView(PermissionRequiredMixin, FormView):
-    """Admin view to add new HathiTrust records by providing a list
-    of ids."""
+class ImportView(PermissionRequiredMixin, FormView):
+    """Admin view to import new records from sources that support
+    import (HathiTrust, Gale) by providing a list of ids."""
 
     permission_required = "archive.add_digitizedwork"
-    template_name = "archive/add_from_hathi.html"
-    form_class = AddFromHathiForm
-    page_title = "Add new records from HathiTrust"
+    template_name = "archive/import.html"
+    form_class = ImportForm
+    page_title = "Import new records"
+    import_mode = None
 
     def get_context_data(self, *args, **kwargs):
         # Add page title to template context data
         context = super().get_context_data(*args, **kwargs)
-        context["page_title"] = self.page_title
+        context.update(
+            {
+                "page_title": self.page_title,
+                "title": self.page_title,  # html head title
+                "import_mode": self.import_mode,
+            }
+        )
         return context
 
     def form_valid(self, form):
         # Process valid form data; should return an HttpResponse.
 
-        # get list of ids from form input
-        htids = form.get_hathi_ids()
+        source_ids = form.get_source_ids()
+        source = form.cleaned_data["source"]
 
-        htimporter = HathiImporter(htids)
-        htimporter.filter_existing_ids()
+        # set readable import mode for display in template
+        self.import_mode = dict(form.fields["source"].choices)[source]
+
+        # initialize appropriate importer class according to source
+        if source == DigitizedWork.HATHI:
+            importer_class = HathiImporter
+        elif source == DigitizedWork.GALE:
+            importer_class = GaleImporter
+        importer = importer_class(source_ids)
+
+        # import the records and report
+        return self.import_records(importer)
+
+    def import_records(self, importer):
+        importer.filter_existing_ids()
         # add items, and create log entries associated with current user
-        htimporter.add_items(log_msg_src="via django admin", user=self.request.user)
-        htimporter.index()
+        importer.add_items(log_msg_src="via django admin", user=self.request.user)
+        importer.index()
 
         # generate lookup for admin urls keyed on source id to simplify
         # template logic needed
         admin_urls = {
             htid: reverse("admin:archive_digitizedwork_change", args=[pk])
-            for htid, pk in htimporter.existing_ids.items()
+            for htid, pk in importer.existing_ids.items()
         }
-        for work in htimporter.imported_works:
+        for work in importer.imported_works:
             admin_urls[work.source_id] = reverse(
                 "admin:archive_digitizedwork_change", args=[work.pk]
             )
@@ -617,11 +543,13 @@ class AddFromHathiView(PermissionRequiredMixin, FormView):
             self.request,
             self.template_name,
             context={
-                "results": htimporter.output_results(),
-                "existing_ids": htimporter.existing_ids,
+                "results": importer.output_results(),
+                "existing_ids": importer.existing_ids,
                 "form": self.form_class(),  # new form instance
                 "page_title": self.page_title,
+                "title": self.page_title,
                 "admin_urls": admin_urls,
+                "import_mode": self.import_mode,  # readable version of hathi/gale
             },
         )
 
