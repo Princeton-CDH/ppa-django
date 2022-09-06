@@ -184,7 +184,7 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             .search(content="(%s)" % self.query)
             .search(id__in=page_ids)
             .only("id")
-            .highlight("content*", snippets=3, method="unified")
+            .highlight("content", snippets=3, method="unified")
         )
         # populate the result cache with number of rows specified
         solr_pageq.get_results(rows=len(page_ids))
@@ -339,7 +339,7 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
                 .only(
                     "id", "source_id", "order", "title", "label", "image_id:image_id_s"
                 )
-                .highlight("content*", snippets=3, method="unified")
+                .highlight("content", snippets=3, method="unified")
                 .order_by("order")
             )
 
