@@ -26,7 +26,7 @@ Create a new core with the `ppa` configset::
 
 When the configset has changed, copy in the updated solr config files::
 
-    docrker cp solr_conf/* solr6:/opt/solr/server/solr/configsets/ppa/
+    docker cp solr_conf/* solr6:/opt/solr/server/solr/configsets/ppa/
 
 Setup
 -----
@@ -46,4 +46,15 @@ To run the multiprocessing page index script (`index_pages`) on MacOS versions p
 Set this environment variable to override it: `OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES`
 
 For more details, see `stack overflow <https://stackoverflow.com/questions/50168647/multiprocessing-causes-python-to-crash-and-gives-an-error-may-have-been-in-progr/52230415#52230415>`_.
+
+
+
+
+Postgresql setup
+---------------
+
+psql -d postgres -c "DROP DATABASE ppa;"
+psql -d postgres -c "DROP ROLE ppa;"
+psql -d postgres -c "CREATE ROLE ppa WITH CREATEDB LOGIN PASSWORD 'ppa';"
+psql -d postgres -U ppa -c "CREATE DATABASE ppa;"
 
