@@ -106,7 +106,7 @@ jobs:
       - uses: actions/checkout@v2
       - run: docker cp solr_conf ${{ job.services.solr.id }}:/opt/solr/server/solr/configsets/ppa
       - run: docker exec --user root ${{ job.services.solr.id }} /bin/bash -c "chown -R solr:solr /opt/solr/server/solr/configsets/ppa"
-      - run: "docker exec -d ${{ job.services.solr.id }} cp -r /opt/solr/server/solr/configsets /var/solr/data"  
+      - run: "docker exec -d ${{ job.services.solr.id }} cp -r /opt/solr/server/solr/configsets /var/solr/data"
       - run: echo "PYTHON_VERSION=$(cat .python-version)" >> $GITHUB_ENV
       - uses: actions/setup-python@v2
         with:
