@@ -80,3 +80,68 @@ jobs:
           SLACK_MESSAGE: "Run <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|#${{ github.run_number }}> on <https://github.com/${{ github.repository }}/|${{ github.repository }}@${{ github.ref }}>"
           SLACK_FOOTER: "<https://github.com/${{ github.repository }}/commit/${{ github.sha }}|View commit>"
           MSG_MINIMAL: true
+
+
+  python-unit:
+    name: Python unit tests (V2)
+    runs-on: ubuntu-latest
+    # We use service containers to avoid needing to set up a local copy of
+    # mysql or postgres on the test runner instance. This syntax is similar to
+    # the spec of a docker-compose file. For more, see:
+    # https://docs.github.com/en/free-pro-team@latest/actions/guides/about-service-containers
+    services:
+      postgres:
+        image: postgres:12
+        env:
+          POSTGRES_DB: ${{ env.DB_NAME }}
+          POSTGRES_USER: ${{ env.DB_USER }}
+          POSTGRES_PASSWORD: ${{ env.DB_PASSWORD }}
+        ports:
+          - 5432:5432
+      solr:
+        image: solr:8.6
+        ports:
+          - 8983:8983
+    steps:
+      - uses: actions/checkout@v2
+      
+      
+      - run: docker cp solr_conf ${{ job.services.solr.id }}:/opt/solr/server/solr/configsets/ppa
+      - run: docker exec --user root ${{ job.services.solr.id }} /bin/bash -c "chown -R solr:solr /opt/solr/server/solr/configsets/ppa"
+      
+      ### ONLY THING DIFF FROM PREV CONFIG
+      - name: Copy solr configsets to solr home directory (Solr 8 specific)
+        run: "docker exec -d ${{ job.services.solr.id }} cp -r /opt/solr/server/solr/configsets /var/solr/data"
+      ######
+
+      - run: echo "PYTHON_VERSION=$(cat .python-version)" >> $GITHUB_ENV
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - run: pip install -r dev-requirements.txt
+      - run: cp ci/testsettings.py ppa/local_settings.py
+      - run: python -c "import uuid; print('SECRET_KEY = \'%s\'' % uuid.uuid4())" >> ppa/local_settings.py
+      - run: py.test --cov=./ --cov-report=xml
+      - uses: codecov/codecov-action@v1
+        with:
+          flags: python
+      - run: echo "SLACK_COLOR=$(if [ "$JOB_STATUS" == "success" ]; then echo "good"; elif [ "$JOB_STATUS" == "failure" ]; then echo "danger"; else echo "warning"; fi)" >> $GITHUB_ENV
+        if: ${{ always() }}
+        env:
+          JOB_STATUS: ${{ job.status }}
+      - uses: rtCamp/action-slack-notify@master
+        if: ${{ always() && (github.event_name == 'schedule' || github.event_name == 'push') }}
+        continue-on-error: true
+        env:
+          SLACK_COLOR: ${{ env.SLACK_COLOR }}
+          SLACK_WEBHOOK: ${{ secrets.ACTIONS_SLACK_WEBHOOK }}
+          SLACK_TITLE: "Workflow `${{ github.workflow }}`: ${{ job.status }}"
+          SLACK_MESSAGE: "Run <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|#${{ github.run_number }}> on <https://github.com/${{ github.repository }}/|${{ github.repository }}@${{ github.ref }}>"
+          SLACK_FOOTER: "<https://github.com/${{ github.repository }}/commit/${{ github.sha }}|View commit>"
+          MSG_MINIMAL: true
