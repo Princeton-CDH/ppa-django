@@ -30,3 +30,4 @@ beautifulsoup4<4.9
 gensim<4.2
 django-adminlogentries
 django-import-export
+psycopg2
