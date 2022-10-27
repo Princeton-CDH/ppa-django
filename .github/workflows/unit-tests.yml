@@ -36,7 +36,6 @@ jobs:
   python-unit:
     name: Python unit tests
     runs-on: ubuntu-latest
-    needs: build-static
     strategy:
       matrix:
         include:
@@ -159,4 +158,3 @@ jobs:
           SLACK_MESSAGE: "Run <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|#${{ github.run_number }}> on <https://github.com/${{ github.repository }}/|${{ github.repository }}@${{ github.ref }}>"
           SLACK_FOOTER: "<https://github.com/${{ github.repository }}/commit/${{ github.sha }}|View commit>"
           MSG_MINIMAL: true # use compact slack message format
-
