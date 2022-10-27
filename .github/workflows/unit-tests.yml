@@ -2,7 +2,7 @@ name: unit tests
 
 on:
   push: # run on every push or PR to any branch
-  pull_request:
+  # pull_request: # for now to stop duplication?
   schedule: # run automatically on main branch each Tuesday at 11am
     - cron: "0 16 * * 2"
 
@@ -115,10 +115,11 @@ jobs:
           pip install -r requirements.txt
           pip install -r dev-requirements.txt
 
-      - name: Download webpack stats
-        uses: actions/download-artifact@v2
-        with:
-          name: webpack-stats.json
+      # This unnec?
+      # - name: Download webpack stats
+      #   uses: actions/download-artifact@v2
+      #   with:
+      #     name: webpack-stats.json
 
       - name: Debug output database configuration
         run: python -c "import pprint; import ci.testsettings; pprint.pprint(ci.testsettings.DATABASES)"
