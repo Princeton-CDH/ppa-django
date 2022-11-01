@@ -2,7 +2,7 @@ name: unit tests
 
 on:
   push: # run on every push or PR to any branch
-  # pull_request: # for now to stop duplication?
+  # pull_request: # for now to stop duplication?   #@TODO: Re-enable before merging!
   schedule: # run automatically on main branch each Tuesday at 11am
     - cron: "0 16 * * 2"
 
@@ -39,13 +39,9 @@ jobs:
     strategy:
       matrix:
         include:
-         # for python 3.5, only test with mariadb and solr 6
-         - python: 3.6
-           solr: 6.6.5
+         - solr: 6.6.5
            db: mysql
-        # for python 3.6, only test with postgres and solr 8
-         - python: 3.6
-           solr: 8.6
+         - solr: 8.6
            db: postgresql
     services:
       mariadb:
@@ -88,11 +84,10 @@ jobs:
         run: "docker exec -d ${{ job.services.solr.id }} cp -r /opt/solr/server/solr/configsets /var/solr/data"
         if: ${{ matrix.solr == 8.6 }}
 
-      # NOTE: for duration of migration to PUL, use python version from build matrix
-      # Python version to use is stored in the .python-version file, which is the
+      # NOTE: Python version to use is stored in the .python-version file, which is the
       # convention for pyenv: https://github.com/pyenv/pyenv
-      # - name: Get Python version
-      #   run: echo "PYTHON_VERSION=$(cat .python-version)" >> $GITHUB_ENV
+      - name: Get Python version
+        run: echo "PYTHON_VERSION=$(cat .python-version)" >> $GITHUB_ENV
 
       # use python version for current build matrix
       - name: Setup Python
@@ -114,15 +109,6 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install -r dev-requirements.txt
-
-      # This unnec?
-      # - name: Download webpack stats
-      #   uses: actions/download-artifact@v2
-      #   with:
-      #     name: webpack-stats.json
-
-      # - name: Debug output database configuration
-      #   run: python -c "import pprint; import ci.testsettings; pprint.pprint(ci.testsettings.DATABASES)"
 
       - name: Setup local_settings.py
         run: |
