@@ -75,11 +75,6 @@ Initial setup and installation:
 
   See developer notes for setup instructions for using docker with `solr:6` image.
 
-- Run the manage command to configure the schema; this will prompt to
-  create the core from your configset if it does not exist::
-
-    python manage.py solr_schema
-
 - Bulk import (*provisional*): requires a local copy of HathiTrust data as
   pairtree provided by rsync.  Configure the path in `localsettings.py`
   and then run::
