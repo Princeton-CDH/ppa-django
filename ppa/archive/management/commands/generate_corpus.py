@@ -169,7 +169,11 @@ class SolrCorpus:
         self.doc_ids = self.page_counts.keys()
         self.doc_count = len(self.doc_ids)
         if pbar:
-            self.pbar = ProgressBar(redirect_stderr=True, max_value=self.doc_count)
+            self.pbar = ProgressBar(
+                redirect_stderr=True, 
+                max_value=self.doc_count, 
+                max_error=False
+            )
         else:
             self.pbar = NullBar()
 
