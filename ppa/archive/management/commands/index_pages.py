@@ -36,7 +36,11 @@ def process_index_queue(index_data_q, total_to_index, work_q):
     as a way of checking that all indexing is complete."""
 
     solr = SolrClient()
-    progbar = progressbar.ProgressBar(redirect_stdout=True, max_value=total_to_index)
+    progbar = progressbar.ProgressBar(
+        redirect_stdout=True, 
+        max_value=total_to_index,
+        max_error=False
+    )
     count = 0
     while True:
         try:
