@@ -11,7 +11,8 @@ from ppa.archive.gale import get_marc_storage
 
 class Command(BaseCommand):
     """Split MARC records out so they are easily accessible by item id
-    for import and Zotero metadata."""
+    for import and Zotero metadata.  When first creating,
+    destination directory must be NOT EXIST."""
 
     help = __doc__
 
