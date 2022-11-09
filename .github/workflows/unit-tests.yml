@@ -17,7 +17,7 @@ jobs:
     name: javascript unit tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -72,7 +72,7 @@ jobs:
         run: echo "DJANGO_DB_BACKEND=$(echo "$BACKEND")" >> $GITHUB_ENV
 
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       # use docker cp to copy the configset, then bash to set ownership to solr
       - name: Copy Solr configset to solr service
