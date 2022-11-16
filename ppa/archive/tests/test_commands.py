@@ -209,7 +209,7 @@ class TestHathiImportCommand(TestCase):
             # request progress bar
             call_command("hathi_import", progress=1, verbosity=0, stdout=stdout)
             mockprogbar.ProgressBar.assert_called_with(
-                redirect_stdout=True, max_value=len(mock_htids)
+                redirect_stdout=True, max_value=len(mock_htids), max_error=False
             )
 
 
@@ -353,7 +353,7 @@ def test_process_index_queue(mock_solrclient, mock_progbar):
     mock_solrclient.return_value.update.index.assert_any_call(mockdata1)
     mock_solrclient.return_value.update.index.assert_any_call(mockdata2)
 
-    mock_progbar.ProgressBar.assert_called_with(redirect_stdout=True, max_value=total)
+    mock_progbar.ProgressBar.assert_called_with(redirect_stdout=True, max_value=total, max_error=False)
     progbar = mock_progbar.ProgressBar.return_value
     progbar.update.assert_any_call(4)
     progbar.update.assert_any_call(7)
