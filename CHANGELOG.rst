@@ -3,6 +3,16 @@
 CHANGELOG
 =========
 
+3.8.1
+-----
+
+- Switch database backend from MySQL to PostgreSQL
+- Upgrade to Solr 8
+- removed outdated/unused Solr schema code
+- bugfix: progress bar breaking solr page indexing when indexed pages
+  exceeds expected page count
+
+
 3.8
 ---
 
