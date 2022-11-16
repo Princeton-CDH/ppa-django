@@ -3,8 +3,8 @@ ppa-django
 
 .. sphinx-start-marker-do-not-remove
 
-Django web application for the new `Princeton Prosody Archive
-<https://prosody.princeton.edu/>`_.
+Django web application for `Princeton Prosody Archive
+<https://prosody.princeton.edu/>`_ version 3.x.
 
 Code and architecture documentation for the current release available
 at `<https://princeton-cdh.github.io/ppa-django/>`_.
@@ -42,7 +42,7 @@ contains the most recent release, and work in progress will be on the **develop*
 Pull requests should be made against develop.
 
 
-Python 3.6 / Django 1.11 / Node 16.15 / MariaDB (MySQL) 5.5 w/ timezone info / Solr 6.6 (requires Java 8)
+Python 3.6 / Django 3.2 / Node 16.15 / Postgresql 13 / Solr 8
 
 
 Development instructions
