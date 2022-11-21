@@ -13,7 +13,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "ppa",
         "PASSWORD": "ppa",
-        "USER": "ppa",
+        "USER": "root", # is ppa or root nec?
         "HOST": "127.0.0.1",
         "PORT": "5432",
         # "OPTIONS": {
