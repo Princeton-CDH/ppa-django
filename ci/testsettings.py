@@ -16,10 +16,10 @@ DATABASES = {
         "USER": "ppa",
         "HOST": "127.0.0.1",
         "PORT": "5432",
-        "OPTIONS": {
+        # "OPTIONS": {
             # In each case, we want strict mode on to catch truncation issues
-            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
+            # "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+        # },
         "TEST": {
             "CHARSET": "utf8",
             # "COLLATION": "utf8_general_ci",
