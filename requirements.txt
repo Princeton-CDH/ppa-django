@@ -1,6 +1,5 @@
 django>=3.2,<4.0
-# avoid a mariadb max field length issue in django-cas-ng>=4.2
-django-cas-ng==4.1.1
+django-cas-ng
 pucas>=0.6
 parasolr>=0.8.2
 pairtree
