@@ -11,7 +11,7 @@ DEBUG = False
 # include database settings to use Mariadb ver on production (5.5)
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.mysql",
+        "ENGINE": "django.db.backends.postgresql",
         "NAME": "ppa",
         "PASSWORD": "ppa",
         "USER": "root",
