@@ -39,18 +39,9 @@ jobs:
     strategy:
       matrix:
         include:
-         - solr: 6.6.5
-           db: mysql
          - solr: 8.6
            db: postgresql
     services:
-      mariadb:
-        image: mariadb
-        env:
-          MYSQL_DATABASE: ${{ env.DB_NAME }}
-          MYSQL_ROOT_PASSWORD: ${{ env.DB_PASSWORD }}
-        ports:
-        - 3306:3306
       postgres:
         image: postgres:12
         env:
