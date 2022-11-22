@@ -205,6 +205,9 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             return context
 
         page_groups = facet_ranges = None
+
+        # @NOTE: Here is the logic that may need to change->
+
         try:
             # catch an error connecting to solr
             context = super().get_context_data(**kwargs)
@@ -212,7 +215,11 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             # in order to get the correct number and set of expanded groups
             # - get everything from the same solr queryset to avoid extra calls
             solrq = context["page_obj"].object_list
-            page_groups = solrq.get_expanded()
+            
+            
+            #@NOTE: Another way to get these page groups?
+            page_groups = solrq.get_expanded()  # gets the first 2 most relevant pages (in works with matches)
+            
             facet_dict = solrq.get_facets()
             self.form.set_choices_from_facets(facet_dict.facet_fields)
             # needs to be inside try/catch or it will re-trigger any error
