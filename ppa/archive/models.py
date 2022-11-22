@@ -947,6 +947,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         # a new record
 
         # find existing record or create a new one
+        # @NOTE @BUG: This is sometimes returning >1 entry and failing. Need to find why
         digwork, created = DigitizedWork.objects.get_or_create(source_id=htid)
 
         # get configured script user for log entries if no user passed in
