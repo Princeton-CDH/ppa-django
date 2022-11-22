@@ -37,13 +37,15 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
-    # mysql for qa/prod
-    # 'default': {
-    #     "ENGINE": "django.db.backends.mysql",
-    #     'NAME': '',
-    #     'USER': '',
-    #     'PASSWORD': '',
-    # }
+    # postgresql for qa/prod
+    # "default": {
+    #     "ENGINE": "django.db.backends.postgresql",
+    #     "NAME": "ppa",
+    #     "USER": "ppa",
+    #     "PASSWORD": "ppa",
+    #     "HOST": "",  # empty string for localhost
+    #     "PORT": "",  # empty string for default
+    # },
 }
 
 SOLR_CONNECTIONS = {
