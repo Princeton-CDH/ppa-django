@@ -12,7 +12,7 @@ django-semanticui-forms
 lxml
 eulxml
 # wagtail 2.16 drops python 3.6 support
-wagtail>=2.15,<2.16
+wagtail #>=2.15,<2.16
 bleach
 django-fullurl
 django-csp
@@ -22,10 +22,9 @@ requests_oauthlib
 wand
 intspan
 # specify bs4 version to avoid wagtail version conflict
-beautifulsoup4<4.9
+beautifulsoup4 #<4.9
 # only needed for the 'generate_corpus' manage command
-# 4.2 is not compatible with py3.6
-gensim<4.2
+gensim
 django-adminlogentries
 django-import-export
 psycopg2-binary
