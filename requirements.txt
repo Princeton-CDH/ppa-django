@@ -1,7 +1,5 @@
 django>=3.2,<4.0
-mysqlclient>=1.3.13
-# avoid a mariadb max field length issue in django-cas-ng>=4.2
-django-cas-ng==4.1.1
+django-cas-ng
 pucas>=0.6
 parasolr>=0.8.2
 pairtree
@@ -30,3 +28,4 @@ beautifulsoup4<4.9
 gensim<4.2
 django-adminlogentries
 django-import-export
+psycopg2-binary

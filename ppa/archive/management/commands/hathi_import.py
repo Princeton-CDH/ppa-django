@@ -122,7 +122,9 @@ class Command(BaseCommand):
 
         if self.options["progress"]:
             progbar = progressbar.ProgressBar(
-                redirect_stdout=True, max_value=self.stats["total"]
+                redirect_stdout=True,
+                max_value=self.stats["total"],
+                max_error=False
             )
         else:
             progbar = None

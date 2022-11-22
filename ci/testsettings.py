@@ -8,22 +8,16 @@ import os
 
 DEBUG = False
 
-# include database settings to use Mariadb ver on production (5.5)
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.mysql",
+        "ENGINE": "django.db.backends.postgresql",
         "NAME": "ppa",
         "PASSWORD": "ppa",
-        "USER": "root",
+        "USER": "ppa",
         "HOST": "127.0.0.1",
-        "PORT": "3306",
-        "OPTIONS": {
-            # In each case, we want strict mode on to catch truncation issues
-            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
+        "PORT": "5432",
         "TEST": {
             "CHARSET": "utf8",
-            "COLLATION": "utf8_general_ci",
         },
     },
 }
