@@ -11,7 +11,6 @@ progressbar2
 django-semanticui-forms
 lxml
 eulxml
-# wagtail 2.16 drops python 3.6 support
 wagtail>=2.15,<3   # wagtail 3 changes api of wagtail.core
 bleach
 django-fullurl
@@ -22,7 +21,7 @@ requests_oauthlib
 wand
 intspan
 # specify bs4 version to avoid wagtail version conflict
-beautifulsoup4 #<4.9
+beautifulsoup4<=4.11
 # only needed for the 'generate_corpus' manage command
 gensim
 django-adminlogentries
