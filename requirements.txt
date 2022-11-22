@@ -12,7 +12,7 @@ django-semanticui-forms
 lxml
 eulxml
 # wagtail 2.16 drops python 3.6 support
-wagtail #>=2.15,<2.16
+wagtail>=2.15 #,<2.16
 bleach
 django-fullurl
 django-csp
