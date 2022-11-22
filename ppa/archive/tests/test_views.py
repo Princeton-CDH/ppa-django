@@ -1105,7 +1105,7 @@ class TestDigitizedWorkListView(TestCase):
             )
             mock_qs.only.assert_called_with("id")
             mock_qs.highlight.assert_called_with(
-                "content*", snippets=3, method="unified"
+                "content", snippets=3, method="unified"
             )
             mock_qs.get_results.assert_called_with(rows=4)
 
