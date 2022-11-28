@@ -5,4 +5,3 @@ pytest-cov
 django-debug-toolbar
 sphinx
 pre-commit
-multiprocess
