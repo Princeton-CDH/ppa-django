@@ -3,6 +3,12 @@
 CHANGELOG
 =========
 
+3.9
+----
+
+- Switched from stdlib multiprocessing to multiprocess (https://github.com/uqfoundation/multiprocess) to fix multiprocessing errors on index_pages for M1 chip macs
+
+
 3.8.1
 -----
 
