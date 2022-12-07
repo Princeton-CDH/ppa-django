@@ -3,6 +3,7 @@ import logging
 from collections import OrderedDict
 from http import HTTPStatus
 from json.decoder import JSONDecodeError
+from pprint import pprint
 
 import requests
 from django.contrib import messages
@@ -211,25 +212,42 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
         try:
             # catch an error connecting to solr
             context = super().get_context_data(**kwargs)
+
+            print('context =',context)
+
+
             # get expanded must be called on the *paginated* solr queryset
             # in order to get the correct number and set of expanded groups
             # - get everything from the same solr queryset to avoid extra calls
             solrq = context["page_obj"].object_list
+            print('solrq =',solrq)
+
+            # res = solrq.get_results()
+            # import pandas as pd
+            # resdf = pd.DataFrame(res)
+            # resdf.to_csv('/Users/ryan/Desktop/testing.csv')
+            # print('results =')
+            # pprint(res)
+            # print()
             
             
             #@NOTE: Another way to get these page groups?
             page_groups = solrq.get_expanded()  # gets the first 2 most relevant pages (in works with matches)
-            
+            print('page_groups =',str(page_groups)[:1000],'...',end='\n\n')
+
             facet_dict = solrq.get_facets()
+            print('facet_dict =',facet_dict,end='\n\n')
+
             self.form.set_choices_from_facets(facet_dict.facet_fields)
             # needs to be inside try/catch or it will re-trigger any error
             facet_ranges = facet_dict.facet_ranges.as_dict()
+            print('facet_ranges =',facet_ranges,end='\n\n')
             # facet ranges are used for display; when sending to solr we
             # increase the end bound by one so that year is included;
             # subtract it back so display matches user entered dates
             facet_ranges["pub_date"]["end"] -= 1
 
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.ConnectionError as e:
             # override object list with an empty list that can be paginated
             # so that template display will still work properly
             self.object_list = self.solrq.none()

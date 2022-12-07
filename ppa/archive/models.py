@@ -27,7 +27,7 @@ from wagtail.admin.edit_handlers import FieldPanel
 from wagtail.core.fields import RichTextField
 from wagtail.snippets.models import register_snippet
 
-from ppa.archive.gale import GaleAPI, MARCRecordNotFound, get_marc_record
+from ppa.archive.gale import GaleAPI, MARCRecordNotFound, get_marc_record, GaleAPIError
 from ppa.archive.hathi import HathiBibliographicAPI, HathiObject, MinimalMETS
 
 logger = logging.getLogger(__name__)
@@ -1066,33 +1066,34 @@ class Page(Indexable):
         cluster_id = str(digwork.cluster) if digwork.cluster else digwork_index_id
 
         # read zipfile contents in place, without unzipping
-        with ZipFile(digwork.hathi.zipfile_path()) as ht_zip:
-
-            # yield a generator of index data for each page; iterate
-            # over pages in METS structmap
-            for i, page in enumerate(mmets.structmap_pages, 1):
-                # if the document has a page range defined, skip any pages not in range
-                if page_span and i not in page_span:
-                    continue
-                # zipfile spec uses / for path regardless of OS
-                pagefilename = "/".join(
-                    [digwork.hathi.content_dir, page.text_file_location]
-                )
-                with ht_zip.open(pagefilename) as pagefile:
-                    try:
-                        yield {
-                            "id": "%s.%s" % (digwork_index_id, page.text_file.sequence),
-                            "source_id": digwork.source_id,
-                            "group_id_s": digwork_index_id,  # for grouping with work record
-                            "cluster_id_s": cluster_id,  # for grouping with cluster
-                            "content": pagefile.read().decode("utf-8"),
-                            "order": page.order,
-                            "label": page.display_label,
-                            "tags": page.label.split(", ") if page.label else [],
-                            "item_type": "page",
-                        }
-                    except StopIteration:
-                        return
+        fpath = digwork.hathi.zipfile_path()
+        if fpath:
+            with ZipFile(fpath) as ht_zip:
+                # yield a generator of index data for each page; iterate
+                # over pages in METS structmap
+                for i, page in enumerate(mmets.structmap_pages, 1):
+                    # if the document has a page range defined, skip any pages not in range
+                    if page_span and i not in page_span:
+                        continue
+                    # zipfile spec uses / for path regardless of OS
+                    pagefilename = "/".join(
+                        [digwork.hathi.content_dir, page.text_file_location]
+                    )
+                    with ht_zip.open(pagefilename) as pagefile:
+                        try:
+                            yield {
+                                "id": "%s.%s" % (digwork_index_id, page.text_file.sequence),
+                                "source_id": digwork.source_id,
+                                "group_id_s": digwork_index_id,  # for grouping with work record
+                                "cluster_id_s": cluster_id,  # for grouping with cluster
+                                "content": pagefile.read().decode("utf-8"),
+                                "order": page.order,
+                                "label": page.display_label,
+                                "tags": page.label.split(", ") if page.label else [],
+                                "item_type": "page",
+                            }
+                        except StopIteration:
+                            return
 
     @classmethod
     def gale_page_index_data(cls, digwork, gale_record=None):
@@ -1100,32 +1101,36 @@ class Page(Indexable):
         API and return data to be indexed in solr. Takes an optional gale_record
         parameter (item record as returned by Gale API), to avoid
         making an extra API call if data is already available."""
-        if gale_record is None:
-            gale_record = GaleAPI().get_item(digwork.source_id)
+        try:
+            if gale_record is None:
+                gale_record = GaleAPI().get_item(digwork.source_id)
 
-        # get page span from digitized work
-        page_span = digwork.page_span
-        digwork_index_id = digwork.index_id()
-        # digwork index id is fallback for cluster, since it is used
-        # to collapse works and pages that belong together
-        cluster_id = str(digwork.cluster) if digwork.cluster else digwork_index_id
+            # get page span from digitized work
+            page_span = digwork.page_span
+            digwork_index_id = digwork.index_id()
+            # digwork index id is fallback for cluster, since it is used
+            # to collapse works and pages that belong together
+            cluster_id = str(digwork.cluster) if digwork.cluster else digwork_index_id
 
-        for i, page in enumerate(gale_record["pageResponse"]["pages"], 1):
-            page_number = page["pageNumber"]
-            # folio number not yet set for all volumes; fallback to page number
-            page_label = page.get("folioNumber", int(page_number))
-            # if the document has a page range defined, skip any pages not in range
-            if page_span and i not in page_span:
-                continue
-            yield {
-                "id": "%s.%s" % (digwork_index_id, page_number),
-                "source_id": digwork.source_id,
-                "group_id_s": digwork_index_id,  # for grouping with work record
-                "cluster_id_s": cluster_id,  # for grouping with cluster
-                "content": page.get("ocrText"),  # some pages have no text
-                "order": i,
-                "label": page_label,
-                "item_type": "page",
-                # image id needed for thumbnail url; use solr dynamic field
-                "image_id_s": page["image"]["id"],
-            }
+            for i, page in enumerate(gale_record["pageResponse"]["pages"], 1):
+                page_number = page["pageNumber"]
+                # folio number not yet set for all volumes; fallback to page number
+                page_label = page.get("folioNumber", int(page_number))
+                # if the document has a page range defined, skip any pages not in range
+                if page_span and i not in page_span:
+                    continue
+                yield {
+                    "id": "%s.%s" % (digwork_index_id, page_number),
+                    "source_id": digwork.source_id,
+                    "group_id_s": digwork_index_id,  # for grouping with work record
+                    "cluster_id_s": cluster_id,  # for grouping with cluster
+                    "content": page.get("ocrText"),  # some pages have no text
+                    "order": i,
+                    "label": page_label,
+                    "item_type": "page",
+                    # image id needed for thumbnail url; use solr dynamic field
+                    "image_id_s": page["image"]["id"],
+                }
+        except GaleAPIError as e:
+            logging.error(f'Gale API error: {e}')
+
