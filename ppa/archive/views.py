@@ -1,3 +1,4 @@
+from pprint import pprint
 import csv
 import logging
 from collections import OrderedDict
@@ -162,7 +163,7 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
         self.solrq = solr_q
         return solr_q
 
-    def get_page_highlights(self, page_groups):
+    def get_page_highlights_from_page_groups(self, page_groups):
         """If there is a keyword search, query Solr for matching pages
         with text highlighting.
         NOTE: This has to be done as a separate query because Solr
@@ -197,6 +198,56 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
         # https://github.com/Princeton-CDH/parasolr/issues/43
         return solr_pageq.get_highlighting()
 
+
+    def get_page_highlights(self, solrq):
+        """If there is a keyword search, query Solr for matching pages
+        with text highlighting.
+        NOTE: This has to be done as a separate query because Solr
+        doesn't support highlighting on collapsed items."""
+
+        page_highlights = {}
+        if not self.query or not solrq.count():
+            # if there is no keyword query, bail out
+            return page_highlights
+
+        # work ids in solrq?
+        work_id_l = [d['id'] for d in solrq]
+
+        # generate a list of page ids from the grouped results
+        solr_pageq = (
+            SolrQuerySet()
+            .search(group_id_s__in=work_id_l)   # @NOTE: Why is _s suffix necessary/alias not working?
+            .filter(item_type="page")
+            .search(content="(%s)" % self.query)
+            .highlight("content", snippets=3, method="unified")
+            .raw_query_parameters(**{
+                'group':'true',
+                'group.field':'group_id_s',
+                'group.limit':2,
+                # 'group.sort':'score desc'
+            })
+        )
+        
+
+        # # if not page_ids:
+        #     # if no page ids were found, bail out
+        #     # return page_highlights
+
+        # solr_pageq = (
+        #     SolrQuerySet()
+        #     .search(content="(%s)" % self.query)
+        #     .search(id__in=page_ids)
+        #     .only("id")
+        #     .highlight("content", snippets=3, method="unified")
+        # )
+
+        # populate the result cache with number of rows specified
+        solr_pageq.get_results(rows=100)
+        
+        # NOTE: rows argument is needed until this parasolr bug is fixed
+        # https://github.com/Princeton-CDH/parasolr/issues/43
+        return solr_pageq.get_highlighting()
+
     def get_context_data(self, **kwargs):
         # if the form is not valid, bail out
         if not self.form.is_valid():
@@ -218,7 +269,24 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             
             
             #@NOTE: Another way to get these page groups?
-            page_groups = solrq.get_expanded()  # gets the first 2 most relevant pages (in works with matches)
+            work_groups_ld = solrq.get_results()
+            work_groups = dict((d['id'],d) for d in work_groups_ld)
+            
+            # Get page highlights
+            # @NOTE: Rewriting this to be passed in the solrq instead of page_groups
+            # page_highlights = self.get_page_highlights(page_groups)
+            page_highlights = self.get_page_highlights(solrq)
+
+            def get_work_id(page_id): return '.'.join(page_id.split('.')[:-1])
+
+            page_groups = {
+                page_id:work_groups[get_work_id(page_id)]
+                for page_id in page_highlights
+                if get_work_id(page_id) in work_groups
+            }
+
+            
+            
             
             facet_dict = solrq.get_facets()
             self.form.set_choices_from_facets(facet_dict.facet_fields)
@@ -229,6 +297,9 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             # subtract it back so display matches user entered dates
             facet_ranges["pub_date"]["end"] -= 1
 
+
+            
+
         except requests.exceptions.ConnectionError:
             # override object list with an empty list that can be paginated
             # so that template display will still work properly
@@ -238,6 +309,18 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             # or an error status set on the response
             context["error"] = "Something went wrong."
 
+
+        # @TODO: page_groups and page_highlights are structured differently now and the templates will need to refer to them differently
+
+        page_groups_keys = set(page_groups.keys())
+        page_highlights_keys = set(page_highlights.keys())
+        print(f"""
+        keys in page_groups = {page_groups_keys}
+        
+        keys in page_highlights = {page_highlights_keys}
+
+        keys shared = {page_groups_keys & page_highlights_keys}
+        """)
         context.update(
             {
                 "search_form": self.form,
@@ -245,7 +328,7 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
                 "page_groups": page_groups,
                 # range facet data for publication date
                 "facet_ranges": facet_ranges,
-                "page_highlights": self.get_page_highlights(page_groups),
+                "page_highlights": page_highlights,
                 # query for use template links to detail view with search
                 "query": self.query,
                 "NO_COLLECTION_LABEL": NO_COLLECTION_LABEL,
