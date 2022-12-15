@@ -1,7 +1,8 @@
 django>=3.2,<4.0
 django-cas-ng
 pucas>=0.6
-parasolr>=0.8.2
+#parasolr>=0.8.2
+git+https://github.com/Princeton-CDH/parasolr@feature/grouped-response#egg=parasolr  # @NOTE: For testing, allowing page grouping
 pairtree
 py-flags
 pymarc
