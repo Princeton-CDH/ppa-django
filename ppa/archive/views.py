@@ -1,3 +1,4 @@
+from collections import defaultdict
 from pprint import pprint
 import csv
 import logging
@@ -163,52 +164,15 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
         self.solrq = solr_q
         return solr_q
 
-    def get_page_highlights_from_page_groups(self, page_groups):
+    def get_pages(self, solrq):
         """If there is a keyword search, query Solr for matching pages
         with text highlighting.
         NOTE: This has to be done as a separate query because Solr
         doesn't support highlighting on collapsed items."""
 
-        page_highlights = {}
-        if not self.query or not page_groups:
-            # if there is no keyword query, bail out
-            return page_highlights
-
-        # generate a list of page ids from the grouped results
-        page_ids = [
-            "(%s)" % page["id"]
-            for results in page_groups.values()
-            for page in results["docs"]
-        ]
-
-        if not page_ids:
-            # if no page ids were found, bail out
-            return page_highlights
-
-        solr_pageq = (
-            SolrQuerySet()
-            .search(content="(%s)" % self.query)
-            .search(id__in=page_ids)
-            .only("id")
-            .highlight("content", snippets=3, method="unified")
-        )
-        # populate the result cache with number of rows specified
-        solr_pageq.get_results(rows=len(page_ids))
-        # NOTE: rows argument is needed until this parasolr bug is fixed
-        # https://github.com/Princeton-CDH/parasolr/issues/43
-        return solr_pageq.get_highlighting()
-
-
-    def get_page_highlights(self, solrq):
-        """If there is a keyword search, query Solr for matching pages
-        with text highlighting.
-        NOTE: This has to be done as a separate query because Solr
-        doesn't support highlighting on collapsed items."""
-
-        page_highlights = {}
         if not self.query or not solrq.count():
             # if there is no keyword query, bail out
-            return page_highlights
+            return ({},{})
 
         # work ids in solrq?
         work_id_l = [d['id'] for d in solrq]
@@ -227,26 +191,24 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
                 # 'group.sort':'score desc'
             })
         )
-        
 
-        # # if not page_ids:
-        #     # if no page ids were found, bail out
-        #     # return page_highlights
-
-        # solr_pageq = (
-        #     SolrQuerySet()
-        #     .search(content="(%s)" % self.query)
-        #     .search(id__in=page_ids)
-        #     .only("id")
-        #     .highlight("content", snippets=3, method="unified")
-        # )
-
-        # populate the result cache with number of rows specified
-        solr_pageq.get_results(rows=100)
-        
+        # get response, this will be cached for rows specified
         # NOTE: rows argument is needed until this parasolr bug is fixed
         # https://github.com/Princeton-CDH/parasolr/issues/43
-        return solr_pageq.get_highlighting()
+        response = solr_pageq.get_response(rows=100)
+
+        # this mimics structure of previous expand/collapse page results
+        # dict is: workid -> workpages
+        page_groups = {
+            group['groupValue']:group['doclist']
+            for group in response.docs
+        }
+
+        # get the page highlights from the solr response
+        # dict is: pageid -> pagehighlights
+        page_highlights = solr_pageq.get_highlighting()
+
+        return (page_groups,page_highlights)
 
     def get_context_data(self, **kwargs):
         # if the form is not valid, bail out
@@ -266,32 +228,17 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             # in order to get the correct number and set of expanded groups
             # - get everything from the same solr queryset to avoid extra calls
             solrq = context["page_obj"].object_list
-            
-            
-            #@NOTE: Another way to get these page groups?
-            work_groups_ld = solrq.get_results()
-            work_groups = dict((d['id'],d) for d in work_groups_ld)
-            
-            # Get page highlights
-            # @NOTE: Rewriting this to be passed in the solrq instead of page_groups
-            # page_highlights = self.get_page_highlights(page_groups)
-            page_highlights = self.get_page_highlights(solrq)
 
-            def get_work_id(page_id): return '.'.join(page_id.split('.')[:-1])
+            page_groups, page_highlights = self.get_pages(solrq)
 
-            page_groups = {
-                page_id:work_groups[get_work_id(page_id)]
-                for page_id in page_highlights
-                if get_work_id(page_id) in work_groups
-            }
 
-            
-            
+
             
             facet_dict = solrq.get_facets()
             self.form.set_choices_from_facets(facet_dict.facet_fields)
             # needs to be inside try/catch or it will re-trigger any error
-            facet_ranges = facet_dict.facet_ranges.as_dict()
+            # @NOTE/@TODO: attrdict's as_dict wasn't working here? casting now
+            facet_ranges = dict(facet_dict.facet_ranges) 
             # facet ranges are used for display; when sending to solr we
             # increase the end bound by one so that year is included;
             # subtract it back so display matches user entered dates
