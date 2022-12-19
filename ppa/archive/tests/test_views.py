@@ -1069,45 +1069,39 @@ class TestDigitizedWorkListView(TestCase):
 
         digworkview = DigitizedWorkListView()
 
-        # no keyword or page groups, no highlights
-        assert digworkview.get_pages({}) == {}
-
-        # search term but no page groups
-        digworkview.query = "iambic"
-        assert digworkview.get_pages({}) == {}
-
         # mock PagedSolrQuery to inspect that query is generated properly
         with patch(
-            "ppa.archive.views.SolrQuerySet", new=self.mock_solr_queryset()
+            "ppa.archive.views.ArchiveSearchQuerySet", new=self.mock_solr_queryset()
         ) as mock_queryset_cls:
-            page_groups = {
-                "group1": {
-                    "docs": [
-                        {"id": "p1a"},
-                        {"id": "p1b"},
-                    ]
-                },
-                "group2": {
-                    "docs": [
-                        {"id": "p2a"},
-                        {"id": "p2b"},
-                    ]
-                },
-            }
 
-            highlights = digworkview.get_pages(page_groups)
+            solrq = mock_queryset_cls()
+
+            # no keyword search, doesn't look for pages or highlights
+            assert digworkview.get_pages(solrq) == ({}, {})
+
+            # search term but no works found
+            digworkview.query = "iambic"
+            solrq.count.return_value = 0
+            assert digworkview.get_pages(solrq) == ({}, {})
+
+            solrq.count.return_value = 10
+            solrq.__iter__.return_value = [
+                {"id": "work1"},
+                {"id": "work2"},
+            ]
+
+            pages, highlights = digworkview.get_pages(solrq)
 
             mock_queryset_cls.assert_called_with()
             mock_qs = mock_queryset_cls.return_value
             mock_qs.search.assert_any_call(content="(iambic)")
-            mock_qs.search.assert_called_with(
-                id__in=["(p1a)", "(p1b)", "(p2a)", "(p2b)"]
-            )
-            mock_qs.only.assert_called_with("id")
+            mock_qs.filter.assert_any_call(item_type="page")
+            mock_qs.filter.assert_any_call(group_id__in=["work1", "work2"])
+            mock_qs.group.assert_called_with("group_id", limit=2, sort="score desc")
             mock_qs.highlight.assert_called_with(
                 "content", snippets=3, method="unified"
             )
-            mock_qs.get_results.assert_called_with(rows=4)
+            mock_qs.get_response.assert_called_with(rows=100)
 
             assert highlights == mock_qs.get_highlighting()
 

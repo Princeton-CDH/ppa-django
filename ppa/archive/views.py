@@ -179,7 +179,7 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
         # generate a list of page ids from the grouped results
         solr_pageq = (
             ArchiveSearchQuerySet()
-            .search(group_id__in=work_id_l)
+            .filter(group_id__in=work_id_l)
             .filter(item_type="page")
             .search(content="(%s)" % self.query)
             .group("group_id", limit=2, sort="score desc")
