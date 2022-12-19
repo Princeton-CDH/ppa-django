@@ -1,10 +1,9 @@
-from collections import defaultdict
-from pprint import pprint
 import csv
 import logging
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from http import HTTPStatus
 from json.decoder import JSONDecodeError
+from pprint import pprint
 
 import requests
 from django.contrib import messages
@@ -172,24 +171,19 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
 
         if not self.query or not solrq.count():
             # if there is no keyword query, bail out
-            return ({},{})
+            return ({}, {})
 
         # work ids in solrq?
-        work_id_l = [d['id'] for d in solrq]
+        work_id_l = [d["id"] for d in solrq]
 
         # generate a list of page ids from the grouped results
         solr_pageq = (
-            SolrQuerySet()
-            .search(group_id_s__in=work_id_l)   # @NOTE: Why is _s suffix necessary/alias not working?
+            ArchiveSearchQuerySet()
+            .search(group_id__in=work_id_l)
             .filter(item_type="page")
             .search(content="(%s)" % self.query)
+            .group("group_id", limit=2, sort="score desc")
             .highlight("content", snippets=3, method="unified")
-            .raw_query_parameters(**{
-                'group':'true',
-                'group.field':'group_id_s',
-                'group.limit':2,
-                # 'group.sort':'score desc'
-            })
         )
 
         # get response, this will be cached for rows specified
@@ -199,16 +193,13 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
 
         # this mimics structure of previous expand/collapse page results
         # dict is: workid -> workpages
-        page_groups = {
-            group['groupValue']:group['doclist']
-            for group in response.docs
-        }
+        page_groups = {group["groupValue"]: group["doclist"] for group in response.docs}
 
         # get the page highlights from the solr response
         # dict is: pageid -> pagehighlights
         page_highlights = solr_pageq.get_highlighting()
 
-        return (page_groups,page_highlights)
+        return (page_groups, page_highlights)
 
     def get_context_data(self, **kwargs):
         # if the form is not valid, bail out
@@ -231,21 +222,15 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
 
             page_groups, page_highlights = self.get_pages(solrq)
 
-
-
-            
             facet_dict = solrq.get_facets()
             self.form.set_choices_from_facets(facet_dict.facet_fields)
             # needs to be inside try/catch or it will re-trigger any error
             # @NOTE/@TODO: attrdict's as_dict wasn't working here? casting now
-            facet_ranges = dict(facet_dict.facet_ranges) 
+            facet_ranges = dict(facet_dict.facet_ranges)
             # facet ranges are used for display; when sending to solr we
             # increase the end bound by one so that year is included;
             # subtract it back so display matches user entered dates
             facet_ranges["pub_date"]["end"] -= 1
-
-
-            
 
         except requests.exceptions.ConnectionError:
             # override object list with an empty list that can be paginated
@@ -256,18 +241,19 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             # or an error status set on the response
             context["error"] = "Something went wrong."
 
-
         # @TODO: page_groups and page_highlights are structured differently now and the templates will need to refer to them differently
 
         page_groups_keys = set(page_groups.keys())
         page_highlights_keys = set(page_highlights.keys())
-        print(f"""
+        print(
+            f"""
         keys in page_groups = {page_groups_keys}
         
         keys in page_highlights = {page_highlights_keys}
 
         keys shared = {page_groups_keys & page_highlights_keys}
-        """)
+        """
+        )
         context.update(
             {
                 "search_form": self.form,
