@@ -191,9 +191,9 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
         # https://github.com/Princeton-CDH/parasolr/issues/43
         response = solr_pageq.get_response(rows=100)
 
-        # this mimics structure of previous expand/collapse page results
-        # dict is: workid -> workpages
-        page_groups = {group["groupValue"]: group["doclist"] for group in response.docs}
+        # mimics structure of previous expand/collapse page results
+        # dict is: group_id -> document list with page objects
+        page_groups = {g["groupValue"]: g["doclist"] for g in response.groups}
 
         # get the page highlights from the solr response
         # dict is: pageid -> pagehighlights
@@ -241,19 +241,8 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             # or an error status set on the response
             context["error"] = "Something went wrong."
 
-        # @TODO: page_groups and page_highlights are structured differently now and the templates will need to refer to them differently
-
         page_groups_keys = set(page_groups.keys())
         page_highlights_keys = set(page_highlights.keys())
-        print(
-            f"""
-        keys in page_groups = {page_groups_keys}
-        
-        keys in page_highlights = {page_highlights_keys}
-
-        keys shared = {page_groups_keys & page_highlights_keys}
-        """
-        )
         context.update(
             {
                 "search_form": self.form,

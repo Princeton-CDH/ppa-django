@@ -1065,16 +1065,16 @@ class TestDigitizedWorkListView(TestCase):
         self.factory = RequestFactory()
 
     @pytest.mark.usefixtures("mock_solr_queryset")
-    def test_get_page_highlights(self):
+    def test_get_pages(self):
 
         digworkview = DigitizedWorkListView()
 
         # no keyword or page groups, no highlights
-        assert digworkview.get_page_highlights({}) == {}
+        assert digworkview.get_pages({}) == {}
 
         # search term but no page groups
         digworkview.query = "iambic"
-        assert digworkview.get_page_highlights({}) == {}
+        assert digworkview.get_pages({}) == {}
 
         # mock PagedSolrQuery to inspect that query is generated properly
         with patch(
@@ -1095,7 +1095,7 @@ class TestDigitizedWorkListView(TestCase):
                 },
             }
 
-            highlights = digworkview.get_page_highlights(page_groups)
+            highlights = digworkview.get_pages(page_groups)
 
             mock_queryset_cls.assert_called_with()
             mock_qs = mock_queryset_cls.return_value
