@@ -173,16 +173,18 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             # if there is no keyword query, bail out
             return ({}, {})
 
-        # work ids in solrq?
-        work_id_l = [d["id"] for d in solrq]
+        # work ids in solrq; quoting to handle ark ids
+        work_id_l = ['"%s"' % d["id"] for d in solrq]
 
         # generate a list of page ids from the grouped results
+        # NOTE: can't use alias for group_id because not using aliased queryset
+        # (archive search queryset doesn't work properly for this query)
         solr_pageq = (
-            ArchiveSearchQuerySet()
-            .filter(group_id__in=work_id_l)
+            SolrQuerySet()
+            .filter(group_id_s__in=work_id_l)
             .filter(item_type="page")
             .search(content="(%s)" % self.query)
-            .group("group_id", limit=2, sort="score desc")
+            .group("group_id_s", limit=2, sort="score desc")
             .highlight("content", snippets=3, method="unified")
         )
 
