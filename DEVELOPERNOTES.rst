@@ -52,3 +52,9 @@ psql -d postgres -c "DROP ROLE ppa;"
 psql -d postgres -c "CREATE ROLE ppa WITH CREATEDB LOGIN PASSWORD 'ppa';"
 psql -d postgres -U ppa -c "CREATE DATABASE ppa;"
 
+or
+
+psql -d postgres -c "DROP ROLE cdh_ppa;"
+psql -d postgres -c "DROP DATABASE cdh_ppa;"
+psql -d postgres -c "CREATE ROLE cdh_ppa WITH CREATEDB LOGIN PASSWORD 'cdh_ppa';"
+psql -d postgres -U cdh_ppa < data/13_daily_cdh_ppa_cdh_ppa_2022-11-22.Tuesday.sql

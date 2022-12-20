@@ -1,8 +1,9 @@
 import csv
 import logging
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from http import HTTPStatus
 from json.decoder import JSONDecodeError
+from pprint import pprint
 
 import requests
 from django.contrib import messages
@@ -96,8 +97,13 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             search_opts = self.form.cleaned_data
             self.query = search_opts.get("query", None)
             collections = search_opts.get("collections", None)
+            cluster_id = search_opts.get("cluster", None)
 
             solr_q.keyword_search(self.query)
+
+            if cluster_id:
+                # filter by group id if set
+                solr_q = solr_q.within_cluster(cluster_id)
 
             # restrict by collection
             if collections:
@@ -157,40 +163,45 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
         self.solrq = solr_q
         return solr_q
 
-    def get_page_highlights(self, page_groups):
+    def get_pages(self, solrq):
         """If there is a keyword search, query Solr for matching pages
         with text highlighting.
         NOTE: This has to be done as a separate query because Solr
         doesn't support highlighting on collapsed items."""
 
-        page_highlights = {}
-        if not self.query or not page_groups:
+        if not self.query or not solrq.count():
             # if there is no keyword query, bail out
-            return page_highlights
+            return ({}, {})
+
+        # work ids in solrq; quoting to handle ark ids
+        work_id_l = ['"%s"' % d["id"] for d in solrq]
 
         # generate a list of page ids from the grouped results
-        page_ids = [
-            "(%s)" % page["id"]
-            for results in page_groups.values()
-            for page in results["docs"]
-        ]
-
-        if not page_ids:
-            # if no page ids were found, bail out
-            return page_highlights
-
+        # NOTE: can't use alias for group_id because not using aliased queryset
+        # (archive search queryset doesn't work properly for this query)
         solr_pageq = (
             SolrQuerySet()
+            .filter(group_id_s__in=work_id_l)
+            .filter(item_type="page")
             .search(content="(%s)" % self.query)
-            .search(id__in=page_ids)
-            .only("id")
+            .group("group_id_s", limit=2, sort="score desc")
             .highlight("content", snippets=3, method="unified")
         )
-        # populate the result cache with number of rows specified
-        solr_pageq.get_results(rows=len(page_ids))
+
+        # get response, this will be cached for rows specified
         # NOTE: rows argument is needed until this parasolr bug is fixed
         # https://github.com/Princeton-CDH/parasolr/issues/43
-        return solr_pageq.get_highlighting()
+        response = solr_pageq.get_response(rows=100)
+
+        # mimics structure of previous expand/collapse page results
+        # dict is: group_id -> document list with page objects
+        page_groups = {g["groupValue"]: g["doclist"] for g in response.groups}
+
+        # get the page highlights from the solr response
+        # dict is: pageid -> pagehighlights
+        page_highlights = solr_pageq.get_highlighting()
+
+        return (page_groups, page_highlights)
 
     def get_context_data(self, **kwargs):
         # if the form is not valid, bail out
@@ -200,6 +211,9 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             return context
 
         page_groups = facet_ranges = None
+
+        # @NOTE: Here is the logic that may need to change->
+
         try:
             # catch an error connecting to solr
             context = super().get_context_data(**kwargs)
@@ -207,11 +221,14 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             # in order to get the correct number and set of expanded groups
             # - get everything from the same solr queryset to avoid extra calls
             solrq = context["page_obj"].object_list
-            page_groups = solrq.get_expanded()
+
+            page_groups, page_highlights = self.get_pages(solrq)
+
             facet_dict = solrq.get_facets()
             self.form.set_choices_from_facets(facet_dict.facet_fields)
             # needs to be inside try/catch or it will re-trigger any error
-            facet_ranges = facet_dict.facet_ranges.as_dict()
+            # @NOTE/@TODO: attrdict's as_dict wasn't working here? casting now
+            facet_ranges = dict(facet_dict.facet_ranges)
             # facet ranges are used for display; when sending to solr we
             # increase the end bound by one so that year is included;
             # subtract it back so display matches user entered dates
@@ -226,6 +243,8 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             # or an error status set on the response
             context["error"] = "Something went wrong."
 
+        page_groups_keys = set(page_groups.keys())
+        page_highlights_keys = set(page_highlights.keys())
         context.update(
             {
                 "search_form": self.form,
@@ -233,7 +252,7 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
                 "page_groups": page_groups,
                 # range facet data for publication date
                 "facet_ranges": facet_ranges,
-                "page_highlights": self.get_page_highlights(page_groups),
+                "page_highlights": page_highlights,
                 # query for use template links to detail view with search
                 "query": self.query,
                 "NO_COLLECTION_LABEL": NO_COLLECTION_LABEL,

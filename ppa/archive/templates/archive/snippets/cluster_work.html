@@ -1,0 +1,5 @@
+{# NOTE: expects cluster_id to be passed in #}
+<div class="cluster-work icon container" >
+    {# TODO: include count if we can easily get it ; search and browse x digitized works within cluster #}
+    <a href="{% url "archive:list" %}?cluster={{ cluster_id }}">search and browse within cluster</a>
+</div>

@@ -2,7 +2,7 @@
     background-position: center center;
     background-repeat: no-repeat;
     background-size: contain;
-    
+
     &[aria-label=article] {
         background-image: url("/static/img/icons/article.svg");
         width: 40px;
@@ -23,5 +23,66 @@
             width: 92px;
             height: 65px;
         }
+    }
+}
+
+.cluster-work.icon::before {
+    content: "";
+    display: inline-block;
+    background-image: url("/static/img/icons/multiple-version-work.svg");
+    background-position: left center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    height: 40px;
+    width: 60px;
+}
+
+
+/* included in search results and document details */
+.cluster-work {
+    padding-bottom: 32px;
+
+    @media (min-width: $computer) {
+        padding-bottom: 42px;
+    }
+
+    // search results placement
+    .results-list .item & {
+        padding-left: 13px;
+
+        @media (min-width: $tablet) {
+            // top padding is 15px from buttons
+            margin-top: -13px;
+            padding-left: 13px;
+        }
+
+        @media (min-width: $computer) {
+            // top padding is 19px from buttons,
+            // default result details padding above this is 1rem = 28px
+            margin-top: -9px;
+            padding-left: 0;
+        }
+    }
+
+    // placement on digitized work detail page
+    #digitized-work & {
+        margin-top: 53px;
+        margin-bottom: 38px;
+
+        @media (min-width: $tablet) {
+            margin-top: 58px;
+        }
+
+        @media (min-width: $computer) {
+            // we want ~100px, table above has 1rem bottom padding
+            margin-top: 70px;
+        }
+    }
+
+    a {
+        &:link, &:visited, &:hover {
+            color: $french-blue;
+        }
+
     }
 }
