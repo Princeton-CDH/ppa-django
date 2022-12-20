@@ -126,6 +126,27 @@ class Collection(TrackChangesModel):
         return stats
 
 
+class Cluster(models.Model):
+    """A model to collect groups of works such as reprints or editions that should
+    be collapsed in the main archive search and accessible together."""
+
+    cluster_id = models.CharField(
+        "Cluster ID",
+        help_text="Unique identifier for a cluster of digitized works",
+        unique=True,
+        max_length=255,
+    )
+
+    class Meta:
+        ordering = ("cluster_id",)
+
+    def __str__(self):
+        return self.cluster_id
+
+    def __repr__(self):
+        return "<cluster %s>" % str(self)
+
+
 class ProtectedWorkFieldFlags(Flags):
     """:class:`flags.Flags` instance to indicate which :class:`DigitizedWork`
     fields should be protected if edited in the admin."""
@@ -329,6 +350,12 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
     )
     #: collections that this work is part of
     collections = models.ManyToManyField(Collection, blank=True)
+
+    #: optional cluster for aggregating works
+    cluster = models.ForeignKey(
+        Cluster, blank=True, null=True, on_delete=models.SET_NULL
+    )
+
     #: date added to the archive
     added = models.DateTimeField(auto_now_add=True)
     #: date of last modification of the local record
@@ -761,6 +788,8 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             "collections": [collection.name for collection in self.collections.all()]
             if self.collections.exists()
             else [NO_COLLECTION_LABEL],
+            # "cluster_id_s": str(self.cluster) if self.cluster else None,  # @BUG?
+            "cluster_id_s": str(self.cluster) if self.cluster else index_id,
             # public notes field for display on site_name
             "notes": self.public_notes,
             # hard-coded to distinguish from & sort with pages
@@ -919,6 +948,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         # a new record
 
         # find existing record or create a new one
+        # @NOTE @BUG: This is sometimes returning >1 entry and failing. Need to find why
         digwork, created = DigitizedWork.objects.get_or_create(source_id=htid)
 
         # get configured script user for log entries if no user passed in
@@ -1000,7 +1030,9 @@ class Page(Indexable):
         """Get page content for the specified digitized work from Hathi
         pairtree and return data to be indexed in solr."""
 
-        # Only index pages fo ritems that are not suppressed
+        # TODO: how to share common fields/logic across sources?
+
+        # Only index pages for items that are not suppressed
         if not digwork.is_suppressed:
             # get index page data based on the source
             if digwork.source == digwork.HATHI:
@@ -1030,6 +1062,9 @@ class Page(Indexable):
         # get page span from digitized work
         page_span = digwork.page_span
         digwork_index_id = digwork.index_id()
+        # digwork index id is fallback for cluster, since it is used
+        # to collapse works and pages that belong together
+        cluster_id = str(digwork.cluster) if digwork.cluster else digwork_index_id
 
         # read zipfile contents in place, without unzipping
         with ZipFile(digwork.hathi.zipfile_path()) as ht_zip:
@@ -1050,6 +1085,7 @@ class Page(Indexable):
                             "id": "%s.%s" % (digwork_index_id, page.text_file.sequence),
                             "source_id": digwork.source_id,
                             "group_id_s": digwork_index_id,  # for grouping with work record
+                            "cluster_id_s": cluster_id,  # for grouping with cluster
                             "content": pagefile.read().decode("utf-8"),
                             "order": page.order,
                             "label": page.display_label,
@@ -1071,6 +1107,9 @@ class Page(Indexable):
         # get page span from digitized work
         page_span = digwork.page_span
         digwork_index_id = digwork.index_id()
+        # digwork index id is fallback for cluster, since it is used
+        # to collapse works and pages that belong together
+        cluster_id = str(digwork.cluster) if digwork.cluster else digwork_index_id
 
         for i, page in enumerate(gale_record["pageResponse"]["pages"], 1):
             page_number = page["pageNumber"]
@@ -1083,6 +1122,7 @@ class Page(Indexable):
                 "id": "%s.%s" % (digwork_index_id, page_number),
                 "source_id": digwork.source_id,
                 "group_id_s": digwork_index_id,  # for grouping with work record
+                "cluster_id_s": cluster_id,  # for grouping with cluster
                 "content": page.get("ocrText"),  # some pages have no text
                 "order": i,
                 "label": page_label,

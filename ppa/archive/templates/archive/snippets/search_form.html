@@ -1,6 +1,19 @@
 {% load semanticui humanize static %}
 <form class="ui form{% if error %} error{% endif %}">
     <div class="ui vertical stackable grid segment">
+        {# include hidden cluster field value for form submission #}
+        {{ search_form.cluster }}
+
+        {% if search_form.cluster.value %}
+        <div class="twelve wide column">
+            {# TODO: icon, text and remove filter here  #}
+            <div class="cluster-work icon container" >
+                You are searching and browsing within a cluster.
+                <a href="?{% querystring_replace cluster='' %}">Search the full archive.</a>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="twelve wide column">
             {% render_field search_form.query %}
             <span class="question-popup" data-html="{{ search_form.QUESTION_POPUP_TEXT }}" data-position="top center">
@@ -20,7 +33,7 @@
             <span class="validation">
                 {{ search_form.pubdate_validation_msg }}
             </span>
-            <button class="clear-selection" type="button">Clear Selection</button>
+            <button class="clear-selection" type="button">Reset Dates</button>
         </div>
         <div class="eight wide column" id="histogram">
             <canvas class="visualization" height="60" width="600"></canvas>
@@ -69,7 +82,7 @@
     </div>
     <input type="submit" class="sr-only sr-only-focusable" aria-label="submit search">
     <div class="workscount ui center aligned text container">
-        <p class="count">Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}</p>
+        <p class="count">Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }} or clusters of works</p>
         <p class="zotero">Work citations can be exported to <a href="https://www.zotero.org/support/getting_stuff_into_your_library">Zotero</a></p>
         <div class="loader">
             <img src="{% static 'img/loader/search-loader.gif' %}" alt="">

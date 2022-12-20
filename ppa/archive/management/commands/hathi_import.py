@@ -148,7 +148,7 @@ class Command(BaseCommand):
             # count pages in the pairtree zip file and update digwork page count
             try:
                 self.stats["pages"] += digwork.count_pages()
-            except storage_exceptions.ObjectNotFoundException:
+            except (storage_exceptions.ObjectNotFoundException, IndexError):  # IndexError on filepath
                 self.stderr.write("%s not found in datastore" % digwork.source_id)
 
             if progbar:
@@ -235,6 +235,10 @@ class Command(BaseCommand):
             )
         except HathiItemNotFound:
             self.stdout.write("Error: Bibliographic data not found for '%s'" % htid)
+            self.stats["error"] += 1
+            return
+        except DigitizedWork.MultipleObjectsReturned:
+            self.stdout.write("Error: Multiple entries found for '%s'" % htid)
             self.stats["error"] += 1
             return
 

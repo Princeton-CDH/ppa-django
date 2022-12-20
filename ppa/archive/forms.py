@@ -232,6 +232,9 @@ class SearchForm(forms.Form):
         ),
     )
 
+    #: hidden input to track cluster id, for searching within reprint/editions
+    cluster = forms.CharField(widget=forms.HiddenInput(), required=False)
+
     sort = forms.ChoiceField(
         widget=SelectWithDisabled, choices=SORT_CHOICES, required=False
     )

@@ -37,6 +37,7 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         "work_type_s",
         "book_journal_s",
         "group_id_s",
+        "cluster_id_s",
     ]
     # aliases for any fields we want to rename for search and display
     # (must also be included in return_fields list)
@@ -47,9 +48,11 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         "work_type_s": "work_type",
         "book_journal_s": "book_journal",
         "group_id_s": "group_id",
+        "cluster_id_s": "cluster_id",
     }
 
     keyword_query = None
+    within_cluster_id = None
 
     def __init__(self, solr=None):
         # field aliases: keys return the fields that will be returned from Solr for search page;
@@ -92,7 +95,17 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         # preserve local fields when cloning
         qs_copy = super()._clone()
         qs_copy.keyword_query = self.keyword_query
+        qs_copy.within_cluster_id = self.within_cluster_id
         qs_copy._workq = self._workq
+        return qs_copy
+
+    def within_cluster(self, cluster_id):
+        """Search within a group of reprints/editions"""
+        # filter both pages and works by cluster id
+        qs_copy = self.filter(cluster_id_s=cluster_id)
+        qs_copy.work_filter(cluster_id_s=cluster_id)
+        # store the cluster id since it impacts expand/collapse behavior
+        qs_copy.within_cluster_id = cluster_id
         return qs_copy
 
     def query_opts(self):
@@ -109,6 +122,13 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
             qs_copy.filter_qs.extend(self._workq.filter_qs)
             # use set to ensure we don't duplicate a filter
             qs_copy.filter_qs = list(set(qs_copy.filter_qs))
+
+            # if not searching within a group, collapse reprints/editions
+            # @NOTE: This following code may not be necessary?
+            # if not qs_copy.within_cluster_id:
+            # (not expanding, since we only display the first)
+            # qs_copy = qs_copy.filter("{!collapse field=cluster_id_s}")
+
             return qs_copy._base_query_opts()
 
         # when there is a keyword query, add it & combine with any work filters
@@ -137,19 +157,24 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
             qs_copy = qs_copy.raw_query_parameters(work_query=work_query)
 
         # search on the combined work/page join query
-        # use collapse to group pages with work by source id
-        # expand and return three rows
-        # NOTE: expand param used to be 2, but that wasn't generating
-        # correct display! Not sure why
+
+        # for main archive search, by default we collapse on
+        # cluster id to collect all reprints/editions and their pages;
+        # when searching within a cluster, collapse on group id
+        collapse_on = "group_id_s" if self.within_cluster_id else "cluster_id_s"
+
+        # @NOTE: Role of order here in separating works from pages (works < pages) may need to be revisited eventually.
+        collapse_filter = '{!collapse field=%s sort="order asc"}' % collapse_on
+
         qs_copy = (
             qs_copy.search(combined_query)
-            .filter('{!collapse field=group_id_s sort="order asc"}')
+            .filter(collapse_filter)
             .raw_query_parameters(
                 content_query="content:(%s)" % self.keyword_query,
                 keyword_query=self.keyword_query,
-                expand="true",
+                # expand="true",
                 work_query=work_query,
-                **{"expand.rows": 2},
+                # **{"expand.rows": 1},
             )
         )
 

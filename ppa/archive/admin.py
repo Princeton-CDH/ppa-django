@@ -1,13 +1,20 @@
 from django.conf.urls import url
 from django.contrib import admin
+from django.db.models import Count
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from import_export import fields, resources, widgets
 from import_export.admin import ExportActionMixin, ExportMixin
 from parasolr.django import SolrClient
 
-from ppa.archive.models import Collection, DigitizedWork, ProtectedWorkFieldFlags
+from ppa.archive.models import (
+    Cluster,
+    Collection,
+    DigitizedWork,
+    ProtectedWorkFieldFlags,
+)
 from ppa.archive.views import ImportView
 
 
@@ -43,8 +50,7 @@ class DigitizedWorkResource(resources.ModelResource):
             "publisher",
             "enumcron",
             "collections",  # multiple, names
-            # ";".join([coll.name for coll in
-            # 'collections.all()])',
+            "cluster",
             "public_notes",
             "notes",
             "pages_orig",
@@ -57,8 +63,14 @@ class DigitizedWorkResource(resources.ModelResource):
         )
         widgets = {
             # customize many-to-many output for collections
-            "collections": {"separator": "; ", "field": "name"}
+            "collections": {"separator": "; ", "field": "name"},
+            # output cluster id instead of pk
+            "cluster": {"field": "cluster_id"},
         }
+
+    def get_queryset(self):
+        # prefetch related object to make download more efficient
+        return super().get_queryset().prefetch_related("collections", "cluster")
 
 
 class DigitizedWorkAdmin(ExportActionMixin, ExportMixin, admin.ModelAdmin):
@@ -69,6 +81,7 @@ class DigitizedWorkAdmin(ExportActionMixin, ExportMixin, admin.ModelAdmin):
         "subtitle",
         "source_link",
         "record_id",
+        "cluster",
         "author",
         "item_type",
         "list_collections",
@@ -99,6 +112,7 @@ class DigitizedWorkAdmin(ExportActionMixin, ExportMixin, admin.ModelAdmin):
         "notes",
         "record_id",
         "collections",
+        "cluster",
         "protected_fields",
         "status",
         "added",
@@ -126,10 +140,12 @@ class DigitizedWorkAdmin(ExportActionMixin, ExportMixin, admin.ModelAdmin):
         "public_notes",
         "notes",
         "record_id",
+        "cluster__cluster_id",
     )
     filter_horizontal = ("collections",)
+    autocomplete_fields = ["cluster"]
     # date_hierarchy = 'added'  # is this useful?
-    list_filter = ["collections", "status", "source", "item_type"]
+    list_filter = ["collections", "status", "source", "item_type", "cluster"]
     actions = ["add_works_to_collection", "suppress_works"]
 
     def get_readonly_fields(self, request, obj=None):
@@ -254,5 +270,44 @@ class CollectionAdmin(admin.ModelAdmin):
     list_editable = ("exclude",)
 
 
+class DigitizedWorkInline(admin.TabularInline):
+    model = DigitizedWork
+    fields = ("source", "source_id", "title", "subtitle", "author")
+    extra = 0
+
+
+class ClusterAdmin(admin.ModelAdmin):
+    list_display = ("cluster_id", "works")
+    digwork_admin_url = "admin:archive_digitizedwork_changelist"
+    inlines = [
+        DigitizedWorkInline,
+    ]
+    search_fields = ("cluster_id",)
+
+    def get_queryset(self, request):
+        # The annotations we use for document count on the list view
+        # make the search too slow for autocomplete.
+        # Reset to original, unannotated queryset *only* for autocomplete
+        qs = super().get_queryset(request)
+        if request and request.path == "/admin/autocomplete/":
+            # return without annotations
+            return qs
+        # otherwise, annotate with counts
+        return qs.annotate(Count("digitizedwork"))
+
+    @admin.display(
+        ordering="digitizedwork__count",
+        description="# works in this cluster",
+    )
+    def works(self, obj):
+        return format_html(
+            '<a href="{0}?cluster__id__exact={1!s}">{2}</a>',
+            reverse(self.digwork_admin_url),
+            str(obj.id),
+            obj.digitizedwork__count,
+        )
+
+
 admin.site.register(DigitizedWork, DigitizedWorkAdmin)
 admin.site.register(Collection, CollectionAdmin)
+admin.site.register(Cluster, ClusterAdmin)

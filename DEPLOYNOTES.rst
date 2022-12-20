@@ -8,6 +8,12 @@ Deploy and Upgrade notes
 
 * Now using nodejs v16.14; should be installed on destination servers.
   On CentOS, `sudo yum install nodejs-16.15.0` should work.
+* Clusters to aggregate groups of works should be imported via `import_clusters` 
+  script and CSV provided by project team.
+* The new work clustering logic requires reindexing all pages::  
+
+    python manage.py index_pages
+
 
 3.7
 ---
