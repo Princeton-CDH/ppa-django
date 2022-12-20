@@ -788,7 +788,8 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             "collections": [collection.name for collection in self.collections.all()]
             if self.collections.exists()
             else [NO_COLLECTION_LABEL],
-            "cluster_id_s": str(self.cluster) if self.cluster else None,
+            # "cluster_id_s": str(self.cluster) if self.cluster else None,  # @BUG?
+            "cluster_id_s": str(self.cluster) if self.cluster else index_id,
             # public notes field for display on site_name
             "notes": self.public_notes,
             # hard-coded to distinguish from & sort with pages

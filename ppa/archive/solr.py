@@ -124,9 +124,10 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
             qs_copy.filter_qs = list(set(qs_copy.filter_qs))
 
             # if not searching within a group, collapse reprints/editions
-            if not qs_copy.within_cluster_id:
-                # (not expanding, since we only display the first)
-                qs_copy = qs_copy.filter("{!collapse field=cluster_id_s}")
+            # @NOTE: This following code may not be necessary?
+            # if not qs_copy.within_cluster_id:
+            # (not expanding, since we only display the first)
+            # qs_copy = qs_copy.filter("{!collapse field=cluster_id_s}")
 
             return qs_copy._base_query_opts()
 
@@ -162,15 +163,18 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         # when searching within a cluster, collapse on group id
         collapse_on = "group_id_s" if self.within_cluster_id else "cluster_id_s"
 
+        # @NOTE: Role of order here in separating works from pages (works < pages) may need to be revisited eventually.
+        collapse_filter = '{!collapse field=%s sort="order asc"}' % collapse_on
+
         qs_copy = (
             qs_copy.search(combined_query)
-            .filter('{!collapse field=%s sort="order asc"}' % collapse_on)
+            .filter(collapse_filter)
             .raw_query_parameters(
                 content_query="content:(%s)" % self.keyword_query,
                 keyword_query=self.keyword_query,
-                expand="true",
+                # expand="true",
                 work_query=work_query,
-                **{"expand.rows": 2},
+                # **{"expand.rows": 1},
             )
         )
 
