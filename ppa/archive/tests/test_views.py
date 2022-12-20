@@ -854,16 +854,14 @@ class TestDigitizedWorkListRequest(TestCase):
         ) as mock_queryset_cls:
 
             mock_qs = mock_queryset_cls.return_value
-            mock_qs.get_expanded.side_effect = requests.exceptions.ConnectionError
+            mock_qs.get_facets.side_effect = requests.exceptions.ConnectionError
             # return main mock when paginated
             mock_qs.__getitem__.return_value = mock_qs
             # count needed for paginator
             mock_qs.count.return_value = 0
             # simulate empty result doc for last modified check
             mock_qs.return_value.__getitem__.return_value = {}
-            mock_qs.get_facets.return_value.facet_ranges.as_dict.return_value = {
-                "pub_date": []
-            }
+            mock_qs.get_facets.return_value.facet_ranges = {"pub_date": []}
             response = self.client.get(self.url, {"query": "something"})
             # paginator variables should still be set
             assert "object_list" in response.context
@@ -1071,7 +1069,7 @@ class TestDigitizedWorkListView(TestCase):
 
         # mock PagedSolrQuery to inspect that query is generated properly
         with patch(
-            "ppa.archive.views.ArchiveSearchQuerySet", new=self.mock_solr_queryset()
+            "ppa.archive.views.SolrQuerySet", new=self.mock_solr_queryset()
         ) as mock_queryset_cls:
 
             solrq = mock_queryset_cls()
@@ -1096,8 +1094,8 @@ class TestDigitizedWorkListView(TestCase):
             mock_qs = mock_queryset_cls.return_value
             mock_qs.search.assert_any_call(content="(iambic)")
             mock_qs.filter.assert_any_call(item_type="page")
-            mock_qs.filter.assert_any_call(group_id__in=["work1", "work2"])
-            mock_qs.group.assert_called_with("group_id", limit=2, sort="score desc")
+            mock_qs.filter.assert_any_call(group_id_s__in=['"work1"', '"work2"'])
+            mock_qs.group.assert_called_with("group_id_s", limit=2, sort="score desc")
             mock_qs.highlight.assert_called_with(
                 "content", snippets=3, method="unified"
             )
