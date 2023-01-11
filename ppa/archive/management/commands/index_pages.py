@@ -4,9 +4,12 @@ Custom multiprocessing Solr index script for page index data.
 
 import queue
 try:
+    # Multiprocess works more reliably on M1 macs
     from multiprocess import Process, Queue, cpu_count
 except ImportError:
+    # But we'd rather by default use python stdlib, especially for deploys
     from multiprocessing import Process, Queue, cpu_count
+
 from time import sleep
 
 import progressbar
