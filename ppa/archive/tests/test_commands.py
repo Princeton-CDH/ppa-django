@@ -5,7 +5,10 @@ import tempfile
 import types
 from collections import defaultdict
 from io import StringIO
-from multiprocess import cpu_count
+try:
+    from multiprocess import cpu_count
+except ImportError:
+    from multiprocessing import cpu_count
 from unittest.mock import Mock, patch
 
 import pytest

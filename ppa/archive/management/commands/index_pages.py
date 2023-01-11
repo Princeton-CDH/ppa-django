@@ -3,7 +3,10 @@ Custom multiprocessing Solr index script for page index data.
 """
 
 import queue
-from multiprocess import Process, Queue, cpu_count
+try:
+    from multiprocess import Process, Queue, cpu_count
+except ImportError:
+    from multiprocessing import Process, Queue, cpu_count
 from time import sleep
 
 import progressbar
