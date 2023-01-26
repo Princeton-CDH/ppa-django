@@ -123,11 +123,10 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
             # use set to ensure we don't duplicate a filter
             qs_copy.filter_qs = list(set(qs_copy.filter_qs))
 
-            # if not searching within a group, collapse reprints/editions
-            # @NOTE: This following code may not be necessary?
-            # if not qs_copy.within_cluster_id:
-            # (not expanding, since we only display the first)
-            # qs_copy = qs_copy.filter("{!collapse field=cluster_id_s}")
+            # If not searching within a group, still collapse reprints/editions
+            # Remember that cluster_id_s is now defined as `str(self.cluster) if self.cluster else index_id` in models.py.
+            # So collapsing by "cluster" id implicitly includes works with no cluster id set.
+            qs_copy = qs_copy.filter("{!collapse field=cluster_id_s}")
 
             return qs_copy._base_query_opts()
 
