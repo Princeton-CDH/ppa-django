@@ -115,6 +115,19 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         # create a queryset copy to update
         qs_copy = self.all()
 
+        # for main archive search, by default we collapse on
+        # cluster id to collect all reprints/editions and their pages;
+        # when searching within a cluster, collapse on group id
+        collapse_on = "group_id_s" if self.within_cluster_id else "cluster_id_s"
+
+        # @NOTE: Role of order here in separating works from pages (works < pages) may need to be revisited eventually.
+        collapse_filter = '{!collapse field=%s sort="order asc"}' % collapse_on
+        
+        # We can apply collapse here since we need it for both keyword query case and not
+        # Remember that cluster_id_s is now defined as `str(self.cluster) if self.cluster else index_id` in models.py.
+        # So collapsing by "cluster" id implicitly includes works with no cluster id set.
+        qs_copy = qs_copy.filter(collapse_filter)
+
         # if there is no keyword search present, only works should
         # be returned; add item type filter and use filters from work queryset
         if not self.keyword_query:
@@ -122,12 +135,6 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
             qs_copy.filter_qs.extend(self._workq.filter_qs)
             # use set to ensure we don't duplicate a filter
             qs_copy.filter_qs = list(set(qs_copy.filter_qs))
-
-            # If not searching within a group, still collapse reprints/editions
-            # Remember that cluster_id_s is now defined as `str(self.cluster) if self.cluster else index_id` in models.py.
-            # So collapsing by "cluster" id implicitly includes works with no cluster id set.
-            qs_copy = qs_copy.filter("{!collapse field=cluster_id_s}")
-
             return qs_copy._base_query_opts()
 
         # when there is a keyword query, add it & combine with any work filters
@@ -154,16 +161,6 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
             )
             # pass combined workfilter query as a raw query parameter
             qs_copy = qs_copy.raw_query_parameters(work_query=work_query)
-
-        # search on the combined work/page join query
-
-        # for main archive search, by default we collapse on
-        # cluster id to collect all reprints/editions and their pages;
-        # when searching within a cluster, collapse on group id
-        collapse_on = "group_id_s" if self.within_cluster_id else "cluster_id_s"
-
-        # @NOTE: Role of order here in separating works from pages (works < pages) may need to be revisited eventually.
-        collapse_filter = '{!collapse field=%s sort="order asc"}' % collapse_on
 
         qs_copy = (
             qs_copy.search(combined_query)
