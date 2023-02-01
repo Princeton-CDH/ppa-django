@@ -187,11 +187,12 @@ class Command(BaseCommand):
         if not self.hathi_pairtree:
             hathi_dirs = glob(os.path.join(settings.HATHI_DATA, "*"))
             for ht_data_dir in hathi_dirs:
-                prefix = os.path.basename(ht_data_dir)
-
-                hathi_ptree = pairtree_client.PairtreeStorageClient(prefix, ht_data_dir)
-                # store initialized pairtree client by prefix for later use
-                self.hathi_pairtree[prefix] = hathi_ptree
+                if os.path.isdir(ht_data_dir):  # ignore anything else!
+                    prefix = os.path.basename(ht_data_dir)
+                    logger.debug(f'Initializing pair tree in ({ht_data_dir}) [prefix={prefix}]')
+                    hathi_ptree = pairtree_client.PairtreeStorageClient(prefix, ht_data_dir)
+                    # store initialized pairtree client by prefix for later use
+                    self.hathi_pairtree[prefix] = hathi_ptree
 
     def get_hathi_ids(self):
         """Generator of hathi ids from previously rsynced hathitrust data,
