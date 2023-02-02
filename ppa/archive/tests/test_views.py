@@ -498,7 +498,7 @@ class TestDigitizedWorkListRequest(TestCase):
         htid_other = "uc1.$b14645"
         
         # NOTE: sample page index data must be updated if page indexing changes
-        def get_solr_page_docs(htid, content):
+        def get_solr_page_docs(htid, docs):
             return [
                 {
                     "content": content,
@@ -508,7 +508,7 @@ class TestDigitizedWorkListRequest(TestCase):
                     "id": "%s.%s" % (htid, i),
                     "group_id_s": htid,  # group id for non-excerpt = source id
                 }
-                for i, content in enumerate(content)
+                for i, content in enumerate(docs)
             ]
 
         # get solr pages
