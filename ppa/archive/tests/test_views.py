@@ -490,25 +490,43 @@ class TestDigitizedWorkListRequest(TestCase):
             "something else delightful",
             "an alternate thing with words like blood and bone not in the title",
         ]
-        htid = "chi.13880510"
-        # NOTE: sample page index data must be updated if page indexing changes
-        solr_page_docs = [
-            {
-                "content": content,
-                "order": i,
-                "item_type": "page",
-                "source_id": htid,
-                "id": "%s.%s" % (htid, i),
-                "group_id_s": htid,  # group id for non-excerpt = source id
-            }
-            for i, content in enumerate(sample_page_content)
+        sample_page_content_other = [
+            'wintry winter wonderlands require dials and compasses', 
+            'this page is about the hot climes of the summer'
         ]
+        htid = "chi.13880510"
+        htid_other = "uc1.$b14645"
+        
+        # NOTE: sample page index data must be updated if page indexing changes
+        def get_solr_page_docs(htid, content):
+            return [
+                {
+                    "content": content,
+                    "order": i,
+                    "item_type": "page",
+                    "source_id": htid,
+                    "id": "%s.%s" % (htid, i),
+                    "group_id_s": htid,  # group id for non-excerpt = source id
+                }
+                for i, content in enumerate(sample_page_content)
+            ]
 
+        # get solr pages
+        solr_page_docs = get_solr_page_docs(htid,sample_page_content)
+        solr_page_docs+= get_solr_page_docs(htid_other,sample_page_content_other)
+
+        # pages + works
         work_docs = [dw.index_data() for dw in DigitizedWork.objects.all()]
         index_data = work_docs + solr_page_docs
         
-        # assign a shared cluster -- cluster_id and cluster_id_s are not in `index_data`
-        for d in index_data: d['cluster_id_s']='treatisewinter'
+        # assign clusters
+        for d in index_data:
+            if d['source_id'] == htid:
+                d['cluster_id_s'] = 'treatisewinter'
+            elif d['source_id'] == htid_other:
+                d['cluster_id_s'] = htid_other
+            else:
+                d['cluster_id_s'] = 'anothercluster'
 
         SolrClient().update.index(index_data)
         # NOTE: without a sleep, even with commit=True and/or low
@@ -608,10 +626,11 @@ class TestDigitizedWorkListRequest(TestCase):
         response = self.client.get(self.url, {"query": "wintry", "sort":"relevance"})
 
         # relevance sort for keyword search
-        assert len(response.context["object_list"]) == 1
-        self.assertContains(response, "1 digitized work")
-        self.assertContains(response, self.wintry.source_id)
-        # page image & text highlight displayed for matching page
+        assert len(response.context["object_list"]) == 2       # 2 hits: 1 in a cluster, 1 not
+        self.assertContains(response, "2 digitized works")
+        self.assertContains(response, self.wintry.source_id)    # has hits for wintry search
+        self.assertNotContains(response, self.dial.source_id)   # no hits for wintry
+        # page image & text highlight displayed for matching page  
         self.assertContains(
             response,
             "babel.hathitrust.org/cgi/imgsrv/image?id=%s;seq=0" % self.wintry.source_id,
@@ -622,8 +641,10 @@ class TestDigitizedWorkListRequest(TestCase):
             "winter and <em>wintry</em> and",
             msg_prefix="highlight snippet from page content displayed",
         )
-
-        self.assertContains(response, '<a href="/archive/?cluster=treatisewinter&query=wintry&sort=relevance&page=1">search and browse within cluster</a>')
+        assert response.content.decode().count("search and browse within cluster") == 1   # 2 results but one cluster
+        self.assertContains(response, '/archive/?cluster=treatisewinter&query=wintry&sort=relevance&page=1')   # link preserves args
+        self.assertContains(response, '/archive/uc1.$b14645/?query=wintry')   # the non-cluster hit should appear
+        self.assertNotContains(response, '/archive/?cluster=anothercluster')     # no hits for wintry in this cluster
 
 
     def test_search_excerpt(self):
