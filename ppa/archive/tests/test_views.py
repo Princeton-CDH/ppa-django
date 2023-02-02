@@ -1,4 +1,5 @@
 import csv
+import html
 import operator
 import re
 import uuid
@@ -488,22 +489,44 @@ class TestDigitizedWorkListRequest(TestCase):
             "something else delightful",
             "an alternate thing with words like blood and bone not in the title",
         ]
-        htid = "chi.13880510"
-        # NOTE: sample page index data must be updated if page indexing changes
-        solr_page_docs = [
-            {
-                "content": content,
-                "order": i,
-                "item_type": "page",
-                "source_id": htid,
-                "id": "%s.%s" % (htid, i),
-                "group_id_s": htid,  # group id for non-excerpt = source id
-            }
-            for i, content in enumerate(sample_page_content)
+        sample_page_content_other = [
+            'wintry winter wonderlands require dials and compasses', 
+            'this page is about the hot climes of the summer'
         ]
+        htid = "chi.13880510"
+        htid_other = "uc1.$b14645"
+        
+        # NOTE: sample page index data must be updated if page indexing changes
+        def get_solr_page_docs(htid, docs):
+            return [
+                {
+                    "content": content,
+                    "order": i,
+                    "item_type": "page",
+                    "source_id": htid,
+                    "id": "%s.%s" % (htid, i),
+                    "group_id_s": htid,  # group id for non-excerpt = source id
+                }
+                for i, content in enumerate(docs)
+            ]
 
+        # get solr pages
+        solr_page_docs = get_solr_page_docs(htid,sample_page_content)
+        solr_page_docs+= get_solr_page_docs(htid_other,sample_page_content_other)
+
+        # pages + works
         work_docs = [dw.index_data() for dw in DigitizedWork.objects.all()]
         index_data = work_docs + solr_page_docs
+        
+        # assign clusters
+        for d in index_data:
+            if d['source_id'] == htid:
+                d['cluster_id_s'] = 'treatisewinter'
+            elif d['source_id'] == htid_other:
+                d['cluster_id_s'] = htid_other
+            else:
+                d['cluster_id_s'] = 'anothercluster'
+
         SolrClient().update.index(index_data)
         # NOTE: without a sleep, even with commit=True and/or low
         # commitWithin settings, indexed data isn't reliably available
@@ -599,12 +622,14 @@ class TestDigitizedWorkListRequest(TestCase):
 
     def test_keyword_search(self):
         # use keyword search with a term in a fixture title
-        response = self.client.get(self.url, {"query": "wintry"})
+        response = self.client.get(self.url, {"query": "wintry", "sort":"relevance"})
+
         # relevance sort for keyword search
-        assert len(response.context["object_list"]) == 1
-        self.assertContains(response, "1 digitized work")
-        self.assertContains(response, self.wintry.source_id)
-        # page image & text highlight displayed for matching page
+        assert len(response.context["object_list"]) == 2       # 2 hits: 1 in a cluster, 1 not
+        self.assertContains(response, "2 digitized works")
+        self.assertContains(response, self.wintry.source_id)    # has hits for wintry search
+        self.assertNotContains(response, self.dial.source_id)   # no hits for wintry
+        # page image & text highlight displayed for matching page  
         self.assertContains(
             response,
             "babel.hathitrust.org/cgi/imgsrv/image?id=%s;seq=0" % self.wintry.source_id,
@@ -615,6 +640,23 @@ class TestDigitizedWorkListRequest(TestCase):
             "winter and <em>wintry</em> and",
             msg_prefix="highlight snippet from page content displayed",
         )
+
+        # need to unescape to test query args below
+        htmlstr=html.unescape(response.content.decode())
+
+        # 2 results but one cluster
+        assert htmlstr.count("search and browse within cluster") == 1
+        
+        # link preserves args
+        assert '/archive/?cluster=treatisewinter&query=wintry&sort=relevance&page=1' in htmlstr
+        
+        # the non-cluster hit should appear
+        assert '/archive/uc1.$b14645/?query=wintry' in htmlstr   
+        
+        # no hits for wintry in this cluster
+        print(htmlstr)
+        assert '/archive/?cluster=anothercluster' not in htmlstr     
+
 
     def test_search_excerpt(self):
         # convert one of the fixtures into an excerpt
@@ -685,8 +727,11 @@ class TestDigitizedWorkListRequest(TestCase):
     def test_search_publisher(self):
         # search text in publisher name
         response = self.client.get(self.url, {"query": "McClurg"})
-        for digwork in DigitizedWork.objects.filter(publisher__icontains="mcclurg"):
-            self.assertContains(response, digwork.source_id)
+        html=response.content.decode()
+        assert any(   # in the fixture both of these 2 hits are in the same cluster. the logic which of them is first/shown is independent so let's check for 1/any of them
+            digwork.source_id in html
+            for digwork in DigitizedWork.objects.filter(publisher__icontains="mcclurg")
+        )
 
     def test_search_publication_place(self):
         # search text in publication place - matches wintry
