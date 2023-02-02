@@ -508,7 +508,7 @@ class TestDigitizedWorkListRequest(TestCase):
                     "id": "%s.%s" % (htid, i),
                     "group_id_s": htid,  # group id for non-excerpt = source id
                 }
-                for i, content in enumerate(sample_page_content)
+                for i, content in enumerate(content)
             ]
 
         # get solr pages
@@ -716,8 +716,11 @@ class TestDigitizedWorkListRequest(TestCase):
     def test_search_publisher(self):
         # search text in publisher name
         response = self.client.get(self.url, {"query": "McClurg"})
-        for digwork in DigitizedWork.objects.filter(publisher__icontains="mcclurg"):
-            self.assertContains(response, digwork.source_id)
+        html=response.content.decode()
+        assert any(   # in the fixture both of these 2 hits are in the same cluster. the logic which of them is first/shown is independent so let's check for 1/any of them
+            digwork.source_id in html
+            for digwork in DigitizedWork.objects.filter(publisher__icontains="mcclurg")
+        )
 
     def test_search_publication_place(self):
         # search text in publication place - matches wintry
