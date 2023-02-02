@@ -1,6 +1,5 @@
-import warnings
-warnings.filterwarnings('ignore')
-import csv,html
+import csv
+import html
 import operator
 import re
 import uuid
