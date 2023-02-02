@@ -1,6 +1,6 @@
 import warnings
 warnings.filterwarnings('ignore')
-import csv
+import csv,html
 import operator
 import re
 import uuid
@@ -641,10 +641,22 @@ class TestDigitizedWorkListRequest(TestCase):
             "winter and <em>wintry</em> and",
             msg_prefix="highlight snippet from page content displayed",
         )
-        assert response.content.decode().count("search and browse within cluster") == 1   # 2 results but one cluster
-        self.assertContains(response, '/archive/?cluster=treatisewinter&query=wintry&sort=relevance&page=1')   # link preserves args
-        self.assertContains(response, '/archive/uc1.$b14645/?query=wintry')   # the non-cluster hit should appear
-        self.assertNotContains(response, '/archive/?cluster=anothercluster')     # no hits for wintry in this cluster
+
+        # need to unescape to test query args below
+        htmlstr=html.unescape(response.content.decode())
+
+        # 2 results but one cluster
+        assert htmlstr.count("search and browse within cluster") == 1
+        
+        # link preserves args
+        assert '/archive/?cluster=treatisewinter&query=wintry&sort=relevance&page=1' in htmlstr
+        
+        # the non-cluster hit should appear
+        assert '/archive/uc1.$b14645/?query=wintry' in htmlstr   
+        
+        # no hits for wintry in this cluster
+        print(htmlstr)
+        assert '/archive/?cluster=anothercluster' not in htmlstr     
 
 
     def test_search_excerpt(self):

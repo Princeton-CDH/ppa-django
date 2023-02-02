@@ -36,7 +36,7 @@ def querystring_replace(context, **kwargs):
     for key, val in kwargs.items():
         querystring[key] = val
     # return urlencoded query string
-    return mark_safe(querystring.urlencode())
+    return querystring.urlencode()
 
 
 # NOTE: Use urllib.parse? Not sure it gets us much given the semi-colon
