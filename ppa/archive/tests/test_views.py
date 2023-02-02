@@ -1,3 +1,5 @@
+import warnings
+warnings.filterwarnings('ignore')
 import csv
 import operator
 import re
@@ -504,6 +506,10 @@ class TestDigitizedWorkListRequest(TestCase):
 
         work_docs = [dw.index_data() for dw in DigitizedWork.objects.all()]
         index_data = work_docs + solr_page_docs
+        
+        # assign a shared cluster -- cluster_id and cluster_id_s are not in `index_data`
+        for d in index_data: d['cluster_id_s']='treatisewinter'
+
         SolrClient().update.index(index_data)
         # NOTE: without a sleep, even with commit=True and/or low
         # commitWithin settings, indexed data isn't reliably available
@@ -599,7 +605,8 @@ class TestDigitizedWorkListRequest(TestCase):
 
     def test_keyword_search(self):
         # use keyword search with a term in a fixture title
-        response = self.client.get(self.url, {"query": "wintry"})
+        response = self.client.get(self.url, {"query": "wintry", "sort":"relevance"})
+
         # relevance sort for keyword search
         assert len(response.context["object_list"]) == 1
         self.assertContains(response, "1 digitized work")
@@ -615,6 +622,9 @@ class TestDigitizedWorkListRequest(TestCase):
             "winter and <em>wintry</em> and",
             msg_prefix="highlight snippet from page content displayed",
         )
+
+        self.assertContains(response, '<a href="/archive/?cluster=treatisewinter&query=wintry&sort=relevance&page=1">search and browse within cluster</a>')
+
 
     def test_search_excerpt(self):
         # convert one of the fixtures into an excerpt
