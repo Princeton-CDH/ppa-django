@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings('ignore')
+from collections import defaultdict
 import csv
 import html
 import operator
@@ -20,7 +23,7 @@ from django.utils.timezone import now
 from parasolr.django import SolrClient, SolrQuerySet
 
 from ppa.archive.forms import ImportForm, ModelMultipleChoiceFieldWithEmpty, SearchForm
-from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork
+from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork, Cluster
 from ppa.archive.solr import ArchiveSearchQuerySet
 from ppa.archive.templatetags.ppa_tags import (
     gale_page_url,
@@ -514,18 +517,43 @@ class TestDigitizedWorkListRequest(TestCase):
         solr_page_docs = get_solr_page_docs(htid,sample_page_content)
         solr_page_docs+= get_solr_page_docs(htid_other,sample_page_content_other)
 
-        # pages + works
+        # assign clusters
+        cl1 = Cluster(cluster_id='treatisewinter')
+        cl2 = Cluster(cluster_id='anothercluster')
+        cl3 = Cluster(cluster_id='dialcluster')
+        cl1.save()
+        cl2.save()
+        cl3.save()
+        clustk = 'cluster_id_s'
+        cluster_objs = {}
         work_docs = [dw.index_data() for dw in DigitizedWork.objects.all()]
         index_data = work_docs + solr_page_docs
-        
-        # assign clusters
+
         for d in index_data:
-            if d['source_id'] == htid:
-                d['cluster_id_s'] = 'treatisewinter'
-            elif d['source_id'] == htid_other:
-                d['cluster_id_s'] = htid_other
+            print('???',d)
+            sid=d['source_id']
+            if sid == htid:
+                d[clustk] = cl1.cluster_id
+                cluster_objs[sid]=cl1
+
+            elif sid in {"chi.78013704", "chi.78013677"}:
+                
+                d[clustk] = cl3.cluster_id
+                cluster_objs[sid]=cl3
+            
+            elif sid == htid_other:
+                d[clustk] = htid_other
+            
             else:
-                d['cluster_id_s'] = 'anothercluster'
+                d[clustk] = cl2.cluster_id
+                cluster_objs[sid]=cl2
+
+        for dw in DigitizedWork.objects.all():
+            cluster = cluster_objs.get(dw.source_id)
+            if cluster:
+                dw.cluster = cluster
+                dw.save()
+
 
         SolrClient().update.index(index_data)
         # NOTE: without a sleep, even with commit=True and/or low
@@ -550,9 +578,29 @@ class TestDigitizedWorkListRequest(TestCase):
         # no query - should find all
         response = self.client.get(self.url)
         assert response.status_code == 200
+
+        # assemble a dictionary of cluster -> list of works within that cluster
+        cluster2works = defaultdict(list)
+        all_works = DigitizedWork.objects.all()
+        for digwork in all_works:
+            # using this instead of digwork.cluster_id_is for consistency with other tests
+            digwork_index_data = digwork.index_data()
+            cluster = digwork_index_data.get('cluster_id_s')
+            # double checking that they're the same though:
+            assert digwork_index_data.get('cluster_id_s') == digwork.cluster_id_s
+            cluster2works[cluster].append(digwork)
+            
+        # assert that shown are number of *clusters* not number of works
+        num_clusters = len(cluster2works)
+        num_works = len(all_works)
         self.assertContains(
-            response, "%d digitized works" % len(DigitizedWork.objects.all())
+            response, "%d digitized works" % num_clusters
         )
+        self.assertNotContains(
+            response, "%d digitized works" % num_works
+        )
+
+        # are results numbered?
         self.assertContains(
             response,
             '<p class="result-number">1</p>',
@@ -583,25 +631,23 @@ class TestDigitizedWorkListRequest(TestCase):
         assert "page_groups" in response.context
         # facet range information from publication date range facet
         assert "facet_ranges" in response.context
-
-        for digwork in DigitizedWork.objects.all():
-            # check basic metadata for each work
-            self.assertContains(response, digwork.title)
-            self.assertContains(response, digwork.subtitle)
-            self.assertContains(response, digwork.source_id)
-            self.assertContains(response, digwork.author)
-            self.assertContains(response, digwork.enumcron)
+    
+        # we need to assert that *at least one* work within each cluster has its metadata shown
+        response_str = response.content.decode()
+        attrs_to_test=['title','subtitle','author','enumcron','pub_date']
+        for cluster,works in cluster2works.items():
+            # assertion is similar for all these attrs
+            for attr in attrs_to_test:
+                assert any(str(getattr(w,attr)) in response_str for w in works)
             # at least one publisher includes an ampersand, so escape text
-            self.assertContains(response, escape(digwork.publisher))
-            # self.assertContains(response, digwork.pub_place)
-            self.assertContains(response, digwork.pub_date)
+            assert any(escape(w.publisher) in response_str for w in works)
+            # self.assertContains(response, digwork.pub_place)   # <- this was already commented, I believe because we're not showing it any longer?
             # link to detail page
-            self.assertContains(response, digwork.get_absolute_url())
+            assert any(w.get_absolute_url() in response_str for w in works)
             # unapi identifier for each work
-            self.assertContains(
-                response,
-                '<abbr class="unapi-id" title="%s"' % digwork.index_id(),
-                msg_prefix="unapi id should be embedded for each work",
+            assert any(
+                ('<abbr class="unapi-id" title="%s"' % w.index_id()) in response_str
+                for w in works
             )
 
         # no page images or highlights displayed without search term
@@ -870,10 +916,17 @@ class TestDigitizedWorkListRequest(TestCase):
         # shouldn't render the search form or whole list
         self.assertTemplateNotUsed("archive/snippets/search_form.html")
         self.assertTemplateNotUsed("archive/digitizedwork_list.html")
+
         # should have all the results
-        assert (
-            len(response.context["object_list"]) == DigitizedWork.objects.all().count()
-        )
+        works = DigitizedWork.objects.all()
+        num_works = works.count()
+        clusters = set(w.index_data().get('cluster_id_s') for w in works)
+        num_clusters = len(clusters)
+        num_respobjs = len(response.context["object_list"])
+
+        print([num_works, num_respobjs, num_clusters])
+        assert num_respobjs==num_clusters # used to be num_works: no longer!
+
         # should have the results count
         self.assertContains(response, " digitized works")
         # should have the histogram data
