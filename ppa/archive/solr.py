@@ -48,7 +48,7 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         "work_type_s": "work_type",
         "book_journal_s": "book_journal",
         "group_id_s": "group_id",
-        "cluster_id_s": "cluster_id",
+        "cluster_id_s": "cluster_id",    # <- will this conflict with property self.cluster_id_s? should I rename?
     }
 
     keyword_query = None

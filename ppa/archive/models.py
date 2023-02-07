@@ -442,6 +442,14 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             return "%s (%s)" % (self.source_id, self.pages_digital)
         return self.source_id
 
+    @property
+    def cluster_id_s(self):
+        """
+        Convenience function to get a string representation of the cluster (or self if no cluster).
+        Redunadancy 
+        """
+        return str(self.cluster) if self.cluster else self.index_id()
+
     def clean_fields(self, exclude=None):
         if not exclude or "pages_digital" not in exclude:
             # normalize whitespace in pages digital field before applying regex validation
@@ -789,7 +797,8 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             if self.collections.exists()
             else [NO_COLLECTION_LABEL],
             # "cluster_id_s": str(self.cluster) if self.cluster else None,  # @BUG?
-            "cluster_id_s": str(self.cluster) if self.cluster else index_id,
+            # "cluster_id_s": str(self.cluster) if self.cluster else index_id,   # moved to magic property function
+            "cluster_id_s": self.cluster_id_s,
             # public notes field for display on site_name
             "notes": self.public_notes,
             # hard-coded to distinguish from & sort with pages
@@ -1064,7 +1073,9 @@ class Page(Indexable):
         digwork_index_id = digwork.index_id()
         # digwork index id is fallback for cluster, since it is used
         # to collapse works and pages that belong together
-        cluster_id = str(digwork.cluster) if digwork.cluster else digwork_index_id
+
+        # [this logic moved to self.cluster_id_s to reduce reduncancy]
+        # cluster_id = str(digwork.cluster) if digwork.cluster else digwork_index_id
 
         # read zipfile contents in place, without unzipping
         with ZipFile(digwork.hathi.zipfile_path()) as ht_zip:
@@ -1085,7 +1096,7 @@ class Page(Indexable):
                             "id": "%s.%s" % (digwork_index_id, page.text_file.sequence),
                             "source_id": digwork.source_id,
                             "group_id_s": digwork_index_id,  # for grouping with work record
-                            "cluster_id_s": cluster_id,  # for grouping with cluster
+                            "cluster_id_s": digwork.cluster_id_s,  # for grouping with cluster
                             "content": pagefile.read().decode("utf-8"),
                             "order": page.order,
                             "label": page.display_label,
@@ -1109,7 +1120,9 @@ class Page(Indexable):
         digwork_index_id = digwork.index_id()
         # digwork index id is fallback for cluster, since it is used
         # to collapse works and pages that belong together
-        cluster_id = str(digwork.cluster) if digwork.cluster else digwork_index_id
+
+        # [this logic moved to self.cluster_id_s to reduce reduncancy]
+        # cluster_id = str(digwork.cluster) if digwork.cluster else digwork_index_id
 
         for i, page in enumerate(gale_record["pageResponse"]["pages"], 1):
             page_number = page["pageNumber"]
@@ -1122,7 +1135,7 @@ class Page(Indexable):
                 "id": "%s.%s" % (digwork_index_id, page_number),
                 "source_id": digwork.source_id,
                 "group_id_s": digwork_index_id,  # for grouping with work record
-                "cluster_id_s": cluster_id,  # for grouping with cluster
+                "cluster_id_s": digwork.cluster_id_s,  # for grouping with cluster
                 "content": page.get("ocrText"),  # some pages have no text
                 "order": i,
                 "label": page_label,
