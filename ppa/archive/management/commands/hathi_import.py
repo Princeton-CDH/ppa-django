@@ -187,7 +187,10 @@ class Command(BaseCommand):
         if not self.hathi_pairtree:
             hathi_dirs = glob(os.path.join(settings.HATHI_DATA, "*"))
             for ht_data_dir in hathi_dirs:
-                if os.path.isdir(ht_data_dir):  # ignore anything else!
+                # ignore non-directories! this is useful because
+                # the rsync may copy txt files, .DS_Store from Mac
+                # may be in there, and so forth.
+                if os.path.isdir(ht_data_dir):
                     prefix = os.path.basename(ht_data_dir)
                     logger.debug(f'Initializing pair tree in ({ht_data_dir}) [prefix={prefix}]')
                     hathi_ptree = pairtree_client.PairtreeStorageClient(prefix, ht_data_dir)
