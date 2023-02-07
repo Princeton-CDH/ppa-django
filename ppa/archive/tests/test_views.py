@@ -584,7 +584,7 @@ class TestDigitizedWorkListRequest(TestCase):
             digwork_index_data = digwork.index_data()
             cluster = digwork_index_data.get('cluster_id_s')
             # double checking that they're the same though:
-            assert digwork_index_data.get('cluster_id_s') == digwork.cluster_id_s
+            assert digwork_index_data.get('cluster_id_s') == digwork.index_cluster_id
             cluster2works[cluster].append(digwork)
             
         # assert that shown are number of *clusters* not number of works
@@ -810,9 +810,9 @@ class TestDigitizedWorkListRequest(TestCase):
                 if not x in l2:
                     l2.append(x)
             return l2
-        sorted_cluster_ids_date = _get_unique_list(dw.cluster_id_s for dw in DigitizedWork.objects.order_by("pub_date"))
-        sorted_cluster_ids_date_rev = _get_unique_list(dw.cluster_id_s for dw in DigitizedWork.objects.order_by("-pub_date"))
-        sorted_cluster_ids_title = _get_unique_list(dw.cluster_id_s for dw in DigitizedWork.objects.order_by("title"))
+        sorted_cluster_ids_date = _get_unique_list(dw.index_cluster_id for dw in DigitizedWork.objects.order_by("pub_date"))
+        sorted_cluster_ids_date_rev = _get_unique_list(dw.index_cluster_id for dw in DigitizedWork.objects.order_by("-pub_date"))
+        sorted_cluster_ids_title = _get_unique_list(dw.index_cluster_id for dw in DigitizedWork.objects.order_by("title"))
 
         ## get unique but sorted cluster ids from response
         def _get_unique_list_response(response):
