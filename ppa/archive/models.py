@@ -446,7 +446,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
     def cluster_id_s(self):
         """
         Convenience function to get a string representation of the cluster (or self if no cluster).
-        Redunadancy 
+        Reduces redunadancy elsewhere.
         """
         return str(self.cluster) if self.cluster else self.index_id()
 
