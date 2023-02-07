@@ -1,6 +1,3 @@
-import warnings
-warnings.filterwarnings('ignore')
-from collections import defaultdict
 import csv
 import html
 import operator
@@ -9,6 +6,7 @@ import uuid
 from io import StringIO
 from time import sleep
 from unittest.mock import Mock, patch
+from collections import defaultdict
 
 import pytest
 import requests
@@ -530,7 +528,6 @@ class TestDigitizedWorkListRequest(TestCase):
         index_data = work_docs + solr_page_docs
 
         for d in index_data:
-            print('???',d)
             sid=d['source_id']
             if sid == htid:
                 d[clustk] = cl1.cluster_id
