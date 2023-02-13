@@ -34,7 +34,7 @@ from ppa.archive.forms import (
 )
 from ppa.archive.import_util import GaleImporter, HathiImporter
 from ppa.archive.models import NO_COLLECTION_LABEL, DigitizedWork
-from ppa.archive.solr import ArchiveSearchQuerySet
+from ppa.archive.solr import ArchiveSearchQuerySet, PageSearchQuerySet
 from ppa.common.views import AjaxTemplateMixin
 
 logger = logging.getLogger(__name__)
@@ -180,7 +180,7 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
         # NOTE: can't use alias for group_id because not using aliased queryset
         # (archive search queryset doesn't work properly for this query)
         solr_pageq = (
-            SolrQuerySet()
+            PageSearchQuerySet()
             .filter(group_id_s__in=work_id_l)
             .filter(item_type="page")
             .search(content="(%s)" % self.query)
