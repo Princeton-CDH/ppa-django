@@ -162,11 +162,12 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
             # pass combined workfilter query as a raw query parameter
             qs_copy = qs_copy.raw_query_parameters(work_query=work_query)
 
+        content_query = "content:(%s)" % self.keyword_query
         qs_copy = (
             qs_copy.search(combined_query)
-            .filter(collapse_filter)
+            # .filter(collapse_filter)     # This no longer needed since applied above in `qs_copy = qs_copy.filter(collapse_filter)`
             .raw_query_parameters(
-                content_query="content:(%s)" % self.keyword_query,
+                content_query=content_query,
                 keyword_query=self.keyword_query,
                 # expand="true",
                 work_query=work_query,
