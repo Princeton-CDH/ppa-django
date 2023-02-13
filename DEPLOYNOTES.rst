@@ -3,6 +3,12 @@
 Deploy and Upgrade notes
 ========================
 
+3.9
+---
+
+* Noted that PUL is running Solr 8.4; tests, documentation, and local environments ought to change accordingly.
+
+
 3.8
 ---
 
