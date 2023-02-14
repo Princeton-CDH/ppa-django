@@ -189,6 +189,9 @@ class PageSearchQuerySet(AliasedSolrQuerySet):
     field_aliases = {
         "id":"id",
         "score":"score",
+        "order":"order",
+        "title":"title",
+        "label":"label",
         "source": "source_id",
         "image_id": "image_id_s",
         "group_id": "group_id_s",

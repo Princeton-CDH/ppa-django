@@ -1152,7 +1152,8 @@ class TestDigitizedWorkListView(TestCase):
 
         # mock PagedSolrQuery to inspect that query is generated properly
         with patch(
-            "ppa.archive.views.SolrQuerySet", new=self.mock_solr_queryset()
+            # "ppa.archive.views.SolrQuerySet", new=self.mock_solr_queryset()
+            "ppa.archive.solr.PageSearchQuerySet", new=self.mock_solr_queryset()
         ) as mock_queryset_cls:
 
             solrq = mock_queryset_cls()
@@ -1175,16 +1176,18 @@ class TestDigitizedWorkListView(TestCase):
 
             mock_queryset_cls.assert_called_with()
             mock_qs = mock_queryset_cls.return_value
-            mock_qs.search.assert_any_call(content="(iambic)")
+
+            ## These asserts aren't working ###
+            mock_qs.filter.assert_any_call(group_id__in=['"work1"', '"work2"'])
             mock_qs.filter.assert_any_call(item_type="page")
-            mock_qs.filter.assert_any_call(group_id_s__in=['"work1"', '"work2"'])
-            mock_qs.group.assert_called_with("group_id_s", limit=2, sort="score desc")
+            mock_qs.search.assert_any_call(content="(iambic)")
+            mock_qs.group.assert_called_with("group_id", limit=2, sort="score desc")
             mock_qs.highlight.assert_called_with(
                 "content", snippets=3, method="unified"
             )
             mock_qs.get_response.assert_called_with(rows=100)
-
             assert highlights == mock_qs.get_highlighting()
+            ####################################
 
     @pytest.mark.usefixtures("mock_solr_queryset")
     def test_get_queryset(self):
