@@ -184,19 +184,13 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
 
 
 class PageSearchQuerySet(AliasedSolrQuerySet):
-    return_fields = [
-        "id",
-        "score",
-        "source_t",
-        "image_id_s",
-        "group_id_s",
-        "cluster_id_s",
-    ]
     # aliases for any fields we want to rename for search and display
-    # (must also be included in return_fields list)
-    aliases = {
-        "source_t": "source",
-        "image_id_s": "image_id",
-        "group_id_s": "group_id",
-        "cluster_id_s": "cluster_id",
+    # includes non-renamed fields to push them into the return
+    field_aliases = {
+        "id":"id",
+        "score":"score",
+        "source": "source_id",
+        "image_id": "image_id_s",
+        "group_id": "group_id_s",
+        "cluster_id": "cluster_id_s",
     }
