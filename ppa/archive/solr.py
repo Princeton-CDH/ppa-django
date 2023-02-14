@@ -180,3 +180,20 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
     def _base_query_opts(self):
         # provide access to regular query opts logic, bypassing keyword/join
         return super().query_opts()
+
+
+
+class PageSearchQuerySet(AliasedSolrQuerySet):
+    # aliases for any fields we want to rename for search and display
+    # includes non-renamed fields to push them into the return
+    field_aliases = {
+        "id":"id",
+        "score":"score",
+        "order":"order",
+        "title":"title",
+        "label":"label",
+        "source_id": "source_id",
+        "image_id": "image_id_s",
+        "group_id": "group_id_s",
+        "cluster_id": "cluster_id_s",
+    }

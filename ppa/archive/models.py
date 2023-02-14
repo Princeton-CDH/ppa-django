@@ -759,7 +759,13 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
     def items_to_index(cls):
         """Queryset of works for indexing everything; excludes
         suppressed works."""
-        return DigitizedWork.objects.exclude(status=cls.SUPPRESSED)
+        return DigitizedWork.objects.exclude(
+            status=cls.SUPPRESSED
+        ).select_related(
+            'cluster'
+        ).prefetch_related(
+            'collections'
+        )
 
     @classmethod
     def index_item_type(cls):
