@@ -181,10 +181,10 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
         # (archive search queryset doesn't work properly for this query)
         solr_pageq = (
             PageSearchQuerySet()
-            .filter(group_id_s__in=work_id_l)
+            .filter(group_id__in=work_id_l)
             .filter(item_type="page")
             .search(content="(%s)" % self.query)
-            .group("group_id_s", limit=2, sort="score desc")
+            .group("group_id", limit=2, sort="score desc")
             .highlight("content", snippets=3, method="unified")
         )
 
