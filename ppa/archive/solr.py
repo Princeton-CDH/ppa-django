@@ -192,7 +192,7 @@ class PageSearchQuerySet(AliasedSolrQuerySet):
         "order":"order",
         "title":"title",
         "label":"label",
-        "source": "source_id",
+        "source_id": "source_id",
         "image_id": "image_id_s",
         "group_id": "group_id_s",
         "cluster_id": "cluster_id_s",
