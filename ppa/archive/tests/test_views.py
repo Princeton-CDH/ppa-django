@@ -1152,8 +1152,7 @@ class TestDigitizedWorkListView(TestCase):
 
         # mock PagedSolrQuery to inspect that query is generated properly
         with patch(
-            # "ppa.archive.views.SolrQuerySet", new=self.mock_solr_queryset()
-            "ppa.archive.solr.PageSearchQuerySet", new=self.mock_solr_queryset()
+            "ppa.archive.views.PageSearchQuerySet", new=self.mock_solr_queryset()
         ) as mock_queryset_cls:
 
             solrq = mock_queryset_cls()
