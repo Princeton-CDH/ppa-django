@@ -352,12 +352,9 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
             # only return fields needed for page result display,
             # configure highlighting on page text content
             solr_pageq = (
-                SolrQuerySet()  # NOTE: not using aliased queryset currently
+                PageSearchQuerySet() # NOTE: Addition of an aliased queryset changes the _s keys below
                 .search(content="(%s)" % query)
-                .filter(group_id_s='"%s"' % digwork.index_id(), item_type="page")
-                .only(
-                    "id", "source_id", "order", "title", "label", "image_id:image_id_s"
-                )
+                .filter(group_id='"%s"' % digwork.index_id(), item_type="page")
                 .highlight("content", snippets=3, method="unified")
                 .order_by("order")
             )
