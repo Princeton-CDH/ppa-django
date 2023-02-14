@@ -34,7 +34,7 @@ from ppa.archive.forms import (
 )
 from ppa.archive.import_util import GaleImporter, HathiImporter
 from ppa.archive.models import NO_COLLECTION_LABEL, DigitizedWork
-from ppa.archive.solr import ArchiveSearchQuerySet
+from ppa.archive.solr import ArchiveSearchQuerySet, PageSearchQuerySet
 from ppa.common.views import AjaxTemplateMixin
 
 logger = logging.getLogger(__name__)
@@ -180,11 +180,11 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
         # NOTE: can't use alias for group_id because not using aliased queryset
         # (archive search queryset doesn't work properly for this query)
         solr_pageq = (
-            SolrQuerySet()
-            .filter(group_id_s__in=work_id_l)
+            PageSearchQuerySet()
+            .filter(group_id__in=work_id_l)
             .filter(item_type="page")
             .search(content="(%s)" % self.query)
-            .group("group_id_s", limit=2, sort="score desc")
+            .group("group_id", limit=2, sort="score desc")
             .highlight("content", snippets=3, method="unified")
         )
 
@@ -352,12 +352,9 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
             # only return fields needed for page result display,
             # configure highlighting on page text content
             solr_pageq = (
-                SolrQuerySet()  # NOTE: not using aliased queryset currently
+                PageSearchQuerySet() # NOTE: Addition of an aliased queryset changes the _s keys below
                 .search(content="(%s)" % query)
-                .filter(group_id_s='"%s"' % digwork.index_id(), item_type="page")
-                .only(
-                    "id", "source_id", "order", "title", "label", "image_id:image_id_s"
-                )
+                .filter(group_id='"%s"' % digwork.index_id(), item_type="page")
                 .highlight("content", snippets=3, method="unified")
                 .order_by("order")
             )
