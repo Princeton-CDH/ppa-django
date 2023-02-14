@@ -756,21 +756,28 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         return self.source_id
 
     @classmethod
-    def items_to_index(cls):
-        """Queryset of works for indexing everything; excludes
-        suppressed works."""
-        return DigitizedWork.objects.exclude(
-            status=cls.SUPPRESSED
-        ).select_related(
-            'cluster'
-        ).prefetch_related(
-            'collections'
-        )
-
-    @classmethod
     def index_item_type(cls):
         """override index item type label to just work"""
         return "work"
+
+    @classmethod
+    def items_to_index(cls):
+        """Queryset of works for indexing everything; excludes
+        suppressed works."""
+        return (
+            DigitizedWork.objects.exclude(status=cls.SUPPRESSED)
+            .select_related("cluster")
+            .prefetch_related("collections")
+        )
+        # NOTE: prefetch_related is ignored when used with Iterator,
+        # which parasolr indexing does
+
+    @classmethod
+    def prep_index_chunk(cls, chunk):
+        # prefetch collections when indexing in chunks
+        # (method modifies queryset in place)
+        models.prefetch_related_objects(chunk, "collections")
+        return chunk
 
     def index_data(self):
         """data for indexing in Solr"""
