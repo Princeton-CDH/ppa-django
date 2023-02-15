@@ -95,8 +95,10 @@ class Command(BaseCommand):
 
         if not source_ids:
             digiworks = DigitizedWork.items_to_index()
+            num_pages = Page.total_to_index()
         else:
             digiworks = DigitizedWork.objects.filter(source_id__in=source_ids)
+            num_pages = sum([dw.page_count for dw in digiworks])
 
         for digwork in digiworks:
             work_q.put(digwork)
@@ -111,7 +113,7 @@ class Command(BaseCommand):
         # start a single indexing process
         indexer = Process(
             target=process_index_queue,
-            args=(page_data_q, Page.total_to_index(), work_q),
+            args=(page_data_q, num_pages, work_q),
         )
         indexer.start()
         # block until indexer has completed
