@@ -397,3 +397,13 @@ class TestIndexPagesCommand(TestCase):
         output = stdout.getvalue()
         assert "Indexing with" not in output
         assert "Items in Solr" not in output
+
+
+    def test_index_pages_specific_ids(self, mock_process, mock_progbar, mock_sleep):
+        # test calling from command line
+        stdout = StringIO()
+        call_command("index_pages", source_ids=['uc1.$b14645','chi.13880510'])
+        output = stdout.getvalue()
+        
+        print(output)
+        
