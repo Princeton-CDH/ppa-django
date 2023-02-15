@@ -398,12 +398,14 @@ class TestIndexPagesCommand(TestCase):
         assert "Indexing with" not in output
         assert "Items in Solr" not in output
 
-
     def test_index_pages_specific_ids(self, mock_process, mock_progbar, mock_sleep):
-        # test calling from command line
         stdout = StringIO()
-        call_command("index_pages", source_ids=['uc1.$b14645','chi.13880510'])
-        output = stdout.getvalue()
-        
-        print(output)
+        source_ids=['chi.78013704', 'chi.13880510']
+        call_command("index_pages", *source_ids, stdout=stdout, verbosity=0)
+        t1=DigitizedWork.objects.get(source_id=source_ids[0])
+        t2=DigitizedWork.objects.get(source_id=source_ids[1])
+        page_count = t1.page_count + t2.page_count
+        big_page_count = Page.total_to_index()
+        assert mock_process.call_args.kwargs.get('args')[1] == page_count      # behavior specifying source ids
+        assert mock_process.call_args.kwargs.get('args')[1] != big_page_count  # normal behavior without specifying source ids
         
