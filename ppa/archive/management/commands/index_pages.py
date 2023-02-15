@@ -77,6 +77,9 @@ class Command(BaseCommand):
             type=int,
             help="Number of processes to use " + "(cpu_count by default: %(default)s)",
         )
+        parser.add_argument(
+            "source_ids", nargs="*", help="List of specific items to index (optional)"
+        )
 
     def handle(self, *args, **kwargs):
         self.verbosity = kwargs.get("verbosity", self.v_normal)
@@ -88,7 +91,14 @@ class Command(BaseCommand):
         page_data_q = Queue()
         # populate the work queue with digitized works that have
         # page content to be indexed
-        for digwork in DigitizedWork.items_to_index():
+        source_ids = kwargs.get('source_ids', [])
+
+        if not source_ids:
+            digiworks = DigitizedWork.items_to_index()
+        else:
+            digiworks = DigitizedWork.objects.filter(source_id__in=source_ids)
+
+        for digwork in digiworks:
             work_q.put(digwork)
 
         # start multiple processes to populate the page index data queue
