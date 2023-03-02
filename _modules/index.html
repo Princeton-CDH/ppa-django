@@ -1,17 +1,16 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Overview: module code &#8212; Princeton Prosody Archive 3.3.0 documentation</title>
-    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Overview: module code &#8212; Princeton Prosody Archive 3.9-0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
    
@@ -34,22 +33,27 @@
 <ul><li><a href="cached_property.html">cached_property</a></li>
 <li><a href="django/db/models/fields/related_descriptors.html">django.db.models.fields.related_descriptors</a></li>
 <li><a href="django/db/models/query_utils.html">django.db.models.query_utils</a></li>
+<li><a href="django/forms/widgets.html">django.forms.widgets</a></li>
 <li><a href="eulxml/xmlmap/fields.html">eulxml.xmlmap.fields</a></li>
 <li><a href="ppa/archive/admin.html">ppa.archive.admin</a></li>
 <li><a href="ppa/archive/forms.html">ppa.archive.forms</a></li>
+<li><a href="ppa/archive/gale.html">ppa.archive.gale</a></li>
 <li><a href="ppa/archive/hathi.html">ppa.archive.hathi</a></li>
+<li><a href="ppa/archive/management/commands/gale_import.html">ppa.archive.management.commands.gale_import</a></li>
+<li><a href="ppa/archive/management/commands/generate_corpus.html">ppa.archive.management.commands.generate_corpus</a></li>
+<li><a href="ppa/archive/management/commands/hathi_excerpt.html">ppa.archive.management.commands.hathi_excerpt</a></li>
+<li><a href="ppa/archive/management/commands/hathi_import.html">ppa.archive.management.commands.hathi_import</a></li>
 <li><a href="ppa/archive/models.html">ppa.archive.models</a></li>
 <li><a href="ppa/archive/solr.html">ppa.archive.solr</a></li>
-<li><a href="ppa/archive/util.html">ppa.archive.util</a></li>
 <li><a href="ppa/archive/views.html">ppa.archive.views</a></li>
 <li><a href="ppa/common/admin.html">ppa.common.admin</a></li>
 <li><a href="ppa/common/views.html">ppa.common.views</a></li>
 <li><a href="ppa/editorial/models.html">ppa.editorial.models</a></li>
 <li><a href="ppa/pages/embed_finders.html">ppa.pages.embed_finders</a></li>
+<li><a href="ppa/pages/management/commands/setup_site_pages.html">ppa.pages.management.commands.setup_site_pages</a></li>
 <li><a href="ppa/pages/models.html">ppa.pages.models</a></li>
 <li><a href="ppa/unapi/views.html">ppa.unapi.views</a></li>
 <li><a href="wagtail/admin/models.html">wagtail.admin.models</a></li>
-<li><a href="wagtail/admin/utils.html">wagtail.admin.utils</a></li>
 </ul>
 
           </div>
@@ -58,7 +62,14 @@
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../index.html">Princeton Prosody Archive</a></h1>
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static/ppa_logo.png" alt="Logo"/>
+    
+    <h1 class="logo logo-name">Princeton Prosody Archive</h1>
+    
+  </a>
+</p>
 
 
 
@@ -76,32 +87,8 @@
 
 
 
-    
-
-<p>
-<a class="badge" href="https://travis-ci.org/Princeton-CDH/ppa-django">
-    <img
-        alt="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
-        src="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
-    />
-</a>
-</p>
-
-
-
-
-    
-
-<p>
-<a class="badge" href="https://codecov.io/github/Princeton-CDH/ppa-django">
-    <img
-    alt="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
-    src="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
-    />
-</a>
-</p>
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../codedocs.html">Code Documentation</a></li>
@@ -114,15 +101,15 @@
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script><div class="powered_by">
+<script>document.getElementById('searchbox').style.display = "block"</script><div class="powered_by">
 <p>Powered by:</p>
 <a href="http://cdh.princeton.edu/">
-<img src="https://cdh.princeton.edu/static/img/logos/cdh-logo.svg"
+<img src="https://cdh.princeton.edu/static/img/CDH_logo.svg"
     alt="Center for Digital Humanities @ Princeton" />
 </a>
 </div>
@@ -134,8 +121,8 @@
       &copy;2018, CDH @ Princeton University.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
     </div>
 

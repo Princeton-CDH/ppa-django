@@ -1,0 +1,323 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ppa.archive.gale &#8212; Princeton Prosody Archive 3.9-0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for ppa.archive.gale</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">pymarc</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+<span class="kn">from</span> <span class="nn">django.core.exceptions</span> <span class="kn">import</span> <span class="n">ImproperlyConfigured</span>
+<span class="kn">from</span> <span class="nn">pairtree</span> <span class="kn">import</span> <span class="n">PairtreeStorageFactory</span><span class="p">,</span> <span class="n">storage_exceptions</span>
+
+<span class="kn">from</span> <span class="nn">ppa</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">ppa_version</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="GaleAPIError"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.gale.GaleAPIError">[docs]</a><span class="k">class</span> <span class="nc">GaleAPIError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base exception class for Gale API errors&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="GaleItemForbidden"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.gale.GaleItemForbidden">[docs]</a><span class="k">class</span> <span class="nc">GaleItemForbidden</span><span class="p">(</span><span class="n">GaleAPIError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Permission denied to access item in Gale API&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="GaleUnauthorized"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.gale.GaleUnauthorized">[docs]</a><span class="k">class</span> <span class="nc">GaleUnauthorized</span><span class="p">(</span><span class="n">GaleAPIError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Permission not authorized for Gale API access&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="GaleItemNotFound"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.gale.GaleItemNotFound">[docs]</a><span class="k">class</span> <span class="nc">GaleItemNotFound</span><span class="p">(</span><span class="n">GaleAPIError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Item not found in Gale API&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="GaleAPI"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.gale.GaleAPI">[docs]</a><span class="k">class</span> <span class="nc">GaleAPI</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Minimal Gale API client with functionality need for PPA import.</span>
+
+<span class="sd">    Requires **GALE_API_USERNAME** configured in Django settings. Automatically</span>
+<span class="sd">    uses the configured username to retrieve an API key when needed, and has</span>
+<span class="sd">    logic to refresh the API key when it expires (30 minutes).</span>
+
+<span class="sd">    If **TECHNICAL_CONTACT** is configured in Django settings, it will</span>
+<span class="sd">    be included in request headers when making API calls.</span>
+
+<span class="sd">    Implemented as a singleton; instanciating the class will return the</span>
+<span class="sd">    same shared instance every time.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#: base URL for all API requests</span>
+    <span class="n">api_root</span> <span class="o">=</span> <span class="s2">&quot;https://api.gale.com/api&quot;</span>
+
+    <span class="c1">#: shared singleton instance; populated on first instantiation</span>
+    <span class="n">instance</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="c1"># implement as a singleton</span>
+        <span class="c1"># adapted from https://softwareengineering.stackexchange.com/a/333710</span>
+
+        <span class="c1"># if no instance has been initialized, create and store on the class</span>
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">instance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">instance</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+        <span class="c1"># return the instance</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">instance</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># NOTE: copied from hathi.py base api class; should be generalized</span>
+        <span class="c1"># into a common base class if/when we add a third provider</span>
+
+        <span class="c1"># first make sure we have a username configured</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">GALE_API_USERNAME</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ImproperlyConfigured</span><span class="p">(</span>
+                <span class="s2">&quot;GALE_API_USERNAME configuration is required for Gale API&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># create a request session, for request pooling</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+        <span class="c1"># set a user-agent header, but  preserve requests version information</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;User-Agent&quot;</span><span class="p">:</span> <span class="s2">&quot;ppa-django/</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span>
+            <span class="o">%</span> <span class="p">(</span><span class="n">ppa_version</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;User-Agent&quot;</span><span class="p">])</span>
+        <span class="p">}</span>
+        <span class="c1"># include technical contact as From header, if set</span>
+        <span class="n">tech_contact</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="s2">&quot;TECHNICAL_CONTACT&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tech_contact</span><span class="p">:</span>
+            <span class="n">headers</span><span class="p">[</span><span class="s2">&quot;From&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tech_contact</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_make_request</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">requires_api_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">retry</span><span class="o">=</span><span class="mi">0</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Make a GET request with the configured session. Takes a url</span>
+<span class="sd">        relative to :attr:`api_root`, optional dictionary of parameters for the request,</span>
+<span class="sd">        and flags to indicate if the request needs an API key, should be streamed,</span>
+<span class="sd">        or is a retry.&quot;&quot;&quot;</span>
+        <span class="c1"># NOTE: also copied from hathi.py</span>
+
+        <span class="c1"># Returns the response for status 200 OK; raises</span>
+        <span class="c1"># :class:`HathiItemNotFound` for 404 and :class:`HathiItemForbidden`</span>
+        <span class="c1"># for 403.</span>
+        <span class="c1"># &#39;&#39;&#39;</span>
+        <span class="n">rqst_url</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_root</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+        <span class="n">rqst_opts</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">:</span>
+            <span class="n">rqst_opts</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># add api key to parameters if neded for this request</span>
+        <span class="k">if</span> <span class="n">requires_api_key</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;params&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">rqst_opts</span><span class="p">:</span>
+                <span class="n">rqst_opts</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">rqst_opts</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">][</span><span class="s2">&quot;api_key&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span>
+
+        <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">rqst_url</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="n">stream</span><span class="p">,</span> <span class="o">**</span><span class="n">rqst_opts</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;get </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">: </span><span class="si">%f</span><span class="s2"> sec&quot;</span><span class="p">,</span>
+            <span class="n">rqst_url</span><span class="p">,</span>
+            <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span>
+            <span class="n">resp</span><span class="o">.</span><span class="n">elapsed</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">(),</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="n">requests</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">resp</span>
+        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="n">requests</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">not_found</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GaleItemNotFound</span>
+
+        <span class="c1"># when api key expires, API returns:</span>
+        <span class="c1"># HTTP Status 401 - Authentication Failed: Invalid or Expired API key</span>
+        <span class="c1"># If we get a 401 on a request that requires an api key, try getting a new one</span>
+        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="n">requests</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">unauthorized</span><span class="p">:</span>
+            <span class="c1"># If we get a 401 on a request that requires an api key,</span>
+            <span class="c1"># get a fresh key and then try the same request again</span>
+            <span class="k">if</span> <span class="n">requires_api_key</span> <span class="ow">and</span> <span class="n">retry</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">refresh_api_key</span><span class="p">()</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span>
+                    <span class="n">url</span><span class="p">,</span>
+                    <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+                    <span class="n">requires_api_key</span><span class="o">=</span><span class="n">requires_api_key</span><span class="p">,</span>
+                    <span class="n">stream</span><span class="o">=</span><span class="n">stream</span><span class="p">,</span>
+                    <span class="n">retry</span><span class="o">=</span><span class="n">retry</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="c1"># response is html error, not json; could try</span>
+            <span class="c1"># extracting h1, but not sure it&#39;s worth parsing</span>
+            <span class="k">raise</span> <span class="n">GaleUnauthorized</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="n">requests</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">forbidden</span><span class="p">:</span>
+            <span class="c1"># forbidden results return a message</span>
+            <span class="c1"># NOTE that item requests for invalid ids may return 403</span>
+            <span class="k">raise</span> <span class="n">GaleItemForbidden</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;message&quot;</span><span class="p">])</span>
+
+        <span class="c1"># raise anything else as a generic error with status code</span>
+        <span class="c1"># getting 406 not acceptable in some cases</span>
+        <span class="c1"># (attempt to access item with invalid item id)</span>
+        <span class="k">raise</span> <span class="n">GaleAPIError</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GaleAPI.get_api_key"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.gale.GaleAPI.get_api_key">[docs]</a>    <span class="k">def</span> <span class="nf">get_api_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a new API key to use for requests in the next 30 minutes.&quot;&quot;&quot;</span>
+        <span class="c1"># GALE API requires use of an API key, which lasts for 30 minutes</span>
+        <span class="c1"># request a new one when needed using configured username</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span>
+            <span class="s2">&quot;tools/generate_key&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;user&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">},</span> <span class="n">requires_api_key</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;apiKey&quot;</span><span class="p">]</span></div>
+
+    <span class="n">_api_key</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">api_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Property for current api key. Uses :meth:`get_api_key` to</span>
+<span class="sd">        request a new one when needed.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_api_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_api_key</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_key</span>
+
+<div class="viewcode-block" id="GaleAPI.refresh_api_key"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.gale.GaleAPI.refresh_api_key">[docs]</a>    <span class="k">def</span> <span class="nf">refresh_api_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;clear cached api key and request a new one&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_api_key</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span>  <span class="c1"># populate new key through property</span></div>
+
+<div class="viewcode-block" id="GaleAPI.get_item"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.gale.GaleAPI.get_item">[docs]</a>    <span class="k">def</span> <span class="nf">get_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the full record for a single item&quot;&quot;&quot;</span>
+        <span class="c1"># full id looks like GALE|CW###### or GALE|CB#######</span>
+        <span class="c1"># using streaming makes a *significant* difference in response time,</span>
+        <span class="c1"># especially for larger results</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="s2">&quot;v1/item/GALE</span><span class="si">%%</span><span class="s2">7C</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">item_id</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">response</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div></div>
+
+
+<span class="c1"># MARC records needed for import and metadata are stored in a local pairtree.</span>
+<span class="c1"># currently used for Gale/ECCO content</span>
+
+
+<div class="viewcode-block" id="get_marc_storage"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.gale.get_marc_storage">[docs]</a><span class="k">def</span> <span class="nf">get_marc_storage</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;return pairtree storage for marc records&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">PairtreeStorageFactory</span><span class="p">()</span><span class="o">.</span><span class="n">get_store</span><span class="p">(</span>
+        <span class="n">store_dir</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">MARC_DATA</span><span class="p">,</span> <span class="n">uri_base</span><span class="o">=</span><span class="s2">&quot;info:local/&quot;</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MARCRecordNotFound"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.gale.MARCRecordNotFound">[docs]</a><span class="k">class</span> <span class="nc">MARCRecordNotFound</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;record not found in local MARC record storage&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="get_marc_record"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.gale.get_marc_record">[docs]</a><span class="k">def</span> <span class="nf">get_marc_record</span><span class="p">(</span><span class="n">marc_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;get a marc record from the pairtree storage by Gale ESTC id&quot;&quot;&quot;</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">marc_object</span> <span class="o">=</span> <span class="n">get_marc_storage</span><span class="p">()</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span><span class="n">marc_id</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">marc_object</span><span class="o">.</span><span class="n">get_bytestream</span><span class="p">(</span><span class="s2">&quot;marc.dat&quot;</span><span class="p">,</span> <span class="n">streamable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">marcfile</span><span class="p">:</span>
+            <span class="n">reader</span> <span class="o">=</span> <span class="n">pymarc</span><span class="o">.</span><span class="n">MARCReader</span><span class="p">(</span><span class="n">marcfile</span><span class="p">,</span> <span class="n">to_unicode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">file_encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+            <span class="n">record</span> <span class="o">=</span> <span class="p">[</span><span class="n">rec</span> <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;Loaded MARC record for </span><span class="si">%s</span><span class="s2"> in </span><span class="si">%.5f</span><span class="s2">s&quot;</span>
+                <span class="o">%</span> <span class="p">(</span><span class="n">marc_id</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span>
+            <span class="p">)</span>
+    <span class="k">except</span> <span class="n">storage_exceptions</span><span class="o">.</span><span class="n">PartNotFoundException</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MARCRecordNotFound</span><span class="p">(</span><span class="n">marc_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">record</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static/ppa_logo.png" alt="Logo"/>
+    
+    <h1 class="logo logo-name">Princeton Prosody Archive</h1>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Django web application for "Princeton Prosody Archive" CDH project</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=Princeton-CDH&repo=ppa-django&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../codedocs.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deploynotes.html">Deploy Notes</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script><div class="powered_by">
+<p>Powered by:</p>
+<a href="http://cdh.princeton.edu/">
+<img src="https://cdh.princeton.edu/static/img/CDH_logo.svg"
+    alt="Center for Digital Humanities @ Princeton" />
+</a>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, CDH @ Princeton University.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

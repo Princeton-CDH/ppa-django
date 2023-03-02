@@ -1,17 +1,17 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Princeton Prosody Archive documentation &#8212; Princeton Prosody Archive 3.3.0 documentation</title>
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Princeton Prosody Archive documentation &#8212; Princeton Prosody Archive 3.9-0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Architecture" href="architecture.html" />
@@ -31,10 +31,10 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="princeton-prosody-archive-documentation">
-<h1>Princeton Prosody Archive documentation<a class="headerlink" href="#princeton-prosody-archive-documentation" title="Permalink to this headline">¶</a></h1>
+  <section id="princeton-prosody-archive-documentation">
+<h1>Princeton Prosody Archive documentation<a class="headerlink" href="#princeton-prosody-archive-documentation" title="Permalink to this heading">¶</a></h1>
 <div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="codedocs.html">Code Documentation</a></li>
@@ -42,28 +42,25 @@
 <li class="toctree-l1"><a class="reference internal" href="deploynotes.html">Deploy Notes</a></li>
 </ul>
 </div>
-<p>Django web application for the new <a class="reference external" href="https://prosody.princeton.edu/">Princeton Prosody Archive</a>.</p>
+<p>Django web application for <a class="reference external" href="https://prosody.princeton.edu/">Princeton Prosody Archive</a> version 3.x.</p>
 <p>Code and architecture documentation for the current release available
 at <a class="reference external" href="https://princeton-cdh.github.io/ppa-django/">https://princeton-cdh.github.io/ppa-django/</a>.</p>
 <a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.2400705"><img alt="DOI: 10.5281/zenodo.2400705" src="https://zenodo.org/badge/110731137.svg" /></a>
-<a class="reference external image-reference" href="https://travis-ci.org/Princeton-CDH/ppa-django"><img alt="Build status" src="https://travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master" /></a>
-<a class="reference external image-reference" href="https://codecov.io/gh/Princeton-CDH/ppa-django"><img alt="Code coverage" src="https://codecov.io/gh/Princeton-CDH/ppa-django/branch/master/graph/badge.svg" /></a>
+<a class="reference external image-reference" href="https://github.com/Princeton-CDH/ppa-django/actions/workflows/unit-tests.yml"><img alt="Unit test status" src="https://github.com/Princeton-CDH/ppa-django/actions/workflows/unit-tests.yml/badge.svg" /></a>
+<a class="reference external image-reference" href="https://codecov.io/gh/Princeton-CDH/ppa-django"><img alt="Code coverage" src="https://codecov.io/gh/Princeton-CDH/ppa-django/branch/main/graph/badge.svg" /></a>
 <a class="reference external image-reference" href="https://www.codefactor.io/repository/github/princeton-cdh/ppa-django"><img alt="CodeFactor" src="https://www.codefactor.io/repository/github/princeton-cdh/ppa-django/badge" /></a>
-<a class="reference external image-reference" href="https://requires.io/github/Princeton-CDH/ppa-django/requirements/?branch=master"><img alt="Requirements Status" src="https://requires.io/github/Princeton-CDH/ppa-django/requirements.svg?branch=master" /></a>
-<p>This repo uses <a class="reference external" href="https://github.com/nvie/gitflow">git-flow</a> conventions; <strong>master</strong>
+<a class="reference external image-reference" href="https://requires.io/github/Princeton-CDH/ppa-django/requirements/?branch=main"><img alt="Requirements Status" src="https://requires.io/github/Princeton-CDH/ppa-django/requirements.svg?branch=main" /></a>
+<a class="reference external image-reference" href="https://github.com/psf/black"><img alt="code style Black" src="https://img.shields.io/badge/code%20style-black-000000.svg" /></a>
+<a class="reference external image-reference" href="https://pycqa.github.io/isort/"><img alt="imports: isort" src="https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&amp;labelColor=ef8336" /></a>
+<p>This repo uses <a class="reference external" href="https://github.com/nvie/gitflow">git-flow</a> conventions; <strong>main</strong>
 contains the most recent release, and work in progress will be on the <strong>develop</strong> branch.
 Pull requests should be made against develop.</p>
-<p>Python 3.6 / Django 1.11 / Node 10.5.0 / MariaDB (MySQL) 5.5 w/ timezone info</p>
-<div class="section" id="development-instructions">
-<h2>Development instructions<a class="headerlink" href="#development-instructions" title="Permalink to this headline">¶</a></h2>
+<p>Python 3.6 / Django 3.2 / Node 16.15 / Postgresql 13 / Solr 8</p>
+<section id="development-instructions">
+<h2>Development instructions<a class="headerlink" href="#development-instructions" title="Permalink to this heading">¶</a></h2>
 <p>Initial setup and installation:</p>
 <ul>
-<li><p><strong>recommended:</strong> create and activate a python 3.6 virtualenv:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">virtualenv</span> <span class="n">ppa</span> <span class="o">-</span><span class="n">p</span> <span class="n">python3</span><span class="o">.</span><span class="mi">6</span>
-<span class="n">source</span> <span class="n">ppa</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span>
-</pre></div>
-</div>
-</li>
+<li><p><strong>recommended:</strong> create and activate a python 3.6 virtual environment, perhaps with <code class="docutils literal notranslate"><span class="pre">virtualenv</span></code> or <code class="docutils literal notranslate"><span class="pre">venv</span></code></p></li>
 <li><p>Use pip to install required python dependencies:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
 <span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">dev</span><span class="o">-</span><span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
@@ -75,25 +72,19 @@ Pull requests should be made against develop.</p>
 </pre></div>
 </div>
 </li>
-<li><p>Create a database, configure in local settings, and run migrations:</p>
+<li><p>Create a database, configure in local settings in the <cite>DATABASES</cite> dictionary, change <cite>SECRET_KEY</cite>, and run migrations:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">migrate</span>
 </pre></div>
 </div>
 </li>
-<li><p>Create two new Solr cores using project specific managed schema and
-solr config, using the core/collection names for development and
-testing that you configured in local settings:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">solr</span> <span class="n">create</span> <span class="o">-</span><span class="n">c</span> <span class="n">SOLR_CORE</span> <span class="o">-</span><span class="n">d</span> <span class="n">solr_conf</span>
-<span class="n">solr</span> <span class="n">create</span> <span class="o">-</span><span class="n">c</span> <span class="n">SOLR_TEST_CORE</span> <span class="o">-</span><span class="n">d</span> <span class="n">solr_conf</span>
+<li><p>Create a new Solr configset from the files in <code class="docutils literal notranslate"><span class="pre">solr_conf</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cp</span> <span class="o">-</span><span class="n">r</span> <span class="n">solr_conf</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">solr</span><span class="o">/</span><span class="n">server</span><span class="o">/</span><span class="n">solr</span><span class="o">/</span><span class="n">configsets</span><span class="o">/</span><span class="n">ppa</span>
+<span class="n">chown</span> <span class="n">solr</span><span class="p">:</span><span class="n">solr</span> <span class="o">-</span><span class="n">R</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">solr</span><span class="o">/</span><span class="n">server</span><span class="o">/</span><span class="n">solr</span><span class="o">/</span><span class="n">configsets</span><span class="o">/</span><span class="n">ppa</span>
 </pre></div>
 </div>
-</li>
-<li><p>Run the manage command to configure the schema:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">solr_schema</span>
-</pre></div>
-</div>
-<p>The manage command will automatically reload the core to ensure schema
-changes take effect.</p>
+<p>and configure <strong>SOLR_CONNECTIONS</strong> in local settings with your
+preferred core/collection name and the configset name you created.</p>
+<p>See developer notes for setup instructions for using docker with <cite>solr:6</cite> image.</p>
 </li>
 <li><p>Bulk import (<em>provisional</em>): requires a local copy of HathiTrust data as
 pairtree provided by rsync.  Configure the path in <cite>localsettings.py</cite>
@@ -103,33 +94,35 @@ and then run:</p>
 </div>
 </li>
 <li><p>Then index the imported content into Solr:</p>
-<blockquote>
-<div><p>python manage.py index</p>
-</div></blockquote>
-</li>
-</ul>
-<p>Frontend development setup:</p>
-<p>This project uses the <a class="reference external" href="https://semantic-ui.com/">Semantic UI</a> library in
-addition to custom styles and javascript. You need to compile static assets
-before running the server.</p>
-<ul>
-<li><p>To build all styles and js for production, including semantic UI:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">npm</span> <span class="n">run</span> <span class="n">build</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">index</span> <span class="o">-</span><span class="n">i</span> <span class="n">work</span>
+<span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">index_pages</span>
 </pre></div>
 </div>
 </li>
 </ul>
-<p>Alternatively, you can rebuild just the custom files or semantic independently.
+<p>Frontend development setup:</p>
+<p>This project uses the <a class="reference external" href="https://fomantic-ui.com/">Fomantic UI</a> library in
+addition to custom styles and javascript. You need to compile static assets
+before running the server.</p>
+<ul>
+<li><p>To build all styles and js for production, including fomantic UI:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">npm</span> <span class="n">install</span>
+<span class="n">npm</span> <span class="n">run</span> <span class="n">build</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>Alternatively, you can rebuild just the custom files or fomantic independently.
 This is useful if you make small changes and need to recompile once:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">npm</span> <span class="n">run</span> <span class="n">build</span><span class="p">:</span><span class="n">qa</span> <span class="c1"># just the custom files, with sourcemaps</span>
 <span class="n">npm</span> <span class="n">run</span> <span class="n">build</span><span class="p">:</span><span class="n">prod</span> <span class="c1"># just the custom files, no sourcemaps</span>
-<span class="n">npm</span> <span class="n">run</span> <span class="n">build</span><span class="p">:</span><span class="n">semantic</span> <span class="c1"># just semantic UI</span>
+<span class="n">npm</span> <span class="n">run</span> <span class="n">build</span><span class="p">:</span><span class="n">semantic</span> <span class="c1"># just fomantic UI</span>
 </pre></div>
 </div>
 <p>Finally, you can run a development server with hot reload if you’ll be changing
 either set of assets frequently. These two processes are separate as well:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">npm</span> <span class="n">run</span> <span class="n">dev</span> <span class="c1"># serve just the custom files from memory, with hot reload</span>
-<span class="n">npm</span> <span class="n">run</span> <span class="n">dev</span><span class="p">:</span><span class="n">semantic</span> <span class="c1"># serve just semantic UI files and recompile on changes</span>
+<span class="n">npm</span> <span class="n">run</span> <span class="n">dev</span><span class="p">:</span><span class="n">semantic</span> <span class="c1"># serve just fomantic UI files and recompile on changes</span>
 </pre></div>
 </div>
 <ul>
@@ -148,8 +141,8 @@ files.</p>
 info on the utility for more information.</p>
 </li>
 </ul>
-<div class="section" id="tests">
-<h3>Tests<a class="headerlink" href="#tests" title="Permalink to this headline">¶</a></h3>
+<section id="tests">
+<h3>Tests<a class="headerlink" href="#tests" title="Permalink to this heading">¶</a></h3>
 <p>Python unit tests are written with <a class="reference external" href="http://doc.pytest.org/">py.test</a> but use
 Django fixture loading and convenience testing methods when that makes
 things easier. To run them, first install development requirements:</p>
@@ -170,6 +163,13 @@ top-level project directory to your python path environment variable:</p>
 </div>
 <p>Make sure you configure a test solr connection and set up an empty
 Solr core using the same instructions as for the development core.</p>
+<p>Note that python unit tests access a test server over HTTP, and therefore
+expect static files to be compiled – see “Frontend development setup” above
+for how to do this.</p>
+<p>In a CI context, we instead use a <code class="docutils literal notranslate"><span class="pre">webpack-stats.json</span></code> file that mocks the
+existence of the static files so they aren’t required. This file is located in
+the <code class="docutils literal notranslate"><span class="pre">ci/</span></code> directory and needs to be updated if new entrypoints are configured
+in <code class="docutils literal notranslate"><span class="pre">webpack.config.js</span></code>.</p>
 <p>Javascript unit tests are written with <a class="reference external" href="https://jasmine.github.io/">Jasmine</a>
 and run using <a class="reference external" href="https://karma-runner.github.io/2.0/index.html">Karma</a>. To run
 them, you can use an <code class="docutils literal notranslate"><span class="pre">npm</span></code> command:</p>
@@ -186,10 +186,26 @@ start the server with <code class="docutils literal notranslate"><span class="pr
 file and look for a sitemap at <code class="docutils literal notranslate"><span class="pre">localhost:8000/sitemap.xml</span></code> to use to crawl the
 site. Additional URLs to test can be added to the <cite>urls</cite> property of the
 <code class="docutils literal notranslate"><span class="pre">.pa11yci.json</span></code> file.</p>
-</div>
-</div>
-<div class="section" id="documentation">
-<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="setup-pre-commit-hooks">
+<h3>Setup pre-commit hooks<a class="headerlink" href="#setup-pre-commit-hooks" title="Permalink to this heading">¶</a></h3>
+<p>If you plan to contribute to this repository, please run the following command:</p>
+<blockquote>
+<div><p>pre-commit install</p>
+</div></blockquote>
+<p>This will add a pre-commit hook to automatically style your python code with <a class="reference external" href="https://github.com/psf/black">black</a> and sort your imports with <a class="reference external" href="https://pycqa.github.io/isort/">isort</a>.</p>
+<p>Because these styling conventions were instituted after multiple releases of development on this project, <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">blame</span></code> may not reflect the true author of a given line. In order to see a more accurate <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">blame</span></code> execute the following command:</p>
+<blockquote>
+<div><p>git blame &lt;FILE&gt; –ignore-revs-file .git-blame-ignore-revs</p>
+</div></blockquote>
+<p>Or configure your git to always ignore styling revision commits:</p>
+<blockquote>
+<div><p>git config blame.ignoreRevsFile .git-blame-ignore-revs</p>
+</div></blockquote>
+</section>
+</section>
+<section id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this heading">¶</a></h2>
 <p>Documentation is generated using <a class="reference external" href="http://www.sphinx-doc.org/">sphinx</a>
 To generate documentation them, first install development requirements:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">dev</span><span class="o">-</span><span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
@@ -201,27 +217,37 @@ directory:</p>
 <span class="n">make</span> <span class="n">html</span>
 </pre></div>
 </div>
-<p>When building for a release <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">docs</span></code> will create a folder called <code class="docutils literal notranslate"><span class="pre">docs</span></code>,
-build the HTML documents and static assets, and force add it to the commit for
-use with Github Pages.</p>
+<p>To check documentation coverage, run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">html</span> <span class="o">-</span><span class="n">b</span> <span class="n">coverage</span>
+</pre></div>
 </div>
-<div class="section" id="license">
-<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
-<p>This project is licensed under the <a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/blob/master/LICENSE">Apache 2.0 License</a>.</p>
-<p>©2019 Trustees of Princeton University.  Permission granted via
+<p>This will create a file under <code class="docutils literal notranslate"><span class="pre">_build/coverage/python.txt</span></code> listing any
+python classes or methods that are not documented. Note that sphinx can only
+report on code coverage for files that are included in the documentation. If a
+new python file is created but not included in the sphinx documentation, it
+will be omitted.</p>
+<p>Documentation will be built and published with GitHub Pages by a GitHub Actions
+workflow triggered on push to <code class="docutils literal notranslate"><span class="pre">main</span></code>.</p>
+<p>The same GitHub Actions workflow will build documentation and checked
+documentation coverage on pull requests.</p>
+</section>
+<section id="license">
+<h2>License<a class="headerlink" href="#license" title="Permalink to this heading">¶</a></h2>
+<p>This project is licensed under the <a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/blob/main/LICENSE">Apache 2.0 License</a>.</p>
+<p>©2019-2023 Trustees of Princeton University.  Permission granted via
 Princeton Docket #20-3624 for distribution online under a standard Open Source
 license. Ownership rights transferred to Rebecca Koeser provided software
 is distributed online via open source.</p>
-</div>
-</div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+</section>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">¶</a></h1>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
-</div>
+</section>
 
 
           </div>
@@ -230,7 +256,14 @@ is distributed online via open source.</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="#">Princeton Prosody Archive</a></h1>
+<p class="logo">
+  <a href="#">
+    <img class="logo" src="_static/ppa_logo.png" alt="Logo"/>
+    
+    <h1 class="logo logo-name">Princeton Prosody Archive</h1>
+    
+  </a>
+</p>
 
 
 
@@ -248,32 +281,8 @@ is distributed online via open source.</p>
 
 
 
-    
-
-<p>
-<a class="badge" href="https://travis-ci.org/Princeton-CDH/ppa-django">
-    <img
-        alt="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
-        src="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
-    />
-</a>
-</p>
-
-
-
-
-    
-
-<p>
-<a class="badge" href="https://codecov.io/github/Princeton-CDH/ppa-django">
-    <img
-    alt="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
-    src="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
-    />
-</a>
-</p>
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="codedocs.html">Code Documentation</a></li>
@@ -282,11 +291,13 @@ is distributed online via open source.</p>
 </ul>
 
 
-  <h3><a href="#">Table of Contents</a></h3>
-  <ul>
+  <div>
+    <h3><a href="#">Table of Contents</a></h3>
+    <ul>
 <li><a class="reference internal" href="#">Princeton Prosody Archive documentation</a><ul>
 <li><a class="reference internal" href="#development-instructions">Development instructions</a><ul>
 <li><a class="reference internal" href="#tests">Tests</a></li>
+<li><a class="reference internal" href="#setup-pre-commit-hooks">Setup pre-commit hooks</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#documentation">Documentation</a></li>
@@ -296,19 +307,20 @@ is distributed online via open source.</p>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
 
+  </div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script><div class="powered_by">
+<script>document.getElementById('searchbox').style.display = "block"</script><div class="powered_by">
 <p>Powered by:</p>
 <a href="http://cdh.princeton.edu/">
-<img src="https://cdh.princeton.edu/static/img/logos/cdh-logo.svg"
+<img src="https://cdh.princeton.edu/static/img/CDH_logo.svg"
     alt="Center for Digital Humanities @ Princeton" />
 </a>
 </div>
@@ -320,8 +332,8 @@ is distributed online via open source.</p>
       &copy;2018, CDH @ Princeton University.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
       <a href="_sources/index.rst.txt"

@@ -1,0 +1,355 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ppa.archive.management.commands.gale_import &#8212; Princeton Prosody Archive 3.9-0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css" />
+    <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+    <script src="../../../../../_static/doctools.js"></script>
+    <script src="../../../../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for ppa.archive.management.commands.gale_import</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">**gale_import** is a custom manage command for bulk import of Gale</span>
+<span class="sd">materials into the local database for management.  It takes either</span>
+<span class="sd">a list of Gale item ids or a path to a CSV file.</span>
+
+<span class="sd">Items are imported into the database for management and also indexed into</span>
+<span class="sd">Solr as part of this import script (both works and pages).</span>
+
+<span class="sd">Example usage::</span>
+
+<span class="sd">    # import from a csv file</span>
+<span class="sd">    python manage.py gale_import -c path/to/import.csv</span>
+<span class="sd">    # import specific items</span>
+<span class="sd">    python manage.py hathi_import galeid1 galeid2 galeid3</span>
+
+<span class="sd">When using a CSV file for import, it *must* include an **ID** field;</span>
+<span class="sd">it may also include **NOTES** (any contents will be imported into private notes),</span>
+<span class="sd">and fields to indicate collection membership to be set on import.</span>
+<span class="sd">These are the supported collection abbreviations:</span>
+
+<span class="sd">- OB: Original Bibliography</span>
+<span class="sd">- LIT: Literary</span>
+<span class="sd">- MUS: Music</span>
+<span class="sd">- TYP: Typographically Unique</span>
+<span class="sd">- LING: Linguistic</span>
+<span class="sd">- DIC: Dictionaries</span>
+<span class="sd">- WL: Word Lists</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span>
+
+<span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+<span class="kn">from</span> <span class="nn">django.contrib.admin.models</span> <span class="kn">import</span> <span class="n">ADDITION</span><span class="p">,</span> <span class="n">LogEntry</span>
+<span class="kn">from</span> <span class="nn">django.contrib.auth.models</span> <span class="kn">import</span> <span class="n">User</span>
+<span class="kn">from</span> <span class="nn">django.contrib.contenttypes.models</span> <span class="kn">import</span> <span class="n">ContentType</span>
+<span class="kn">from</span> <span class="nn">django.core.exceptions</span> <span class="kn">import</span> <span class="n">ImproperlyConfigured</span>
+<span class="kn">from</span> <span class="nn">django.core.management.base</span> <span class="kn">import</span> <span class="n">BaseCommand</span><span class="p">,</span> <span class="n">CommandError</span>
+<span class="kn">from</span> <span class="nn">django.template.defaultfilters</span> <span class="kn">import</span> <span class="n">pluralize</span><span class="p">,</span> <span class="n">truncatechars</span>
+<span class="kn">from</span> <span class="nn">parasolr.django.signals</span> <span class="kn">import</span> <span class="n">IndexableSignalHandler</span>
+
+<span class="kn">from</span> <span class="nn">ppa.archive.gale</span> <span class="kn">import</span> <span class="n">GaleAPI</span><span class="p">,</span> <span class="n">GaleAPIError</span><span class="p">,</span> <span class="n">MARCRecordNotFound</span><span class="p">,</span> <span class="n">get_marc_record</span>
+<span class="kn">from</span> <span class="nn">ppa.archive.import_util</span> <span class="kn">import</span> <span class="n">GaleImporter</span>
+<span class="kn">from</span> <span class="nn">ppa.archive.models</span> <span class="kn">import</span> <span class="n">Collection</span><span class="p">,</span> <span class="n">DigitizedWork</span><span class="p">,</span> <span class="n">Page</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Command"><a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.gale_import.Command">[docs]</a><span class="k">class</span> <span class="nc">Command</span><span class="p">(</span><span class="n">BaseCommand</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Import Gale content into PPA for management and search&quot;&quot;&quot;</span>
+
+    <span class="n">help</span> <span class="o">=</span> <span class="vm">__doc__</span>
+
+    <span class="n">stats</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1">#: normal verbosity level</span>
+    <span class="n">v_normal</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">verbosity</span> <span class="o">=</span> <span class="n">v_normal</span>
+
+    <span class="c1"># input spreadsheets use the following codes as field names</span>
+    <span class="c1"># to indicate collection membership</span>
+    <span class="n">collection_codes</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;OB&quot;</span><span class="p">:</span> <span class="s2">&quot;Original Bibliography&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LIT&quot;</span><span class="p">:</span> <span class="s2">&quot;Literary&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;MUS&quot;</span><span class="p">:</span> <span class="s2">&quot;Music&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;TYP&quot;</span><span class="p">:</span> <span class="s2">&quot;Typographically Unique&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LING&quot;</span><span class="p">:</span> <span class="s2">&quot;Linguistic&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;DIC&quot;</span><span class="p">:</span> <span class="s2">&quot;Dictionaries&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;WL&quot;</span><span class="p">:</span> <span class="s2">&quot;Word Lists&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># item type lookup for supported types — adapted from hathi excerpt script</span>
+    <span class="n">item_type</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;Excerpt&quot;</span><span class="p">:</span> <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">EXCERPT</span><span class="p">,</span>
+        <span class="s2">&quot;Article&quot;</span><span class="p">:</span> <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">ARTICLE</span><span class="p">,</span>
+        <span class="s2">&quot;Full work&quot;</span><span class="p">:</span> <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">FULL</span><span class="p">,</span>
+    <span class="p">}</span>
+
+<div class="viewcode-block" id="Command.add_arguments"><a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.gale_import.Command.add_arguments">[docs]</a>    <span class="k">def</span> <span class="nf">add_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;ids&quot;</span><span class="p">,</span>
+            <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Optional list of specific items to import by Gale id.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;-c&quot;</span><span class="p">,</span> <span class="s2">&quot;--csv&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;CSV file with items to import be imported.&quot;</span>
+        <span class="p">)</span></div>
+        <span class="c1"># NOTE: no support for updating records for now, since Gale/ECCO records</span>
+        <span class="c1"># will not change.</span>
+
+<div class="viewcode-block" id="Command.handle"><a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.gale_import.Command.handle">[docs]</a>    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;ids&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;csv&quot;</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="n">CommandError</span><span class="p">(</span><span class="s2">&quot;A list of IDs or CSV file for is required for import&quot;</span><span class="p">)</span>
+
+        <span class="c1"># error handling in case user forgets to specify csv file correctly</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="s2">&quot;ids&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;ids&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span>
+            <span class="ow">and</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;ids&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">WARNING</span><span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> is not a valid id; did you forget to specify -c/--csv?&quot;</span>
+                    <span class="o">%</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;ids&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;verbosity&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_normal</span><span class="p">)</span>
+
+        <span class="c1"># disconnect signal-based indexing to avoid unnecessary indexing</span>
+        <span class="n">IndexableSignalHandler</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
+
+        <span class="c1"># api initialization will error if username is not in settings</span>
+        <span class="c1"># catch and output error as command error for readability</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gale_api</span> <span class="o">=</span> <span class="n">GaleAPI</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">ImproperlyConfigured</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CommandError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">()</span>
+
+        <span class="c1"># if ids are specified on the command line, create a list</span>
+        <span class="c1"># of dictionaries so import will look similar to csv</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;ids&quot;</span><span class="p">]:</span>
+            <span class="n">to_import</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;ID&quot;</span><span class="p">:</span> <span class="n">gale_id</span><span class="p">}</span> <span class="k">for</span> <span class="n">gale_id</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;ids&quot;</span><span class="p">]]</span>
+        <span class="c1"># when csv is specified, load rows into a list of dics</span>
+        <span class="k">elif</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;csv&quot;</span><span class="p">]:</span>
+            <span class="n">to_import</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_csv</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;csv&quot;</span><span class="p">])</span>
+            <span class="c1"># load collections when importing from CSV</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_collections</span><span class="p">()</span>
+
+        <span class="c1"># total is needed for progessbar (if we add it)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;total&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_import</span><span class="p">)</span>
+
+        <span class="c1"># initialize importer and run pre-steps needed before importi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">importer</span> <span class="o">=</span> <span class="n">GaleImporter</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">importer</span><span class="o">.</span><span class="n">add_item_prep</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">to_import</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_normal</span><span class="p">:</span>
+                <span class="c1"># include title in output if present, but truncate since many are long</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                    <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">],</span> <span class="n">truncatechars</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Title&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="mi">55</span><span class="p">)])</span>
+                <span class="p">)</span>
+            <span class="c1"># send extra details to import method</span>
+            <span class="c1"># to handle notes and collection membership from CSV</span>
+            <span class="n">item_info</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">del</span> <span class="n">item_info</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">]</span>  <span class="c1"># don&#39;t send ID twice</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">import_record</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">],</span> <span class="o">**</span><span class="n">item_info</span><span class="p">)</span>
+
+        <span class="n">summary</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Processed </span><span class="si">{:,d}</span><span class="s2"> item</span><span class="si">{}</span><span class="s2"> for import.&quot;</span>
+            <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Imported </span><span class="si">{:,d}</span><span class="s2">; </span><span class="si">{:,d}</span><span class="s2"> missing MARC record</span><span class="si">{}</span><span class="s2">; &quot;</span>
+            <span class="o">+</span> <span class="s2">&quot;skipped </span><span class="si">{:,d}</span><span class="s2">; </span><span class="si">{:,d}</span><span class="s2"> error</span><span class="si">{}</span><span class="s2">; imported </span><span class="si">{:,d}</span><span class="s2"> page</span><span class="si">{}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="n">summary</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;total&quot;</span><span class="p">],</span>
+            <span class="n">pluralize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;total&quot;</span><span class="p">]),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;imported&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;no_marc&quot;</span><span class="p">],</span>
+            <span class="n">pluralize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;no_marc&quot;</span><span class="p">]),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;skipped&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">],</span>
+            <span class="n">pluralize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;pages&quot;</span><span class="p">],</span>
+            <span class="n">pluralize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;pages&quot;</span><span class="p">]),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">summary</span><span class="p">)</span></div>
+
+    <span class="n">collections</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="Command.load_collections"><a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.gale_import.Command.load_collections">[docs]</a>    <span class="k">def</span> <span class="nf">load_collections</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load :class:`~ppa.archive.model.Collection` records from the</span>
+<span class="sd">        database and create a lookup based on the codes used in the spreadsheet.&quot;&quot;&quot;</span>
+        <span class="n">collections</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">Collection</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()}</span>
+        <span class="k">for</span> <span class="n">code</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">collection_codes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">collections</span><span class="p">[</span><span class="n">code</span><span class="p">]</span> <span class="o">=</span> <span class="n">collections</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Command.load_csv"><a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.gale_import.Command.load_csv">[docs]</a>    <span class="k">def</span> <span class="nf">load_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a CSV file with items to be imported.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8-sig&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">csvfile</span><span class="p">:</span>
+                <span class="n">csvreader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">csvfile</span><span class="p">)</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">csvreader</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CommandError</span><span class="p">(</span><span class="s2">&quot;Error loading the specified CSV file: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;ID&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">CommandError</span><span class="p">(</span><span class="s2">&quot;ID column is required in CSV file&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span></div>
+
+<div class="viewcode-block" id="Command.import_record"><a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.gale_import.Command.import_record">[docs]</a>    <span class="k">def</span> <span class="nf">import_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gale_id</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Import a single work into the database.</span>
+<span class="sd">        Retrieves record data from Gale API.&quot;&quot;&quot;</span>
+
+        <span class="c1"># check if an item with this source id + page range exists</span>
+        <span class="c1"># (check local db first because API call is slow for large items)</span>
+
+        <span class="c1"># use an unsaved digitized work to parse the page range (if any)</span>
+        <span class="c1"># for queryset filter to check for duplicates</span>
+        <span class="n">dw_pages</span> <span class="o">=</span> <span class="n">DigitizedWork</span><span class="p">(</span>
+            <span class="n">pages_digital</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Digital Page Range&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">source_id</span><span class="o">=</span><span class="n">gale_id</span><span class="p">,</span> <span class="n">pages_digital</span><span class="o">=</span><span class="n">dw_pages</span><span class="o">.</span><span class="n">pages_digital</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> is already in the database; skipping&quot;</span> <span class="o">%</span> <span class="n">gale_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;skipped&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">return</span>
+
+        <span class="c1"># determine collection membership based on spreadsheet columns</span>
+        <span class="n">digwork_collections</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">collection</span>
+            <span class="k">for</span> <span class="n">code</span><span class="p">,</span> <span class="n">collection</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">collections</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="c1"># translate item type in spreadsheet to digitized work item type code</span>
+        <span class="c1"># strip whitespace in case any was added in the spreadsheet</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;item_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_type</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Item Type&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+
+        <span class="n">digwork</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">importer</span><span class="o">.</span><span class="n">import_digitizedwork</span><span class="p">(</span>
+            <span class="n">gale_id</span><span class="p">,</span> <span class="n">collections</span><span class="o">=</span><span class="n">digwork_collections</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+
+        <span class="c1"># if import failed, check status</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">digwork</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">importer</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="n">gale_id</span><span class="p">],</span> <span class="n">GaleAPIError</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Error getting item information for </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">gale_id</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">return</span>
+
+        <span class="c1"># check for marc record not found error</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">importer</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="n">gale_id</span><span class="p">],</span> <span class="n">MARCRecordNotFound</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;no_marc&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">WARNING</span><span class="p">(</span><span class="s2">&quot;MARC record not found for </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">gale_id</span><span class="p">))</span>
+            <span class="p">)</span>
+
+        <span class="c1"># if record was created successfully, update stats</span>
+        <span class="k">if</span> <span class="n">digwork</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;imported&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;pages&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">digwork</span><span class="o">.</span><span class="n">page_count</span>
+            <span class="k">return</span> <span class="n">digwork</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../../../index.html">
+    <img class="logo" src="../../../../../_static/ppa_logo.png" alt="Logo"/>
+    
+    <h1 class="logo logo-name">Princeton Prosody Archive</h1>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Django web application for "Princeton Prosody Archive" CDH project</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=Princeton-CDH&repo=ppa-django&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../codedocs.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../changelog.html">Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../deploynotes.html">Deploy Notes</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script><div class="powered_by">
+<p>Powered by:</p>
+<a href="http://cdh.princeton.edu/">
+<img src="https://cdh.princeton.edu/static/img/CDH_logo.svg"
+    alt="Center for Digital Humanities @ Princeton" />
+</a>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, CDH @ Princeton University.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

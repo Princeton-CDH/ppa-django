@@ -1,17 +1,16 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>ppa.archive.hathi &#8212; Princeton Prosody Archive 3.3.0 documentation</title>
-    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ppa.archive.hathi &#8212; Princeton Prosody Archive 3.9-0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
    
@@ -31,77 +30,78 @@
           <div class="body" role="main">
             
   <h1>Source code for ppa.archive.hathi</h1><div class="highlight"><pre>
-<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Utilities for working with HathiTrust materials and APIs.</span>
-<span class="sd">&#39;&#39;&#39;</span>
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">io</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os.path</span>
-<span class="kn">import</span> <span class="nn">io</span>
 <span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 
-<span class="kn">from</span> <span class="nn">cached_property</span> <span class="k">import</span> <span class="n">cached_property</span>
-<span class="kn">from</span> <span class="nn">django.conf</span> <span class="k">import</span> <span class="n">settings</span>
-<span class="kn">from</span> <span class="nn">django.core.exceptions</span> <span class="k">import</span> <span class="n">ImproperlyConfigured</span>
-<span class="kn">from</span> <span class="nn">eulxml</span> <span class="k">import</span> <span class="n">xmlmap</span>
-<span class="kn">from</span> <span class="nn">pairtree</span> <span class="k">import</span> <span class="n">pairtree_path</span><span class="p">,</span> <span class="n">pairtree_client</span><span class="p">,</span> <span class="n">storage_exceptions</span>
 <span class="kn">import</span> <span class="nn">pymarc</span>
 <span class="kn">import</span> <span class="nn">requests</span>
-<span class="kn">from</span> <span class="nn">requests_oauthlib</span> <span class="k">import</span> <span class="n">OAuth1</span>
+<span class="kn">from</span> <span class="nn">cached_property</span> <span class="kn">import</span> <span class="n">cached_property</span>
+<span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+<span class="kn">from</span> <span class="nn">eulxml</span> <span class="kn">import</span> <span class="n">xmlmap</span>
+<span class="kn">from</span> <span class="nn">pairtree</span> <span class="kn">import</span> <span class="n">pairtree_client</span><span class="p">,</span> <span class="n">pairtree_path</span><span class="p">,</span> <span class="n">storage_exceptions</span>
 
-
-<span class="kn">from</span> <span class="nn">ppa</span> <span class="k">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">ppa_version</span>
-
+<span class="kn">from</span> <span class="nn">ppa</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">ppa_version</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="HathiItemNotFound"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiItemNotFound">[docs]</a><span class="k">class</span> <span class="nc">HathiItemNotFound</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Item not found in bibliographic or data API&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Item not found in bibliographic or data API&quot;&quot;&quot;</span>
+
     <span class="k">pass</span></div>
 
 
 <div class="viewcode-block" id="HathiItemForbidden"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiItemForbidden">[docs]</a><span class="k">class</span> <span class="nc">HathiItemForbidden</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Permission denied to access item in data API&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Permission denied to access item in data API&quot;&quot;&quot;</span>
+
     <span class="k">pass</span></div>
 
 
 <div class="viewcode-block" id="HathiBaseAPI"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiBaseAPI">[docs]</a><span class="k">class</span> <span class="nc">HathiBaseAPI</span><span class="p">:</span>
-    <span class="sd">&#39;&#39;&#39;Base client class for HathiTrust APIs&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base client class for HathiTrust APIs&quot;&quot;&quot;</span>
 
     <span class="c1">#: base api URL for all requests</span>
-    <span class="n">api_root</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">api_root</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># create a request session, for request pooling</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
         <span class="c1"># set a user-agent header, but  preserve requests version information</span>
         <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;User-Agent&#39;</span><span class="p">:</span> <span class="s1">&#39;ppa-django/</span><span class="si">%s</span><span class="s1"> (</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> \
-                <span class="p">(</span><span class="n">ppa_version</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;User-Agent&#39;</span><span class="p">])</span>
+            <span class="s2">&quot;User-Agent&quot;</span><span class="p">:</span> <span class="s2">&quot;ppa-django/</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span>
+            <span class="o">%</span> <span class="p">(</span><span class="n">ppa_version</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;User-Agent&quot;</span><span class="p">])</span>
         <span class="p">}</span>
         <span class="c1"># include technical contact as From header, if set</span>
-        <span class="n">tech_contact</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="s1">&#39;TECHNICAL_CONTACT&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">tech_contact</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="s2">&quot;TECHNICAL_CONTACT&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">tech_contact</span><span class="p">:</span>
-            <span class="n">headers</span><span class="p">[</span><span class="s1">&#39;From&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tech_contact</span>
+            <span class="n">headers</span><span class="p">[</span><span class="s2">&quot;From&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tech_contact</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># close the request session</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
     <span class="k">def</span> <span class="nf">_make_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Make a GET request with the configured session. Takes a url</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Make a GET request with the configured session. Takes a url</span>
 <span class="sd">        relative to :attr:`api_root` and optional dictionary of parameters.</span>
 <span class="sd">        Returns the response for status 200 OK; raises</span>
 <span class="sd">        :class:`HathiItemNotFound` for 404 and :class:`HathiItemForbidden`</span>
 <span class="sd">        for 403.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="n">url</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_root</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_root</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
         <span class="n">rqst_opts</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">params</span><span class="p">:</span>
-            <span class="n">rqst_opts</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">params</span>
+            <span class="n">rqst_opts</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">params</span>
 
         <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">rqst_opts</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;get </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">: </span><span class="si">%f</span><span class="s1"> sec&#39;</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span>
-                     <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;get </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">: </span><span class="si">%f</span><span class="s2"> sec&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="n">requests</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">resp</span>
         <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="n">requests</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">not_found</span><span class="p">:</span>
@@ -111,254 +111,229 @@
 
 
 <div class="viewcode-block" id="HathiBibliographicAPI"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiBibliographicAPI">[docs]</a><span class="k">class</span> <span class="nc">HathiBibliographicAPI</span><span class="p">(</span><span class="n">HathiBaseAPI</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Wrapper for HathiTrust Bibliographic API.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper for HathiTrust Bibliographic API.</span>
 
 <span class="sd">    https://www.hathitrust.org/bib_api</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">api_root</span> <span class="o">=</span> <span class="s1">&#39;http://catalog.hathitrust.org/api&#39;</span>
+    <span class="n">api_root</span> <span class="o">=</span> <span class="s2">&quot;http://catalog.hathitrust.org/api&quot;</span>
 
     <span class="k">def</span> <span class="nf">_get_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">id_type</span><span class="p">,</span> <span class="n">id_value</span><span class="p">):</span>
-        <span class="n">url</span> <span class="o">=</span> <span class="s1">&#39;volumes/</span><span class="si">%(mode)s</span><span class="s1">/</span><span class="si">%(id_type)s</span><span class="s1">/</span><span class="si">%(id_value)s</span><span class="s1">.json&#39;</span> <span class="o">%</span> <span class="p">{</span>
-            <span class="s1">&#39;mode&#39;</span><span class="p">:</span> <span class="n">mode</span><span class="p">,</span>
-            <span class="s1">&#39;id_type&#39;</span><span class="p">:</span> <span class="n">id_type</span><span class="p">,</span>
-            <span class="s1">&#39;id_value&#39;</span><span class="p">:</span> <span class="n">id_value</span> <span class="c1"># NOTE: / in ark ids is *not* escaped</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;volumes/</span><span class="si">%(mode)s</span><span class="s2">/</span><span class="si">%(id_type)s</span><span class="s2">/</span><span class="si">%(id_value)s</span><span class="s2">.json&quot;</span> <span class="o">%</span> <span class="p">{</span>
+            <span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="n">mode</span><span class="p">,</span>
+            <span class="s2">&quot;id_type&quot;</span><span class="p">:</span> <span class="n">id_type</span><span class="p">,</span>
+            <span class="s2">&quot;id_value&quot;</span><span class="p">:</span> <span class="n">id_value</span><span class="p">,</span>  <span class="c1"># NOTE: / in ark ids is *not* escaped</span>
         <span class="p">}</span>
         <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
         <span class="c1"># for an invalid id, hathi seems to return a 200 ok</span>
         <span class="c1"># but json has no records</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;records&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;records&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">HathiItemNotFound</span>
         <span class="k">return</span> <span class="n">HathiBibliographicRecord</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
 
 <div class="viewcode-block" id="HathiBibliographicAPI.brief_record"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiBibliographicAPI.brief_record">[docs]</a>    <span class="k">def</span> <span class="nf">brief_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_type</span><span class="p">,</span> <span class="n">id_value</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Get brief record by id type and value.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get brief record by id type and value.</span>
 
 <span class="sd">        :returns: :class:`HathiBibliographicRecord`</span>
 <span class="sd">        :raises: :class:`HathiItemNotFound`</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_record</span><span class="p">(</span><span class="s1">&#39;brief&#39;</span><span class="p">,</span> <span class="n">id_type</span><span class="p">,</span> <span class="n">id_value</span><span class="p">)</span></div>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_record</span><span class="p">(</span><span class="s2">&quot;brief&quot;</span><span class="p">,</span> <span class="n">id_type</span><span class="p">,</span> <span class="n">id_value</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="HathiBibliographicAPI.record"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiBibliographicAPI.record">[docs]</a>    <span class="k">def</span> <span class="nf">record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_type</span><span class="p">,</span> <span class="n">id_value</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Get full record by id type and value.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get full record by id type and value.</span>
 
 <span class="sd">        :returns: :class:`HathiBibliographicRecord`</span>
 <span class="sd">        :raises: :class:`HathiItemNotFound`</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_record</span><span class="p">(</span><span class="s1">&#39;full&#39;</span><span class="p">,</span> <span class="n">id_type</span><span class="p">,</span> <span class="n">id_value</span><span class="p">)</span></div></div>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_record</span><span class="p">(</span><span class="s2">&quot;full&quot;</span><span class="p">,</span> <span class="n">id_type</span><span class="p">,</span> <span class="n">id_value</span><span class="p">)</span></div></div>
 
     <span class="c1"># also possible: get multiple records at once</span>
 
 
 <div class="viewcode-block" id="HathiBibliographicRecord"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiBibliographicRecord">[docs]</a><span class="k">class</span> <span class="nc">HathiBibliographicRecord</span><span class="p">:</span>
-    <span class="sd">&#39;&#39;&#39;Representation of a HathiTrust bibliographic record.&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Representation of a HathiTrust bibliographic record.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">data</span>
         <span class="c1"># for a single bib api json result, we only want the first item</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">record_id</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;records&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;records&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">record_id</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;records&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;records&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">title</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;First title (standard title)&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;First title (standard title)&quot;&quot;&quot;</span>
         <span class="c1"># returns list of titles - standard title; could also have</span>
         <span class="c1"># title without leading article and other language titles</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;titles&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;titles&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">pub_dates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39; list of available publication dates&#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;publishDates&#39;</span><span class="p">]</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;list of available publication dates&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;publishDates&quot;</span><span class="p">]</span>
 
 <div class="viewcode-block" id="HathiBibliographicRecord.copy_details"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiBibliographicRecord.copy_details">[docs]</a>    <span class="k">def</span> <span class="nf">copy_details</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">htid</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Details for a specific copy identified by hathi id&#39;&#39;&#39;</span>
-        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="s1">&#39;items&#39;</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;htid&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">htid</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Details for a specific copy identified by hathi id&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="s2">&quot;items&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;htid&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">htid</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">item</span></div>
 
 <div class="viewcode-block" id="HathiBibliographicRecord.copy_last_updated"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiBibliographicRecord.copy_last_updated">[docs]</a>    <span class="k">def</span> <span class="nf">copy_last_updated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">htid</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Return last update date for a specificy copy identified by</span>
-<span class="sd">        hathi id.  Returns as :class:`datetime.date`&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return last update date for a specificy copy identified by</span>
+<span class="sd">        hathi id.  Returns as :class:`datetime.date`&quot;&quot;&quot;</span>
         <span class="c1"># get last update from copy details</span>
-        <span class="n">last_update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy_details</span><span class="p">(</span><span class="n">htid</span><span class="p">)[</span><span class="s1">&#39;lastUpdate&#39;</span><span class="p">]</span>
+        <span class="n">last_update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy_details</span><span class="p">(</span><span class="n">htid</span><span class="p">)[</span><span class="s2">&quot;lastUpdate&quot;</span><span class="p">]</span>
         <span class="c1"># use datetime to parse, then return just thed ate</span>
-        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">last_update</span><span class="p">,</span> <span class="s1">&#39;%Y%m</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">last_update</span><span class="p">,</span> <span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span></div>
 
     <span class="nd">@cached_property</span>
     <span class="k">def</span> <span class="nf">marcxml</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Record marcxml if included (full records only), as an instance of</span>
-<span class="sd">        :class:`pymarc.Record`&#39;&#39;&#39;</span>
-        <span class="n">marcxml</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="s1">&#39;records&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">record_id</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;marc-xml&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Record marcxml if included (full records only), as an instance of</span>
+<span class="sd">        :class:`pymarc.Record`&quot;&quot;&quot;</span>
+        <span class="n">marcxml</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="s2">&quot;records&quot;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">record_id</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;marc-xml&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">marcxml</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">pymarc</span><span class="o">.</span><span class="n">parse_xml_to_array</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">marcxml</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="HathiDataAPI"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiDataAPI">[docs]</a><span class="k">class</span> <span class="nc">HathiDataAPI</span><span class="p">(</span><span class="n">HathiBaseAPI</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Wrapper for HathiTrust DATA API. Pulls OAuth credentials from</span>
-<span class="sd">    Django settings.&#39;&#39;&#39;</span>
-
-    <span class="n">api_root</span> <span class="o">=</span> <span class="s1">&#39;https://babel.hathitrust.org/cgi/htd&#39;</span>
-
-    <span class="n">cfg_err</span> <span class="o">=</span> <span class="s1">&#39;OAuth key and secret configuration required for HathiDataAPI use&#39;</span>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="c1"># get oauth configuration and attach to session</span>
-        <span class="n">oauth_key</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="s1">&#39;HATHITRUST_OAUTH_KEY&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">oauth_secret</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="s1">&#39;HATHITRUST_OAUTH_SECRET&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">oauth_key</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">oauth_secret</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">ImproperlyConfigured</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg_err</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">oauth</span> <span class="o">=</span> <span class="n">OAuth1</span><span class="p">(</span><span class="n">client_key</span><span class="o">=</span><span class="n">oauth_key</span><span class="p">,</span>
-                            <span class="n">client_secret</span><span class="o">=</span><span class="n">oauth_secret</span><span class="p">,</span>
-                            <span class="n">signature_type</span><span class="o">=</span><span class="s1">&#39;query&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">auth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">oauth</span>
-
-    <span class="c1"># NOTE: response headers include filename in content-disposition,</span>
-    <span class="c1"># so return the whole response for aggregrate and structure requests</span>
-
-<div class="viewcode-block" id="HathiDataAPI.get_aggregate"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiDataAPI.get_aggregate">[docs]</a>    <span class="k">def</span> <span class="nf">get_aggregate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">htid</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Get aggregate date package for a HathiTrust record by hathi id.&#39;&#39;&#39;</span>
-        <span class="c1"># http[s]://babel.hathitrust.org/cgi/htd/aggregate/:ID?v=2</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="s1">&#39;aggregate/</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">htid</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;v&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span></div>
-
-<div class="viewcode-block" id="HathiDataAPI.get_structure"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiDataAPI.get_structure">[docs]</a>    <span class="k">def</span> <span class="nf">get_structure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">htid</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;xml&#39;</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Get structure information for a HathiTrust record by hathi id.&#39;&#39;&#39;</span>
-        <span class="c1"># http[s]://babel.hathitrust.org/cgi/htd/structure/:ID?format=xml&amp;v=2</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="s1">&#39;structure/</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">htid</span><span class="p">,</span>
-                                  <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;v&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;format&#39;</span><span class="p">:</span> <span class="n">fmt</span><span class="p">})</span></div></div>
-
-
 <span class="k">class</span> <span class="nc">_METS</span><span class="p">(</span><span class="n">xmlmap</span><span class="o">.</span><span class="n">XmlObject</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Base :class:`~eulxml.xmlmap.XmlObject`. with METS namespace configured&#39;&#39;&#39;</span>
-    <span class="n">ROOT_NAMESPACES</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;m&#39;</span><span class="p">:</span> <span class="s1">&#39;http://www.loc.gov/METS/&#39;</span>
-    <span class="p">}</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base :class:`~eulxml.xmlmap.XmlObject`. with METS namespace configured&quot;&quot;&quot;</span>
+
+    <span class="n">ROOT_NAMESPACES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;m&quot;</span><span class="p">:</span> <span class="s2">&quot;http://www.loc.gov/METS/&quot;</span><span class="p">}</span>
+
 
 <div class="viewcode-block" id="StructMapPage"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.StructMapPage">[docs]</a><span class="k">class</span> <span class="nc">StructMapPage</span><span class="p">(</span><span class="n">_METS</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Single logical page within a METS StructMap&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Single logical page within a METS StructMap&quot;&quot;&quot;</span>
+
     <span class="c1">#: page order</span>
-    <span class="n">order</span> <span class="o">=</span> <span class="n">xmlmap</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">(</span><span class="s1">&#39;@ORDER&#39;</span><span class="p">)</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">xmlmap</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">(</span><span class="s2">&quot;@ORDER&quot;</span><span class="p">)</span>
     <span class="c1">#: page label</span>
-    <span class="n">label</span> <span class="o">=</span> <span class="n">xmlmap</span><span class="o">.</span><span class="n">StringField</span><span class="p">(</span><span class="s1">&#39;@LABEL&#39;</span><span class="p">)</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">xmlmap</span><span class="o">.</span><span class="n">StringField</span><span class="p">(</span><span class="s2">&quot;@LABEL&quot;</span><span class="p">)</span>
     <span class="c1">#: order label</span>
-    <span class="n">orderlabel</span> <span class="o">=</span> <span class="n">xmlmap</span><span class="o">.</span><span class="n">StringField</span><span class="p">(</span><span class="s1">&#39;@ORDERLABEL&#39;</span><span class="p">)</span>
+    <span class="n">orderlabel</span> <span class="o">=</span> <span class="n">xmlmap</span><span class="o">.</span><span class="n">StringField</span><span class="p">(</span><span class="s2">&quot;@ORDERLABEL&quot;</span><span class="p">)</span>
     <span class="c1">#: identifier for a text or ocr file, from a file pointer</span>
-    <span class="n">text_file_id</span> <span class="o">=</span> <span class="n">xmlmap</span><span class="o">.</span><span class="n">StringField</span><span class="p">(</span><span class="s1">&#39;m:fptr/@FILEID[contains(., &quot;TXT&quot;) or contains(. , &quot;OCR&quot;)]&#39;</span><span class="p">)</span>
+    <span class="n">text_file_id</span> <span class="o">=</span> <span class="n">xmlmap</span><span class="o">.</span><span class="n">StringField</span><span class="p">(</span>
+        <span class="s1">&#39;m:fptr/@FILEID[contains(., &quot;TXT&quot;) or contains(. , &quot;OCR&quot;)]&#39;</span>
+    <span class="p">)</span>
 
     <span class="c1">## example struct map page</span>
-    <span class="sd">&#39;&#39;&#39;&lt;METS:div ORDER=&quot;1&quot; LABEL=&quot;FRONT_COVER, IMAGE_ON_PAGE, IMPLICIT_PAGE_NUMBER&quot; TYPE=&quot;page&quot;&gt;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;&lt;METS:div ORDER=&quot;1&quot; LABEL=&quot;FRONT_COVER, IMAGE_ON_PAGE, IMPLICIT_PAGE_NUMBER&quot; TYPE=&quot;page&quot;&gt;</span>
 <span class="sd">         &lt;METS:fptr FILEID=&quot;HTML00000001&quot;/&gt;</span>
 <span class="sd">         &lt;METS:fptr FILEID=&quot;TXT00000001&quot;/&gt;</span>
 <span class="sd">         &lt;METS:fptr FILEID=&quot;IMG00000001&quot;/&gt;</span>
 <span class="sd">       &lt;METS:file SIZE=&quot;1003&quot; ID=&quot;HTML00000496&quot; MIMETYPE=&quot;text/html&quot; CREATED=&quot;2017-03-20T10:40:21Z&quot;</span>
 <span class="sd">         CHECKSUM=&quot;f0a326c10b2a6dc9ae5e3ede261c9897&quot; SEQ=&quot;00000496&quot; CHECKSUMTYPE=&quot;MD5&quot;&gt;</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="nd">@property</span>
+    <span class="nd">@cached_property</span>
     <span class="k">def</span> <span class="nf">display_label</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;page display labeel; use order label if present; otherwise use order&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;page display labeel; use order label if present; otherwise use order&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">orderlabel</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
 
-    <span class="nd">@property</span>
+    <span class="nd">@cached_property</span>
     <span class="k">def</span> <span class="nf">text_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;:class:`METSFiile` corresponding to the text file pointer for this page&#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="n">METSFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;//m:file[@ID=&quot;</span><span class="si">%s</span><span class="s1">&quot;]&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">text_file_id</span><span class="p">,</span>
-                                        <span class="n">namespaces</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ROOT_NAMESPACES</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="nd">@property</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;:class:`METSFiile` corresponding to the text file pointer for this page&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">METSFile</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span>
+                <span class="s1">&#39;//m:file[@ID=&quot;</span><span class="si">%s</span><span class="s1">&quot;]&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">text_file_id</span><span class="p">,</span>
+                <span class="n">namespaces</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ROOT_NAMESPACES</span><span class="p">,</span>
+            <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="nd">@cached_property</span>
     <span class="k">def</span> <span class="nf">text_file_location</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;location for the text file&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;location for the text file&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">text_file</span><span class="o">.</span><span class="n">location</span></div>
 
 
 <div class="viewcode-block" id="METSFile"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.METSFile">[docs]</a><span class="k">class</span> <span class="nc">METSFile</span><span class="p">(</span><span class="n">_METS</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;File location information within a METS document.&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;File location information within a METS document.&quot;&quot;&quot;</span>
+
     <span class="c1">#: xml identifier</span>
-    <span class="nb">id</span> <span class="o">=</span> <span class="n">xmlmap</span><span class="o">.</span><span class="n">StringField</span><span class="p">(</span><span class="s1">&#39;@ID&#39;</span><span class="p">)</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">xmlmap</span><span class="o">.</span><span class="n">StringField</span><span class="p">(</span><span class="s2">&quot;@ID&quot;</span><span class="p">)</span>
     <span class="c1">#: sequence attribute</span>
-    <span class="n">sequence</span> <span class="o">=</span> <span class="n">xmlmap</span><span class="o">.</span><span class="n">StringField</span><span class="p">(</span><span class="s1">&#39;@SEQ&#39;</span><span class="p">)</span>
+    <span class="n">sequence</span> <span class="o">=</span> <span class="n">xmlmap</span><span class="o">.</span><span class="n">StringField</span><span class="p">(</span><span class="s2">&quot;@SEQ&quot;</span><span class="p">)</span>
     <span class="c1">#: file location</span>
-    <span class="n">location</span> <span class="o">=</span> <span class="n">xmlmap</span><span class="o">.</span><span class="n">StringField</span><span class="p">(</span><span class="s1">&#39;m:FLocat/@xlink:href&#39;</span><span class="p">)</span>
+    <span class="n">location</span> <span class="o">=</span> <span class="n">xmlmap</span><span class="o">.</span><span class="n">StringField</span><span class="p">(</span><span class="s2">&quot;m:FLocat/@xlink:href&quot;</span><span class="p">)</span>
     <span class="c1"># example file</span>
-    <span class="sd">&#39;&#39;&#39;&lt;METS:file SIZE=&quot;1&quot; ID=&quot;TXT00000001&quot; MIMETYPE=&quot;text/plain&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;&lt;METS:file SIZE=&quot;1&quot; ID=&quot;TXT00000001&quot; MIMETYPE=&quot;text/plain&quot;</span>
 <span class="sd">        CREATED=&quot;2016-06-24T09:04:15Z&quot; CHECKSUM=&quot;68b329da9893e34099c7d8ad5cb9c940&quot;</span>
 <span class="sd">        SEQ=&quot;00000001&quot; CHECKSUMTYPE=&quot;MD5&quot;&gt;</span>
-<span class="sd">    &#39;&#39;&#39;</span></div>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
 
 <div class="viewcode-block" id="MinimalMETS"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.MinimalMETS">[docs]</a><span class="k">class</span> <span class="nc">MinimalMETS</span><span class="p">(</span><span class="n">_METS</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Minimal :class:`~eulxml.xmlmap.XmlObject` for METS that maps only</span>
-<span class="sd">    what is needed to support page indexing for :mod:`ppa`.&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Minimal :class:`~eulxml.xmlmap.XmlObject` for METS that maps only</span>
+<span class="sd">    what is needed to support page indexing for :mod:`ppa`.&quot;&quot;&quot;</span>
 
     <span class="c1">#: list of struct map pages as :class:`StructMapPage`</span>
-    <span class="n">structmap_pages</span> <span class="o">=</span> <span class="n">xmlmap</span><span class="o">.</span><span class="n">NodeListField</span><span class="p">(</span><span class="s1">&#39;m:structMap[@TYPE=&quot;physical&quot;]//m:div[@TYPE=&quot;page&quot;]&#39;</span><span class="p">,</span>
-                                           <span class="n">StructMapPage</span><span class="p">)</span></div>
+    <span class="n">structmap_pages</span> <span class="o">=</span> <span class="n">xmlmap</span><span class="o">.</span><span class="n">NodeListField</span><span class="p">(</span>
+        <span class="s1">&#39;m:structMap[@TYPE=&quot;physical&quot;]//m:div[@TYPE=&quot;page&quot;]&#39;</span><span class="p">,</span> <span class="n">StructMapPage</span>
+    <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="HathiObject"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiObject">[docs]</a><span class="k">class</span> <span class="nc">HathiObject</span><span class="p">:</span>
-    <span class="sd">&#39;&#39;&#39;An object for working with a HathiTrust item with data in a</span>
-<span class="sd">    locally configured pairtree datastore.&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;An object for working with a HathiTrust item with data in a</span>
+<span class="sd">    locally configured pairtree datastore.&quot;&quot;&quot;</span>
 
     <span class="n">hathi_id</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hathi_id</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hathi_id</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hathi_id</span> <span class="o">=</span> <span class="n">hathi_id</span>
 
     <span class="nd">@cached_property</span>
     <span class="k">def</span> <span class="nf">pairtree_prefix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;pairtree prefix (first portion of the hathi id, short-form</span>
-<span class="sd">        identifier for owning institution)&#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hathi_id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;pairtree prefix (first portion of the hathi id, short-form</span>
+<span class="sd">        identifier for owning institution)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hathi_id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="nd">@cached_property</span>
     <span class="k">def</span> <span class="nf">pairtree_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;pairtree identifier (second portion of source id)&#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hathi_id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;pairtree identifier (second portion of source id)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hathi_id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
 
     <span class="nd">@cached_property</span>
     <span class="k">def</span> <span class="nf">content_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;content directory for this work within the appropriate</span>
-<span class="sd">        pairtree&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;content directory for this work within the appropriate</span>
+<span class="sd">        pairtree&quot;&quot;&quot;</span>
         <span class="c1"># contents are stored in a directory named based on a</span>
         <span class="c1"># pairtree encoded version of the id</span>
         <span class="k">return</span> <span class="n">pairtree_path</span><span class="o">.</span><span class="n">id_encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pairtree_id</span><span class="p">)</span>
 
 <div class="viewcode-block" id="HathiObject.pairtree_client"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiObject.pairtree_client">[docs]</a>    <span class="k">def</span> <span class="nf">pairtree_client</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Initialize a pairtree client for the pairtree datastore this</span>
-<span class="sd">        object belongs to, based on its Hathi prefix id.&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a pairtree client for the pairtree datastore this</span>
+<span class="sd">        object belongs to, based on its Hathi prefix id.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">pairtree_client</span><span class="o">.</span><span class="n">PairtreeStorageClient</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pairtree_prefix</span><span class="p">,</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">HATHI_DATA</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pairtree_prefix</span><span class="p">))</span></div>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">HATHI_DATA</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pairtree_prefix</span><span class="p">),</span>
+        <span class="p">)</span></div>
 
 <div class="viewcode-block" id="HathiObject.pairtree_object"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiObject.pairtree_object">[docs]</a>    <span class="k">def</span> <span class="nf">pairtree_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ptree_client</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">create</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;get a pairtree object for this record</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;get a pairtree object for this record</span>
 
 <span class="sd">        :param ptree_client: optional</span>
 <span class="sd">            :class:`pairtree_client.PairtreeStorageClient` if one has</span>
 <span class="sd">            already been initialized, to avoid repeated initialization</span>
 <span class="sd">            (currently used in hathi_import manage command)</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">ptree_client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># get pairtree client if not passed in</span>
             <span class="n">ptree_client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pairtree_client</span><span class="p">()</span>
 
         <span class="c1"># return the pairtree object for current work</span>
-        <span class="k">return</span> <span class="n">ptree_client</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pairtree_id</span><span class="p">,</span>
-                                       <span class="n">create_if_doesnt_exist</span><span class="o">=</span><span class="n">create</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">ptree_client</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pairtree_id</span><span class="p">,</span> <span class="n">create_if_doesnt_exist</span><span class="o">=</span><span class="n">create</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="HathiObject.delete_pairtree_data"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiObject.delete_pairtree_data">[docs]</a>    <span class="k">def</span> <span class="nf">delete_pairtree_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Delete pairtree object from the pairtree datastore.&#39;&#39;&#39;</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Deleting pairtree data for </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hathi_id</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete pairtree object from the pairtree datastore.&quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Deleting pairtree data for </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hathi_id</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">pairtree_client</span><span class="p">()</span> \
-                <span class="o">.</span><span class="n">delete_object</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pairtree_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pairtree_client</span><span class="p">()</span><span class="o">.</span><span class="n">delete_object</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pairtree_id</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">storage_exceptions</span><span class="o">.</span><span class="n">ObjectNotFoundException</span><span class="p">:</span>
             <span class="c1"># data is already gone; warn, but not an error</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Pairtree deletion failed; object not found </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
-                           <span class="bp">self</span><span class="o">.</span><span class="n">hathi_id</span><span class="p">)</span></div>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Pairtree deletion failed; object not found </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hathi_id</span>
+            <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_content_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ext</span><span class="p">,</span> <span class="n">ptree_client</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;path to zipfile within the hathi contents for this work&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;path to zipfile within the hathi contents for this work&quot;&quot;&quot;</span>
         <span class="n">pairtree_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pairtree_object</span><span class="p">(</span><span class="n">ptree_client</span><span class="o">=</span><span class="n">ptree_client</span><span class="p">)</span>
         <span class="c1"># - expect a mets file and a zip file</span>
         <span class="c1"># NOTE: not yet making use of the metsfile</span>
@@ -367,16 +342,15 @@
         <span class="c1"># find the first zipfile in the list (should only be one)</span>
         <span class="n">filepath</span> <span class="o">=</span> <span class="p">[</span><span class="n">part</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">parts</span> <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">ext</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pairtree_obj</span><span class="o">.</span><span class="n">id_to_dirpath</span><span class="p">(),</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">content_dir</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pairtree_obj</span><span class="o">.</span><span class="n">id_to_dirpath</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">content_dir</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
 
 <div class="viewcode-block" id="HathiObject.zipfile_path"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiObject.zipfile_path">[docs]</a>    <span class="k">def</span> <span class="nf">zipfile_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ptree_client</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;path to zipfile within the hathi contents for this work&#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_content_path</span><span class="p">(</span><span class="s1">&#39;zip&#39;</span><span class="p">,</span> <span class="n">ptree_client</span><span class="o">=</span><span class="n">ptree_client</span><span class="p">)</span></div>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;path to zipfile within the hathi contents for this work&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_content_path</span><span class="p">(</span><span class="s2">&quot;zip&quot;</span><span class="p">,</span> <span class="n">ptree_client</span><span class="o">=</span><span class="n">ptree_client</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="HathiObject.metsfile_path"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiObject.metsfile_path">[docs]</a>    <span class="k">def</span> <span class="nf">metsfile_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ptree_client</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;path to mets xml file within the hathi contents for this work&#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_content_path</span><span class="p">(</span><span class="s1">&#39;.mets.xml&#39;</span><span class="p">,</span> <span class="n">ptree_client</span><span class="o">=</span><span class="n">ptree_client</span><span class="p">)</span></div></div>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;path to mets xml file within the hathi contents for this work&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_content_path</span><span class="p">(</span><span class="s2">&quot;.mets.xml&quot;</span><span class="p">,</span> <span class="n">ptree_client</span><span class="o">=</span><span class="n">ptree_client</span><span class="p">)</span></div></div>
 </pre></div>
 
           </div>
@@ -385,7 +359,14 @@
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../../index.html">Princeton Prosody Archive</a></h1>
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static/ppa_logo.png" alt="Logo"/>
+    
+    <h1 class="logo logo-name">Princeton Prosody Archive</h1>
+    
+  </a>
+</p>
 
 
 
@@ -403,32 +384,8 @@
 
 
 
-    
-
-<p>
-<a class="badge" href="https://travis-ci.org/Princeton-CDH/ppa-django">
-    <img
-        alt="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
-        src="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
-    />
-</a>
-</p>
-
-
-
-
-    
-
-<p>
-<a class="badge" href="https://codecov.io/github/Princeton-CDH/ppa-django">
-    <img
-    alt="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
-    src="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
-    />
-</a>
-</p>
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../codedocs.html">Code Documentation</a></li>
@@ -441,15 +398,15 @@
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script><div class="powered_by">
+<script>document.getElementById('searchbox').style.display = "block"</script><div class="powered_by">
 <p>Powered by:</p>
 <a href="http://cdh.princeton.edu/">
-<img src="https://cdh.princeton.edu/static/img/logos/cdh-logo.svg"
+<img src="https://cdh.princeton.edu/static/img/CDH_logo.svg"
     alt="Center for Digital Humanities @ Princeton" />
 </a>
 </div>
@@ -461,8 +418,8 @@
       &copy;2018, CDH @ Princeton University.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
     </div>
 

@@ -1,0 +1,453 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ppa.archive.management.commands.generate_corpus &#8212; Princeton Prosody Archive 3.9-0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css" />
+    <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+    <script src="../../../../../_static/doctools.js"></script>
+    <script src="../../../../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for ppa.archive.management.commands.generate_corpus</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">**generate_corpus** is a custom manage command to generate and serialize</span>
+<span class="sd">a Gensim corpus from Solr.  It should be run *after* content has been indexed</span>
+<span class="sd">into Solr via the **index** manage command.</span>
+
+<span class="sd">The Corpus is serialized in the Matrix Market format</span>
+<span class="sd">(https://math.nist.gov/MatrixMarket/formats.html)</span>
+<span class="sd">with a `.mm` extension, using the Gensim Topic Modelling library</span>
+<span class="sd">(https://radimrehurek.com/gensim)</span>
+<span class="sd">Typically, an index corresponding to the .mm file is also saved by Gensim,</span>
+<span class="sd">with a `.mm.index` extension.</span>
+
+<span class="sd">A dictionary corresponding to token IDs is also saved by default,</span>
+<span class="sd">using a `.mm.dict` extension.</span>
+<span class="sd">By default, this is a pickled Gensim Dictionary object.</span>
+<span class="sd">If the `--dictionary-as-text` flag is specified, then the dictionary is saved</span>
+<span class="sd">as a utf8-encoded and newline-separated</span>
+<span class="sd">file, where line number N contains the token with token_id N-1.</span>
+<span class="sd">Saving the dictionary can be skipped by using the `--no-dictionary` option.</span>
+
+<span class="sd">Additional document-level metadata found in the Solr Index is also saved by</span>
+<span class="sd">default, with `.mm.metadata` extension.</span>
+<span class="sd">This is a csv file with a header row and one row per unique document found in</span>
+<span class="sd">the Solr index.</span>
+<span class="sd">Saving the metadata can be skipped by using the `--no-metadata` option.</span>
+
+<span class="sd">By default, *all* documents found in the Solr index are serialized.</span>
+<span class="sd">This can be controlled using -`-doc-limit`,</span>
+<span class="sd">which denotes the maximum no. of documents to serialize. This is especially</span>
+<span class="sd">useful for development, or for sanity-testing your Solr installation.</span>
+
+<span class="sd">For corpus generation, the following pre-processing options are available via</span>
+<span class="sd">the `--preprocess` flag::</span>
+
+<span class="sd">    # Lower-cases words</span>
+<span class="sd">    &#39;lower&#39;</span>
+<span class="sd">    # Strips HTML tags</span>
+<span class="sd">    &#39;strip_tags&#39;</span>
+<span class="sd">    # Strips punctuation</span>
+<span class="sd">    &#39;strip_punctuation&#39;</span>
+<span class="sd">    # Collapses multiple whitespaces into one</span>
+<span class="sd">    &#39;strip_multiple_whitespaces&#39;</span>
+<span class="sd">    # Strips numeric characters</span>
+<span class="sd">    &#39;strip_numeric&#39;</span>
+<span class="sd">    # Removes stopwords - Note that the set of default stopwords used by Gensim</span>
+<span class="sd">    # is from Stone, Denis, Kwantes (2010).</span>
+<span class="sd">    &#39;remove_stopwords&#39;</span>
+<span class="sd">    # Strip short words. The lower limit on word length is 3.</span>
+<span class="sd">    &#39;strip_short&#39;</span>
+<span class="sd">    # Use Porter Stemmer for word-normalization.</span>
+<span class="sd">    &#39;stem_text&#39;</span>
+
+<span class="sd">IMPORTANT - NO preprocessing filters are applied by default, but you will</span>
+<span class="sd">typically at least want to use `lower`.</span>
+<span class="sd">Multiple preprocessing filters can be applied (in order) by specifying multiple</span>
+<span class="sd">`--preprocess` flags.</span>
+
+<span class="sd">Example usage::</span>
+
+<span class="sd">    # Save all files to the &#39;data&#39; folder, with bare-minimum preprocessing</span>
+<span class="sd">    python manage.py generate_corpus --path data --preprocess lower</span>
+<span class="sd">    --preprocess strip_tags</span>
+
+<span class="sd">    # Restrict corpus to 1000 documents</span>
+<span class="sd">    python manage.py generate_corpus --path data --doc-limit 1000</span>
+<span class="sd">    --preprocess lower --preprocess strip_tags</span>
+
+<span class="sd">    # Don&#39;t generate dictionary; don&#39;t generate metadata</span>
+<span class="sd">    python manage.py generate_corpus --path data --doc-limit 1000</span>
+<span class="sd">    --preprocess lower --no-dictionary --no-metadata</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">makedirs</span>
+
+<span class="kn">from</span> <span class="nn">django.core.management.base</span> <span class="kn">import</span> <span class="n">BaseCommand</span>
+<span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span>
+<span class="kn">from</span> <span class="nn">gensim.corpora.dictionary</span> <span class="kn">import</span> <span class="n">Dictionary</span>
+<span class="kn">from</span> <span class="nn">gensim.parsing.preprocessing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">preprocess_string</span><span class="p">,</span>
+    <span class="n">remove_stopwords</span><span class="p">,</span>
+    <span class="n">stem_text</span><span class="p">,</span>
+    <span class="n">strip_multiple_whitespaces</span><span class="p">,</span>
+    <span class="n">strip_numeric</span><span class="p">,</span>
+    <span class="n">strip_punctuation</span><span class="p">,</span>
+    <span class="n">strip_short</span><span class="p">,</span>
+    <span class="n">strip_tags</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">parasolr.django</span> <span class="kn">import</span> <span class="n">SolrQuerySet</span>
+<span class="kn">from</span> <span class="nn">progressbar</span> <span class="kn">import</span> <span class="n">NullBar</span><span class="p">,</span> <span class="n">ProgressBar</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">PREPROCESS_FUNCTIONS</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;strip_short&quot;</span><span class="p">,</span> <span class="n">strip_short</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;strip_multiple_whitespaces&quot;</span><span class="p">,</span> <span class="n">strip_multiple_whitespaces</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;strip_punctuation&quot;</span><span class="p">,</span> <span class="n">strip_punctuation</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;strip_tags&quot;</span><span class="p">,</span> <span class="n">strip_tags</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;strip_numeric&quot;</span><span class="p">,</span> <span class="n">strip_numeric</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span>
+        <span class="p">(</span><span class="s2">&quot;remove_stopwords&quot;</span><span class="p">,</span> <span class="n">remove_stopwords</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;stem_text&quot;</span><span class="p">,</span> <span class="n">stem_text</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="SolrCorpus"><a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.generate_corpus.SolrCorpus">[docs]</a><span class="k">class</span> <span class="nc">SolrCorpus</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom class to generate a text corpus from Solr&quot;&quot;&quot;</span>
+
+    <span class="c1"># Class attributes that rarely, if ever, need to change</span>
+    <span class="n">DOC_ID_FIELD</span> <span class="o">=</span> <span class="s2">&quot;source_id&quot;</span>  <span class="c1"># Solr field name for document identifier</span>
+    <span class="n">DOC_CONTENT_FIELD</span> <span class="o">=</span> <span class="s2">&quot;content&quot;</span>  <span class="c1"># Solr field name for document content</span>
+    <span class="n">PAGE_ORDER_FIELD</span> <span class="o">=</span> <span class="s2">&quot;order&quot;</span>  <span class="c1"># Solr field name for page ordering</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">doc_limit</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">preprocess_fns</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pbar</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A class encapsulating a Solr Client specification, that yields</span>
+<span class="sd">        Bag-of-Word vectors on iteration, and thus acts as a Gensim Corpus.</span>
+
+<span class="sd">        :param name: A string name of this corpus.</span>
+<span class="sd">            Used as a string prefix for generated files.</span>
+<span class="sd">        :param client: A SolrClient.SolrClient object used to interface with</span>
+<span class="sd">            Solr</span>
+<span class="sd">        :param collection: A string representing the Solr collection name.</span>
+<span class="sd">        :param doc_limit: Max no. of documents to process. The default of -1</span>
+<span class="sd">            means we process ALL documents found.</span>
+<span class="sd">        :param preprocess_fns: A list of single-argument functions to use as</span>
+<span class="sd">            preprocessors.</span>
+<span class="sd">            See the module gensim.parsing.preprocessing for some typical</span>
+<span class="sd">            preprocessing functions.</span>
+<span class="sd">        :param pbar: A boolean indicating whether to display a progress bar</span>
+<span class="sd">            during corpus generation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doc_limit</span> <span class="o">=</span> <span class="n">doc_limit</span>
+
+        <span class="k">if</span> <span class="n">preprocess_fns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;ALL&quot;</span> <span class="ow">in</span> <span class="n">preprocess_fns</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_fns</span> <span class="o">=</span> <span class="n">PREPROCESS_FUNCTIONS</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_fns</span> <span class="o">=</span> <span class="p">[</span><span class="n">PREPROCESS_FUNCTIONS</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">preprocess_fns</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_fns</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dictionary</span> <span class="o">=</span> <span class="n">Dictionary</span><span class="p">()</span>
+
+        <span class="c1"># doc_id -&gt; dict of k-&gt;v mappings</span>
+        <span class="c1"># NOTE: We cannot use &#39;metadata&#39; as GenSim mangles this attribute!</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># list of strings, populated on first doc retrieval</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata_field_names</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># facet on document id to get counts of pages by work</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">SolrQuerySet</span><span class="p">()</span><span class="o">.</span><span class="n">facet</span><span class="p">(</span><span class="n">SolrCorpus</span><span class="o">.</span><span class="n">DOC_ID_FIELD</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_limit</span><span class="p">)</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        An OrderedDict of doc_id =&gt; page count mapping</span>
+<span class="sd">        An OrderedDict is important here in case we want to save document-level</span>
+<span class="sd">        metadata, in which case rows of metadata would be in the same order as</span>
+<span class="sd">        the BoW-vectors returned by this object&#39;s iterator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">page_counts</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_facets</span><span class="p">()</span><span class="o">.</span><span class="n">facet_fields</span><span class="p">[</span><span class="s2">&quot;source_id&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doc_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">page_counts</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doc_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_ids</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pbar</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pbar</span> <span class="o">=</span> <span class="n">ProgressBar</span><span class="p">(</span>
+                <span class="n">redirect_stderr</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_count</span><span class="p">,</span> <span class="n">max_error</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pbar</span> <span class="o">=</span> <span class="n">NullBar</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">doc_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc_ids</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">doc_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">page_counts</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Unknown page count for doc </span><span class="si">{}</span><span class="s2">. Skipping.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">doc_id</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="n">result</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">SolrQuerySet</span><span class="p">()</span>
+                <span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">SolrCorpus</span><span class="o">.</span><span class="n">DOC_ID_FIELD</span><span class="p">:</span> <span class="n">doc_id</span><span class="p">})</span>
+                <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">SolrCorpus</span><span class="o">.</span><span class="n">PAGE_ORDER_FIELD</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="c1"># populate the result cache with number of rows specified</span>
+            <span class="n">docs</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get_results</span><span class="p">(</span><span class="n">rows</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">page_counts</span><span class="p">[</span><span class="n">doc_id</span><span class="p">])</span>
+
+            <span class="n">metadata_docs</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">docs</span> <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;item_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;work&quot;</span><span class="p">]</span>
+
+            <span class="n">n_metadata_docs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">metadata_docs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">n_metadata_docs</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">n_metadata_docs</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="s2">&quot;Multiple metadata records found for doc ID&quot;</span>
+                        <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">. Using the first.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">doc_id</span><span class="p">)</span>
+                    <span class="p">)</span>
+
+                <span class="n">metadata_doc</span> <span class="o">=</span> <span class="n">metadata_docs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="p">[</span><span class="n">doc_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">metadata_doc</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_field_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">metadata_field_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">metadata_doc</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No metadata record found for doc ID </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">doc_id</span><span class="p">))</span>
+
+            <span class="c1"># filter out pages that have no content;</span>
+            <span class="c1"># combine all pages into one string</span>
+            <span class="n">fulltext</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="nb">list</span><span class="p">(</span>
+                    <span class="nb">filter</span><span class="p">(</span>
+                        <span class="kc">None</span><span class="p">,</span>
+                        <span class="p">(</span>
+                            <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">SolrCorpus</span><span class="o">.</span><span class="n">DOC_CONTENT_FIELD</span><span class="p">)</span>
+                            <span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">docs</span>
+                            <span class="k">if</span> <span class="n">doc</span><span class="p">[</span><span class="s2">&quot;item_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;page&quot;</span>
+                        <span class="p">),</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">fulltext</span> <span class="o">=</span> <span class="n">preprocess_string</span><span class="p">(</span><span class="n">fulltext</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">preprocess_fns</span><span class="p">)</span>
+
+            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">dictionary</span><span class="o">.</span><span class="n">doc2bow</span><span class="p">(</span><span class="n">fulltext</span><span class="p">,</span> <span class="n">allow_update</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pbar</span><span class="o">.</span><span class="n">value</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_save_dictionary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">as_text</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save dictionary at a specified path, either as a picked Gensim</span>
+<span class="sd">        Dictionary object, or a .txt file</span>
+<span class="sd">        :param filepath: File path for saved dictionary</span>
+<span class="sd">        :param as_text: Whether to save as a plaintext file, where the</span>
+<span class="sd">        0-indexed line number denotes the token id.</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">as_text</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span>
+                    <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dictionary</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dictionary</span><span class="p">))]</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dictionary</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_save_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_field_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Unable to determine metadata field names!&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf8&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata_field_names</span><span class="p">)</span>  <span class="c1"># header row</span>
+
+            <span class="k">for</span> <span class="n">doc_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc_ids</span><span class="p">:</span>
+                <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="p">[</span><span class="n">doc_id</span><span class="p">]</span>
+                <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field_name</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">field_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_field_names</span>
+                    <span class="p">]</span>
+                <span class="p">)</span>
+
+<div class="viewcode-block" id="SolrCorpus.save"><a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.generate_corpus.SolrCorpus.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">save_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_dict_as_text</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_metadata</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save the generated corpus text and metadata to files on disk&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">corpus_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.mm&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+
+        <span class="c1"># There&#39;s no way to completely turn off the progress ticker for Gensim</span>
+        <span class="c1"># serialize - we simply set it&#39;s frequency to one more than the no. of</span>
+        <span class="c1"># documents we have, so it will effectively be shut off.</span>
+        <span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="n">corpus_path</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">progress_cnt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">save_dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_save_dictionary</span><span class="p">(</span><span class="n">corpus_path</span> <span class="o">+</span> <span class="s2">&quot;.dict&quot;</span><span class="p">,</span> <span class="n">as_text</span><span class="o">=</span><span class="n">save_dict_as_text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">save_metadata</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_save_metadata</span><span class="p">(</span><span class="n">corpus_path</span> <span class="o">+</span> <span class="s2">&quot;.metadata&quot;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Command"><a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.generate_corpus.Command">[docs]</a><span class="k">class</span> <span class="nc">Command</span><span class="p">(</span><span class="n">BaseCommand</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom manage command to generate a token corpus from text indexed in Solr&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Command.add_arguments"><a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.generate_corpus.Command.add_arguments">[docs]</a>    <span class="k">def</span> <span class="nf">add_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--path&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Directory path to save corpus file(s).&quot;</span>
+        <span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--name&quot;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;corpus&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name prefix to use for all saved corpus file(s).&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--doc-limit&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Limit on the number of documents for corpus generation.&quot;</span>
+            <span class="s2">&quot;The default of -1 considers ALL documents.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--no-dictionary&quot;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Do not save corpus dictionary.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--dictionary-as-text&quot;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;If saving dictionary, save as a plaintext file.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--no-metadata&quot;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Do not save corpus metadata.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--no-progress&quot;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Do not display progress bar to track the status of the&quot;</span> <span class="s2">&quot;command.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--preprocess&quot;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s2">&quot;append&quot;</span><span class="p">,</span>
+            <span class="n">choices</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">PREPROCESS_FUNCTIONS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;ALL&quot;</span><span class="p">],</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Pre-processing filter(s) to apply. Multiple filters can be&quot;</span>
+            <span class="s2">&quot;applied (in order) by adding multiple --preprocess flags.&quot;</span>
+            <span class="s2">&quot;Use ALL to apply all pre-processing filters.&quot;</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Command.handle"><a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.generate_corpus.Command.handle">[docs]</a>    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="n">corpus</span> <span class="o">=</span> <span class="n">SolrCorpus</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+            <span class="n">doc_limit</span><span class="o">=</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;doc_limit&quot;</span><span class="p">],</span>
+            <span class="n">preprocess_fns</span><span class="o">=</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;preprocess&quot;</span><span class="p">],</span>
+            <span class="n">pbar</span><span class="o">=</span><span class="ow">not</span> <span class="n">options</span><span class="p">[</span><span class="s2">&quot;no_progress&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+
+        <span class="n">corpus</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">],</span>
+            <span class="n">save_dict</span><span class="o">=</span><span class="ow">not</span> <span class="n">options</span><span class="p">[</span><span class="s2">&quot;no_dictionary&quot;</span><span class="p">],</span>
+            <span class="n">save_dict_as_text</span><span class="o">=</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;dictionary_as_text&quot;</span><span class="p">],</span>
+            <span class="n">save_metadata</span><span class="o">=</span><span class="ow">not</span> <span class="n">options</span><span class="p">[</span><span class="s2">&quot;no_metadata&quot;</span><span class="p">],</span>
+        <span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../../../index.html">
+    <img class="logo" src="../../../../../_static/ppa_logo.png" alt="Logo"/>
+    
+    <h1 class="logo logo-name">Princeton Prosody Archive</h1>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Django web application for "Princeton Prosody Archive" CDH project</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=Princeton-CDH&repo=ppa-django&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../codedocs.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../changelog.html">Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../deploynotes.html">Deploy Notes</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script><div class="powered_by">
+<p>Powered by:</p>
+<a href="http://cdh.princeton.edu/">
+<img src="https://cdh.princeton.edu/static/img/CDH_logo.svg"
+    alt="Center for Digital Humanities @ Princeton" />
+</a>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, CDH @ Princeton University.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

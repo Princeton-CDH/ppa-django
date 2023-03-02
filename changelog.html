@@ -1,17 +1,17 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>CHANGELOG &#8212; Princeton Prosody Archive 3.3.0 documentation</title>
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>CHANGELOG &#8212; Princeton Prosody Archive 3.9-0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Deploy and Upgrade notes" href="deploynotes.html" />
@@ -32,10 +32,160 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="changelog">
-<span id="id1"></span><h1>CHANGELOG<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="id2">
-<h2>3.3<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+  <section id="changelog">
+<span id="id1"></span><h1>CHANGELOG<a class="headerlink" href="#changelog" title="Permalink to this heading">¶</a></h1>
+<section id="id2">
+<h2>3.9<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h2>
+<p>public site:</p>
+<ul class="simple">
+<li><p>As a user, I want items with the same title and author to be collapsed automatically so that my search isn’t clouded by repetitive results.</p></li>
+<li><p>As a user, when I see a group of editions in my search results, I want an option to search within all editions.</p></li>
+<li><p>As a user viewing a digitized work that’s available in other editions, I want to know that other editions are available and have easy access to search across them.</p></li>
+</ul>
+<p>admin:</p>
+<ul class="simple">
+<li><p>As an admin, I want to see work clusters on digitized work list view so that I can search for and see collapsed versions at a glance.</p></li>
+<li><p>As an admin, I want to see and edit work clusters so that I can collapse and uncollapse texts after developer-assisted import.</p></li>
+</ul>
+<p>other:</p>
+<ul class="simple">
+<li><p>As a developer, I want a way to easily index all pages for one or more specific digitized works, so I can update page index data without reindexing all pages.</p></li>
+<li><p>Completed transition from mysql to psql (removed mysql from python dependencies, unit test matrix, ansible variables)</p></li>
+<li><p>Upgraded python from 3.6 to 3.9</p></li>
+<li><p>Switched from stdlib multiprocessing to multiprocess (<a class="reference external" href="https://github.com/uqfoundation/multiprocess">https://github.com/uqfoundation/multiprocess</a>) to fix multiprocessing errors on index_pages for M1 chip macs</p></li>
+<li><p>Ansible playbooks updated to deploy via nginx rather than apache</p></li>
+</ul>
+</section>
+<section id="id3">
+<h2>3.8.1<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Switch database backend from MySQL to PostgreSQL</p></li>
+<li><p>Upgrade to Solr 8</p></li>
+<li><p>removed outdated/unused Solr schema code</p></li>
+<li><p>bugfix: progress bar breaking solr page indexing when indexed pages
+exceeds expected page count</p></li>
+</ul>
+</section>
+<section id="id4">
+<h2>3.8<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h2>
+<p>public site:</p>
+<ul class="simple">
+<li><p>As a user, I want to see the actual rather than digital page number on
+keyword search results of Gale/ECCO items so that I can more
+accurately cite items.</p></li>
+<li><p>As a user, I want volume information to appear on both list view and
+item detail view so that my experience is  consistent across the
+search pages.</p></li>
+</ul>
+<p>admin:</p>
+<ul class="simple">
+<li><p>As an admin, I want to add one or several new items from Gale/ECCO via
+the admin interface so that I can add content to the site after
+initial bulk import without developer assistance.</p></li>
+<li><p>As an admin, I want to include book excerpts and articles as well as
+full volumes from Gale/ECCO, so that I can include material that is
+specifically about prosody from longer works about other subjects.</p></li>
+<li><p>As an admin, I want to export a custom CSV after searching in the
+backend so that I can use the backend’s search functionality to
+create targeted data sets.</p></li>
+</ul>
+<p>accessibility:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>As a motion-sensitive user, I want my browser reduced motion preference honored and the parallax effect on the site homepage not enabled, so that the parallax doesn’t make me feel unwell.</p></li>
+</ul>
+</div></blockquote>
+<p>other:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Transform typographic quotes in searches to work as exact phrase search</p></li>
+<li><p>Clarify help text on search page</p></li>
+<li><p>Correct template display issue for admin bulk add to collections page</p></li>
+<li><p>Upgrade to Django 3.2</p></li>
+<li><p>Upgrade to Wagtail 2.15</p></li>
+<li><p>Upgrade to Node 16.15</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="id5">
+<h2>3.7.1<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>bugfix: use updated syntax for loading Google fonts</p></li>
+</ul>
+</section>
+<section id="id6">
+<h2>3.7<a class="headerlink" href="#id6" title="Permalink to this heading">¶</a></h2>
+<p>Excerpt support:</p>
+<ul class="simple">
+<li><p>As an admin, I want to include book excerpts and articles as well as full volumes, so that I can include material that is specifically about prosody from longer works about other subjects.</p></li>
+<li><p>As an admin, I want to convert existing full HathiTrust items into excerpts so that I can include just the parts of those document that are about prosody.</p></li>
+<li><p>As an admin, I want the option of importing two different sections from the same HathiTrust work so I can include multiple articles or chapters from a single journal issue or book.</p></li>
+<li><p>As a user, I want to search and browse content across all types so that I can find any results in full volumes as well as excerpts.</p></li>
+<li><p>As a user, when I’m looking at search results I want to see an indicator when something is an excerpt or an article, so that I can tell what kind of content I’m looking at.</p></li>
+<li><p>As a user, when I’m looking at the details for an item I want to see an indicator if it’s an excerpt or article so I understand the content better.</p></li>
+<li><p>As a user, I want to search within a book excerpt or article so that I can see more than two results for my search terms in context.</p></li>
+<li><p>As an admin, I want item type and book excerpt/article metadata included in admin CSV exports so I can review all information in the system.</p></li>
+</ul>
+<p>Gale/ECCO support:</p>
+<ul class="simple">
+<li><p>As an admin, I want a bulk import of content from Gale/ECCO so that I can add content to the site that is not available from HathiTrust.</p></li>
+<li><p>As an admin, I want a bulk import of MARC metadata from Gale/ECCO so that I can view and search each record by its metadata.</p></li>
+<li><p>As a user, I want to search and browse digitized volumes across all sources so that I can find any materials in the archive, whether from HathiTrust or Gale/ECCO.</p></li>
+<li><p>As a user viewing keyword search results, I want to see a few text snippets from the full text of a works from Gale/ECCO so that I can see how my search terms are used in context.</p></li>
+<li><p>As a user viewing an item from ECCO in keyword search results, I want to see page image thumbnails and text snippets that match my search terms so I can see how many and what kind of pages match my search terms.</p></li>
+<li><p>As a user, I want to view a page for content from ECCO in Gale Primary Sources by clicking its thumbnail or page number in a search result so that I can quickly and easily see my search result in its full context.</p></li>
+<li><p>As a user, I want to add a Gale/ECCO work to my Zotero library from the item page or the search results page, so that I can save references for later research or citation.</p></li>
+<li><p>As a user, when I’m viewing an item from Gale/ECCO, I want to see the Gale identifier and link to view the item on Gale Primary Sources so that I can get to the Gale version of the document.</p></li>
+<li><p>As a user, I want to search within a single Gale/ECCO item so that I can find more page results and keywords in context than are available on the main archive search.</p></li>
+<li><p>As an admin, I want the CSV export to include source so that I can distinguish content from HathiTrust, Gale/ECCO, etc.</p></li>
+<li><p>As an admin, I want a way to suppress items in bulk from the admin digitized works list so that I can manage the content if an agreement for content expires.</p></li>
+</ul>
+<p>Other items:</p>
+<ul class="simple">
+<li><p>New ISSN assigned for PPA; added to footer</p></li>
+<li><p>Added CC-BY license to footer</p></li>
+</ul>
+</section>
+<section id="id7">
+<h2>3.6.2<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>bugfix: avoid mariadb-specific error when running migrations for django-cas-ng</p></li>
+</ul>
+</section>
+<section id="id8">
+<h2>3.6.1<a class="headerlink" href="#id8" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>bugfix: server error when accessing pages that reference built styles via webpack-loader</p></li>
+</ul>
+</section>
+<section id="id9">
+<h2>3.6<a class="headerlink" href="#id9" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>accessibility: update hover and focus styles</p></li>
+<li><p>chore: switch out semantic-ui for fomantic-ui and update js dependencies</p></li>
+</ul>
+</section>
+<section id="id10">
+<h2>3.5<a class="headerlink" href="#id10" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>bugfix: refactor add new works from HathiTrust admin functionality to use rsync instead of API to work around restrictions on Google digitized</p></li>
+<li><p>bugfix: improve overly-aggressive keyword search stemming</p></li>
+<li><p>bugfix: remove page data from search index when suppressing works</p></li>
+<li><p>New manage command <code class="docutils literal notranslate"><span class="pre">index_pages</span></code> to reindex pages more efficiently using multiprocessing</p></li>
+<li><p>Refactored to use parasolr instead of SolrClient</p></li>
+</ul>
+</section>
+<section id="id11">
+<h2>3.4<a class="headerlink" href="#id11" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Add required alternative text field to captioned image for wagtail content</p></li>
+<li><p>Upgrade to Django 2.2</p></li>
+<li><p>Upgrade to Wagtail 2.7</p></li>
+<li><p>bugfix: correct style regression for side by side images in wagtail content</p></li>
+</ul>
+</section>
+<section id="id12">
+<h2>3.3<a class="headerlink" href="#id12" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>As a content editor, I want to create linkable anchors in documents so that I can reference specific sections of my content on other pages.</p></li>
 <li><p>As a content editor, I want to add SVG images to content pages so that I can include data visualizations and other scalable images.</p></li>
@@ -43,18 +193,18 @@
 <li><p>Update captioned image to require contextual alternative text</p></li>
 <li><p>Preliminary manage command to generate a token-count corpus; implemented by &#64;vineetbansal</p></li>
 </ul>
-</div>
-<div class="section" id="id3">
-<h2>3.2.4<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="id13">
+<h2>3.2.4<a class="headerlink" href="#id13" title="Permalink to this heading">¶</a></h2>
 <p>Maintenance release.</p>
 <ul class="simple">
 <li><p>Update to pucas 0.6 and current version of django-cas-ng</p></li>
 <li><p>Update to pytest 5.x</p></li>
 <li><p>Security updates for npm packages</p></li>
 </ul>
-</div>
-<div class="section" id="id4">
-<h2>3.2.2<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="id14">
+<h2>3.2.2<a class="headerlink" href="#id14" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Update 500 error logo image for consistent color order/overlap</p></li>
 <li><p>Add citation metadata to editorial content pages</p></li>
@@ -62,17 +212,17 @@
 <li><p>bugfix: editorial list page margin fix for even-numbered last child on
 mobile</p></li>
 </ul>
-</div>
-<div class="section" id="id5">
-<h2>3.2.1<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="id15">
+<h2>3.2.1<a class="headerlink" href="#id15" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Updates the homepage graphic and favicon/logo images to use the filled-in logo.</p></li>
 <li><p>Updates the loading animation on the archive search to use an animated .gif.</p></li>
 <li><p>Sets the last-modified date for the archive search to match the most recently modified work in the index.</p></li>
 </ul>
-</div>
-<div class="section" id="id6">
-<h2>3.2<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="id16">
+<h2>3.2<a class="headerlink" href="#id16" title="Permalink to this heading">¶</a></h2>
 <p>Adds support for adding HathiTrust items to the archive in bulk. Adds reactivity
 to the search within work page. Makes numerous improvements to the Wagtail editor
 for writing and styling editorial content.</p>
@@ -89,9 +239,9 @@ for writing and styling editorial content.</p>
 <li><p>Adds support for last-modified headers on archive list and detail views.</p></li>
 </ul>
 <p><a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/milestone/9?closed=1">3.2 GitHub milestone</a></p>
-</div>
-<div class="section" id="id7">
-<h2>3.1<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="id17">
+<h2>3.1<a class="headerlink" href="#id17" title="Permalink to this heading">¶</a></h2>
 <p>Support for preserving local edits to metadata, add photos to contributor
 content page, and numerous accessibility and style fixes and improvements.</p>
 <ul class="simple">
@@ -117,9 +267,9 @@ reduce likelihood of throttling.</p>
 * Footer link spacing, mobile improvements for tile display and scrolling on iOS,</p></li>
 </ul>
 <p><a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/milestone/8?closed=1">3.1 GitHub milestone</a></p>
-</div>
-<div class="section" id="id9">
-<h2>3.0.1<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="id19">
+<h2>3.0.1<a class="headerlink" href="#id19" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>bugfix: Archive title search field should also search subtitle</p></li>
 <li><p>As a user, I want search results from the title field to prioritize
@@ -136,21 +286,21 @@ on archive page first loaded</p></li>
 * Implement HTTP strict transport security (HSTS)
 * Remove unused Semantic UI components</p></li>
 </ul>
-</div>
-<div class="section" id="initial-public-version-soft-launch">
-<h2>3.0 - Initial public version (soft launch)<a class="headerlink" href="#initial-public-version-soft-launch" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="initial-public-version-soft-launch">
+<h2>3.0 - Initial public version (soft launch)<a class="headerlink" href="#initial-public-version-soft-launch" title="Permalink to this heading">¶</a></h2>
 <p><strong>PPA 3.0 is a completely new implementation of the Princeton Prosody
 Archive project. The 3.0 is used here for what would normally be a 1.0 release
 as a way to credit and differentiate from previous versions of PPA.</strong></p>
-<div class="section" id="admin-data-curation-functionality">
-<h3>Admin &amp; data curation functionality<a class="headerlink" href="#admin-data-curation-functionality" title="Permalink to this headline">¶</a></h3>
+<section id="admin-data-curation-functionality">
+<h3>Admin &amp; data curation functionality<a class="headerlink" href="#admin-data-curation-functionality" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>As an admin, I want to manually enter bibliographic information into editable fields so that users can view and search citations for works not available in Hathi.</p></li>
 <li><p>As an admin, I want to suppress items from the site so that I can pull content that should not be included or was wrongly added as I am going through and assigning collections to archive volumes.</p></li>
 </ul>
-</div>
-<div class="section" id="search-improvements">
-<h3>Search improvements<a class="headerlink" href="#search-improvements" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="search-improvements">
+<h3>Search improvements<a class="headerlink" href="#search-improvements" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>As a user, I want keyword searches to prioritize matches in the author, title and public notes fields so that I can easily find works using keywords.</p></li>
 <li><p>As a user, I should not see suppressed items in search results or item display so that my results are not cluttered by items not meant to be part of the archive.</p></li>
@@ -162,16 +312,16 @@ as a way to credit and differentiate from previous versions of PPA.</strong></p>
 <li><p>bugfix: Using actual numbers for date range causes works without
 a date to go missing when form is submitted</p></li>
 </ul>
-</div>
-<div class="section" id="content-management">
-<h3>Content management<a class="headerlink" href="#content-management" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="content-management">
+<h3>Content management<a class="headerlink" href="#content-management" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>As a content editor, I want to be able to add and order multiple authors to an editorial so I can correctly attribute work.</p></li>
 <li><p>As a content editor, I want to list people who contributed to the project so that I can give credit to everyone who was involved in it.</p></li>
 </ul>
-</div>
-<div class="section" id="ui-ux-design-updates">
-<h3>UI/UX/Design updates<a class="headerlink" href="#ui-ux-design-updates" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="ui-ux-design-updates">
+<h3>UI/UX/Design updates<a class="headerlink" href="#ui-ux-design-updates" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>Refinements to the search form
 - collapsible advanced search, hidden by default
@@ -184,17 +334,17 @@ and footnotes</p></li>
 <li><p>Updated error pages</p></li>
 </ul>
 <p><a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/milestone/7?closed=1">3.0 GitHub milestone</a></p>
-</div>
-</div>
-<div class="section" id="id11">
-<h2>0.11<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="id21">
+<h2>0.11<a class="headerlink" href="#id21" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>As a content editor, I want to control how the description of my editorial content is displayed when on PPA, when shared, and when searched.</p></li>
 <li><p>As a content editor, I want to add new or edit existing editorial content so that I can publish and promote scholarly work related to the project.</p></li>
 <li><p>As an admin, I should not be able to edit wagtail content in the Django admin so that I don’t uninintentionally break content by editing it in the wrong place.</p></li>
 </ul>
-<div class="section" id="bugs-chores">
-<h3>Bugs/chores<a class="headerlink" href="#bugs-chores" title="Permalink to this headline">¶</a></h3>
+<section id="bugs-chores">
+<h3>Bugs/chores<a class="headerlink" href="#bugs-chores" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>Constrains image sizes in editorial posts</p></li>
 <li><p>Sets up Google Analytics</p></li>
@@ -202,9 +352,9 @@ and footnotes</p></li>
 <li><p>Switches to sans-serif font (Open Sans) sitewide</p></li>
 <li><p>Adds tzinfo to mysql to fix failing tests in CI</p></li>
 </ul>
-</div>
-<div class="section" id="design-updates">
-<h3>Design updates<a class="headerlink" href="#design-updates" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="design-updates">
+<h3>Design updates<a class="headerlink" href="#design-updates" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>Homepage</p></li>
 <li><p>Top navigation menu</p></li>
@@ -216,36 +366,36 @@ and footnotes</p></li>
 <li><p>Editorial post list page</p></li>
 </ul>
 <p><a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/milestone/6?closed=1">0.11 GitHub milestone</a></p>
-</div>
-</div>
-<div class="section" id="id13">
-<h2>0.10<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="id23">
+<h2>0.10<a class="headerlink" href="#id23" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>As a content editor, I want unneeded punctuation removed when importing or updating records from HathiTrust metadata, so that records are easier to search and browse.</p></li>
 <li><p>As a user, I want item titles to be case-insensitive when sorting, so that I can find content alphabetically.</p></li>
 <li><p>As a user, I want my search input for publication year to be validated in the browser so that I can’t enter invalid dates.</p></li>
 </ul>
-<div class="section" id="content-management-updates">
-<h3>Content management updates<a class="headerlink" href="#content-management-updates" title="Permalink to this headline">¶</a></h3>
+<section id="content-management-updates">
+<h3>Content management updates<a class="headerlink" href="#content-management-updates" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>As a content editor, I want to arrange content pages on the site so that I can update site navigation when information changes.</p></li>
 <li><p>As an admin, I want the site to provide XML sitemaps for content pages, collection and archive pages, and digitized works so that site content will be findable by search engines.</p></li>
 <li><p>Replace Mezzanine with Wagtail as content management system.</p></li>
 <li><p>Add built-in fixtures to create default page structure within Wagtail.</p></li>
 </ul>
-</div>
-<div class="section" id="id14">
-<h3>Design updates<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="id24">
+<h3>Design updates<a class="headerlink" href="#id24" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>Refactor SCSS and media queries.</p></li>
 <li><p>Fixes issues with histogram and pub date display on Chrome.</p></li>
 <li><p>Fixes an issue where hitting back on a search could result in unformatted JSON being displayed.</p></li>
 </ul>
 <p><a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/milestone/5?closed=1">0.10 GitHub milestone</a></p>
-</div>
-</div>
-<div class="section" id="id16">
-<h2>0.9<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="id26">
+<h2>0.9<a class="headerlink" href="#id26" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>As an admin, I would like to be able to see the Hathi Catalog IDs for a volume so that I can see how individual volumes are grouped together within the HathiTrust.</p></li>
 <li><p>As an admin, I want the CSV report of materials on the site to include items’ Hathi catalog ID so that I can identify duplicates and multi-volume works.</p></li>
@@ -257,8 +407,8 @@ and footnotes</p></li>
 <li><p>As a user, I want different styles for the main title and subtitle on search results so that I can visually distinguish titles.</p></li>
 <li><p>As a user, I want item titles to ignore definite articles and punctuation when sorting, so that I can find the most relevant content first.</p></li>
 </ul>
-<div class="section" id="id17">
-<h3>Design updates<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
+<section id="id27">
+<h3>Design updates<a class="headerlink" href="#id27" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>Updates styles site-wide to match new designs for most pages</p></li>
 <li><p>Fixes some issues with min/max date display on publication date histogram</p></li>
@@ -267,10 +417,10 @@ and footnotes</p></li>
 <li><p>Fixes an issue with sizing of the footer in WebKit browsers</p></li>
 </ul>
 <p><a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/milestone/4?closed=1">0.9 GitHub milestone</a></p>
-</div>
-</div>
-<div class="section" id="id19">
-<h2>0.8.1<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="id29">
+<h2>0.8.1<a class="headerlink" href="#id29" title="Permalink to this heading">¶</a></h2>
 <p>Minor updates, tweaks, and fixes:</p>
 <ul class="simple">
 <li><p>Set HathiTrust links to open in new browser window or tab</p></li>
@@ -279,16 +429,16 @@ and footnotes</p></li>
 <li><p>Clean up print statements and documentation in hathi import and deploy notes</p></li>
 <li><p>Tweak wording to clarify Zotero functionality</p></li>
 </ul>
-</div>
-<div class="section" id="search-filtering-and-highlighting">
-<h2>0.8 Search filtering and highlighting<a class="headerlink" href="#search-filtering-and-highlighting" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="search-filtering-and-highlighting">
+<h2>0.8 Search filtering and highlighting<a class="headerlink" href="#search-filtering-and-highlighting" title="Permalink to this heading">¶</a></h2>
 <p>Includes nearly all public-facing functionality documented in the CDH project
 charter for minimum viable product (and some additional features), with the
 exception of blog/editorial content management functionality and a few other
 content management features.  Templates and styles are provisional, focusing
 on basic layout and interactions.</p>
-<div class="section" id="search-filters-and-highlighting">
-<h3>Search filters and highlighting<a class="headerlink" href="#search-filters-and-highlighting" title="Permalink to this headline">¶</a></h3>
+<section id="search-filters-and-highlighting">
+<h3>Search filters and highlighting<a class="headerlink" href="#search-filters-and-highlighting" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>As a user viewing keyword search results, I want to see a few text snippets from the full text of a work so that I can get an idea how my search terms are used in the work.</p></li>
 <li><p>As a user viewing an individual item from a keyword search, I want to see page image thumbnails and text snippets that match my search terms so I can see how many and what kind of pages match my search terms.</p></li>
@@ -302,25 +452,25 @@ on basic layout and interactions.</p>
 <li><p>As a user, I want to add all or selected works from the search results list to my Zotero library, so that I can efficiently save them for later research or citation.</p></li>
 <li><p>As a user, I want to add a work to my Zotero library from the individual item page so that I can save it for research without having to go back to the list of results.</p></li>
 </ul>
-</div>
-<div class="section" id="basic-content-management">
-<h3>Basic content management<a class="headerlink" href="#basic-content-management" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="basic-content-management">
+<h3>Basic content management<a class="headerlink" href="#basic-content-management" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>As a content editor, I want to create and edit content pages on the site so that I can update text on the site when information changes.</p></li>
 </ul>
-</div>
-<div class="section" id="other-improvements">
-<h3>Other improvements<a class="headerlink" href="#other-improvements" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="other-improvements">
+<h3>Other improvements<a class="headerlink" href="#other-improvements" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>New, more efficient Solr index script</p></li>
 <li><p>Templates and basic styles for current site components</p></li>
 <li><p>SCSS/JS pipeline with compressor</p></li>
 </ul>
 <p><a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/milestone/3?closed=1">0.8 GitHub milestone</a></p>
-</div>
-</div>
-<div class="section" id="collections-improvements">
-<h2>0.7 Collections Improvements<a class="headerlink" href="#collections-improvements" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="collections-improvements">
+<h2>0.7 Collections Improvements<a class="headerlink" href="#collections-improvements" title="Permalink to this heading">¶</a></h2>
 <p>Minor improvements to collections management and bug fix.</p>
 <ul class="simple">
 <li><p>As an admin, I want a “Collection” column viewable on the “Digitized works” page so that I can easily see what collection(s) an item belongs to.</p></li>
@@ -329,18 +479,18 @@ on basic layout and interactions.</p>
 This release resolves this error which resulted from setting rather
 than adding digital works to collections.</p></li>
 </ul>
-</div>
-<div class="section" id="collections-management">
-<h2>0.6 Collections Management<a class="headerlink" href="#collections-management" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="collections-management">
+<h2>0.6 Collections Management<a class="headerlink" href="#collections-management" title="Permalink to this heading">¶</a></h2>
 <p>Release adding collections creation and management, as well as CSV exports of all digitized works.</p>
-<div class="section" id="csv-export">
-<h3>CSV Export<a class="headerlink" href="#csv-export" title="Permalink to this headline">¶</a></h3>
+<section id="csv-export">
+<h3>CSV Export<a class="headerlink" href="#csv-export" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>As an admin, I want to generate a CSV report of materials on the site so that I can do analysis with other tools such as OpenRefine to analyze collection assignment.</p></li>
 </ul>
-</div>
-<div class="section" id="collections">
-<h3>Collections<a class="headerlink" href="#collections" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="collections">
+<h3>Collections<a class="headerlink" href="#collections" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>As an admin, I want to create and update collections so that I can group digitized works into subcollections for site users.</p></li>
 <li><p>As an admin, I want to add and edit collection descriptions so that I can help site users understand the collection and find related materials.</p></li>
@@ -350,21 +500,21 @@ than adding digital works to collections.</p></li>
 <li><p>As a user, I want to filter search results by collection so that I can include or exclude groups of materials based on my interests.</p></li>
 </ul>
 <p><a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/milestone/2?closed=1">0.6 GitHub milestone</a></p>
-</div>
-</div>
-<div class="section" id="bulk-import-and-simple-search">
-<h2>0.5 Bulk Import and Simple Search<a class="headerlink" href="#bulk-import-and-simple-search" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="bulk-import-and-simple-search">
+<h2>0.5 Bulk Import and Simple Search<a class="headerlink" href="#bulk-import-and-simple-search" title="Permalink to this heading">¶</a></h2>
 <p>Initial release with basic admin functionality, import/index Hathi materials, and a basic search to allow interacting and testing the Solr index.</p>
-<div class="section" id="user-management">
-<h3>User Management<a class="headerlink" href="#user-management" title="Permalink to this headline">¶</a></h3>
+<section id="user-management">
+<h3>User Management<a class="headerlink" href="#user-management" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>As a project team member, I want to login with my Princeton CAS account so that I can use existing credentials and not have to keep track of a separate username and password.</p></li>
 <li><p>As an admin, I want to edit user and group permissions so I can manage project team member access within the system.</p></li>
 <li><p>As an admin, I want an easy way to give project team members archive management and content editing permissions so that I don’t have to keep track of all the individual required permissions.</p></li>
 </ul>
-</div>
-<div class="section" id="hathitrust-materials">
-<h3>HathiTrust Materials<a class="headerlink" href="#hathitrust-materials" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="hathitrust-materials">
+<h3>HathiTrust Materials<a class="headerlink" href="#hathitrust-materials" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>As an admin, I want a bulk import of HathiTrust materials so that previously identified and downloaded data can be added to the system.</p></li>
 <li><p>As an admin, I want to see a list of all digitized materials in the archive so that I can view and manage the contents.</p></li>
@@ -374,9 +524,9 @@ than adding digital works to collections.</p></li>
 <li><p>As a user, I want to see basic details for individual items in the archive so that I can see the record details and get to the HathiTrust version.</p></li>
 </ul>
 <p><a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/milestone/1?closed=1">0.5 GitHub milestone</a></p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
           </div>
@@ -385,7 +535,14 @@ than adding digital works to collections.</p></li>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="index.html">Princeton Prosody Archive</a></h1>
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/ppa_logo.png" alt="Logo"/>
+    
+    <h1 class="logo logo-name">Princeton Prosody Archive</h1>
+    
+  </a>
+</p>
 
 
 
@@ -403,32 +560,8 @@ than adding digital works to collections.</p></li>
 
 
 
-    
-
-<p>
-<a class="badge" href="https://travis-ci.org/Princeton-CDH/ppa-django">
-    <img
-        alt="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
-        src="https://secure.travis-ci.org/Princeton-CDH/ppa-django.svg?branch=master"
-    />
-</a>
-</p>
-
-
-
-
-    
-
-<p>
-<a class="badge" href="https://codecov.io/github/Princeton-CDH/ppa-django">
-    <img
-    alt="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
-    src="https://codecov.io/github/Princeton-CDH/ppa-django/coverage.svg?branch=master"
-    />
-</a>
-</p>
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="codedocs.html">Code Documentation</a></li>
@@ -437,16 +570,27 @@ than adding digital works to collections.</p></li>
 </ul>
 
 
-  <h3><a href="index.html">Table of Contents</a></h3>
-  <ul>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
 <li><a class="reference internal" href="#">CHANGELOG</a><ul>
-<li><a class="reference internal" href="#id2">3.3</a></li>
-<li><a class="reference internal" href="#id3">3.2.4</a></li>
-<li><a class="reference internal" href="#id4">3.2.2</a></li>
-<li><a class="reference internal" href="#id5">3.2.1</a></li>
-<li><a class="reference internal" href="#id6">3.2</a></li>
-<li><a class="reference internal" href="#id7">3.1</a></li>
-<li><a class="reference internal" href="#id9">3.0.1</a></li>
+<li><a class="reference internal" href="#id2">3.9</a></li>
+<li><a class="reference internal" href="#id3">3.8.1</a></li>
+<li><a class="reference internal" href="#id4">3.8</a></li>
+<li><a class="reference internal" href="#id5">3.7.1</a></li>
+<li><a class="reference internal" href="#id6">3.7</a></li>
+<li><a class="reference internal" href="#id7">3.6.2</a></li>
+<li><a class="reference internal" href="#id8">3.6.1</a></li>
+<li><a class="reference internal" href="#id9">3.6</a></li>
+<li><a class="reference internal" href="#id10">3.5</a></li>
+<li><a class="reference internal" href="#id11">3.4</a></li>
+<li><a class="reference internal" href="#id12">3.3</a></li>
+<li><a class="reference internal" href="#id13">3.2.4</a></li>
+<li><a class="reference internal" href="#id14">3.2.2</a></li>
+<li><a class="reference internal" href="#id15">3.2.1</a></li>
+<li><a class="reference internal" href="#id16">3.2</a></li>
+<li><a class="reference internal" href="#id17">3.1</a></li>
+<li><a class="reference internal" href="#id19">3.0.1</a></li>
 <li><a class="reference internal" href="#initial-public-version-soft-launch">3.0 - Initial public version (soft launch)</a><ul>
 <li><a class="reference internal" href="#admin-data-curation-functionality">Admin &amp; data curation functionality</a></li>
 <li><a class="reference internal" href="#search-improvements">Search improvements</a></li>
@@ -454,21 +598,21 @@ than adding digital works to collections.</p></li>
 <li><a class="reference internal" href="#ui-ux-design-updates">UI/UX/Design updates</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id11">0.11</a><ul>
+<li><a class="reference internal" href="#id21">0.11</a><ul>
 <li><a class="reference internal" href="#bugs-chores">Bugs/chores</a></li>
 <li><a class="reference internal" href="#design-updates">Design updates</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id13">0.10</a><ul>
+<li><a class="reference internal" href="#id23">0.10</a><ul>
 <li><a class="reference internal" href="#content-management-updates">Content management updates</a></li>
-<li><a class="reference internal" href="#id14">Design updates</a></li>
+<li><a class="reference internal" href="#id24">Design updates</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id16">0.9</a><ul>
-<li><a class="reference internal" href="#id17">Design updates</a></li>
+<li><a class="reference internal" href="#id26">0.9</a><ul>
+<li><a class="reference internal" href="#id27">Design updates</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id19">0.8.1</a></li>
+<li><a class="reference internal" href="#id29">0.8.1</a></li>
 <li><a class="reference internal" href="#search-filtering-and-highlighting">0.8 Search filtering and highlighting</a><ul>
 <li><a class="reference internal" href="#search-filters-and-highlighting">Search filters and highlighting</a></li>
 <li><a class="reference internal" href="#basic-content-management">Basic content management</a></li>
@@ -490,19 +634,20 @@ than adding digital works to collections.</p></li>
 </li>
 </ul>
 
+  </div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script><div class="powered_by">
+<script>document.getElementById('searchbox').style.display = "block"</script><div class="powered_by">
 <p>Powered by:</p>
 <a href="http://cdh.princeton.edu/">
-<img src="https://cdh.princeton.edu/static/img/logos/cdh-logo.svg"
+<img src="https://cdh.princeton.edu/static/img/CDH_logo.svg"
     alt="Center for Digital Humanities @ Princeton" />
 </a>
 </div>
@@ -514,8 +659,8 @@ than adding digital works to collections.</p></li>
       &copy;2018, CDH @ Princeton University.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
       <a href="_sources/changelog.rst.txt"
