@@ -62,7 +62,7 @@ class Command(BaseCommand):
         parser.add_argument("csv", help="CSV file with excerpt information")
 
     def setup(self):
-        # common setup steps for running the script or testing
+        "Run common setup steps for running the script or testing"
         self.stats = Counter()
         self.script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
         self.digwork_contentype = ContentType.objects.get_for_model(DigitizedWork)

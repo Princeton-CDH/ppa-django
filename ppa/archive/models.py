@@ -197,6 +197,7 @@ class ProtectedWorkField(models.Field):
         return ProtectedWorkFieldFlags(value)
 
     def get_internal_type(self):
+        "Preserve type as PositiveSmallIntegerField"
         return "PositiveSmallIntegerField"
 
     def get_prep_value(self, value):
@@ -745,6 +746,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
     }
 
     def first_page(self):
+        """Number of the first page in range, if this is an excerpt"""
         if self.pages_digital:
             return list(self.page_span)[0]
 
@@ -1087,7 +1089,6 @@ class Page(Indexable):
 
         # read zipfile contents in place, without unzipping
         with ZipFile(digwork.hathi.zipfile_path()) as ht_zip:
-
             # yield a generator of index data for each page; iterate
             # over pages in METS structmap
             for i, page in enumerate(mmets.structmap_pages, 1):

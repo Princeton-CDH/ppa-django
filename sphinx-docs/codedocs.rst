@@ -77,7 +77,7 @@ Generate Corpus
 ~~~~~~~~~~~~~~~
 
 .. automodule:: ppa.archive.management.commands.generate_corpus
-
+    :members:
 
 Common
 ------
@@ -115,6 +115,7 @@ Manage Commands
 Setup Site Pages
 ~~~~~~~~~~~~~~~~
 .. automodule:: ppa.pages.management.commands.setup_site_pages
+    :members:
 
 
 Editorial
