@@ -170,17 +170,13 @@ class SolrCorpus:
         self.doc_count = len(self.doc_ids)
         if pbar:
             self.pbar = ProgressBar(
-                redirect_stderr=True, 
-                max_value=self.doc_count, 
-                max_error=False
+                redirect_stderr=True, max_value=self.doc_count, max_error=False
             )
         else:
             self.pbar = NullBar()
 
     def __iter__(self):
-
         for doc_id in self.doc_ids:
-
             if doc_id not in self.page_counts:
                 logger.warning(
                     "Unknown page count for doc {}. Skipping.".format(doc_id)
@@ -266,6 +262,7 @@ class SolrCorpus:
                 )
 
     def save(self, path, save_dict=True, save_dict_as_text=False, save_metadata=False):
+        """Save the generated corpus text and metadata to files on disk"""
         if not os.path.isdir(path):
             makedirs(path)
         corpus_path = os.path.join(path, "{}.mm".format(self.name))
