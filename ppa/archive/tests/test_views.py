@@ -1,10 +1,12 @@
 import csv
+import html
 import operator
 import re
 import uuid
 from io import StringIO
 from time import sleep
 from unittest.mock import Mock, patch
+from collections import defaultdict
 
 import pytest
 import requests
@@ -19,7 +21,7 @@ from django.utils.timezone import now
 from parasolr.django import SolrClient, SolrQuerySet
 
 from ppa.archive.forms import ImportForm, ModelMultipleChoiceFieldWithEmpty, SearchForm
-from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork
+from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork, Cluster
 from ppa.archive.solr import ArchiveSearchQuerySet
 from ppa.archive.templatetags.ppa_tags import (
     gale_page_url,
@@ -488,22 +490,68 @@ class TestDigitizedWorkListRequest(TestCase):
             "something else delightful",
             "an alternate thing with words like blood and bone not in the title",
         ]
-        htid = "chi.13880510"
-        # NOTE: sample page index data must be updated if page indexing changes
-        solr_page_docs = [
-            {
-                "content": content,
-                "order": i,
-                "item_type": "page",
-                "source_id": htid,
-                "id": "%s.%s" % (htid, i),
-                "group_id_s": htid,  # group id for non-excerpt = source id
-            }
-            for i, content in enumerate(sample_page_content)
+        sample_page_content_other = [
+            'wintry winter wonderlands require dials and compasses', 
+            'this page is about the hot climes of the summer'
         ]
+        htid = "chi.13880510"
+        htid_other = "uc1.$b14645"
+        
+        # NOTE: sample page index data must be updated if page indexing changes
+        def get_solr_page_docs(htid, docs):
+            return [
+                {
+                    "content": content,
+                    "order": i,
+                    "item_type": "page",
+                    "source_id": htid,
+                    "id": "%s.%s" % (htid, i),
+                    "group_id_s": htid,  # group id for non-excerpt = source id
+                }
+                for i, content in enumerate(docs)
+            ]
 
+        # get solr pages
+        solr_page_docs = get_solr_page_docs(htid,sample_page_content)
+        solr_page_docs+= get_solr_page_docs(htid_other,sample_page_content_other)
+
+        # assign clusters
+        cl1 = Cluster(cluster_id='treatisewinter')
+        cl2 = Cluster(cluster_id='anothercluster')
+        cl3 = Cluster(cluster_id='dialcluster')
+        cl1.save()
+        cl2.save()
+        cl3.save()
+        clustk = 'cluster_id_s'
+        cluster_objs = {}
         work_docs = [dw.index_data() for dw in DigitizedWork.objects.all()]
         index_data = work_docs + solr_page_docs
+
+        for d in index_data:
+            sid=d['source_id']
+            if sid == htid:
+                d[clustk] = cl1.cluster_id
+                cluster_objs[sid]=cl1
+
+            elif sid in {"chi.78013704", "chi.78013677"}:
+                
+                d[clustk] = cl3.cluster_id
+                cluster_objs[sid]=cl3
+            
+            elif sid == htid_other:
+                d[clustk] = htid_other
+            
+            else:
+                d[clustk] = cl2.cluster_id
+                cluster_objs[sid]=cl2
+
+        for dw in DigitizedWork.objects.all():
+            cluster = cluster_objs.get(dw.source_id)
+            if cluster:
+                dw.cluster = cluster
+                dw.save()
+
+
         SolrClient().update.index(index_data)
         # NOTE: without a sleep, even with commit=True and/or low
         # commitWithin settings, indexed data isn't reliably available
@@ -527,9 +575,29 @@ class TestDigitizedWorkListRequest(TestCase):
         # no query - should find all
         response = self.client.get(self.url)
         assert response.status_code == 200
+
+        # assemble a dictionary of cluster -> list of works within that cluster
+        cluster2works = defaultdict(list)
+        all_works = DigitizedWork.objects.all()
+        for digwork in all_works:
+            # using this instead of digwork.cluster_id_is for consistency with other tests
+            digwork_index_data = digwork.index_data()
+            cluster = digwork_index_data.get('cluster_id_s')
+            # double checking that they're the same though:
+            assert digwork_index_data.get('cluster_id_s') == digwork.index_cluster_id
+            cluster2works[cluster].append(digwork)
+            
+        # assert that shown are number of *clusters* not number of works
+        num_clusters = len(cluster2works)
+        num_works = len(all_works)
         self.assertContains(
-            response, "%d digitized works" % len(DigitizedWork.objects.all())
+            response, "%d digitized works" % num_clusters
         )
+        self.assertNotContains(
+            response, "%d digitized works" % num_works
+        )
+
+        # are results numbered?
         self.assertContains(
             response,
             '<p class="result-number">1</p>',
@@ -560,25 +628,23 @@ class TestDigitizedWorkListRequest(TestCase):
         assert "page_groups" in response.context
         # facet range information from publication date range facet
         assert "facet_ranges" in response.context
-
-        for digwork in DigitizedWork.objects.all():
-            # check basic metadata for each work
-            self.assertContains(response, digwork.title)
-            self.assertContains(response, digwork.subtitle)
-            self.assertContains(response, digwork.source_id)
-            self.assertContains(response, digwork.author)
-            self.assertContains(response, digwork.enumcron)
+    
+        # we need to assert that *at least one* work within each cluster has its metadata shown
+        response_str = response.content.decode()
+        attrs_to_test=['title','subtitle','author','enumcron','pub_date']
+        for cluster,works in cluster2works.items():
+            # assertion is similar for all these attrs
+            for attr in attrs_to_test:
+                assert any(str(getattr(w,attr)) in response_str for w in works)
             # at least one publisher includes an ampersand, so escape text
-            self.assertContains(response, escape(digwork.publisher))
-            # self.assertContains(response, digwork.pub_place)
-            self.assertContains(response, digwork.pub_date)
+            assert any(escape(w.publisher) in response_str for w in works)
+            # self.assertContains(response, digwork.pub_place)   # <- this was already commented, I believe because we're not showing it any longer?
             # link to detail page
-            self.assertContains(response, digwork.get_absolute_url())
+            assert any(w.get_absolute_url() in response_str for w in works)
             # unapi identifier for each work
-            self.assertContains(
-                response,
-                '<abbr class="unapi-id" title="%s"' % digwork.index_id(),
-                msg_prefix="unapi id should be embedded for each work",
+            assert any(
+                ('<abbr class="unapi-id" title="%s"' % w.index_id()) in response_str
+                for w in works
             )
 
         # no page images or highlights displayed without search term
@@ -599,12 +665,14 @@ class TestDigitizedWorkListRequest(TestCase):
 
     def test_keyword_search(self):
         # use keyword search with a term in a fixture title
-        response = self.client.get(self.url, {"query": "wintry"})
+        response = self.client.get(self.url, {"query": "wintry", "sort":"relevance"})
+
         # relevance sort for keyword search
-        assert len(response.context["object_list"]) == 1
-        self.assertContains(response, "1 digitized work")
-        self.assertContains(response, self.wintry.source_id)
-        # page image & text highlight displayed for matching page
+        assert len(response.context["object_list"]) == 2       # 2 hits: 1 in a cluster, 1 not
+        self.assertContains(response, "2 digitized works")
+        self.assertContains(response, self.wintry.source_id)    # has hits for wintry search
+        self.assertNotContains(response, self.dial.source_id)   # no hits for wintry
+        # page image & text highlight displayed for matching page  
         self.assertContains(
             response,
             "babel.hathitrust.org/cgi/imgsrv/image?id=%s;seq=0" % self.wintry.source_id,
@@ -615,6 +683,23 @@ class TestDigitizedWorkListRequest(TestCase):
             "winter and <em>wintry</em> and",
             msg_prefix="highlight snippet from page content displayed",
         )
+
+        # need to unescape to test query args below
+        htmlstr=html.unescape(response.content.decode())
+
+        # 2 results but one cluster
+        assert htmlstr.count("search and browse within cluster") == 1
+        
+        # link preserves args
+        assert '/archive/?cluster=treatisewinter&query=wintry&sort=relevance&page=1' in htmlstr
+        
+        # the non-cluster hit should appear
+        assert '/archive/uc1.$b14645/?query=wintry' in htmlstr   
+        
+        # no hits for wintry in this cluster
+        print(htmlstr)
+        assert '/archive/?cluster=anothercluster' not in htmlstr     
+
 
     def test_search_excerpt(self):
         # convert one of the fixtures into an excerpt
@@ -685,8 +770,11 @@ class TestDigitizedWorkListRequest(TestCase):
     def test_search_publisher(self):
         # search text in publisher name
         response = self.client.get(self.url, {"query": "McClurg"})
-        for digwork in DigitizedWork.objects.filter(publisher__icontains="mcclurg"):
-            self.assertContains(response, digwork.source_id)
+        html=response.content.decode()
+        assert any(   # in the fixture both of these 2 hits are in the same cluster. the logic which of them is first/shown is independent so let's check for 1/any of them
+            digwork.source_id in html
+            for digwork in DigitizedWork.objects.filter(publisher__icontains="mcclurg")
+        )
 
     def test_search_publication_place(self):
         # search text in publication place - matches wintry
@@ -715,42 +803,30 @@ class TestDigitizedWorkListRequest(TestCase):
         # self.assertContains(response, 'Unable to parse search query')
 
     def test_search_sort(self):
-        # add a sort term - pub date
-        response = self.client.get(self.url, {"sort": "pub_date_asc"})
-        # get works from the database sorted by pub date
-        sorted_works_ids = list(
-            DigitizedWork.objects.order_by("pub_date").values_list(
-                "source_id", flat=True
-            )
-        )
-        # the list of sorted ids should match
-        assert sorted_works_ids == [
-            work["source_id"] for work in response.context["object_list"]
-        ]
+        ## get unique but sorted cluster ids in database                
+        def _get_unique_list(l1):
+            l2=[]
+            for x in l1:
+                if not x in l2:
+                    l2.append(x)
+            return l2
+        sorted_cluster_ids_date = _get_unique_list(dw.index_cluster_id for dw in DigitizedWork.objects.order_by("pub_date"))
+        sorted_cluster_ids_date_rev = _get_unique_list(dw.index_cluster_id for dw in DigitizedWork.objects.order_by("-pub_date"))
+        sorted_cluster_ids_title = _get_unique_list(dw.index_cluster_id for dw in DigitizedWork.objects.order_by("title"))
 
-        # test sort date in reverse
-        response = self.client.get(self.url, {"sort": "pub_date_desc"})
-        # get works sorted by reverse pub date from the database
-        sorted_works_ids = list(
-            DigitizedWork.objects.order_by("-pub_date").values_list(
-                "source_id", flat=True
-            )
-        )
+        ## get unique but sorted cluster ids from response
+        def _get_unique_list_response(response):
+            return _get_unique_list(work["cluster_id"] for work in response.context["object_list"])
+        response_sorted_cluster_ids_date = _get_unique_list_response(self.client.get(self.url, {"sort": "pub_date_asc"}))
+        response_sorted_cluster_ids_date_rev = _get_unique_list_response(self.client.get(self.url, {"sort": "pub_date_desc"}))
+        response_sorted_cluster_ids_title = _get_unique_list_response(self.client.get(self.url, {"query": "", "sort": "title_asc"}))
 
-        # the list of sorted ids should match
-        assert sorted_works_ids == [
-            work["source_id"] for work in response.context["object_list"]
-        ]
+        ## these should match
+        assert sorted_cluster_ids_date == response_sorted_cluster_ids_date
+        assert sorted_cluster_ids_date_rev == response_sorted_cluster_ids_date_rev
+        assert sorted_cluster_ids_title == response_sorted_cluster_ids_title
 
-        # one last test using title
-        response = self.client.get(self.url, {"query": "", "sort": "title_asc"})
-        sorted_work_ids = DigitizedWork.objects.order_by(
-            Lower("sort_title")
-        ).values_list("source_id", flat=True)
-        # the list of ids should match exactly
-        assert list(sorted_work_ids) == [
-            work["source_id"] for work in response.context["object_list"]
-        ]
+
 
     def test_relevance_sort_enabled(self):
         # - check that a query allows relevance as sort order toggle in form
@@ -825,10 +901,17 @@ class TestDigitizedWorkListRequest(TestCase):
         # shouldn't render the search form or whole list
         self.assertTemplateNotUsed("archive/snippets/search_form.html")
         self.assertTemplateNotUsed("archive/digitizedwork_list.html")
+
         # should have all the results
-        assert (
-            len(response.context["object_list"]) == DigitizedWork.objects.all().count()
-        )
+        works = DigitizedWork.objects.all()
+        num_works = works.count()
+        clusters = set(w.index_data().get('cluster_id_s') for w in works)
+        num_clusters = len(clusters)
+        num_respobjs = len(response.context["object_list"])
+
+        print([num_works, num_respobjs, num_clusters])
+        assert num_respobjs==num_clusters # used to be num_works: no longer!
+
         # should have the results count
         self.assertContains(response, " digitized works")
         # should have the histogram data
@@ -854,16 +937,14 @@ class TestDigitizedWorkListRequest(TestCase):
         ) as mock_queryset_cls:
 
             mock_qs = mock_queryset_cls.return_value
-            mock_qs.get_expanded.side_effect = requests.exceptions.ConnectionError
+            mock_qs.get_facets.side_effect = requests.exceptions.ConnectionError
             # return main mock when paginated
             mock_qs.__getitem__.return_value = mock_qs
             # count needed for paginator
             mock_qs.count.return_value = 0
             # simulate empty result doc for last modified check
             mock_qs.return_value.__getitem__.return_value = {}
-            mock_qs.get_facets.return_value.facet_ranges.as_dict.return_value = {
-                "pub_date": []
-            }
+            mock_qs.get_facets.return_value.facet_ranges = {"pub_date": []}
             response = self.client.get(self.url, {"query": "something"})
             # paginator variables should still be set
             assert "object_list" in response.context
@@ -1065,50 +1146,44 @@ class TestDigitizedWorkListView(TestCase):
         self.factory = RequestFactory()
 
     @pytest.mark.usefixtures("mock_solr_queryset")
-    def test_get_page_highlights(self):
+    def test_get_pages(self):
 
         digworkview = DigitizedWorkListView()
 
-        # no keyword or page groups, no highlights
-        assert digworkview.get_page_highlights({}) == {}
-
-        # search term but no page groups
-        digworkview.query = "iambic"
-        assert digworkview.get_page_highlights({}) == {}
-
         # mock PagedSolrQuery to inspect that query is generated properly
         with patch(
-            "ppa.archive.views.SolrQuerySet", new=self.mock_solr_queryset()
+            "ppa.archive.views.PageSearchQuerySet", new=self.mock_solr_queryset()
         ) as mock_queryset_cls:
-            page_groups = {
-                "group1": {
-                    "docs": [
-                        {"id": "p1a"},
-                        {"id": "p1b"},
-                    ]
-                },
-                "group2": {
-                    "docs": [
-                        {"id": "p2a"},
-                        {"id": "p2b"},
-                    ]
-                },
-            }
 
-            highlights = digworkview.get_page_highlights(page_groups)
+            solrq = mock_queryset_cls()
+
+            # no keyword search, doesn't look for pages or highlights
+            assert digworkview.get_pages(solrq) == ({}, {})
+
+            # search term but no works found
+            digworkview.query = "iambic"
+            solrq.count.return_value = 0
+            assert digworkview.get_pages(solrq) == ({}, {})
+
+            solrq.count.return_value = 10
+            solrq.__iter__.return_value = [
+                {"id": "work1"},
+                {"id": "work2"},
+            ]
+
+            pages, highlights = digworkview.get_pages(solrq)
 
             mock_queryset_cls.assert_called_with()
             mock_qs = mock_queryset_cls.return_value
+
+            mock_qs.filter.assert_any_call(group_id__in=['"work1"', '"work2"'])
+            mock_qs.filter.assert_any_call(item_type="page")
             mock_qs.search.assert_any_call(content="(iambic)")
-            mock_qs.search.assert_called_with(
-                id__in=["(p1a)", "(p1b)", "(p2a)", "(p2b)"]
-            )
-            mock_qs.only.assert_called_with("id")
+            mock_qs.group.assert_called_with("group_id", limit=2, sort="score desc")
             mock_qs.highlight.assert_called_with(
                 "content", snippets=3, method="unified"
             )
-            mock_qs.get_results.assert_called_with(rows=4)
-
+            mock_qs.get_response.assert_called_with(rows=100)
             assert highlights == mock_qs.get_highlighting()
 
     @pytest.mark.usefixtures("mock_solr_queryset")

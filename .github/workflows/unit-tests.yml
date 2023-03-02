@@ -18,10 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -29,38 +29,24 @@ jobs:
             ${{ runner.os }}-node-
       - run: npm ci
       - run: npm run test:unit
-      - uses: codecov/codecov-action@v1
+      - uses: codecov/codecov-action@v3
         with:
           flags: javascript
 
   python-unit:
     name: Python unit tests
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-         - solr: 6.6.5
-           db: mysql
-         - solr: 8.6
-           db: postgresql
     services:
-      mariadb:
-        image: mariadb
-        env:
-          MYSQL_DATABASE: ${{ env.DB_NAME }}
-          MYSQL_ROOT_PASSWORD: ${{ env.DB_PASSWORD }}
-        ports:
-        - 3306:3306
-      postgres:
+      db:
         image: postgres:12
         env:
-          POSTGRES_DB: ${{ env.DB_NAME }}
-          POSTGRES_USER: ${{ env.DB_USER }}
-          POSTGRES_PASSWORD: ${{ env.DB_PASSWORD }}
+          POSTGRES_DB: ppa
+          POSTGRES_USER: ppa
+          POSTGRES_PASSWORD: ppa
         ports:
           - 5432:5432
       solr:
-        image: solr:${{ matrix.solr }}
+        image: solr:8.6
         ports:
           - 8983:8983
     steps:
@@ -68,7 +54,7 @@ jobs:
       # configure django's ORM based on whether we're testing postgres or mysql
       - name: Set django database backend adapter
         env:
-          BACKEND: ${{ matrix.db }}
+          BACKEND: postgresql
         run: echo "DJANGO_DB_BACKEND=$(echo "$BACKEND")" >> $GITHUB_ENV
 
       - name: Checkout repository
@@ -82,27 +68,26 @@ jobs:
 
       - name: Copy solr configsets to solr home directory (Solr 8 only)
         run: "docker exec -d ${{ job.services.solr.id }} cp -r /opt/solr/server/solr/configsets /var/solr/data"
-        if: ${{ matrix.solr == 8.6 }}
 
       # NOTE: Python version to use is stored in the .python-version file, which is the
       # convention for pyenv: https://github.com/pyenv/pyenv
       - name: Get Python version
         run: echo "PYTHON_VERSION=$(cat .python-version)" >> $GITHUB_ENV
 
-      # use python version for current build matrix
+      # use python version for current build
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
-          python-version: ${{ matrix.python }}
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Cache pip
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: pip-${{ matrix.python }}-${{ hashFiles('requirements.txt') }}
+          key: pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('requirements.txt') }}
           restore-keys: |
-            pip-${{ matrix.python }}-${{ hashFiles('requirements.txt') }}
-            pip-${{ matrix.python }}
+            pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('requirements.txt') }}
+            pip-${{ env.PYTHON_VERSION }}
             pip-
 
       - name: Install dependencies
@@ -119,7 +104,7 @@ jobs:
         run: py.test --cov=./ --cov-report=xml
 
       - name: Upload test coverage to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
           flags: python
 
@@ -141,7 +126,7 @@ jobs:
         env:
           SLACK_COLOR: ${{ env.SLACK_COLOR }}
           SLACK_WEBHOOK: ${{ secrets.ACTIONS_SLACK_WEBHOOK }}
-          SLACK_TITLE: "Walk #${{ github.run_number }} for workflow `${{ github.workflow }} (python${{ matrix.python }}/${{ matrix.db }}/solr${{ matrix.solr }})`: ${{ job.status }}"
-          SLACK_MESSAGE: "Walk <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|#${{ github.run_number }}> on <https://github.com/${{ github.repository }}/|${{ github.repository }}@${{ github.ref }}>"
+          SLACK_TITLE: "Run #${{ github.run_number }} for workflow `${{ github.workflow }}`: ${{ job.status }}"
+          SLACK_MESSAGE: "Run <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|#${{ github.run_number }}> on <https://github.com/${{ github.repository }}/|${{ github.repository }}@${{ github.ref }}>"
           SLACK_FOOTER: "<https://github.com/${{ github.repository }}/commit/${{ github.sha }}|View commit>"
           MSG_MINIMAL: true # use compact slack message format

@@ -8,6 +8,8 @@
     .meta {
         position: relative;
         padding: 0 1rem;
+        border-bottom: 2px solid $seafoam-blue;
+        margin-bottom: 1rem;
 
         @media (min-width: $tablet) {
             padding: 0 2rem;
@@ -45,7 +47,6 @@
 
     .metadata.table {
         table-layout: fixed;
-        border-bottom: 2px solid $seafoam-blue;
         padding-bottom: 1rem;
 
         td {
