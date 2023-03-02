@@ -310,6 +310,8 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
         return qs
 
     def get(self, *args, **kwargs):
+        """Handle get request, with redirect logic if redirect url is set for
+        a digitized work id converted to a single excerpt."""
         try:
             response = super().get(*args, **kwargs)
         except Http404:
@@ -352,7 +354,7 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
             # only return fields needed for page result display,
             # configure highlighting on page text content
             solr_pageq = (
-                PageSearchQuerySet() # NOTE: Addition of an aliased queryset changes the _s keys below
+                PageSearchQuerySet()  # NOTE: Addition of an aliased queryset changes the _s keys below
                 .search(content="(%s)" % query)
                 .filter(group_id='"%s"' % digwork.index_id(), item_type="page")
                 .highlight("content", snippets=3, method="unified")
@@ -536,6 +538,7 @@ class ImportView(PermissionRequiredMixin, FormView):
         return self.import_records(importer)
 
     def import_records(self, importer):
+        """Import records based on values submitted in the form"""
         importer.filter_existing_ids()
         # add items, and create log entries associated with current user
         importer.add_items(log_msg_src="via django admin", user=self.request.user)
