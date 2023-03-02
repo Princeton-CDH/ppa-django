@@ -22,6 +22,7 @@ class EditorialIndexPage(Page):
     subpage_types = ["editorial.EditorialPage"]
 
     def get_context(self, request):
+        """Add published editorial posts to template context, most recent first"""
         context = super().get_context(request)
 
         # Add extra variables and return the updated context
@@ -38,7 +39,6 @@ class EditorialIndexPage(Page):
         # but could not get that to work
 
         if path_components:
-
             # if not enough path components are specified, raise a 404
             if len(path_components) < 3:
                 raise Http404

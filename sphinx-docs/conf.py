@@ -219,7 +219,7 @@ coverage_ignore_pyobjects = [
     # django auto-generated model methods
     "clean_fields",
     "get_deferred_fields",
-    "get_(next|previous)_by_(created|last_modified|modified)",
-    "refresh_from_db",
+    "get_(next|previous)_by_(created|last_modified|modified|added|updated)",
     "get_.*_display",  # django auto-generated method for choice fields
+    "usage_url",  # not sure what this is! but not present in code
 ]
