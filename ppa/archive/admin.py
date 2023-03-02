@@ -300,6 +300,8 @@ class ClusterAdmin(admin.ModelAdmin):
         description="# works in this cluster",
     )
     def works(self, obj):
+        """Custom property to display number of works in a cluster and link
+        to a filtered view of the digitized works list."""
         return format_html(
             '<a href="{0}?cluster__id__exact={1!s}">{2}</a>',
             reverse(self.digwork_admin_url),
