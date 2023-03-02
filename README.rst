@@ -207,18 +207,21 @@ directory::
     cd sphinx-docs
     make html
 
-When building for a release ``make docs`` will create a folder called ``docs``,
-build the HTML documents and static assets, and force add it to the commit for
-use with Github Pages.
+To check documentation coverage, run::
 
-To build and publish documentation for a release, add the ``gh-pages`` branch
-to the ``docs`` folder in your worktree::
+    make html -b coverage
 
-  git worktree add -B gh-pages docs origin/gh-pages
+This will create a file under ``_build/coverage/python.txt`` listing any
+python classes or methods that are not documented. Note that sphinx can only
+report on code coverage for files that are included in the documentation. If a
+new python file is created but not included in the sphinx documentation, it
+will be omitted.
 
-In the ``sphinx-docs`` folder, use ``make docs`` to build the HTML documents
-and static assets, add it to the docs folder, and commit it for publication on
-Github Pages. After the build completes, push to GitHub from the ``docs`` folder.
+Documentation will be built and published with GitHub Pages by a GitHub Actions
+workflow triggered on push to ``main``.
+
+The same GitHub Actions workflow will build documentation and checked
+documentation coverage on pull requests.
 
 License
 -------
