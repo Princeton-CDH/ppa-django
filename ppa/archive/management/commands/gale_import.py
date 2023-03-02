@@ -171,8 +171,8 @@ class Command(BaseCommand):
     collections = {}
 
     def load_collections(self):
-        # load collections from the database and create
-        # a lookup based on the codes used in the spreadsheet
+        """Load :class:`~ppa.archive.model.Collection` records from the
+        database and create a lookup based on the codes used in the spreadsheet."""
         collections = {c.name: c for c in Collection.objects.all()}
         for code, name in self.collection_codes.items():
             self.collections[code] = collections[name]
