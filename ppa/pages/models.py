@@ -105,6 +105,8 @@ class HomePage(Page):
         verbose_name = "homepage"
 
     def get_context(self, request):
+        """Add collections with stats and previews for content pages to
+        template context."""
         context = super().get_context(request)
 
         preview_pages = [
@@ -327,6 +329,7 @@ class CollectionPage(Page):
     subpage_types = []
 
     def get_context(self, request):
+        """Add collections and collection stats to template context"""
         context = super().get_context(request)
 
         # include all collections with stats

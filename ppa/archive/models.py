@@ -126,6 +126,27 @@ class Collection(TrackChangesModel):
         return stats
 
 
+class Cluster(models.Model):
+    """A model to collect groups of works such as reprints or editions that should
+    be collapsed in the main archive search and accessible together."""
+
+    cluster_id = models.CharField(
+        "Cluster ID",
+        help_text="Unique identifier for a cluster of digitized works",
+        unique=True,
+        max_length=255,
+    )
+
+    class Meta:
+        ordering = ("cluster_id",)
+
+    def __str__(self):
+        return self.cluster_id
+
+    def __repr__(self):
+        return "<cluster %s>" % str(self)
+
+
 class ProtectedWorkFieldFlags(Flags):
     """:class:`flags.Flags` instance to indicate which :class:`DigitizedWork`
     fields should be protected if edited in the admin."""
@@ -176,6 +197,7 @@ class ProtectedWorkField(models.Field):
         return ProtectedWorkFieldFlags(value)
 
     def get_internal_type(self):
+        "Preserve type as PositiveSmallIntegerField"
         return "PositiveSmallIntegerField"
 
     def get_prep_value(self, value):
@@ -329,6 +351,12 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
     )
     #: collections that this work is part of
     collections = models.ManyToManyField(Collection, blank=True)
+
+    #: optional cluster for aggregating works
+    cluster = models.ForeignKey(
+        Cluster, blank=True, null=True, on_delete=models.SET_NULL
+    )
+
     #: date added to the archive
     added = models.DateTimeField(auto_now_add=True)
     #: date of last modification of the local record
@@ -414,6 +442,14 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         if self.pages_digital:
             return "%s (%s)" % (self.source_id, self.pages_digital)
         return self.source_id
+
+    @property
+    def index_cluster_id(self):
+        """
+        Convenience function to get a string representation of the cluster (or self if no cluster).
+        Reduces redunadancy elsewhere.
+        """
+        return str(self.cluster) if self.cluster else self.index_id()
 
     def clean_fields(self, exclude=None):
         if not exclude or "pages_digital" not in exclude:
@@ -710,6 +746,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
     }
 
     def first_page(self):
+        """Number of the first page in range, if this is an excerpt"""
         if self.pages_digital:
             return list(self.page_span)[0]
 
@@ -721,15 +758,28 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         return self.source_id
 
     @classmethod
-    def items_to_index(cls):
-        """Queryset of works for indexing everything; excludes
-        suppressed works."""
-        return DigitizedWork.objects.exclude(status=cls.SUPPRESSED)
-
-    @classmethod
     def index_item_type(cls):
         """override index item type label to just work"""
         return "work"
+
+    @classmethod
+    def items_to_index(cls):
+        """Queryset of works for indexing everything; excludes
+        suppressed works."""
+        return (
+            DigitizedWork.objects.exclude(status=cls.SUPPRESSED)
+            .select_related("cluster")
+            .prefetch_related("collections")
+        )
+        # NOTE: prefetch_related is ignored when used with Iterator,
+        # which parasolr indexing does
+
+    @classmethod
+    def prep_index_chunk(cls, chunk):
+        # prefetch collections when indexing in chunks
+        # (method modifies queryset in place)
+        models.prefetch_related_objects(chunk, "collections")
+        return chunk
 
     def index_data(self):
         """data for indexing in Solr"""
@@ -761,6 +811,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             "collections": [collection.name for collection in self.collections.all()]
             if self.collections.exists()
             else [NO_COLLECTION_LABEL],
+            "cluster_id_s": self.index_cluster_id,
             # public notes field for display on site_name
             "notes": self.public_notes,
             # hard-coded to distinguish from & sort with pages
@@ -919,6 +970,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         # a new record
 
         # find existing record or create a new one
+        # @NOTE @BUG: This is sometimes returning >1 entry and failing. Need to find why
         digwork, created = DigitizedWork.objects.get_or_create(source_id=htid)
 
         # get configured script user for log entries if no user passed in
@@ -1000,7 +1052,9 @@ class Page(Indexable):
         """Get page content for the specified digitized work from Hathi
         pairtree and return data to be indexed in solr."""
 
-        # Only index pages fo ritems that are not suppressed
+        # TODO: how to share common fields/logic across sources?
+
+        # Only index pages for items that are not suppressed
         if not digwork.is_suppressed:
             # get index page data based on the source
             if digwork.source == digwork.HATHI:
@@ -1030,10 +1084,11 @@ class Page(Indexable):
         # get page span from digitized work
         page_span = digwork.page_span
         digwork_index_id = digwork.index_id()
+        # digwork index id is fallback for cluster, since it is used
+        # to collapse works and pages that belong together
 
         # read zipfile contents in place, without unzipping
         with ZipFile(digwork.hathi.zipfile_path()) as ht_zip:
-
             # yield a generator of index data for each page; iterate
             # over pages in METS structmap
             for i, page in enumerate(mmets.structmap_pages, 1):
@@ -1050,6 +1105,7 @@ class Page(Indexable):
                             "id": "%s.%s" % (digwork_index_id, page.text_file.sequence),
                             "source_id": digwork.source_id,
                             "group_id_s": digwork_index_id,  # for grouping with work record
+                            "cluster_id_s": digwork.index_cluster_id,  # for grouping with cluster
                             "content": pagefile.read().decode("utf-8"),
                             "order": page.order,
                             "label": page.display_label,
@@ -1071,6 +1127,8 @@ class Page(Indexable):
         # get page span from digitized work
         page_span = digwork.page_span
         digwork_index_id = digwork.index_id()
+        # digwork index id is fallback for cluster, since it is used
+        # to collapse works and pages that belong together
 
         for i, page in enumerate(gale_record["pageResponse"]["pages"], 1):
             page_number = page["pageNumber"]
@@ -1083,6 +1141,7 @@ class Page(Indexable):
                 "id": "%s.%s" % (digwork_index_id, page_number),
                 "source_id": digwork.source_id,
                 "group_id_s": digwork_index_id,  # for grouping with work record
+                "cluster_id_s": digwork.index_cluster_id,  # for grouping with cluster
                 "content": page.get("ocrText"),  # some pages have no text
                 "order": i,
                 "label": page_label,

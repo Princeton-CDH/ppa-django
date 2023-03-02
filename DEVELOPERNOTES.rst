@@ -4,7 +4,10 @@ Troubleshooting
 Solr setup with Docker
 ----------------------
 
-Create a new docker container with the Solr 6.6 image::
+Note 2022-02-13: PUL is running Solr 8.4. We need to change our tests, documentation, and local environments accordingly.
+
+
+Create a new docker container with the Solr 8.6 image::
 
     docker run --name solr86 -p 8983:8983 -t solr:8.6
 
@@ -52,3 +55,9 @@ psql -d postgres -c "DROP ROLE ppa;"
 psql -d postgres -c "CREATE ROLE ppa WITH CREATEDB LOGIN PASSWORD 'ppa';"
 psql -d postgres -U ppa -c "CREATE DATABASE ppa;"
 
+or
+
+psql -d postgres -c "DROP ROLE cdh_ppa;"
+psql -d postgres -c "DROP DATABASE cdh_ppa;"
+psql -d postgres -c "CREATE ROLE cdh_ppa WITH CREATEDB LOGIN PASSWORD 'cdh_ppa';"
+psql -d postgres -U cdh_ppa < data/13_daily_cdh_ppa_cdh_ppa_2023-01-11.Wednesday.sql

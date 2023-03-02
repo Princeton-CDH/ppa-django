@@ -3,6 +3,29 @@
 CHANGELOG
 =========
 
+3.9
+----
+
+public site:
+
+* As a user, I want items with the same title and author to be collapsed automatically so that my search isn't clouded by repetitive results.
+* As a user, when I see a group of editions in my search results, I want an option to search within all editions.
+* As a user viewing a digitized work that's available in other editions, I want to know that other editions are available and have easy access to search across them.
+
+admin: 
+
+* As an admin, I want to see work clusters on digitized work list view so that I can search for and see collapsed versions at a glance.
+* As an admin, I want to see and edit work clusters so that I can collapse and uncollapse texts after developer-assisted import.
+
+other:
+
+* As a developer, I want a way to easily index all pages for one or more specific digitized works, so I can update page index data without reindexing all pages.
+* Completed transition from mysql to psql (removed mysql from python dependencies, unit test matrix, ansible variables)
+* Upgraded python from 3.6 to 3.9
+* Switched from stdlib multiprocessing to multiprocess (https://github.com/uqfoundation/multiprocess) to fix multiprocessing errors on index_pages for M1 chip macs
+* Ansible playbooks updated to deploy via nginx rather than apache
+
+
 3.8.1
 -----
 
