@@ -22,6 +22,7 @@ class SelectDisabledMixin(object):
     def create_option(
         self, name, value, label, selected, index, subindex=None, attrs=None
     ):
+        """Overide option creation to optionally disable specified values"""
         disabled = None
 
         if isinstance(label, dict):
@@ -361,7 +362,6 @@ class SearchForm(forms.Form):
             # but options should be disabled if not present at all
             # (i.e. no works are associated with that collection in Solr)
             if formfield == "collections":
-
                 new_choice = []
                 for choice in self.fields[formfield].widget.choices:
                     # widget choice is tuple of id, name; check for name in facets
