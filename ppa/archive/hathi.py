@@ -309,11 +309,11 @@ class HathiObject:
         parts = pairtree_obj.list_parts(self.content_dir)
         # find the first zipfile in the list (should only be one)
         filepaths = [part for part in parts if part.endswith(ext)]
-        return (
-            os.path.join(pairtree_obj.id_to_dirpath(), self.content_dir, filepaths[0])
-            if filepaths
-            else None
-        )
+        if not filepaths: 
+            # An error has occurred -- there is no zip file here in parts
+            raise storage_exceptions.PartNotFoundException
+        return os.path.join(pairtree_obj.id_to_dirpath(), self.content_dir, filepaths[0])
+
         
     def zipfile_path(self, ptree_client=None):
         """path to zipfile within the hathi contents for this work"""

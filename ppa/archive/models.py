@@ -1088,34 +1088,39 @@ class Page(Indexable):
         # to collapse works and pages that belong together
 
         # read zipfile contents in place, without unzipping
-        zpath=digwork.hathi.zipfile_path()
-        if zpath:
-            with ZipFile(zpath) as ht_zip:
-                # yield a generator of index data for each page; iterate
-                # over pages in METS structmap
-                for i, page in enumerate(mmets.structmap_pages, 1):
-                    # if the document has a page range defined, skip any pages not in range
-                    if page_span and i not in page_span:
-                        continue
-                    # zipfile spec uses / for path regardless of OS
-                    pagefilename = "/".join(
-                        [digwork.hathi.content_dir, page.text_file_location]
-                    )
-                    with ht_zip.open(pagefilename) as pagefile:
-                        try:
-                            yield {
-                                "id": "%s.%s" % (digwork_index_id, page.text_file.sequence),
-                                "source_id": digwork.source_id,
-                                "group_id_s": digwork_index_id,  # for grouping with work record
-                                "cluster_id_s": digwork.index_cluster_id,  # for grouping with cluster
-                                "content": pagefile.read().decode("utf-8"),
-                                "order": page.order,
-                                "label": page.display_label,
-                                "tags": page.label.split(", ") if page.label else [],
-                                "item_type": "page",
-                            }
-                        except StopIteration:
-                            return
+        try:
+            zpath=digwork.hathi.zipfile_path()
+        except storage_exceptions.PartNotFoundException:
+            # missing file inside pairtree for this
+            logging.error(f'Missing pairtree data for: {digwork}')
+            return
+    
+        with ZipFile(zpath) as ht_zip:
+            # yield a generator of index data for each page; iterate
+            # over pages in METS structmap
+            for i, page in enumerate(mmets.structmap_pages, 1):
+                # if the document has a page range defined, skip any pages not in range
+                if page_span and i not in page_span:
+                    continue
+                # zipfile spec uses / for path regardless of OS
+                pagefilename = "/".join(
+                    [digwork.hathi.content_dir, page.text_file_location]
+                )
+                with ht_zip.open(pagefilename) as pagefile:
+                    try:
+                        yield {
+                            "id": "%s.%s" % (digwork_index_id, page.text_file.sequence),
+                            "source_id": digwork.source_id,
+                            "group_id_s": digwork_index_id,  # for grouping with work record
+                            "cluster_id_s": digwork.index_cluster_id,  # for grouping with cluster
+                            "content": pagefile.read().decode("utf-8"),
+                            "order": page.order,
+                            "label": page.display_label,
+                            "tags": page.label.split(", ") if page.label else [],
+                            "item_type": "page",
+                        }
+                    except StopIteration:
+                        return
 
     @classmethod
     def gale_page_index_data(cls, digwork, gale_record=None):
