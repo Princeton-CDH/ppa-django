@@ -73,7 +73,7 @@ Initial setup and installation:
   and configure **SOLR_CONNECTIONS** in local settings with your
   preferred core/collection name and the configset name you created.
 
-  See developer notes for setup instructions for using docker with `solr:6` image.
+  See developer notes for setup instructions for using docker with `solr:8.4` image.
 
 - Bulk import (*provisional*): requires a local copy of HathiTrust data as
   pairtree provided by rsync.  Configure the path in `localsettings.py`
