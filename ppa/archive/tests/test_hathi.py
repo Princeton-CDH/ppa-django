@@ -290,7 +290,11 @@ class TestHathiObject:
             mock_ptree_obj_meth.assert_called_with(ptree_client=my_ptree_client)
 
             # test broken zipfile path
-            mock_ptree_obj.list_parts.return_value = [fn for fn in contents if not fn.endswith('.zip')]
+            mock_ptree_obj.list_parts.return_value = [
+                fn
+                for fn in contents
+                if not fn.endswith('.zip')
+            ]
             # assert that it raises this exception
             with pytest.raises(storage_exceptions.PartNotFoundException):   
                 hobj.zipfile_path(my_ptree_client)
