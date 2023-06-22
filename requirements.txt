@@ -4,7 +4,7 @@ pucas>=0.8
 parasolr>=0.9
 pairtree
 py-flags
-pymarc>=5.1
+pymarc
 cached_property
 django-apptemplates
 progressbar2

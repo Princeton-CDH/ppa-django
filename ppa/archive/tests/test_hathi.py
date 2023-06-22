@@ -7,7 +7,9 @@ from unittest.mock import Mock, patch
 import pymarc
 import pytest
 import requests
+import requests_oauthlib
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, override_settings
 from eulxml.xmlmap import load_xmlobject_from_file
 from pairtree import pairtree_client, pairtree_path, storage_exceptions
@@ -20,6 +22,7 @@ FIXTURES_PATH = os.path.join(settings.BASE_DIR, "ppa", "archive", "fixtures")
 
 @patch("ppa.archive.hathi.requests")
 class TestHathiBibliographicAPI(TestCase):
+
     bibdata = os.path.join(FIXTURES_PATH, "bibdata_brief_njp.32101013082597.json")
 
     def test_brief_record(self, mockrequests):
@@ -98,8 +101,7 @@ class TestHathiBibliographicRecord(TestCase):
         assert record.record_id == "008883512"
         assert (
             record.title
-            == "Lectures on the literature of the age of Elizabeth, "
-            + "and Characters of Shakespear's plays,"
+            == "Lectures on the literature of the age of Elizabeth, and Characters of Shakespear's plays,"
         )
         assert record.pub_dates == ["1882"]
         copy_details = record.copy_details("njp.32101013082597")
@@ -113,8 +115,7 @@ class TestHathiBibliographicRecord(TestCase):
         assert record.record_id == "008883512"
         assert (
             record.title
-            == "Lectures on the literature of the age of Elizabeth, and "
-            + "Characters of Shakespear's plays,"
+            == "Lectures on the literature of the age of Elizabeth, and Characters of Shakespear's plays,"
         )
         assert record.pub_dates == ["1882"]
         copy_details = record.copy_details("njp.32101013082597")
@@ -131,7 +132,7 @@ class TestHathiBibliographicRecord(TestCase):
     def test_marcxml(self):
         record = self.record
         assert isinstance(record.marcxml, pymarc.Record)
-        assert record.marcxml.author == "Hazlitt, William, 1778-1830."
+        assert record.marcxml.author() == "Hazlitt, William, 1778-1830."
 
         # test no marcxml in data, e.g. brief record
         assert self.brief_record.marcxml is None
@@ -218,6 +219,7 @@ class TestHathiBaseAPI(TestCase):
 
 
 class TestHathiObject:
+
     ht_tempdir = tempfile.TemporaryDirectory(prefix="ht_text_pd")
 
     def test_pairtree_prefix(self):
@@ -248,8 +250,10 @@ class TestHathiObject:
             hobj.pairtree_id, create_if_doesnt_exist=False
         )
         # object returned
-        mock_ptree_client = mock_pairtree_client.PairtreeStorageClient
-        assert ptree_obj == mock_ptree_client.return_value.get_object.return_value
+        assert (
+            ptree_obj
+            == mock_pairtree_client.PairtreeStorageClient.return_value.get_object.return_value
+        )
 
         # test passing in existing pairtree client
         mock_pairtree_client.reset_mock()
@@ -324,7 +328,7 @@ class TestHathiObject:
             hobj.delete_pairtree_data()
             # should initialize client
             mock_pairtree_client.assert_called()
-            # should call delete object
+            # should call delete boject
             mock_pairtree_client.return_value.delete_object.assert_called_with(
                 hobj.pairtree_id
             )

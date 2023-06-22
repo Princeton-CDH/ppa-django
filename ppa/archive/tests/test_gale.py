@@ -101,7 +101,7 @@ class TestGaleAPI(TestCase):
         ok_response.elapsed.total_seconds.return_value = 3
 
         gale_api.session.get.side_effect = [unauth_response, ok_response]
-        gale_api._make_request("foo", requires_api_key=True)
+        resp = gale_api._make_request("foo", requires_api_key=True)
         # should be called twice: once for initial request, then for retry
         assert mock_get_api_key.call_count == 2
         gale_api.session.get.assert_any_call(
@@ -115,7 +115,7 @@ class TestGaleAPI(TestCase):
         # retry should preserve parameters and streaming option
         gale_api.session.reset_mock()
         gale_api.session.get.side_effect = [unauth_response, ok_response]
-        gale_api._make_request(
+        resp = gale_api._make_request(
             "foo", params={"bar": "baz"}, stream=True, requires_api_key=True
         )
         gale_api.session.get.assert_any_call(
@@ -137,7 +137,7 @@ class TestGaleAPI(TestCase):
         gale_api.session.reset_mock()
         gale_api.session.get.side_effect = [unauth_response, ok_response]
         with pytest.raises(gale.GaleUnauthorized):
-            gale_api._make_request("foo", requires_api_key=False)
+            resp = gale_api._make_request("foo", requires_api_key=False)
         # should not get a new key; should only make the request once
         mock_get_api_key.assert_not_called()
         assert gale_api.session.get.call_count == 1
@@ -147,7 +147,7 @@ class TestGaleAPI(TestCase):
         gale_api.session.reset_mock()
         gale_api.session.get.side_effect = [unauth_response, ok_response]
         with pytest.raises(gale.GaleUnauthorized):
-            gale_api._make_request("foo", requires_api_key=True, retry=1)
+            resp = gale_api._make_request("foo", requires_api_key=True, retry=1)
         # should not get a new key; should only make the request once
         mock_get_api_key.assert_not_called()
         assert gale_api.session.get.call_count == 1
@@ -223,7 +223,7 @@ class TestGaleAPI(TestCase):
 @override_settings(MARC_DATA="/path/to/data/marc")
 @patch("ppa.archive.gale.PairtreeStorageFactory")
 def test_get_marc_storage(mock_pairtree_storage_factory):
-    gale.get_marc_storage()
+    mstore = gale.get_marc_storage()
     mock_pairtree_storage_factory.assert_called_with()
     mock_pairtree_storage_factory.return_value.get_store.assert_called_with(
         store_dir=settings.MARC_DATA, uri_base="info:local/"
@@ -244,4 +244,4 @@ def test_get_marc_record(mock_get_marc_storage):
         ptree_obj.get_bytestream.assert_called_with("marc.dat", streamable=True)
 
         # confirm we loaded the MARC record and can read it
-        assert record.title == "Cross-platform Perl /"
+        assert record.title() == "Cross-platform Perl /"

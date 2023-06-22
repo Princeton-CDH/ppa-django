@@ -634,8 +634,8 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         # definite article.
         # Also strip punctuation, since MARC only includes it in
         # non-sort count when there is a definite article.
-        field_data["sort_title"] = marc_record.title[non_sort:].strip(' "[')
-        field_data["author"] = marc_record.author or ""
+        field_data["sort_title"] = marc_record.title()[non_sort:].strip(' "[')
+        field_data["author"] = marc_record.author() or ""
         # remove a note present on some records and strip whitespace
         field_data["author"] = (
             field_data["author"].replace("[from old catalog]", "").strip()
@@ -672,7 +672,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 
         # Gale/ECCO dates may include non-numeric, e.g. MDCCLXXXVIII. [1788]
         # try as numeric first, then extract year with regex
-        pubdate = marc_record.pubyear
+        pubdate = marc_record.pubyear()
         # at least one case returns None here,
         # which results in a TypeError on attemped conversion to integer
         if pubdate:
