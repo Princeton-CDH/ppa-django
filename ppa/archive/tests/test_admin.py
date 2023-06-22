@@ -2,15 +2,15 @@ from unittest.mock import Mock, patch
 
 from django.contrib.admin.sites import AdminSite
 from django.http import HttpResponseRedirect
-from django.test import RequestFactory, TestCase, override_settings
+from django.test import RequestFactory, TestCase
 from django.urls import reverse
+from pytest_django.asserts import assertContains, assertTemplateUsed
 
 from ppa.archive.admin import DigitizedWorkAdmin
 from ppa.archive.models import Collection, DigitizedWork, ProtectedWorkFieldFlags
 
 
 class TestDigitizedWorkAdmin(TestCase):
-
     fixtures = ["sample_digitized_works"]
 
     def setUp(self):
@@ -169,3 +169,15 @@ class TestDigitizedWorkAdmin(TestCase):
                 "Suppressed 0 digitized works. Skipped %d (already suppressed)."
                 % len(all_ids),
             )
+
+
+def test_digitizedwork_listview(admin_client):
+    digwork_list_url = reverse("admin:archive_digitizedwork_changelist")
+    response = admin_client.get(digwork_list_url)
+    assert response.status_code == 200
+    # confirm that link to import url is present
+    assertContains(response, reverse("admin:import"))
+    # confirm that local object tools template is used
+    assertTemplateUsed(
+        response, "admin/archive/digitizedwork/change_list_object_tools.html"
+    )
