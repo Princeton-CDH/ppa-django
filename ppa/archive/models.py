@@ -1088,7 +1088,14 @@ class Page(Indexable):
         # to collapse works and pages that belong together
 
         # read zipfile contents in place, without unzipping
-        with ZipFile(digwork.hathi.zipfile_path()) as ht_zip:
+        try:
+            zpath=digwork.hathi.zipfile_path()
+        except storage_exceptions.PartNotFoundException:
+            # missing file inside pairtree for this
+            logging.error(f'Missing pairtree data for: {digwork}')
+            return
+    
+        with ZipFile(zpath) as ht_zip:
             # yield a generator of index data for each page; iterate
             # over pages in METS structmap
             for i, page in enumerate(mmets.structmap_pages, 1):
