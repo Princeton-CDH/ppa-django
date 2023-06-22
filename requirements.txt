@@ -4,7 +4,8 @@ pucas>=0.8
 parasolr>=0.9
 pairtree
 py-flags
-pymarc
+# pymarc 5+ has incompatible changes
+pymarc<5.0
 cached_property
 django-apptemplates
 progressbar2
