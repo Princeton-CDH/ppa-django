@@ -1,25 +1,21 @@
 import logging
-import os.path
 import re
 import time
 from zipfile import ZipFile
 
-import requests
 from cached_property import cached_property
 from django.conf import settings
-from django.conf.urls import url
 from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.core.validators import RegexValidator
 from django.db import models
 from django.urls import reverse
 from eulxml.xmlmap import load_xmlobject_from_file
 from flags import Flags
 from intspan import ParseError as IntSpanParseError
 from intspan import intspan
-from pairtree import pairtree_client, pairtree_path, storage_exceptions
+from pairtree import storage_exceptions
 from parasolr.django import SolrQuerySet
 from parasolr.django.indexing import ModelIndexable
 from parasolr.indexing import Indexable
@@ -391,12 +387,14 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         max_length=1,
         choices=ITEMTYPE_CHOICES,
         default=FULL,
-        help_text="Portion of the work that is included; used to determine icon for public display.",
+        help_text="Portion of the work that is included; "
+        + "used to determine icon for public display.",
     )
     #: book or journal title for excerpt or article
     book_journal = models.TextField(
         "Book/Journal title",
-        help_text="title of the book or journal that includes this content (excerpt/article only)",
+        help_text="title of the book or journal that includes "
+        + "this content (excerpt/article only)",
         blank=True,
     )
     pages_orig = models.CharField(
@@ -438,7 +436,8 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         return reverse("archive:detail", kwargs=url_opts)
 
     def __str__(self):
-        """Default string display. Uses :attr:`source_id` and :attr:`pages_digital` if any"""
+        """Default string display. Uses :attr:`source_id`
+        and :attr:`pages_digital` if any"""
         if self.pages_digital:
             return "%s (%s)" % (self.source_id, self.pages_digital)
         return self.source_id
@@ -446,14 +445,14 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
     @property
     def index_cluster_id(self):
         """
-        Convenience function to get a string representation of the cluster (or self if no cluster).
-        Reduces redunadancy elsewhere.
+        Convenience function to get a string representation of the cluster
+        (or self if no cluster). Reduces redunadancy elsewhere.
         """
         return str(self.cluster) if self.cluster else self.index_id()
 
     def clean_fields(self, exclude=None):
         if not exclude or "pages_digital" not in exclude:
-            # normalize whitespace in pages digital field before applying regex validation
+            # normalize whitespace before applying regex validation
             self.pages_digital = " ".join(self.pages_digital.strip().split())
         super().clean_fields(exclude=exclude)
 
@@ -635,8 +634,8 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         # definite article.
         # Also strip punctuation, since MARC only includes it in
         # non-sort count when there is a definite article.
-        field_data["sort_title"] = marc_record.title()[non_sort:].strip(' "[')
-        field_data["author"] = marc_record.author() or ""
+        field_data["sort_title"] = marc_record.title[non_sort:].strip(' "[')
+        field_data["author"] = marc_record.author or ""
         # remove a note present on some records and strip whitespace
         field_data["author"] = (
             field_data["author"].replace("[from old catalog]", "").strip()
@@ -673,7 +672,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 
         # Gale/ECCO dates may include non-numeric, e.g. MDCCLXXXVIII. [1788]
         # try as numeric first, then extract year with regex
-        pubdate = marc_record.pubyear()
+        pubdate = marc_record.pubyear
         # at least one case returns None here,
         # which results in a TypeError on attemped conversion to integer
         if pubdate:
@@ -1111,8 +1110,10 @@ class Page(Indexable):
                         yield {
                             "id": "%s.%s" % (digwork_index_id, page.text_file.sequence),
                             "source_id": digwork.source_id,
-                            "group_id_s": digwork_index_id,  # for grouping with work record
-                            "cluster_id_s": digwork.index_cluster_id,  # for grouping with cluster
+                            # for grouping with work record
+                            "group_id_s": digwork_index_id,
+                            # for grouping with cluster
+                            "cluster_id_s": digwork.index_cluster_id,
                             "content": pagefile.read().decode("utf-8"),
                             "order": page.order,
                             "label": page.display_label,
