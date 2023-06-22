@@ -1,11 +1,11 @@
-from django.conf.urls import url
+from django.urls import re_path
 from django.contrib import admin
 from django.db.models import Count
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from import_export import fields, resources, widgets
+from import_export import fields, resources
 from import_export.admin import ExportActionMixin, ExportMixin
 from parasolr.django import SolrClient
 
@@ -256,7 +256,7 @@ class DigitizedWorkAdmin(ExportActionMixin, ExportMixin, admin.ModelAdmin):
         """Add url for import admin form"""
         urls = super(DigitizedWorkAdmin, self).get_urls()
         my_urls = [
-            url(
+            re_path(
                 r"^import/$",
                 self.admin_site.admin_view(ImportView.as_view()),
                 name="import",

@@ -1,6 +1,6 @@
-django>=3.2,<4.0
+django>=4.0,<4.1
 django-cas-ng
-pucas>=0.6
+pucas>=0.8
 parasolr>=0.9
 pairtree
 py-flags
