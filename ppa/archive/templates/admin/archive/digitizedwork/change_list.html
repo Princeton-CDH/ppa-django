@@ -1,9 +1,0 @@
-{# extend import-export template to get export all button  #}
-{% extends 'admin/import_export/change_list_export.html' %}
-
-{% block object-tools-items %}
-    {% if perms.archive.add_digitizedwork %}
-    <li><a class="addlink" href="{% url 'admin:import' %}">Import</a></li>
-    {% endif %}
-    {{ block.super }}
-{% endblock %}

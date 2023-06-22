@@ -18,11 +18,11 @@ def test_dict_item():
     # no error on not found
     assert dict_item({}, "foo") is None
     # string key
-    assert dict_item({"foo": "bar"}, "foo") is "bar"
+    assert dict_item({"foo": "bar"}, "foo") == "bar"
     # integer key
-    assert dict_item({13: "lucky"}, 13) is "lucky"
+    assert dict_item({13: "lucky"}, 13) == "lucky"
     # integer value
-    assert dict_item({13: 7}, 13) is 7
+    assert dict_item({13: 7}, 13) == 7
 
 
 def test_querystring_replace():

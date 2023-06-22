@@ -20,4 +20,4 @@ def test_split_marc(tmpdir):
         # just test retrieval based on test id set as 001 in the marc record
         record = get_marc_record("fol05882032")
         assert isinstance(record, pymarc.Record)
-        assert record.title() == "Cross-platform Perl /"
+        assert record.title == "Cross-platform Perl /"

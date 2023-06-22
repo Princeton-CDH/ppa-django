@@ -42,7 +42,7 @@ contains the most recent release, and work in progress will be on the **develop*
 Pull requests should be made against develop.
 
 
-Python 3.6 / Django 3.2 / Node 16.15 / Postgresql 13 / Solr 8
+Python 3.9 / Django 4.0 / Node 16.15 / Postgresql 13 / Solr 8
 
 
 Development instructions
@@ -183,7 +183,7 @@ If you plan to contribute to this repository, please run the following command:
 
     pre-commit install
 
-This will add a pre-commit hook to automatically style your python code with `black <https://github.com/psf/black>`_ and sort your imports with `isort <https://pycqa.github.io/isort/>`_.
+This will add a pre-commit hook to automatically style and clean python code with `black <https://github.com/psf/black>`_ and `ruff <https://beta.ruff.rs/docs/>`_.
 
 Because these styling conventions were instituted after multiple releases of development on this project, ``git blame`` may not reflect the true author of a given line. In order to see a more accurate ``git blame`` execute the following command:
 
