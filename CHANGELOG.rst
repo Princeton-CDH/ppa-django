@@ -3,6 +3,14 @@
 CHANGELOG
 =========
 
+3.9.1
+-----
+
+- update to Django 4.0 
+- improved error handling for hathi pairtree indexing 
+- bugfix: restore admin digitized work import and export buttons
+
+
 3.9
 ----
 
