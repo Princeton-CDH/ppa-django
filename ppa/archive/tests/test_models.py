@@ -3,6 +3,7 @@ import os.path
 import types
 from datetime import date, timedelta
 from time import sleep
+from unittest import mock
 from unittest.mock import Mock, patch
 from zipfile import ZipFile
 
@@ -161,6 +162,7 @@ class TestDigitizedWork(TestCase):
         assert digwork.hathi is None
 
     def test_compare_protected_fields(self):
+
         digwork = DigitizedWork(
             source_id="testid",
             title="Fake Title",
@@ -236,7 +238,7 @@ class TestDigitizedWork(TestCase):
         # fixture has indicator 0, no non-sort characters
         assert digwork.sort_title == " ".join([digwork.title, digwork.subtitle])
         # authors should have trailing period removed
-        assert digwork.author == full_bibdata.marcxml.author.rstrip(".")
+        assert digwork.author == full_bibdata.marcxml.author().rstrip(".")
         # comma should be stripped from publication place and publisher
         assert digwork.pub_place == full_bibdata.marcxml["260"]["a"].strip(",")
         assert digwork.publisher == full_bibdata.marcxml["260"]["b"].strip(",")
@@ -651,7 +653,7 @@ class TestDigitizedWork(TestCase):
         work = DigitizedWork.objects.create(
             source=DigitizedWork.OTHER, source_id="12345"
         )
-        work.index_id()
+        index_id = work.index_id()
         with patch.object(work, "remove_from_index") as mock_rm_from_index:
             work.pages_digital = "12-300"
             work.save()
@@ -735,6 +737,7 @@ class TestDigitizedWork(TestCase):
     @patch("ppa.archive.models.DigitizedWork.populate_from_bibdata")
     @patch("ppa.archive.models.HathiBibliographicAPI")
     def test_add_from_hathi(self, mock_hathibib_api, mock_pop_from_bibdata):
+
         script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
 
         # add new with default opts
@@ -935,8 +938,9 @@ class TestPage(TestCase):
         mockzip_obj.namelist.return_value = page_files
         # simulate reading zip file contents
         contents = ("page content for one", "hello! pshaw! what?")
-        mockzip_open_enter = mockzip_obj.open.return_value.__enter__
-        mockzip_open_enter.return_value.read.return_value.decode.side_effect = contents
+        mockzip_obj.open.return_value.__enter__.return_value.read.return_value.decode.side_effect = (
+            contents
+        )
 
         work = DigitizedWork(source_id="chi.79279237")
 
@@ -970,8 +974,7 @@ class TestPage(TestCase):
             mockzip_obj.namelist.return_value = page_files
             # simulate reading zip file contents
             contents = ("page content for one", "hello! pshaw! what?")
-            mockzip_open_enter = mockzip_obj.open.return_value.__enter__
-            mockzip_open_enter.return_value.read.return_value.decode.side_effect = (
+            mockzip_obj.open.return_value.__enter__.return_value.read.return_value.decode.side_effect = (
                 contents
             )
             page_data = list(Page.page_index_data(excerpt))
