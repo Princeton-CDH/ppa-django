@@ -46,7 +46,7 @@ jobs:
         ports:
           - 5432:5432
       solr:
-        image: solr:8.6
+        image: solr:8.4
         ports:
           - 8983:8983
     steps:

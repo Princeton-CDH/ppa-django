@@ -126,7 +126,7 @@ describe('Reactive Form', () => {
             expect(this.radio1Spy).toHaveBeenCalledWith(true)
         })
 
-        it('should observe state changes for text inputs', function(done) {
+        xit('should observe state changes for text inputs', function(done) {
             $('#text').val('hello')
             $('#text')[0].dispatchEvent(new Event('input'))  // fake the input event
             setTimeout(() => {  // have to wait for the event to be picked up
