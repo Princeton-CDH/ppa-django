@@ -1,11 +1,10 @@
-
 <!DOCTYPE html>
 
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ppa.archive.models &#8212; Princeton Prosody Archive 3.9-0 documentation</title>
+    <title>ppa.archive.models &#8212; Princeton Prosody Archive 3.9.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
     <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
@@ -31,27 +30,23 @@
             
   <h1>Source code for ppa.archive.models</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">os.path</span>
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">from</span> <span class="nn">zipfile</span> <span class="kn">import</span> <span class="n">ZipFile</span>
 
-<span class="kn">import</span> <span class="nn">requests</span>
 <span class="kn">from</span> <span class="nn">cached_property</span> <span class="kn">import</span> <span class="n">cached_property</span>
 <span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
-<span class="kn">from</span> <span class="nn">django.conf.urls</span> <span class="kn">import</span> <span class="n">url</span>
 <span class="kn">from</span> <span class="nn">django.contrib.admin.models</span> <span class="kn">import</span> <span class="n">ADDITION</span><span class="p">,</span> <span class="n">CHANGE</span><span class="p">,</span> <span class="n">LogEntry</span>
 <span class="kn">from</span> <span class="nn">django.contrib.auth.models</span> <span class="kn">import</span> <span class="n">User</span>
 <span class="kn">from</span> <span class="nn">django.contrib.contenttypes.models</span> <span class="kn">import</span> <span class="n">ContentType</span>
 <span class="kn">from</span> <span class="nn">django.core.exceptions</span> <span class="kn">import</span> <span class="n">ValidationError</span>
-<span class="kn">from</span> <span class="nn">django.core.validators</span> <span class="kn">import</span> <span class="n">RegexValidator</span>
 <span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
 <span class="kn">from</span> <span class="nn">django.urls</span> <span class="kn">import</span> <span class="n">reverse</span>
 <span class="kn">from</span> <span class="nn">eulxml.xmlmap</span> <span class="kn">import</span> <span class="n">load_xmlobject_from_file</span>
 <span class="kn">from</span> <span class="nn">flags</span> <span class="kn">import</span> <span class="n">Flags</span>
 <span class="kn">from</span> <span class="nn">intspan</span> <span class="kn">import</span> <span class="n">ParseError</span> <span class="k">as</span> <span class="n">IntSpanParseError</span>
 <span class="kn">from</span> <span class="nn">intspan</span> <span class="kn">import</span> <span class="n">intspan</span>
-<span class="kn">from</span> <span class="nn">pairtree</span> <span class="kn">import</span> <span class="n">pairtree_client</span><span class="p">,</span> <span class="n">pairtree_path</span><span class="p">,</span> <span class="n">storage_exceptions</span>
+<span class="kn">from</span> <span class="nn">pairtree</span> <span class="kn">import</span> <span class="n">storage_exceptions</span>
 <span class="kn">from</span> <span class="nn">parasolr.django</span> <span class="kn">import</span> <span class="n">SolrQuerySet</span>
 <span class="kn">from</span> <span class="nn">parasolr.django.indexing</span> <span class="kn">import</span> <span class="n">ModelIndexable</span>
 <span class="kn">from</span> <span class="nn">parasolr.indexing</span> <span class="kn">import</span> <span class="n">Indexable</span>
@@ -423,12 +418,14 @@
         <span class="n">max_length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">choices</span><span class="o">=</span><span class="n">ITEMTYPE_CHOICES</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="n">FULL</span><span class="p">,</span>
-        <span class="n">help_text</span><span class="o">=</span><span class="s2">&quot;Portion of the work that is included; used to determine icon for public display.&quot;</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">&quot;Portion of the work that is included; &quot;</span>
+        <span class="o">+</span> <span class="s2">&quot;used to determine icon for public display.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="c1">#: book or journal title for excerpt or article</span>
     <span class="n">book_journal</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span>
         <span class="s2">&quot;Book/Journal title&quot;</span><span class="p">,</span>
-        <span class="n">help_text</span><span class="o">=</span><span class="s2">&quot;title of the book or journal that includes this content (excerpt/article only)&quot;</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">&quot;title of the book or journal that includes &quot;</span>
+        <span class="o">+</span> <span class="s2">&quot;this content (excerpt/article only)&quot;</span><span class="p">,</span>
         <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">pages_orig</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
@@ -470,7 +467,8 @@
         <span class="k">return</span> <span class="n">reverse</span><span class="p">(</span><span class="s2">&quot;archive:detail&quot;</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="n">url_opts</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Default string display. Uses :attr:`source_id` and :attr:`pages_digital` if any&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Default string display. Uses :attr:`source_id`</span>
+<span class="sd">        and :attr:`pages_digital` if any&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pages_digital</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pages_digital</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_id</span>
@@ -478,14 +476,14 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">index_cluster_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Convenience function to get a string representation of the cluster (or self if no cluster).</span>
-<span class="sd">        Reduces redunadancy elsewhere.</span>
+<span class="sd">        Convenience function to get a string representation of the cluster</span>
+<span class="sd">        (or self if no cluster). Reduces redunadancy elsewhere.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_id</span><span class="p">()</span>
 
 <div class="viewcode-block" id="DigitizedWork.clean_fields"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWork.clean_fields">[docs]</a>    <span class="k">def</span> <span class="nf">clean_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">exclude</span> <span class="ow">or</span> <span class="s2">&quot;pages_digital&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">:</span>
-            <span class="c1"># normalize whitespace in pages digital field before applying regex validation</span>
+            <span class="c1"># normalize whitespace before applying regex validation</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pages_digital</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pages_digital</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">clean_fields</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="n">exclude</span><span class="p">)</span></div>
 
@@ -1120,7 +1118,14 @@
         <span class="c1"># to collapse works and pages that belong together</span>
 
         <span class="c1"># read zipfile contents in place, without unzipping</span>
-        <span class="k">with</span> <span class="n">ZipFile</span><span class="p">(</span><span class="n">digwork</span><span class="o">.</span><span class="n">hathi</span><span class="o">.</span><span class="n">zipfile_path</span><span class="p">())</span> <span class="k">as</span> <span class="n">ht_zip</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">zpath</span><span class="o">=</span><span class="n">digwork</span><span class="o">.</span><span class="n">hathi</span><span class="o">.</span><span class="n">zipfile_path</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">storage_exceptions</span><span class="o">.</span><span class="n">PartNotFoundException</span><span class="p">:</span>
+            <span class="c1"># missing file inside pairtree for this</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Missing pairtree data for: </span><span class="si">{</span><span class="n">digwork</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+    
+        <span class="k">with</span> <span class="n">ZipFile</span><span class="p">(</span><span class="n">zpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">ht_zip</span><span class="p">:</span>
             <span class="c1"># yield a generator of index data for each page; iterate</span>
             <span class="c1"># over pages in METS structmap</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">page</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mmets</span><span class="o">.</span><span class="n">structmap_pages</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
@@ -1136,8 +1141,10 @@
                         <span class="k">yield</span> <span class="p">{</span>
                             <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">digwork_index_id</span><span class="p">,</span> <span class="n">page</span><span class="o">.</span><span class="n">text_file</span><span class="o">.</span><span class="n">sequence</span><span class="p">),</span>
                             <span class="s2">&quot;source_id&quot;</span><span class="p">:</span> <span class="n">digwork</span><span class="o">.</span><span class="n">source_id</span><span class="p">,</span>
-                            <span class="s2">&quot;group_id_s&quot;</span><span class="p">:</span> <span class="n">digwork_index_id</span><span class="p">,</span>  <span class="c1"># for grouping with work record</span>
-                            <span class="s2">&quot;cluster_id_s&quot;</span><span class="p">:</span> <span class="n">digwork</span><span class="o">.</span><span class="n">index_cluster_id</span><span class="p">,</span>  <span class="c1"># for grouping with cluster</span>
+                            <span class="c1"># for grouping with work record</span>
+                            <span class="s2">&quot;group_id_s&quot;</span><span class="p">:</span> <span class="n">digwork_index_id</span><span class="p">,</span>
+                            <span class="c1"># for grouping with cluster</span>
+                            <span class="s2">&quot;cluster_id_s&quot;</span><span class="p">:</span> <span class="n">digwork</span><span class="o">.</span><span class="n">index_cluster_id</span><span class="p">,</span>
                             <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">pagefile</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">),</span>
                             <span class="s2">&quot;order&quot;</span><span class="p">:</span> <span class="n">page</span><span class="o">.</span><span class="n">order</span><span class="p">,</span>
                             <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">page</span><span class="o">.</span><span class="n">display_label</span><span class="p">,</span>
@@ -1248,7 +1255,7 @@
       &copy;2018, CDH @ Princeton University.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
     </div>
