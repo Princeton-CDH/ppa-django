@@ -1,5 +1,7 @@
 from datetime import date
 
+from django.core.validators import RegexValidator
+from django.db import models
 from django.http import Http404
 from wagtail.admin.edit_handlers import FieldPanel, StreamFieldPanel
 from wagtail.core.fields import RichTextField, StreamField
@@ -82,6 +84,11 @@ class EditorialIndexPage(Page):
             return super().route(request, path_components)
 
 
+validate_doi = RegexValidator(
+    regex=r"^10[.][0-9]{4,}", message="DOI in short form, starting with 10."
+)
+
+
 class EditorialPage(Page, PagePreviewDescriptionMixin):
     """Editorial page, for scholarly, educational, or other essay-like
     content related to the site"""
@@ -94,9 +101,30 @@ class EditorialPage(Page, PagePreviewDescriptionMixin):
         blank=True,
         help_text="Select or create people snippets to add as authors.",
     )
+    editors = StreamField(
+        [("editor", SnippetChooserBlock(Person))],
+        blank=True,
+        help_text="Select or create people snippets to add as editors.",
+    )
+    doi = models.CharField(
+        "DOI",
+        blank=True,
+        max_length=255,
+        help_text="Digital Object Identifier (DOI) if registered, in short form",
+        validators=[validate_doi],
+    )
+    pdf = models.URLField(
+        "PDF URL",
+        blank=True,
+        max_length=255,
+        help_text="URL for a PDF of this article, if available",
+    )
     content_panels = Page.content_panels + [
         FieldPanel("description"),
         StreamFieldPanel("authors"),
+        StreamFieldPanel("editors"),
+        FieldPanel("doi"),
+        FieldPanel("pdf"),
         StreamFieldPanel("body"),
     ]
 
@@ -118,7 +146,8 @@ class EditorialPage(Page, PagePreviewDescriptionMixin):
                 parent.url_path, post_date.strftime("%Y/%m"), self.slug
             )
         else:
-            # a page without a parent is the tree root, which always has a url_path of '/'
+            # a page without a parent is the tree root,
+            # which always has a url_path of '/'
             self.url_path = "/"
 
         return self.url_path
