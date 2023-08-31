@@ -32,6 +32,41 @@
 		}
 	}
 
+	/* pdf header/footer content */
+	.print-only {
+	    display: block;
+	    /* hide for pinting in browsers that don't support @page styles */
+	    opacity: 0;
+	}
+
+
+	@page :first {
+	    /* don't display article title on first page */
+	    @top-left {
+	        content: '';
+	    }
+	    @top-right {
+	        content: element(first-page-header);
+	    }
+	}
+
+
+	a.page-header {
+	    position: running(page-header);
+	}
+	a.first-page-header {
+	    position: running(first-page-header);
+	}
+
+	h1.page-title {
+	    position: running(header-title);
+	}
+
+	a.page-doi {
+	    position: running(page-footer);
+	}
+
+
 	html,
 	body,
 	main {
