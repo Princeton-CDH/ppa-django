@@ -17,8 +17,9 @@ module.exports = env => ({
     entry: {
         main: [
             './js/index.js', // main site js
-            './scss/ppa.scss' // main site styles
+            './scss/ppa.scss', // main site styles
         ],
+        print: './scss/print.scss', // print styles
         home: './js/home.js', // homepage (parallax)
         search: './js/search.js', // scripts & styles for search page
         searchWithin: './ts/searchWithin.ts', // components & styles for search within work page

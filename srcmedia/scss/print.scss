@@ -1,0 +1,108 @@
+// print styles
+@import "variables";
+
+@media print {
+	@page {
+		size: letter;
+		margin: 0.75in 0.2in 0.57in 0.2in;
+
+		@top-left {
+			content: string(title);
+			font-weight: 300;
+			font-size: 11px;
+			font-family: $pageFont;
+		}
+
+		@top-right {
+			content: element(page-header);
+			opacity: 1;
+		}
+
+		@bottom-left {
+			content: element(page-footer);
+			opacity: 1;
+			font-size: 11px;
+			font-weight: 300;
+		}
+
+		@bottom-right {
+			content: counter(page);
+			font-size: 11px;
+			font-weight: 300;
+		}
+	}
+
+	html,
+	body,
+	main {
+		overflow: visible;
+		height: auto;
+		background: white;
+	}
+
+	main {
+		margin: auto;
+		padding: 0;
+		width: 6in;
+		background: white;
+		font-size: 1rem;
+	}
+
+	h1 {
+		margin: 0 auto 2rem;
+	}
+
+	body.pushable > .pusher {
+		background: white;
+		display: block; // disable flex display
+	}
+
+	.pusher:after {
+		display: none;
+	}
+
+	figure {
+		page-break-inside: avoid;
+	}
+
+	// avoid page break beween heading and paragraph that follows immediately after
+	h2 + p,
+	h3 + p {
+		page-break-before: avoid;
+	}
+
+	#editorial header .meta {
+		font-size: 1rem;
+		display: flex;
+		flex-direction: column;
+		flex-basis: auto;
+
+		a {
+			text-decoration: none;
+		}
+		p {
+			font-size: 1rem;
+		}
+
+		time {
+			&:before {
+				display: none; // suppress slash used for screen
+			}
+		}
+		.pdf {  // hide link to pdf (since this is used to generate pdf)
+			display: none;
+		}
+	}
+
+	// suppress main nav, background banner image, footer
+	#main-nav,
+	.banner,
+	#footer,
+	.ribbon-box {
+		display: none;
+	}
+
+	.ppa-logo {
+		position: running(page-header);
+	}
+}
