@@ -1,6 +1,6 @@
 #editorial {
     @include content-page;
-    
+
     ul li::before {
         background-color: $wisteria; // purple-colored list bullets
     }
@@ -9,7 +9,33 @@
         border-color: $wisteria;
     }
 
-    h1 {
+    header {
         @include underline-headline($wisteria);
+    }
+
+    h1 {
+        // underline headline mixin includes font sizing we need
+        @include underline-headline($wisteria);
+        border-bottom: 0;  // disable redundant border
+    }
+
+    .meta {
+        @include font-scale;
+
+        // separate author and date, doi and pdf by slash
+        .author + time,
+        .doi + .pdf {
+            &:before {
+                content: " / ";
+                text-decoration: none;
+            }
+        }
+        .author {
+            display: inline-block;
+        }
+        p {
+            margin-bottom: 0;
+            @include font-scale;
+        }
     }
 }
