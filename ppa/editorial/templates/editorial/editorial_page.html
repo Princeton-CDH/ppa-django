@@ -29,3 +29,21 @@
 {% block attribution %}
     {% include 'editorial/snippets/attribution.html' with page=page add_urls=True %}
 {% endblock %}
+
+{% block page_footer %}
+    {#* elements for PDF header & footer #}
+    <section class='print-only'>
+        <a class="first-page-header" href="{{ site.domain }}">
+            <img class="ppa-logo" src="{% static 'img/logos/filled/logo-filled-monochrome.svg' %}" alt="Princeton Prosody Archive" />
+        </a>
+
+        <a class="page-header" href="{{ site.domain }}">
+            <img class="ppa-logo" src="{% static 'img/logos/filled/logo-filled-monochrome.svg' %}" alt="Princeton Prosody Archive" />
+        </a>
+
+        {% if page.doi %}
+         <a href="http://doi.org/{{ .page.doi }}" rel="alternate" class="page-doi">doi:{{ page.doi }}</a>
+        {% endif %}
+    </section>
+    {{ block.super }}
+{% endblock %}

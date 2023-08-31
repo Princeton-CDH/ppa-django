@@ -5,3 +5,7 @@
         @include underline-headline($pig-pink);
     }
 }
+
+.print-only {
+    display: none;
+}
