@@ -17,6 +17,7 @@
 {% endif %}
 <time class="pubdate" datetime="{{ page.first_published_at|date:"Y-m-d" }}">{{ page.first_published_at|date:"F j, Y" }}</time>
 
+{% if full %}{# full metadata only displayed on page, not card #}
 {% if page.editors %}
 <p class="editor">Edited by
     {% if add_urls %}
@@ -38,4 +39,5 @@
 {% endif %}
 {% if page.pdf %}
  <a href="{{ page.pdf }}" rel="alternate" class="pdf">PDF</a>
+{% endif %}
 {% endif %}
