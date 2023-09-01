@@ -16,12 +16,22 @@
     h1 {
         // underline headline mixin includes font sizing we need
         @include underline-headline($wisteria);
-        border-bottom: 0;  // disable redundant border
+        border-bottom: 0; // disable redundant border
     }
 
     .meta {
         @include font-scale;
 
+        p {
+            margin-bottom: 0;
+            @include font-scale;
+        }
+    }
+}
+
+#editorial,
+#list-editorial {
+    .meta {
         // separate author and date, doi and pdf by slash
         .author + time,
         .doi + .pdf {
@@ -32,10 +42,6 @@
         }
         .author {
             display: inline-block;
-        }
-        p {
-            margin-bottom: 0;
-            @include font-scale;
         }
     }
 }
