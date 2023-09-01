@@ -2,6 +2,15 @@
 
     article.profile {
         width: 230px;
+        // set each card to span 4 rows
+        // then use subgrid to align the cards with each other
+        grid-row-end: span 4;
+        display: grid;
+        grid-template-rows: subgrid;
+
+        header {
+        	padding-bottom: 0;
+        }
 
         .title {
             display: block;
@@ -17,13 +26,21 @@
             font-size: 1.2rem;
             font-weight: normal;
             padding: 0;
-            margin: 2rem 0 1rem;
+            // margin: 2rem 0 1rem;
+            // subgrid gutter is 1rem
+            margin: 1rem 0 0;
         }
     
-        .rich-text > * {
+        .rich-text > *, .years {
             font-family: $pageFont;
             font-size: 1rem;
             font-weight: normal;
+        }
+
+        .years {
+        	display: block;
+        	margin-top: -1rem;  /* undo title bottom margin */
+        	/* no bottom margin; 1rem subgrid gutter */
         }
 
         img {

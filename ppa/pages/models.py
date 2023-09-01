@@ -25,7 +25,7 @@ class Person(models.Model):
     #: the display name of an individual
     name = models.CharField(
         max_length=255,
-        help_text="Full name for the person as it should appear in the author " "list.",
+        help_text="Full name for the person as it should appear in the author list.",
     )
     #: Optional profile image to be associated with a person
     photo = models.ForeignKey(
@@ -56,6 +56,18 @@ class Person(models.Model):
         blank=True,
         help_text="Project role, if any, for display on contributor list.",
     )
+    #: project years
+    project_years = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Project years, if desired for display on contributor list.",
+    )
+    orcid = models.URLField(
+        "ORCID iD",
+        max_length=255,
+        blank=True,
+        help_text="ORCID url, if available, to include in editorial author citation",
+    )
 
     panels = [
         FieldPanel("name"),
@@ -63,6 +75,8 @@ class Person(models.Model):
         FieldPanel("url"),
         FieldPanel("description"),
         FieldPanel("project_role"),
+        FieldPanel("project_years"),
+        FieldPanel("orcid"),
     ]
 
     def __str__(self):
