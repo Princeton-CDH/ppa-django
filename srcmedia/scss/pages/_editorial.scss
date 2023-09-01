@@ -36,10 +36,13 @@
         .author + time,
         .doi + .pdf {
             &:before {
-                content: " / ";
+                content: "/ ";
                 text-decoration: none;
+                display: inline-block; /* required to prevent underline */
+                padding-right: 0.25em;
             }
         }
+
         .author {
             display: inline-block;
         }
