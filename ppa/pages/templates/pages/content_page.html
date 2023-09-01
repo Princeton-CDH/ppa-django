@@ -21,12 +21,13 @@
 
 {% block content %}
 <article class="ui text container">
-    <h1 class="ui header page-title">
-        {% firstof page.title page_title object.title %}
-        <span class="meta">
+    <header>
+        <h1 class="ui header page-title">
+        {% firstof page.title page_title object.title %}</h1>
+        <div class="meta">
             {% block attribution %}{% endblock %}
-        </span>
-    </h1>
+        </div>
+    </header>
     {% block page_body %}
     {% for block in page.body %}
         {% if block.block_type == 'paragraph' %}
