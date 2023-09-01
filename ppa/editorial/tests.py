@@ -140,15 +140,17 @@ class TestEditorialIndexPage(WagtailPageTests):
             '<a href="%s"' % person_a.url,
             html=True,
         )
-        # the date of the post's publication should be present with slash
+        # the date of the post's publication should be present in readable form
         self.assertContains(
             response,
-            "/ %s" % editorial_with_authors.first_published_at.strftime("%B %-d, %Y"),
+            "%s" % editorial_with_authors.first_published_at.strftime("%B %-d, %Y"),
             count=1,
         )
-        # the date of the post without authors should be present, without slash
+        # present in an attribute in ISO form
         self.assertContains(
-            response, editorial_page.first_published_at.strftime("%B %-d, %Y"), count=1
+            response,
+            "%s" % editorial_with_authors.first_published_at.strftime("%Y-%m-%d"),
+            count=1,
         )
 
 
@@ -175,6 +177,7 @@ class TestEditorialPage(WagtailPageTests):
                     "date": date.today(),
                     "body": streamfield([("paragraph", rich_text("some analysis"))]),
                     "authors": streamfield([]),
+                    "editors": streamfield([]),
                 }
             ),
         )
@@ -193,6 +196,7 @@ class TestEditorialPage(WagtailPageTests):
                     "date": date.today(),
                     "body": streamfield([("paragraph", rich_text("some analysis"))]),
                     "authors": streamfield([("author", foo.pk), ("author", bar.pk)]),
+                    "editors": streamfield([]),
                 }
             ),
         )
@@ -233,14 +237,14 @@ class TestEditorialPage(WagtailPageTests):
         # the date of the post's publication should be present with slash
         self.assertContains(
             response,
-            "/ %s" % editorial_page.first_published_at.strftime("%B %-d, %Y"),
+            editorial_page.first_published_at.strftime("%B %-d, %Y"),
             count=1,
         )
         # the url for person A should be present once
         self.assertContains(response, person_a.url, count=1)
         # check order of authors in the page context
         # should be out of alpha order
-        page = response.context["page"]
+        response.context["page"]
 
         # citation metadata should be set in header
         self.assertContains(
@@ -262,7 +266,8 @@ class TestEditorialPage(WagtailPageTests):
         )
         self.assertContains(
             response,
-            '<meta property="citation_publisher" content="Center for Digital Humanities at Princeton" />',
+            '<meta property="citation_publisher" '
+            + 'content="Center for Digital Humanities at Princeton" />',
             html=True,
         )
         request = RequestFactory().get(editorial_url)
@@ -272,12 +277,24 @@ class TestEditorialPage(WagtailPageTests):
             % request.build_absolute_uri(),
             html=True,
         )
+        # doi and editor not present when not set
+        self.assertNotContains(response, "doi:")
+        self.assertNotContains(response, "Edited by")
+        # add doi, editor, pdf
+        editorial_page.doi = "10.1234/56"
+        editorial_page.pdf = "http://example.com/path/to/some.pdf"
+        # copy authors to editors
+        editorial_page.editors = editorial_page.authors
+        editorial_page.save()
+        response = self.client.get(editorial_url)
+        self.assertContains(response, f"doi:{editorial_page.doi}")
+        self.assertContains(response, f"doi.org/{editorial_page.doi}")
 
         # delete authors
         editorial_page.authors = None
         editorial_page.save()
         response = self.client.get(editorial_url)
-        # each author should be shown once
+        # author should not be shown once
         self.assertNotContains(response, person_a.name)
         self.assertNotContains(response, person_b.name)
         # the date of the post's publication should be present
