@@ -37,6 +37,8 @@
 	    display: block;
 	    /* hide for pinting in browsers that don't support @page styles */
 	    opacity: 0;
+	    height: 0;
+	    overflow: hidden;
 	}
 
 
