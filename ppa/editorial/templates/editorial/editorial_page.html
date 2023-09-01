@@ -8,20 +8,29 @@
 {# keywords for meta not yet implemented in wagtail #}
 
 {% block metadata %}
-<meta property="citation_title" content="{{ page.title|escape }}" />
+<meta name="citation_title" content="{{ page.title|escape }}" />
 {# should have original pub date and citation_online_date for reposted content... #}
-<meta property="citation_publication_date" content="{{ page.first_published_at|date:"Y/m/d" }}" />
+<meta name="citation_publication_date" content="{{ page.first_published_at|date:"Y/m/d" }}" />
 {% for block in page.authors %}
-<meta property="citation_author" content="{{ block.value.name|escape }}" />
+<meta name="citation_author" content="{{ block.value.name|escape }}" />
 {% if block.value.orcid %}
-<meta property="citation_author_orcid" content="{{ block.value.orcid }}" />
+<meta name="citation_author_orcid" content="{{ block.value.orcid }}" />
 {% endif %}
 {% endfor %}
-{% if page.doi %}<meta name="citation_doi" content="{{ page.doi }}"/>{% endif %}
-
+{% for block in page.editors %}
+<meta name="citation_editor" content="{{ block.value.name|escape }}" />
+{% if block.value.orcid %}
+<meta name="citation_editor_orcid" content="{{ block.value.orcid }}" />
+{% endif %}
+{% endfor %}
 <meta name="citation_journal_title" content="Princeton Prosody Archive"/>
-<meta property="citation_publisher" content="Center for Digital Humanities at Princeton" />
-<meta property="citation_public_url" content="{{ request.build_absolute_uri }}" />
+<meta name="citation_journal_abbrev" content="PPA"/>
+<meta name="citation_publisher" content="Center for Digital Humanities, Princeton University" />
+<meta name="citation_public_url" content="{{ request.build_absolute_uri }}" />
+{% if page.doi %}<meta name="citation_doi" content="{{ page.doi }}"/>{% endif %}
+{% if page.pdf %}
+<meta name="citation_pdf_url" content="{{ page.pdf }}" />
+{% endif %}
 <meta name="citation_issn" content="2769-3619">
 {% endblock %}
 
