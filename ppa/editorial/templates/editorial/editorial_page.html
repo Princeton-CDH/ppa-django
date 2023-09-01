@@ -13,9 +13,16 @@
 <meta property="citation_publication_date" content="{{ page.first_published_at|date:"Y/m/d" }}" />
 {% for block in page.authors %}
 <meta property="citation_author" content="{{ block.value.name|escape }}" />
+{% if block.value.orcid %}
+<meta property="citation_author_orcid" content="{{ block.value.orcid }}" />
+{% endif %}
 {% endfor %}
+{% if page.doi %}<meta name="citation_doi" content="{{ page.doi }}"/>{% endif %}
+
+<meta name="citation_journal_title" content="Princeton Prosody Archive"/>
 <meta property="citation_publisher" content="Center for Digital Humanities at Princeton" />
 <meta property="citation_public_url" content="{{ request.build_absolute_uri }}" />
+<meta name="citation_issn" content="2769-3619">
 {% endblock %}
 
 {% block page_header %}
@@ -27,5 +34,23 @@
 {% endblock %}
 
 {% block attribution %}
-    {% include 'editorial/snippets/attribution.html' with page=page add_urls=True %}
+    {% include 'editorial/snippets/attribution.html' with page=page add_urls=True full=True %}
+{% endblock %}
+
+{% block page_footer %}
+    {#* elements for PDF header & footer #}
+    <section class='print-only'>
+        <a class="first-page-header" href="{{ site.domain }}">
+            <img class="ppa-logo" src="{% static 'img/logos/filled/logo-filled-monochrome.svg' %}" alt="Princeton Prosody Archive" />
+        </a>
+
+        <a class="page-header" href="{{ site.domain }}">
+            <img class="ppa-logo" src="{% static 'img/logos/filled/logo-filled-monochrome.svg' %}" alt="Princeton Prosody Archive" />
+        </a>
+
+        {% if page.doi %}
+         <a href="http://doi.org/{{ page.doi }}" rel="alternate" class="page-doi">doi:{{ page.doi }}</a>
+        {% endif %}
+    </section>
+    {{ block.super }}
 {% endblock %}
