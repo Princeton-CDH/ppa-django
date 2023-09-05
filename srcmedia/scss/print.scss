@@ -19,7 +19,7 @@
 		}
 
 		@bottom-left {
-			content: element(page-footer);
+			content: string(doi);
 			opacity: 1;
 			font-size: 11px;
 			font-weight: 300;
@@ -43,29 +43,36 @@
 
 
 	@page :first {
-	    /* don't display article title on first page */
+	    /* don't display article title on top left of first page */
 	    @top-left {
 	        content: '';
 	    }
-	    @top-right {
-	        content: element(first-page-header);
-	    }
+	}
+
+	// pagedjs page container somewhere is inheriting site dark background; 
+	// override to aid debugging
+	.pagedjs_pages {
+		background-color: white;
 	}
 
 
 	a.page-header {
 	    position: running(page-header);
-	}
-	a.first-page-header {
-	    position: running(first-page-header);
+	    opacity: 1;
+
+	    img {
+	    	height: 50px;
+	    	
+	    }
 	}
 
 	h1.page-title {
-	    position: running(header-title);
+		// use text contents for title in header
+        string-set: title content();
 	}
 
-	a.page-doi {
-	    position: running(page-footer);
+	a.doi {
+	   string-set: doi content();		
 	}
 
 
@@ -103,10 +110,10 @@
 	}
 
 	// avoid page break beween heading and paragraph that follows immediately after
-	h2 + p,
+/*	h2 + p,
 	h3 + p {
 		page-break-before: avoid;
-	}
+	} */
 
 	#editorial header .meta {
 		font-size: 1rem;
@@ -123,7 +130,8 @@
 
 		time {
 			&:before {
-				display: none; // suppress slash used for screen
+   			    // suppress slash used for screen
+				display: none !important;
 			}
 		}
 		.pdf {  // hide link to pdf (since this is used to generate pdf)
@@ -137,9 +145,11 @@
 	#footer,
 	.ribbon-box {
 		display: none;
+		opacity: 0;
+		height: 0;
 	}
 
-	.ppa-logo {
+/*	.ppa-logo {
 		position: running(page-header);
-	}
+	} */
 }
