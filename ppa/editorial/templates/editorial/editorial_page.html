@@ -46,15 +46,11 @@
     {% include 'editorial/snippets/attribution.html' with page=page add_urls=True full=True %}
 {% endblock %}
 
-{% block page_footer %}
-    {#* elements for PDF header & footer #}
+{% block content %}
+    {#* elements for PDF header & footer; must occur BEFORE content #}
     <section class='print-only'>
-        <a class="first-page-header" href="{{ site.domain }}">
-            <img class="ppa-logo" src="{% static 'img/logos/filled/logo-filled-monochrome.svg' %}" alt="Princeton Prosody Archive" />
-        </a>
-
         <a class="page-header" href="{{ site.domain }}">
-            <img class="ppa-logo" src="{% static 'img/logos/filled/logo-filled-monochrome.svg' %}" alt="Princeton Prosody Archive" />
+            <img src="{% static 'img/logotype/logotype.svg' %}" alt="Princeton Prosody Archive" />
         </a>
 
         {% if page.doi %}
