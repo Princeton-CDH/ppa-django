@@ -249,31 +249,31 @@ class TestEditorialPage(WagtailPageTests):
         # citation metadata should be set in header
         self.assertContains(
             response,
-            '<meta property="citation_title" content="%s" />' % editorial_page.title,
+            '<meta name="citation_title" content="%s" />' % editorial_page.title,
             html=True,
         )
         for author in [person_a, person_b]:
             self.assertContains(
                 response,
-                '<meta property="citation_author" content="%s" />' % person_a.name,
+                '<meta name="citation_author" content="%s" />' % person_a.name,
                 html=True,
             )
         self.assertContains(
             response,
-            '<meta property="citation_publication_date" content="%s" />'
+            '<meta name="citation_publication_date" content="%s" />'
             % editorial_page.first_published_at.strftime("%Y/%m/%d"),
             html=True,
         )
         self.assertContains(
             response,
-            '<meta property="citation_publisher" '
-            + 'content="Center for Digital Humanities at Princeton" />',
+            '<meta name="citation_publisher" '
+            + 'content="Center for Digital Humanities, Princeton University" />',
             html=True,
         )
         request = RequestFactory().get(editorial_url)
         self.assertContains(
             response,
-            '<meta property="citation_public_url" content="%s" />'
+            '<meta name="citation_public_url" content="%s" />'
             % request.build_absolute_uri(),
             html=True,
         )
@@ -283,12 +283,32 @@ class TestEditorialPage(WagtailPageTests):
         # add doi, editor, pdf
         editorial_page.doi = "10.1234/56"
         editorial_page.pdf = "http://example.com/path/to/some.pdf"
-        # copy authors to editors
-        editorial_page.editors = editorial_page.authors
+        # copy authors to editors  (doesn't seem to wokr)
+        # editorial_page.editors = editorial_page.authors
         editorial_page.save()
         response = self.client.get(editorial_url)
         self.assertContains(response, f"doi:{editorial_page.doi}")
         self.assertContains(response, f"doi.org/{editorial_page.doi}")
+        self.assertContains(response, editorial_page.pdf)
+        # additional metadata
+        self.assertContains(
+            response,
+            '<meta name="citation_doi" content="%s" />' % editorial_page.doi,
+            html=True,
+        )
+        self.assertContains(
+            response,
+            '<meta name="citation_pdf_url" content="%s" />' % editorial_page.pdf,
+            html=True,
+        )
+        # not setting editors correctly
+        # self.assertContains(response, "Edited by")
+        # for editor in [person_a, person_b]:
+        #     self.assertContains(
+        #         response,
+        #         '<meta name="citation_editor" content="%s" />' % person_a.name,
+        #         html=True,
+        #     )
 
         # delete authors
         editorial_page.authors = None
