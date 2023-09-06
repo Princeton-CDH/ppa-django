@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ppa.archive.admin &#8212; Princeton Prosody Archive 3.9.1 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
-    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-    <script src="../../../_static/doctools.js"></script>
-    <script src="../../../_static/sphinx_highlight.js"></script>
+    <title>ppa.archive.admin &#8212; Princeton Prosody Archive 3.10.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=039e1c02" />
+    <script src="../../../_static/documentation_options.js?v=f8d09eac"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
    
@@ -50,7 +50,9 @@
 
 
 <span class="c1"># import/export resource</span>
-<div class="viewcode-block" id="DigitizedWorkResource"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkResource">[docs]</a><span class="k">class</span> <span class="nc">DigitizedWorkResource</span><span class="p">(</span><span class="n">resources</span><span class="o">.</span><span class="n">ModelResource</span><span class="p">):</span>
+<div class="viewcode-block" id="DigitizedWorkResource">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkResource">[docs]</a>
+<span class="k">class</span> <span class="nc">DigitizedWorkResource</span><span class="p">(</span><span class="n">resources</span><span class="o">.</span><span class="n">ModelResource</span><span class="p">):</span>
     <span class="c1"># declare export fields to customize output</span>
     <span class="c1"># - get display value for choice fields</span>
     <span class="n">item_type</span> <span class="o">=</span> <span class="n">fields</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span>
@@ -99,12 +101,18 @@
             <span class="s2">&quot;cluster&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;field&quot;</span><span class="p">:</span> <span class="s2">&quot;cluster_id&quot;</span><span class="p">},</span>
         <span class="p">}</span>
 
-<div class="viewcode-block" id="DigitizedWorkResource.get_queryset"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkResource.get_queryset">[docs]</a>    <span class="k">def</span> <span class="nf">get_queryset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DigitizedWorkResource.get_queryset">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkResource.get_queryset">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_queryset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># prefetch related object to make download more efficient</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_queryset</span><span class="p">()</span><span class="o">.</span><span class="n">prefetch_related</span><span class="p">(</span><span class="s2">&quot;collections&quot;</span><span class="p">,</span> <span class="s2">&quot;cluster&quot;</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_queryset</span><span class="p">()</span><span class="o">.</span><span class="n">prefetch_related</span><span class="p">(</span><span class="s2">&quot;collections&quot;</span><span class="p">,</span> <span class="s2">&quot;cluster&quot;</span><span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="DigitizedWorkAdmin"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin">[docs]</a><span class="k">class</span> <span class="nc">DigitizedWorkAdmin</span><span class="p">(</span><span class="n">ExportActionMixin</span><span class="p">,</span> <span class="n">ExportMixin</span><span class="p">,</span> <span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
+
+<div class="viewcode-block" id="DigitizedWorkAdmin">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin">[docs]</a>
+<span class="k">class</span> <span class="nc">DigitizedWorkAdmin</span><span class="p">(</span><span class="n">ExportActionMixin</span><span class="p">,</span> <span class="n">ExportMixin</span><span class="p">,</span> <span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
     <span class="n">resource_class</span> <span class="o">=</span> <span class="n">DigitizedWorkResource</span>  <span class="c1"># resource for export</span>
 
     <span class="n">list_display</span> <span class="o">=</span> <span class="p">(</span>
@@ -179,7 +187,9 @@
     <span class="n">list_filter</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;collections&quot;</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">,</span> <span class="s2">&quot;source&quot;</span><span class="p">,</span> <span class="s2">&quot;item_type&quot;</span><span class="p">,</span> <span class="s2">&quot;cluster&quot;</span><span class="p">]</span>
     <span class="n">actions</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;add_works_to_collection&quot;</span><span class="p">,</span> <span class="s2">&quot;suppress_works&quot;</span><span class="p">]</span>
 
-<div class="viewcode-block" id="DigitizedWorkAdmin.get_readonly_fields"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin.get_readonly_fields">[docs]</a>    <span class="k">def</span> <span class="nf">get_readonly_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="DigitizedWorkAdmin.get_readonly_fields">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin.get_readonly_fields">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_readonly_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Determine read only fields based on item source, to prevent</span>
 <span class="sd">        editing of HathiTrust fields that should not be changed.</span>
@@ -188,24 +198,33 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hathi_readonly_fields</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">readonly_fields</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">readonly_fields</span></div>
 
-<div class="viewcode-block" id="DigitizedWorkAdmin.list_collections"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin.list_collections">[docs]</a>    <span class="k">def</span> <span class="nf">list_collections</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+
+<div class="viewcode-block" id="DigitizedWorkAdmin.list_collections">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin.list_collections">[docs]</a>
+    <span class="k">def</span> <span class="nf">list_collections</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a list of :class:ppa.archive.models.Collection object names</span>
 <span class="sd">        as a comma separated list to populate a change_list column.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">coll</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">coll</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">collections</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)])</span></div>
 
+
     <span class="n">list_collections</span><span class="o">.</span><span class="n">short_description</span> <span class="o">=</span> <span class="s2">&quot;Collections&quot;</span>
 
-<div class="viewcode-block" id="DigitizedWorkAdmin.source_link"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin.source_link">[docs]</a>    <span class="k">def</span> <span class="nf">source_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+<div class="viewcode-block" id="DigitizedWorkAdmin.source_link">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin.source_link">[docs]</a>
+    <span class="k">def</span> <span class="nf">source_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Link to source record&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mark_safe</span><span class="p">(</span>
             <span class="s1">&#39;&lt;a href=&quot;</span><span class="si">%s</span><span class="s1">&quot; target=&quot;_blank&quot;&gt;</span><span class="si">%s</span><span class="s1">&lt;/a&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">source_url</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">source_id</span><span class="p">)</span>
         <span class="p">)</span></div>
 
+
     <span class="n">source_link</span><span class="o">.</span><span class="n">short_description</span> <span class="o">=</span> <span class="s2">&quot;Source id&quot;</span>
     <span class="n">source_link</span><span class="o">.</span><span class="n">admin_order_field</span> <span class="o">=</span> <span class="s2">&quot;source_id&quot;</span>
 
-<div class="viewcode-block" id="DigitizedWorkAdmin.save_model"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin.save_model">[docs]</a>    <span class="k">def</span> <span class="nf">save_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">form</span><span class="p">,</span> <span class="n">change</span><span class="p">):</span>
+<div class="viewcode-block" id="DigitizedWorkAdmin.save_model">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin.save_model">[docs]</a>
+    <span class="k">def</span> <span class="nf">save_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">form</span><span class="p">,</span> <span class="n">change</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Note any fields in the protected list that have been changed in</span>
 <span class="sd">        the admin and preserve in database.&quot;&quot;&quot;</span>
         <span class="c1"># If new object, created from scratch, nothing to track and preserve</span>
@@ -223,7 +242,10 @@
             <span class="n">obj</span><span class="o">.</span><span class="n">protected_fields</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">protected_fields</span> <span class="o">|</span> <span class="n">ProtectedWorkFieldFlags</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">save_model</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">form</span><span class="p">,</span> <span class="n">change</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DigitizedWorkAdmin.save_related"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin.save_related">[docs]</a>    <span class="k">def</span> <span class="nf">save_related</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">form</span><span class="p">,</span> <span class="n">formsets</span><span class="p">,</span> <span class="n">change</span><span class="p">):</span>
+
+<div class="viewcode-block" id="DigitizedWorkAdmin.save_related">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin.save_related">[docs]</a>
+    <span class="k">def</span> <span class="nf">save_related</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">form</span><span class="p">,</span> <span class="n">formsets</span><span class="p">,</span> <span class="n">change</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Ensure reindex is called when admin form is saved&quot;&quot;&quot;</span>
         <span class="c1"># m2m relations are handled separately by the admin form so the standard</span>
         <span class="c1"># save override will not help as the m2m relationship are not yet set when</span>
@@ -234,7 +256,10 @@
         <span class="n">digwork</span> <span class="o">=</span> <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">form</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">pk</span><span class="p">)</span>
         <span class="n">digwork</span><span class="o">.</span><span class="n">index</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="DigitizedWorkAdmin.add_works_to_collection"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin.add_works_to_collection">[docs]</a>    <span class="k">def</span> <span class="nf">add_works_to_collection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">queryset</span><span class="p">):</span>
+
+<div class="viewcode-block" id="DigitizedWorkAdmin.add_works_to_collection">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin.add_works_to_collection">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_works_to_collection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">queryset</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Bulk add a queryset of :class:`ppa.archive.DigitizedWork` to</span>
 <span class="sd">        a :class:`ppa.archive.Collection`.</span>
@@ -248,12 +273,15 @@
         <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s2">&quot;collection-add-ids&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">selected</span>
         <span class="k">return</span> <span class="n">HttpResponseRedirect</span><span class="p">(</span><span class="n">reverse</span><span class="p">(</span><span class="s2">&quot;archive:add-to-collection&quot;</span><span class="p">))</span></div>
 
+
     <span class="n">add_works_to_collection</span><span class="o">.</span><span class="n">short_description</span> <span class="o">=</span> <span class="p">(</span>
         <span class="s2">&quot;Add selected digitized works to collections&quot;</span>
     <span class="p">)</span>
     <span class="n">add_works_to_collection</span><span class="o">.</span><span class="n">allowed_permissions</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">,)</span>
 
-<div class="viewcode-block" id="DigitizedWorkAdmin.suppress_works"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin.suppress_works">[docs]</a>    <span class="k">def</span> <span class="nf">suppress_works</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">queryset</span><span class="p">):</span>
+<div class="viewcode-block" id="DigitizedWorkAdmin.suppress_works">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin.suppress_works">[docs]</a>
+    <span class="k">def</span> <span class="nf">suppress_works</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">queryset</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set status to suppressed for every item in the queryset</span>
 <span class="sd">        that is not already suppressed.&quot;&quot;&quot;</span>
         <span class="n">non_suppressed</span> <span class="o">=</span> <span class="n">queryset</span><span class="o">.</span><span class="n">exclude</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="n">DigitizedWork</span><span class="o">.</span><span class="n">SUPPRESSED</span><span class="p">)</span>
@@ -281,9 +309,12 @@
             <span class="o">%</span> <span class="p">(</span><span class="n">updated</span><span class="p">,</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">updated</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="n">skipped</span><span class="p">),</span>
         <span class="p">)</span></div>
 
+
     <span class="n">suppress_works</span><span class="o">.</span><span class="n">short_description</span> <span class="o">=</span> <span class="s2">&quot;Suppress selected digitized works&quot;</span>
 
-<div class="viewcode-block" id="DigitizedWorkAdmin.get_urls"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin.get_urls">[docs]</a>    <span class="k">def</span> <span class="nf">get_urls</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DigitizedWorkAdmin.get_urls">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin.get_urls">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_urls</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add url for import admin form&quot;&quot;&quot;</span>
         <span class="n">urls</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">DigitizedWorkAdmin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get_urls</span><span class="p">()</span>
         <span class="n">my_urls</span> <span class="o">=</span> <span class="p">[</span>
@@ -293,21 +324,31 @@
                 <span class="n">name</span><span class="o">=</span><span class="s2">&quot;import&quot;</span><span class="p">,</span>
             <span class="p">),</span>
         <span class="p">]</span>
-        <span class="k">return</span> <span class="n">my_urls</span> <span class="o">+</span> <span class="n">urls</span></div></div>
+        <span class="k">return</span> <span class="n">my_urls</span> <span class="o">+</span> <span class="n">urls</span></div>
+</div>
 
 
-<div class="viewcode-block" id="CollectionAdmin"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.CollectionAdmin">[docs]</a><span class="k">class</span> <span class="nc">CollectionAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CollectionAdmin">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.CollectionAdmin">[docs]</a>
+<span class="k">class</span> <span class="nc">CollectionAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
     <span class="n">list_display</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;exclude&quot;</span><span class="p">)</span>
     <span class="n">list_editable</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;exclude&quot;</span><span class="p">,)</span></div>
 
 
-<div class="viewcode-block" id="DigitizedWorkInline"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkInline">[docs]</a><span class="k">class</span> <span class="nc">DigitizedWorkInline</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">TabularInline</span><span class="p">):</span>
+
+<div class="viewcode-block" id="DigitizedWorkInline">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkInline">[docs]</a>
+<span class="k">class</span> <span class="nc">DigitizedWorkInline</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">TabularInline</span><span class="p">):</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">DigitizedWork</span>
     <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;source&quot;</span><span class="p">,</span> <span class="s2">&quot;source_id&quot;</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;subtitle&quot;</span><span class="p">,</span> <span class="s2">&quot;author&quot;</span><span class="p">)</span>
     <span class="n">extra</span> <span class="o">=</span> <span class="mi">0</span></div>
 
 
-<div class="viewcode-block" id="ClusterAdmin"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.ClusterAdmin">[docs]</a><span class="k">class</span> <span class="nc">ClusterAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ClusterAdmin">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.ClusterAdmin">[docs]</a>
+<span class="k">class</span> <span class="nc">ClusterAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
     <span class="n">list_display</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;cluster_id&quot;</span><span class="p">,</span> <span class="s2">&quot;works&quot;</span><span class="p">)</span>
     <span class="n">digwork_admin_url</span> <span class="o">=</span> <span class="s2">&quot;admin:archive_digitizedwork_changelist&quot;</span>
     <span class="n">inlines</span> <span class="o">=</span> <span class="p">[</span>
@@ -315,7 +356,9 @@
     <span class="p">]</span>
     <span class="n">search_fields</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;cluster_id&quot;</span><span class="p">,)</span>
 
-<div class="viewcode-block" id="ClusterAdmin.get_queryset"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.ClusterAdmin.get_queryset">[docs]</a>    <span class="k">def</span> <span class="nf">get_queryset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+<div class="viewcode-block" id="ClusterAdmin.get_queryset">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.ClusterAdmin.get_queryset">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_queryset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
         <span class="c1"># The annotations we use for document count on the list view</span>
         <span class="c1"># make the search too slow for autocomplete.</span>
         <span class="c1"># Reset to original, unannotated queryset *only* for autocomplete</span>
@@ -326,7 +369,10 @@
         <span class="c1"># otherwise, annotate with counts</span>
         <span class="k">return</span> <span class="n">qs</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">Count</span><span class="p">(</span><span class="s2">&quot;digitizedwork&quot;</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="ClusterAdmin.works"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.ClusterAdmin.works">[docs]</a>    <span class="nd">@admin</span><span class="o">.</span><span class="n">display</span><span class="p">(</span>
+
+<div class="viewcode-block" id="ClusterAdmin.works">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.ClusterAdmin.works">[docs]</a>
+    <span class="nd">@admin</span><span class="o">.</span><span class="n">display</span><span class="p">(</span>
         <span class="n">ordering</span><span class="o">=</span><span class="s2">&quot;digitizedwork__count&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;# works in this cluster&quot;</span><span class="p">,</span>
     <span class="p">)</span>
@@ -338,7 +384,9 @@
             <span class="n">reverse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">digwork_admin_url</span><span class="p">),</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
             <span class="n">obj</span><span class="o">.</span><span class="n">digitizedwork__count</span><span class="p">,</span>
-        <span class="p">)</span></div></div>
+        <span class="p">)</span></div>
+</div>
+
 
 
 <span class="n">admin</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">DigitizedWork</span><span class="p">,</span> <span class="n">DigitizedWorkAdmin</span><span class="p">)</span>
@@ -411,7 +459,7 @@
       &copy;2018, CDH @ Princeton University.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.5</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
     </div>

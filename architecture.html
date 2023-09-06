@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Architecture &#8212; Princeton Prosody Archive 3.9.1 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <title>Architecture &#8212; Princeton Prosody Archive 3.10.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <script src="_static/documentation_options.js?v=f8d09eac"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Code Documentation" href="codedocs.html" />
@@ -32,7 +32,7 @@
           <div class="body" role="main">
             
   <section id="architecture">
-<h1>Architecture<a class="headerlink" href="#architecture" title="Permalink to this heading">¶</a></h1>
+<h1>Architecture<a class="headerlink" href="#architecture" title="Link to this heading">¶</a></h1>
 <div class="toctree-wrapper compound">
 </div>
 <p>The PPA Django application uses a SQL database as a thin layer to provide
@@ -40,9 +40,9 @@ administrative management and reporting at the level of Digitized Work,
 and a Solr index for search and browse on Digitized Work metadata and
 page content.</p>
 <section id="database">
-<h2>Database<a class="headerlink" href="#database" title="Permalink to this heading">¶</a></h2>
+<h2>Database<a class="headerlink" href="#database" title="Link to this heading">¶</a></h2>
 <section id="updates">
-<h3>3.7 updates<a class="headerlink" href="#updates" title="Permalink to this heading">¶</a></h3>
+<h3>3.7 updates<a class="headerlink" href="#updates" title="Link to this heading">¶</a></h3>
 <ul class="simple">
 <li><p><a class="reference internal" href="codedocs.html#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">DigitizedWork</span></code></a> has new fields to support excerpts and articles as well as full works:
 * Item Type (full work, article, or excerpt, required)
@@ -52,7 +52,7 @@ page content.</p>
 </ul>
 </section>
 <section id="id1">
-<h3>3.1 Updates<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
+<h3>3.1 Updates<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>Add optional  <a class="reference internal" href="codedocs.html#ppa.pages.models.Person.photo" title="ppa.pages.models.Person.photo"><code class="xref py py-attr docutils literal notranslate"><span class="pre">photo</span></code></a> on
 <a class="reference internal" href="codedocs.html#ppa.pages.models.Person" title="ppa.pages.models.Person"><code class="xref py py-class docutils literal notranslate"><span class="pre">Person</span></code></a> to support
@@ -63,7 +63,7 @@ local edits to HathiTrust metadata.</p></li>
 </ul>
 </section>
 <section id="wagtail-release-0-10">
-<h3>Wagtail (Release 0.10)<a class="headerlink" href="#wagtail-release-0-10" title="Permalink to this heading">¶</a></h3>
+<h3>Wagtail (Release 0.10)<a class="headerlink" href="#wagtail-release-0-10" title="Link to this heading">¶</a></h3>
 <a class="reference external image-reference" href="_static/ppa-schema-v10.png"><img alt="PPA Databse Schema, version 0.10" src="_images/ppa-schema-v10.png" /></a>
 <p>The primary purpose of this database revision is to remove Mezzanine and add
 Wagtail as the CMS employed by the project. The pages module represents the
@@ -72,21 +72,21 @@ of Wagtail’s base page model (expanded for detail with one example of the
 subclassed types).</p>
 </section>
 <section id="collections-release-0-6">
-<h3>Collections (Release 0.6)<a class="headerlink" href="#collections-release-0-6" title="Permalink to this heading">¶</a></h3>
+<h3>Collections (Release 0.6)<a class="headerlink" href="#collections-release-0-6" title="Link to this heading">¶</a></h3>
 <a class="reference external image-reference" href="_static/ppa-schema-v06.png"><img alt="PPA Database Schema, version 0.6" src="_images/ppa-schema-v06.png" /></a>
 <p>This database revision adds Collections to the schema, as well as
 some generic functionality import from Mezzanine as the result of using its
 rich text field for the description field of Collections.</p>
 </section>
 <section id="initial-schema-release-0-5">
-<h3>Initial Schema (Release 0.5)<a class="headerlink" href="#initial-schema-release-0-5" title="Permalink to this heading">¶</a></h3>
+<h3>Initial Schema (Release 0.5)<a class="headerlink" href="#initial-schema-release-0-5" title="Link to this heading">¶</a></h3>
 <a class="reference external image-reference" href="_static/ppa-schema-v05.png"><img alt="PPA Database Schema, version 0.5" src="_images/ppa-schema-v05.png" /></a>
 <p>As of version 0.5, PPA is basically a stock Django/Mezzanine
 application with a single database table to track imported Digitized Works.</p>
 </section>
 </section>
 <section id="solr">
-<h2>Solr<a class="headerlink" href="#solr" title="Permalink to this heading">¶</a></h2>
+<h2>Solr<a class="headerlink" href="#solr" title="Link to this heading">¶</a></h2>
 <p>Content is indexed in Solr under two <cite>item types</cite>: “work”, which contains
 the bibliographic metadata for a digitized work, and “page”, which contains
 the text content for an individual page.  Work and corresponding pages are
@@ -179,7 +179,7 @@ grouping work and pages together in search results.</p>
       &copy;2018, CDH @ Princeton University.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.5</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |

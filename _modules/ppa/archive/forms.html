@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ppa.archive.forms &#8212; Princeton Prosody Archive 3.9.1 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
-    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-    <script src="../../../_static/doctools.js"></script>
-    <script src="../../../_static/sphinx_highlight.js"></script>
+    <title>ppa.archive.forms &#8212; Princeton Prosody Archive 3.10.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=039e1c02" />
+    <script src="../../../_static/documentation_options.js?v=f8d09eac"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
    
@@ -39,7 +39,9 @@
 <span class="kn">from</span> <span class="nn">ppa.common.utils</span> <span class="kn">import</span> <span class="n">simplify_quotes</span>
 
 
-<div class="viewcode-block" id="SelectDisabledMixin"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SelectDisabledMixin">[docs]</a><span class="k">class</span> <span class="nc">SelectDisabledMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="SelectDisabledMixin">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SelectDisabledMixin">[docs]</a>
+<span class="k">class</span> <span class="nc">SelectDisabledMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Mixin for :class:`django.forms.RadioSelect` or :class:`django.forms.CheckboxSelect`</span>
 <span class="sd">    classes to set an option as disabled. To disable, the widget&#39;s choice</span>
@@ -50,7 +52,9 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Using a solution at https://djangosnippets.org/snippets/2453/</span>
-<div class="viewcode-block" id="SelectDisabledMixin.create_option"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SelectDisabledMixin.create_option">[docs]</a>    <span class="k">def</span> <span class="nf">create_option</span><span class="p">(</span>
+<div class="viewcode-block" id="SelectDisabledMixin.create_option">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SelectDisabledMixin.create_option">[docs]</a>
+    <span class="k">def</span> <span class="nf">create_option</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">selected</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">subindex</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Overide option creation to optionally disable specified values&quot;&quot;&quot;</span>
@@ -63,24 +67,34 @@
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">disabled</span><span class="p">:</span>
             <span class="n">option_dict</span><span class="p">[</span><span class="s2">&quot;attrs&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;disabled&quot;</span><span class="p">:</span> <span class="s2">&quot;disabled&quot;</span><span class="p">})</span>
-        <span class="k">return</span> <span class="n">option_dict</span></div></div>
+        <span class="k">return</span> <span class="n">option_dict</span></div>
+</div>
 
 
-<div class="viewcode-block" id="RadioSelectWithDisabled"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.RadioSelectWithDisabled">[docs]</a><span class="k">class</span> <span class="nc">RadioSelectWithDisabled</span><span class="p">(</span><span class="n">SelectDisabledMixin</span><span class="p">,</span> <span class="n">forms</span><span class="o">.</span><span class="n">RadioSelect</span><span class="p">):</span>
+
+<div class="viewcode-block" id="RadioSelectWithDisabled">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.RadioSelectWithDisabled">[docs]</a>
+<span class="k">class</span> <span class="nc">RadioSelectWithDisabled</span><span class="p">(</span><span class="n">SelectDisabledMixin</span><span class="p">,</span> <span class="n">forms</span><span class="o">.</span><span class="n">RadioSelect</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Subclass of :class:`django.forms.RadioSelect` with option to mark</span>
 <span class="sd">    a choice as disabled.</span>
 <span class="sd">    &quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="SelectWithDisabled"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SelectWithDisabled">[docs]</a><span class="k">class</span> <span class="nc">SelectWithDisabled</span><span class="p">(</span><span class="n">SelectDisabledMixin</span><span class="p">,</span> <span class="n">forms</span><span class="o">.</span><span class="n">Select</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SelectWithDisabled">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SelectWithDisabled">[docs]</a>
+<span class="k">class</span> <span class="nc">SelectWithDisabled</span><span class="p">(</span><span class="n">SelectDisabledMixin</span><span class="p">,</span> <span class="n">forms</span><span class="o">.</span><span class="n">Select</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Subclass of :class:`django.forms.Select` with option to mark</span>
 <span class="sd">    a choice as disabled.</span>
 <span class="sd">    &quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="CheckboxSelectMultipleWithDisabled"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.CheckboxSelectMultipleWithDisabled">[docs]</a><span class="k">class</span> <span class="nc">CheckboxSelectMultipleWithDisabled</span><span class="p">(</span>
+
+<div class="viewcode-block" id="CheckboxSelectMultipleWithDisabled">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.CheckboxSelectMultipleWithDisabled">[docs]</a>
+<span class="k">class</span> <span class="nc">CheckboxSelectMultipleWithDisabled</span><span class="p">(</span>
     <span class="n">SelectDisabledMixin</span><span class="p">,</span> <span class="n">forms</span><span class="o">.</span><span class="n">CheckboxSelectMultiple</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -89,7 +103,10 @@
 <span class="sd">    &quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="FacetChoiceField"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.FacetChoiceField">[docs]</a><span class="k">class</span> <span class="nc">FacetChoiceField</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">MultipleChoiceField</span><span class="p">):</span>
+
+<div class="viewcode-block" id="FacetChoiceField">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.FacetChoiceField">[docs]</a>
+<span class="k">class</span> <span class="nc">FacetChoiceField</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">MultipleChoiceField</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Add CheckboxSelectMultiple field with facets taken from solr query&quot;&quot;&quot;</span>
 
     <span class="c1"># Borrowed from https://github.com/Princeton-CDH/derrida-django/blob/develop/derrida/books/forms.py</span>
@@ -106,14 +123,20 @@
             <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;required&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-<div class="viewcode-block" id="FacetChoiceField.valid_value"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.FacetChoiceField.valid_value">[docs]</a>    <span class="k">def</span> <span class="nf">valid_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="k">return</span> <span class="kc">True</span></div></div>
+<div class="viewcode-block" id="FacetChoiceField.valid_value">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.FacetChoiceField.valid_value">[docs]</a>
+    <span class="k">def</span> <span class="nf">valid_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+</div>
+
 
 
 <span class="c1"># RangeWidget and RangeField also borrowed from Derrida codebase</span>
 
 
-<div class="viewcode-block" id="RangeWidget"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.RangeWidget">[docs]</a><span class="k">class</span> <span class="nc">RangeWidget</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">MultiWidget</span><span class="p">):</span>
+<div class="viewcode-block" id="RangeWidget">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.RangeWidget">[docs]</a>
+<span class="k">class</span> <span class="nc">RangeWidget</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">MultiWidget</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;date range widget, for two numeric inputs&quot;&quot;&quot;</span>
 
     <span class="c1">#: separator string when splitting out values in decompress</span>
@@ -129,13 +152,19 @@
         <span class="p">]</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">widgets</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-<div class="viewcode-block" id="RangeWidget.decompress"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.RangeWidget.decompress">[docs]</a>    <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<div class="viewcode-block" id="RangeWidget.decompress">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.RangeWidget.decompress">[docs]</a>
+    <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sep</span><span class="p">)]</span>
-        <span class="k">return</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span></div></div>
+        <span class="k">return</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span></div>
+</div>
 
 
-<div class="viewcode-block" id="RangeField"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.RangeField">[docs]</a><span class="k">class</span> <span class="nc">RangeField</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">MultiValueField</span><span class="p">):</span>
+
+<div class="viewcode-block" id="RangeField">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.RangeField">[docs]</a>
+<span class="k">class</span> <span class="nc">RangeField</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">MultiValueField</span><span class="p">):</span>
     <span class="n">widget</span> <span class="o">=</span> <span class="n">RangeWidget</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -158,17 +187,23 @@
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fields</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">require_all_fields</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-<div class="viewcode-block" id="RangeField.compress"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.RangeField.compress">[docs]</a>    <span class="k">def</span> <span class="nf">compress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_list</span><span class="p">):</span>
+<div class="viewcode-block" id="RangeField.compress">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.RangeField.compress">[docs]</a>
+    <span class="k">def</span> <span class="nf">compress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_list</span><span class="p">):</span>
         <span class="c1"># if both values are set and the first is greater than the second,</span>
         <span class="c1"># raise a validation error</span>
         <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">data_list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">data_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">data_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
                 <span class="s2">&quot;Invalid range (</span><span class="si">%s</span><span class="s2"> - </span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">data_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">data_list</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">val</span> <span class="k">if</span> <span class="n">val</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">data_list</span><span class="p">])</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">val</span> <span class="k">if</span> <span class="n">val</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">data_list</span><span class="p">])</span></div>
+</div>
 
 
-<div class="viewcode-block" id="ModelMultipleChoiceFieldWithEmpty"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.ModelMultipleChoiceFieldWithEmpty">[docs]</a><span class="k">class</span> <span class="nc">ModelMultipleChoiceFieldWithEmpty</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">ModelMultipleChoiceField</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ModelMultipleChoiceFieldWithEmpty">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.ModelMultipleChoiceFieldWithEmpty">[docs]</a>
+<span class="k">class</span> <span class="nc">ModelMultipleChoiceFieldWithEmpty</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">ModelMultipleChoiceField</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Extend :class:`django.forms.ModelMultipleChoiceField` to add an</span>
 <span class="sd">    option for an unset or empty choice (i.e. no relationship in a</span>
 <span class="sd">    many-to-many relationship such as collection membership).</span>
@@ -177,7 +212,9 @@
     <span class="n">EMPTY_VALUE</span> <span class="o">=</span> <span class="n">NO_COLLECTION_LABEL</span>
     <span class="n">EMPTY_ID</span> <span class="o">=</span> <span class="mi">0</span>
 
-<div class="viewcode-block" id="ModelMultipleChoiceFieldWithEmpty.clean"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.ModelMultipleChoiceFieldWithEmpty.clean">[docs]</a>    <span class="k">def</span> <span class="nf">clean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<div class="viewcode-block" id="ModelMultipleChoiceFieldWithEmpty.clean">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.ModelMultipleChoiceFieldWithEmpty.clean">[docs]</a>
+    <span class="k">def</span> <span class="nf">clean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Extend clean to use default validation on all values but</span>
 <span class="sd">        the empty id.&quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
@@ -188,10 +225,14 @@
         <span class="n">qs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_check_values</span><span class="p">(</span><span class="n">pk_values</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">EMPTY_ID</span> <span class="ow">in</span> <span class="n">value</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">EMPTY_ID</span><span class="p">)</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">EMPTY_VALUE</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">qs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">qs</span></div></div>
+        <span class="k">return</span> <span class="n">qs</span></div>
+</div>
 
 
-<div class="viewcode-block" id="SearchForm"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm">[docs]</a><span class="k">class</span> <span class="nc">SearchForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SearchForm">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm">[docs]</a>
+<span class="k">class</span> <span class="nc">SearchForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Simple search form for digitized works.&quot;&quot;&quot;</span>
 
     <span class="n">SORT_CHOICES</span> <span class="o">=</span> <span class="p">[</span>
@@ -299,7 +340,9 @@
     <span class="c1"># mapping of solr fields to form input</span>
     <span class="n">solr_facet_fields</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;collections_exact&quot;</span><span class="p">:</span> <span class="s2">&quot;collections&quot;</span><span class="p">}</span>
 
-<div class="viewcode-block" id="SearchForm.defaults"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm.defaults">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="SearchForm.defaults">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm.defaults">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">defaults</span><span class="p">():</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Default values when initializing the form.  Sort by title,</span>
 <span class="sd">        pre-select collections based exclude property.&quot;&quot;&quot;</span>
@@ -311,6 +354,7 @@
                 <span class="n">Collection</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">values_list</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">flat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="p">),</span>
         <span class="p">}</span></div>
+
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -346,13 +390,18 @@
                 <span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Relevance&quot;</span><span class="p">,</span> <span class="s2">&quot;disabled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
             <span class="p">)</span>
 
-<div class="viewcode-block" id="SearchForm.has_keyword_query"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm.has_keyword_query">[docs]</a>    <span class="k">def</span> <span class="nf">has_keyword_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<div class="viewcode-block" id="SearchForm.has_keyword_query">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm.has_keyword_query">[docs]</a>
+    <span class="k">def</span> <span class="nf">has_keyword_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;check if any of the keyword search fields have search terms&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">any</span><span class="p">(</span>
             <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">query_field</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">query_field</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;query&quot;</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;author&quot;</span><span class="p">]</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="SearchForm.get_solr_sort_field"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm.get_solr_sort_field">[docs]</a>    <span class="k">def</span> <span class="nf">get_solr_sort_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SearchForm.get_solr_sort_field">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm.get_solr_sort_field">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_solr_sort_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set solr sort fields for the query based on sort and query strings.</span>
 <span class="sd">        If sort field is not specified, will use sort in the the cleaned</span>
@@ -376,7 +425,10 @@
         <span class="c1"># return solr field for requested sort option</span>
         <span class="k">return</span> <span class="n">solr_mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sort</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SearchForm.set_choices_from_facets"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm.set_choices_from_facets">[docs]</a>    <span class="k">def</span> <span class="nf">set_choices_from_facets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">facets</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SearchForm.set_choices_from_facets">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm.set_choices_from_facets">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_choices_from_facets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">facets</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set choices on field from a dictionary of facets&quot;&quot;&quot;</span>
         <span class="c1"># Also borrowed from Derrida module referenced for FacetChoiceField</span>
         <span class="c1"># Uses mapping of solr_facet_fields and facet_fields in class</span>
@@ -416,6 +468,7 @@
                 <span class="c1"># replace choices with new version</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">formfield</span><span class="p">]</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">choices</span> <span class="o">=</span> <span class="n">new_choice</span></div>
 
+
             <span class="c1"># normal facet field behavior: populate choices from facet</span>
             <span class="c1"># disabling for now, not currently in use</span>
             <span class="c1"># elif formfield in self.fields:</span>
@@ -425,7 +478,9 @@
 
     <span class="n">PUBDATE_CACHE_KEY</span> <span class="o">=</span> <span class="s2">&quot;digitizedwork_pubdate_maxmin&quot;</span>
 
-<div class="viewcode-block" id="SearchForm.pub_date_minmax"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm.pub_date_minmax">[docs]</a>    <span class="k">def</span> <span class="nf">pub_date_minmax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SearchForm.pub_date_minmax">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm.pub_date_minmax">[docs]</a>
+    <span class="k">def</span> <span class="nf">pub_date_minmax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get minimum and maximum values for</span>
 <span class="sd">        :class:`~ppa.archive.models.DigitizedWork` publication dates</span>
 <span class="sd">        in the database.  Used to set placeholder values for the form</span>
@@ -449,6 +504,7 @@
         <span class="c1"># return just the min and max values</span>
         <span class="k">return</span> <span class="n">maxmin</span><span class="p">[</span><span class="s2">&quot;pub_date__min&quot;</span><span class="p">],</span> <span class="n">maxmin</span><span class="p">[</span><span class="s2">&quot;pub_date__max&quot;</span><span class="p">]</span></div>
 
+
     <span class="k">def</span> <span class="nf">_clean_quotes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">):</span>
         <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cleaned_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
@@ -457,23 +513,35 @@
 
     <span class="c1"># query, author, and title could all have quotes for exact phrase</span>
 
-<div class="viewcode-block" id="SearchForm.clean_query"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm.clean_query">[docs]</a>    <span class="k">def</span> <span class="nf">clean_query</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SearchForm.clean_query">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm.clean_query">[docs]</a>
+    <span class="k">def</span> <span class="nf">clean_query</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Clean keyword search query term; converts any typographic</span>
 <span class="sd">        quotes to straight quotes&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clean_quotes</span><span class="p">(</span><span class="s2">&quot;query&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SearchForm.clean_title"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm.clean_title">[docs]</a>    <span class="k">def</span> <span class="nf">clean_title</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SearchForm.clean_title">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm.clean_title">[docs]</a>
+    <span class="k">def</span> <span class="nf">clean_title</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Clean keyword search query term; converts any typographic</span>
 <span class="sd">        quotes to straight quotes&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clean_quotes</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SearchForm.clean_author"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm.clean_author">[docs]</a>    <span class="k">def</span> <span class="nf">clean_author</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SearchForm.clean_author">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm.clean_author">[docs]</a>
+    <span class="k">def</span> <span class="nf">clean_author</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Clean keyword search query term; converts any typographic</span>
 <span class="sd">        quotes to straight quotes&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clean_quotes</span><span class="p">(</span><span class="s2">&quot;author&quot;</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clean_quotes</span><span class="p">(</span><span class="s2">&quot;author&quot;</span><span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="SearchWithinWorkForm"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchWithinWorkForm">[docs]</a><span class="k">class</span> <span class="nc">SearchWithinWorkForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SearchWithinWorkForm">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchWithinWorkForm">[docs]</a>
+<span class="k">class</span> <span class="nc">SearchWithinWorkForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Form to search for occurrences of a string within a particular instance</span>
 <span class="sd">    of a digitized work.</span>
@@ -499,7 +567,10 @@
     <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="AddToCollectionForm"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.AddToCollectionForm">[docs]</a><span class="k">class</span> <span class="nc">AddToCollectionForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+
+<div class="viewcode-block" id="AddToCollectionForm">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.AddToCollectionForm">[docs]</a>
+<span class="k">class</span> <span class="nc">AddToCollectionForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Form to select a set of :class:ppa.archive.models.Collection to which</span>
 <span class="sd">    to bulk add a queryset of :class:ppa.archive.models.DigitizedWork</span>
@@ -513,7 +584,10 @@
     <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="ImportForm"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.ImportForm">[docs]</a><span class="k">class</span> <span class="nc">ImportForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ImportForm">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.ImportForm">[docs]</a>
+<span class="k">class</span> <span class="nc">ImportForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Form to import records from sources that support import.&quot;&quot;&quot;</span>
 
     <span class="c1"># only a subset of DigitizedWork.SOURCE_CHOICES can be imported</span>
@@ -538,14 +612,18 @@
         <span class="o">+</span> <span class="s2">&quot;Existing records and invalid IDs will be skipped.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-<div class="viewcode-block" id="ImportForm.get_source_ids"><a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.ImportForm.get_source_ids">[docs]</a>    <span class="k">def</span> <span class="nf">get_source_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ImportForm.get_source_ids">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.ImportForm.get_source_ids">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_source_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get list of ids from valid form input. Splits on newlines,</span>
 <span class="sd">        strips whitespace, and ignores empty lines.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span>
             <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cleaned_data</span><span class="p">[</span><span class="s2">&quot;source_ids&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-        <span class="p">]</span></div></div>
+        <span class="p">]</span></div>
+</div>
+
 </pre></div>
 
           </div>
@@ -613,7 +691,7 @@
       &copy;2018, CDH @ Princeton University.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.5</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
     </div>
