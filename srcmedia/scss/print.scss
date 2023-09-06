@@ -49,7 +49,7 @@
 	    }
 	}
 
-	// pagedjs page container somewhere is inheriting site dark background; 
+	// pagedjs page container somewhere is inheriting site dark background;
 	// override to aid debugging
 	.pagedjs_pages {
 		background-color: white;
@@ -62,7 +62,7 @@
 
 	    img {
 	    	height: 50px;
-	    	
+
 	    }
 	}
 
@@ -72,7 +72,7 @@
 	}
 
 	a.doi {
-	   string-set: doi content();		
+	   string-set: doi content();
 	}
 
 
@@ -82,6 +82,8 @@
 		overflow: visible;
 		height: auto;
 		background: white;
+		margin: 0;
+		padding: 0;
 	}
 
 	main {
@@ -90,6 +92,10 @@
 		width: 6in;
 		background: white;
 		font-size: 1rem;
+	}
+
+	main, #editorial p, #editorial h2, #editorial h3 {
+	    font-size: 20px;
 	}
 
 	h1 {
@@ -107,13 +113,17 @@
 
 	figure {
 		page-break-inside: avoid;
+
+	}
+	#editorial img {
+		max-height: 4in;  /* don't allow images to take too much of the page */
 	}
 
 	// avoid page break beween heading and paragraph that follows immediately after
-/*	h2 + p,
+	h2 + p,
 	h3 + p {
 		page-break-before: avoid;
-	} */
+	}
 
 	#editorial header .meta {
 		font-size: 1rem;
