@@ -3,6 +3,21 @@
 Deploy and Upgrade notes
 ========================
 
+3.10
+----
+
+* Project contributors with specific years of involvement should be updated to
+  move years from their name to the new project years field
+* Editorial articles with editors can be updated to specify the editors in the metadata instead of the article text
+* Editorial articles can now be updated with DOI.
+  - To include a DOI in an editorial PDF: reserve a DOI, add it to the article, create the PDF, then deposit the PDF and publish the DOI
+* Editorial articles can link to published PDF versions of the article
+
+To create PDFs of editorial articles (after adding any editors, DOI, and fixing any name display issues):
+- Install a known working version of pagedjs-cli: `npm install pagedjs-cli@0.3.1`
+- Run pagedjs-cli with a url and an output filenaname:  `pagedjs-cli https://prosody.princeton.edu/editorial/2019/03/elizabeth-barrett-brownings-pathways-through-ppa/ -o ppa-mm-ebb.pdf`
+
+
 3.9
 ---
 
