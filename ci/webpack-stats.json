@@ -3,6 +3,7 @@
     "publicPath": "/static/",
     "chunks": {
         "main": [],
+        "print": [],
         "home": [],
         "search": [],
         "searchWithin": []
