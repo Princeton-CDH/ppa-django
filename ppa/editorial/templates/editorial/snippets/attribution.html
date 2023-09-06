@@ -1,5 +1,6 @@
 {# Snippet to include authors and date attribution to editorial posts #}
 {% if page.authors %}
+    <p class="author">
     {% if add_urls %}
         {% for block in page.authors %}
             {% with block.value.url|yesno:"a,span" as tag %}
@@ -12,5 +13,31 @@
             {{ block.value.name}}{% if not forloop.last %}, {% endif %}
         {% endfor %}
     {% endif %}
+    </p>
+{% endif %}
+<time class="pubdate" datetime="{{ page.first_published_at|date:"Y-m-d" }}">{{ page.first_published_at|date:"F j, Y" }}</time>
 
-/ {% endif %}{{ page.first_published_at|date:"F j, Y"}}
+{% if full %}{# full metadata only displayed on page, not card #}
+{% if page.editors %}
+<p class="editor">Edited by
+    {% if add_urls %}
+        {% for block in page.editors %}
+            {% with block.value.url|yesno:"a,span" as tag %}
+                <{{ tag }} {% if tag == "a" %} href="{{ block.value.url }}" target="_blank" {% endif %}>
+                     {{ block.value.name }}</{{tag}}>{% if not forloop.last %}, {% endif %}
+            {% endwith %}
+        {% endfor %}
+    {% else %}
+        {% for block in page.editors %}
+            {{ block.value.name}}{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+    {% endif %}
+</p>
+{% endif %}
+{% if page.doi %}
+ <a href="http://doi.org/{{ page.doi }}" rel="alternate" class="doi">doi:{{ page.doi }}</a>
+{% endif %}
+{% if page.pdf %}
+ <a href="{{ page.pdf }}" rel="alternate" class="pdf">PDF</a>
+{% endif %}
+{% endif %}

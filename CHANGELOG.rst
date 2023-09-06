@@ -3,6 +3,17 @@
 CHANGELOG
 =========
 
+3.10
+----
+
+- As a user, I want to download a PDF and cite a published editorial so that I can deposit it or share it in a more recognized academic format.
+- As a content editor, I want a separate field to display project years of involvement on project contributor page, so I can make it clear when different people were involved.
+- Editorial content should have an optional field to associate and display one or more editors who contributed to the piece.
+- bugfix: Long project role title creates misalignment on contributor page
+- bugfix: Can't print more than one page of editorial essay
+- bugfix: Gale excerpts and articles only (not full works) show the words "GALE url" before DocID on item detail pages
+
+
 3.9.1
 -----
 

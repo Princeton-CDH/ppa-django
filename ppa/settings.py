@@ -258,6 +258,7 @@ CSP_SCRIPT_SRC = (
     "https://cdnjs.cloudflare.com",
     "https://www.googletagmanager.com",
     "*.glitch.me",
+    "localhost",
 )
 
 # allow loading fonts locally and from google (via data: url)
@@ -281,7 +282,12 @@ CSP_EXCLUDE_URL_PREFIXES = ("/admin", "/cms")
 CSP_INCLUDE_NONCE_IN = ("script-src",)
 
 # allow local scripts to connect to source (i.e. searchLoading)
-CSP_CONNECT_SRC = ("'self'", "https://www.google-analytics.com", "*.glitch.me")
+CSP_CONNECT_SRC = (
+    "'self'",
+    "https://www.google-analytics.com",
+    "*.glitch.me",
+    "fonts.googleapis.com",
+)
 
 # load a manifest file
 CSP_MANIFEST_SRC = "'self'"
@@ -314,8 +320,6 @@ if os.path.exists(f):
 # if in debug mode and django-debug-toolbar is available, add to installed apps
 if DEBUG:
     try:
-        import debug_toolbar
-
         INSTALLED_APPS.append("debug_toolbar")
         MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware")
     except ImportError:

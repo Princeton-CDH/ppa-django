@@ -1,0 +1,165 @@
+// print styles
+@import "variables";
+
+@media print {
+	@page {
+		size: letter;
+		margin: 0.75in 0.2in 0.57in 0.2in;
+
+		@top-left {
+			content: string(title);
+			font-weight: 300;
+			font-size: 11px;
+			font-family: $pageFont;
+		}
+
+		@top-right {
+			content: element(page-header);
+			opacity: 1;
+		}
+
+		@bottom-left {
+			content: string(doi);
+			opacity: 1;
+			font-size: 11px;
+			font-weight: 300;
+		}
+
+		@bottom-right {
+			content: counter(page);
+			font-size: 11px;
+			font-weight: 300;
+		}
+	}
+
+	/* pdf header/footer content */
+	.print-only {
+	    display: block;
+	    /* hide for pinting in browsers that don't support @page styles */
+	    opacity: 0;
+	    height: 0;
+	    overflow: hidden;
+	}
+
+
+	@page :first {
+	    /* don't display article title on top left of first page */
+	    @top-left {
+	        content: '';
+	    }
+	}
+
+	// pagedjs page container somewhere is inheriting site dark background;
+	// override to aid debugging
+	.pagedjs_pages {
+		background-color: white;
+	}
+
+
+	a.page-header {
+	    position: running(page-header);
+	    opacity: 1;
+
+	    img {
+	    	height: 50px;
+
+	    }
+	}
+
+	h1.page-title {
+		// use text contents for title in header
+        string-set: title content();
+	}
+
+	a.doi {
+	   string-set: doi content();
+	}
+
+
+	html,
+	body,
+	main {
+		overflow: visible;
+		height: auto;
+		background: white;
+		margin: 0;
+		padding: 0;
+	}
+
+	main {
+		margin: auto;
+		padding: 0;
+		width: 6in;
+		background: white;
+		font-size: 1rem;
+	}
+
+	main, #editorial p, #editorial h2, #editorial h3 {
+	    font-size: 20px;
+	}
+
+	h1 {
+		margin: 0 auto 2rem;
+	}
+
+	body.pushable > .pusher {
+		background: white;
+		display: block; // disable flex display
+	}
+
+	.pusher:after {
+		display: none;
+	}
+
+	figure {
+		page-break-inside: avoid;
+
+	}
+	#editorial img {
+		max-height: 4in;  /* don't allow images to take too much of the page */
+	}
+
+	// avoid page break beween heading and paragraph that follows immediately after
+	h2 + p,
+	h3 + p {
+		page-break-before: avoid;
+	}
+
+	#editorial header .meta {
+		font-size: 1rem;
+		display: flex;
+		flex-direction: column;
+		flex-basis: auto;
+
+		a {
+			text-decoration: none;
+		}
+		p {
+			font-size: 1rem;
+		}
+
+		time {
+			&:before {
+   			    // suppress slash used for screen
+				display: none !important;
+			}
+		}
+		.pdf {  // hide link to pdf (since this is used to generate pdf)
+			display: none;
+		}
+	}
+
+	// suppress main nav, background banner image, footer
+	#main-nav,
+	.banner,
+	#footer,
+	.ribbon-box {
+		display: none;
+		opacity: 0;
+		height: 0;
+	}
+
+/*	.ppa-logo {
+		position: running(page-header);
+	} */
+}

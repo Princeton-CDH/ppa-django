@@ -2,7 +2,12 @@
 {% with person.url|yesno:"a,div" as tag %}
 <article class="profile">
     {% if person.project_role %}
+    <div>{# group title and years in one row for alignment #}
         <span class="title">{{ person.project_role }}</span>
+        {% if person.project_years %}
+        <span class="years">{{ person.project_years }}</span>
+        {% endif %}
+    </div>
     {% endif %}
     <{{ tag }} class="ui profile card"{% if person.url %} href="{{ person.url }}" target="_blank" rel="noreferrer"{% endif %}>
     {% if person.photo %}
