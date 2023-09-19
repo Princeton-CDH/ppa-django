@@ -132,3 +132,5 @@ ENV/
 
 # osx thumbnails
 .DS_Store
+
+.ipynb_checkpoints
