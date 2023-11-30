@@ -5,6 +5,6 @@ pytest-cov
 django-debug-toolbar
 sphinx
 pre-commit
-wordfreq
-nltk
+pandas
+orjson
 tqdm
