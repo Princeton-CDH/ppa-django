@@ -34,8 +34,8 @@ class SolrCorpus:
 
     def __init__(self, path, doc_limit=-1):
         """
-        A class encapsulating a Solr Client specification, that yields
-        Bag-of-Word vectors on iteration, and thus acts as a Gensim Corpus.
+        A class encapsulating a Solr Client specification which yields
+       metadata and page data for PPA documents.
 
         :param path: A string to a path for the corpus output.
         :param doc_limit: Max no. of documents to process. The default of -1
