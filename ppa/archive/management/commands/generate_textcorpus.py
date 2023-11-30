@@ -5,7 +5,7 @@ into Solr via the **index** manage command.
 """
 
 import os
-import orjson
+import orjson   # a faster json implementation
 from django.core.management.base import BaseCommand
 from parasolr.django import SolrQuerySet
 from collections import defaultdict, OrderedDict
