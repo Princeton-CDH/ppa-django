@@ -5,13 +5,12 @@ into Solr via the **index** manage command.
 """
 
 import os
-import orjson   # a faster json implementation
+import json
 from django.core.management.base import BaseCommand
 from parasolr.django import SolrQuerySet
 from collections import defaultdict, OrderedDict
 import logging
 from tqdm import tqdm
-import pandas as pd
 from typing import Tuple
 from contextlib import contextmanager
 import logging
@@ -49,7 +48,7 @@ class SolrCorpus:
 
         # subsequent paths
         self.path_texts = os.path.join(self.path,'texts')
-        self.path_metadata = os.path.join(self.path,'metadata.csv')
+        self.path_metadata = os.path.join(self.path,'metadata.json')
         
         # query to get initial results
         results = SolrQuerySet().facet(self.DOC_ID_FIELD, limit=self.doc_limit)
@@ -125,8 +124,8 @@ class SolrCorpus:
         if pages:
             filename = os.path.join(self.path_texts, meta[self.WORK_ID_FIELD]+'.json')
             os.makedirs(self.path_texts,exist_ok=True)
-            with open(filename,'wb') as of:
-                of.write(orjson.dumps(pages,option=orjson.OPT_INDENT_2))
+            with open(filename,'w') as of:
+                json.dump(pages, of, indent=2)
         
         # otherwise, returned filename is blank to indicate no file saved
         else:
@@ -157,8 +156,8 @@ class SolrCorpus:
         pbar.close()
 
         # save metadata csv
-        dfmeta=pd.DataFrame(metadata).set_index(self.WORK_ID_FIELD).fillna('')
-        dfmeta.to_csv(self.path_metadata)
+        with open(self.path_metadata,'w') as of:
+            json.dump(metadata, of, indent=2)
         print(f'Saved metadata to: {self.path_metadata}')
 
 

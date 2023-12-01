@@ -3,7 +3,6 @@ import json
 import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
-import pandas as pd
 import os
 
 # mock results for acet query used to get document IDs and page counts
@@ -66,8 +65,10 @@ def test_save(tmpdir, patched_solr_queryset):
     call_command("generate_textcorpus", "--path", tmpdir.dirpath())
     metadata_file = tmpdir.dirpath("metadata.csv")
     assert metadata_file.check()
-    dfmeta = pd.read_csv(metadata_file)
-    assert len(dfmeta) == 2
+    
+    with open(metadata_file) as f: 
+        meta=json.load(f)
+    assert len(meta) == 2
 
     tdir=tmpdir.dirpath('texts')
     fns=os.listdir(tdir)
