@@ -14,6 +14,7 @@ mock_solr_docs = [
     # The first record has item_type='work' and contains metadata for the
     # document
     {"item_type": "work", "pub_year": 1863, "group_id_s":"doc_1"},
+    {"item_type": "work", "pub_year": "unknown","group_id_s":"doc_2"},
     # If multiple metadata rows are found, the first one (above) is used
     # Subsequent records have item_type='page', page-order specified by
     # 'order', with content in 'content'
@@ -36,7 +37,6 @@ mock_solr_docs = [
 
 
 
-    {"item_type": "work", "pub_year": "unknown","group_id_s":"doc_2"},
     {
         "item_type": "page",
         "order": 3,
@@ -73,7 +73,6 @@ def test_save(tmpdir, patched_solr_queryset):
     fns=os.listdir(tdir)
     assert len(fns) == 2
 
-    print(fns)
     fn1=os.path.join(tdir,fns[0])
     fn2=os.path.join(tdir,fns[1])
     with open(fn1) as f: ld1=json.load(f)
