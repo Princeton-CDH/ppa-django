@@ -85,7 +85,6 @@ class SolrCorpus:
 
         # find the metadata doc
         metadata_docs = [d for d in docs if d["item_type"] == "work"]
-        print('?',metadata_docs)
         assert len(metadata_docs)==1
         meta = {self.WORK_ID_FIELD:work_id, **metadata_docs[0]}
 
