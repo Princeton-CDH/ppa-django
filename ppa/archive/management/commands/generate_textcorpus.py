@@ -20,6 +20,13 @@ class Command(BaseCommand):
         parser.add_argument(
             "--path", required=True, help="Directory path to save corpus file(s)."
         )
+        parser.add_argument(
+            "--doc-limit",
+            type=int,
+            default=-1,
+            help="Limit on the number of documents for corpus generation."
+            "The default of -1 considers ALL documents.",
+        )
 
     def iter_solr(self, nsize=10, item_type='page'):
         i=0
@@ -42,9 +49,15 @@ class Command(BaseCommand):
         os.makedirs(path, exist_ok=True)
         path_meta = os.path.join(path,'metadata.jsonl')
         path_texts = os.path.join(path,'pages.jsonl')
+        
         with jsonlines.open(path_meta,'w') as of_meta:
-            for d in self.iter_works():
+            for i,d in enumerate(self.iter_works()):
                 of_meta.write(d)
+                if options['doc_limit']>0 and i+1>=options['doc_limit']: 
+                    break
+        
         with jsonlines.open(path_texts,'w') as of_meta:
-            for d in self.iter_pages():
+            for i,d in enumerate(self.iter_pages()):
                 of_meta.write(d)
+                if options['doc_limit']>0 and i+1>=options['doc_limit']: 
+                    break
