@@ -22,14 +22,14 @@ class SolrCorpus:
     DOC_ID_FIELD = "group_id_s"  # Solr field name for document identifier (not source_id, which is same across excerpts)
     PAGE_ORDER_FIELD = "order"  # Solr field name for page ordering
     OUTPUT_DOC_FIELDS = dict(
+        page_num = 'order',
         page_num_orig = 'label',
-        page_num_digi = 'order',
         page_text = 'content',
     )
     PAGE_ID_FIELD = 'page_id'
     WORK_ID_FIELD = 'work_id'
     PAGE_NUM_FIELD = 'page_num_orig'
-    PAGE_SORT_FIELD = 'page_num_digi'
+    PAGE_SORT_FIELD = 'page_num'
 
     def __init__(self, path, doc_limit=-1):
         """
