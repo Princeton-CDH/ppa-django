@@ -5,7 +5,6 @@ into Solr via the **index** manage command.
 """
 
 import os
-import jsonlines
 import json
 from django.core.management.base import BaseCommand
 from ppa.archive.models import DigitizedWork
@@ -73,7 +72,6 @@ class Command(BaseCommand):
             q=get_query(order=True)
             q.set_limits(step, step+batch_size)
             for d in q:
-                print(d)
                 yield d
 
     def handle(self, *args, **options):
@@ -82,7 +80,6 @@ class Command(BaseCommand):
         """
         # options
         path = options['path']
-        print(options)
         doclimit = options['doc_limit'] if options['doc_limit']>0 else None
         progress = options['verbosity']>0
         batch_size = options['batch']

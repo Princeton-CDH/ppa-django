@@ -3,10 +3,7 @@ import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
 import os
-import jsonlines,json
-
-# mock results for acet query used to get document IDs and page counts
-mock_solr_facets = {"group_id_s": {"doc_1": 2, "doc_2": 1}}
+import json
 
 # mock result for solr document data
 mock_solr_docs = [
