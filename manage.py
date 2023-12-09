@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import sys
+# sys.path.insert(0,'/Users/ryanheuser/github/parasolr')
 
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ppa.settings")
