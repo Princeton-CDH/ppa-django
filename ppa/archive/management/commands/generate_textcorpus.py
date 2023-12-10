@@ -109,7 +109,7 @@ class Command(BaseCommand):
         # if we want fewer than that, decrease "total"
         # (this has the effect of pulling from solr only what we need,
         # since we limit how many rows we pull by this amount)
-        if lim and int(total) > lim:
+        if lim and total > lim:
             total = lim
 
         # if total smaller than batch size, decrease batch size
