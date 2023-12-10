@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import os
 import sys
-# sys.path.insert(0,'/Users/ryanheuser/github/parasolr')
 
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ppa.settings")
@@ -12,7 +11,7 @@ if __name__ == "__main__":
         # issue is really that Django is missing to avoid masking other
         # exceptions on Python 2.
         try:
-            import django
+            pass
         except ImportError:
             raise ImportError(
                 "Couldn't import Django. Are you sure it's installed and "
