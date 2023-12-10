@@ -93,25 +93,41 @@ class Command(BaseCommand):
         Iterate over solr documents of a certain `item_type`.
         """
 
-        # get query
+        # get params
         batch_size, lim = self.batch_size, self.doclimit
+
+        # search for this item type, order by id
         qset = self.query_set.search(item_type=item_type).order_by("id")
+
+        # if we're looking for pages, rename those fields
         if item_type == "page":
             qset = qset.only(*self.PAGE_FIELDLIST)
+
+        # get the total count for this query
         total = qset.count()
+
+        # if we want fewer than that, decrease "total"
+        # (this has the effect of pulling from solr only what we need,
+        # since we limit how many rows we pull by this amount)
         if lim and int(total) > lim:
             total = lim
+
+        # if total smaller than batch size, decrease batch size
         if batch_size > total:
             batch_size = total
 
-        # iterate with progress bar
+        # define a generator to iterate solr with
         iterr = (
             result
             for step in range(0, total, batch_size)
             for result in qset[step : step + batch_size]
         )
+
+        # if progress bar wanted, tap one one
         if self.progress:
             iterr = progressbar(iterr, max_value=total)
+
+        # yield from this generator, progress bar or no
         yield from iterr
 
     def iter_works(self):
@@ -137,6 +153,7 @@ class Command(BaseCommand):
 
         # save if not a dry run
         if not self.is_dry_run:
+            # save json
             with open(self.path_meta, "w") as of:
                 json.dump(data, of, indent=2)
 
