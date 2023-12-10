@@ -56,7 +56,7 @@ def patched_solr_queryset(mock_solr_queryset):
     ) as mock_queryset_cls:
         mock_qs = mock_queryset_cls.return_value
         mock_qs.only.return_value.count.return_value = len(mock_solr_docs)
-        mock_qs.only.return_value.get_results.return_value = mock_solr_docs
+        mock_qs.only.return_value.__getitem__.return_value = mock_solr_docs
         yield mock_qs
 
 
@@ -68,13 +68,13 @@ def test_save(tmpdir, patched_solr_queryset):
     pages_file = tmpdir.dirpath("pages.jsonl")
     assert metadata_file.check()
     with open(metadata_file) as f: meta=json.load(f)
-    assert len(meta) == 10
+    assert len(meta) == 2
 
     def numlines(fngz):
         with gzip.open(fngz,'rt',encoding='utf-8') as f:
             return sum(1 for ln in f)
     
-    assert numlines(pages_file) > 10
+    assert numlines(pages_file) == 3
         
 
 
