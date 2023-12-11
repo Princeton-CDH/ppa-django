@@ -2,9 +2,22 @@
 **generate_textcorpus** is a custom manage command to generate a plain
 text corpus from Solr.  It should be run *after* content has been indexed
 into Solr via the **index** manage command.
+
+Examples:
+
+    python manage.py generate_textcorpus --path ~/ppa_solr_corpus
+
+    python manage.py generate_textcorpus --path ~/ppa_solr_corpus --dry-run
+
+    python manage.py generate_textcorpus --path ~/ppa_solr_corpus --doc-limit 100000
+
+    python manage.py generate_textcorpus --path ~/ppa_solr_corpus --batch-size 1000
+
 """
 import os
+from datetime import datetime
 import json
+import csv
 from django.core.management.base import BaseCommand
 from parasolr.django import SolrQuerySet
 from progressbar import progressbar
@@ -12,35 +25,22 @@ import orjsonl
 from functools import cached_property
 from collections import deque
 
-
 DEFAULT_BATCH_SIZE = 10000
 
 
 class Command(BaseCommand):
     """
     Custom manage command to generate a text corpus from text indexed in Solr.
-
-    Examples:
-
-        python manage.py generate_textcorpus --path ~/ppa_solr_corpus
-
-        python manage.py generate_textcorpus --path ~/ppa_solr_corpus --dry-run
-
-        python manage.py generate_textcorpus --path ~/ppa_solr_corpus --doc-limit 100000
-
-        python manage.py generate_textcorpus --path ~/ppa_solr_corpus --batch-size 1000
-
     """
 
     # fields we want from pages, in solr syntax: newfieldname:oldfieldname
     PAGE_FIELDLIST = [
-        "page_id:id",
+        "id:id",
         "work_id:group_id_s",
-        "source_id:source_id",
-        "page_num:order",
-        "page_num_orig:label",
-        "page_tags:tags",
-        "page_text:content",
+        "num:order",
+        "num_orig:label",
+        "tags:tags",
+        "text:content",
     ]
 
     WORK_FIELDLIST = [
@@ -50,12 +50,16 @@ class Command(BaseCommand):
         "title:title",
         "author:author_exact",
         "pub_year:pub_date",
-        "pub_publisher:publisher",
+        "publisher:publisher",
         "pub_place:pub_place",
         "collections:collections_exact",
         "work_type:work_type_s",
-        "sources:source_t",
+        "source:source_t",
         "source_url:source_url",
+        # title_sort for better key sorting, but could be sort_title
+        "title_sort:sort_title",
+        # title_sub for better key sorting, but could be subtitle
+        "title_sub:subtitle",
     ]
 
     # Argument parsing
@@ -66,7 +70,7 @@ class Command(BaseCommand):
 
         # add --path argument for output storage
         parser.add_argument(
-            "--path", required=True, help="Directory path to save corpus file(s)."
+            "--path", help="Directory path to save corpus file(s).", default=None
         )
 
         # add --doc-limit argument (determines how many results to retrieve from solr)
@@ -151,7 +155,13 @@ class Command(BaseCommand):
         """
         Simply calls `.iter_solr()` with `item_type` as `'work'`
         """
-        yield from self.iter_solr(item_type="work")
+        for d in self.iter_solr(item_type="work"):
+            # source does not need to be a list, will only be one
+            assert len(d["source"]) == 1
+            d["source"] = d["source"][0]
+
+            # yield now
+            yield d
 
     # save pages
     def iter_pages(self):
@@ -174,6 +184,14 @@ class Command(BaseCommand):
             with open(self.path_meta, "w") as of:
                 json.dump(data, of, indent=2, sort_keys=True)
 
+            # save csv
+            with open(self.path_meta_csv, "w", newline="") as csvfile:
+                # fieldnames we already know
+                fieldnames = [x.split(":")[0] for x in self.WORK_FIELDLIST]
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(data)
+
     def save_pages(self):
         """
         Save the page-level metadata as a jsonl file
@@ -194,8 +212,12 @@ class Command(BaseCommand):
         """
         # options
         self.path = options["path"]
-        self.path_meta = os.path.join(self.path, "metadata.json")
-        self.path_texts = os.path.join(self.path, "pages.jsonl.gz")
+        if not self.path:
+            self.path = os.path.join(f"generate_textcorpus_output_{nowstr()}")
+
+        self.path_meta = os.path.join(self.path, "ppa_metadata.json")
+        self.path_meta_csv = os.path.join(self.path, "ppa_metadata.csv")
+        self.path_texts = os.path.join(self.path, "ppa_pages.jsonl.gz")
         self.is_dry_run = options["dry_run"]
         self.doclimit = options["doc_limit"] if options["doc_limit"] > 0 else None
         self.progress = options["verbosity"] > 0
@@ -210,3 +232,8 @@ class Command(BaseCommand):
 
         # save pages
         self.save_pages()
+
+
+# helper func
+def nowstr():
+    return datetime.now().strftime("%Y-%m-%d_%H%M")
