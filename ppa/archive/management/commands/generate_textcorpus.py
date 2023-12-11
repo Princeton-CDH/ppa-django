@@ -43,6 +43,21 @@ class Command(BaseCommand):
         "page_text:content",
     ]
 
+    WORK_FIELDLIST = [
+        "work_id:group_id_s",
+        "source_id:source_id",
+        "cluster_id:cluster_id_s",
+        "title:title",
+        "author:author_exact",
+        "pub_year:pub_date",
+        "pub_publisher:publisher",
+        "pub_place:pub_place",
+        "collections:collections_exact",
+        "work_type:work_type_s",
+        "sources:source_t",
+        "source_url:source_url",
+    ]
+
     # Argument parsing
     def add_arguments(self, parser):
         """
@@ -102,6 +117,8 @@ class Command(BaseCommand):
         # if we're looking for pages, rename those fields
         if item_type == "page":
             qset = qset.only(*self.PAGE_FIELDLIST)
+        elif item_type == "work":
+            qset = qset.only(*self.WORK_FIELDLIST)
 
         # get the total count for this query
         total = qset.count()
@@ -123,7 +140,7 @@ class Command(BaseCommand):
             for result in qset[step : step + batch_size]
         )
 
-        # if progress bar wanted, tap one one
+        # if progress bar wanted, tack one on
         if self.progress:
             iterr = progressbar(iterr, max_value=total)
 
@@ -155,7 +172,7 @@ class Command(BaseCommand):
         if not self.is_dry_run:
             # save json
             with open(self.path_meta, "w") as of:
-                json.dump(data, of, indent=2)
+                json.dump(data, of, indent=2, sort_keys=True)
 
     def save_pages(self):
         """
