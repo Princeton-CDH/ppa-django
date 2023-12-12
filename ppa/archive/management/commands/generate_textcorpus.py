@@ -99,9 +99,10 @@ class Command(BaseCommand):
 
         # add --dry-run argument (don't save anything, just iterate)
         parser.add_argument(
-            "--uncompressed",
+            "--no-gzip",
             action="store_true",
-            help="Save as ppa_pages.jsonl instead of ppa_pages.jsonl.gz",
+            help="Save uncompressed as ppa_pages.jsonl"
+            "instead of compressed as ppa_pages.jsonl.gz",
         )
 
         # add --dry-run argument (don't save anything, just iterate)
@@ -223,7 +224,7 @@ class Command(BaseCommand):
 
         self.path_meta = os.path.join(self.path, "ppa_metadata.json")
         self.path_meta_csv = os.path.join(self.path, "ppa_metadata.csv")
-        self.uncompressed = options["uncompressed"]
+        self.uncompressed = options["no_gzip"]
         self.path_texts = os.path.join(
             self.path, "ppa_pages.jsonl" + ("" if self.uncompressed else ".gz")
         )
