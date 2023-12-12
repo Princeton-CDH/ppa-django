@@ -3,6 +3,13 @@
 text corpus from Solr.  It should be run *after* content has been indexed
 into Solr via the **index** manage command.
 
+Assumptions:
+    * No suppressed works from PPA exist in the solr index
+    * The "source_t" field exists in solr index, is a list, 
+        but contains only entry (it will be ["Gale"] or ["Hathi"])
+    
+
+
 Examples:
 
     python manage.py generate_textcorpus --path ~/ppa_solr_corpus
@@ -22,7 +29,6 @@ from django.core.management.base import BaseCommand
 from parasolr.django import SolrQuerySet
 from progressbar import progressbar
 import orjsonl
-from functools import cached_property
 from collections import deque
 
 DEFAULT_BATCH_SIZE = 10000
@@ -34,33 +40,31 @@ class Command(BaseCommand):
     """
 
     # fields we want from pages, in solr syntax: newfieldname:oldfieldname
-    PAGE_FIELDLIST = [
-        "id:id",
-        "work_id:group_id_s",
-        "num:order",
-        "num_orig:label",
-        "tags:tags",
-        "text:content",
-    ]
+    PAGE_FIELDLIST = {
+        "id": "id",
+        "work_id": "group_id_s",
+        "num": "order",
+        "num_orig": "label",
+        "tags": "tags",
+        "text": "content",
+    }
 
-    WORK_FIELDLIST = [
-        "work_id:group_id_s",
-        "source_id:source_id",
-        "cluster_id:cluster_id_s",
-        "title:title",
-        "author:author_exact",
-        "pub_year:pub_date",
-        "publisher:publisher",
-        "pub_place:pub_place",
-        "collections:collections_exact",
-        "work_type:work_type_s",
-        "source:source_t",
-        "source_url:source_url",
-        # title_sort for better key sorting, but could be sort_title
-        "title_sort:sort_title",
-        # title_sub for better key sorting, but could be subtitle
-        "title_sub:subtitle",
-    ]
+    WORK_FIELDLIST = {
+        "work_id": "group_id_s",
+        "source_id": "source_id",
+        "cluster_id": "cluster_id_s",
+        "title": "title",
+        "author": "author_exact",
+        "pub_year": "pub_date",
+        "publisher": "publisher",
+        "pub_place": "pub_place",
+        "collections": "collections_exact",
+        "work_type": "work_type_s",
+        "source": "source_t",
+        "source_url": "source_url",
+        "sort_title": "sort_title",
+        "subtitle": "subtitle",
+    }
 
     # Argument parsing
     def add_arguments(self, parser):
@@ -70,7 +74,10 @@ class Command(BaseCommand):
 
         # add --path argument for output storage
         parser.add_argument(
-            "--path", help="Directory path to save corpus file(s).", default=None
+            "--path",
+            help="Directory path to save corpus file(s)."
+            "Defaults to ./ppa_corpus_{timestamp}",
+            default=None,
         )
 
         # add --doc-limit argument (determines how many results to retrieve from solr)
@@ -92,20 +99,19 @@ class Command(BaseCommand):
 
         # add --dry-run argument (don't save anything, just iterate)
         parser.add_argument(
+            "--uncompressed",
+            action="store_true",
+            help="Save as ppa_pages.jsonl instead of ppa_pages.jsonl.gz",
+        )
+
+        # add --dry-run argument (don't save anything, just iterate)
+        parser.add_argument(
             "--dry-run",
             action="store_true",
             help="Do not save anything, just iterate over solr",
         )
 
     #### SOLR ####
-
-    @cached_property
-    def query_set(self):
-        """
-        A cached representation of the query set;
-        it discourages opening multiple connections to database.
-        """
-        return SolrQuerySet()
 
     def iter_solr(self, item_type="page"):
         """
@@ -116,13 +122,13 @@ class Command(BaseCommand):
         batch_size, lim = self.batch_size, self.doclimit
 
         # search for this item type, order by id
-        qset = self.query_set.search(item_type=item_type).order_by("id")
+        qset = self.query_set.filter(item_type=item_type).order_by("id")
 
         # if we're looking for pages, rename those fields
         if item_type == "page":
-            qset = qset.only(*self.PAGE_FIELDLIST)
+            qset = qset.only(**self.PAGE_FIELDLIST)
         elif item_type == "work":
-            qset = qset.only(*self.WORK_FIELDLIST)
+            qset = qset.only(**self.WORK_FIELDLIST)
 
         # get the total count for this query
         total = qset.count()
@@ -138,7 +144,7 @@ class Command(BaseCommand):
             batch_size = total
 
         # define a generator to iterate solr with
-        iterr = (
+        batch_iterator = (
             result
             for step in range(0, total, batch_size)
             for result in qset[step : step + batch_size]
@@ -146,10 +152,10 @@ class Command(BaseCommand):
 
         # if progress bar wanted, tack one on
         if self.progress:
-            iterr = progressbar(iterr, max_value=total)
+            batch_iterator = progressbar(batch_iterator, max_value=total)
 
         # yield from this generator, progress bar or no
-        yield from iterr
+        yield from batch_iterator
 
     def iter_works(self):
         """
@@ -157,7 +163,7 @@ class Command(BaseCommand):
         """
         for d in self.iter_solr(item_type="work"):
             # source does not need to be a list, will only be one
-            assert len(d["source"]) == 1
+            # see module docstring for more info
             d["source"] = d["source"][0]
 
             # yield now
@@ -182,12 +188,12 @@ class Command(BaseCommand):
         if not self.is_dry_run:
             # save json
             with open(self.path_meta, "w") as of:
-                json.dump(data, of, indent=2, sort_keys=True)
+                json.dump(data, of, indent=2)
 
             # save csv
             with open(self.path_meta_csv, "w", newline="") as csvfile:
                 # fieldnames we already know
-                fieldnames = [x.split(":")[0] for x in self.WORK_FIELDLIST]
+                fieldnames = list(self.WORK_FIELDLIST.keys())
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                 writer.writeheader()
                 writer.writerows(data)
@@ -213,18 +219,24 @@ class Command(BaseCommand):
         # options
         self.path = options["path"]
         if not self.path:
-            self.path = os.path.join(f"generate_textcorpus_output_{nowstr()}")
+            self.path = os.path.join(f"ppa_corpus_{nowstr()}")
 
         self.path_meta = os.path.join(self.path, "ppa_metadata.json")
         self.path_meta_csv = os.path.join(self.path, "ppa_metadata.csv")
-        self.path_texts = os.path.join(self.path, "ppa_pages.jsonl.gz")
+        self.uncompressed = options["uncompressed"]
+        self.path_texts = os.path.join(
+            self.path, "ppa_pages.jsonl" + ("" if self.uncompressed else ".gz")
+        )
         self.is_dry_run = options["dry_run"]
         self.doclimit = options["doc_limit"] if options["doc_limit"] > 0 else None
-        self.progress = options["verbosity"] > 0
+        self.verbose = self.progress = options["verbosity"] > 0
         self.batch_size = options["batch_size"]
+        self.query_set = SolrQuerySet()
 
         # ensure path
         if not self.is_dry_run:
+            if self.verbose:
+                print(f"saving PPA text corpus to: {self.path}")
             os.makedirs(self.path, exist_ok=True)
 
         # save metadata
