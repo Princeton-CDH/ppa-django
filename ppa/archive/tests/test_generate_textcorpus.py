@@ -426,8 +426,8 @@ def test_handle():
         mock_iter_pages.return_value = (d for d in mock_page_docs)
 
         with tempfile.TemporaryDirectory() as tdir:
-            cmd = init_cmd(verbosity=1)
-            cmd.handle(path=tdir)
+            cmd = init_cmd()
+            cmd.handle(path=tdir, verbosity=1)
             assert cmd.path == tdir
             assert os.path.exists(cmd.path_meta)
             assert os.path.exists(cmd.path_meta_csv)
