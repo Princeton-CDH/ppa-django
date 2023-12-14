@@ -32,6 +32,7 @@ import orjsonl
 from collections import deque
 
 DEFAULT_BATCH_SIZE = 10000
+TIMESTAMP_FMT = "%Y-%m-%d_%H%M"
 
 
 class Command(BaseCommand):
@@ -84,9 +85,9 @@ class Command(BaseCommand):
         parser.add_argument(
             "--doc-limit",
             type=int,
-            default=-1,
+            default=0,
             help="Limit on the number of documents for corpus generation."
-            "The default of -1 considers ALL documents.",
+            "The default of 0 considers ALL documents.",
         )
 
         # add --batch-size argument (for solr querying)
@@ -133,7 +134,10 @@ class Command(BaseCommand):
 
         # get the total count for this query
         total = qset.count()
+        if not total:
+            raise Exception("no records found in solr for query")
 
+        print(total)
         # if we want fewer than that, decrease "total"
         # (this has the effect of pulling from solr only what we need,
         # since we limit how many rows we pull by this amount)
@@ -143,6 +147,8 @@ class Command(BaseCommand):
         # if total smaller than batch size, decrease batch size
         if batch_size > total:
             batch_size = total
+
+        print(total, lim, batch_size)
 
         # define a generator to iterate solr with
         batch_iterator = (
@@ -165,6 +171,7 @@ class Command(BaseCommand):
         for d in self.iter_solr(item_type="work"):
             # source does not need to be a list, will only be one
             # see module docstring for more info
+
             d["source"] = d["source"][0]
 
             # yield now
@@ -213,26 +220,35 @@ class Command(BaseCommand):
 
     ### running script
 
-    def handle(self, *args, **options):
+    def set_params(self, *args, **options):
         """
         Run the command, generating metadata.jsonl and pages.jsonl
         """
         # options
-        self.path = options["path"]
+        self.path = options.get("path")
         if not self.path:
             self.path = os.path.join(f"ppa_corpus_{nowstr()}")
 
         self.path_meta = os.path.join(self.path, "ppa_metadata.json")
         self.path_meta_csv = os.path.join(self.path, "ppa_metadata.csv")
-        self.uncompressed = options["no_gzip"]
+        self.uncompressed = options.get("no_gzip")
         self.path_texts = os.path.join(
             self.path, "ppa_pages.jsonl" + ("" if self.uncompressed else ".gz")
         )
-        self.is_dry_run = options["dry_run"]
-        self.doclimit = options["doc_limit"] if options["doc_limit"] > 0 else None
-        self.verbose = self.progress = options["verbosity"] > 0
-        self.batch_size = options["batch_size"]
+        self.is_dry_run = options.get("dry_run")
+        self.doclimit = (
+            options.get("doc_limit") if options.get("doc_limit", 0) > 0 else None
+        )
+        self.verbose = self.progress = options.get("verbosity", 0) > 0
+        self.batch_size = (
+            options.get("batch_size")
+            if options.get("batch_size", 0) > 0
+            else DEFAULT_BATCH_SIZE
+        )
         self.query_set = SolrQuerySet()
+
+    def handle(self, *args, **options):
+        self.set_params(*args, **options)
 
         # ensure path
         if not self.is_dry_run:
@@ -249,4 +265,4 @@ class Command(BaseCommand):
 
 # helper func
 def nowstr():
-    return datetime.now().strftime("%Y-%m-%d_%H%M")
+    return datetime.now().strftime(TIMESTAMP_FMT)
