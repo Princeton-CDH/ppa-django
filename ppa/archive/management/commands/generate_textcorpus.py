@@ -137,24 +137,21 @@ class Command(BaseCommand):
         if not total:
             raise Exception("no records found in solr for query")
 
-        print(total)
         # if we want fewer than that, decrease "total"
         # (this has the effect of pulling from solr only what we need,
         # since we limit how many rows we pull by this amount)
         if lim and total > lim:
             total = lim
 
-        # if total smaller than batch size, decrease batch size
-        if batch_size > total:
-            batch_size = total
-
-        print(total, lim, batch_size)
-
         # define a generator to iterate solr with
         batch_iterator = (
             result
             for step in range(0, total, batch_size)
-            for result in qset[step : step + batch_size]
+            for result in qset[
+                step : (step + batch_size)
+                if (step + batch_size) < (total + 1)
+                else (total + 1)
+            ]
         )
 
         # if progress bar wanted, tack one on
