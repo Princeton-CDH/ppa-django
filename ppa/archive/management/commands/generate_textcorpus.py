@@ -142,15 +142,12 @@ class Command(BaseCommand):
         # since we limit how many rows we pull by this amount)
         if lim and total > lim:
             total = lim
-
         # define a generator to iterate solr with
         batch_iterator = (
             result
             for step in range(0, total, batch_size)
             for result in qset[
-                step : (step + batch_size)
-                if (step + batch_size) < (total + 1)
-                else (total + 1)
+                step : (step + batch_size) if (step + batch_size) <= total else total
             ]
         )
 
