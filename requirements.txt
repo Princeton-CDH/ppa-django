@@ -23,10 +23,9 @@ wand
 intspan
 # specify bs4 version to avoid wagtail version conflict
 beautifulsoup4<=4.11
-# only needed for the 'generate_corpus' manage command
-gensim
 django-adminlogentries
 django-import-export
 psycopg2-binary
 multiprocess
+# only needed for the 'generate_textcorpus' manage command
 orjsonl
