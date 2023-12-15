@@ -3,11 +3,12 @@
 text corpus from Solr.  It should be run *after* content has been indexed
 into Solr via the **index** manage command.
 
-Assumptions:
-    * No suppressed works from PPA exist in the solr index
-    * The "source_t" field exists in solr index, is a list, 
-        but contains only entry (it will be ["Gale"] or ["Hathi"])
-    
+The full text corpus is generated from Solr; this script makes the 
+following assumptions:
+    * Suppressed works and pages are not indexed 
+        (expected behavior, if db and Solr are synchronized)
+    * Each work has a single source (Gale or Hathi) 
+        even though it is indexed in Solr as a list    
 
 
 Examples:
@@ -25,7 +26,7 @@ import os
 from datetime import datetime
 import json
 import csv
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from parasolr.django import SolrQuerySet
 from progressbar import progressbar
 import orjsonl
@@ -135,7 +136,7 @@ class Command(BaseCommand):
         # get the total count for this query
         total = qset.count()
         if not total:
-            raise Exception("no records found in solr for query")
+            raise CommandError("No records found in solr for query.")
 
         # if we want fewer than that, decrease "total"
         # (this has the effect of pulling from solr only what we need,
@@ -147,7 +148,7 @@ class Command(BaseCommand):
             result
             for step in range(0, total, batch_size)
             for result in qset[
-                step : (step + batch_size) if (step + batch_size) <= total else total
+                step : (step + batch_size) if (step + batch_size) < total else total
             ]
         )
 
@@ -233,7 +234,9 @@ class Command(BaseCommand):
         self.doclimit = (
             options.get("doc_limit") if options.get("doc_limit", 0) > 0 else None
         )
-        self.verbose = self.progress = options.get("verbosity", 0) > 0
+        verbosity_int = options.get("verbosity", 0)
+        self.verbose = verbosity_int > 1  # extra verbose
+        self.progress = verbosity_int > 0  # unless quieted, use progress bar
         self.batch_size = (
             options.get("batch_size")
             if options.get("batch_size", 0) > 0

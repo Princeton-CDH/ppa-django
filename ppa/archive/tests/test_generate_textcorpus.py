@@ -1,5 +1,6 @@
 from unittest.mock import patch
 import pytest
+from collections import deque
 import types
 from django.core.management import call_command
 from django.core.management.base import CommandError
@@ -213,50 +214,29 @@ def test_iter_pages():
         mock_iter_solr.assert_called_with(item_type="page")
 
 
-# def test_iter_solr_lim_works():
-#     with patch(
-#         "ppa.archive.management.commands.generate_textcorpus.Command.iter_solr"
-#     ) as mock_iter_solr:
-#         mock_iter_solr.return_value = (d for d in mock_work_docs)
-#         lim = 2
-#         with tempfile.TemporaryDirectory() as tdir:
-#             cmd = init_cmd(path=tdir, doc_limit = lim)
-#             cmd.save_metadata()
-#             assert cmd.path == tdir
-#             assert os.path.exists(cmd.path_meta)
-#             assert os.path.exists(cmd.path_meta_csv)
+def test_progressbar(patched_pages_solr_queryset):
+    with patch(
+        "ppa.archive.management.commands.generate_textcorpus.progressbar"
+    ) as mock_iter_progress:
+        cmd = init_cmd(verbosity=1, dry_run=True)
+        page_iter = cmd.iter_pages()
+        deque(page_iter, maxlen=0)
+        mock_iter_progress.assert_called()
 
-#             meta_ld_out = list(cmd.iter_pages())
-#             assert len(meta_ld_out) == 0, "generator should be spent"
-
-#             with open(cmd.path_meta) as f:
-#                 json_meta = json.load(f)
-
-#             with open(cmd.path_meta_csv, newline="") as csvfile:
-#                 reader = csv.DictReader(csvfile)
-#                 csv_meta = list(reader)
-
-#             assert len(json_meta) == len(csv_meta) == lim
-#             assert len(json_meta) == len(mock_work_docs) == lim
+    with patch(
+        "ppa.archive.management.commands.generate_textcorpus.progressbar"
+    ) as mock_iter_progress:
+        cmd = init_cmd(verbosity=0, dry_run=True)
+        page_iter = cmd.iter_pages()
+        deque(page_iter, maxlen=0)
+        mock_iter_progress.assert_not_called()
 
 
-# def test_iter_solr_lim_pages():
-#     with patch(
-#         "ppa.archive.management.commands.generate_textcorpus.Command.iter_solr"
-#     ) as mock_iter_solr:
-#         mock_iter_solr.return_value = (d for d in mock_page_docs)
-#         lim = 2
-#         with tempfile.TemporaryDirectory() as tdir:
-#             cmd = init_cmd(path=tdir, doc_limit = lim)
-#             cmd.save_pages()
-#             assert cmd.path == tdir
-#             assert os.path.exists(cmd.path_texts)
-
-#             pages_ld_out = list(cmd.iter_pages())
-#             assert len(pages_ld_out) == 0, "generator should be spent"
-
-#             pages_json = orjsonl.load(cmd.path_texts)
-#             assert len(pages_json) == lim
+def test_no_solr():
+    cmd = init_cmd(verbosity=1, dry_run=True)
+    with pytest.raises(CommandError):
+        page_iter = cmd.iter_pages()
+        deque(page_iter, maxlen=0)
 
 
 def test_save_metadata():
@@ -354,7 +334,8 @@ def test_set_params():
                 if not optiond["doc_limit"]
                 else optiond["doc_limit"]
             )
-            assert cmd.verbose == bool(optiond["verbosity"])
+            assert cmd.verbose == bool(optiond["verbosity"] > 1)
+            assert cmd.progress == bool(optiond["verbosity"] > 0)
             assert (
                 cmd.batch_size == optiond["batch_size"]
                 if optiond["batch_size"]
@@ -373,26 +354,6 @@ def test_default_args(patched_works_solr_queryset):
         assert not cmd.uncompressed
         assert cmd.batch_size == generate_textcorpus.DEFAULT_BATCH_SIZE
     os.chdir(herenow)
-
-
-## cannot get this to work ?
-# #since if we patch iter_solr then we set the doc limit already
-# def test_doclimit(tmpdir):
-#     lim=2
-#     call_command(
-#         "generate_textcorpus",
-#         "--path", tmpdir.dirpath(),
-#         "--doc-limit", lim,
-#         "--no-gzip"
-#     )
-#     path_meta = os.path.join(tmpdir,'ppa_metadata.json')
-#     path_pages = os.path.join(tmpdir,'ppa_pages.jsonl')
-#     assert os.path.exists(path_meta)
-#     assert os.path.exists(path_pages)
-#     with open(path_meta) as f:
-#         meta = json.load(f)
-#     pages = orjsonl.load(path_pages)
-#     assert len(meta) == len(pages) == 2
 
 
 def test_invalid_args(tmpdir):
