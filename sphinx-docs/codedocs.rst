@@ -76,7 +76,7 @@ Gale Import
 Generate Corpus
 ~~~~~~~~~~~~~~~
 
-.. automodule:: ppa.archive.management.commands.generate_corpus
+.. automodule:: ppa.archive.management.commands.generate_textcorpus
     :members:
 
 Common
