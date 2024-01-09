@@ -69,32 +69,32 @@ mock_page_docs = [
     {
         "id": "text1.000001",
         "work_id": "text1",
-        "num": 0,
-        "num_orig": "label",
+        "order": 0,
+        "label": "label",
         "tags": "tags",
         "text": "content",
     },
     {
         "id": "text1.000002",
         "work_id": "text1",
-        "num": 1,
-        "num_orig": "label",
+        "order": 1,
+        "label": "label",
         "tags": ["tags"],
         "text": "content",
     },
     {
         "id": "text2.00001",
         "work_id": "group_id_s",
-        "num": 2,
-        "num_orig": "label",
+        "order": 2,
+        "label": "label",
         "tags": ["tags"],
         "text": "content",
     },
     {
         "id": "text2.00002",
         "work_id": "group_id_s",
-        "num": 3,
-        "num_orig": "label",
+        "order": 3,
+        "label": "label",
         "tags": ["tags"],
         "text": "content",
     },
@@ -218,7 +218,7 @@ def test_progressbar(patched_pages_solr_queryset):
     with patch(
         "ppa.archive.management.commands.generate_textcorpus.progressbar"
     ) as mock_iter_progress:
-        cmd = init_cmd(verbosity=1, dry_run=True)
+        cmd = init_cmd(no_progressbar=False, dry_run=True)
         page_iter = cmd.iter_pages()
         deque(page_iter, maxlen=0)
         mock_iter_progress.assert_called()
@@ -226,7 +226,7 @@ def test_progressbar(patched_pages_solr_queryset):
     with patch(
         "ppa.archive.management.commands.generate_textcorpus.progressbar"
     ) as mock_iter_progress:
-        cmd = init_cmd(verbosity=0, dry_run=True)
+        cmd = init_cmd(no_progressbar=True, dry_run=True)
         page_iter = cmd.iter_pages()
         deque(page_iter, maxlen=0)
         mock_iter_progress.assert_not_called()
@@ -319,6 +319,7 @@ def test_set_params():
             "doc_limit": [0, 1000],
             "verbosity": [0, 1],
             "batch_size": [1000, 10000],
+            "no_progressbar": [True, False],
         }
         cmd = init_cmd()
         for run in range(10):
@@ -335,7 +336,7 @@ def test_set_params():
                 else optiond["doc_limit"]
             )
             assert cmd.verbose == bool(optiond["verbosity"] > 1)
-            assert cmd.progress == bool(optiond["verbosity"] > 0)
+            assert cmd.progress == (not bool(optiond["no_progressbar"]))
             assert (
                 cmd.batch_size == optiond["batch_size"]
                 if optiond["batch_size"]
