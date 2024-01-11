@@ -13,19 +13,23 @@ following assumptions:
 Examples:
 
     - Expected use:
+        python manage.py generate_textcorpus
+
+    - Specify a path:
         python manage.py generate_textcorpus --path ~/ppa_solr_corpus
 
     - Dry run (do not create any files or folders):
-        python manage.py generate_textcorpus --path ~/ppa_solr_corpus --dry-run
+        python manage.py generate_textcorpus --dry-run
 
     - Partial run (save only N rows, for testing):
-        python manage.py generate_textcorpus --path ~/ppa_solr_corpus --doc-limit 100
+        python manage.py generate_textcorpus --doc-limit 100
 
     - Cron-style run (no progress bar, but logs)
-        python manage.py generate_textcorpus --path ~/ppa_solr_corpus \
-            --no-progressbar --verbosity 2
+        python manage.py generate_textcorpus --no-progressbar --verbosity 2
 
 Notes:
+
+    - Default path is `ppa_corpus_{timestamp}` in the current working directory
 
     - Default batch size is 10,000, meaning 10,000 records are pulled 
       from solr at a time. Usage testing revealed that this default 
