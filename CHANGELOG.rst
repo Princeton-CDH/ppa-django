@@ -3,6 +3,11 @@
 CHANGELOG
 =========
 
+3.11
+----
+
+- As an admin, I want a way to reproducibly generate a full-text corpus of all public PPA content in order to support computational research on PPA materials
+
 3.10
 ----
 
