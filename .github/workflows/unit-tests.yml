@@ -7,7 +7,6 @@ on:
     - cron: "0 16 * * 2"
 
 env:
-  NODE_VERSION: 16.15
   DB_NAME: ppa
   DB_USER: ppa
   DB_PASSWORD: ppa
@@ -20,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: package.json
       - uses: actions/cache@v4
         with:
           path: ~/.npm
@@ -69,16 +68,10 @@ jobs:
       - name: Copy solr configsets to solr home directory (Solr 8 only)
         run: "docker exec -d ${{ job.services.solr.id }} cp -r /opt/solr/server/solr/configsets /var/solr/data"
 
-      # NOTE: Python version to use is stored in the .python-version file, which is the
-      # convention for pyenv: https://github.com/pyenv/pyenv
-      - name: Get Python version
-        run: echo "PYTHON_VERSION=$(cat .python-version)" >> $GITHUB_ENV
-
       # use python version for current build
       - name: Setup Python
         uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
+        # uses .python-version to determine python version
 
       - name: Cache pip
         uses: actions/cache@v4
