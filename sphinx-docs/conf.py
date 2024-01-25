@@ -28,6 +28,7 @@ sys.path.insert(0, os.path.abspath(".."))
 os.environ["DJANGO_SETTINGS_MODULE"] = "ppa.settings"
 django.setup()
 
+# ruff: noqa: E402
 from ppa import __version__
 
 # -- General configuration ------------------------------------------------
@@ -208,9 +209,9 @@ texinfo_documents = [
 ]
 
 
-# Example configuration for intersphinx: refer to the Python standard library.
+# Configure for intersphinx document links to python standard library + django
 intersphinx_mapping = {
-    "https://docs.python.org/3/": None,
+    "python": ("https://docs.python.org/3/", None),
     "django": ("https://django.readthedocs.io/en/latest/", None),
 }
 
