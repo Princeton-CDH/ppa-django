@@ -283,4 +283,5 @@ class Command(BaseCommand):
 
 # helper func
 def nowstr():
+    """helper method to generate timestamp for use in output filename"""
     return datetime.now().strftime(TIMESTAMP_FMT)
