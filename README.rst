@@ -25,10 +25,6 @@ at `<https://princeton-cdh.github.io/ppa-django/>`_.
    :target: https://www.codefactor.io/repository/github/princeton-cdh/ppa-django
    :alt: CodeFactor
 
-.. image:: https://requires.io/github/Princeton-CDH/ppa-django/requirements.svg?branch=main
-   :target: https://requires.io/github/Princeton-CDH/ppa-django/requirements/?branch=main
-   :alt: Requirements Status
-
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
    :target: https://github.com/psf/black
    :alt: code style Black
@@ -50,7 +46,7 @@ Development instructions
 
 Initial setup and installation:
 
-- **recommended:** create and activate a python 3.6 virtual environment, perhaps with ``virtualenv`` or ``venv``
+- **recommended:** create and activate a python 3.9 virtual environment, perhaps with ``virtualenv`` or ``venv``
 
 - Use pip to install required python dependencies::
 
