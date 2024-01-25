@@ -4,10 +4,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; Princeton Prosody Archive 3.10.0 documentation</title>
+    <title>Index &#8212; Princeton Prosody Archive 3.11.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
-    <script src="_static/documentation_options.js?v=f8d09eac"></script>
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=12dfc556" />
+    <script src="_static/documentation_options.js?v=8905d4f5"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="#" />
@@ -15,8 +15,9 @@
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
+
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  
 
   </head><body>
   
@@ -65,7 +66,7 @@
       <li><a href="codedocs.html#ppa.archive.management.commands.gale_import.Command.add_arguments">add_arguments() (ppa.archive.management.commands.gale_import.Command method)</a>
 
       <ul>
-        <li><a href="codedocs.html#ppa.archive.management.commands.generate_corpus.Command.add_arguments">(ppa.archive.management.commands.generate_corpus.Command method)</a>
+        <li><a href="codedocs.html#ppa.archive.management.commands.generate_textcorpus.Command.add_arguments">(ppa.archive.management.commands.generate_textcorpus.Command method)</a>
 </li>
         <li><a href="codedocs.html#ppa.archive.management.commands.hathi_excerpt.Command.add_arguments">(ppa.archive.management.commands.hathi_excerpt.Command method)</a>
 </li>
@@ -187,7 +188,7 @@
       <li><a href="codedocs.html#ppa.archive.management.commands.gale_import.Command">Command (class in ppa.archive.management.commands.gale_import)</a>
 
       <ul>
-        <li><a href="codedocs.html#ppa.archive.management.commands.generate_corpus.Command">(class in ppa.archive.management.commands.generate_corpus)</a>
+        <li><a href="codedocs.html#ppa.archive.management.commands.generate_textcorpus.Command">(class in ppa.archive.management.commands.generate_textcorpus)</a>
 </li>
         <li><a href="codedocs.html#ppa.archive.management.commands.hathi_excerpt.Command">(class in ppa.archive.management.commands.hathi_excerpt)</a>
 </li>
@@ -467,7 +468,7 @@
       <li><a href="codedocs.html#ppa.archive.management.commands.gale_import.Command.handle">handle() (ppa.archive.management.commands.gale_import.Command method)</a>
 
       <ul>
-        <li><a href="codedocs.html#ppa.archive.management.commands.generate_corpus.Command.handle">(ppa.archive.management.commands.generate_corpus.Command method)</a>
+        <li><a href="codedocs.html#ppa.archive.management.commands.generate_textcorpus.Command.handle">(ppa.archive.management.commands.generate_textcorpus.Command method)</a>
 </li>
         <li><a href="codedocs.html#ppa.archive.management.commands.hathi_excerpt.Command.handle">(ppa.archive.management.commands.hathi_excerpt.Command method)</a>
 </li>
@@ -532,14 +533,14 @@
 </li>
       <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.index_id">index_id() (ppa.archive.models.DigitizedWork method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.index_item_type">index_item_type() (ppa.archive.models.DigitizedWork class method)</a>
 
       <ul>
         <li><a href="codedocs.html#ppa.archive.models.Page.index_item_type">(ppa.archive.models.Page class method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="codedocs.html#ppa.archive.models.TrackChangesModel.initial_value">initial_value() (ppa.archive.models.TrackChangesModel method)</a>
 </li>
       <li><a href="codedocs.html#ppa.archive.management.commands.hathi_import.Command.initialize_pairtrees">initialize_pairtrees() (ppa.archive.management.commands.hathi_import.Command method)</a>
@@ -558,6 +559,12 @@
         <li><a href="codedocs.html#ppa.archive.models.Page.items_to_index">(ppa.archive.models.Page class method)</a>
 </li>
       </ul></li>
+      <li><a href="codedocs.html#ppa.archive.management.commands.generate_textcorpus.Command.iter_pages">iter_pages() (ppa.archive.management.commands.generate_textcorpus.Command method)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.management.commands.generate_textcorpus.Command.iter_solr">iter_solr() (ppa.archive.management.commands.generate_textcorpus.Command method)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.management.commands.generate_textcorpus.Command.iter_works">iter_works() (ppa.archive.management.commands.generate_textcorpus.Command method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -662,7 +669,7 @@
 </li>
         <li><a href="codedocs.html#module-ppa.archive.management.commands.gale_import">ppa.archive.management.commands.gale_import</a>
 </li>
-        <li><a href="codedocs.html#module-ppa.archive.management.commands.generate_corpus">ppa.archive.management.commands.generate_corpus</a>
+        <li><a href="codedocs.html#module-ppa.archive.management.commands.generate_textcorpus">ppa.archive.management.commands.generate_textcorpus</a>
 </li>
         <li><a href="codedocs.html#module-ppa.archive.management.commands.hathi_excerpt">ppa.archive.management.commands.hathi_excerpt</a>
 </li>
@@ -720,6 +727,8 @@
 </li>
       </ul></li>
       <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.notes">notes (ppa.archive.models.DigitizedWork attribute)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.management.commands.generate_textcorpus.nowstr">nowstr() (in module ppa.archive.management.commands.generate_textcorpus)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -816,10 +825,10 @@
 </li>
       </ul></li>
       <li>
-    ppa.archive.management.commands.generate_corpus
+    ppa.archive.management.commands.generate_textcorpus
 
       <ul>
-        <li><a href="codedocs.html#module-ppa.archive.management.commands.generate_corpus">module</a>
+        <li><a href="codedocs.html#module-ppa.archive.management.commands.generate_textcorpus">module</a>
 </li>
       </ul></li>
       <li>
@@ -1018,17 +1027,19 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="codedocs.html#ppa.archive.management.commands.generate_corpus.SolrCorpus.save">save() (ppa.archive.management.commands.generate_corpus.SolrCorpus method)</a>
+      <li><a href="codedocs.html#ppa.archive.models.CollectionSignalHandlers.save">save() (ppa.archive.models.CollectionSignalHandlers static method)</a>
 
       <ul>
-        <li><a href="codedocs.html#ppa.archive.models.CollectionSignalHandlers.save">(ppa.archive.models.CollectionSignalHandlers static method)</a>
-</li>
         <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.save">(ppa.archive.models.DigitizedWork method)</a>
 </li>
         <li><a href="codedocs.html#ppa.archive.models.TrackChangesModel.save">(ppa.archive.models.TrackChangesModel method)</a>
 </li>
       </ul></li>
+      <li><a href="codedocs.html#ppa.archive.management.commands.generate_textcorpus.Command.save_metadata">save_metadata() (ppa.archive.management.commands.generate_textcorpus.Command method)</a>
+</li>
       <li><a href="codedocs.html#ppa.archive.admin.DigitizedWorkAdmin.save_model">save_model() (ppa.archive.admin.DigitizedWorkAdmin method)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.management.commands.generate_textcorpus.Command.save_pages">save_pages() (ppa.archive.management.commands.generate_textcorpus.Command method)</a>
 </li>
       <li><a href="codedocs.html#ppa.archive.admin.DigitizedWorkAdmin.save_related">save_related() (ppa.archive.admin.DigitizedWorkAdmin method)</a>
 </li>
@@ -1046,13 +1057,13 @@
 </li>
       <li><a href="codedocs.html#ppa.archive.forms.SearchForm.set_choices_from_facets">set_choices_from_facets() (ppa.archive.forms.SearchForm method)</a>
 </li>
-      <li><a href="codedocs.html#ppa.editorial.models.EditorialPage.set_url_path">set_url_path() (ppa.editorial.models.EditorialPage method)</a>
-</li>
-      <li><a href="codedocs.html#ppa.archive.management.commands.hathi_excerpt.Command.setup">setup() (ppa.archive.management.commands.hathi_excerpt.Command method)</a>
+      <li><a href="codedocs.html#ppa.archive.management.commands.generate_textcorpus.Command.set_params">set_params() (ppa.archive.management.commands.generate_textcorpus.Command method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="codedocs.html#ppa.archive.management.commands.generate_corpus.SolrCorpus">SolrCorpus (class in ppa.archive.management.commands.generate_corpus)</a>
+      <li><a href="codedocs.html#ppa.editorial.models.EditorialPage.set_url_path">set_url_path() (ppa.editorial.models.EditorialPage method)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.management.commands.hathi_excerpt.Command.setup">setup() (ppa.archive.management.commands.hathi_excerpt.Command method)</a>
 </li>
       <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.sort_title">sort_title (ppa.archive.models.DigitizedWork attribute)</a>
 
@@ -1199,7 +1210,7 @@
         <div class="sphinxsidebarwrapper">
 <p class="logo">
   <a href="index.html">
-    <img class="logo" src="_static/ppa_logo.png" alt="Logo"/>
+    <img class="logo" src="_static/ppa_logo.png" alt="Logo" />
     
     <h1 class="logo logo-name">Princeton Prosody Archive</h1>
     
@@ -1253,11 +1264,11 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2018, CDH @ Princeton University.
+      &#169;2018, CDH @ Princeton University.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.5</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>
 

@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Code Documentation &#8212; Princeton Prosody Archive 3.10.0 documentation</title>
+    <title>Code Documentation &#8212; Princeton Prosody Archive 3.11.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
-    <script src="_static/documentation_options.js?v=f8d09eac"></script>
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=12dfc556" />
+    <script src="_static/documentation_options.js?v=8905d4f5"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -18,8 +18,9 @@
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
+
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  
 
   </head><body>
   
@@ -345,7 +346,7 @@ of all validation errors if any occur.</p>
 that are changed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>db_obj</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.11)"><em>object</em></a>) – Database instance of a
+<dd class="field-odd"><p><strong>db_obj</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.12)"><em>object</em></a>) – Database instance of a
 <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">DigitizedWork</span></code></a>.</p>
 </dd>
 </dl>
@@ -492,7 +493,7 @@ to set values.</p>
 bibdata information.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>field_data</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A dictionary of fields updated from a
+<dd class="field-odd"><p><strong>field_data</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – A dictionary of fields updated from a
 <a class="reference internal" href="#ppa.archive.hathi.HathiBibliographicRecord" title="ppa.archive.hathi.HathiBibliographicRecord"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.hathi.HathiBibliographicRecord</span></code></a> instance.</p>
 </dd>
 </dl>
@@ -1051,7 +1052,7 @@ to bulk add a queryset of :class:ppa.archive.models.DigitizedWork</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="ppa.archive.forms.CheckboxSelectMultipleWithDisabled">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.forms.</span></span><span class="sig-name descname"><span class="pre">CheckboxSelectMultipleWithDisabled</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">choices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#CheckboxSelectMultipleWithDisabled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.forms.CheckboxSelectMultipleWithDisabled" title="Link to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/widgets.html#django.forms.CheckboxSelectMultiple" title="(in Django v5.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.CheckboxSelectMultiple</span></code></a> with option to mark
+<dd><p>Subclass of <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/widgets.html#django.forms.CheckboxSelectMultiple" title="(in Django v5.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.CheckboxSelectMultiple</span></code></a> with option to mark
 a choice as disabled.</p>
 </dd></dl>
 
@@ -1095,7 +1096,7 @@ strips whitespace, and ignores empty lines.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="ppa.archive.forms.ModelMultipleChoiceFieldWithEmpty">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.forms.</span></span><span class="sig-name descname"><span class="pre">ModelMultipleChoiceFieldWithEmpty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">queryset</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#ModelMultipleChoiceFieldWithEmpty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.forms.ModelMultipleChoiceFieldWithEmpty" title="Link to this definition">¶</a></dt>
-<dd><p>Extend <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/fields.html#django.forms.ModelMultipleChoiceField" title="(in Django v5.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.ModelMultipleChoiceField</span></code></a> to add an
+<dd><p>Extend <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/fields.html#django.forms.ModelMultipleChoiceField" title="(in Django v5.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.ModelMultipleChoiceField</span></code></a> to add an
 option for an unset or empty choice (i.e. no relationship in a
 many-to-many relationship such as collection membership).</p>
 <dl class="py method">
@@ -1110,7 +1111,7 @@ the empty id.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="ppa.archive.forms.RadioSelectWithDisabled">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.forms.</span></span><span class="sig-name descname"><span class="pre">RadioSelectWithDisabled</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">choices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#RadioSelectWithDisabled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.forms.RadioSelectWithDisabled" title="Link to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/widgets.html#django.forms.RadioSelect" title="(in Django v5.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.RadioSelect</span></code></a> with option to mark
+<dd><p>Subclass of <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/widgets.html#django.forms.RadioSelect" title="(in Django v5.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.RadioSelect</span></code></a> with option to mark
 a choice as disabled.</p>
 </dd></dl>
 
@@ -1213,7 +1214,7 @@ pre-select collections based exclude property.</p>
 <dd><p>Set solr sort fields for the query based on sort and query strings.
 If sort field is not specified, will use sort in the the cleaned
 data in the current form. If sort is not specified and valid
-form data is not available, will raise an <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#AttributeError" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AttributeError</span></code></a>.</p>
+form data is not available, will raise an <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#AttributeError" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AttributeError</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>solr sort field</p>
@@ -1279,7 +1280,7 @@ of a digitized work.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="ppa.archive.forms.SelectDisabledMixin">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.forms.</span></span><span class="sig-name descname"><span class="pre">SelectDisabledMixin</span></span><a class="reference internal" href="_modules/ppa/archive/forms.html#SelectDisabledMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.forms.SelectDisabledMixin" title="Link to this definition">¶</a></dt>
-<dd><p>Mixin for <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/widgets.html#django.forms.RadioSelect" title="(in Django v5.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.RadioSelect</span></code></a> or <code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.CheckboxSelect</span></code>
+<dd><p>Mixin for <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/widgets.html#django.forms.RadioSelect" title="(in Django v5.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.RadioSelect</span></code></a> or <code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.CheckboxSelect</span></code>
 classes to set an option as disabled. To disable, the widget’s choice
 label option should be passed in as a dictionary with <cite>disabled</cite> set
 to True:</p>
@@ -1297,7 +1298,7 @@ to True:</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="ppa.archive.forms.SelectWithDisabled">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.forms.</span></span><span class="sig-name descname"><span class="pre">SelectWithDisabled</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">choices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#SelectWithDisabled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.forms.SelectWithDisabled" title="Link to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/widgets.html#django.forms.Select" title="(in Django v5.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.Select</span></code></a> with option to mark
+<dd><p>Subclass of <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/widgets.html#django.forms.Select" title="(in Django v5.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.Select</span></code></a> with option to mark
 a choice as disabled.</p>
 </dd></dl>
 
@@ -1342,7 +1343,7 @@ search options based on what filters are present.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="ppa.archive.solr.PageSearchQuerySet">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.solr.</span></span><span class="sig-name descname"><span class="pre">PageSearchQuerySet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SolrClient</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/solr.html#PageSearchQuerySet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.solr.PageSearchQuerySet" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.solr.</span></span><span class="sig-name descname"><span class="pre">PageSearchQuerySet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SolrClient</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/solr.html#PageSearchQuerySet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.solr.PageSearchQuerySet" title="Link to this definition">¶</a></dt>
 <dd><dl class="py attribute">
 <dt class="sig sig-object py" id="ppa.archive.solr.PageSearchQuerySet.field_aliases">
 <span class="sig-name descname"><span class="pre">field_aliases</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'cluster_id':</span> <span class="pre">'cluster_id_s',</span> <span class="pre">'group_id':</span> <span class="pre">'group_id_s',</span> <span class="pre">'id':</span> <span class="pre">'id',</span> <span class="pre">'image_id':</span> <span class="pre">'image_id_s',</span> <span class="pre">'label':</span> <span class="pre">'label',</span> <span class="pre">'order':</span> <span class="pre">'order',</span> <span class="pre">'score':</span> <span class="pre">'score',</span> <span class="pre">'source_id':</span> <span class="pre">'source_id',</span> <span class="pre">'title':</span> <span class="pre">'title'}</span></em><a class="headerlink" href="#ppa.archive.solr.PageSearchQuerySet.field_aliases" title="Link to this definition">¶</a></dt>
@@ -1423,7 +1424,7 @@ to actual solr fields (i.e. if using dynamic field types)</p>
 <dt class="sig sig-object py" id="ppa.archive.hathi.HathiBibliographicRecord.copy_last_updated">
 <span class="sig-name descname"><span class="pre">copy_last_updated</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">htid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/hathi.html#HathiBibliographicRecord.copy_last_updated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.hathi.HathiBibliographicRecord.copy_last_updated" title="Link to this definition">¶</a></dt>
 <dd><p>Return last update date for a specificy copy identified by
-hathi id.  Returns as <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.date" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.date</span></code></a></p>
+hathi id.  Returns as <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.date" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.date</span></code></a></p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1975,101 +1976,125 @@ database and create a lookup based on the codes used in the spreadsheet.</p>
 </dd></dl>
 
 </section>
-<section id="module-ppa.archive.management.commands.generate_corpus">
-<span id="generate-corpus"></span><h4>Generate Corpus<a class="headerlink" href="#module-ppa.archive.management.commands.generate_corpus" title="Link to this heading">¶</a></h4>
-<p><strong>generate_corpus</strong> is a custom manage command to generate and serialize
-a Gensim corpus from Solr.  It should be run <em>after</em> content has been indexed
+<section id="module-ppa.archive.management.commands.generate_textcorpus">
+<span id="generate-corpus"></span><h4>Generate Corpus<a class="headerlink" href="#module-ppa.archive.management.commands.generate_textcorpus" title="Link to this heading">¶</a></h4>
+<p><strong>generate_textcorpus</strong> is a custom manage command to generate a plain
+text corpus from Solr.  It should be run <em>after</em> content has been indexed
 into Solr via the <strong>index</strong> manage command.</p>
-<p>The Corpus is serialized in the Matrix Market format
-(<a class="reference external" href="https://math.nist.gov/MatrixMarket/formats.html">https://math.nist.gov/MatrixMarket/formats.html</a>)
-with a <cite>.mm</cite> extension, using the Gensim Topic Modelling library
-(<a class="reference external" href="https://radimrehurek.com/gensim">https://radimrehurek.com/gensim</a>)
-Typically, an index corresponding to the .mm file is also saved by Gensim,
-with a <cite>.mm.index</cite> extension.</p>
-<p>A dictionary corresponding to token IDs is also saved by default,
-using a <cite>.mm.dict</cite> extension.
-By default, this is a pickled Gensim Dictionary object.
-If the <cite>–dictionary-as-text</cite> flag is specified, then the dictionary is saved
-as a utf8-encoded and newline-separated
-file, where line number N contains the token with token_id N-1.
-Saving the dictionary can be skipped by using the <cite>–no-dictionary</cite> option.</p>
-<p>Additional document-level metadata found in the Solr Index is also saved by
-default, with <cite>.mm.metadata</cite> extension.
-This is a csv file with a header row and one row per unique document found in
-the Solr index.
-Saving the metadata can be skipped by using the <cite>–no-metadata</cite> option.</p>
-<p>By default, <em>all</em> documents found in the Solr index are serialized.
-This can be controlled using -<cite>-doc-limit</cite>,
-which denotes the maximum no. of documents to serialize. This is especially
-useful for development, or for sanity-testing your Solr installation.</p>
-<p>For corpus generation, the following pre-processing options are available via
-the <cite>–preprocess</cite> flag:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Lower-cases words</span>
-<span class="s1">&#39;lower&#39;</span>
-<span class="c1"># Strips HTML tags</span>
-<span class="s1">&#39;strip_tags&#39;</span>
-<span class="c1"># Strips punctuation</span>
-<span class="s1">&#39;strip_punctuation&#39;</span>
-<span class="c1"># Collapses multiple whitespaces into one</span>
-<span class="s1">&#39;strip_multiple_whitespaces&#39;</span>
-<span class="c1"># Strips numeric characters</span>
-<span class="s1">&#39;strip_numeric&#39;</span>
-<span class="c1"># Removes stopwords - Note that the set of default stopwords used by Gensim</span>
-<span class="c1"># is from Stone, Denis, Kwantes (2010).</span>
-<span class="s1">&#39;remove_stopwords&#39;</span>
-<span class="c1"># Strip short words. The lower limit on word length is 3.</span>
-<span class="s1">&#39;strip_short&#39;</span>
-<span class="c1"># Use Porter Stemmer for word-normalization.</span>
-<span class="s1">&#39;stem_text&#39;</span>
-</pre></div>
-</div>
-<p>IMPORTANT - NO preprocessing filters are applied by default, but you will
-typically at least want to use <cite>lower</cite>.
-Multiple preprocessing filters can be applied (in order) by specifying multiple
-<cite>–preprocess</cite> flags.</p>
-<p>Example usage:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Save all files to the &#39;data&#39; folder, with bare-minimum preprocessing</span>
-<span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">generate_corpus</span> <span class="o">--</span><span class="n">path</span> <span class="n">data</span> <span class="o">--</span><span class="n">preprocess</span> <span class="n">lower</span>
-<span class="o">--</span><span class="n">preprocess</span> <span class="n">strip_tags</span>
-
-<span class="c1"># Restrict corpus to 1000 documents</span>
-<span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">generate_corpus</span> <span class="o">--</span><span class="n">path</span> <span class="n">data</span> <span class="o">--</span><span class="n">doc</span><span class="o">-</span><span class="n">limit</span> <span class="mi">1000</span>
-<span class="o">--</span><span class="n">preprocess</span> <span class="n">lower</span> <span class="o">--</span><span class="n">preprocess</span> <span class="n">strip_tags</span>
-
-<span class="c1"># Don&#39;t generate dictionary; don&#39;t generate metadata</span>
-<span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">generate_corpus</span> <span class="o">--</span><span class="n">path</span> <span class="n">data</span> <span class="o">--</span><span class="n">doc</span><span class="o">-</span><span class="n">limit</span> <span class="mi">1000</span>
-<span class="o">--</span><span class="n">preprocess</span> <span class="n">lower</span> <span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">dictionary</span> <span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">metadata</span>
-</pre></div>
-</div>
+<p>The full text corpus is generated from Solr; this script makes the 
+following assumptions:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>Suppressed works and pages are not indexed </dt><dd><p>(expected behavior, if db and Solr are synchronized)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Each work has a single source (Gale or Hathi) </dt><dd><p>even though it is indexed in Solr as a list</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>Examples:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>Expected use:</dt><dd><p>python manage.py generate_textcorpus</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Specify a path:</dt><dd><p>python manage.py generate_textcorpus –path ~/ppa_solr_corpus</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Dry run (do not create any files or folders):</dt><dd><p>python manage.py generate_textcorpus –dry-run</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Partial run (save only N rows, for testing):</dt><dd><p>python manage.py generate_textcorpus –doc-limit 100</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Cron-style run (no progress bar, but logs)</dt><dd><p>python manage.py generate_textcorpus –no-progressbar –verbosity 2</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>Notes:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Default path is <cite>ppa_corpus_{timestamp}</cite> in the current working directory</p></li>
+<li><p>Default batch size is 10,000, meaning 10,000 records are pulled 
+from solr at a time. Usage testing revealed that this default 
+iterates over the collection the quickest.</p></li>
+</ul>
+</div></blockquote>
 <dl class="py class">
-<dt class="sig sig-object py" id="ppa.archive.management.commands.generate_corpus.Command">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.management.commands.generate_corpus.</span></span><span class="sig-name descname"><span class="pre">Command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stdout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stderr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_corpus.html#Command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_corpus.Command" title="Link to this definition">¶</a></dt>
-<dd><p>Custom manage command to generate a token corpus from text indexed in Solr</p>
+<dt class="sig sig-object py" id="ppa.archive.management.commands.generate_textcorpus.Command">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.management.commands.generate_textcorpus.</span></span><span class="sig-name descname"><span class="pre">Command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stdout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stderr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_textcorpus.html#Command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_textcorpus.Command" title="Link to this definition">¶</a></dt>
+<dd><p>Custom manage command to generate a text corpus from text indexed in Solr.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="ppa.archive.management.commands.generate_corpus.Command.add_arguments">
-<span class="sig-name descname"><span class="pre">add_arguments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parser</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_corpus.html#Command.add_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_corpus.Command.add_arguments" title="Link to this definition">¶</a></dt>
-<dd><p>Entry point for subclassed commands to add custom arguments.</p>
+<dt class="sig sig-object py" id="ppa.archive.management.commands.generate_textcorpus.Command.add_arguments">
+<span class="sig-name descname"><span class="pre">add_arguments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parser</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_textcorpus.html#Command.add_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_textcorpus.Command.add_arguments" title="Link to this definition">¶</a></dt>
+<dd><p>Build CLI arguments for command.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="ppa.archive.management.commands.generate_corpus.Command.handle">
-<span class="sig-name descname"><span class="pre">handle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_corpus.html#Command.handle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_corpus.Command.handle" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="ppa.archive.management.commands.generate_textcorpus.Command.handle">
+<span class="sig-name descname"><span class="pre">handle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_textcorpus.html#Command.handle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_textcorpus.Command.handle" title="Link to this definition">¶</a></dt>
 <dd><p>The actual logic of the command. Subclasses must implement
 this method.</p>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="ppa.archive.management.commands.generate_corpus.SolrCorpus">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.management.commands.generate_corpus.</span></span><span class="sig-name descname"><span class="pre">SolrCorpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doc_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocess_fns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_corpus.html#SolrCorpus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_corpus.SolrCorpus" title="Link to this definition">¶</a></dt>
-<dd><p>Custom class to generate a text corpus from Solr</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="ppa.archive.management.commands.generate_corpus.SolrCorpus.save">
-<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dict_as_text</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_corpus.html#SolrCorpus.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_corpus.SolrCorpus.save" title="Link to this definition">¶</a></dt>
-<dd><p>Save the generated corpus text and metadata to files on disk</p>
+<dt class="sig sig-object py" id="ppa.archive.management.commands.generate_textcorpus.Command.iter_pages">
+<span class="sig-name descname"><span class="pre">iter_pages</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_textcorpus.html#Command.iter_pages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_textcorpus.Command.iter_pages" title="Link to this definition">¶</a></dt>
+<dd><p>Simply calls <cite>.iter_solr()</cite> with <cite>item_type</cite> as <cite>‘page’</cite></p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="ppa.archive.management.commands.generate_textcorpus.Command.iter_solr">
+<span class="sig-name descname"><span class="pre">iter_solr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'page'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_textcorpus.html#Command.iter_solr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_textcorpus.Command.iter_solr" title="Link to this definition">¶</a></dt>
+<dd><p>Iterate over solr documents of a certain <cite>item_type</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ppa.archive.management.commands.generate_textcorpus.Command.iter_works">
+<span class="sig-name descname"><span class="pre">iter_works</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_textcorpus.html#Command.iter_works"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_textcorpus.Command.iter_works" title="Link to this definition">¶</a></dt>
+<dd><p>Simply calls <cite>.iter_solr()</cite> with <cite>item_type</cite> as <cite>‘work’</cite></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ppa.archive.management.commands.generate_textcorpus.Command.save_metadata">
+<span class="sig-name descname"><span class="pre">save_metadata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_textcorpus.html#Command.save_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_textcorpus.Command.save_metadata" title="Link to this definition">¶</a></dt>
+<dd><p>Save the work-level metadata as a json file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ppa.archive.management.commands.generate_textcorpus.Command.save_pages">
+<span class="sig-name descname"><span class="pre">save_pages</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_textcorpus.html#Command.save_pages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_textcorpus.Command.save_pages" title="Link to this definition">¶</a></dt>
+<dd><p>Save the page-level metadata as a jsonl file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ppa.archive.management.commands.generate_textcorpus.Command.set_params">
+<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_textcorpus.html#Command.set_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_textcorpus.Command.set_params" title="Link to this definition">¶</a></dt>
+<dd><p>Run the command, generating metadata.jsonl and pages.jsonl</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ppa.archive.management.commands.generate_textcorpus.nowstr">
+<span class="sig-prename descclassname"><span class="pre">ppa.archive.management.commands.generate_textcorpus.</span></span><span class="sig-name descname"><span class="pre">nowstr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_textcorpus.html#nowstr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_textcorpus.nowstr" title="Link to this definition">¶</a></dt>
+<dd><p>helper method to generate timestamp for use in output filename</p>
 </dd></dl>
 
 </section>
@@ -2273,7 +2298,7 @@ description, for use in previews on the site and plain-text metadata
 previews.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags">
-<span class="sig-name descname"><span class="pre">allowed_tags</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['code',</span> <span class="pre">'b',</span> <span class="pre">'abbr',</span> <span class="pre">'ol',</span> <span class="pre">'blockquote',</span> <span class="pre">'em',</span> <span class="pre">'strong',</span> <span class="pre">'li',</span> <span class="pre">'p',</span> <span class="pre">'acronym',</span> <span class="pre">'ul',</span> <span class="pre">'i']</span></em><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">allowed_tags</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['em',</span> <span class="pre">'ul',</span> <span class="pre">'acronym',</span> <span class="pre">'strong',</span> <span class="pre">'ol',</span> <span class="pre">'blockquote',</span> <span class="pre">'i',</span> <span class="pre">'li',</span> <span class="pre">'p',</span> <span class="pre">'code',</span> <span class="pre">'b',</span> <span class="pre">'abbr']</span></em><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags" title="Link to this definition">¶</a></dt>
 <dd><p>allowed tags for bleach html stripping in description</p>
 </dd></dl>
 
@@ -2589,7 +2614,7 @@ to normal template view behavior and displays format information.</p>
         <div class="sphinxsidebarwrapper">
 <p class="logo">
   <a href="index.html">
-    <img class="logo" src="_static/ppa_logo.png" alt="Logo"/>
+    <img class="logo" src="_static/ppa_logo.png" alt="Logo" />
     
     <h1 class="logo logo-name">Princeton Prosody Archive</h1>
     
@@ -3002,16 +3027,19 @@ to normal template view behavior and displays format information.</p>
 </li>
 </ul>
 </li>
-<li><a class="reference internal" href="#module-ppa.archive.management.commands.generate_corpus">Generate Corpus</a><ul>
-<li><a class="reference internal" href="#ppa.archive.management.commands.generate_corpus.Command"><code class="docutils literal notranslate"><span class="pre">Command</span></code></a><ul>
-<li><a class="reference internal" href="#ppa.archive.management.commands.generate_corpus.Command.add_arguments"><code class="docutils literal notranslate"><span class="pre">Command.add_arguments()</span></code></a></li>
-<li><a class="reference internal" href="#ppa.archive.management.commands.generate_corpus.Command.handle"><code class="docutils literal notranslate"><span class="pre">Command.handle()</span></code></a></li>
+<li><a class="reference internal" href="#module-ppa.archive.management.commands.generate_textcorpus">Generate Corpus</a><ul>
+<li><a class="reference internal" href="#ppa.archive.management.commands.generate_textcorpus.Command"><code class="docutils literal notranslate"><span class="pre">Command</span></code></a><ul>
+<li><a class="reference internal" href="#ppa.archive.management.commands.generate_textcorpus.Command.add_arguments"><code class="docutils literal notranslate"><span class="pre">Command.add_arguments()</span></code></a></li>
+<li><a class="reference internal" href="#ppa.archive.management.commands.generate_textcorpus.Command.handle"><code class="docutils literal notranslate"><span class="pre">Command.handle()</span></code></a></li>
+<li><a class="reference internal" href="#ppa.archive.management.commands.generate_textcorpus.Command.iter_pages"><code class="docutils literal notranslate"><span class="pre">Command.iter_pages()</span></code></a></li>
+<li><a class="reference internal" href="#ppa.archive.management.commands.generate_textcorpus.Command.iter_solr"><code class="docutils literal notranslate"><span class="pre">Command.iter_solr()</span></code></a></li>
+<li><a class="reference internal" href="#ppa.archive.management.commands.generate_textcorpus.Command.iter_works"><code class="docutils literal notranslate"><span class="pre">Command.iter_works()</span></code></a></li>
+<li><a class="reference internal" href="#ppa.archive.management.commands.generate_textcorpus.Command.save_metadata"><code class="docutils literal notranslate"><span class="pre">Command.save_metadata()</span></code></a></li>
+<li><a class="reference internal" href="#ppa.archive.management.commands.generate_textcorpus.Command.save_pages"><code class="docutils literal notranslate"><span class="pre">Command.save_pages()</span></code></a></li>
+<li><a class="reference internal" href="#ppa.archive.management.commands.generate_textcorpus.Command.set_params"><code class="docutils literal notranslate"><span class="pre">Command.set_params()</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#ppa.archive.management.commands.generate_corpus.SolrCorpus"><code class="docutils literal notranslate"><span class="pre">SolrCorpus</span></code></a><ul>
-<li><a class="reference internal" href="#ppa.archive.management.commands.generate_corpus.SolrCorpus.save"><code class="docutils literal notranslate"><span class="pre">SolrCorpus.save()</span></code></a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#ppa.archive.management.commands.generate_textcorpus.nowstr"><code class="docutils literal notranslate"><span class="pre">nowstr()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -3177,11 +3205,11 @@ to normal template view behavior and displays format information.</p>
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2018, CDH @ Princeton University.
+      &#169;2018, CDH @ Princeton University.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.5</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
       |
       <a href="_sources/codedocs.rst.txt"
