@@ -3,5 +3,5 @@ pytest>=5.0
 pytest-django>=4.5.2
 pytest-cov
 django-debug-toolbar
-sphinx
+sphinx>=7.2
 pre-commit
