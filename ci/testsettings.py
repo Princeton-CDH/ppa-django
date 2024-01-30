@@ -4,7 +4,6 @@
 # If this file is changed in development, the development server will
 # have to be manually restarted because changes will not be noticed
 # immediately.
-import os
 
 DEBUG = False
 
@@ -35,9 +34,9 @@ SOLR_CONNECTIONS = {
     }
 }
 
-# use an empty webpack-stats.json so we can ignore missing static files in tests
+# use a fake webpack loader to ignore missing assets for unit tests
 WEBPACK_LOADER = {
-    "DEFAULT": {"STATS_FILE": os.path.join(BASE_DIR, "ci", "webpack-stats.json")}
+    "DEFAULT": {"LOADER_CLASS": "webpack_loader.loaders.FakeWebpackLoader"}
 }
 
 # secret key added as a travis build step
