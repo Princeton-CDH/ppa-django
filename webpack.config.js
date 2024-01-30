@@ -84,7 +84,7 @@ module.exports = env => ({
     plugins: [
         new BundleTracker({
             filename: 'webpack-stats.json', // tells Django where to find webpack output
-            relativePath: true,
+            path: __dirname,
             indent: 2
         }),
         // extract css into a single file
