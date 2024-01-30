@@ -33,7 +33,7 @@ module.exports = env => ({
     module: {
         rules: [
             { // compile TypeScript to js
-                test: /\.tsx?$/,
+                test: /^(?!.*\.test\.ts$).*\.tsx?$/,
                 loader: 'ts-loader',
                 exclude: [
                     /node_modules/, // don't transpile dependencies
