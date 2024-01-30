@@ -17,14 +17,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Python version to use is stored in the .python-version file, which is the
-      # convention for pyenv: https://github.com/pyenv/pyenv
-      - name: Get Python version
-        run: echo "PYTHON_VERSION=$(cat .python-version)" >> $GITHUB_ENV
       - name: Setup Python
         uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
+        # uses .python-version to determine python version
 
       # We base the python cache on the hash of all requirements files, so that
       # if any change, the cache is invalidated.
