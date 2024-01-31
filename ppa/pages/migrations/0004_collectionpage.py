@@ -3,12 +3,11 @@
 from __future__ import unicode_literals
 
 import django.db.models.deletion
-import wagtail.core.fields
+import wagtail.fields
 from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("wagtailcore", "0040_page_draft_title"),
         ("pages", "0003_add_homepage_preview_pages"),
@@ -29,7 +28,7 @@ class Migration(migrations.Migration):
                         to="wagtailcore.Page",
                     ),
                 ),
-                ("body", wagtail.core.fields.RichTextField(blank=True)),
+                ("body", wagtail.fields.RichTextField(blank=True)),
             ],
             options={
                 "abstract": False,

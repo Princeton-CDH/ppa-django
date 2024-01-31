@@ -3,8 +3,8 @@
 from __future__ import unicode_literals
 
 import django.db.models.deletion
-import wagtail.core.blocks
-import wagtail.core.fields
+import wagtail.blocks
+import wagtail.fields
 import wagtail.documents.blocks
 import wagtail.images.blocks
 import wagtail.snippets.blocks
@@ -14,7 +14,6 @@ import ppa.pages.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("wagtailcore", "0040_page_draft_title"),
         ("pages", "0007_add_person_snippet"),
@@ -37,14 +36,14 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "description",
-                    wagtail.core.fields.RichTextField(
+                    wagtail.fields.RichTextField(
                         blank=True,
                         help_text="Optional. Brief description for preview display. Will also be used for search description (without tags), if one is not entered.",
                     ),
                 ),
                 (
                     "contributors",
-                    wagtail.core.fields.StreamField(
+                    wagtail.fields.StreamField(
                         [
                             (
                                 "person",
@@ -59,7 +58,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "board",
-                    wagtail.core.fields.StreamField(
+                    wagtail.fields.StreamField(
                         [
                             (
                                 "person",
@@ -74,9 +73,9 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "body",
-                    wagtail.core.fields.StreamField(
+                    wagtail.fields.StreamField(
                         [
-                            ("paragraph", wagtail.core.blocks.RichTextBlock()),
+                            ("paragraph", wagtail.blocks.RichTextBlock()),
                             ("image", wagtail.images.blocks.ImageChooserBlock()),
                             (
                                 "document",
@@ -94,7 +93,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="person",
             name="description",
-            field=wagtail.core.fields.RichTextField(
+            field=wagtail.fields.RichTextField(
                 blank=True, help_text="Title & affiliation, or other relevant context."
             ),
         ),

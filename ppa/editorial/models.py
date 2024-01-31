@@ -3,9 +3,9 @@ from datetime import date
 from django.core.validators import RegexValidator
 from django.db import models
 from django.http import Http404
-from wagtail.admin.edit_handlers import FieldPanel, StreamFieldPanel
-from wagtail.core.fields import RichTextField, StreamField
-from wagtail.core.models import Page
+from wagtail.admin.panels import FieldPanel, StreamFieldPanel
+from wagtail.fields import RichTextField, StreamField
+from wagtail.models import Page
 from wagtail.snippets.blocks import SnippetChooserBlock
 
 from ppa.pages.models import BodyContentBlock, PagePreviewDescriptionMixin, Person

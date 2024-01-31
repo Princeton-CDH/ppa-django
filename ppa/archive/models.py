@@ -19,8 +19,8 @@ from pairtree import storage_exceptions
 from parasolr.django import SolrQuerySet
 from parasolr.django.indexing import ModelIndexable
 from parasolr.indexing import Indexable
-from wagtail.admin.edit_handlers import FieldPanel
-from wagtail.core.fields import RichTextField
+from wagtail.admin.panels import FieldPanel
+from wagtail.fields import RichTextField
 from wagtail.snippets.models import register_snippet
 
 from ppa.archive.gale import GaleAPI, MARCRecordNotFound, get_marc_record
@@ -1088,12 +1088,12 @@ class Page(Indexable):
 
         # read zipfile contents in place, without unzipping
         try:
-            zpath=digwork.hathi.zipfile_path()
+            zpath = digwork.hathi.zipfile_path()
         except storage_exceptions.PartNotFoundException:
             # missing file inside pairtree for this
-            logging.error(f'Missing pairtree data for: {digwork}')
+            logging.error(f"Missing pairtree data for: {digwork}")
             return
-    
+
         with ZipFile(zpath) as ht_zip:
             # yield a generator of index data for each page; iterate
             # over pages in METS structmap

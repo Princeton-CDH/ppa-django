@@ -2,10 +2,10 @@ import bleach
 from django.db import models
 from django.template.defaultfilters import striptags, truncatechars_html
 from django.utils.text import slugify
-from wagtail.admin.edit_handlers import FieldPanel, PageChooserPanel, StreamFieldPanel
-from wagtail.core import blocks
-from wagtail.core.fields import RichTextField, StreamField
-from wagtail.core.models import Page
+from wagtail.admin.panels import FieldPanel, PageChooserPanel, StreamFieldPanel
+from wagtail import blocks
+from wagtail.fields import RichTextField, StreamField
+from wagtail.models import Page
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.embeds.blocks import EmbedBlock
 from wagtail.images.blocks import ImageChooserBlock
@@ -84,7 +84,7 @@ class Person(models.Model):
 
 
 class HomePage(Page):
-    """:class:`wagtail.core.models.Page` model for PPA home page"""
+    """:class:`wagtail.models.Page` model for PPA home page"""
 
     body = RichTextField(blank=True)
 
@@ -154,7 +154,7 @@ briefly communicate the intended message of the image in this context."""
 
 
 class ImageWithCaption(blocks.StructBlock):
-    """:class:`~wagtail.core.blocks.StructBlock` for an image with
+    """:class:`~wagtail.blocks.StructBlock` for an image with
     a formatted caption, so caption can be context-specific. Also allows images
     to be floated right, left, or take up the width of the page."""
 
@@ -180,7 +180,7 @@ class ImageWithCaption(blocks.StructBlock):
 
 
 class SVGImageBlock(blocks.StructBlock):
-    """:class:`~wagtail.core.blocks.StructBlock` for an SVG image with
+    """:class:`~wagtail.blocks.StructBlock` for an SVG image with
     alternative text and optional formatted caption. Separate from
     :class:`CaptionedImageBlock` because Wagtail image handling
     does not work with SVG."""
@@ -203,7 +203,7 @@ class SVGImageBlock(blocks.StructBlock):
 
 
 class LinkableSectionBlock(blocks.StructBlock):
-    """:class:`~wagtail.core.blocks.StructBlock` for a rich text block and an
+    """:class:`~wagtail.blocks.StructBlock` for a rich text block and an
     associated `title` that will render as an <h2>. Creates an anchor (<a>)
     so that the section can be directly linked to using a url fragment."""
 

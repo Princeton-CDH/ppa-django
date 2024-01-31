@@ -4,10 +4,10 @@ import pytest
 from django.http import Http404
 from django.test import TestCase
 from django.test.client import RequestFactory
-from wagtail.core.models import Site
-from wagtail.core.url_routing import RouteResult
-from wagtail.tests.utils import WagtailPageTests
-from wagtail.tests.utils.form_data import nested_form_data, rich_text, streamfield
+from wagtail.models import Site
+from wagtail.url_routing import RouteResult
+from wagtail.test.utils import WagtailPageTests
+from wagtail.test.utils.form_data import nested_form_data, rich_text, streamfield
 
 from ppa.editorial.models import EditorialIndexPage, EditorialPage
 from ppa.pages.models import HomePage, Person

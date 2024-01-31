@@ -2,15 +2,14 @@ from time import sleep
 from unittest.mock import Mock
 
 import bleach
-import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.template.defaultfilters import striptags
 from django.test import SimpleTestCase
 from django.urls import reverse
-from wagtail.core.models import Page, Site
+from wagtail.models import Page, Site
 from wagtail.images.models import Image
-from wagtail.tests.utils import WagtailPageTests
-from wagtail.tests.utils.form_data import nested_form_data, rich_text, streamfield
+from wagtail.test.utils import WagtailPageTests
+from wagtail.test.utils.form_data import nested_form_data, rich_text, streamfield
 
 from ppa.archive.models import Collection, DigitizedWork
 from ppa.editorial.models import EditorialIndexPage
@@ -90,7 +89,7 @@ class TestHomePage(WagtailPageTests):
         assert context["collection_page"] == self.collection_page
 
         # Add a third collection
-        coll2 = Collection.objects.create(
+        Collection.objects.create(
             name="Bar through Time", description="A somewhat less useful collection."
         )
         context = self.home.get_context({})
@@ -182,12 +181,17 @@ class TestContentPage(WagtailPageTests):
         # (excluding end of content because truncation is inside tags)
 
         # should also be cleaned by bleach to its limited set of tags
-        assert desc[:200] == bleach.clean(
-            str(content_page.body[0]),
-            # omit 'a' from list of allowed tags
-            tags=list((set(bleach.sanitizer.ALLOWED_TAGS) | set(["p"])) - set(["a"])),
-            strip=True,
-        )[:200]
+        assert (
+            desc[:200]
+            == bleach.clean(
+                str(content_page.body[0]),
+                # omit 'a' from list of allowed tags
+                tags=list(
+                    (set(bleach.sanitizer.ALLOWED_TAGS) | set(["p"])) - set(["a"])
+                ),
+                strip=True,
+            )[:200]
+        )
         # empty tags in description shouldn't be used
         content_page.description = "<p></p>"
         desc = content_page.get_description()
@@ -206,12 +210,17 @@ class TestContentPage(WagtailPageTests):
             ],
         )
         # should ignore image block and use first paragraph content
-        assert content_page2.get_description()[:200] == bleach.clean(
-            str(content_page2.body[1]),
-            # omit 'a' from list of allowed tags
-            tags=list((set(bleach.sanitizer.ALLOWED_TAGS) | set(["p"])) - set(["a"])),
-            strip=True,
-        )[:200]
+        assert (
+            content_page2.get_description()[:200]
+            == bleach.clean(
+                str(content_page2.body[1]),
+                # omit 'a' from list of allowed tags
+                tags=list(
+                    (set(bleach.sanitizer.ALLOWED_TAGS) | set(["p"])) - set(["a"])
+                ),
+                strip=True,
+            )[:200]
+        )
 
         # should remove <a> tags
         assert '<a href="#">' not in content_page2.get_description()
@@ -289,9 +298,9 @@ class TestCollectionPage(WagtailPageTests):
 
     def test_get_context(self):
         # Create test collections to display
-        coll1 = Collection.objects.create(name="Random Grabbag")
-        dictionary = Collection.objects.create(name="Dictionary")
-        coll2 = Collection.objects.create(
+        Collection.objects.create(name="Random Grabbag")
+        Collection.objects.create(name="Dictionary")
+        Collection.objects.create(
             name="Foo through Time", description="A <em>very</em> useful collection."
         )
 

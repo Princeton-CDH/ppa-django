@@ -3,8 +3,8 @@
 from __future__ import unicode_literals
 
 import django.db.models.deletion
-import wagtail.core.blocks
-import wagtail.core.fields
+import wagtail.blocks
+import wagtail.fields
 import wagtail.documents.blocks
 import wagtail.images.blocks
 import wagtail.snippets.blocks
@@ -14,7 +14,6 @@ import ppa.pages.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("wagtailimages", "0021_image_file_hash"),
         ("pages", "0009_content_page_image_caption_footnotes"),
@@ -35,18 +34,18 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="contentpage",
             name="body",
-            field=wagtail.core.fields.StreamField(
+            field=wagtail.fields.StreamField(
                 [
-                    ("paragraph", wagtail.core.blocks.RichTextBlock()),
+                    ("paragraph", wagtail.blocks.RichTextBlock()),
                     ("image", wagtail.images.blocks.ImageChooserBlock()),
                     (
                         "captioned_image",
-                        wagtail.core.blocks.StructBlock(
+                        wagtail.blocks.StructBlock(
                             [
                                 ("image", wagtail.images.blocks.ImageChooserBlock()),
                                 (
                                     "caption",
-                                    wagtail.core.blocks.RichTextBlock(
+                                    wagtail.blocks.RichTextBlock(
                                         features=["bold", "italic", "link"]
                                     ),
                                 ),
@@ -55,7 +54,7 @@ class Migration(migrations.Migration):
                     ),
                     (
                         "footnotes",
-                        wagtail.core.blocks.RichTextBlock(
+                        wagtail.blocks.RichTextBlock(
                             classname="footnotes",
                             features=["ol", "ul", "bold", "italic", "link"],
                         ),
@@ -67,18 +66,18 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="contributorpage",
             name="body",
-            field=wagtail.core.fields.StreamField(
+            field=wagtail.fields.StreamField(
                 [
-                    ("paragraph", wagtail.core.blocks.RichTextBlock()),
+                    ("paragraph", wagtail.blocks.RichTextBlock()),
                     ("image", wagtail.images.blocks.ImageChooserBlock()),
                     (
                         "captioned_image",
-                        wagtail.core.blocks.StructBlock(
+                        wagtail.blocks.StructBlock(
                             [
                                 ("image", wagtail.images.blocks.ImageChooserBlock()),
                                 (
                                     "caption",
-                                    wagtail.core.blocks.RichTextBlock(
+                                    wagtail.blocks.RichTextBlock(
                                         features=["bold", "italic", "link"]
                                     ),
                                 ),
@@ -87,7 +86,7 @@ class Migration(migrations.Migration):
                     ),
                     (
                         "footnotes",
-                        wagtail.core.blocks.RichTextBlock(
+                        wagtail.blocks.RichTextBlock(
                             classname="footnotes",
                             features=["ol", "ul", "bold", "italic", "link"],
                         ),
@@ -100,7 +99,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="contributorpage",
             name="contributors",
-            field=wagtail.core.fields.StreamField(
+            field=wagtail.fields.StreamField(
                 [
                     (
                         "person",
