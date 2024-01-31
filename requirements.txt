@@ -12,7 +12,7 @@ progressbar2
 django-semanticui-forms
 lxml
 eulxml
-wagtail>=4.0,<5.0
+wagtail>=4.0,<4.1
 bleach
 django-fullurl
 django-csp
