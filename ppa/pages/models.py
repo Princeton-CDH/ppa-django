@@ -2,14 +2,13 @@ import bleach
 from django.db import models
 from django.template.defaultfilters import striptags, truncatechars_html
 from django.utils.text import slugify
-from wagtail.admin.panels import FieldPanel, PageChooserPanel, StreamFieldPanel
+from wagtail.admin.panels import FieldPanel
 from wagtail import blocks
 from wagtail.fields import RichTextField, StreamField
 from wagtail.models import Page
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.embeds.blocks import EmbedBlock
 from wagtail.images.blocks import ImageChooserBlock
-from wagtail.images.edit_handlers import ImageChooserPanel
 from wagtail.images.models import Image
 from wagtail.snippets.blocks import SnippetChooserBlock
 from wagtail.snippets.models import register_snippet
@@ -71,7 +70,7 @@ class Person(models.Model):
 
     panels = [
         FieldPanel("name"),
-        ImageChooserPanel("photo"),
+        FieldPanel("photo"),
         FieldPanel("url"),
         FieldPanel("description"),
         FieldPanel("project_role"),
@@ -106,8 +105,8 @@ class HomePage(Page):
     )
 
     content_panels = Page.content_panels + [
-        PageChooserPanel("page_preview_1"),
-        PageChooserPanel("page_preview_2"),
+        FieldPanel("page_preview_1"),
+        FieldPanel("page_preview_2"),
         FieldPanel("body", classname="full"),
     ]
 
@@ -320,11 +319,11 @@ class PagePreviewDescriptionMixin(models.Model):
 class ContentPage(Page, PagePreviewDescriptionMixin):
     """Basic content page model."""
 
-    body = StreamField(BodyContentBlock)
+    body = StreamField(BodyContentBlock, use_json_field=True)
 
     content_panels = Page.content_panels + [
         FieldPanel("description"),
-        StreamFieldPanel("body"),
+        FieldPanel("body"),
     ]
 
 
@@ -364,20 +363,22 @@ class ContributorPage(Page, PagePreviewDescriptionMixin):
         blank=True,
         help_text="Select and order people to be listed as project \
         contributors.",
+        use_json_field=True,
     )
     board = StreamField(
         [("person", SnippetChooserBlock(Person))],
         blank=True,
         help_text="Select and order people to be listed as board members.",
+        use_json_field=True,
     )
 
-    body = StreamField(BodyContentBlock, blank=True)
+    body = StreamField(BodyContentBlock, blank=True, use_json_field=True)
 
     content_panels = Page.content_panels + [
         FieldPanel("description"),
-        StreamFieldPanel("contributors"),
-        StreamFieldPanel("board"),
-        StreamFieldPanel("body"),
+        FieldPanel("contributors"),
+        FieldPanel("board"),
+        FieldPanel("body"),
     ]
 
     # only allow creating directly under home page
