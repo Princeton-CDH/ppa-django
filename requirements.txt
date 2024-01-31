@@ -12,7 +12,7 @@ progressbar2
 django-semanticui-forms
 lxml
 eulxml
-wagtail>=2.15,<3   # wagtail 3 changes api of wagtail.core
+wagtail>=2.16,<3   # wagtail 3 changes api of wagtail.core
 bleach
 django-fullurl
 django-csp
