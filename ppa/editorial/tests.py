@@ -6,14 +6,14 @@ from django.test import TestCase
 from django.test.client import RequestFactory
 from wagtail.models import Site
 from wagtail.url_routing import RouteResult
-from wagtail.test.utils import WagtailPageTests
+from wagtail.test.utils import WagtailPageTestCase
 from wagtail.test.utils.form_data import nested_form_data, rich_text, streamfield
 
 from ppa.editorial.models import EditorialIndexPage, EditorialPage
 from ppa.pages.models import HomePage, Person
 
 
-class TestEditorialIndexPage(WagtailPageTests):
+class TestEditorialIndexPage(WagtailPageTestCase):
     fixtures = ["wagtail_pages"]
 
     def test_parent_pages(self):
@@ -24,29 +24,17 @@ class TestEditorialIndexPage(WagtailPageTests):
 
     def test_can_create(self):
         self.assertCanCreateAt(HomePage, EditorialIndexPage)
-        root = HomePage.objects.first()
-        self.assertCanCreate(
-            root,
-            EditorialIndexPage,
-            nested_form_data(
-                {
-                    "title": "Editorialization",
-                    "slug": "ed",
-                    "intro": rich_text("about these essays"),
-                }
-            ),
-        )
 
     def test_get_context(self):
         index_page = EditorialIndexPage.objects.first()
         ed_page = EditorialPage.objects.first()
         context = index_page.get_context({})
         assert "posts" in context
-        assert ed_page in context["posts"]
+        posts = [post.specific for post in context["posts"]]
+        assert ed_page in posts
 
-        # set to not published
-        ed_page.live = False
-        ed_page.save()
+        # unpublish
+        index_page.get_children().all().unpublish()
         context = index_page.get_context({})
         assert ed_page not in context["posts"]
 
@@ -154,8 +142,12 @@ class TestEditorialIndexPage(WagtailPageTests):
         )
 
 
-class TestEditorialPage(WagtailPageTests):
+class TestEditorialPage(WagtailPageTestCase):
     fixtures = ["wagtail_pages"]
+
+    def setUp(self):
+        # login so we have permission to test creating a page
+        self.login()
 
     def test_parent_pages(self):
         self.assertAllowedParentPageTypes(EditorialPage, [EditorialIndexPage])

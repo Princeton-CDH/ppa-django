@@ -41,6 +41,7 @@ class TestSitemaps(TestCase):
     def test_sitemap_pages(self):
         site = Site.objects.first()
         response = self.client.get("/sitemap-pages.xml")
+
         for slug in ["history", "editorial", "home"]:
             # somehow slug=home is returning more than one?
             page = Page.objects.filter(slug=slug).first()

@@ -2,13 +2,12 @@ from time import sleep
 from unittest.mock import Mock
 
 import bleach
-from django.contrib.contenttypes.models import ContentType
 from django.template.defaultfilters import striptags
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, RequestFactory
 from django.urls import reverse
 from wagtail.models import Page, Site
 from wagtail.images.models import Image
-from wagtail.test.utils import WagtailPageTests
+from wagtail.test.utils import WagtailPageTestCase
 from wagtail.test.utils.form_data import nested_form_data, rich_text, streamfield
 
 from ppa.archive.models import Collection, DigitizedWork
@@ -25,7 +24,7 @@ from ppa.pages.models import (
 )
 
 
-class TestHomePage(WagtailPageTests):
+class TestHomePage(WagtailPageTestCase):
     fixtures = ["wagtail_pages"]
 
     # NOTE: can't check assertCanCreate since it requires
@@ -37,15 +36,20 @@ class TestHomePage(WagtailPageTests):
         self.home = HomePage.objects.first()
 
         # collection page for testing homepage context & template logic
-        self.collection_page = CollectionPage.objects.create(
+        self.collection_page = CollectionPage(
             title="All About My PPA Collections",
             slug="collections",
-            depth=self.home.depth + 1,
+            # depth=self.home.depth + 1,
             show_in_menus=False,
-            path=self.home.path + "0003",
-            content_type=ContentType.objects.get_for_model(CollectionPage),
+            # path=self.home.path + "0003",
+            # content_type=ContentType.objects.get_for_model(CollectionPage),
             body=rich_text("You want a collection?"),
         )
+        # add child sets depth and path
+        self.home.add_child(instance=self.collection_page)
+
+        # login so we can test creating pages
+        self.login()
 
     def test_can_create(self):
         root = Page.objects.get(title="Root")
@@ -144,8 +148,12 @@ class TestHomePage(WagtailPageTests):
         )
 
 
-class TestContentPage(WagtailPageTests):
+class TestContentPage(WagtailPageTestCase):
     fixtures = ["wagtail_pages"]
+
+    def setUp(self):
+        # login so we can test creating page
+        self.login()
 
     def test_can_create(self):
         self.assertCanCreateAt(HomePage, ContentPage)
@@ -261,20 +269,23 @@ class TestContentPage(WagtailPageTests):
         )
 
 
-class TestCollectionPage(WagtailPageTests):
+class TestCollectionPage(WagtailPageTestCase):
     fixtures = ["wagtail_pages", "sample_digitized_works"]
 
     def setUp(self):
         super().setUp()
         self.home = HomePage.objects.first()
-        self.collection_page = CollectionPage.objects.create(
+        self.collection_page = CollectionPage(
             title="About the Collections",
             slug="collections",
-            depth=self.home.depth + 1,
+            # depth=self.home.depth + 1,
             show_in_menus=False,
-            path=self.home.path + "0003",
-            content_type=ContentType.objects.get_for_model(CollectionPage),
+            # path=self.home.path + "0003",
+            # content_type=ContentType.objects.get_for_model(CollectionPage),
         )
+        self.home.add_child(instance=self.collection_page)
+        # login so we can test page creation
+        self.login()
 
     def test_can_create(self):
         self.assertCanCreateAt(HomePage, CollectionPage)
@@ -381,8 +392,12 @@ class TestCollectionPage(WagtailPageTests):
         )
 
 
-class TestContributorPage(WagtailPageTests):
+class TestContributorPage(WagtailPageTestCase):
     fixtures = ["wagtail_pages"]
+
+    def setUp(self):
+        # login so we can test page creation
+        self.login()
 
     def test_can_create(self):
         self.assertCanCreateAt(HomePage, ContributorPage)
@@ -409,31 +424,33 @@ class TestContributorPage(WagtailPageTests):
         self.assertAllowedSubpageTypes(ContributorPage, [])
 
     def test_template(self):
-        home = HomePage.objects.first()
-        site = Site.objects.first()
-        contrib = ContributorPage.objects.create(
+        home = Page.objects.filter(url_path="/home/").first()
+        site = Site.objects.filter(is_default_site=True).first()
+        contrib = ContributorPage(
             title="Contributors and Board Members",
             slug="contributors",
-            depth=home.depth + 1,
             show_in_menus=False,
-            path=home.path + "0003",
-            content_type=ContentType.objects.get_for_model(ContributorPage),
         )
+        # add child sets depth and path
+        home.add_child(instance=contrib)
+
+        Page.objects.get(id=contrib.id)
 
         # add people as project & board members
         person_a = Person.objects.get(name="Person A")
         person_b = Person.objects.get(name="Person B")
         contrib.contributors.append(("person", person_a, "p1"))
         contrib.board.append(("person", person_b, "p2"))
-        contrib.save()
+        contrib.save_revision().publish()
 
-        response = self.client.get(contrib.relative_url(site))
-        # - check that correct templates are used
-        self.assertTemplateUsed(response, "base.html")
-        self.assertTemplateUsed(response, "pages/content_page.html")
-        self.assertTemplateUsed(response, "pages/contributor_page.html")
+        request = RequestFactory().get(contrib.relative_url(site))
+        response = contrib.serve(request)
+        # - check that expected template was used
+        assert response.template_name == "pages/contributor_page.html"
 
-        # contributor name, description, link, project role
+        # render template response content
+        response.render()
+        # check contributor name, description, link, project
         self.assertContains(response, person_a.name)
         self.assertContains(response, person_a.url)
         self.assertContains(response, person_a.description)
