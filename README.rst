@@ -106,22 +106,6 @@ either set of assets frequently. These two processes are separate as well::
     npm run dev # serve just the custom files from memory, with hot reload
     npm run dev:semantic # serve just fomantic UI files and recompile on changes
 
-- If running this application on MariaDB/MySQL, you must make sure that
-  time zone definitions are installed. On most flavors of Linux/MacOS,
-  you may use the following command, which will prompt
-  for the database server's root password::
-
-    mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql -p
-
-  If this command does not work, make sure you have the command line utilities
-  for MariaDB/MySQL installed and consult the documentation for your OS for
-  timezone info. Windows users will need to install a copy of the zoneinfo
-  files.
-
-  See `MariaDB <https://mariadb.com/kb/en/library/mysql_tzinfo_to_sql/>`_'s
-  info on the utility for more information.
-
-
 Tests
 ~~~~~
 
@@ -220,7 +204,7 @@ License
 -------
 This project is licensed under the `Apache 2.0 License <https://github.com/Princeton-CDH/ppa-django/blob/main/LICENSE>`_.
 
-©2019-2023 Trustees of Princeton University.  Permission granted via
+©2019-2024 Trustees of Princeton University.  Permission granted via
 Princeton Docket #20-3624 for distribution online under a standard Open Source
 license. Ownership rights transferred to Rebecca Koeser provided software
 is distributed online via open source.
