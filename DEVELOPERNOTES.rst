@@ -58,11 +58,10 @@ To create a new postgres database and user for development::
     psql -d postgres -c "CREATE ROLE ppa WITH CREATEDB LOGIN PASSWORD 'ppa';"
     psql -d postgres -U ppa -c "CREATE DATABASE ppa;"
 
-To update a development database with a dump of production data::
+To replace a local development database with a dump of production data::
 
-    psql -d postgres -c "DROP ROLE cdh_ppa;"
     psql -d postgres -c "DROP DATABASE cdh_ppa;"
-    psql -d postgres -c "CREATE ROLE cdh_ppa WITH CREATEDB LOGIN PASSWORD 'cdh_ppa';"
+    psql -d postgres -c "CREATE DATABASE cdh_ppa;"
     psql -d postgres -U cdh_ppa < data/13_daily_cdh_ppa_cdh_ppa_2023-01-11.Wednesday.sql
 
 
@@ -72,7 +71,7 @@ Updating Wagtail test fixture
 We use a fixture in `ppa/common/fixtures/wagtail_pages.json` for some wagtail unit tests.
 To update this to reflect changes in new versions of wagtail:
 
-1. Create an empty database to use for migrated the fixture. 
+1. Create an empty database to use for migrated the fixture.
 2. Check out a version of the codebase before any new migrations have been applied,
 and run migrations up to that point on the new database (`python manage.py migrate`)
 3. Remove preloaded wagtail content from the database using python console or web interface.
