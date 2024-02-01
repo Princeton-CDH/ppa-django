@@ -38,7 +38,7 @@ contains the most recent release, and work in progress will be on the **develop*
 Pull requests should be made against develop.
 
 
-Python 3.9 / Django 4.0 / Node 18.12 / Postgresql 13 / Solr 8
+Python 3.11 / Django 5.0 / Node 18.12 / Postgresql 15 / Solr 8
 
 
 Development instructions
@@ -46,7 +46,7 @@ Development instructions
 
 Initial setup and installation:
 
-- **recommended:** create and activate a python 3.9 virtual environment, perhaps with ``virtualenv`` or ``venv``
+- **recommended:** create and activate a python 3.11 virtual environment, perhaps with ``virtualenv`` or ``venv``
 
 - Use pip to install required python dependencies::
 

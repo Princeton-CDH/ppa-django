@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       db:
-        image: postgres:12
+        image: postgres:15
         env:
           POSTGRES_DB: ppa
           POSTGRES_USER: ppa
