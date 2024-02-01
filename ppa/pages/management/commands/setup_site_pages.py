@@ -11,8 +11,8 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
-from wagtail.core.models import Page
-from wagtail.core.models import Site as WagtailSite
+from wagtail.models import Page
+from wagtail.models import Site as WagtailSite
 
 from ppa.editorial.models import EditorialIndexPage
 from ppa.pages.models import CollectionPage, ContentPage, ContributorPage, HomePage
@@ -38,7 +38,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         # wagtail creates the root page for us
-        root = Page.objects.get(slug="root")
+        Page.objects.get(slug="root")
 
         # NOTE: logic for creating pages based on wagtail core migration
         # 0002 initial data, which creates initial site and welcome page

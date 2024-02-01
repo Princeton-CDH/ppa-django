@@ -93,9 +93,9 @@ INSTALLED_APPS = [
     "wagtail.documents",
     "wagtail.embeds",
     "wagtail.images",
-    # 'wagtail.search',
+    "wagtail.search",
     "wagtail.admin",
-    "wagtail.core",
+    "wagtail",
     "modelcluster",
     "taggit",
     "fullurl",
@@ -198,8 +198,6 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "America/New_York"
 
 USE_I18N = True
-
-USE_L10N = True
 
 USE_TZ = True
 

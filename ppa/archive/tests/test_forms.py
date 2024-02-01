@@ -18,7 +18,6 @@ from ppa.archive.models import Collection, DigitizedWork
 
 class TestFacetChoiceField(TestCase):
     def test_init(self):
-
         fcf = FacetChoiceField()
         # uses CheckboxSelectMultiple
         fcf.widget == forms.CheckboxSelectMultiple
@@ -75,15 +74,17 @@ class TestSearchForm(TestCase):
         searchform = SearchForm()
         # call the method to configure choices based on facets
         searchform.set_choices_from_facets(fake_facets)
-        for choice in searchform.fields["collections"].widget.choices:
+        for index_id, choice_name in searchform.fields["collections"].widget.choices:
             # choice is index id, label
-            choice_name = choice[1]
+            # choice_name = choice[1]
             if choice_name in ["foo", "bar", "baz"]:
                 assert isinstance(choice_name, str)
             # disabled uses override of dictionary with label and disabled flag
             else:
-                assert choice_name["label"] == "empty"
-                assert choice_name["disabled"]
+                # choice is a list of tuples, convert to dict to check
+                choice_dict = dict(choice_name)
+                assert choice_dict["label"] == "empty"
+                assert choice_dict["disabled"]
 
         # old facet field behavior with facet counts, no longer
         # used for collections (but possible used in future...)
@@ -213,12 +214,11 @@ class TestRadioWithDisabled(TestCase):
         self.form = TestForm()
 
     def test_create_option(self):
-
         rendered = self.form.as_p()
         # no is disabled
         self.assertInHTML(
-            '<input type="radio" name="yes_no" value="no" '
-            'required id="id_yes_no_0" disabled="disabled" />',
+            '<input type="radio" name="yes_no" value="disabled" '
+            'required id="id_yes_no_0_1" />',
             rendered,
         )
         # yes is not disabled

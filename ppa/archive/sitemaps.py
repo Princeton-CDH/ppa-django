@@ -19,7 +19,9 @@ class ArchiveViewsSitemap(Sitemap):
     def lastmod(self, obj):
         # both pages are modified based on changes to digitized works,
         # so return the most recent modification time of any of them
-        return DigitizedWork.objects.order_by("-updated").first().updated
+        most_recent_work = DigitizedWork.objects.order_by("-updated").first()
+        if most_recent_work:
+            return most_recent_work.updated
 
 
 class DigitizedWorkSitemap(Sitemap):
