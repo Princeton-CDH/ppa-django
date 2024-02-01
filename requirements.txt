@@ -1,5 +1,4 @@
 django>=4.1,<4.2
-django-cas-ng
 pucas>=0.8
 parasolr>=0.9
 pairtree
@@ -12,7 +11,7 @@ progressbar2
 django-semanticui-forms
 lxml
 eulxml
-wagtail>=4.2,<5.0
+wagtail>=5.0,<5.1
 django-taggit>=3.1,<4.0
 bleach
 django-fullurl
