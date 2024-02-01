@@ -25,10 +25,6 @@ at `<https://princeton-cdh.github.io/ppa-django/>`_.
    :target: https://www.codefactor.io/repository/github/princeton-cdh/ppa-django
    :alt: CodeFactor
 
-.. image:: https://requires.io/github/Princeton-CDH/ppa-django/requirements.svg?branch=main
-   :target: https://requires.io/github/Princeton-CDH/ppa-django/requirements/?branch=main
-   :alt: Requirements Status
-
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
    :target: https://github.com/psf/black
    :alt: code style Black
@@ -42,7 +38,7 @@ contains the most recent release, and work in progress will be on the **develop*
 Pull requests should be made against develop.
 
 
-Python 3.9 / Django 4.0 / Node 16.15 / Postgresql 13 / Solr 8
+Python 3.11 / Django 5.0 / Node 18.12 / Postgresql 15 / Solr 8
 
 
 Development instructions
@@ -50,7 +46,7 @@ Development instructions
 
 Initial setup and installation:
 
-- **recommended:** create and activate a python 3.6 virtual environment, perhaps with ``virtualenv`` or ``venv``
+- **recommended:** create and activate a python 3.11 virtual environment, perhaps with ``virtualenv`` or ``venv``
 
 - Use pip to install required python dependencies::
 
@@ -110,22 +106,6 @@ either set of assets frequently. These two processes are separate as well::
     npm run dev # serve just the custom files from memory, with hot reload
     npm run dev:semantic # serve just fomantic UI files and recompile on changes
 
-- If running this application on MariaDB/MySQL, you must make sure that
-  time zone definitions are installed. On most flavors of Linux/MacOS,
-  you may use the following command, which will prompt
-  for the database server's root password::
-
-    mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql -p
-
-  If this command does not work, make sure you have the command line utilities
-  for MariaDB/MySQL installed and consult the documentation for your OS for
-  timezone info. Windows users will need to install a copy of the zoneinfo
-  files.
-
-  See `MariaDB <https://mariadb.com/kb/en/library/mysql_tzinfo_to_sql/>`_'s
-  info on the utility for more information.
-
-
 Tests
 ~~~~~
 
@@ -151,13 +131,10 @@ Make sure you configure a test solr connection and set up an empty
 Solr core using the same instructions as for the development core.
 
 Note that python unit tests access a test server over HTTP, and therefore
-expect static files to be compiled – see "Frontend development setup" above
+expect static files to be compiled – see "Frontend development setup" above
 for how to do this.
 
-In a CI context, we instead use a ``webpack-stats.json`` file that mocks the
-existence of the static files so they aren't required. This file is located in
-the ``ci/`` directory and needs to be updated if new entrypoints are configured
-in ``webpack.config.js``.
+In a CI context, we use a fake webpack loader backend that ignores missing assets.
 
 Javascript unit tests are written with `Jasmine <https://jasmine.github.io/>`_
 and run using `Karma <https://karma-runner.github.io/2.0/index.html>`_. To run
@@ -227,7 +204,7 @@ License
 -------
 This project is licensed under the `Apache 2.0 License <https://github.com/Princeton-CDH/ppa-django/blob/main/LICENSE>`_.
 
-©2019-2023 Trustees of Princeton University.  Permission granted via
+©2019-2024 Trustees of Princeton University.  Permission granted via
 Princeton Docket #20-3624 for distribution online under a standard Open Source
 license. Ownership rights transferred to Rebecca Koeser provided software
 is distributed online via open source.

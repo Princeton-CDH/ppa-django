@@ -14,8 +14,13 @@
             "dom", // assume DOM APIs are present
             "dom.iterable", // assume newer DOM APIs are present
         ],
+        "declaration": true
     },
     "include": [
         "srcmedia/"
+    ],
+    "exclude": [
+        "*.test.ts"
     ]
+
 }

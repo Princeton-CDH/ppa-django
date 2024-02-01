@@ -33,7 +33,7 @@ module.exports = env => ({
     module: {
         rules: [
             { // compile TypeScript to js
-                test: /\.tsx?$/,
+                test: /^(?!.*\.test\.ts$).*\.tsx?$/,
                 loader: 'ts-loader',
                 exclude: [
                     /node_modules/, // don't transpile dependencies
@@ -84,7 +84,7 @@ module.exports = env => ({
     plugins: [
         new BundleTracker({
             filename: 'webpack-stats.json', // tells Django where to find webpack output
-            relativePath: true,
+            path: __dirname,
             indent: 2
         }),
         // extract css into a single file

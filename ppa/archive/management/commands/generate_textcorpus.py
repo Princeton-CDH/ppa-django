@@ -10,16 +10,30 @@ following assumptions:
     * Each work has a single source (Gale or Hathi) 
         even though it is indexed in Solr as a list    
 
-
 Examples:
 
-    python manage.py generate_textcorpus --path ~/ppa_solr_corpus
+    - Expected use:
+        python manage.py generate_textcorpus
 
-    python manage.py generate_textcorpus --path ~/ppa_solr_corpus --dry-run
+    - Specify a path:
+        python manage.py generate_textcorpus --path ~/ppa_solr_corpus
 
-    python manage.py generate_textcorpus --path ~/ppa_solr_corpus --doc-limit 100000
+    - Dry run (do not create any files or folders):
+        python manage.py generate_textcorpus --dry-run
 
-    python manage.py generate_textcorpus --path ~/ppa_solr_corpus --batch-size 1000
+    - Partial run (save only N rows, for testing):
+        python manage.py generate_textcorpus --doc-limit 100
+
+    - Cron-style run (no progress bar, but logs)
+        python manage.py generate_textcorpus --no-progressbar --verbosity 2
+
+Notes:
+
+    - Default path is `ppa_corpus_{timestamp}` in the current working directory
+
+    - Default batch size is 10,000, meaning 10,000 records are pulled 
+      from solr at a time. Usage testing revealed that this default 
+      iterates over the collection the quickest.
 
 """
 import os
@@ -45,8 +59,8 @@ class Command(BaseCommand):
     PAGE_FIELDLIST = {
         "id": "id",
         "work_id": "group_id_s",
-        "num": "order",
-        "num_orig": "label",
+        "order": "order",
+        "label": "label",
         "tags": "tags",
         "text": "content",
     }
@@ -99,11 +113,11 @@ class Command(BaseCommand):
             help="Number of docs to query from solr at one time",
         )
 
-        # add --dry-run argument (don't save anything, just iterate)
+        # add --no-gzip argument (save as .jsonl instead of .jsonl.gz)
         parser.add_argument(
             "--no-gzip",
             action="store_true",
-            help="Save uncompressed as ppa_pages.jsonl"
+            help="Save uncompressed as ppa_pages.jsonl "
             "instead of compressed as ppa_pages.jsonl.gz",
         )
 
@@ -112,6 +126,11 @@ class Command(BaseCommand):
             "--dry-run",
             action="store_true",
             help="Do not save anything, just iterate over solr",
+        )
+
+        # add --no-progressbar argument (don't show progress bar)
+        parser.add_argument(
+            "--no-progressbar", action="store_true", help="Hide the progress bar"
         )
 
     #### SOLR ####
@@ -154,7 +173,9 @@ class Command(BaseCommand):
 
         # if progress bar wanted, tack one on
         if self.progress:
-            batch_iterator = progressbar(batch_iterator, max_value=total)
+            batch_iterator = progressbar(
+                batch_iterator, max_value=total, prefix=f"Iterating {item_type}s: "
+            )
 
         # yield from this generator, progress bar or no
         yield from batch_iterator
@@ -236,7 +257,7 @@ class Command(BaseCommand):
         )
         verbosity_int = options.get("verbosity", 0)
         self.verbose = verbosity_int > 1  # extra verbose
-        self.progress = verbosity_int > 0  # unless quieted, use progress bar
+        self.progress = not options.get("no_progressbar")
         self.batch_size = (
             options.get("batch_size")
             if options.get("batch_size", 0) > 0
@@ -262,4 +283,5 @@ class Command(BaseCommand):
 
 # helper func
 def nowstr():
+    """helper method to generate timestamp for use in output filename"""
     return datetime.now().strftime(TIMESTAMP_FMT)
