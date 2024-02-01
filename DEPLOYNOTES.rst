@@ -11,6 +11,11 @@ Deploy and Upgrade notes
 
     python manage.py rebuild_references_index
 
+* This version enables wagtail search for content admin functionality. You
+  must update the wagtail index::
+
+    python manage.py update_index
+
 3.10
 ----
 
