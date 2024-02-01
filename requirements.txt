@@ -1,4 +1,4 @@
-django>=4.1,<4.2
+django>=4.2,<5.0
 pucas>=0.8
 parasolr>=0.9
 pairtree
@@ -12,7 +12,7 @@ django-semanticui-forms
 lxml
 eulxml
 wagtail>=5.2,<6.0
-django-taggit>=3.1,<4.0
+django-taggit>=4.0
 bleach
 django-fullurl
 django-csp
