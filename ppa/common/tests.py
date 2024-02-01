@@ -3,7 +3,7 @@ from unittest.mock import Mock
 from django.contrib.auth.models import Group, User
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
-from wagtail.core.models import Page, Site
+from wagtail.models import Page, Site
 
 from ppa.archive.views import DigitizedWorkListView
 from ppa.common.admin import LocalUserAdmin
@@ -41,6 +41,7 @@ class TestSitemaps(TestCase):
     def test_sitemap_pages(self):
         site = Site.objects.first()
         response = self.client.get("/sitemap-pages.xml")
+
         for slug in ["history", "editorial", "home"]:
             # somehow slug=home is returning more than one?
             page = Page.objects.filter(slug=slug).first()
@@ -49,7 +50,6 @@ class TestSitemaps(TestCase):
 
 class TestVaryOnHeadersMixin(TestCase):
     def test_vary_on_headers_mixing(self):
-
         # stub a View that will always return 405 since no methods are defined
         vary_on_view = VaryOnHeadersMixin(vary_headers=["X-Foobar", "X-Bazbar"])
         # mock a request because we don't need its functionality
@@ -99,12 +99,10 @@ class TestRobotsTxt(TestCase):
 
 
 class TestAnalytics(TestCase):
-
     # make the test enviroment as if setting is not set by default
     # regardless of test runner's actual settings.
     @override_settings(GTAGS_ANALYTICS_ID=None)
     def test_analytics(self):
-
         # No analytics setting should default to false
         # use a url that without running setup for Wagtail will use base.html
         url = reverse("archive:list")

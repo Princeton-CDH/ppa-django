@@ -3,9 +3,9 @@ from datetime import date
 from django.core.validators import RegexValidator
 from django.db import models
 from django.http import Http404
-from wagtail.admin.edit_handlers import FieldPanel, StreamFieldPanel
-from wagtail.core.fields import RichTextField, StreamField
-from wagtail.core.models import Page
+from wagtail.admin.panels import FieldPanel
+from wagtail.fields import RichTextField, StreamField
+from wagtail.models import Page
 from wagtail.snippets.blocks import SnippetChooserBlock
 
 from ppa.pages.models import BodyContentBlock, PagePreviewDescriptionMixin, Person
@@ -95,16 +95,21 @@ class EditorialPage(Page, PagePreviewDescriptionMixin):
 
     # preliminary streamfield; we may need other options for content
     # (maybe a footnotes block?)
-    body = StreamField(BodyContentBlock)
+    body = StreamField(
+        BodyContentBlock,
+        use_json_field=True,
+    )
     authors = StreamField(
         [("author", SnippetChooserBlock(Person))],
         blank=True,
         help_text="Select or create people snippets to add as authors.",
+        use_json_field=True,
     )
     editors = StreamField(
         [("editor", SnippetChooserBlock(Person))],
         blank=True,
         help_text="Select or create people snippets to add as editors.",
+        use_json_field=True,
     )
     doi = models.CharField(
         "DOI",
@@ -121,11 +126,11 @@ class EditorialPage(Page, PagePreviewDescriptionMixin):
     )
     content_panels = Page.content_panels + [
         FieldPanel("description"),
-        StreamFieldPanel("authors"),
-        StreamFieldPanel("editors"),
+        FieldPanel("authors"),
+        FieldPanel("editors"),
         FieldPanel("doi"),
         FieldPanel("pdf"),
-        StreamFieldPanel("body"),
+        FieldPanel("body"),
     ]
 
     # can only be under editorial, cannot have subpages
