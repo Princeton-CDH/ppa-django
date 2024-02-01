@@ -10,6 +10,7 @@ from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.embeds.blocks import EmbedBlock
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.images.models import Image
+from wagtail.search import index
 from wagtail.snippets.blocks import SnippetChooserBlock
 from wagtail.snippets.models import register_snippet
 
@@ -17,7 +18,7 @@ from ppa.archive.models import Collection
 
 
 @register_snippet
-class Person(models.Model):
+class Person(index.Indexed, models.Model):
     """Common model for a person, currently used to document authorship for
     instances of :class:`ppa.editorial.models.EditorialPage`."""
 
@@ -76,6 +77,11 @@ class Person(models.Model):
         FieldPanel("project_role"),
         FieldPanel("project_years"),
         FieldPanel("orcid"),
+    ]
+
+    search_fields = [
+        index.SearchField("name"),
+        index.AutocompleteField("name"),
     ]
 
     def __str__(self):

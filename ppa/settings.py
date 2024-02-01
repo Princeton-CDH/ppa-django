@@ -93,7 +93,7 @@ INSTALLED_APPS = [
     "wagtail.documents",
     "wagtail.embeds",
     "wagtail.images",
-    # 'wagtail.search',
+    "wagtail.search",
     "wagtail.admin",
     "wagtail",
     "modelcluster",
