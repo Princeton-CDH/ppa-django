@@ -1,4 +1,4 @@
-django>=4.0,<4.1
+django>=4.1,<4.2
 django-cas-ng
 pucas>=0.8
 parasolr>=0.9
