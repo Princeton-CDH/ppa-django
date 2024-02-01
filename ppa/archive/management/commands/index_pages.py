@@ -113,10 +113,11 @@ class Command(BaseCommand):
             work_diff = digiworks.count() - solr_count.get("work", 0)
             page_diff = num_pages - solr_count.get("page", 0)
 
-            if work_diff:
-                self.stdout.write(f"{work_diff:,} works not indexed in Solr")
-            if page_diff:
-                self.stdout.write(f"{page_diff:,} pages not indexed in Solr")
+            if self.verbosity >= self.v_normal:
+                if work_diff:
+                    self.stdout.write(f"{work_diff:,} works not indexed in Solr")
+                if page_diff:
+                    self.stdout.write(f"{page_diff:,} pages not indexed in Solr")
 
         if kwargs.get("expedite"):
             # find works with missing pages
