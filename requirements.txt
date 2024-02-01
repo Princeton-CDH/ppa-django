@@ -1,6 +1,8 @@
 django>=5.0,<5.1
 pucas>=0.8
-parasolr>=0.9
+# dev parasolr until next release
+git+https://github.com/Princeton-CDH/parasolr@develop#egg=parasolr
+#parasolr>=0.9
 pairtree
 py-flags
 # pymarc 5+ has incompatible changes

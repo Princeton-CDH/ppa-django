@@ -773,6 +773,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         # NOTE: prefetch_related is ignored when used with Iterator,
         # which parasolr indexing does
 
+    # specify chunk size; using previous django iterator default
+    index_chunk_size = 2000
+
     @classmethod
     def prep_index_chunk(cls, chunk):
         # prefetch collections when indexing in chunks
@@ -1020,6 +1023,8 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 class Page(Indexable):
     """Indexable for pages to make page data available for indexing with
     parasolr index manage command."""
+
+    index_chunk_size = 2000
 
     @classmethod
     def items_to_index(cls):
