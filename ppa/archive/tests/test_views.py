@@ -1,21 +1,18 @@
-import html
 import uuid
 from time import sleep
 from unittest.mock import Mock, patch
-from collections import defaultdict
 
 import pytest
 import requests
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
-from django.template.defaultfilters import escape
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.utils.http import urlencode
 from parasolr.django import SolrClient, SolrQuerySet
 
 from ppa.archive.forms import ImportForm, ModelMultipleChoiceFieldWithEmpty, SearchForm
-from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork, Cluster
+from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork
 from ppa.archive.solr import ArchiveSearchQuerySet
 from ppa.archive.templatetags.ppa_tags import (
     gale_page_url,
@@ -505,44 +502,12 @@ class TestDigitizedWorkListRequest(TestCase):
                 for i, content in enumerate(docs)
             ]
 
-        # get solr pages
+        # create test page content for indexing
         solr_page_docs = get_solr_page_docs(htid, sample_page_content)
         solr_page_docs += get_solr_page_docs(htid_other, sample_page_content_other)
 
-        # assign clusters
-        cl1 = Cluster(cluster_id="treatisewinter")
-        cl2 = Cluster(cluster_id="anothercluster")
-        cl3 = Cluster(cluster_id="dialcluster")
-        cl1.save()
-        cl2.save()
-        cl3.save()
-        clustk = "cluster_id_s"
-        cluster_objs = {}
         work_docs = [dw.index_data() for dw in DigitizedWork.objects.all()]
         index_data = work_docs + solr_page_docs
-
-        for d in index_data:
-            sid = d["source_id"]
-            if sid == htid:
-                d[clustk] = cl1.cluster_id
-                cluster_objs[sid] = cl1
-
-            elif sid in {"chi.78013704", "chi.78013677"}:
-                d[clustk] = cl3.cluster_id
-                cluster_objs[sid] = cl3
-
-            elif sid == htid_other:
-                d[clustk] = htid_other
-
-            else:
-                d[clustk] = cl2.cluster_id
-                cluster_objs[sid] = cl2
-
-        for dw in DigitizedWork.objects.all():
-            cluster = cluster_objs.get(dw.source_id)
-            if cluster:
-                dw.cluster = cluster
-                dw.save()
 
         SolrClient().update.index(index_data)
         # NOTE: without a sleep, even with commit=True and/or low
@@ -568,22 +533,9 @@ class TestDigitizedWorkListRequest(TestCase):
         response = self.client.get(self.url)
         assert response.status_code == 200
 
-        # assemble a dictionary of cluster -> list of works within that cluster
-        cluster2works = defaultdict(list)
-        all_works = DigitizedWork.objects.all()
-        for digwork in all_works:
-            # using this instead of digwork.cluster_id_is for consistency with other tests
-            digwork_index_data = digwork.index_data()
-            cluster = digwork_index_data.get("cluster_id_s")
-            # double checking that they're the same though:
-            assert digwork_index_data.get("cluster_id_s") == digwork.index_cluster_id
-            cluster2works[cluster].append(digwork)
-
-        # assert that shown are number of *clusters* not number of works
-        num_clusters = len(cluster2works)
-        num_works = len(all_works)
-        self.assertContains(response, "%d digitized works" % num_clusters)
-        self.assertNotContains(response, "%d digitized works" % num_works)
+        # fixture data has 4 works but two are in the same cluster
+        self.assertContains(response, "3 digitized works or clusters of works")
+        self.assertNotContains(response, "4 digitized works")
 
         # are results numbered?
         self.assertContains(
@@ -617,24 +569,24 @@ class TestDigitizedWorkListRequest(TestCase):
         # facet range information from publication date range facet
         assert "facet_ranges" in response.context
 
-        # we need to assert that *at least one* work within each cluster has its metadata shown
-        response_str = response.content.decode()
-        attrs_to_test = ["title", "subtitle", "author", "enumcron", "pub_date"]
-        for cluster, works in cluster2works.items():
-            # assertion is similar for all these attrs
-            for attr in attrs_to_test:
-                assert any(str(getattr(w, attr)) in response_str for w in works)
-            # at least one publisher includes an ampersand, so escape text
-            assert any(escape(w.publisher) in response_str for w in works)
-            # <- this was already commented, I believe because we're not showing it any longer?
-            # self.assertContains(response, digwork.pub_place)
+        # check that digitized work metadata appears
+        # - testing unclustered work and work in cluster of 1
+        for work in DigitizedWork.objects.exclude(cluster__cluster_id="dialcluster"):
+            self.assertContains(response, work.title)
+            self.assertContains(response, work.subtitle)
+            self.assertContains(response, work.author)
+            self.assertContains(response, work.enumcron)
+            self.assertContains(response, work.pub_date)
             # link to detail page
-            assert any(w.get_absolute_url() in response_str for w in works)
-            # unapi identifier for each work
-            assert any(
-                ('<abbr class="unapi-id" title="%s"' % w.index_id()) in response_str
-                for w in works
-            )
+            self.assertContains(response, work.get_absolute_url())
+
+        # two works in the same cluster
+        # both have the same title, should only be listed once
+        clustered_works = DigitizedWork.objects.filter(
+            cluster__cluster_id="dialcluster"
+        )
+        self.assertContains(response, clustered_works[0].title, count=1)
+        # (link to search within cluster tested elsewhere)
 
         # no page images or highlights displayed without search term
         self.assertNotContains(
@@ -677,24 +629,17 @@ class TestDigitizedWorkListRequest(TestCase):
             msg_prefix="highlight snippet from page content displayed",
         )
 
-        # need to unescape to test query args below
-        htmlstr = html.unescape(response.content.decode())
-
-        # 2 results but one cluster
-        assert htmlstr.count("search and browse within cluster") == 1
+        self.assertContains(response, "search and browse within cluster", count=1)
 
         # link preserves args
-        assert (
-            "/archive/?cluster=treatisewinter&query=wintry&sort=relevance&page=1"
-            in htmlstr
+        self.assertContains(
+            response,
+            "/archive/?cluster=treatisewinter&query=wintry&sort=relevance&page=1",
         )
-
         # the non-cluster hit should appear
-        assert "/archive/uc1.$b14645/?query=wintry" in htmlstr
-
+        self.assertContains(response, "/archive/uc1.$b14645/?query=wintry")
         # no hits for wintry in this cluster
-        print(htmlstr)
-        assert "/archive/?cluster=anothercluster" not in htmlstr
+        self.assertNotContains(response, "/archive/?cluster=anothercluster")
 
     def test_search_excerpt(self):
         # convert one of the fixtures into an excerpt
@@ -928,14 +873,8 @@ class TestDigitizedWorkListRequest(TestCase):
         self.assertTemplateNotUsed("archive/digitizedwork_list.html")
 
         # should have all the results
-        works = DigitizedWork.objects.all()
-        num_works = works.count()
-        clusters = set(w.index_data().get("cluster_id_s") for w in works)
-        num_clusters = len(clusters)
-        num_respobjs = len(response.context["object_list"])
-
-        print([num_works, num_respobjs, num_clusters])
-        assert num_respobjs == num_clusters  # used to be num_works: no longer!
+        # should only return three objects since 2 are in the same cluster
+        assert len(response.context["object_list"]) == 3
 
         # should have the results count
         self.assertContains(response, " digitized works")
