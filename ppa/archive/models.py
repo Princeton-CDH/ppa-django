@@ -122,7 +122,7 @@ class Collection(TrackChangesModel):
         return stats
 
 
-class Cluster(models.Model):
+class Cluster(TrackChangesModel):
     """A model to collect groups of works such as reprints or editions that should
     be collapsed in the main archive search and accessible together."""
 
@@ -204,12 +204,12 @@ class ProtectedWorkField(models.Field):
         return ProtectedWorkFieldFlags(value)
 
 
-class CollectionSignalHandlers:
+class SignalHandlers:
     """Signal handlers for indexing :class:`DigitizedWork` records when
-    :class:`Collection` records are saved or deleted."""
+    :class:`Collection` or :class:`Cluster` records are saved or deleted."""
 
     @staticmethod
-    def save(sender, instance, **kwargs):
+    def collection_save(sender, instance, **kwargs):
         """signal handler for collection save; reindex associated digitized works"""
         # only reindex if collection name has changed
         # and if collection has already been saved
@@ -223,19 +223,78 @@ class CollectionSignalHandlers:
                 DigitizedWork.index_items(works)
 
     @staticmethod
-    def delete(sender, instance, **kwargs):
+    def collection_delete(sender, instance, **kwargs):
         """signal handler for collection delete; clear associated digitized
         works and reindex"""
-        logger.debug("collection delete")
         # get a list of ids for collected works before clearing them
         digwork_ids = instance.digitizedwork_set.values_list("id", flat=True)
         # find the items based on the list of ids to reindex
         digworks = DigitizedWork.objects.filter(id__in=list(digwork_ids))
+        logger.debug("collection delete, reindexing %d works" % len(digworks))
 
         # NOTE: this sends pre/post clear signal, but it's not obvious
         # how to take advantage of that
         instance.digitizedwork_set.clear()
         DigitizedWork.index_items(digworks)
+
+    @staticmethod
+    def cluster_save(sender, instance, **kwargs):
+        """signal handler for cluster save; reindex pages for
+        associated digitized works"""
+        # only reindex if cluster id has changed
+        # and if object has already been saved to the db
+        if instance.pk and instance.has_changed("cluster_id"):
+            # if the cluster has any works associated
+            works = instance.digitizedwork_set.all()
+            if works.exists():
+                print("*** indexing %s" % works)
+                # get a total of page count for affected works
+                page_count = works.aggregate(page_count=models.Sum("page_count"))
+                logger.debug(
+                    "cluster id has changed, reindexing %d works and %d pages",
+                    works.count(),
+                    page_count["page_count"],
+                )
+                DigitizedWork.index_items(works)
+                # reindex pages (this may be slow...)
+                for work in works:
+                    work.index_items(Page.page_index_data(work))
+
+    @staticmethod
+    def cluster_delete(sender, instance, **kwargs):
+        """signal handler for cluster delete; clear associated digitized
+        works and reindex"""
+        # get a list of ids for collected works before clearing them
+        digwork_ids = instance.digitizedwork_set.values_list("id", flat=True)
+        # find the items based on the list of ids to reindex
+        digworks = DigitizedWork.objects.filter(id__in=list(digwork_ids))
+        # get a total of page count for affected works
+        page_count = digworks.aggregate(page_count=models.Sum("page_count"))
+        logger.debug(
+            "cluster delete, reindexing %d works and %d pages",
+            digworks.count(),
+            page_count["page_count"],
+        )
+
+        # NOTE: this sends pre/post clear signal, but it's not obvious
+        # how to take advantage of that for reindexing
+        instance.digitizedwork_set.clear()
+        DigitizedWork.index_items(digworks)
+        # reindex pages (this may be slow...)
+        for work in digworks:
+            work.index_items(Page.page_index_data(work))
+
+    @staticmethod
+    def handle_digwork_cluster_change(sender, instance, **kwargs):
+        """when a :class:`DigitizedWork` is saved,
+        reindex pages if cluster id has changed"""
+        if isinstance(instance, DigitizedWork) and instance.has_changed("cluster_id"):
+            logger.debug(
+                "Cluster changed for %s; indexing %d pages",
+                instance,
+                instance.page_count,
+            )
+            instance.index_items(Page.page_index_data(instance))
 
 
 def validate_page_range(value):
@@ -739,9 +798,16 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 
     index_depends_on = {
         "collections": {
-            "post_save": CollectionSignalHandlers.save,
-            "pre_delete": CollectionSignalHandlers.delete,
-        }
+            "post_save": SignalHandlers.collection_save,
+            "pre_delete": SignalHandlers.collection_delete,
+        },
+        "cluster": {
+            "post_save": SignalHandlers.cluster_save,
+            "pre_delete": SignalHandlers.cluster_delete,
+        },
+        "archive.DigitizedWork": {
+            "post_save": SignalHandlers.handle_digwork_cluster_change
+        },
     }
 
     def first_page(self):
