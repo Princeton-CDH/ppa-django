@@ -9,7 +9,7 @@
             {# TODO: icon, text and remove filter here  #}
             <div class="cluster-work icon container" >
                 You are searching and browsing within a cluster.
-                <a href="?{% querystring_replace cluster='' %}">Search the full archive.</a>
+                <a href="{% url 'archive:list' %}">Search the full archive.</a>
             </div>
         </div>
         {% endif %}
