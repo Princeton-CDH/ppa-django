@@ -759,44 +759,38 @@ class TestDigitizedWorkListRequest(TestCase):
         self.assertNotContains(response, 'cluster="')
 
     def test_search_sort(self):
-        ## get unique but sorted cluster ids in database
-        def _get_unique_list(l1):
-            l2 = []
-            for x in l1:
-                if x not in l2:
-                    l2.append(x)
-            return l2
+        # add a sort term - pub date
+        response = self.client.get(self.url, {"sort": "pub_date_asc"})
+        # get works from the database sorted by pub date
+        digworks = DigitizedWork.objects.order_by("pub_date")
+        # generate a list of corresponding clusters in order, for filtering
+        clusters = [dw.cluster for dw in digworks]
+        # generate a list of source ids in order, filtering out any
+        # with a duplicated cluster id
+        sorted_works_ids = [
+            dw.source_id
+            for i, dw in enumerate(digworks)
+            if (dw.cluster is None or dw.cluster not in clusters[:i])
+        ]
+        # the list of sorted ids should match
+        assert sorted_works_ids == [
+            work["source_id"] for work in response.context["object_list"]
+        ]
 
-        sorted_cluster_ids_date = _get_unique_list(
-            dw.index_cluster_id for dw in DigitizedWork.objects.order_by("pub_date")
-        )
-        sorted_cluster_ids_date_rev = _get_unique_list(
-            dw.index_cluster_id for dw in DigitizedWork.objects.order_by("-pub_date")
-        )
-        sorted_cluster_ids_title = _get_unique_list(
-            dw.index_cluster_id for dw in DigitizedWork.objects.order_by("title")
-        )
-
-        ## get unique but sorted cluster ids from response
-        def _get_unique_list_response(response):
-            return _get_unique_list(
-                work["cluster_id"] for work in response.context["object_list"]
-            )
-
-        response_sorted_cluster_ids_date = _get_unique_list_response(
-            self.client.get(self.url, {"sort": "pub_date_asc"})
-        )
-        response_sorted_cluster_ids_date_rev = _get_unique_list_response(
-            self.client.get(self.url, {"sort": "pub_date_desc"})
-        )
-        response_sorted_cluster_ids_title = _get_unique_list_response(
-            self.client.get(self.url, {"query": "", "sort": "title_asc"})
-        )
-
-        ## these should match
-        assert sorted_cluster_ids_date == response_sorted_cluster_ids_date
-        assert sorted_cluster_ids_date_rev == response_sorted_cluster_ids_date_rev
-        assert sorted_cluster_ids_title == response_sorted_cluster_ids_title
+        # test sort date in reverse
+        response = self.client.get(self.url, {"sort": "pub_date_desc"})
+        # generate source ids from works sorted by reverse pub date,
+        # and again filter by cluster, in matching order
+        # (this should result in the other item from dialcluster being included)
+        clusters.reverse()
+        sorted_works_ids = [
+            dw.source_id
+            for i, dw in enumerate(digworks.reverse())
+            if (dw.cluster is None or dw.cluster not in clusters[:i])
+        ]
+        assert sorted_works_ids == [
+            work["source_id"] for work in response.context["object_list"]
+        ]
 
     def test_relevance_sort_enabled(self):
         # - check that a query allows relevance as sort order toggle in form
