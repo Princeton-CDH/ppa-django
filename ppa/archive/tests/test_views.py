@@ -751,12 +751,20 @@ class TestDigitizedWorkListRequest(TestCase):
         self.assertContains(
             response, "You are searching and browsing within a cluster."
         )
-        # TODO: check that it lists ids within the cluster and not others
 
         # should link back to main archive search
         self.assertContains(response, reverse("archive:list"))
         # should NOT include a link with an empty cluster id
         self.assertNotContains(response, 'cluster="')
+
+        # check that the response *only* includes ids within the cluster
+        digwork_ids = DigitizedWork.objects.filter(
+            cluster__cluster_id="treatisewinter"
+        ).values_list("source_id", flat=True)
+        # convert to list because queryset != list
+        assert list(digwork_ids) == [
+            work["source_id"] for work in response.context["object_list"]
+        ]
 
     def test_search_sort(self):
         # add a sort term - pub date
