@@ -247,7 +247,6 @@ class SignalHandlers:
             # if the cluster has any works associated
             works = instance.digitizedwork_set.all()
             if works.exists():
-                print("*** indexing %s" % works)
                 # get a total of page count for affected works
                 page_count = works.aggregate(page_count=models.Sum("page_count"))
                 logger.debug(
