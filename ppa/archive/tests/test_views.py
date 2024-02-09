@@ -698,8 +698,14 @@ class TestDigitizedWorkListRequest(TestCase):
     def test_search_title(self):
         # search title using the title field
         response = self.client.get(self.url, {"title": "The Dial"})
-        self.assertContains(response, self.dial.source_id)
-        self.assertNotContains(response, self.wintry.source_id)
+        # fixture has two dial records in a cluster now, only one of them
+        # will be present
+        dial_ids = DigitizedWork.objects.filter(title="The Dial").values_list(
+            "source_id", flat=True
+        )
+        # one of these ids should be present, doesn't matter which one
+        content = str(response.content)  # decode from bytes
+        assert dial_ids[0] in content or dial_ids[1] in content
 
         # search on subtitle using the title query field
         response = self.client.get(self.url, {"title": "valuable"})

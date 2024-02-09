@@ -8,6 +8,7 @@ from time import sleep
 
 import progressbar
 from django.core.management.base import BaseCommand
+from django.db import models
 from parasolr.django import SolrClient, SolrQuerySet
 
 from ppa.archive.models import DigitizedWork, Page
@@ -103,7 +104,8 @@ class Command(BaseCommand):
             num_pages = Page.total_to_index()
         else:
             digiworks = DigitizedWork.objects.filter(source_id__in=source_ids)
-            num_pages = sum([dw.page_count for dw in digiworks])
+            digwork_pages = digiworks.aggregate(page_count=models.Sum("page_count"))
+            num_pages = digwork_pages["page_count"]
 
         # if reindexing everything, check db totals against solr
         if not source_ids and self.verbosity >= self.v_normal:
