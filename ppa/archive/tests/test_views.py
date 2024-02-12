@@ -631,11 +631,17 @@ class TestDigitizedWorkListRequest(TestCase):
 
         self.assertContains(response, "search and browse within cluster", count=1)
 
-        # link preserves args
+        # link preserves keyword arg only but not any other parameters
         self.assertContains(
+            response,
+            "<a href='/archive/?cluster=treatisewinter&query=wintry'>search and browse within cluster</a>",  # noqa: E501
+            html=True,
+        )
+        self.assertNotContains(
             response,
             "/archive/?cluster=treatisewinter&query=wintry&sort=relevance&page=1",
         )
+
         # the non-cluster hit should appear
         self.assertContains(response, "/archive/uc1.$b14645/?query=wintry")
         # no hits for wintry in this cluster
