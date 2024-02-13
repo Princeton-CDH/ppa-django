@@ -12,6 +12,7 @@ from ppa.archive.forms import (
     RangeField,
     RangeWidget,
     SearchForm,
+    ChoiceLabel,
 )
 from ppa.archive.models import Collection, DigitizedWork
 
@@ -79,12 +80,12 @@ class TestSearchForm(TestCase):
             # choice_name = choice[1]
             if choice_name in ["foo", "bar", "baz"]:
                 assert isinstance(choice_name, str)
-            # disabled uses override of dictionary with label and disabled flag
+            # disabled uses custom object with label and disabled flag
             else:
-                # choice is a list of tuples, convert to dict to check
-                choice_dict = dict(choice_name)
-                assert choice_dict["label"] == "empty"
-                assert choice_dict["disabled"]
+                # choice is a ChoiceLabel object
+                assert isinstance(choice_name, ChoiceLabel)
+                assert str(choice_name) == "empty"
+                assert choice_name.disabled
 
         # old facet field behavior with facet counts, no longer
         # used for collections (but possible used in future...)
