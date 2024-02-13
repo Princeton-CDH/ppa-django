@@ -8,6 +8,18 @@ from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork
 from ppa.common.utils import simplify_quotes
 
 
+class ChoiceLabel:
+    """Custom choice label that can be used to set an option as disabled
+    without resulting in extra choices when normalized."""
+
+    def __init__(self, label, disabled=False):
+        self.label = label
+        self.disabled = disabled
+
+    def __str__(self):
+        return str(self.label)
+
+
 class SelectDisabledMixin(object):
     """
     Mixin for :class:`django.forms.RadioSelect` or :class:`django.forms.CheckboxSelect`
@@ -27,6 +39,9 @@ class SelectDisabledMixin(object):
 
         if isinstance(label, dict):
             label, disabled = label["label"], label.get("disabled", False)
+        elif isinstance(label, ChoiceLabel):
+            disabled = label.disabled
+
         option_dict = super().create_option(
             name, value, label, selected, index, subindex=subindex, attrs=attrs
         )
@@ -56,6 +71,18 @@ class CheckboxSelectMultipleWithDisabled(
     Subclass of :class:`django.forms.CheckboxSelectMultiple` with option to mark
     a choice as disabled.
     """
+
+
+class CollectionCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
+    def create_option(
+        self, name, value, label, selected, index, subindex=None, attrs=None
+    ):
+        option = super().create_option(
+            name, value, label, selected, index, subindex, attrs
+        )
+        if value and value.instance.digwork_count == 0:
+            option["attrs"]["disabled"] = "disabled"
+        return option
 
 
 class FacetChoiceField(forms.MultipleChoiceField):
@@ -223,6 +250,7 @@ class SearchForm(forms.Form):
         queryset=Collection.objects.order_by("name"),
         label="Collection",
         widget=CheckboxSelectMultipleWithDisabled,
+        # widget=CollectionCheckboxSelectMultiple,
         required=False,
     )
     pub_date = RangeField(
@@ -347,50 +375,45 @@ class SearchForm(forms.Form):
 
     def set_choices_from_facets(self, facets):
         """Set choices on field from a dictionary of facets"""
-        # Also borrowed from Derrida module referenced for FacetChoiceField
-        # Uses mapping of solr_facet_fields and facet_fields in class
-        # definition but does not yet import full functionality of
-        # derrida-django's ReferenceSearchForm
 
-        # The primary adaptation involves use of a dictionary of dictionaries
-        # for facets in SolrClient vs. the functionality of
-        # django-haystack/pysolr.
-        for key, facet_dict in facets.items():
-            formfield = self.solr_facet_fields.get(key, key)
+        # update collections multiselect based on facets
 
-            # special case: collections is no longer a facet choice field,
-            # but options should be disabled if not present at all
-            # (i.e. no works are associated with that collection in Solr)
-            if formfield == "collections":
-                new_choice = []
-                for choice in self.fields[formfield].widget.choices:
-                    # widget choice is tuple of id, name; check for name in facets
-                    if choice[1] not in facet_dict.keys():
-                        new_choice.append(
-                            (choice[0], {"label": choice[1], "disabled": True})
-                        )
+        for facet_field, form_field in self.solr_facet_fields.items():
+            # currently the only configured facet field
+            if form_field == "collections":
+                self.fields["collections"].widget
+                facet_dict = facets[facet_field]
+                solr_collections = facet_dict.keys()
+
+                # construct updated choice list
+                choices = []
+                # iterate over existing choices (based on collections in database)
+                # widget choice is tuple of ModelChoiceIteratorValue, name
+                for itervalue, label in self.fields[form_field].widget.choices:
+                    # if a collection is not in solr, mark it as disabled
+                    if label not in solr_collections:
+                        # we have to use ChoiceLabel here instead of a dict
+                        # to avoid dict values being normalized into choices
+                        choices.append((itervalue, ChoiceLabel(label, disabled=True)))
+                    # otherwise, add choice unchanged
                     else:
-                        new_choice.append(choice)
+                        choices.append((itervalue, label))
 
-                # if there are items not in a collection, add an option
+                # if there are any items not in a collection, add an option
                 # so they will be findable
                 if NO_COLLECTION_LABEL in facet_dict:
-                    new_choice.append(
+                    choices.append(
                         (
                             ModelMultipleChoiceFieldWithEmpty.EMPTY_ID,
-                            {"label": NO_COLLECTION_LABEL},
+                            NO_COLLECTION_LABEL,
                         )
                     )
 
-                # replace choices with new version
-                self.fields[formfield].widget.choices = new_choice
-
-            # normal facet field behavior: populate choices from facet
-            # disabling for now, not currently in use
-            # elif formfield in self.fields:
-            #     self.fields[formfield].choices = [
-            #         (val, mark_safe('%s <span>%d</span>' % (val, count)))
-            #         for val, count in facet_dict.items()]
+                # replace form field choices with updated options
+                # Note that setting here updates both field and widget;
+                # it runs through a normalize method, which is why
+                # we can't use a dict for label + disabled
+                self.fields[form_field].choices = choices
 
     PUBDATE_CACHE_KEY = "digitizedwork_pubdate_maxmin"
 
