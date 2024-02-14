@@ -1175,23 +1175,36 @@ class Page(Indexable):
                 pagefilename = "/".join(
                     [digwork.hathi.content_dir, page.text_file_location]
                 )
-                with ht_zip.open(pagefilename) as pagefile:
-                    try:
-                        yield {
-                            "id": "%s.%s" % (digwork_index_id, page.text_file.sequence),
-                            "source_id": digwork.source_id,
-                            # for grouping with work record
-                            "group_id_s": digwork_index_id,
-                            # for grouping with cluster
-                            "cluster_id_s": digwork.index_cluster_id,
-                            "content": pagefile.read().decode("utf-8"),
-                            "order": page.order,
-                            "label": page.display_label,
-                            "tags": page.label.split(", ") if page.label else [],
-                            "item_type": "page",
-                        }
-                    except StopIteration:
-                        return
+                try:
+                    with ht_zip.open(pagefilename) as pagefile:
+                        try:
+                            yield {
+                                "id": "%s.%s"
+                                % (digwork_index_id, page.text_file.sequence),
+                                "source_id": digwork.source_id,
+                                # for grouping with work record
+                                "group_id_s": digwork_index_id,
+                                # for grouping with cluster
+                                "cluster_id_s": digwork.index_cluster_id,
+                                "content": pagefile.read().decode("utf-8"),
+                                "order": page.order,
+                                "label": page.display_label,
+                                "tags": page.label.split(", ") if page.label else [],
+                                "item_type": "page",
+                            }
+                        except StopIteration:
+                            return
+                except KeyError:
+                    # we know of one HathiTrust work (uc1.$b31619) where
+                    # the METS references pages that are not present in the zip file;
+                    # they are at the end of the document and don't have any
+                    # page content, so log a warning but don't treat as an error
+                    logger.warn(
+                        "Indexing %s pages: "
+                        + "%s referenced in METS but not found in zip file",
+                        digwork,
+                        pagefilename,
+                    )
 
     @classmethod
     def gale_page_index_data(cls, digwork, gale_record=None):
