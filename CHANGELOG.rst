@@ -3,6 +3,12 @@
 CHANGELOG
 =========
 
+3.11.2
+------
+
+Fix version mismatch between python and npm webpack loader packages 
+and correct bundle directory path configuration.
+
 3.11
 ----
 

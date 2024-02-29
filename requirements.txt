@@ -16,8 +16,8 @@ wagtail>=2.15,<3   # wagtail 3 changes api of wagtail.core
 bleach
 django-fullurl
 django-csp
-# see https://github.com/Princeton-CDH/ppa-django/issues/366
-django-webpack-loader<1
+# should be kept in sync with webpack-bundle-tracker npm package
+django-webpack-loader==3.0.1
 requests_oauthlib
 wand
 intspan

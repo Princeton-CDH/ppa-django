@@ -147,13 +147,10 @@ Make sure you configure a test solr connection and set up an empty
 Solr core using the same instructions as for the development core.
 
 Note that python unit tests access a test server over HTTP, and therefore
-expect static files to be compiled – see "Frontend development setup" above
+expect static files to be compiled – see "Frontend development setup" above
 for how to do this.
 
-In a CI context, we instead use a ``webpack-stats.json`` file that mocks the
-existence of the static files so they aren't required. This file is located in
-the ``ci/`` directory and needs to be updated if new entrypoints are configured
-in ``webpack.config.js``.
+In a CI context, we use a fake webpack loader backend that ignores missing assets.
 
 Javascript unit tests are written with `Jasmine <https://jasmine.github.io/>`_
 and run using `Karma <https://karma-runner.github.io/2.0/index.html>`_. To run
