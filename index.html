@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Princeton Prosody Archive documentation &#8212; Princeton Prosody Archive 3.11.2 documentation</title>
+    <title>Princeton Prosody Archive documentation &#8212; Princeton Prosody Archive 3.11.3 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=12dfc556" />
-    <script src="_static/documentation_options.js?v=1a85da86"></script>
+    <script src="_static/documentation_options.js?v=befd5e9f"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -54,12 +54,12 @@ at <a class="reference external" href="https://princeton-cdh.github.io/ppa-djang
 <p>This repo uses <a class="reference external" href="https://github.com/nvie/gitflow">git-flow</a> conventions; <strong>main</strong>
 contains the most recent release, and work in progress will be on the <strong>develop</strong> branch.
 Pull requests should be made against develop.</p>
-<p>Python 3.9 / Django 4.0 / Node 18.12 / Postgresql 13 / Solr 8</p>
+<p>Python 3.11 / Django 5.0 / Node 18.12 / Postgresql 15 / Solr 8</p>
 <section id="development-instructions">
 <h2>Development instructions<a class="headerlink" href="#development-instructions" title="Link to this heading">¶</a></h2>
 <p>Initial setup and installation:</p>
 <ul>
-<li><p><strong>recommended:</strong> create and activate a python 3.9 virtual environment, perhaps with <code class="docutils literal notranslate"><span class="pre">virtualenv</span></code> or <code class="docutils literal notranslate"><span class="pre">venv</span></code></p></li>
+<li><p><strong>recommended:</strong> create and activate a python 3.11 virtual environment, perhaps with <code class="docutils literal notranslate"><span class="pre">virtualenv</span></code> or <code class="docutils literal notranslate"><span class="pre">venv</span></code></p></li>
 <li><p>Use pip to install required python dependencies:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
 <span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">dev</span><span class="o">-</span><span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
@@ -124,22 +124,6 @@ either set of assets frequently. These two processes are separate as well:</p>
 <span class="n">npm</span> <span class="n">run</span> <span class="n">dev</span><span class="p">:</span><span class="n">semantic</span> <span class="c1"># serve just fomantic UI files and recompile on changes</span>
 </pre></div>
 </div>
-<ul>
-<li><p>If running this application on MariaDB/MySQL, you must make sure that
-time zone definitions are installed. On most flavors of Linux/MacOS,
-you may use the following command, which will prompt
-for the database server’s root password:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mysql_tzinfo_to_sql</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">zoneinfo</span> <span class="o">|</span> <span class="n">mysql</span> <span class="o">-</span><span class="n">u</span> <span class="n">root</span> <span class="n">mysql</span> <span class="o">-</span><span class="n">p</span>
-</pre></div>
-</div>
-<p>If this command does not work, make sure you have the command line utilities
-for MariaDB/MySQL installed and consult the documentation for your OS for
-timezone info. Windows users will need to install a copy of the zoneinfo
-files.</p>
-<p>See <a class="reference external" href="https://mariadb.com/kb/en/library/mysql_tzinfo_to_sql/">MariaDB</a>’s
-info on the utility for more information.</p>
-</li>
-</ul>
 <section id="tests">
 <h3>Tests<a class="headerlink" href="#tests" title="Link to this heading">¶</a></h3>
 <p>Python unit tests are written with <a class="reference external" href="http://doc.pytest.org/">py.test</a> but use
@@ -230,7 +214,7 @@ documentation coverage on pull requests.</p>
 <section id="license">
 <h2>License<a class="headerlink" href="#license" title="Link to this heading">¶</a></h2>
 <p>This project is licensed under the <a class="reference external" href="https://github.com/Princeton-CDH/ppa-django/blob/main/LICENSE">Apache 2.0 License</a>.</p>
-<p>©2019-2023 Trustees of Princeton University.  Permission granted via
+<p>©2019-2024 Trustees of Princeton University.  Permission granted via
 Princeton Docket #20-3624 for distribution online under a standard Open Source
 license. Ownership rights transferred to Rebecca Koeser provided software
 is distributed online via open source.</p>

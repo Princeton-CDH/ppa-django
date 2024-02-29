@@ -4,10 +4,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ppa.archive.forms &#8212; Princeton Prosody Archive 3.11.2 documentation</title>
+    <title>ppa.archive.forms &#8212; Princeton Prosody Archive 3.11.3 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=12dfc556" />
-    <script src="../../../_static/documentation_options.js?v=1a85da86"></script>
+    <script src="../../../_static/documentation_options.js?v=befd5e9f"></script>
     <script src="../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -40,6 +40,21 @@
 <span class="kn">from</span> <span class="nn">ppa.common.utils</span> <span class="kn">import</span> <span class="n">simplify_quotes</span>
 
 
+<div class="viewcode-block" id="ChoiceLabel">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.ChoiceLabel">[docs]</a>
+<span class="k">class</span> <span class="nc">ChoiceLabel</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom choice label that can be used to set an option as disabled</span>
+<span class="sd">    without resulting in extra choices when normalized.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">disabled</span> <span class="o">=</span> <span class="n">disabled</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="SelectDisabledMixin">
 <a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SelectDisabledMixin">[docs]</a>
 <span class="k">class</span> <span class="nc">SelectDisabledMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -63,6 +78,9 @@
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="n">label</span><span class="p">,</span> <span class="n">disabled</span> <span class="o">=</span> <span class="n">label</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">],</span> <span class="n">label</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;disabled&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">ChoiceLabel</span><span class="p">):</span>
+            <span class="n">disabled</span> <span class="o">=</span> <span class="n">label</span><span class="o">.</span><span class="n">disabled</span>
+
         <span class="n">option_dict</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">create_option</span><span class="p">(</span>
             <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">selected</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">subindex</span><span class="o">=</span><span class="n">subindex</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span>
         <span class="p">)</span>
@@ -103,6 +121,18 @@
 <span class="sd">    a choice as disabled.</span>
 <span class="sd">    &quot;&quot;&quot;</span></div>
 
+
+
+<span class="k">class</span> <span class="nc">CollectionCheckboxSelectMultiple</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">CheckboxSelectMultiple</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">create_option</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">selected</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">subindex</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="n">option</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">create_option</span><span class="p">(</span>
+            <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">selected</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">subindex</span><span class="p">,</span> <span class="n">attrs</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">digwork_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">option</span><span class="p">[</span><span class="s2">&quot;attrs&quot;</span><span class="p">][</span><span class="s2">&quot;disabled&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;disabled&quot;</span>
+        <span class="k">return</span> <span class="n">option</span>
 
 
 <div class="viewcode-block" id="FacetChoiceField">
@@ -296,6 +326,7 @@
         <span class="n">queryset</span><span class="o">=</span><span class="n">Collection</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">),</span>
         <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Collection&quot;</span><span class="p">,</span>
         <span class="n">widget</span><span class="o">=</span><span class="n">CheckboxSelectMultipleWithDisabled</span><span class="p">,</span>
+        <span class="c1"># widget=CollectionCheckboxSelectMultiple,</span>
         <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">pub_date</span> <span class="o">=</span> <span class="n">RangeField</span><span class="p">(</span>
@@ -431,51 +462,46 @@
 <a class="viewcode-back" href="../../../codedocs.html#ppa.archive.views.SearchForm.set_choices_from_facets">[docs]</a>
     <span class="k">def</span> <span class="nf">set_choices_from_facets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">facets</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set choices on field from a dictionary of facets&quot;&quot;&quot;</span>
-        <span class="c1"># Also borrowed from Derrida module referenced for FacetChoiceField</span>
-        <span class="c1"># Uses mapping of solr_facet_fields and facet_fields in class</span>
-        <span class="c1"># definition but does not yet import full functionality of</span>
-        <span class="c1"># derrida-django&#39;s ReferenceSearchForm</span>
 
-        <span class="c1"># The primary adaptation involves use of a dictionary of dictionaries</span>
-        <span class="c1"># for facets in SolrClient vs. the functionality of</span>
-        <span class="c1"># django-haystack/pysolr.</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">facet_dict</span> <span class="ow">in</span> <span class="n">facets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">formfield</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solr_facet_fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="c1"># update collections multiselect based on facets</span>
 
-            <span class="c1"># special case: collections is no longer a facet choice field,</span>
-            <span class="c1"># but options should be disabled if not present at all</span>
-            <span class="c1"># (i.e. no works are associated with that collection in Solr)</span>
-            <span class="k">if</span> <span class="n">formfield</span> <span class="o">==</span> <span class="s2">&quot;collections&quot;</span><span class="p">:</span>
-                <span class="n">new_choice</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="k">for</span> <span class="n">choice</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">formfield</span><span class="p">]</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">choices</span><span class="p">:</span>
-                    <span class="c1"># widget choice is tuple of id, name; check for name in facets</span>
-                    <span class="k">if</span> <span class="n">choice</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">facet_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                        <span class="n">new_choice</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                            <span class="p">(</span><span class="n">choice</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">choice</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;disabled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
-                        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">facet_field</span><span class="p">,</span> <span class="n">form_field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">solr_facet_fields</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># currently the only configured facet field</span>
+            <span class="k">if</span> <span class="n">form_field</span> <span class="o">==</span> <span class="s2">&quot;collections&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s2">&quot;collections&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">widget</span>
+                <span class="n">facet_dict</span> <span class="o">=</span> <span class="n">facets</span><span class="p">[</span><span class="n">facet_field</span><span class="p">]</span>
+                <span class="n">solr_collections</span> <span class="o">=</span> <span class="n">facet_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+                <span class="c1"># construct updated choice list</span>
+                <span class="n">choices</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="c1"># iterate over existing choices (based on collections in database)</span>
+                <span class="c1"># widget choice is tuple of ModelChoiceIteratorValue, name</span>
+                <span class="k">for</span> <span class="n">itervalue</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">form_field</span><span class="p">]</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">choices</span><span class="p">:</span>
+                    <span class="c1"># if a collection is not in solr, mark it as disabled</span>
+                    <span class="k">if</span> <span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">solr_collections</span><span class="p">:</span>
+                        <span class="c1"># we have to use ChoiceLabel here instead of a dict</span>
+                        <span class="c1"># to avoid dict values being normalized into choices</span>
+                        <span class="n">choices</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">itervalue</span><span class="p">,</span> <span class="n">ChoiceLabel</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">)))</span>
+                    <span class="c1"># otherwise, add choice unchanged</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="n">new_choice</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">choice</span><span class="p">)</span>
+                        <span class="n">choices</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">itervalue</span><span class="p">,</span> <span class="n">label</span><span class="p">))</span>
 
-                <span class="c1"># if there are items not in a collection, add an option</span>
+                <span class="c1"># if there are any items not in a collection, add an option</span>
                 <span class="c1"># so they will be findable</span>
                 <span class="k">if</span> <span class="n">NO_COLLECTION_LABEL</span> <span class="ow">in</span> <span class="n">facet_dict</span><span class="p">:</span>
-                    <span class="n">new_choice</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">choices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                         <span class="p">(</span>
                             <span class="n">ModelMultipleChoiceFieldWithEmpty</span><span class="o">.</span><span class="n">EMPTY_ID</span><span class="p">,</span>
-                            <span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">NO_COLLECTION_LABEL</span><span class="p">},</span>
+                            <span class="n">NO_COLLECTION_LABEL</span><span class="p">,</span>
                         <span class="p">)</span>
                     <span class="p">)</span>
 
-                <span class="c1"># replace choices with new version</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">formfield</span><span class="p">]</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">choices</span> <span class="o">=</span> <span class="n">new_choice</span></div>
+                <span class="c1"># replace form field choices with updated options</span>
+                <span class="c1"># Note that setting here updates both field and widget;</span>
+                <span class="c1"># it runs through a normalize method, which is why</span>
+                <span class="c1"># we can&#39;t use a dict for label + disabled</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">form_field</span><span class="p">]</span><span class="o">.</span><span class="n">choices</span> <span class="o">=</span> <span class="n">choices</span></div>
 
-
-            <span class="c1"># normal facet field behavior: populate choices from facet</span>
-            <span class="c1"># disabling for now, not currently in use</span>
-            <span class="c1"># elif formfield in self.fields:</span>
-            <span class="c1">#     self.fields[formfield].choices = [</span>
-            <span class="c1">#         (val, mark_safe(&#39;%s &lt;span&gt;%d&lt;/span&gt;&#39; % (val, count)))</span>
-            <span class="c1">#         for val, count in facet_dict.items()]</span>
 
     <span class="n">PUBDATE_CACHE_KEY</span> <span class="o">=</span> <span class="s2">&quot;digitizedwork_pubdate_maxmin&quot;</span>
 

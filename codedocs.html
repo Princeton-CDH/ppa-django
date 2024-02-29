@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Code Documentation &#8212; Princeton Prosody Archive 3.11.2 documentation</title>
+    <title>Code Documentation &#8212; Princeton Prosody Archive 3.11.3 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=12dfc556" />
-    <script src="_static/documentation_options.js?v=1a85da86"></script>
+    <script src="_static/documentation_options.js?v=befd5e9f"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -205,12 +205,6 @@ be collapsed in the main archive search and accessible together.</p>
 public search</p>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="ppa.archive.models.Collection.get_usage">
-<span class="sig-name descname"><span class="pre">get_usage</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ppa.archive.models.Collection.get_usage" title="Link to this definition">¶</a></dt>
-<dd><p>Returns a queryset of pages that link to a particular object</p>
-</dd></dl>
-
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ppa.archive.models.Collection.name">
 <span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#ppa.archive.models.Collection.name" title="Link to this definition">¶</a></dt>
@@ -229,26 +223,6 @@ public search</p>
 <dd><p>Collection counts and date ranges, based on what is in Solr.
 Returns a dictionary where they keys are collection names and
 values are a dictionary with count and dates.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="ppa.archive.models.CollectionSignalHandlers">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.models.</span></span><span class="sig-name descname"><span class="pre">CollectionSignalHandlers</span></span><a class="reference internal" href="_modules/ppa/archive/models.html#CollectionSignalHandlers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.models.CollectionSignalHandlers" title="Link to this definition">¶</a></dt>
-<dd><p>Signal handlers for indexing <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">DigitizedWork</span></code></a> records when
-<a class="reference internal" href="#ppa.archive.models.Collection" title="ppa.archive.models.Collection"><code class="xref py py-class docutils literal notranslate"><span class="pre">Collection</span></code></a> records are saved or deleted.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="ppa.archive.models.CollectionSignalHandlers.delete">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#CollectionSignalHandlers.delete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.models.CollectionSignalHandlers.delete" title="Link to this definition">¶</a></dt>
-<dd><p>signal handler for collection delete; clear associated digitized
-works and reindex</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="ppa.archive.models.CollectionSignalHandlers.save">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#CollectionSignalHandlers.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.models.CollectionSignalHandlers.save" title="Link to this definition">¶</a></dt>
-<dd><p>signal handler for collection save; reindex associated digitized works</p>
 </dd></dl>
 
 </dd></dl>
@@ -414,6 +388,12 @@ HathiTrust or Gale).</p>
 <span class="sig-name descname"><span class="pre">hathi</span></span><a class="headerlink" href="#ppa.archive.models.DigitizedWork.hathi" title="Link to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="#ppa.archive.hathi.HathiObject" title="ppa.archive.hathi.HathiObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">ppa.archive.hathi.HathiObject</span></code></a> for HathiTrust records,
 for working with data in HathiTrust pairtree data structure.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ppa.archive.models.DigitizedWork.index_chunk_size">
+<span class="sig-name descname"><span class="pre">index_chunk_size</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2000</span></em><a class="headerlink" href="#ppa.archive.models.DigitizedWork.index_chunk_size" title="Link to this definition">¶</a></dt>
+<dd><p>number of items to index at once when indexing a large number of items</p>
 </dd></dl>
 
 <dl class="py property">
@@ -653,6 +633,12 @@ making an extra API call if data is already available.</p>
 pairtree and return data to be indexed in solr.</p>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ppa.archive.models.Page.index_chunk_size">
+<span class="sig-name descname"><span class="pre">index_chunk_size</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2000</span></em><a class="headerlink" href="#ppa.archive.models.Page.index_chunk_size" title="Link to this definition">¶</a></dt>
+<dd><p>number of items to index at once when indexing a large number of items</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="ppa.archive.models.Page.index_item_type">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">index_item_type</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#Page.index_item_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.models.Page.index_item_type" title="Link to this definition">¶</a></dt>
@@ -771,6 +757,47 @@ fields should be protected if edited in the admin.</p>
 <dt class="sig sig-object py" id="ppa.archive.models.ProtectedWorkFieldFlags.title">
 <span class="sig-name descname"><span class="pre">title</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;ProtectedWorkFieldFlags.title</span> <span class="pre">bits=0x0001</span> <span class="pre">data=UNDEFINED&gt;</span></em><a class="headerlink" href="#ppa.archive.models.ProtectedWorkFieldFlags.title" title="Link to this definition">¶</a></dt>
 <dd><p>title</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ppa.archive.models.SignalHandlers">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.models.</span></span><span class="sig-name descname"><span class="pre">SignalHandlers</span></span><a class="reference internal" href="_modules/ppa/archive/models.html#SignalHandlers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.models.SignalHandlers" title="Link to this definition">¶</a></dt>
+<dd><p>Signal handlers for indexing <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">DigitizedWork</span></code></a> records when
+<a class="reference internal" href="#ppa.archive.models.Collection" title="ppa.archive.models.Collection"><code class="xref py py-class docutils literal notranslate"><span class="pre">Collection</span></code></a> or <a class="reference internal" href="#ppa.archive.models.Cluster" title="ppa.archive.models.Cluster"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cluster</span></code></a> records are saved or deleted.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ppa.archive.models.SignalHandlers.cluster_delete">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#SignalHandlers.cluster_delete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.models.SignalHandlers.cluster_delete" title="Link to this definition">¶</a></dt>
+<dd><p>signal handler for cluster delete; clear associated digitized
+works and reindex</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ppa.archive.models.SignalHandlers.cluster_save">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#SignalHandlers.cluster_save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.models.SignalHandlers.cluster_save" title="Link to this definition">¶</a></dt>
+<dd><p>signal handler for cluster save; reindex pages for
+associated digitized works</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ppa.archive.models.SignalHandlers.collection_delete">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">collection_delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#SignalHandlers.collection_delete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.models.SignalHandlers.collection_delete" title="Link to this definition">¶</a></dt>
+<dd><p>signal handler for collection delete; clear associated digitized
+works and reindex</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ppa.archive.models.SignalHandlers.collection_save">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">collection_save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#SignalHandlers.collection_save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.models.SignalHandlers.collection_save" title="Link to this definition">¶</a></dt>
+<dd><p>signal handler for collection save; reindex associated digitized works</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ppa.archive.models.SignalHandlers.handle_digwork_cluster_change">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">handle_digwork_cluster_change</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#SignalHandlers.handle_digwork_cluster_change"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.models.SignalHandlers.handle_digwork_cluster_change" title="Link to this definition">¶</a></dt>
+<dd><p>when a <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">DigitizedWork</span></code></a> is saved,
+reindex pages if cluster id has changed</p>
 </dd></dl>
 
 </dd></dl>
@@ -1054,6 +1081,13 @@ to bulk add a queryset of :class:ppa.archive.models.DigitizedWork</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.forms.</span></span><span class="sig-name descname"><span class="pre">CheckboxSelectMultipleWithDisabled</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">choices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#CheckboxSelectMultipleWithDisabled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.forms.CheckboxSelectMultipleWithDisabled" title="Link to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference external" href="https://django.readthedocs.io/en/latest/ref/forms/widgets.html#django.forms.CheckboxSelectMultiple" title="(in Django v5.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.CheckboxSelectMultiple</span></code></a> with option to mark
 a choice as disabled.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ppa.archive.forms.ChoiceLabel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.forms.</span></span><span class="sig-name descname"><span class="pre">ChoiceLabel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disabled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#ChoiceLabel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.forms.ChoiceLabel" title="Link to this definition">¶</a></dt>
+<dd><p>Custom choice label that can be used to set an option as disabled
+without resulting in extra choices when normalized.</p>
 </dd></dl>
 
 <dl class="py class">
@@ -2242,7 +2276,7 @@ and editorial pages</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="ppa.pages.models.HomePage">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.pages.models.</span></span><span class="sig-name descname"><span class="pre">HomePage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/pages/models.html#HomePage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.pages.models.HomePage" title="Link to this definition">¶</a></dt>
-<dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">wagtail.core.models.Page</span></code> model for PPA home page</p>
+<dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">wagtail.models.Page</span></code> model for PPA home page</p>
 <dl class="py exception">
 <dt class="sig sig-object py" id="ppa.pages.models.HomePage.DoesNotExist">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#ppa.pages.models.HomePage.DoesNotExist" title="Link to this definition">¶</a></dt>
@@ -2298,7 +2332,7 @@ description, for use in previews on the site and plain-text metadata
 previews.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags">
-<span class="sig-name descname"><span class="pre">allowed_tags</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['p',</span> <span class="pre">'b',</span> <span class="pre">'ol',</span> <span class="pre">'em',</span> <span class="pre">'li',</span> <span class="pre">'strong',</span> <span class="pre">'ul',</span> <span class="pre">'code',</span> <span class="pre">'blockquote',</span> <span class="pre">'acronym',</span> <span class="pre">'abbr',</span> <span class="pre">'i']</span></em><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">allowed_tags</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['code',</span> <span class="pre">'acronym',</span> <span class="pre">'b',</span> <span class="pre">'strong',</span> <span class="pre">'blockquote',</span> <span class="pre">'i',</span> <span class="pre">'p',</span> <span class="pre">'abbr',</span> <span class="pre">'ol',</span> <span class="pre">'ul',</span> <span class="pre">'em',</span> <span class="pre">'li']</span></em><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags" title="Link to this definition">¶</a></dt>
 <dd><p>allowed tags for bleach html stripping in description</p>
 </dd></dl>
 
@@ -2344,12 +2378,6 @@ instances of <a class="reference internal" href="#ppa.editorial.models.Editorial
 <dt class="sig sig-object py" id="ppa.pages.models.Person.description">
 <span class="sig-name descname"><span class="pre">description</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">affiliation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">etc.</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ppa.pages.models.Person.description" title="Link to this definition">¶</a></dt>
 <dd><p>description (affiliation, etc.)</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="ppa.pages.models.Person.get_usage">
-<span class="sig-name descname"><span class="pre">get_usage</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ppa.pages.models.Person.get_usage" title="Link to this definition">¶</a></dt>
-<dd><p>Returns a queryset of pages that link to a particular object</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -2693,15 +2721,9 @@ to normal template view behavior and displays format information.</p>
 <li><a class="reference internal" href="#ppa.archive.models.Collection.MultipleObjectsReturned"><code class="docutils literal notranslate"><span class="pre">Collection.MultipleObjectsReturned</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.models.Collection.description"><code class="docutils literal notranslate"><span class="pre">Collection.description</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.models.Collection.exclude"><code class="docutils literal notranslate"><span class="pre">Collection.exclude</span></code></a></li>
-<li><a class="reference internal" href="#ppa.archive.models.Collection.get_usage"><code class="docutils literal notranslate"><span class="pre">Collection.get_usage()</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.models.Collection.name"><code class="docutils literal notranslate"><span class="pre">Collection.name</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.models.Collection.name_changed"><code class="docutils literal notranslate"><span class="pre">Collection.name_changed</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.models.Collection.stats"><code class="docutils literal notranslate"><span class="pre">Collection.stats()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#ppa.archive.models.CollectionSignalHandlers"><code class="docutils literal notranslate"><span class="pre">CollectionSignalHandlers</span></code></a><ul>
-<li><a class="reference internal" href="#ppa.archive.models.CollectionSignalHandlers.delete"><code class="docutils literal notranslate"><span class="pre">CollectionSignalHandlers.delete()</span></code></a></li>
-<li><a class="reference internal" href="#ppa.archive.models.CollectionSignalHandlers.save"><code class="docutils literal notranslate"><span class="pre">CollectionSignalHandlers.save()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#ppa.archive.models.DigitizedWork"><code class="docutils literal notranslate"><span class="pre">DigitizedWork</span></code></a><ul>
@@ -2724,6 +2746,7 @@ to normal template view behavior and displays format information.</p>
 <li><a class="reference internal" href="#ppa.archive.models.DigitizedWork.get_source_link_label"><code class="docutils literal notranslate"><span class="pre">DigitizedWork.get_source_link_label()</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.models.DigitizedWork.has_fulltext"><code class="docutils literal notranslate"><span class="pre">DigitizedWork.has_fulltext</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.models.DigitizedWork.hathi"><code class="docutils literal notranslate"><span class="pre">DigitizedWork.hathi</span></code></a></li>
+<li><a class="reference internal" href="#ppa.archive.models.DigitizedWork.index_chunk_size"><code class="docutils literal notranslate"><span class="pre">DigitizedWork.index_chunk_size</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.models.DigitizedWork.index_cluster_id"><code class="docutils literal notranslate"><span class="pre">DigitizedWork.index_cluster_id</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.models.DigitizedWork.index_data"><code class="docutils literal notranslate"><span class="pre">DigitizedWork.index_data()</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.models.DigitizedWork.index_id"><code class="docutils literal notranslate"><span class="pre">DigitizedWork.index_id()</span></code></a></li>
@@ -2760,6 +2783,7 @@ to normal template view behavior and displays format information.</p>
 <li><a class="reference internal" href="#ppa.archive.models.Page"><code class="docutils literal notranslate"><span class="pre">Page</span></code></a><ul>
 <li><a class="reference internal" href="#ppa.archive.models.Page.gale_page_index_data"><code class="docutils literal notranslate"><span class="pre">Page.gale_page_index_data()</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.models.Page.hathi_page_index_data"><code class="docutils literal notranslate"><span class="pre">Page.hathi_page_index_data()</span></code></a></li>
+<li><a class="reference internal" href="#ppa.archive.models.Page.index_chunk_size"><code class="docutils literal notranslate"><span class="pre">Page.index_chunk_size</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.models.Page.index_item_type"><code class="docutils literal notranslate"><span class="pre">Page.index_item_type()</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.models.Page.items_to_index"><code class="docutils literal notranslate"><span class="pre">Page.items_to_index()</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.models.Page.page_index_data"><code class="docutils literal notranslate"><span class="pre">Page.page_index_data()</span></code></a></li>
@@ -2783,6 +2807,14 @@ to normal template view behavior and displays format information.</p>
 <li><a class="reference internal" href="#ppa.archive.models.ProtectedWorkFieldFlags.sort_title"><code class="docutils literal notranslate"><span class="pre">ProtectedWorkFieldFlags.sort_title</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.models.ProtectedWorkFieldFlags.subtitle"><code class="docutils literal notranslate"><span class="pre">ProtectedWorkFieldFlags.subtitle</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.models.ProtectedWorkFieldFlags.title"><code class="docutils literal notranslate"><span class="pre">ProtectedWorkFieldFlags.title</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ppa.archive.models.SignalHandlers"><code class="docutils literal notranslate"><span class="pre">SignalHandlers</span></code></a><ul>
+<li><a class="reference internal" href="#ppa.archive.models.SignalHandlers.cluster_delete"><code class="docutils literal notranslate"><span class="pre">SignalHandlers.cluster_delete()</span></code></a></li>
+<li><a class="reference internal" href="#ppa.archive.models.SignalHandlers.cluster_save"><code class="docutils literal notranslate"><span class="pre">SignalHandlers.cluster_save()</span></code></a></li>
+<li><a class="reference internal" href="#ppa.archive.models.SignalHandlers.collection_delete"><code class="docutils literal notranslate"><span class="pre">SignalHandlers.collection_delete()</span></code></a></li>
+<li><a class="reference internal" href="#ppa.archive.models.SignalHandlers.collection_save"><code class="docutils literal notranslate"><span class="pre">SignalHandlers.collection_save()</span></code></a></li>
+<li><a class="reference internal" href="#ppa.archive.models.SignalHandlers.handle_digwork_cluster_change"><code class="docutils literal notranslate"><span class="pre">SignalHandlers.handle_digwork_cluster_change()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#ppa.archive.models.TrackChangesModel"><code class="docutils literal notranslate"><span class="pre">TrackChangesModel</span></code></a><ul>
@@ -2846,6 +2878,7 @@ to normal template view behavior and displays format information.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#ppa.archive.forms.CheckboxSelectMultipleWithDisabled"><code class="docutils literal notranslate"><span class="pre">CheckboxSelectMultipleWithDisabled</span></code></a></li>
+<li><a class="reference internal" href="#ppa.archive.forms.ChoiceLabel"><code class="docutils literal notranslate"><span class="pre">ChoiceLabel</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.forms.FacetChoiceField"><code class="docutils literal notranslate"><span class="pre">FacetChoiceField</span></code></a><ul>
 <li><a class="reference internal" href="#ppa.archive.forms.FacetChoiceField.valid_value"><code class="docutils literal notranslate"><span class="pre">FacetChoiceField.valid_value()</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.forms.FacetChoiceField.widget"><code class="docutils literal notranslate"><span class="pre">FacetChoiceField.widget</span></code></a></li>
@@ -3111,7 +3144,6 @@ to normal template view behavior and displays format information.</p>
 <li><a class="reference internal" href="#ppa.pages.models.Person.DoesNotExist"><code class="docutils literal notranslate"><span class="pre">Person.DoesNotExist</span></code></a></li>
 <li><a class="reference internal" href="#ppa.pages.models.Person.MultipleObjectsReturned"><code class="docutils literal notranslate"><span class="pre">Person.MultipleObjectsReturned</span></code></a></li>
 <li><a class="reference internal" href="#ppa.pages.models.Person.description"><code class="docutils literal notranslate"><span class="pre">Person.description</span></code></a></li>
-<li><a class="reference internal" href="#ppa.pages.models.Person.get_usage"><code class="docutils literal notranslate"><span class="pre">Person.get_usage()</span></code></a></li>
 <li><a class="reference internal" href="#ppa.pages.models.Person.name"><code class="docutils literal notranslate"><span class="pre">Person.name</span></code></a></li>
 <li><a class="reference internal" href="#ppa.pages.models.Person.photo"><code class="docutils literal notranslate"><span class="pre">Person.photo</span></code></a></li>
 <li><a class="reference internal" href="#ppa.pages.models.Person.project_role"><code class="docutils literal notranslate"><span class="pre">Person.project_role</span></code></a></li>
