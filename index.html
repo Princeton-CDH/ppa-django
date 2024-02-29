@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Princeton Prosody Archive documentation &#8212; Princeton Prosody Archive 3.11.1 documentation</title>
+    <title>Princeton Prosody Archive documentation &#8212; Princeton Prosody Archive 3.11.2 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=12dfc556" />
-    <script src="_static/documentation_options.js?v=2d7d50ec"></script>
+    <script src="_static/documentation_options.js?v=1a85da86"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -163,12 +163,9 @@ top-level project directory to your python path environment variable:</p>
 <p>Make sure you configure a test solr connection and set up an empty
 Solr core using the same instructions as for the development core.</p>
 <p>Note that python unit tests access a test server over HTTP, and therefore
-expect static files to be compiled – see “Frontend development setup” above
+expect static files to be compiled – see “Frontend development setup” above
 for how to do this.</p>
-<p>In a CI context, we instead use a <code class="docutils literal notranslate"><span class="pre">webpack-stats.json</span></code> file that mocks the
-existence of the static files so they aren’t required. This file is located in
-the <code class="docutils literal notranslate"><span class="pre">ci/</span></code> directory and needs to be updated if new entrypoints are configured
-in <code class="docutils literal notranslate"><span class="pre">webpack.config.js</span></code>.</p>
+<p>In a CI context, we use a fake webpack loader backend that ignores missing assets.</p>
 <p>Javascript unit tests are written with <a class="reference external" href="https://jasmine.github.io/">Jasmine</a>
 and run using <a class="reference external" href="https://karma-runner.github.io/2.0/index.html">Karma</a>. To run
 them, you can use an <code class="docutils literal notranslate"><span class="pre">npm</span></code> command:</p>
