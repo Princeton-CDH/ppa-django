@@ -1,6 +1,6 @@
 {# NOTE: expects cluster_id to be passed in #}
 <div class="cluster-work icon container" >
     {# TODO: include count if we can easily get it ; search and browse x digitized works within cluster #}
-    {# ONLY include keyword search parameter, no other filters or sort options #}
-    <a href="{% url "archive:list" %}?cluster={{ cluster_id }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}">search and browse within cluster</a>
+    {# do NOT include any search parameters, to avoid unintentionally hiding cluster results #}
+    <a href="{% url "archive:list" %}?cluster={{ cluster_id }}">search and browse within cluster</a>
 </div>
