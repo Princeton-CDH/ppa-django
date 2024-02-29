@@ -2,15 +2,15 @@ import bleach
 from django.db import models
 from django.template.defaultfilters import striptags, truncatechars_html
 from django.utils.text import slugify
-from wagtail.admin.edit_handlers import FieldPanel, PageChooserPanel, StreamFieldPanel
-from wagtail.core import blocks
-from wagtail.core.fields import RichTextField, StreamField
-from wagtail.core.models import Page
+from wagtail.admin.panels import FieldPanel
+from wagtail import blocks
+from wagtail.fields import RichTextField, StreamField
+from wagtail.models import Page
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.embeds.blocks import EmbedBlock
 from wagtail.images.blocks import ImageChooserBlock
-from wagtail.images.edit_handlers import ImageChooserPanel
 from wagtail.images.models import Image
+from wagtail.search import index
 from wagtail.snippets.blocks import SnippetChooserBlock
 from wagtail.snippets.models import register_snippet
 
@@ -18,7 +18,7 @@ from ppa.archive.models import Collection
 
 
 @register_snippet
-class Person(models.Model):
+class Person(index.Indexed, models.Model):
     """Common model for a person, currently used to document authorship for
     instances of :class:`ppa.editorial.models.EditorialPage`."""
 
@@ -71,7 +71,7 @@ class Person(models.Model):
 
     panels = [
         FieldPanel("name"),
-        ImageChooserPanel("photo"),
+        FieldPanel("photo"),
         FieldPanel("url"),
         FieldPanel("description"),
         FieldPanel("project_role"),
@@ -79,12 +79,17 @@ class Person(models.Model):
         FieldPanel("orcid"),
     ]
 
+    search_fields = [
+        index.SearchField("name"),
+        index.AutocompleteField("name"),
+    ]
+
     def __str__(self):
         return self.name
 
 
 class HomePage(Page):
-    """:class:`wagtail.core.models.Page` model for PPA home page"""
+    """:class:`wagtail.models.Page` model for PPA home page"""
 
     body = RichTextField(blank=True)
 
@@ -106,8 +111,8 @@ class HomePage(Page):
     )
 
     content_panels = Page.content_panels + [
-        PageChooserPanel("page_preview_1"),
-        PageChooserPanel("page_preview_2"),
+        FieldPanel("page_preview_1"),
+        FieldPanel("page_preview_2"),
         FieldPanel("body", classname="full"),
     ]
 
@@ -154,7 +159,7 @@ briefly communicate the intended message of the image in this context."""
 
 
 class ImageWithCaption(blocks.StructBlock):
-    """:class:`~wagtail.core.blocks.StructBlock` for an image with
+    """:class:`~wagtail.blocks.StructBlock` for an image with
     a formatted caption, so caption can be context-specific. Also allows images
     to be floated right, left, or take up the width of the page."""
 
@@ -180,7 +185,7 @@ class ImageWithCaption(blocks.StructBlock):
 
 
 class SVGImageBlock(blocks.StructBlock):
-    """:class:`~wagtail.core.blocks.StructBlock` for an SVG image with
+    """:class:`~wagtail.blocks.StructBlock` for an SVG image with
     alternative text and optional formatted caption. Separate from
     :class:`CaptionedImageBlock` because Wagtail image handling
     does not work with SVG."""
@@ -203,7 +208,7 @@ class SVGImageBlock(blocks.StructBlock):
 
 
 class LinkableSectionBlock(blocks.StructBlock):
-    """:class:`~wagtail.core.blocks.StructBlock` for a rich text block and an
+    """:class:`~wagtail.blocks.StructBlock` for a rich text block and an
     associated `title` that will render as an <h2>. Creates an anchor (<a>)
     so that the section can be directly linked to using a url fragment."""
 
@@ -320,11 +325,11 @@ class PagePreviewDescriptionMixin(models.Model):
 class ContentPage(Page, PagePreviewDescriptionMixin):
     """Basic content page model."""
 
-    body = StreamField(BodyContentBlock)
+    body = StreamField(BodyContentBlock, use_json_field=True)
 
     content_panels = Page.content_panels + [
         FieldPanel("description"),
-        StreamFieldPanel("body"),
+        FieldPanel("body"),
     ]
 
 
@@ -364,20 +369,22 @@ class ContributorPage(Page, PagePreviewDescriptionMixin):
         blank=True,
         help_text="Select and order people to be listed as project \
         contributors.",
+        use_json_field=True,
     )
     board = StreamField(
         [("person", SnippetChooserBlock(Person))],
         blank=True,
         help_text="Select and order people to be listed as board members.",
+        use_json_field=True,
     )
 
-    body = StreamField(BodyContentBlock, blank=True)
+    body = StreamField(BodyContentBlock, blank=True, use_json_field=True)
 
     content_panels = Page.content_panels + [
         FieldPanel("description"),
-        StreamFieldPanel("contributors"),
-        StreamFieldPanel("board"),
-        StreamFieldPanel("body"),
+        FieldPanel("contributors"),
+        FieldPanel("board"),
+        FieldPanel("body"),
     ]
 
     # only allow creating directly under home page
