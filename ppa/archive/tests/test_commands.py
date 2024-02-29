@@ -170,7 +170,6 @@ class TestHathiImportCommand(TestCase):
     @patch("ppa.archive.management.commands.hathi_import.HathiBibliographicAPI")
     @patch("ppa.archive.management.commands.hathi_import.progressbar")
     def test_call_command(self, mockprogbar, mockhathi_bibapi):
-
         digwork = DigitizedWork(source_id="test.123")
 
         # patch methods with actual logic to check handle method behavior
@@ -183,7 +182,6 @@ class TestHathiImportCommand(TestCase):
         ) as mock_import_digwork, patch.object(
             digwork, "count_pages"
         ) as mock_count_pages:
-
             mock_htids = ["ab.1234", "cd.5678"]
             mock_get_htids.return_value = mock_htids
             mock_import_digwork.return_value = digwork
@@ -353,7 +351,9 @@ def test_process_index_queue(mock_solrclient, mock_progbar):
     mock_solrclient.return_value.update.index.assert_any_call(mockdata1)
     mock_solrclient.return_value.update.index.assert_any_call(mockdata2)
 
-    mock_progbar.ProgressBar.assert_called_with(redirect_stdout=True, max_value=total, max_error=False)
+    mock_progbar.ProgressBar.assert_called_with(
+        redirect_stdout=True, max_value=total, max_error=False
+    )
     progbar = mock_progbar.ProgressBar.return_value
     progbar.update.assert_any_call(4)
     progbar.update.assert_any_call(7)
@@ -400,12 +400,36 @@ class TestIndexPagesCommand(TestCase):
 
     def test_index_pages_specific_ids(self, mock_process, mock_progbar, mock_sleep):
         stdout = StringIO()
-        source_ids=['chi.78013704', 'chi.13880510']
+        source_ids = ["chi.78013704", "chi.13880510"]
         call_command("index_pages", *source_ids, stdout=stdout, verbosity=0)
-        t1=DigitizedWork.objects.get(source_id=source_ids[0])
-        t2=DigitizedWork.objects.get(source_id=source_ids[1])
+        t1 = DigitizedWork.objects.get(source_id=source_ids[0])
+        t2 = DigitizedWork.objects.get(source_id=source_ids[1])
         page_count = t1.page_count + t2.page_count
         big_page_count = Page.total_to_index()
-        assert mock_process.call_args.kwargs.get('args')[1] == page_count      # behavior specifying source ids
-        assert mock_process.call_args.kwargs.get('args')[1] != big_page_count  # normal behavior without specifying source ids
-        
+        assert (
+            mock_process.call_args.kwargs.get("args")[1] == page_count
+        )  # behavior specifying source ids
+        assert (
+            mock_process.call_args.kwargs.get("args")[1] != big_page_count
+        )  # normal behavior without specifying source ids
+
+    def test_index_pages_expedite(self, mock_process, mock_progbar, mock_sleep):
+        # test calling from command line
+        stdout = StringIO()
+        call_command("index_pages", stdout=stdout, expedite=True)
+        output = stdout.getvalue()
+        # should report on work/page indexing & mismatch
+        expected_strings = [
+            "works not indexed in Solr",
+            "pages not indexed in Solr",
+            "page count mismatches",
+        ]
+        for msg in expected_strings:
+            assert msg in output
+
+        # should suppress reporting if verbosity is 0
+        stdout = StringIO()
+        call_command("index_pages", stdout=stdout, expedite=True, verbosity=0)
+        output = stdout.getvalue()
+        for msg in expected_strings:
+            assert msg not in output

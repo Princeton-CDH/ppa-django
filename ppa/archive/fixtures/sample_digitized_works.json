@@ -16,6 +16,27 @@
   }
 },
 {
+    "model": "archive.cluster",
+    "pk": 1,
+    "fields": {
+        "cluster_id": "treatisewinter"
+    }
+},
+{
+    "model": "archive.cluster",
+    "pk": 2,
+    "fields": {
+        "cluster_id": "anothercluster"
+    }
+},
+{
+    "model": "archive.cluster",
+    "pk": 3,
+    "fields": {
+        "cluster_id": "dialcluster"
+    }
+},
+{
   "model": "archive.digitizedwork",
   "pk": 1,
   "fields": {
@@ -35,7 +56,8 @@
     "updated": "2018-02-06T16:33:49.008Z",
     "collections": [
       2
-    ]
+    ],
+    "cluster": 1
   }
 },
 {
@@ -59,7 +81,8 @@
     "collections": [
       1,
       2
-    ]
+    ],
+    "cluster": 3
   }
 },
 {
@@ -81,7 +104,8 @@
     "updated": "2018-02-06T16:33:33.966Z",
     "collections": [
       1
-    ]
+    ],
+    "cluster": 3
   }
 },
 {

@@ -19,8 +19,8 @@ from pairtree import storage_exceptions
 from parasolr.django import SolrQuerySet
 from parasolr.django.indexing import ModelIndexable
 from parasolr.indexing import Indexable
-from wagtail.admin.edit_handlers import FieldPanel
-from wagtail.core.fields import RichTextField
+from wagtail.admin.panels import FieldPanel
+from wagtail.fields import RichTextField
 from wagtail.snippets.models import register_snippet
 
 from ppa.archive.gale import GaleAPI, MARCRecordNotFound, get_marc_record
@@ -122,7 +122,7 @@ class Collection(TrackChangesModel):
         return stats
 
 
-class Cluster(models.Model):
+class Cluster(TrackChangesModel):
     """A model to collect groups of works such as reprints or editions that should
     be collapsed in the main archive search and accessible together."""
 
@@ -204,12 +204,12 @@ class ProtectedWorkField(models.Field):
         return ProtectedWorkFieldFlags(value)
 
 
-class CollectionSignalHandlers:
+class SignalHandlers:
     """Signal handlers for indexing :class:`DigitizedWork` records when
-    :class:`Collection` records are saved or deleted."""
+    :class:`Collection` or :class:`Cluster` records are saved or deleted."""
 
     @staticmethod
-    def save(sender, instance, **kwargs):
+    def collection_save(sender, instance, **kwargs):
         """signal handler for collection save; reindex associated digitized works"""
         # only reindex if collection name has changed
         # and if collection has already been saved
@@ -223,19 +223,77 @@ class CollectionSignalHandlers:
                 DigitizedWork.index_items(works)
 
     @staticmethod
-    def delete(sender, instance, **kwargs):
+    def collection_delete(sender, instance, **kwargs):
         """signal handler for collection delete; clear associated digitized
         works and reindex"""
-        logger.debug("collection delete")
         # get a list of ids for collected works before clearing them
         digwork_ids = instance.digitizedwork_set.values_list("id", flat=True)
         # find the items based on the list of ids to reindex
         digworks = DigitizedWork.objects.filter(id__in=list(digwork_ids))
+        logger.debug("collection delete, reindexing %d works" % len(digworks))
 
         # NOTE: this sends pre/post clear signal, but it's not obvious
         # how to take advantage of that
         instance.digitizedwork_set.clear()
         DigitizedWork.index_items(digworks)
+
+    @staticmethod
+    def cluster_save(sender, instance, **kwargs):
+        """signal handler for cluster save; reindex pages for
+        associated digitized works"""
+        # only reindex if cluster id has changed
+        # and if object has already been saved to the db
+        if instance.pk and instance.has_changed("cluster_id"):
+            # if the cluster has any works associated
+            works = instance.digitizedwork_set.all()
+            if works.exists():
+                # get a total of page count for affected works
+                page_count = works.aggregate(page_count=models.Sum("page_count"))
+                logger.debug(
+                    "cluster id has changed, reindexing %d works and %d pages",
+                    works.count(),
+                    page_count["page_count"],
+                )
+                DigitizedWork.index_items(works)
+                # reindex pages (this may be slow...)
+                for work in works:
+                    work.index_items(Page.page_index_data(work))
+
+    @staticmethod
+    def cluster_delete(sender, instance, **kwargs):
+        """signal handler for cluster delete; clear associated digitized
+        works and reindex"""
+        # get a list of ids for collected works before clearing them
+        digwork_ids = instance.digitizedwork_set.values_list("id", flat=True)
+        # find the items based on the list of ids to reindex
+        digworks = DigitizedWork.objects.filter(id__in=list(digwork_ids))
+        # get a total of page count for affected works
+        page_count = digworks.aggregate(page_count=models.Sum("page_count"))
+        logger.debug(
+            "cluster delete, reindexing %d works and %d pages",
+            digworks.count(),
+            page_count["page_count"],
+        )
+
+        # NOTE: this sends pre/post clear signal, but it's not obvious
+        # how to take advantage of that for reindexing
+        instance.digitizedwork_set.clear()
+        DigitizedWork.index_items(digworks)
+        # reindex pages (this may be slow...)
+        for work in digworks:
+            work.index_items(Page.page_index_data(work))
+
+    @staticmethod
+    def handle_digwork_cluster_change(sender, instance, **kwargs):
+        """when a :class:`DigitizedWork` is saved,
+        reindex pages if cluster id has changed"""
+        if isinstance(instance, DigitizedWork) and instance.has_changed("cluster_id"):
+            logger.debug(
+                "Cluster changed for %s; indexing %d pages",
+                instance,
+                instance.page_count,
+            )
+            instance.index_items(Page.page_index_data(instance))
 
 
 def validate_page_range(value):
@@ -739,9 +797,16 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 
     index_depends_on = {
         "collections": {
-            "post_save": CollectionSignalHandlers.save,
-            "pre_delete": CollectionSignalHandlers.delete,
-        }
+            "post_save": SignalHandlers.collection_save,
+            "pre_delete": SignalHandlers.collection_delete,
+        },
+        "cluster": {
+            "post_save": SignalHandlers.cluster_save,
+            "pre_delete": SignalHandlers.cluster_delete,
+        },
+        "archive.DigitizedWork": {
+            "post_save": SignalHandlers.handle_digwork_cluster_change
+        },
     }
 
     def first_page(self):
@@ -772,6 +837,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         )
         # NOTE: prefetch_related is ignored when used with Iterator,
         # which parasolr indexing does
+
+    # specify chunk size; using previous django iterator default
+    index_chunk_size = 2000
 
     @classmethod
     def prep_index_chunk(cls, chunk):
@@ -1021,6 +1089,8 @@ class Page(Indexable):
     """Indexable for pages to make page data available for indexing with
     parasolr index manage command."""
 
+    index_chunk_size = 2000
+
     @classmethod
     def items_to_index(cls):
         """Return a generator of page data to be indexed, with data for
@@ -1088,12 +1158,12 @@ class Page(Indexable):
 
         # read zipfile contents in place, without unzipping
         try:
-            zpath=digwork.hathi.zipfile_path()
+            zpath = digwork.hathi.zipfile_path()
         except storage_exceptions.PartNotFoundException:
             # missing file inside pairtree for this
-            logging.error(f'Missing pairtree data for: {digwork}')
+            logging.error(f"Missing pairtree data for: {digwork}")
             return
-    
+
         with ZipFile(zpath) as ht_zip:
             # yield a generator of index data for each page; iterate
             # over pages in METS structmap
@@ -1105,23 +1175,36 @@ class Page(Indexable):
                 pagefilename = "/".join(
                     [digwork.hathi.content_dir, page.text_file_location]
                 )
-                with ht_zip.open(pagefilename) as pagefile:
-                    try:
-                        yield {
-                            "id": "%s.%s" % (digwork_index_id, page.text_file.sequence),
-                            "source_id": digwork.source_id,
-                            # for grouping with work record
-                            "group_id_s": digwork_index_id,
-                            # for grouping with cluster
-                            "cluster_id_s": digwork.index_cluster_id,
-                            "content": pagefile.read().decode("utf-8"),
-                            "order": page.order,
-                            "label": page.display_label,
-                            "tags": page.label.split(", ") if page.label else [],
-                            "item_type": "page",
-                        }
-                    except StopIteration:
-                        return
+                try:
+                    with ht_zip.open(pagefilename) as pagefile:
+                        try:
+                            yield {
+                                "id": "%s.%s"
+                                % (digwork_index_id, page.text_file.sequence),
+                                "source_id": digwork.source_id,
+                                # for grouping with work record
+                                "group_id_s": digwork_index_id,
+                                # for grouping with cluster
+                                "cluster_id_s": digwork.index_cluster_id,
+                                "content": pagefile.read().decode("utf-8"),
+                                "order": page.order,
+                                "label": page.display_label,
+                                "tags": page.label.split(", ") if page.label else [],
+                                "item_type": "page",
+                            }
+                        except StopIteration:
+                            return
+                except KeyError:
+                    # we know of one HathiTrust work (uc1.$b31619) where
+                    # the METS references pages that are not present in the zip file;
+                    # they are at the end of the document and don't have any
+                    # page content, so log a warning but don't treat as an error
+                    logger.warn(
+                        "Indexing %s pages: "
+                        + "%s referenced in METS but not found in zip file",
+                        digwork,
+                        pagefilename,
+                    )
 
     @classmethod
     def gale_page_index_data(cls, digwork, gale_record=None):

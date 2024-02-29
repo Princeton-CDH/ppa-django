@@ -3,7 +3,6 @@ import os.path
 import types
 from datetime import date, timedelta
 from time import sleep
-from unittest import mock
 from unittest.mock import Mock, patch
 from zipfile import ZipFile
 
@@ -23,8 +22,9 @@ from parasolr.django.indexing import ModelIndexable
 from ppa.archive import gale, hathi
 from ppa.archive.models import (
     NO_COLLECTION_LABEL,
+    Cluster,
     Collection,
-    CollectionSignalHandlers,
+    SignalHandlers,
     DigitizedWork,
     Page,
     ProtectedWorkFieldFlags,
@@ -50,37 +50,88 @@ class TestProtectedFlags(TestCase):
 
 
 @pytest.mark.django_db
-class TestCollectionSignalHandlers:
+class TestSignalHandlers:
     @patch.object(ModelIndexable, "index_items")
-    def test_save(self, mock_index_items):
+    def test_collection_save(self, mock_index_items):
         digwork = DigitizedWork.objects.create(source_id="njp.32101013082597")
         coll1 = Collection.objects.create(name="Flotsam")
         digwork.collections.add(coll1)
 
-        CollectionSignalHandlers.save(Mock(), coll1)
+        SignalHandlers.collection_save(Mock(), coll1)
         # index not called because collection name has not changed
         mock_index_items.assert_not_called()
 
         # modify name to test indexing
         coll1.name = "Jetsam"
-        CollectionSignalHandlers.save(Mock(), coll1)
+        SignalHandlers.collection_save(Mock(), coll1)
         # call must be inspected piecemeal because queryset equals comparison fails
         args, kwargs = mock_index_items.call_args
         assert isinstance(args[0], QuerySet)
         assert digwork in args[0]
 
     @patch.object(ModelIndexable, "index_items")
-    def test_delete(self, mock_index_items):
+    def test_collection_delete(self, mock_index_items):
         digwork = DigitizedWork.objects.create(source_id="njp.32101013082597")
         coll1 = Collection.objects.create(name="Flotsam")
         digwork.collections.add(coll1)
 
-        CollectionSignalHandlers.delete(Mock(), coll1)
+        SignalHandlers.collection_delete(Mock(), coll1)
 
         assert coll1.digitizedwork_set.count() == 0
         args, kwargs = mock_index_items.call_args
         assert isinstance(args[0], QuerySet)
         assert digwork in args[0]
+
+    @patch.object(ModelIndexable, "index_items")
+    @patch("ppa.archive.models.Page")
+    def test_cluster_save(self, mockPage, mock_index_items):
+        cluster1 = Cluster.objects.create(cluster_id="flotsam")
+        digwork = DigitizedWork.objects.create(
+            source_id="njp.32101013082597", cluster=cluster1
+        )
+
+        SignalHandlers.cluster_save(Mock(), cluster1)
+        # index not called because cluster id has not changed
+        mock_index_items.assert_not_called()
+
+        # modify name to test indexing
+        cluster1.cluster_id = "jetsam"
+        SignalHandlers.cluster_save(Mock(), cluster1)
+        # should index pages for the affected work
+        mock_index_items.assert_called_with(mockPage.page_index_data(digwork))
+
+    @patch.object(ModelIndexable, "index_items")
+    @patch("ppa.archive.models.Page")
+    def test_cluster_delete(self, mockPage, mock_index_items):
+        cluster1 = Cluster.objects.create(cluster_id="flotsam")
+        digwork = DigitizedWork.objects.create(
+            source_id="njp.32101013082597", cluster=cluster1
+        )
+
+        SignalHandlers.cluster_delete(Mock(), cluster1)
+        # should clear related works
+        assert cluster1.digitizedwork_set.count() == 0
+        # should index pages for the affected work
+        mock_index_items.assert_called_with(mockPage.page_index_data(digwork))
+
+    @patch.object(ModelIndexable, "index_items")
+    @patch("ppa.archive.models.Page")
+    def test_handle_digwork_cluster_change(self, mockPage, mock_index_items):
+        digwork = DigitizedWork.objects.create(source_id="njp.32101013082597")
+        cluster1 = Cluster.objects.create(cluster_id="flotsam")
+
+        # not a digitized work, should do nothing
+        SignalHandlers.handle_digwork_cluster_change(Mock(), cluster1)
+        assert mock_index_items.call_count == 0
+
+        # digitized work but cluster id not changed, should do nothing
+        SignalHandlers.handle_digwork_cluster_change(Mock(), digwork)
+        assert mock_index_items.call_count == 0
+
+        digwork.cluster_id = cluster1.id
+        SignalHandlers.handle_digwork_cluster_change(Mock(), digwork)
+        # should index pages for thew ork
+        mock_index_items.assert_called_with(mockPage.page_index_data(digwork))
 
 
 class TestTrackChangesModel(TestCase):
@@ -162,7 +213,6 @@ class TestDigitizedWork(TestCase):
         assert digwork.hathi is None
 
     def test_compare_protected_fields(self):
-
         digwork = DigitizedWork(
             source_id="testid",
             title="Fake Title",
@@ -653,7 +703,7 @@ class TestDigitizedWork(TestCase):
         work = DigitizedWork.objects.create(
             source=DigitizedWork.OTHER, source_id="12345"
         )
-        index_id = work.index_id()
+        work.index_id()
         with patch.object(work, "remove_from_index") as mock_rm_from_index:
             work.pages_digital = "12-300"
             work.save()
@@ -737,7 +787,6 @@ class TestDigitizedWork(TestCase):
     @patch("ppa.archive.models.DigitizedWork.populate_from_bibdata")
     @patch("ppa.archive.models.HathiBibliographicAPI")
     def test_add_from_hathi(self, mock_hathibib_api, mock_pop_from_bibdata):
-
         script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
 
         # add new with default opts
@@ -938,7 +987,7 @@ class TestPage(TestCase):
         mockzip_obj.namelist.return_value = page_files
         # simulate reading zip file contents
         contents = ("page content for one", "hello! pshaw! what?")
-        mockzip_obj.open.return_value.__enter__.return_value.read.return_value.decode.side_effect = (
+        mockzip_obj.open.return_value.__enter__.return_value.read.return_value.decode.side_effect = (  # noqa: e501
             contents
         )
 
@@ -974,7 +1023,7 @@ class TestPage(TestCase):
             mockzip_obj.namelist.return_value = page_files
             # simulate reading zip file contents
             contents = ("page content for one", "hello! pshaw! what?")
-            mockzip_obj.open.return_value.__enter__.return_value.read.return_value.decode.side_effect = (
+            mockzip_obj.open.return_value.__enter__.return_value.read.return_value.decode.side_effect = (  # noqa: E501
                 contents
             )
             page_data = list(Page.page_index_data(excerpt))

@@ -1,4 +1,3 @@
-import json
 import re
 
 from django.template.defaultfilters import stringfilter
@@ -36,7 +35,7 @@ def querystring_replace(context, **kwargs):
     for key, val in kwargs.items():
         querystring[key] = val
     # return urlencoded query string
-    return querystring.urlencode()
+    return mark_safe(querystring.urlencode())  # don't encode & as &amp;
 
 
 # NOTE: Use urllib.parse? Not sure it gets us much given the semi-colon
@@ -98,7 +97,9 @@ def solr_highlight(value, autoescape=True):
     if autoescape:
         esc = conditional_escape
     else:
-        esc = lambda x: x
+
+        def esc(x):
+            return x
 
     # split the text on em tags; mark em tags as safe and
     # escape everything else

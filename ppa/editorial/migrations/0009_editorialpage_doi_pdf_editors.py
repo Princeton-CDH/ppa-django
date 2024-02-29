@@ -3,7 +3,7 @@
 import django.core.validators
 from django.db import migrations, models
 import ppa.pages.models
-import wagtail.core.fields
+import wagtail.fields
 import wagtail.snippets.blocks
 
 
@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="editorialpage",
             name="editors",
-            field=wagtail.core.fields.StreamField(
+            field=wagtail.fields.StreamField(
                 [
                     (
                         "editor",
