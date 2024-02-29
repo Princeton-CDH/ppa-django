@@ -7,6 +7,7 @@ CHANGELOG
 ------
 
 - Upgraded to Python 3.11, Django 5.0, Wagtail 5.2
+- New option to page_index script to only index works with page count mismatches between database and Solr
 - bugfix: changing clusters needs to reindex pages; otherwise, we get blank records in keyword search results
 - bugfix: After clicking "Search the full archive" from a cluster page, cluster parameter should be removed from url
 
