@@ -400,8 +400,8 @@ class SearchForm(forms.Form):
                         choices.append((itervalue, label))
 
                 # if there are any items not in a collection, add an option
-                # so they will be findable
-                if NO_COLLECTION_LABEL in facet_dict:
+                # so they will be findable; only include if facet count is non-zero
+                if facet_dict.get(NO_COLLECTION_LABEL, 0):
                     choices.append(
                         (
                             ModelMultipleChoiceFieldWithEmpty.EMPTY_ID,
