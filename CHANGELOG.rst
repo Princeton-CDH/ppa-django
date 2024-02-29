@@ -3,6 +3,14 @@
 CHANGELOG
 =========
 
+3.11.3
+------
+
+- Upgraded to Python 3.11, Django 5.0, Wagtail 5.2
+- bugfix: changing clusters needs to reindex pages; otherwise, we get blank records in keyword search results
+- bugfix: After clicking "Search the full archive" from a cluster page, cluster parameter should be removed from url
+
+
 3.11.2
 ------
 
