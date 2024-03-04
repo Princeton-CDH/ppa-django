@@ -269,9 +269,32 @@ class HathiObject:
     def pairtree_client(self):
         """Initialize a pairtree client for the pairtree datastore this
         object belongs to, based on its Hathi prefix id."""
+        store_dir = os.path.join(settings.HATHI_DATA, self.pairtree_prefix)
+        ptree_file_prefix = f"{self.pairtree_prefix}."
+        
+        # Check if store_dir exists, check if pairtree files exist
+        if os.path.isdir(store_dir):
+            # Check if "pairtree_prefix" file exists. If not, create it.
+            ptree_prefix_fn = os.path.join(store_dir, "pairtree_prefix")
+            if not os.path.isfile(ptree_prefix_fn):
+                with open(ptree_prefix_fn, mode='w') as writer:
+                    writer.write(ptree_file_prefix)
+            # Check if "pairtree_version0_1" file exists. If not, create it.
+            # Note: Mimicking paitree packages behavior. File contents are not
+            #       actually verified
+            ptree_vn_fn = os.path.join(store_dir, "pairtree_version0_1")
+            if not os.path.isfile(ptree_vn_fn):
+                ptree_vn_stmt = (
+                    "This directory conforms to Pairtree Version 0.1. Updated "
+                    "spec: http://www.cdlib.org/inside/diglib/pairtree/"
+                    "pairtreespec.html"
+                )
+                with open(ptree_vn_fn, mode="w") as writer:
+                    writer.write(ptree_vn_stmt)
+
         return pairtree_client.PairtreeStorageClient(
-            self.pairtree_prefix,
-            os.path.join(settings.HATHI_DATA, self.pairtree_prefix),
+            ptree_file_prefix,
+            store_dir,
         )
 
     def pairtree_object(self, ptree_client=None, create=False):
