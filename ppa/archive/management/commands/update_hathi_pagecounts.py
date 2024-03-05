@@ -55,7 +55,8 @@ class Command(BaseCommand):
                 # recalculate page count from pairtree data
                 # NOTE: this method automatically saves if page count changes
                 digwork.page_count = digwork.count_pages()
-                if old_page_count != digwork.page_count:
+                if digwork.has_changed("page_count"):
+                    digwork.save()
                     stats["updated"] += 1
                     # create a log entry documenting page count change
                     LogEntry.objects.log_action(
