@@ -633,8 +633,9 @@ class TestDigitizedWork(TestCase):
 
         # return total and digitized work page counts updated
         assert page_count == 2
-        digwork = DigitizedWork.objects.get(source_id=digwork.source_id)
-        assert digwork.page_count == 2
+        # does NOT save automatically
+        db_digwork = DigitizedWork.objects.get(source_id=digwork.source_id)
+        assert db_digwork.page_count is None
 
         # should ignore non-text files
         page_files = ["0001.txt", "00002.txt", "00001.jp2", "00002.jp2"]

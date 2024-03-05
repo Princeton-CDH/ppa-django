@@ -122,9 +122,7 @@ class Command(BaseCommand):
 
         if self.options["progress"]:
             progbar = progressbar.ProgressBar(
-                redirect_stdout=True,
-                max_value=self.stats["total"],
-                max_error=False
+                redirect_stdout=True, max_value=self.stats["total"], max_error=False
             )
         else:
             progbar = None
@@ -148,7 +146,13 @@ class Command(BaseCommand):
             # count pages in the pairtree zip file and update digwork page count
             try:
                 self.stats["pages"] += digwork.count_pages()
-            except (storage_exceptions.ObjectNotFoundException, IndexError):  # IndexError on filepath
+                # update page count in the database
+                if digwork.has_changed("page_count"):
+                    digwork.save()
+            except (
+                storage_exceptions.ObjectNotFoundException,
+                IndexError,
+            ):  # IndexError on filepath
                 self.stderr.write("%s not found in datastore" % digwork.source_id)
 
             if progbar:
@@ -156,7 +160,8 @@ class Command(BaseCommand):
 
         summary = (
             "\nProcessed {:,d} item{} for import."
-            + "\nAdded {:,d}; updated {:,d}; skipped {:,d}; {:,d} error{}; imported {:,d} page{}."
+            + "\nAdded {:,d}; updated {:,d}; skipped {:,d}; "
+            + "{:,d} error{}; imported {:,d} page{}."
         )
         summary = summary.format(
             self.stats["total"],
@@ -172,7 +177,7 @@ class Command(BaseCommand):
         self.stdout.write(summary)
 
     def initialize_pairtrees(self):
-        """Initiaulize pairtree storage clients for each
+        """Initialize pairtree storage clients for each
         subdirectory in the configured **HATHI_DATA** path."""
 
         # if the configured directory does not exist or is not
@@ -192,8 +197,12 @@ class Command(BaseCommand):
                 # may be in there, and so forth.
                 if os.path.isdir(ht_data_dir):
                     prefix = os.path.basename(ht_data_dir)
-                    logger.debug(f'Initializing pair tree in ({ht_data_dir}) [prefix={prefix}]')
-                    hathi_ptree = pairtree_client.PairtreeStorageClient(prefix, ht_data_dir)
+                    logger.debug(
+                        f"Initializing pair tree in ({ht_data_dir}) [prefix={prefix}]"
+                    )
+                    hathi_ptree = pairtree_client.PairtreeStorageClient(
+                        prefix, ht_data_dir
+                    )
                     # store initialized pairtree client by prefix for later use
                     self.hathi_pairtree[prefix] = hathi_ptree
 
