@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.contrib.admin.models import CHANGE, LogEntry
@@ -20,6 +18,7 @@ class Command(BaseCommand):
 
     #: normal verbosity level
     v_normal = 1
+    #: verbosity level for the current run; defaults to 1 / normal
     verbosity = v_normal
 
     def add_arguments(self, parser):
@@ -46,7 +45,7 @@ class Command(BaseCommand):
         if source_ids:
             hathi_vols = hathi_vols.filter(source_id__in=source_ids)
 
-        stats = {"updated":0, "unchanged":0, "missing_data":0}
+        stats = {"updated": 0, "unchanged": 0, "missing_data": 0}
 
         for digwork in hathi_vols:
             try:
@@ -82,7 +81,7 @@ class Command(BaseCommand):
         # report a summary of what was done
         if self.verbosity >= self.v_normal:
             self.stdout.write(
-                f"""Volumes with updated page count: {stats['updated']:,}
-    Page count unchanged: {stats['unchanged']:,}
-    Missing pairtree data: {stats['missing_data']:,}"""
+                f"Volumes with updated page count: {stats['updated']:,}"
+                + f"\n\tPage count unchanged: {stats['unchanged']:,}"
+                + f"\n\tMissing pairtree data: {stats['missing_data']:,}"
             )
