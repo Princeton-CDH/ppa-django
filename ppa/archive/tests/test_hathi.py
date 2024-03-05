@@ -222,43 +222,41 @@ class TestHathiObject:
 
     ht_tempdir = tempfile.TemporaryDirectory(prefix="ht_text_pd")
 
+    def test_lib_id(self):
+        hobj = hathi.HathiObject(hathi_id="uva.1234")
+        assert hobj.lib_id == "uva"
+
+    def test_vol_id(self):
+        hobj = hathi.HathiObject(hathi_id="uva.1234")
+        assert hobj.vol_id == "1234"
+
     def test_pairtree_prefix(self):
         hobj = hathi.HathiObject(hathi_id="uva.1234")
-        assert hobj.pairtree_prefix == "uva"
-
-    def test_pairtree_id(self):
-        hobj = hathi.HathiObject(hathi_id="uva.1234")
-        assert hobj.pairtree_id == "1234"
+        assert hobj.pairtree_prefix == "uva."
 
     def test_content_dir(self):
         hobj = hathi.HathiObject(hathi_id="uva.1234")
-        assert hobj.content_dir == pairtree_path.id_encode(hobj.pairtree_id)
+        assert hobj.content_dir == pairtree_path.id_encode(hobj.vol_id)
 
     @override_settings(HATHI_DATA=ht_tempdir.name)
     def test_pairtree_client(self):
         hobj = hathi.HathiObject(hathi_id="uva.1234")
-        store_dir = os.path.join(settings.HATHI_DATA, hobj.pairtree_prefix)
-
+        store_dir = os.path.join(settings.HATHI_DATA, hobj.lib_id)
 
         # Case 1: Initialize client without directory
         ptree_client = hobj.pairtree_client()
 
         # assert file "pairtree_prefix" exists with correct contents
         ptree_pfx_fn = os.path.join(store_dir, "pairtree_prefix")
-        ptree_file_prefix = f"{hobj.pairtree_prefix}."
         with open(ptree_pfx_fn) as reader:
             ptree_pfx_contents = reader.read()
-        assert ptree_pfx_contents == ptree_file_prefix
+        assert ptree_pfx_contents == hobj.pairtree_prefix
       
         # assert file "pairtree_version0_1" exists with correct contents
         ptree_vn_fn = os.path.join(store_dir, "pairtree_version0_1")
-        ptree_vn_stmt = (
-            "This directory conforms to Pairtree Version 0.1. Updated spec: " +
-            "http://www.cdlib.org/inside/diglib/pairtree/pairtreespec.html"
-            )
         with open(ptree_vn_fn) as reader:
           ptree_vn_contents = reader.read()
-        assert ptree_vn_contents == ptree_vn_stmt
+        assert ptree_vn_contents == hobj.pairtree_version_stmt
         
         # Case 2: initialize client with directory but without files
         os.remove(ptree_pfx_fn)
@@ -268,20 +266,15 @@ class TestHathiObject:
 
         # assert file "pairtree_prefix" exists with correct contents
         ptree_pfx_fn = os.path.join(store_dir, "pairtree_prefix")
-        ptree_file_prefix = f"{hobj.pairtree_prefix}."
         with open(ptree_pfx_fn) as reader:
             ptree_pfx_contents = reader.read()
-        assert ptree_pfx_contents == ptree_file_prefix
+        assert ptree_pfx_contents == hobj.pairtree_prefix
       
         # assert file "pairtree_version0_1" exists with correct contents
         ptree_vn_fn = os.path.join(store_dir, "pairtree_version0_1")
-        ptree_vn_stmt = (
-            "This directory conforms to Pairtree Version 0.1. Updated spec: " +
-            "http://www.cdlib.org/inside/diglib/pairtree/pairtreespec.html"
-            )
         with open(ptree_vn_fn) as reader:
           ptree_vn_contents = reader.read()
-        assert ptree_vn_contents == ptree_vn_stmt
+        assert ptree_vn_contents == hobj.pairtree_version_stmt
 
     @patch("ppa.archive.hathi.pairtree_client")
     @override_settings(HATHI_DATA=ht_tempdir.name)
@@ -291,12 +284,12 @@ class TestHathiObject:
         ptree_obj = hobj.pairtree_object()
         # client initialized
         mock_pairtree_client.PairtreeStorageClient.assert_called_with(
-            f"{hobj.pairtree_prefix}.",
-            os.path.join(settings.HATHI_DATA, hobj.pairtree_prefix),
+            hobj.pairtree_prefix,
+            os.path.join(settings.HATHI_DATA, hobj.lib_id),
         )
         # object retrieved
         mock_pairtree_client.PairtreeStorageClient.return_value.get_object.assert_called_with(
-            hobj.pairtree_id, create_if_doesnt_exist=False
+            hobj.vol_id, create_if_doesnt_exist=False
         )
         # object returned
         assert (
@@ -312,7 +305,7 @@ class TestHathiObject:
         mock_pairtree_client.PairtreeStorageClient.assert_not_called()
         # should get object from my client
         my_ptree_client.get_object.assert_called_with(
-            hobj.pairtree_id, create_if_doesnt_exist=False
+            hobj.vol_id, create_if_doesnt_exist=False
         )
 
     @override_settings(HATHI_DATA=ht_tempdir.name)
@@ -379,7 +372,7 @@ class TestHathiObject:
             mock_pairtree_client.assert_called()
             # should call delete boject
             mock_pairtree_client.return_value.delete_object.assert_called_with(
-                hobj.pairtree_id
+                hobj.vol_id
             )
 
             # should not raise an exception if deletion fails

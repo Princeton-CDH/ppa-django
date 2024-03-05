@@ -242,58 +242,46 @@ class HathiObject:
     """An object for working with a HathiTrust item with data in a
     locally configured pairtree datastore."""
 
-    hathi_id = None
+    # Pairtree version statement usd by pairtree package
+    pairtree_version_stmt = (
+        "This directory conforms to Pairtree Version 0.1. Updated spec: " +
+        "http://www.cdlib.org/inside/diglib/pairtree/pairtreespec.html"
+        )
 
     def __init__(self, hathi_id):
+        # HathiTrust record id
         self.hathi_id = hathi_id
-
-    @cached_property
-    def pairtree_prefix(self):
-        """pairtree prefix (first portion of the hathi id, short-form
-        identifier for owning institution)"""
-        return self.hathi_id.split(".", 1)[0]
-
-    @cached_property
-    def pairtree_id(self):
-        """pairtree identifier (second portion of source id)"""
-        return self.hathi_id.split(".", 1)[1]
-
-    @cached_property
-    def content_dir(self):
-        """content directory for this work within the appropriate
-        pairtree"""
-        # contents are stored in a directory named based on a
-        # pairtree encoded version of the id
-        return pairtree_path.id_encode(self.pairtree_id)
+        # Identifiers for owning institution and volume which form the overall
+        # HathiTrust record id: [lib_id].[vol_id]
+        self.lib_id, self.vol_id = hathi_id.split(".", 1)
+        # Pairtree prefix
+        self.pairtree_prefix = f"{self.lib_id}."
+        # Content directory for this work within the appropriate pairtree
+        # which is based on a pairtree encoded version of the volume id
+        self.content_dir = pairtree_path.id_encode(self.vol_id)
 
     def pairtree_client(self):
         """Initialize a pairtree client for the pairtree datastore this
-        object belongs to, based on its Hathi prefix id."""
-        store_dir = os.path.join(settings.HATHI_DATA, self.pairtree_prefix)
-        ptree_file_prefix = f"{self.pairtree_prefix}."
+        object belongs to, based on its HathiTrust record id."""
+        store_dir = os.path.join(settings.HATHI_DATA, self.lib_id)
         
         # Check if store_dir exists, check if pairtree files exist
         if os.path.isdir(store_dir):
             # Check if "pairtree_prefix" file exists. If not, create it.
-            ptree_prefix_fn = os.path.join(store_dir, "pairtree_prefix")
-            if not os.path.isfile(ptree_prefix_fn):
-                with open(ptree_prefix_fn, mode='w') as writer:
-                    writer.write(ptree_file_prefix)
+            pairtree_prefix_fn = os.path.join(store_dir, "pairtree_prefix")
+            if not os.path.isfile(pairtree_prefix_fn):
+                with open(pairtree_prefix_fn, mode='w') as writer:
+                    writer.write(self.pairtree_prefix)
             # Check if "pairtree_version0_1" file exists. If not, create it.
             # Note: Mimicking paitree packages behavior. File contents are not
             #       actually verified
-            ptree_vn_fn = os.path.join(store_dir, "pairtree_version0_1")
-            if not os.path.isfile(ptree_vn_fn):
-                ptree_vn_stmt = (
-                    "This directory conforms to Pairtree Version 0.1. Updated "
-                    "spec: http://www.cdlib.org/inside/diglib/pairtree/"
-                    "pairtreespec.html"
-                )
-                with open(ptree_vn_fn, mode="w") as writer:
-                    writer.write(ptree_vn_stmt)
+            pairtree_vn_fn = os.path.join(store_dir, "pairtree_version0_1")
+            if not os.path.isfile(pairtree_vn_fn):
+                with open(pairtree_vn_fn, mode="w") as writer:
+                    writer.write(self.pairtree_version_stmt)
 
         return pairtree_client.PairtreeStorageClient(
-            ptree_file_prefix,
+            self.pairtree_prefix,
             store_dir,
         )
 
@@ -310,13 +298,13 @@ class HathiObject:
             ptree_client = self.pairtree_client()
 
         # return the pairtree object for current work
-        return ptree_client.get_object(self.pairtree_id, create_if_doesnt_exist=create)
+        return ptree_client.get_object(self.vol_id, create_if_doesnt_exist=create)
 
     def delete_pairtree_data(self):
         """Delete pairtree object from the pairtree datastore."""
         logger.info("Deleting pairtree data for %s", self.hathi_id)
         try:
-            self.pairtree_client().delete_object(self.pairtree_id)
+            self.pairtree_client().delete_object(self.vol_id)
         except storage_exceptions.ObjectNotFoundException:
             # data is already gone; warn, but not an error
             logger.warning(
@@ -337,7 +325,6 @@ class HathiObject:
             raise storage_exceptions.PartNotFoundException
         return os.path.join(pairtree_obj.id_to_dirpath(), self.content_dir, filepaths[0])
 
-        
     def zipfile_path(self, ptree_client=None):
         """path to zipfile within the hathi contents for this work"""
         return self._content_path("zip", ptree_client=ptree_client)
