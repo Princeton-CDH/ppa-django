@@ -46,7 +46,7 @@ class Command(BaseCommand):
         if source_ids:
             hathi_vols = hathi_vols.filter(source_id__in=source_ids)
 
-        stats = defaultdict(int)
+        stats = {"updated":0, "unchanged":0, "missing_data":0}
 
         for digwork in hathi_vols:
             try:
