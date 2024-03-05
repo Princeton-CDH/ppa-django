@@ -222,20 +222,11 @@ class TestHathiObject:
 
     ht_tempdir = tempfile.TemporaryDirectory(prefix="ht_text_pd")
 
-    def test_lib_id(self):
+    def test_init(self):
         hobj = hathi.HathiObject(hathi_id="uva.1234")
         assert hobj.lib_id == "uva"
-
-    def test_vol_id(self):
-        hobj = hathi.HathiObject(hathi_id="uva.1234")
         assert hobj.vol_id == "1234"
-
-    def test_pairtree_prefix(self):
-        hobj = hathi.HathiObject(hathi_id="uva.1234")
         assert hobj.pairtree_prefix == "uva."
-
-    def test_content_dir(self):
-        hobj = hathi.HathiObject(hathi_id="uva.1234")
         assert hobj.content_dir == pairtree_path.id_encode(hobj.vol_id)
 
     @override_settings(HATHI_DATA=ht_tempdir.name)
