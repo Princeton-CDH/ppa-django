@@ -79,7 +79,7 @@ class Command(BaseCommand):
                 stats["missing_data"] += 1
 
         # report a summary of what was done
-        if verbosity >= self.v_normal:
+        if self.verbosity >= self.v_normal:
             self.stdout.write(
                 f"""Volumes with updated page count: {stats['updated']:,}
     Page count unchanged: {stats['unchanged']:,}
