@@ -559,12 +559,25 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
     def save(self, *args, **kwargs):
         # if status has changed so that object is now suppressed,
         # do some cleanup
-        if self.has_changed("status") and self.status == self.SUPPRESSED:
-            # remove indexed page content from Solr
-            self.solr.update.delete_by_query('source_id:"%s"' % self.source_id)
+        if self.has_changed("status") and self.status == DigitizedWork.SUPPRESSED:
+            # remove indexed page content from Solr using index id
+            # (i.e., if excerpt, should only remove content for this excerpt,
+            # not all excerpts in this volume)
+            self.solr.update.delete_by_query('group_id_s:"%s"' % self.index_id())
             # if this is a HathiTrust item, remove pairtree data
             if self.source == DigitizedWork.HATHI:
-                self.hathi.delete_pairtree_data()
+                # if this is a full work (not excerpted), remove
+                # if this is an excerpt, should only remove if there are no other
+                # public excerpts from this volume
+                if (
+                    self.item_type == DigitizedWork.FULL
+                    or not DigitizedWork.objects.filter(
+                        status=DigitizedWork.PUBLIC, source_id=self.source_id
+                    )
+                    .exclude(pk=self.pk)
+                    .exists()
+                ):
+                    self.hathi.delete_pairtree_data()
 
         # Solr identifier is based on combination of source id and first page;
         # if either changes, remove the old record from Solr before saving
