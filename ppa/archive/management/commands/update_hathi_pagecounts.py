@@ -28,7 +28,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **kwargs):
-        verbosity = kwargs.get("verbosity", self.v_normal)
+        self.verbosity = kwargs.get("verbosity", self.verbosity)
         source_ids = kwargs.get("source_ids", [])
         # page count does not affect solr indexing, so disconnect signal handler
         IndexableSignalHandler.disconnect()
