@@ -252,7 +252,7 @@ class SignalHandlers:
                 logger.debug(
                     "cluster id has changed, reindexing %d works and %d pages",
                     works.count(),
-                    page_count["page_count"],
+                    page_count.get("page_count", 0),
                 )
                 DigitizedWork.index_items(works)
                 # reindex pages (this may be slow...)
@@ -907,7 +907,8 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         number of files in the zipfile within the pairtree content (Hathi-specific).
         Raises :class:`pairtree.storage_exceptions.ObjectNotFoundException`
         if the data is not found in the pairtree storage. Returns page count
-        found; saves the object if the count changes."""
+        found; updates the `page_count` attribute on the current instance,
+        but does NOT save the object."""
 
         # if this item has a page span defined, calculate number of pages
         # based on the number of pages across all spans
@@ -941,11 +942,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         # NOTE: could also count pages via mets file, but that's slower
         # than counting via zipfile name list
 
-        # store page count in the database if changed
-        if self.page_count != page_count:
-            self.page_count = page_count
-            self.save()
-
+        # update page count on the instance, but don't save changes
+        self.page_count = page_count
+        # return the total
         return page_count
 
     @property

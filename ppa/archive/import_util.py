@@ -173,7 +173,8 @@ class HathiImporter(DigitizedWorkImporter):
             hathi.HathiItemForbidden: "Permission denied to download data.",
             RSYNC_ERROR: "Failed to sync data",
             # only saw this one on day, but this was what it was
-            JSONDecodeError: "HathiTrust catalog temporarily unavailable (malformed response).",
+            JSONDecodeError: "HathiTrust catalog temporarily unavailable "
+            + "(malformed response).",
         }
     )
 
@@ -256,7 +257,6 @@ class HathiImporter(DigitizedWorkImporter):
             # temporary preserve file for dev
             delete=False,
         ) as fp:
-
             file_paths = list(self.pairtree_paths.values())
             # sorting makes rsync more efficient
             file_paths.sort()
@@ -337,6 +337,9 @@ class HathiImporter(DigitizedWorkImporter):
             if digwork:
                 # populate page count
                 digwork.count_pages()
+                # save the page count to the database
+                if digwork.has_changed("page_count"):
+                    digwork.save()
                 self.imported_works.append(digwork)
 
             self.results[htid] = self.SUCCESS
