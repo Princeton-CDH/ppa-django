@@ -72,8 +72,7 @@
        The example below can be used to load a Solr Module along
        with their external dependencies.
     -->
-    <!-- <lib dir="${solr.install.dir:../../../..}/modules/ltr/lib" regex=".*\.jar" /> -->
-
+  <lib dir="${solr.install.dir:../../../..}/modules/scripting/lib" regex=".*\.jar" />
   <!-- an exact 'path' can be used instead of a 'dir' to specify a
        specific jar file.  This will cause a serious error to be logged
        if it can't be loaded.
@@ -572,8 +571,8 @@
          plugins.
        -->
     <requestParsers
-                    multipartUploadLimitInKB="2048000"
-                    formdataUploadLimitInKB="2048"
+                    multipartUploadLimitInKB="-1"
+                    formdataUploadLimitInKB="-1"
                     addHttpRequestToContext="false"/>
 
     <!-- HTTP Caching
