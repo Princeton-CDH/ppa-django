@@ -380,8 +380,13 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
     publisher = models.TextField(blank=True)
     # Needs to be integer to allow aggregating max/min, filtering by date
     pub_date = models.PositiveIntegerField("Publication Date", null=True, blank=True)
-    #: number of pages in the work
-    page_count = models.PositiveIntegerField(null=True, blank=True)
+    #: number of pages in the work (or page range, for an excerpt)
+    page_count = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Automatically calculated on import; "
+        + "recalculated on save when digital page range changes",
+    )
     #: public notes field for this work
     public_notes = models.TextField(
         blank=True,
@@ -595,10 +600,10 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             self.pages_digital = new_pages_digital
 
         if self.has_changed("pages_digital"):
-            # if there is a page range set now, update page count and index
+            # update the page count if possible (i.e., not a Gale record)
+            self.page_count = self.count_pages()
+            # if there is a page range set, update page count and index
             if self.pages_digital:
-                # recalculate page total based on current range
-                self.page_count = self.count_pages()
                 # update index to remove all pages that are no longer in range
                 self.solr.update.delete_by_query(
                     'source_id:"%s" AND item_type:page NOT order:(%s)'
