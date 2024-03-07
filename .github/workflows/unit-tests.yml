@@ -28,7 +28,7 @@ jobs:
             ${{ runner.os }}-node-
       - run: npm ci
       - run: npm run test:unit
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
         with:
           flags: javascript
 
