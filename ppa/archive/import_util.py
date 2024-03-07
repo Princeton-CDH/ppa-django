@@ -258,7 +258,7 @@ class HathiImporter(DigitizedWorkImporter):
         # limit the number of ids included in the log message
         log_detail = ""
         rsync_count = len(self.source_ids)
-        if rsync_count <= 12:
+        if rsync_count <= 10:
             log_detail = ", ".join(self.source_ids)
         else:
             log_detail = "%d volumes" % rsync_count
