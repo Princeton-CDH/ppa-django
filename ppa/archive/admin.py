@@ -76,6 +76,9 @@ class DigitizedWorkResource(resources.ModelResource):
 class DigitizedWorkAdmin(ExportActionMixin, ExportMixin, admin.ModelAdmin):
     resource_class = DigitizedWorkResource  # resource for export
 
+    # enable "save as new" button to copy and create a new record
+    save_as = True
+
     list_display = (
         "display_title",
         "subtitle",
