@@ -165,7 +165,10 @@ class HathiImporter(DigitizedWorkImporter):
         synchronize (optional)
     :param bool rsync_output: determines whether rsync itemized report
         is enabled (default: False)
-    :param str output_dir: base directory for rsync output file (optional)
+    :param str output_dir: base directory for rsync output file
+        (required if `rsync_output` is True)
+    :raises ValueError: if output_dir is unset when rsync_output is True or
+        if output_dir is not an existing directory
     """
 
     #: rsync error
@@ -185,10 +188,19 @@ class HathiImporter(DigitizedWorkImporter):
         }
     )
 
-    def __init__(self, source_ids=None, rsync_output=False, output_dir=""):
+    def __init__(self, source_ids=None, rsync_output=False, output_dir=None):
         super().__init__(source_ids)
         # track whether (and how much) rsync output is desired
         self.rsync_output = rsync_output
+        # if rsync output is enabled, output directory is required
+        if self.rsync_output:
+            if output_dir is None:
+                raise ValueError("output_dir is required when rsync_output is enabled")
+            elif not os.path.isdir(output_dir):
+                raise ValueError(
+                    "rsync output dir %s is not an existing directory", output_dir
+                )
+
         self.output_dir = output_dir
 
     def filter_invalid_ids(self):
