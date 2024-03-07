@@ -689,6 +689,32 @@ class TestDigitizedWork(TestCase):
             work.save()
             mock_hathiobj.delete_pairtree_data.assert_not_called()
 
+    def test_save_suppress_excerpt(self):
+        work = DigitizedWork(source_id="chi.79279237", item_type=DigitizedWork.EXCERPT)
+        with patch.object(work, "hathi") as mock_hathiobj:
+            # no change in status - nothing should happen
+            work.save()
+            mock_hathiobj.delete_pairtree_data.assert_not_called()
+
+            # change status to suppressed, no other excerpts in this volume
+            # - data should be deleted
+            work.status = work.SUPPRESSED
+            work.save()
+            assert mock_hathiobj.delete_pairtree_data.call_count == 1
+
+            # second public excerpt from the same valoume
+            DigitizedWork.objects.create(
+                source_id="chi.79279237",
+                item_type=DigitizedWork.EXCERPT,
+                pages_orig="3-5",
+                pages_digital="5-7",
+            )
+            # reset mock so we can check it is not called
+            mock_hathiobj.delete_pairtree_data.reset_mock()
+            work.status = work.SUPPRESSED
+            work.save()
+            assert mock_hathiobj.delete_pairtree_data.call_count == 0
+
     def test_save_sourceid(self):
         # if source_id changes, old id should be removed from solr index
         work = DigitizedWork.objects.create(
