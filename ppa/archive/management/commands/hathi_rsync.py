@@ -43,7 +43,7 @@ class Command(BaseCommand):
         # NOTE: report here on any skipped ids?
 
         # generate a list of unique source ids from the queryset
-        hathi_ids = digworks.values_list("source_id", flat=True).distinct()
+        working_htids = digworks.values_list("source_id", flat=True).distinct()
         self.stdout.write("Synchronizing data for %d records" % len(hathi_ids))
         # we always want itemized rsync output, so we can report
         # on which volumes were updated
