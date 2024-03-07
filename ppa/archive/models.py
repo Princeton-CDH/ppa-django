@@ -11,7 +11,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
-from eulxml.xmlmap import load_xmlobject_from_file
 from flags import Flags
 from intspan import ParseError as IntSpanParseError
 from intspan import intspan
@@ -24,7 +23,7 @@ from wagtail.fields import RichTextField
 from wagtail.snippets.models import register_snippet
 
 from ppa.archive.gale import GaleAPI, MARCRecordNotFound, get_marc_record
-from ppa.archive.hathi import HathiBibliographicAPI, HathiObject, MinimalMETS
+from ppa.archive.hathi import HathiBibliographicAPI, HathiObject
 
 logger = logging.getLogger(__name__)
 
@@ -811,8 +810,31 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 
     def first_page(self):
         """Number of the first page in range, if this is an excerpt"""
+        # return digital page for now; may be switching to original
+        # or this method may be going away
+        return self.first_page_digital()
+
+    def first_page_digital(self):
+        """Number of the first page in range (digital pages / page index),
+        if this is an excerpt.
+
+        :return: first page number for digital page range; None if no page range
+        :rtype: int, None
+        """
         if self.pages_digital:
             return list(self.page_span)[0]
+
+    def first_page_original(self):
+        """Number of the first page in range (original page numbering)
+        if this is an excerpt
+
+        :return: first page number for original page range; None if no page range
+        :rtype: str, None
+        """
+        # use regex since it handles all cases (intspan only works for a subset)
+        match = re.match(r"([\da-z]+)([,-]|\b)", self.pages_orig)
+        if match:
+            return match.group(1)
 
     def index_id(self):
         """use source id + first page in range (if any) as solr identifier"""
@@ -949,6 +971,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 
     @property
     def page_span(self):
+        # TODO: relabel to make it explicit that this is digital pages?
         # convert the specified page numbers into an intspan
         # if empty, returns an empty set
         return intspan(self.pages_digital)
@@ -1140,7 +1163,7 @@ class Page(Indexable):
 
         # load mets record to pull metadata about the images
         try:
-            mmets = load_xmlobject_from_file(digwork.hathi.metsfile_path(), MinimalMETS)
+            mmets = digwork.hathi.mets_xml()
         except storage_exceptions.ObjectNotFoundException:
             logger.error(
                 "Pairtree data for %s not found but status is %s",
