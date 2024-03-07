@@ -1011,7 +1011,7 @@ class TestPage(TestCase):
         mets = load_xmlobject_from_file(TestDigitizedWork.metsfile, hathi.MinimalMETS)
         with patch.object(DigitizedWork, "hathi") as mock_hathiobj:
             mock_hathiobj.zipfile_path.return_value = "/path/to/79279237.zip"
-            mock_hathiobj.metsfile_path.return_value = TestDigitizedWork.metsfile
+            mock_hathiobj.mets_xml.return_value = mets
             mock_hathiobj.content_dir = "data"
 
             page_data = Page.page_index_data(work)
