@@ -67,7 +67,7 @@ class Command(BaseCommand):
                     if not filename.endswith(".zip") and not filename.endswith(".xml"):
                         continue
                     # reconstruct the hathi id from the filepath
-                    ht_prefix, pairtree_dir = filename.split("/pairtree_root/")
+                    ht_prefix, pairtree_dir = filename.split("/pairtree_root/", 1)
                     # get the directory one level up from the updated file
                     pairtree_id = os.path.dirname(os.path.dirname(pairtree_dir))
                     # use pairtree to determine the id based on the path
