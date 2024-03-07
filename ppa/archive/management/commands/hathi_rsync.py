@@ -1,4 +1,6 @@
+import csv
 import os.path
+import tempfile
 from datetime import datetime
 
 from django.core.management.base import BaseCommand
@@ -40,29 +42,50 @@ class Command(BaseCommand):
         # in the database and not suppressed
         if htids:
             digworks = digworks.filter(source_id__in=htids)
-        # NOTE: report here on any skipped ids?
 
         # generate a list of unique source ids from the queryset
         working_htids = digworks.values_list("source_id", flat=True).distinct()
-        self.stdout.write("Synchronizing data for %d records" % len(hathi_ids))
+
+        # if htids were explicitly specified, report if any are skipped
+        if htids:
+            skipped_htids = set(htids) - set(working_htids)
+            if skipped_htids:
+                self.stdout.write(
+                    self.style.NOTICE(
+                        "Some ids not found in public HathiTrust volumes; skipping %s"
+                        % " ".join(skipped_htids)
+                    )
+                )
+
+        # bail out if there's nothing to do
+        # (e.g., explicit htids only and none valid)
+        if not working_htids:
+            return
+
+        self.stdout.write("Synchronizing data for %d records" % len(working_htids))
+
+        # create a tempdir for rsync logfile; will automatically be cleaned up
+        output_dir = tempfile.TemporaryDirectory(prefix="ppa-rsync_")
         # we always want itemized rsync output, so we can report
-        # on which volumes were updated
+        # on which htids have updated content
         htimporter = HathiImporter(
-            source_ids=hathi_ids, rsync_output=True, output_dir="/tmp"
+            source_ids=working_htids, rsync_output=True, output_dir=output_dir.name
         )
         logfile = htimporter.rsync_data()
 
-        # read the rsync itemized output to identify records where file
-        # sizes changed
-        updated_ids = set()
+        # read the rsync itemized output to identify and report on changes
+        updated_files = []
         with open(logfile) as rsync_output:
             for line in rsync_output:
-                # if a line indicates that a file was updated due
-                # to a change in size, use the path to determine the hathi id
-                if " >f.s" in line:
-                    # rsync itemized output is white-space delimited;
+                # check for a line indicating that a file was updated
+                if " >f" in line:
+                    # rsync itemized output is white-space delimited
+                    parts = line.split()
                     # last element is the filename that was updated
-                    filename = line.rsplit()[-1].strip()
+                    filename = parts[-1]
+                    # itemized info flags preced the filename
+                    flags = parts[-2]
+
                     # we only care about zip files and mets.xml files
                     if not filename.endswith(".zip") and not filename.endswith(".xml"):
                         continue
@@ -73,19 +96,34 @@ class Command(BaseCommand):
                     # use pairtree to determine the id based on the path
                     # (handles special characters like those used in ARKs)
                     htid = f"{ht_prefix}.{path2id(pairtree_id)}"
-                    updated_ids.add(htid)
+                    updated_files.append(
+                        {
+                            "htid": htid,
+                            "filename": os.path.basename(filename),
+                            # rsync itemized flags look like >f.st....
+                            # or >f+++++++ for new files
+                            "size_changed": flags[3] == "s",
+                            "modification_time": flags[4] == "t",
+                            "rsync_flags": flags,
+                        }
+                    )
 
         # should this behavior only be when updating all?
         # if specific htids are specified on the command line, maybe report on them only?
-        if updated_ids:
-            outfilename = "ppa_rsync_updated_htids_%s.txt" % datetime.now().strftime(
+        if updated_files:
+            outfilename = "ppa_rsync_changes_%s.csv" % datetime.now().strftime(
                 "%Y%m%d-%H%M%S"
             )
+            fields = updated_files[0].keys()
+            print(fields)
             with open(outfilename, "w") as outfile:
-                outfile.write("\n".join(sorted(updated_ids)))
+                csvwriter = csv.DictWriter(outfile, fieldnames=fields)
+                csvwriter.writeheader()
+                csvwriter.writerows(updated_files)
+            updated_htids = set([i["htid"] for i in updated_files])
             success_msg = (
-                f"File sizes changed for {len(updated_ids)} hathi ids; "
-                + f"full list in {outfilename}"
+                f"Updated {len(updated_files)} files for {len(updated_htids)} volumes; "
+                + f"full details in {outfilename}"
             )
         else:
             success_msg = "rsync completed; no changes to report"
