@@ -119,8 +119,8 @@ class Command(BaseCommand):
             outfilename = "ppa_rsync_changes_{time}.csv".format(
                 time=datetime.now().strftime("%Y%m%d-%H%M%S")
             )
+            # use keys from the first row to populate csv header row
             fields = updated_files[0].keys()
-            print(fields)
             with open(outfilename, "w") as outfile:
                 csvwriter = csv.DictWriter(outfile, fieldnames=fields)
                 csvwriter.writeheader()
