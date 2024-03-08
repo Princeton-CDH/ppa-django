@@ -83,7 +83,7 @@ class Command(BaseCommand):
                     parts = line.split()
                     # last element is the filename that was updated
                     filename = parts[-1]
-                    # itemized info flags preced the filename
+                    # itemized info flags precede the filename
                     flags = parts[-2]
 
                     # we only care about zip files and mets.xml files
