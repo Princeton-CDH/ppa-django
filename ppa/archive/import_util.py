@@ -159,7 +159,17 @@ class DigitizedWorkImporter:
 
 class HathiImporter(DigitizedWorkImporter):
     """Logic for creating new :class:`~ppa.archive.models.DigitizedWork`
-    records from HathiTrust. For use in views and manage commands."""
+    records from HathiTrust. For use in views and manage commands.
+
+    :param list source_ids: list of HathiTrust source ids (htid) to
+        synchronize (optional)
+    :param bool rsync_output: determines whether rsync itemized report
+        is enabled (default: False)
+    :param str output_dir: base directory for rsync output file
+        (required if `rsync_output` is True)
+    :raises ValueError: if output_dir is unset when rsync_output is True or
+        if output_dir is not an existing directory
+    """
 
     #: rsync error
     RSYNC_ERROR = 4
@@ -178,10 +188,20 @@ class HathiImporter(DigitizedWorkImporter):
         }
     )
 
-    def __init__(self, source_ids=None, rsync_output=False):
+    def __init__(self, source_ids=None, rsync_output=False, output_dir=None):
         super().__init__(source_ids)
         # track whether (and how much) rsync output is desired
         self.rsync_output = rsync_output
+        # if rsync output is enabled, output directory is required
+        if self.rsync_output:
+            if output_dir is None:
+                raise ValueError("output_dir is required when rsync_output is enabled")
+            elif not os.path.isdir(output_dir):
+                raise ValueError(
+                    f"rsync output dir {output_dir} is not an existing directory"
+                )
+
+        self.output_dir = output_dir
 
     def filter_invalid_ids(self):
         """Remove any ids that don't look valid. At minimum, must
@@ -247,7 +267,15 @@ class HathiImporter(DigitizedWorkImporter):
     def rsync_data(self):
         """Use rsync to retrieve data for the volumes to be imported."""
 
-        logger.info("rsyncing pairtree data for %s", ", ".join(self.source_ids))
+        # limit the number of ids included in the log message
+        log_detail = ""
+        rsync_count = len(self.source_ids)
+        if rsync_count <= 10:
+            log_detail = ", ".join(self.source_ids)
+        else:
+            log_detail = "%d volumes" % rsync_count
+
+        logger.info("rsyncing pairtree data for %s", log_detail)
 
         # create temp file with list of paths to synchronize
         with tempfile.NamedTemporaryFile(
@@ -271,8 +299,9 @@ class HathiImporter(DigitizedWorkImporter):
             # if rsync output requested, include itemize and log fileargs
             output_opts = ""
             if self.rsync_output:
-                outputfilename = "ppa_hathi_rsync_%s.log" % datetime.now().strftime(
-                    "%Y%m%d-%H%M%S"
+                outputfilename = os.path.join(
+                    self.output_dir,
+                    "ppa_hathi_rsync_%s.log" % datetime.now().strftime("%Y%m%d-%H%M%S"),
                 )
                 # output requested: always log content to a file
                 output_opts = "--log-file=%s" % outputfilename
@@ -292,7 +321,7 @@ class HathiImporter(DigitizedWorkImporter):
                 subprocess.run(args=rsync_cmd.split(), check=True)
             except subprocess.CalledProcessError as err:
                 logger.error(
-                    "HathiTrust rsync failed — %s / command: %s"
+                    "HathiTrust rsync failed — %s / command: %s"
                     % (self.RSYNC_RETURN_CODES[err.returncode], rsync_cmd)
                 )
 
