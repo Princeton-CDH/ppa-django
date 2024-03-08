@@ -4,6 +4,7 @@ import tempfile
 from datetime import datetime
 
 from django.core.management.base import BaseCommand
+from django.template.defaultfilters import pluralize
 from pairtree import path2id
 
 from ppa.archive.import_util import HathiImporter
@@ -52,17 +53,21 @@ class Command(BaseCommand):
             if skipped_htids:
                 self.stdout.write(
                     self.style.NOTICE(
-                        "Some ids not found in public HathiTrust volumes; skipping %s"
-                        % " ".join(skipped_htids)
+                        f"{len(skipped_htids)} id{pluralize(skipped_htids)} "
+                        + "not found in public HathiTrust volumes; "
+                        + f"skipping {' '.join(skipped_htids)}"
                     )
                 )
 
         # bail out if there's nothing to do
         # (e.g., explicit htids only and none valid)
         if not working_htids:
+            self.stdout.write("No records to synchronize; stopping")
             return
 
-        self.stdout.write("Synchronizing data for %d records" % len(working_htids))
+        self.stdout.write(
+            f"Synchronizing data for {len(working_htids)} record{pluralize(working_htids)}"
+        )
 
         # create a tempdir for rsync logfile; will automatically be cleaned up
         output_dir = tempfile.TemporaryDirectory(prefix="ppa-rsync_")
@@ -111,8 +116,8 @@ class Command(BaseCommand):
         # should this behavior only be when updating all?
         # if specific htids are specified on the command line, maybe report on them only?
         if updated_files:
-            outfilename = "ppa_rsync_changes_%s.csv" % datetime.now().strftime(
-                "%Y%m%d-%H%M%S"
+            outfilename = "ppa_rsync_changes_{time}.csv".format(
+                time=datetime.now().strftime("%Y%m%d-%H%M%S")
             )
             fields = updated_files[0].keys()
             print(fields)
