@@ -281,7 +281,7 @@ def test_hathiimporter_init(tmp_path_factory):
     # rsync output requested with non-existent output dir
     with pytest.raises(ValueError, match="not an existing directory"):
         # rsync output requested with invalid output dir
-        HathiImporter(rsync_output=True, output_dir="/tmp/foo/bar")
+        HathiImporter(rsync_output=True, output_dir="/foo/bar/baz")
 
     # with valid output dir
     tmpdir = tmp_path_factory.mktemp("output")
