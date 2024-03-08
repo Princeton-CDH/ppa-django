@@ -198,7 +198,7 @@ class HathiImporter(DigitizedWorkImporter):
                 raise ValueError("output_dir is required when rsync_output is enabled")
             elif not os.path.isdir(output_dir):
                 raise ValueError(
-                    "rsync output dir %s is not an existing directory", output_dir
+                    f"rsync output dir {output_dir} is not an existing directory"
                 )
 
         self.output_dir = output_dir
