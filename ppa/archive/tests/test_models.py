@@ -804,6 +804,19 @@ class TestDigitizedWork(TestCase):
             work.clean_fields()
         assert "start value should exceed stop (355-35)" in str(err)
 
+    def test_first_page_digital(self):
+        assert DigitizedWork(pages_digital="133-135").first_page_digital() == 133
+
+    def test_first_page_original(self):
+        # citation-style page range (second number is incomplete)
+        assert DigitizedWork(pages_orig="133-5").first_page_original() == "133"
+        # single page number
+        assert DigitizedWork(pages_orig="133").first_page_original() == "133"
+        # discontinuous page range
+        assert DigitizedWork(pages_orig="133, 134").first_page_original() == "133"
+        # roman numreals
+        assert DigitizedWork(pages_orig="iii-xiv").first_page_original() == "iii"
+
     def test_is_suppressed(self):
         work = DigitizedWork(source_id="chi.79279237")
         assert not work.is_suppressed
@@ -1024,7 +1037,7 @@ class TestPage(TestCase):
         mets = load_xmlobject_from_file(TestDigitizedWork.metsfile, hathi.MinimalMETS)
         with patch.object(DigitizedWork, "hathi") as mock_hathiobj:
             mock_hathiobj.zipfile_path.return_value = "/path/to/79279237.zip"
-            mock_hathiobj.metsfile_path.return_value = TestDigitizedWork.metsfile
+            mock_hathiobj.mets_xml.return_value = mets
             mock_hathiobj.content_dir = "data"
 
             page_data = Page.page_index_data(work)
