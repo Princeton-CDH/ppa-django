@@ -329,7 +329,7 @@ class TestDigitizedWorkDetailView(TestCase):
         self.assertNotContains(response, "View external record")
 
         # search term should be ignored for items without fulltext
-        with patch("ppa.archive.views.SolrQuerySet") as mock_solrq:
+        with patch("ppa.archive.views.PageSearchQuerySet") as mock_solrq:
             response = self.client.get(thesis.get_absolute_url(), {"query": "lady"})
             # not called at all
             assert mock_solrq.call_count == 0
@@ -1192,6 +1192,18 @@ class TestDigitizedWorkListView(TestCase):
             mock_qs.facet.assert_called_with(*SearchForm.facet_fields)
             mock_qs.order_by.assert_called_with("sort_title")  # default sort
             mock_qs.work_filter.assert_called_with(author="Robert")
+
+    def test_too_many_clusters(self):
+        archive_list_url = reverse("archive:list")
+        response = self.client.get(archive_list_url, {"cluster": ["one", "two"]})
+        # if there is more than one cluster param,
+        # should redirect to archive search with a 303 See Other status code
+        assert response.status_code == 303
+        assert response["Location"] == archive_list_url
+        # single cluster should be fine
+        assert self.client.get(archive_list_url, {"cluster": "one"}).status_code == 200
+        # no cluster should also be fine
+        assert self.client.get(archive_list_url).status_code == 200
 
 
 class TestImportView(TestCase):
