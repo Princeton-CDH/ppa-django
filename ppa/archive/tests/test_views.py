@@ -329,7 +329,7 @@ class TestDigitizedWorkDetailView(TestCase):
         self.assertNotContains(response, "View external record")
 
         # search term should be ignored for items without fulltext
-        with patch("ppa.archive.views.SolrQuerySet") as mock_solrq:
+        with patch("ppa.archive.views.PageSearchQuerySet") as mock_solrq:
             response = self.client.get(thesis.get_absolute_url(), {"query": "lady"})
             # not called at all
             assert mock_solrq.call_count == 0
