@@ -40,7 +40,8 @@ class Command(BaseCommand):
             "notes",
         ]
 
-        with open("ppa-excerpt-pagecheck.csv", "w") as csvfile:
+        report_filename = "ppa-excerpt-pagecheck.csv"
+        with open(report_filename, "w") as csvfile:
             csvwriter = csv.DictWriter(csvfile, fieldnames=output_fields)
             csvwriter.writeheader()
 
@@ -78,8 +79,9 @@ class Command(BaseCommand):
 
                 # use digital page range to get the first page in the mets
                 # that would be included with current digital range (1-based index)
+
                 try:
-                    excerpt_first_page = page_info[digwork.first_page_digital() + 1]
+                    excerpt_first_page = page_info[digwork.first_page_digital() - 1]
                 except IndexError:
                     if digwork.first_page_digital() >= len(page_info):
                         excerpt_first_page[-1]
@@ -126,3 +128,5 @@ class Command(BaseCommand):
 
                 # either way, write out the info
                 csvwriter.writerow(info)
+
+        self.stdout.write(f"Excerpt page check report available in {report_filename}")
