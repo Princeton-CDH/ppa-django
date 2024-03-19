@@ -1,9 +1,4 @@
-import csv
 import logging
-from collections import OrderedDict, defaultdict
-from http import HTTPStatus
-from json.decoder import JSONDecodeError
-from pprint import pprint
 
 import requests
 from django.contrib import messages
@@ -12,18 +7,14 @@ from django.core.exceptions import MultipleObjectsReturned, ValidationError
 from django.core.paginator import Paginator
 from django.http import (
     Http404,
-    HttpResponse,
     HttpResponsePermanentRedirect,
-    HttpResponseRedirect,
 )
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import urlencode
-from django.utils.timezone import now
 from django.views.generic import DetailView, ListView
 from django.views.generic.base import RedirectView, TemplateView
 from django.views.generic.edit import FormView
-from parasolr.django import SolrQuerySet
 from parasolr.django.views import SolrLastModifiedMixin
 
 from ppa.archive.forms import (
@@ -58,6 +49,18 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
 
     # keyword query; assume no search terms unless set
     query = None
+
+    def get(self, *args, **kwargs):
+        # a bug used to allow aggregation of multiple cluster params,
+        # which is not supported; if detected, redirect to archive search
+        cluster_param = self.request.GET.getlist("cluster")
+        if cluster_param and len(cluster_param) > 1:
+            response = HttpResponsePermanentRedirect(reverse("archive:list"))
+            response.status_code = 303  # See other
+            return response
+
+        # otherwise, process response normally
+        return super(DigitizedWorkListView, self).get(*args, **kwargs)
 
     def get_queryset(self, **kwargs):
         form_opts = self.request.GET.copy()
@@ -243,8 +246,8 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             # or an error status set on the response
             context["error"] = "Something went wrong."
 
-        page_groups_keys = set(page_groups.keys())
-        page_highlights_keys = set(page_highlights.keys())
+        set(page_groups.keys())
+        set(page_highlights.keys())
         context.update(
             {
                 "search_form": self.form,
@@ -354,7 +357,8 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
             # only return fields needed for page result display,
             # configure highlighting on page text content
             solr_pageq = (
-                PageSearchQuerySet()  # NOTE: Addition of an aliased queryset changes the _s keys below
+                # NOTE: Addition of an aliased queryset changes the _s keys below
+                PageSearchQuerySet()
                 .search(content="(%s)" % query)
                 .filter(group_id='"%s"' % digwork.index_id(), item_type="page")
                 .highlight("content", snippets=3, method="unified")
