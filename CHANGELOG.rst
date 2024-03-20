@@ -3,6 +3,11 @@
 CHANGELOG
 =========
 
+3.11.4
+------
+
+- Redirect invalid archive search with multiple clusters in the search parameters to main archive search page
+
 3.11.3
 ------
 
@@ -15,7 +20,7 @@ CHANGELOG
 3.11.2
 ------
 
-Fix version mismatch between python and npm webpack loader packages 
+Fix version mismatch between python and npm webpack loader packages
 and correct bundle directory path configuration.
 
 3.11
@@ -37,8 +42,8 @@ and correct bundle directory path configuration.
 3.9.1
 -----
 
-- update to Django 4.0 
-- improved error handling for hathi pairtree indexing 
+- update to Django 4.0
+- improved error handling for hathi pairtree indexing
 - bugfix: restore admin digitized work import and export buttons
 
 
@@ -51,7 +56,7 @@ public site:
 * As a user, when I see a group of editions in my search results, I want an option to search within all editions.
 * As a user viewing a digitized work that's available in other editions, I want to know that other editions are available and have easy access to search across them.
 
-admin: 
+admin:
 
 * As an admin, I want to see work clusters on digitized work list view so that I can search for and see collapsed versions at a glance.
 * As an admin, I want to see and edit work clusters so that I can collapse and uncollapse texts after developer-assisted import.
@@ -85,9 +90,9 @@ public site:
   accurately cite items.
 * As a user, I want volume information to appear on both list view and
   item detail view so that my experience is  consistent across the
-  search pages.  
+  search pages.
 
-admin: 
+admin:
 
 * As an admin, I want to add one or several new items from Gale/ECCO via
   the admin interface so that I can add content to the site after
@@ -97,7 +102,7 @@ admin:
   specifically about prosody from longer works about other subjects.
 * As an admin, I want to export a custom CSV after searching in the
   backend so that I can use the backend’s search functionality to
-  create targeted data sets.  
+  create targeted data sets.
 
 accessibility:
 
@@ -106,7 +111,7 @@ accessibility:
 other:
 
   * Transform typographic quotes in searches to work as exact phrase search
-  * Clarify help text on search page 
+  * Clarify help text on search page
   * Correct template display issue for admin bulk add to collections page
   * Upgrade to Django 3.2
   * Upgrade to Wagtail 2.15
