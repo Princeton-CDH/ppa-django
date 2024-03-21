@@ -17,7 +17,12 @@ def get_version_label(htid):
     # a script block in HT record page includes a number of HT.params including version timestamp
     re_pattern = r'HT.params.versionLabel = "([^"]+)";'
     catalog_url = f"https://hdl.handle.net/2027/{htid}"
-    r = requests.get(catalog_url, timeout=5)
+    try:
+        r = requests.get(catalog_url, timeout=5)
+    except requests.exceptions.Timeout:
+        # Handle timeouts gracefully (catch and continue)
+        print(f"Warning: request timed out for {htid}")
+        return
     if r.status_code == requests.codes['ok']:
         # Extract version_label from response text
         version_label = re.findall(re_pattern, r.text)
@@ -26,7 +31,7 @@ def get_version_label(htid):
         else:
             print(f"Warning: {htid} missing versionLabel!")
     else:
-        print(f"Warning: bad/unexpected response")
+        print(f"Warning: bad/unexpected response for {htid}")
 
 
 def get_version_labels(htids, wait_time=1):
