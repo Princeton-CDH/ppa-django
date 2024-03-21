@@ -7,10 +7,14 @@ At this time, these scripts do not have any additional requirements.
 
 ## HathiTrust "Version" Timestamps
 This script extracts and saves the version timestamp information from the
-public HathiTrust interface for PPA excerpt records (based on an exported report).
+public HathiTrust interface for a set of HathiTrust volumes. By default,
+the set of volumes corresponds to PPA excerpt records (based on an exported
+report).
 
-- `get_version_labels.py`: The script to run. It extracts the HathiTrust
-volume identifiers (htids) from an existing excerpt file. It writes its output as a tsv
+- `get_version_labels.py`: The script to run. This script extracts HathiTrust
+volume identifiers (htids) from a text file containing one htid per line. By
+default, the input file is `ht-excerpts-2023-09-20.txt`, but an alternative file
+can be specified as input. It writes its output as a tsv
 with columns corresponding to htids and their extracted version timestamps.
-    - input (hard-coded): `ht-excerpts-2023-09-20.tsv` 
+    - input: Input `.txt` file. If none specified, `ht-excerpts-2023-09-20.txt`.
     - output: `version-labels/version-labels-[current date].tsv`

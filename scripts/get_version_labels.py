@@ -55,18 +55,22 @@ def get_version_labels(htids, wait_time=1):
 
 
 if __name__ == "__main__":
-    in_tsv = "ht-excerpts-2023-09-20.tsv"
+    if len(sys.argv) not in [1,2]:
+        print("Usage: ([htids list])")
+        sys.exit(1)
+
+    # Check if an input file has been provided
+    in_tsv = "ht-excerpts-2023-09-20.txt" # Default value
+    if len(sys.argv) == 3:
+        in_tsv = sys.argv[1]
+
     out_tsv = f"version-labels/version-labels-{datetime.date.today()}.tsv"
 
     # Get htids
     htids = []
     with open(in_tsv) as reader:
-        reader.readline() # skip header
         for line in reader:
-            fields = line.rstrip().split('\t')
-            if len(fields) < 15:
-                continue
-            htid = fields[15]
+            htid = line.strip()
             htids.append(htid)
     version_pairs = get_version_labels(htids)
 
