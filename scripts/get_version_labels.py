@@ -14,6 +14,7 @@ def get_version_label(htid):
     Extract the HathiTrust "version label" from a record's catalog page.
     Returns the corresponding timestamp, returns None if the HTTP request fails.
     """
+    # a script block in HT record page includes a number of HT.params including version timestamp
     re_pattern = r'HT.params.versionLabel = "([^"]+)";'
     catalog_url = f"https://hdl.handle.net/2027/{htid}"
     r = requests.get(catalog_url, timeout=5)
