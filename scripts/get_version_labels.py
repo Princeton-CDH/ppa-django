@@ -77,7 +77,7 @@ if __name__ == "__main__":
     while os.path.isfile(out_tsv):
         # File exists, so update increment and add index
         i += 1
-        out_tsv =  f"{out_pfx}-{i}.tsv"
+        out_tsv = f"{out_pfx}-{i}.tsv"
 
     # Get htids
     htids = []
