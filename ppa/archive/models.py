@@ -598,18 +598,25 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             self.source_id = new_source_id
             self.pages_digital = new_pages_digital
 
-        if self.has_changed("pages_digital"):
+        # if excerpt page range has changed
+        # OR this is a new record with a page range
+        if self.has_changed("pages_digital") or (
+            self.pk is None and self.pages_digital
+        ):
             # update the page count if possible (i.e., not a Gale record)
             self.page_count = self.count_pages()
-            # if there is a page range set, update page count and index
-            if self.pages_digital:
+            # if page range changed on existing record, clear out old index
+            if self.pages_digital and self.pk is not None:
                 # update index to remove all pages that are no longer in range
                 self.solr.update.delete_by_query(
                     'source_id:"%s" AND item_type:page NOT order:(%s)'
                     % (self.source_id, " OR ".join(str(p) for p in self.page_span))
                 )
             # any page range change requires reindexing (potentially slow)
-            logger.debug("Reindexing pages for %s after change to page range", self)
+            if self.pk is None:
+                logger.debug("Indexing pages for new excerpt %s", self)
+            else:
+                logger.debug("Reindexing pages for %s after change to page range", self)
             self.index_items(Page.page_index_data(self))
             # NOTE: removing a page range may not work as expected
             # (does not recalculate page count; cannot recalculate for Gale items)
