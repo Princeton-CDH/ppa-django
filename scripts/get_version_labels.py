@@ -28,7 +28,7 @@ def get_version_label(htid):
         print(f"Warning: bad/unexpected response")
 
 
-def get_version_labels(htids, wait_time=3):
+def get_version_labels(htids, wait_time=1):
     """
     Extracts the HathiTrust "version label" for each record within htids.
     Returns a list of the extracted htid-timestamp pairs.
