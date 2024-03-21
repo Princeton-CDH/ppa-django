@@ -21,7 +21,7 @@ def get_version_label(htid):
         r = requests.get(catalog_url, timeout=5)
     except requests.exceptions.Timeout:
         # Handle timeouts gracefully (catch and continue)
-        print(f"Warning: request timed out for {htid}")
+        print(f"Warning: request timed out for '{htid}'")
         return
     if r.status_code == requests.codes['ok']:
         # Extract version_label from response text
@@ -31,7 +31,7 @@ def get_version_label(htid):
         else:
             print(f"Warning: {htid} missing versionLabel!")
     else:
-        print(f"Warning: bad/unexpected response for {htid}")
+        print(f"Warning: bad/unexpected response for '{htid}'")
 
 
 def get_version_labels(htids, wait_time=1):
@@ -66,10 +66,18 @@ if __name__ == "__main__":
 
     # Check if an input file has been provided
     in_tsv = "ht-excerpts-2023-09-20.txt" # Default value
-    if len(sys.argv) == 3:
+    if len(sys.argv) == 2:
         in_tsv = sys.argv[1]
 
-    out_tsv = f"version-labels/version-labels-{datetime.date.today()}.tsv"
+    # Determine output file
+    out_pfx = os.path.join("version-labels",
+                           f"version-labels-{datetime.date.today()}")
+    out_tsv = f"{out_pfx}.tsv"
+    i = 0
+    while os.path.isfile(out_tsv):
+        # File exists, so update increment and add index
+        i += 1
+        out_tsv =  f"{out_pfx}-{i}.tsv"
 
     # Get htids
     htids = []
