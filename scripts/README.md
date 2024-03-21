@@ -16,5 +16,9 @@ volume identifiers (htids) from a text file containing one htid per line. By
 default, the input file is `ht-excerpts-2023-09-20.txt`, but an alternative file
 can be specified as input. It writes its output as a tsv
 with columns corresponding to htids and their extracted version timestamps.
-    - input: Input `.txt` file. If none specified, `ht-excerpts-2023-09-20.txt`.
-    - output: `version-labels/version-labels-[current date].tsv`
+    - input: Input `.txt` file. If none specified,
+    `ht-excerpts-2023-09-20.txt`.
+    - output: `version-labels/version-labels-[current date].tsv`. If this file
+    already exists, then the output file corresponds to a new (non-existing)
+    file `version-labels/version-labels-[current date]-[i].tsv` where `i`
+    is the smallest possible, postive integer.
