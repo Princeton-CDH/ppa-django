@@ -41,7 +41,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand, CommandError
 from parasolr.django.signals import IndexableSignalHandler
 
-from ppa.archive.models import Collection, DigitizedWork, Page
+from ppa.archive.models import Collection, DigitizedWork
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +83,8 @@ class Command(BaseCommand):
             self.excerpt(row)
 
         self.stdout.write(
-            "\nExcerpted {excerpted:,d} existing records; created {created:,d} new excerpts. {error:,d} errors.".format_map(
+            "\nExcerpted {excerpted:,d} existing records; "
+            + "created {created:,d} new excerpts. {error:,d} errors.".format_map(
                 self.stats
             )
         )
@@ -146,12 +147,9 @@ class Command(BaseCommand):
         digwork.public_notes = row.get("Public Notes", "")
 
         try:
-            # Calculate & save number of pages based on page range.
-            # (automatically calculated on save for excerpt but not
-            # for newly created items)
-            # Could trigger parse error if page span is invalid.
-            digwork.page_count = digwork.count_pages()
             # save to create or update in the database
+            # page count is automatically calculated on save for excerpts
+            # Could trigger parse error if page span is invalid.
             digwork.save()
         except intspan.ParseError as err:
             self.stderr.write(
@@ -173,14 +171,11 @@ class Command(BaseCommand):
 
         if created:
             self.stats["created"] += 1
-            # any page range change requires reindexing (potentially slow)
-            logger.debug("Indexing pages for new excerpt %s", digwork)
-            DigitizedWork.index_items(Page.page_index_data(digwork))
-
+            # pages are automatically indexed when saving a new excerpt
         else:
+            self.stats["excerpted"] += 1
             # Indexed pages are automatically updated for existing records on save
             # when page range has changed.
-            self.stats["excerpted"] += 1
 
         DigitizedWork.index_items([digwork])
 
