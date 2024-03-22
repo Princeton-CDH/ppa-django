@@ -150,7 +150,8 @@ class TestDigitizedWorkDetailView(TestCase):
             msg_prefix="Volume metadata should not display if no enumcron",
         )
 
-    def test_anonymous_display_excerpt_hathi(self):
+    @patch("ppa.archive.models.DigitizedWork.index_items")
+    def test_anonymous_display_excerpt_hathi(self, mock_index_items):
         # create an excerpt
         excerpt = DigitizedWork.objects.create(
             source_id="abc.1234",
@@ -192,7 +193,8 @@ class TestDigitizedWorkDetailView(TestCase):
             ),
         )
 
-    def test_anonymous_display_article_hathi(self):
+    @patch("ppa.archive.models.DigitizedWork.index_items")
+    def test_anonymous_display_article_hathi(self, mock_index_items):
         # create an article
         article = DigitizedWork.objects.create(
             source_id="abc.1234",
@@ -426,7 +428,8 @@ class TestDigitizedWorkDetailView(TestCase):
         # should have pagination
         self.assertContains(response, '<div class="page-controls')
 
-    def test_get_queryset(self):
+    @patch("ppa.archive.models.DigitizedWork.index_items")
+    def test_get_queryset(self, mock_index_items):
         # requesting non-excerpt with start page specified should return 404 not found
         bogus_dial_excerpt_url = reverse(
             "archive:detail",
