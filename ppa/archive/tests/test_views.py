@@ -170,8 +170,10 @@ class TestDigitizedWorkDetailView(TestCase):
             response, hathi_page_url(excerpt.source_id, excerpt.first_page())
         )
 
-    def test_anonymous_display_excerpt_gale(self):
+    @patch("ppa.archive.models.DigitizedWork.index_items")
+    def test_anonymous_display_excerpt_gale(self, mock_index_items):
         # create a gale excerpt to test link logic
+        # patch index_items to skip attempting to index pages
         excerpt = DigitizedWork.objects.create(
             source_id="abc.1234",
             source_url="https://hdl.example.co/9823/abc.1234",
