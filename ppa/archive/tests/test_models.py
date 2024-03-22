@@ -689,7 +689,8 @@ class TestDigitizedWork(TestCase):
             work.save()
             mock_hathiobj.delete_pairtree_data.assert_not_called()
 
-    def test_save_suppress_excerpt(self):
+    @patch("ppa.archive.models.DigitizedWork.index_items")
+    def test_save_suppress_excerpt(self, mock_index_items):
         work = DigitizedWork(source_id="chi.79279237", item_type=DigitizedWork.EXCERPT)
         with patch.object(work, "hathi") as mock_hathiobj:
             # no change in status - nothing should happen

@@ -83,10 +83,9 @@ class Command(BaseCommand):
             self.excerpt(row)
 
         self.stdout.write(
-            "\nExcerpted {excerpted:,d} existing records; "
-            + "created {created:,d} new excerpts. {error:,d} errors.".format_map(
-                self.stats
-            )
+            f"\nExcerpted {self.stats['excerpted']:,d} existing records; "
+            + f"created {self.stats['created']:,d} new excerpts. "
+            + f"{self.stats['error']:,d} errors."
         )
 
     def load_collections(self):
