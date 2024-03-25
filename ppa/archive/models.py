@@ -198,6 +198,8 @@ class ProtectedWorkField(models.Field):
         return "PositiveSmallIntegerField"
 
     def get_prep_value(self, value):
+        if value == "":
+            return 0
         return int(value)
 
     def to_python(self, value):
