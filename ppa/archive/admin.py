@@ -158,6 +158,13 @@ class DigitizedWorkAdmin(ExportActionMixin, ExportMixin, admin.ModelAdmin):
         """
         if obj and obj.source == DigitizedWork.HATHI:
             return self.hathi_readonly_fields + self.readonly_fields
+
+        print(request.POST)
+        if request.POST.get("_saveasnew"):
+            # protected fields must not be read-only in order
+            # to preserve/copy when saving as new
+            return ("added", "updated")
+
         return self.readonly_fields
 
     def list_collections(self, obj):
@@ -192,7 +199,11 @@ class DigitizedWorkAdmin(ExportActionMixin, ExportMixin, admin.ModelAdmin):
                 post_params["source_id"] = instance.source_id
                 post_params["source_url"] = instance.source_url
                 post_params["record_id"] = instance.record_id
-                post_params["protected_fields"] = instance.protected_fields
+                # copy protected wield flags in simple string format
+                post_params[
+                    "protected_fields"
+                ] = instance.protected_fields.to_simple_str()
+
                 # clear out fields that should be changed when excerpting
                 clear_fields = [
                     "title",
