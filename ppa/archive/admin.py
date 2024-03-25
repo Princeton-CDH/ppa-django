@@ -159,7 +159,6 @@ class DigitizedWorkAdmin(ExportActionMixin, ExportMixin, admin.ModelAdmin):
         if obj and obj.source == DigitizedWork.HATHI:
             return self.hathi_readonly_fields + self.readonly_fields
 
-        print(request.POST)
         if request.POST.get("_saveasnew"):
             # protected fields must not be read-only in order
             # to preserve/copy when saving as new
