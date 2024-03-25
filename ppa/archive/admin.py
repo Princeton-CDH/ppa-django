@@ -192,6 +192,7 @@ class DigitizedWorkAdmin(ExportActionMixin, ExportMixin, admin.ModelAdmin):
                 post_params["source_id"] = instance.source_id
                 post_params["source_url"] = instance.source_url
                 post_params["record_id"] = instance.record_id
+                post_params["protected_fields"] = instance.protected_fields
                 # clear out fields that should be changed when excerpting
                 clear_fields = [
                     "title",
