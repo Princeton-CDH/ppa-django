@@ -28,6 +28,7 @@ from ppa.archive.models import (
     DigitizedWork,
     Page,
     ProtectedWorkFieldFlags,
+    ProtectedWorkField,
 )
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, "ppa", "archive", "fixtures")
@@ -47,6 +48,13 @@ class TestProtectedFlags(TestCase):
             | ProtectedWorkFieldFlags.sort_title
         )
         assert str(fields) == "enumcron, sort_title, title"
+
+
+class TestProtectedWorkField(TestCase):
+    def test_get_prep_value(self):
+        assert ProtectedWorkField().get_prep_value("1") == 1
+        # handle empty string
+        assert ProtectedWorkField().get_prep_value("") == 0
 
 
 @pytest.mark.django_db
