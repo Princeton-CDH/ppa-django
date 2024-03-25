@@ -56,7 +56,13 @@ class TestDigitizedWorkAdmin(TestCase):
         site = AdminSite()
         digadmin = DigitizedWorkAdmin(DigitizedWork, site)
 
-        assert digadmin.get_readonly_fields(Mock()) == digadmin.readonly_fields
+        assert digadmin.get_readonly_fields(Mock(POST={})) == digadmin.readonly_fields
+
+        # when using 'save as new', protected fields should not be read only
+        assert digadmin.get_readonly_fields(Mock(POST={"_saveasnew": 1})) == (
+            "added",
+            "updated",
+        )
 
         # hathi record
         hathi_work = DigitizedWork.objects.first()
