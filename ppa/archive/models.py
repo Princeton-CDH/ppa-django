@@ -860,30 +860,30 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         index_id = self.index_id()
         return {
             "id": index_id,
-            "source_id": self.source_id,
+            "source_id_s": self.source_id,
             "first_page_i": self.first_page(),
             "group_id_s": index_id,  # for grouping pages by work or excerpt
             "source_t": self.get_source_display(),
-            "source_url": self.source_url,
-            "title": self.title,
-            "subtitle": self.subtitle,
-            "sort_title": self.sort_title,
-            "pub_date": self.pub_date,
-            "pub_place": self.pub_place,
-            "publisher": self.publisher,
-            "enumcron": self.enumcron,
-            "author": self.author,
+            "source_url_s": self.source_url,
+            "title_t": self.title,
+            "subtitle_t": self.subtitle,
+            "sort_title_t_sort": self.sort_title,
+            "pub_date_i": self.pub_date,
+            "pub_place_txt_en": self.pub_place,
+            "publisher_txt_en": self.publisher,
+            "enumcron_s": self.enumcron,
+            "author_txt_en": self.author,
             # set default value to simplify queries to find uncollected items
             # (not set in Solr schema because needs to be works only)
-            "collections": [collection.name for collection in self.collections.all()]
+            "collections_txts_en": [collection.name for collection in self.collections.all()]
             if self.collections.exists()
             else [NO_COLLECTION_LABEL],
             "cluster_id_s": self.index_cluster_id,
             # public notes field for display on site_name
-            "notes": self.public_notes,
+            "notes_txt_en": self.public_notes,
             # hard-coded to distinguish from & sort with pages
-            "item_type": "work",
-            "order": "0",
+            "item_type_s": "work",
+            "order_i": 0,
             "work_type_s": self.get_item_type_display()
             .lower()
             .replace(" ", "-"),  # full-work, excerpt, or article
@@ -1180,16 +1180,16 @@ class Page(Indexable):
                             yield {
                                 "id": "%s.%s"
                                 % (digwork_index_id, page.text_file.sequence),
-                                "source_id": digwork.source_id,
+                                "source_id_s": digwork.source_id,
                                 # for grouping with work record
                                 "group_id_s": digwork_index_id,
                                 # for grouping with cluster
                                 "cluster_id_s": digwork.index_cluster_id,
-                                "content": pagefile.read().decode("utf-8"),
-                                "order": page.order,
-                                "label": page.display_label,
-                                "tags": page.label.split(", ") if page.label else [],
-                                "item_type": "page",
+                                "content_txt_en": pagefile.read().decode("utf-8"),
+                                "order_i": page.order,
+                                "label_s": page.display_label,
+                                "tags_ss": page.label.split(", ") if page.label else [],
+                                "item_type_s": "page",
                             }
                         except StopIteration:
                             return
@@ -1229,13 +1229,13 @@ class Page(Indexable):
                 continue
             yield {
                 "id": "%s.%s" % (digwork_index_id, page_number),
-                "source_id": digwork.source_id,
+                "source_id_s": digwork.source_id,
                 "group_id_s": digwork_index_id,  # for grouping with work record
                 "cluster_id_s": digwork.index_cluster_id,  # for grouping with cluster
-                "content": page.get("ocrText"),  # some pages have no text
-                "order": i,
-                "label": page_label,
-                "item_type": "page",
+                "content_txt_en": page.get("ocrText"),  # some pages have no text
+                "order_i": i,
+                "label_s": page_label,
+                "item_type_s": "page",
                 # image id needed for thumbnail url; use solr dynamic field
                 "image_id_s": page["image"]["id"],
             }

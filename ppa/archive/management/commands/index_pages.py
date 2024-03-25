@@ -188,6 +188,6 @@ class Command(BaseCommand):
             )
 
     def get_solr_totals(self):
-        facets = SolrQuerySet().all().facet("item_type").get_facets()
+        facets = SolrQuerySet().all().facet("item_type_s").get_facets()
         # facet returns an ordered dict
         return facets.facet_fields.item_type
