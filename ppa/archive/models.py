@@ -184,8 +184,10 @@ class ProtectedWorkField(models.Field):
     )
 
     def __init__(self, verbose_name=None, name=None, **kwargs):
-        """Make the field unnullable and not allowed to be blank."""
-        super().__init__(verbose_name, name, blank=False, null=False, **kwargs)
+        """Make the field unnullable; by default, not allowed to be blank."""
+        if "blank" not in kwargs:
+            kwargs["blank"] = False
+        super().__init__(verbose_name, name, null=False, **kwargs)
 
     def from_db_value(self, value, expression, connection):
         """Always return an instance of :class:`ProtectedWorkFieldFlags`"""
@@ -403,6 +405,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
     #: modified in Django admin.
     protected_fields = ProtectedWorkField(
         default=ProtectedWorkFieldFlags,
+        blank=True,  # required for save as new, where we make editable to copy
         help_text="Fields protected from HathiTrust bulk "
         "update because they have been manually edited in the "
         "Django admin.",
