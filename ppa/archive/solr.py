@@ -6,7 +6,6 @@ logger = logging.getLogger(__name__)
 
 
 class ArchiveSearchQuerySet(AliasedSolrQuerySet):
-
     # search title query field syntax
     # (query field configured in solr config; searches title & subtitle with
     # boosting)
@@ -15,52 +14,42 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
     )
     _keyword_search = "{!type=edismax qf=$keyword_qf pf=$keyword_pf v=$keyword_query}"
 
-    # minimal set of fields to be returned from Solr for search page
-    return_fields = [
-        "id",
-        "author",
-        "pubdate",
-        "publisher",
-        "enumcron",
-        "order",
-        "source_id",
-        "label",
-        "title",
-        "subtitle",
-        "score",
-        "pub_date",
-        "collections",
-        "source_t",
-        "image_id_s",
-        "first_page_i",
-        "source_url",
-        "work_type_s",
-        "book_journal_s",
-        "group_id_s",
-        "cluster_id_s",
-    ]
-    # aliases for any fields we want to rename for search and display
-    # (must also be included in return_fields list)
-    aliases = {
-        "source_t": "source",
-        "image_id_s": "image_id",
-        "first_page_i": "first_page",
-        "work_type_s": "work_type",
-        "book_journal_s": "book_journal",
-        "group_id_s": "group_id",
-        "cluster_id_s": "cluster_id",
+    # aliases for fields to rename for search and display;
+    # include all fields to be returned, even if not renamed
+    field_aliases = {
+        "id": "id",
+        "source": "source_t",
+        "source_id": "source_id_s",
+        "source_url": "source_url_s",
+        "title": "title_t",
+        "subtitle": "subtitle_t",
+        "sort_title": "sort_title_t_sort",
+        "pub_date": "pub_date_i",
+        "pub_place": "pub_place_txt_en",
+        "publisher": "publisher_txt_en",
+        "enumcron": "enumcron_s",
+        "author": "author_txt_en",
+        "first_page": "first_page_i",
+        "work_type": "work_type_s",
+        "book_journal": "book_journal_s",
+        "group_id": "group_id_s",
+        "collections": "collections_txts_en",
+        "cluster_id": "cluster_id_s",
+        "notes": "notes_txt_en",
+        "item_type": "item_type_s",
+        "order": "order_i",
+        # solr relevance score
+        "score": "score",
+        # page fields
+        "label": "label_s",
+        "image_id": "image_id_s",
     }
 
     keyword_query = None
     within_cluster_id = None
 
     def __init__(self, solr=None):
-        # field aliases: keys return the fields that will be returned from Solr for search page;
-        # values provide an aliased name if it should be different than solr index field.
-        # use alias if one is set, otherwise use field name
-        self.field_aliases = {
-            self.aliases.get(key, key): key for key in self.return_fields
-        }
+        # initialize a stock queryset for work-specific query
         self._workq = SolrQuerySet()
         super().__init__(solr=solr)
 
@@ -120,11 +109,13 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         # when searching within a cluster, collapse on group id
         collapse_on = "group_id_s" if self.within_cluster_id else "cluster_id_s"
 
-        # @NOTE: Role of order here in separating works from pages (works < pages) may need to be revisited eventually.
+        # @NOTE: Role of order here in separating works from pages (works < pages)
+        # may need to be revisited eventually.
         collapse_filter = '{!collapse field=%s sort="order asc"}' % collapse_on
-        
+
         # We can apply collapse here since we need it for both keyword query case and not
-        # Remember that cluster_id_s is now defined as `str(self.cluster) if self.cluster else index_id` in models.py.
+        # Remember that cluster_id_s is now defined as `str(self.cluster)
+        # if self.cluster else index_id` in models.py.
         # So collapsing by "cluster" id implicitly includes works with no cluster id set.
         qs_copy = qs_copy.filter(collapse_filter)
 
@@ -163,16 +154,12 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
             qs_copy = qs_copy.raw_query_parameters(work_query=work_query)
 
         content_query = "content:(%s)" % self.keyword_query
-        qs_copy = (
-            qs_copy.search(combined_query)
-            # .filter(collapse_filter)     # This no longer needed since applied above in `qs_copy = qs_copy.filter(collapse_filter)`
-            .raw_query_parameters(
-                content_query=content_query,
-                keyword_query=self.keyword_query,
-                # expand="true",
-                work_query=work_query,
-                # **{"expand.rows": 1},
-            )
+        qs_copy = qs_copy.search(combined_query).raw_query_parameters(
+            content_query=content_query,
+            keyword_query=self.keyword_query,
+            # expand="true",
+            work_query=work_query,
+            # **{"expand.rows": 1},
         )
 
         return qs_copy._base_query_opts()
@@ -182,18 +169,18 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         return super().query_opts()
 
 
-
 class PageSearchQuerySet(AliasedSolrQuerySet):
     # aliases for any fields we want to rename for search and display
     # includes non-renamed fields to push them into the return
     field_aliases = {
-        "id":"id",
-        "score":"score",
-        "order":"order",
-        "title":"title",
-        "label":"label",
+        "id": "id",
+        "score": "score",
+        "order": "order_i",
+        "title": "title",
+        "label": "label_s",
         "source_id": "source_id",
         "image_id": "image_id_s",
         "group_id": "group_id_s",
         "cluster_id": "cluster_id_s",
+        "item_type": "item_type_s",
     }
