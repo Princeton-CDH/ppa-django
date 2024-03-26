@@ -18,9 +18,8 @@
 
 <!--
 
- This example schema is the recommended starting point for users.
- It should be kept correct and concise, usable out-of-the-box.
-
+ This schema is adapted from the default-config schema accompanying Solr 9.5
+ which is the recommended starting point for users.
 
  For more information, on how to customize this file, please see
  https://solr.apache.org/guide/solr/latest/indexing-guide/schema-elements.html
@@ -38,7 +37,7 @@
     catchall "text" field, and use that for searching.
 -->
 
-<schema name="default-config" version="1.6">
+<schema name="ppa-config" version="1.6">
     <!-- attribute "name" is the name of this schema and is only used for display purposes.
        version="x.y" is Solr's version number for the schema syntax and
        semantics.  It should not normally be changed by applications.
@@ -113,21 +112,22 @@
     <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" />
     <!-- docValues are enabled by default for long type so we don't need to index the version field  -->
     <field name="_version_" type="plong" indexed="false" stored="false"/>
-
-    <!-- Custom local fields -->
+    <!-- PPA: Custom local fields -->
+    <field name="author" type="text_en" multiValued="false" required="false" stored="true"/>
+    <field name="author_exact" type="string" multiValued="false" required="false" stored="true"/>
+    <field name="collections" type="text_en" multiValued="true" required="false" stored="true"/>
+    <field name="collections_exact" type="string" multiValued="true" required="false" stored="true"/>
     <field name="last_modified" type="pdate" default="NOW" multiValued="false" required="false" stored="true" />
+    <field name="sort_title" type="text_string" multiValued="false" required="false" stored="true"/>
 
-    <!-- If you don't use child/nested documents, then you should remove the next two fields:  -->
-    <!-- for nested documents (minimal; points to root document) -->
-    <field name="_root_" type="string" indexed="true" stored="false" docValues="false" />
-    <!-- for nested documents (relationship tracking) -->
-    <field name="_nest_path_" type="_nest_path_" /><fieldType name="_nest_path_" class="solr.NestPathField" />
+    <!-- copyField commands copy one field to another at the time a document
+       is added to the index.  It's used either to index the same field differently,
+       or to add multiple fields to the same field for easier/faster searching.
 
-    <field name="_text_" type="text_general" indexed="true" stored="false" multiValued="true"/>
-
-    <!-- This can be enabled, in case the client does not know what fields may be searched. It isn't enabled by default
-         because it's very expensive to index everything twice. -->
-    <!-- <copyField source="*" dest="_text_"/> -->
+    <copyField source="sourceFieldName" dest="destinationFieldName"/>
+    -->
+    <copyField source="author" dest="author_exact"/>
+    <copyField source="collections" dest="collections_exact"/>
 
     <!-- Dynamic field definitions allow using convention over configuration
        for fields via the specification of patterns to match field names.
@@ -173,13 +173,6 @@
     -->
     <uniqueKey>id</uniqueKey>
 
-    <!-- copyField commands copy one field to another at the time a document
-       is added to the index.  It's used either to index the same field differently,
-       or to add multiple fields to the same field for easier/faster searching.
-
-    <copyField source="sourceFieldName" dest="destinationFieldName"/>
-    -->
-
     <!-- field type definitions. The "name" attribute is
        just a label to be used by field definitions.  The "class"
        attribute and any other attributes determine the real
@@ -202,6 +195,36 @@
          then default lucene sorting will be used which places docs without the
          field first in an ascending sort and last in a descending sort.
     -->
+
+    <!-- PPA: Custom local fieldTypes -->
+    <!-- The default text field for English text customized for PPA. -->
+    <dynamicField name="*_txt_en" type="text_en"  indexed="true"  stored="true"/>
+    <dynamicField name="*_txts_en" type="text_en"  indexed="true"  stored="true"  multiValued="true"/>
+    <fieldType name="text_en" class="solr.TextField" positionIncrementGap="100">
+      <analyzer>
+        <tokenizer name="standard"/>
+        <!-- Case insensitive stop word removal. -->
+        <filter name="stop" ignoreCase="true" words="lang/stopwords_en.txt"/>
+        <filter name="lowercase"/>
+        <filter name="englishPossessive"/>
+        <filter name="keywordRepeat"/>
+        <filter name="stemmerOverride" dictionary="stemdict_ppa.txt"/>
+        <filter name="porterStem"/>
+        <!-- TODO: "This filter is a better substitute for the combined behavior of the
+             ASCII Folding Filter, Lower Case Filter, and ICU Normalizer 2 Filter.
+        -->
+        <filter name="icuFolding"/>
+        <filter name="removeDuplicates"/>
+      </analyzer>
+    </fieldType>
+
+    <!-- Used for sort_title -->
+    <fieldType name="text_string" class="solr.TextField" sortMissingLast="true">
+      <analyzer>
+        <tokenizer name="keyword"/>
+        <filter name="icuFolding"/>
+      </analyzer>
+    </fieldType>
 
     <!-- The StrField type is not analyzed, but indexed/stored verbatim. -->
     <fieldType name="string" class="solr.StrField" sortMissingLast="true" docValues="true" />
@@ -340,48 +363,50 @@
       </analyzer>
     </fieldType>
 
-    <!-- A text field with defaults appropriate for English: it tokenizes with StandardTokenizer,
-         removes English stop words (lang/stopwords_en.txt), down cases, protects words from protwords.txt, and
-         finally applies Porter's stemming.  The query time analyzer also applies synonyms from synonyms.txt. -->
-    <dynamicField name="*_txt_en" type="text_en"  indexed="true"  stored="true"/>
-    <dynamicField name="*_txts_en" type="text_en"  indexed="true"  stored="true"  multiValued="true"/>
-    <fieldType name="text_en" class="solr.TextField" positionIncrementGap="100">
-      <analyzer type="index">
-        <tokenizer name="standard"/>
-        <!-- in this example, we will only use synonyms at query time
-        <filter name="synonymGraph" synonyms="index_synonyms.txt" ignoreCase="true" expand="false"/>
-        <filter name="flattenGraph"/>
-        -->
-        <!-- Case insensitive stop word removal.
-        -->
-        <filter name="stop"
-                ignoreCase="true"
-                words="lang/stopwords_en.txt"
-            />
-        <filter name="lowercase"/>
-        <filter name="englishPossessive"/>
-        <filter name="keywordMarker" protected="protwords.txt"/>
-        <!-- Optionally you may want to use this less aggressive stemmer instead of PorterStemFilterFactory:
-        <filter name="englishMinimalStem"/>
-        -->
-        <filter name="porterStem"/>
-      </analyzer>
-      <analyzer type="query">
-        <tokenizer name="standard"/>
-        <filter name="synonymGraph" synonyms="synonyms.txt" ignoreCase="true" expand="true"/>
-        <filter name="stop"
-                ignoreCase="true"
-                words="lang/stopwords_en.txt"
-        />
-        <filter name="lowercase"/>
-        <filter name="englishPossessive"/>
-        <filter name="keywordMarker" protected="protwords.txt"/>
-        <!-- Optionally you may want to use this less aggressive stemmer instead of PorterStemFilterFactory:
-        <filter name="englishMinimalStem"/>
-        -->
-        <filter name="porterStem"/>
-      </analyzer>
-    </fieldType>
+    <!-- THE DEFAULT DEFINITION FOR "text_en"
+      <!## A text field with defaults appropriate for English: it tokenizes with StandardTokenizer,
+           removes English stop words (lang/stopwords_en.txt), down cases, protects words from protwords.txt, and
+           finally applies Porter's stemming.  The query time analyzer also applies synonyms from synonyms.txt. ##>
+      <dynamicField name="*_txt_en" type="text_en"  indexed="true"  stored="true"/>
+      <dynamicField name="*_txts_en" type="text_en"  indexed="true"  stored="true"  multiValued="true"/>
+      <fieldType name="text_en" class="solr.TextField" positionIncrementGap="100">
+        <analyzer type="index">
+          <tokenizer name="standard"/>
+          <!## in this example, we will only use synonyms at query time
+          <filter name="synonymGraph" synonyms="index_synonyms.txt" ignoreCase="true" expand="false"/>
+          <filter name="flattenGraph"/>
+          ##>
+          <!## Case insensitive stop word removal.
+          ##>
+          <filter name="stop"
+                  ignoreCase="true"
+                  words="lang/stopwords_en.txt"
+              />
+          <filter name="lowercase"/>
+          <filter name="englishPossessive"/>
+          <filter name="keywordMarker" protected="protwords.txt"/>
+          <!## Optionally you may want to use this less aggressive stemmer instead of PorterStemFilterFactory:
+          <filter name="englishMinimalStem"/>
+          ##>
+          <filter name="porterStem"/>
+        </analyzer>
+        <analyzer type="query">
+          <tokenizer name="standard"/>
+          <filter name="synonymGraph" synonyms="synonyms.txt" ignoreCase="true" expand="true"/>
+          <filter name="stop"
+                  ignoreCase="true"
+                  words="lang/stopwords_en.txt"
+          />
+          <filter name="lowercase"/>
+          <filter name="englishPossessive"/>
+          <filter name="keywordMarker" protected="protwords.txt"/>
+          <!## Optionally you may want to use this less aggressive stemmer instead of PorterStemFilterFactory:
+          <filter name="englishMinimalStem"/>
+          ##>
+          <filter name="porterStem"/>
+        </analyzer>
+      </fieldType>
+    -->
 
     <!-- A text field with defaults appropriate for English, plus
          aggressive word-splitting and autophrase features enabled.

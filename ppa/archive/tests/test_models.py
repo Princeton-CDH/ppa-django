@@ -506,13 +506,13 @@ class TestDigitizedWork(TestCase):
         assert index_data["source_id_s"] == digwork.source_id
         assert index_data["source_t"] == digwork.get_source_display()
         assert index_data["item_type_s"] == "work"
-        assert index_data["title_t"] == digwork.title
-        assert index_data["subtitle_t"] == digwork.subtitle
-        assert index_data["sort_title_t_sort"] == digwork.sort_title
-        assert index_data["author_txt_en"] == digwork.author
+        assert index_data["title_txt_en"] == digwork.title
+        assert index_data["subtitle_txt_en"] == digwork.subtitle
+        assert index_data["sort_title"] == digwork.sort_title
+        assert index_data["author"] == digwork.author
         assert index_data["pub_place_txt_en"] == digwork.pub_place
         assert index_data["pub_date_i"] == digwork.pub_date
-        assert index_data["collections_txts_en"] == ["Flotsam", "Jetsam"]
+        assert index_data["collections"] == ["Flotsam", "Jetsam"]
         assert index_data["publisher_txt_en"] == digwork.publisher
         assert index_data["source_url_s"] == digwork.source_url
         assert digwork.public_notes in index_data["notes_txt_en"]
@@ -526,7 +526,7 @@ class TestDigitizedWork(TestCase):
 
         # not in a collection
         digwork.collections.clear()
-        assert digwork.index_data()["collections_txts_en"] == [NO_COLLECTION_LABEL]
+        assert digwork.index_data()["collections"] == [NO_COLLECTION_LABEL]
 
         # excerpt work type
         digwork.item_type = DigitizedWork.EXCERPT

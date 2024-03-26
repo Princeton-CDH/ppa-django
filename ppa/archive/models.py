@@ -866,17 +866,17 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             "group_id_s": index_id,  # for grouping pages by work or excerpt
             "source_t": self.get_source_display(),
             "source_url_s": self.source_url,
-            "title_t": self.title,
-            "subtitle_t": self.subtitle,
-            "sort_title_t_sort": self.sort_title,
+            "title_txt_en": self.title,
+            "subtitle_txt_en": self.subtitle,
+            "sort_title": self.sort_title,
             "pub_date_i": self.pub_date,
             "pub_place_txt_en": self.pub_place,
             "publisher_txt_en": self.publisher,
             "enumcron_s": self.enumcron,
-            "author_txt_en": self.author,
+            "author": self.author,
             # set default value to simplify queries to find uncollected items
             # (not set in Solr schema because needs to be works only)
-            "collections_txts_en": [
+            "collections": [
                 collection.name for collection in self.collections.all()
             ]
             if self.collections.exists()

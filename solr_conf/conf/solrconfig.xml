@@ -72,7 +72,14 @@
        The example below can be used to load a Solr Module along
        with their external dependencies.
     -->
+  
+  <!-- Scripting module required by XSLTResponseWriter -->     
   <lib dir="${solr.install.dir:../../../..}/modules/scripting/lib" regex=".*\.jar" />
+  <!-- Required jars for ICU Folding -->
+  <lib dir="${solr.install.dir:../../../..}/modules/analysis-extras/lib/" regex="solr-analysis-extras-\d.*\.jar" />
+  <lib dir="${solr.install.dir:../../../..}/modules/analysis-extras/lib/" regex="lucene-analysis-icu-\d.*\.jar" />
+  <lib dir="${solr.install.dir:../../../..}/modules/analysis-extras/lib/" regex="icu4j-\d.*\.jar" />
+  
   <!-- an exact 'path' can be used instead of a 'dir' to specify a
        specific jar file.  This will cause a serious error to be logged
        if it can't be loaded.
