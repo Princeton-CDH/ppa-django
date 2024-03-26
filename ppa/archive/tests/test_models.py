@@ -503,30 +503,30 @@ class TestDigitizedWork(TestCase):
         digwork.collections.add(coll2)
         index_data = digwork.index_data()
         assert index_data["id"] == digwork.source_id
-        assert index_data["source_id"] == digwork.source_id
+        assert index_data["source_id_s"] == digwork.source_id
         assert index_data["source_t"] == digwork.get_source_display()
-        assert index_data["item_type"] == "work"
-        assert index_data["title"] == digwork.title
-        assert index_data["subtitle"] == digwork.subtitle
-        assert index_data["sort_title"] == digwork.sort_title
-        assert index_data["author"] == digwork.author
-        assert index_data["pub_place"] == digwork.pub_place
-        assert index_data["pub_date"] == digwork.pub_date
-        assert index_data["collections"] == ["Flotsam", "Jetsam"]
-        assert index_data["publisher"] == digwork.publisher
-        assert index_data["source_url"] == digwork.source_url
-        assert digwork.public_notes in index_data["notes"]
-        assert digwork.notes not in index_data["notes"]
+        assert index_data["item_type_s"] == "work"
+        assert index_data["title_t"] == digwork.title
+        assert index_data["subtitle_t"] == digwork.subtitle
+        assert index_data["sort_title_t_sort"] == digwork.sort_title
+        assert index_data["author_txt_en"] == digwork.author
+        assert index_data["pub_place_txt_en"] == digwork.pub_place
+        assert index_data["pub_date_i"] == digwork.pub_date
+        assert index_data["collections_txts_en"] == ["Flotsam", "Jetsam"]
+        assert index_data["publisher_txt_en"] == digwork.publisher
+        assert index_data["source_url_s"] == digwork.source_url
+        assert digwork.public_notes in index_data["notes_txt_en"]
+        assert digwork.notes not in index_data["notes_txt_en"]
         assert index_data["work_type_s"] == "full-work"
-        assert not index_data["enumcron"]
+        assert not index_data["enumcron_s"]
 
         # with enumcron
         digwork.enumcron = "v.7 (1848)"
-        assert digwork.index_data()["enumcron"] == digwork.enumcron
+        assert digwork.index_data()["enumcron_s"] == digwork.enumcron
 
         # not in a collection
         digwork.collections.clear()
-        assert digwork.index_data()["collections"] == [NO_COLLECTION_LABEL]
+        assert digwork.index_data()["collections_txts_en"] == [NO_COLLECTION_LABEL]
 
         # excerpt work type
         digwork.item_type = DigitizedWork.EXCERPT
@@ -1009,13 +1009,13 @@ class TestPage(TestCase):
                 assert data["id"] == ".".join(
                     [work.source_id, mets_page.text_file.sequence]
                 )
-                assert data["source_id"] == work.source_id
-                assert data["content"] == contents[i]
-                assert data["order"] == mets_page.order
-                assert data["item_type"] == "page"
-                assert data["label"] == mets_page.display_label
-                assert "tags" in data
-                assert data["tags"] == mets_page.label.split(", ")
+                assert data["source_id_s"] == work.source_id
+                assert data["content_txt_en"] == contents[i]
+                assert data["order_i"] == mets_page.order
+                assert data["item_type_s"] == "page"
+                assert data["label_s"] == mets_page.display_label
+                assert "tags_ss" in data
+                assert data["tags_ss"] == mets_page.label.split(", ")
 
             # limit pages if specified
             excerpt = DigitizedWork(source_id="chi.79279237", pages_digital="2-3")
@@ -1082,15 +1082,15 @@ class TestPage(TestCase):
                 index_data["id"]
                 == f"{gale_work.source_id}.{test_pages[i]['pageNumber']}"
             )
-            assert index_data["source_id"] == gale_work.source_id
-            assert index_data["content"] == test_pages[i].get("ocrText")
-            assert index_data["order"] == i + 1
+            assert index_data["source_id_s"] == gale_work.source_id
+            assert index_data["content_txt_en"] == test_pages[i].get("ocrText")
+            assert index_data["order_i"] == i + 1
             # should use folio number when set
             if "folioNumber" in test_pages[i]:
-                assert index_data["label"] == test_pages[i]["folioNumber"]
+                assert index_data["label_s"] == test_pages[i]["folioNumber"]
             else:
-                assert index_data["label"] == int(test_pages[i]["pageNumber"])
-            assert index_data["item_type"] == "page"
+                assert index_data["label_s"] == int(test_pages[i]["pageNumber"])
+            assert index_data["item_type_s"] == "page"
             assert index_data["image_id_s"] == test_pages[i]["image"]["id"]
 
         # skip api call if item data is passed in

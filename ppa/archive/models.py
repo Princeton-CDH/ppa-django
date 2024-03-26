@@ -102,10 +102,11 @@ class Collection(TrackChangesModel):
         """
 
         # NOTE: if we *only* want counts, could just do a regular facet
+        # TODO: collection facet requires copyfields config
         sqs = (
-            SolrQuerySet()
-            .stats("{!tag=piv1 min=true max=true}pub_date")
-            .facet(pivot="{!stats=piv1}collections_exact")
+            SolrQuerySet().stats("{!tag=piv1 min=true max=true}pub_date_i")
+            # .facet(pivot="{!stats=piv1}collections_exact")
+            .facet(pivot="{!stats=piv1}collections_ss")  # fieldname tbd
         )
         facet_pivot = sqs.get_facets().facet_pivot
         # simplify the pivot stat data for display
@@ -875,7 +876,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             "author_txt_en": self.author,
             # set default value to simplify queries to find uncollected items
             # (not set in Solr schema because needs to be works only)
-            "collections_txts_en": [collection.name for collection in self.collections.all()]
+            "collections_txts_en": [
+                collection.name for collection in self.collections.all()
+            ]
             if self.collections.exists()
             else [NO_COLLECTION_LABEL],
             "cluster_id_s": self.index_cluster_id,
