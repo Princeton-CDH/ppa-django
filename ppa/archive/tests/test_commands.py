@@ -371,10 +371,11 @@ class TestIndexPagesCommand(TestCase):
         # generate solrqueryset mock and patch it in
         mock_solrqs = self.mock_solr_queryset()
         with patch(
-            "ppa.archive.management.commands.index_pages.SolrQuerySet", new=mock_solrqs
+            "ppa.archive.management.commands.index_pages.PageSearchQuerySet",
+            new=mock_solrqs,
         ):
-            mock_solrqs.return_value.get_facets.return_value.facet_fields.item_type = {
-                "pages": 153
+            mock_solrqs.return_value.get_facets.return_value.facet_fields = {
+                "item_type": {"pages": 153}
             }
 
             # test calling from command line

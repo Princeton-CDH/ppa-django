@@ -9,7 +9,7 @@ from time import sleep
 import progressbar
 from django.core.management.base import BaseCommand
 from django.db import models
-from parasolr.django import SolrClient, SolrQuerySet
+from parasolr.django import SolrClient
 
 from ppa.archive.models import DigitizedWork, Page
 from ppa.archive.solr import PageSearchQuerySet
@@ -111,7 +111,6 @@ class Command(BaseCommand):
         if not source_ids and self.verbosity >= self.v_normal:
             # check totals
             solr_count = self.get_solr_totals()
-
             work_diff = digiworks.count() - solr_count.get("work", 0)
             page_diff = num_pages - solr_count.get("page", 0)
 
@@ -188,6 +187,10 @@ class Command(BaseCommand):
             )
 
     def get_solr_totals(self):
-        facets = SolrQuerySet().all().facet("item_type_s").get_facets()
+        facets = PageSearchQuerySet().all().facet("item_type").get_facets()
         # facet returns an ordered dict
-        return facets.facet_fields.item_type
+        if facets and facets.facet_fields:
+            return facets.facet_fields.get("item_type", {})
+
+        # if facets or facet_fields not set, count for all types is zero
+        return {}
