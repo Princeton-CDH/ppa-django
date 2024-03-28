@@ -11,7 +11,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
-from eulxml.xmlmap import load_xmlobject_from_file
 from flags import Flags
 from intspan import ParseError as IntSpanParseError
 from intspan import intspan
@@ -24,7 +23,7 @@ from wagtail.fields import RichTextField
 from wagtail.snippets.models import register_snippet
 
 from ppa.archive.gale import GaleAPI, MARCRecordNotFound, get_marc_record
-from ppa.archive.hathi import HathiBibliographicAPI, HathiObject, MinimalMETS
+from ppa.archive.hathi import HathiBibliographicAPI, HathiObject
 
 logger = logging.getLogger(__name__)
 
@@ -186,8 +185,10 @@ class ProtectedWorkField(models.Field):
     )
 
     def __init__(self, verbose_name=None, name=None, **kwargs):
-        """Make the field unnullable and not allowed to be blank."""
-        super().__init__(verbose_name, name, blank=False, null=False, **kwargs)
+        """Make the field unnullable; by default, not allowed to be blank."""
+        if "blank" not in kwargs:
+            kwargs["blank"] = False
+        super().__init__(verbose_name, name, null=False, **kwargs)
 
     def from_db_value(self, value, expression, connection):
         """Always return an instance of :class:`ProtectedWorkFieldFlags`"""
@@ -198,6 +199,8 @@ class ProtectedWorkField(models.Field):
         return "PositiveSmallIntegerField"
 
     def get_prep_value(self, value):
+        if value == "":
+            return 0
         return int(value)
 
     def to_python(self, value):
@@ -381,8 +384,13 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
     publisher = models.TextField(blank=True)
     # Needs to be integer to allow aggregating max/min, filtering by date
     pub_date = models.PositiveIntegerField("Publication Date", null=True, blank=True)
-    #: number of pages in the work
-    page_count = models.PositiveIntegerField(null=True, blank=True)
+    #: number of pages in the work (or page range, for an excerpt)
+    page_count = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Automatically calculated on import; "
+        + "recalculated on save when digital page range changes",
+    )
     #: public notes field for this work
     public_notes = models.TextField(
         blank=True,
@@ -400,6 +408,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
     #: modified in Django admin.
     protected_fields = ProtectedWorkField(
         default=ProtectedWorkFieldFlags,
+        blank=True,  # required for save as new, where we make editable to copy
         help_text="Fields protected from HathiTrust bulk "
         "update because they have been manually edited in the "
         "Django admin.",
@@ -560,12 +569,25 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
     def save(self, *args, **kwargs):
         # if status has changed so that object is now suppressed,
         # do some cleanup
-        if self.has_changed("status") and self.status == self.SUPPRESSED:
-            # remove indexed page content from Solr
-            self.solr.update.delete_by_query('source_id:"%s"' % self.source_id)
+        if self.has_changed("status") and self.status == DigitizedWork.SUPPRESSED:
+            # remove indexed page content from Solr using index id
+            # (i.e., if excerpt, should only remove content for this excerpt,
+            # not all excerpts in this volume)
+            self.solr.update.delete_by_query('group_id_s:"%s"' % self.index_id())
             # if this is a HathiTrust item, remove pairtree data
             if self.source == DigitizedWork.HATHI:
-                self.hathi.delete_pairtree_data()
+                # if this is a full work (not excerpted), remove
+                # if this is an excerpt, should only remove if there are no other
+                # public excerpts from this volume
+                if (
+                    self.item_type == DigitizedWork.FULL
+                    or not DigitizedWork.objects.filter(
+                        status=DigitizedWork.PUBLIC, source_id=self.source_id
+                    )
+                    .exclude(pk=self.pk)
+                    .exists()
+                ):
+                    self.hathi.delete_pairtree_data()
 
         # Solr identifier is based on combination of source id and first page;
         # if either changes, remove the old record from Solr before saving
@@ -582,18 +604,25 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             self.source_id = new_source_id
             self.pages_digital = new_pages_digital
 
-        if self.has_changed("pages_digital"):
-            # if there is a page range set now, update page count and index
-            if self.pages_digital:
-                # recalculate page total based on current range
-                self.page_count = self.count_pages()
+        # if excerpt page range has changed
+        # OR this is a new record with a page range
+        if self.has_changed("pages_digital") or (
+            self.pk is None and self.pages_digital
+        ):
+            # update the page count if possible (i.e., not a Gale record)
+            self.page_count = self.count_pages()
+            # if page range changed on existing record, clear out old index
+            if self.pages_digital and self.pk is not None:
                 # update index to remove all pages that are no longer in range
                 self.solr.update.delete_by_query(
                     'source_id:"%s" AND item_type:page NOT order:(%s)'
                     % (self.source_id, " OR ".join(str(p) for p in self.page_span))
                 )
             # any page range change requires reindexing (potentially slow)
-            logger.debug("Reindexing pages for %s after change to page range", self)
+            if self.pk is None:
+                logger.debug("Indexing pages for new excerpt %s", self)
+            else:
+                logger.debug("Reindexing pages for %s after change to page range", self)
             self.index_items(Page.page_index_data(self))
             # NOTE: removing a page range may not work as expected
             # (does not recalculate page count; cannot recalculate for Gale items)
@@ -812,8 +841,31 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 
     def first_page(self):
         """Number of the first page in range, if this is an excerpt"""
+        # return digital page for now; may be switching to original
+        # or this method may be going away
+        return self.first_page_digital()
+
+    def first_page_digital(self):
+        """Number of the first page in range (digital pages / page index),
+        if this is an excerpt.
+
+        :return: first page number for digital page range; None if no page range
+        :rtype: int, None
+        """
         if self.pages_digital:
             return list(self.page_span)[0]
+
+    def first_page_original(self):
+        """Number of the first page in range (original page numbering)
+        if this is an excerpt
+
+        :return: first page number for original page range; None if no page range
+        :rtype: str, None
+        """
+        # use regex since it handles all cases (intspan only works for a subset)
+        match = re.match(r"([\da-z]+)([,-]|\b)", self.pages_orig)
+        if match:
+            return match.group(1)
 
     def index_id(self):
         """use source id + first page in range (if any) as solr identifier"""
@@ -950,6 +1002,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 
     @property
     def page_span(self):
+        # TODO: relabel to make it explicit that this is digital pages?
         # convert the specified page numbers into an intspan
         # if empty, returns an empty set
         return intspan(self.pages_digital)
@@ -1141,7 +1194,7 @@ class Page(Indexable):
 
         # load mets record to pull metadata about the images
         try:
-            mmets = load_xmlobject_from_file(digwork.hathi.metsfile_path(), MinimalMETS)
+            mmets = digwork.hathi.mets_xml()
         except storage_exceptions.ObjectNotFoundException:
             logger.error(
                 "Pairtree data for %s not found but status is %s",

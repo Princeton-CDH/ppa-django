@@ -82,6 +82,6 @@ class Command(BaseCommand):
         if self.verbosity >= self.v_normal:
             self.stdout.write(
                 f"Volumes with updated page count: {stats['updated']:,}"
-                + f"\n\tPage count unchanged: {stats['unchanged']:,}"
-                + f"\n\tMissing pairtree data: {stats['missing_data']:,}"
+                + f"\nPage count unchanged: {stats['unchanged']:,}"
+                + f"\nMissing pairtree data: {stats['missing_data']:,}"
             )

@@ -189,7 +189,7 @@ class StructMapPage(_METS):
          <METS:fptr FILEID="IMG00000001"/>
        <METS:file SIZE="1003" ID="HTML00000496" MIMETYPE="text/html" CREATED="2017-03-20T10:40:21Z"
          CHECKSUM="f0a326c10b2a6dc9ae5e3ede261c9897" SEQ="00000496" CHECKSUMTYPE="MD5">
-    """
+    """  # noqa: E501
 
     @cached_property
     def display_label(self):
@@ -244,9 +244,9 @@ class HathiObject:
 
     # Pairtree version statement usd by pairtree package
     pairtree_version_stmt = (
-        "This directory conforms to Pairtree Version 0.1. Updated spec: " +
-        "http://www.cdlib.org/inside/diglib/pairtree/pairtreespec.html"
-        )
+        "This directory conforms to Pairtree Version 0.1. Updated spec: "
+        + "http://www.cdlib.org/inside/diglib/pairtree/pairtreespec.html"
+    )
 
     def __init__(self, hathi_id):
         # HathiTrust record id
@@ -264,13 +264,13 @@ class HathiObject:
         """Initialize a pairtree client for the pairtree datastore this
         object belongs to, based on its HathiTrust record id."""
         store_dir = os.path.join(settings.HATHI_DATA, self.lib_id)
-        
+
         # Check if store_dir exists, check if pairtree files exist
         if os.path.isdir(store_dir):
             # Check if "pairtree_prefix" file exists. If not, create it.
             pairtree_prefix_fn = os.path.join(store_dir, "pairtree_prefix")
             if not os.path.isfile(pairtree_prefix_fn):
-                with open(pairtree_prefix_fn, mode='w') as writer:
+                with open(pairtree_prefix_fn, mode="w") as writer:
                     writer.write(self.pairtree_prefix)
             # Check if "pairtree_version0_1" file exists. If not, create it.
             # Note: Mimicking paitree packages behavior. File contents are not
@@ -320,10 +320,12 @@ class HathiObject:
         parts = pairtree_obj.list_parts(self.content_dir)
         # find the first zipfile in the list (should only be one)
         filepaths = [part for part in parts if part.endswith(ext)]
-        if not filepaths: 
+        if not filepaths:
             # An error has occurred -- there is no zip file here in parts
             raise storage_exceptions.PartNotFoundException
-        return os.path.join(pairtree_obj.id_to_dirpath(), self.content_dir, filepaths[0])
+        return os.path.join(
+            pairtree_obj.id_to_dirpath(), self.content_dir, filepaths[0]
+        )
 
     def zipfile_path(self, ptree_client=None):
         """path to zipfile within the hathi contents for this work"""
@@ -332,3 +334,15 @@ class HathiObject:
     def metsfile_path(self, ptree_client=None):
         """path to mets xml file within the hathi contents for this work"""
         return self._content_path(".mets.xml", ptree_client=ptree_client)
+
+    def mets_xml(self) -> MinimalMETS:
+        """load METS xml file from pairtree and initialize as an instance
+        of :class:`MinimalMETS`
+
+        :rtype: :class:`MinimalMETS`
+        :raises: :class:`storage_exceptions.ObjectNotFoundException` if the
+            object is not found in pairtree storage
+        :raises: :class:`storage_exceptions.PartNotFoundException` if the
+            mets.xml flie is not found in pairtree storage for this object
+        """
+        return xmlmap.load_xmlobject_from_file(self.metsfile_path(), MinimalMETS)

@@ -50,6 +50,18 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
     # keyword query; assume no search terms unless set
     query = None
 
+    def get(self, *args, **kwargs):
+        # a bug used to allow aggregation of multiple cluster params,
+        # which is not supported; if detected, redirect to archive search
+        cluster_param = self.request.GET.getlist("cluster")
+        if cluster_param and len(cluster_param) > 1:
+            response = HttpResponsePermanentRedirect(reverse("archive:list"))
+            response.status_code = 303  # See other
+            return response
+
+        # otherwise, process response normally
+        return super(DigitizedWorkListView, self).get(*args, **kwargs)
+
     def get_queryset(self, **kwargs):
         form_opts = self.request.GET.copy()
         # if relevance sort is requested but there is no keyword search
@@ -345,7 +357,7 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
             # configure highlighting on page text content
             solr_pageq = (
                 PageSearchQuerySet()
-                .search(content_txt_en="(%s)" % query)
+                .search(content="(%s)" % query)
                 .filter(group_id='"%s"' % digwork.index_id(), item_type="page")
                 .highlight("content", snippets=3, method="unified")
                 # .only("title", "order", "id")

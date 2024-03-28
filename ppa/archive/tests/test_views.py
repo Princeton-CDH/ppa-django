@@ -150,7 +150,8 @@ class TestDigitizedWorkDetailView(TestCase):
             msg_prefix="Volume metadata should not display if no enumcron",
         )
 
-    def test_anonymous_display_excerpt_hathi(self):
+    @patch("ppa.archive.models.DigitizedWork.index_items")
+    def test_anonymous_display_excerpt_hathi(self, mock_index_items):
         # create an excerpt
         excerpt = DigitizedWork.objects.create(
             source_id="abc.1234",
@@ -170,8 +171,10 @@ class TestDigitizedWorkDetailView(TestCase):
             response, hathi_page_url(excerpt.source_id, excerpt.first_page())
         )
 
-    def test_anonymous_display_excerpt_gale(self):
+    @patch("ppa.archive.models.DigitizedWork.index_items")
+    def test_anonymous_display_excerpt_gale(self, mock_index_items):
         # create a gale excerpt to test link logic
+        # patch index_items to skip attempting to index pages
         excerpt = DigitizedWork.objects.create(
             source_id="abc.1234",
             source_url="https://hdl.example.co/9823/abc.1234",
@@ -190,7 +193,8 @@ class TestDigitizedWorkDetailView(TestCase):
             ),
         )
 
-    def test_anonymous_display_article_hathi(self):
+    @patch("ppa.archive.models.DigitizedWork.index_items")
+    def test_anonymous_display_article_hathi(self, mock_index_items):
         # create an article
         article = DigitizedWork.objects.create(
             source_id="abc.1234",
@@ -329,7 +333,7 @@ class TestDigitizedWorkDetailView(TestCase):
         self.assertNotContains(response, "View external record")
 
         # search term should be ignored for items without fulltext
-        with patch("ppa.archive.views.SolrQuerySet") as mock_solrq:
+        with patch("ppa.archive.views.PageSearchQuerySet") as mock_solrq:
             response = self.client.get(thesis.get_absolute_url(), {"query": "lady"})
             # not called at all
             assert mock_solrq.call_count == 0
@@ -424,7 +428,8 @@ class TestDigitizedWorkDetailView(TestCase):
         # should have pagination
         self.assertContains(response, '<div class="page-controls')
 
-    def test_get_queryset(self):
+    @patch("ppa.archive.models.DigitizedWork.index_items")
+    def test_get_queryset(self, mock_index_items):
         # requesting non-excerpt with start page specified should return 404 not found
         bogus_dial_excerpt_url = reverse(
             "archive:detail",
@@ -1201,6 +1206,18 @@ class TestDigitizedWorkListView(TestCase):
             mock_qs.facet.assert_called_with(*SearchForm.facet_fields)
             mock_qs.order_by.assert_called_with("sort_title")  # default sort
             mock_qs.work_filter.assert_called_with(author="Robert")
+
+    def test_too_many_clusters(self):
+        archive_list_url = reverse("archive:list")
+        response = self.client.get(archive_list_url, {"cluster": ["one", "two"]})
+        # if there is more than one cluster param,
+        # should redirect to archive search with a 303 See Other status code
+        assert response.status_code == 303
+        assert response["Location"] == archive_list_url
+        # single cluster should be fine
+        assert self.client.get(archive_list_url, {"cluster": "one"}).status_code == 200
+        # no cluster should also be fine
+        assert self.client.get(archive_list_url).status_code == 200
 
 
 class TestImportView(TestCase):
