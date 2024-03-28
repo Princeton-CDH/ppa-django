@@ -117,9 +117,27 @@ class Command(BaseCommand):
 
             if self.verbosity >= self.v_normal:
                 if work_diff:
-                    self.stdout.write(f"{work_diff:,} works not indexed in Solr")
+                    # negative = more works in solr than database
+                    if work_diff < 0:
+                        self.stdout.write(
+                            self.style.WARNING(
+                                f"{abs(work_diff):,} extra works indexed in Solr; "
+                                + " may need to clear old data"
+                            )
+                        )
+                    else:
+                        self.stdout.write(f"{work_diff:,} works not indexed in Solr")
                 if page_diff:
-                    self.stdout.write(f"{page_diff:,} pages not indexed in Solr")
+                    # negative = more pages in solr than expected
+                    if work_diff < 0:
+                        self.stdout.write(
+                            self.style.WARNING(
+                                f"{abs(page_diff):,} more pages indexed in Solr than expected"
+                            )
+                        )
+
+                    else:
+                        self.stdout.write(f"{page_diff:,} pages not indexed in Solr")
 
         if kwargs.get("expedite"):
             # find works with missing pages
@@ -133,7 +151,20 @@ class Command(BaseCommand):
             pages_per_work = facets.facet_fields["group_id"]
             for digwork in DigitizedWork.items_to_index():
                 solr_page_count = pages_per_work.get(digwork.index_id(), 0)
-                if digwork.page_count != solr_page_count:
+                # it indicates an error, but page count could be null;
+                # if so, assume page count mismatch
+                if digwork.page_count is None:
+                    # add to list of works to index
+                    mismatches.append(digwork)
+                    # warn about the missing page count
+                    if self.verbosity >= self.v_normal:
+                        self.stdout.write(
+                            self.style.WARNING(
+                                f"Warning: {digwork} page count is not set in database"
+                            )
+                        )
+
+                elif digwork.page_count != solr_page_count:
                     # add to list of works to index
                     mismatches.append(digwork)
 
