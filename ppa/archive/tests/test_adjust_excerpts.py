@@ -17,7 +17,10 @@ class TestAdjustExcerptsCommand:
         pages_orig = "10-20"
         pages_digital = "12-22"
         work = DigitizedWork.objects.create(
-            source_id=source_id, pages_orig=pages_orig, pages_digital=pages_digital
+            source_id=source_id,
+            pages_orig=pages_orig,
+            pages_digital=pages_digital,
+            source=DigitizedWork.OTHER,
         )
 
         cmd = adjust_excerpts.Command()
@@ -61,7 +64,10 @@ class TestAdjustExcerptsCommand:
         pages_orig = "10-20"
         pages_digital = "12-22"
         DigitizedWork.objects.create(
-            source_id=source_id, pages_orig=pages_orig, pages_digital=pages_digital
+            source_id=source_id,
+            pages_orig=pages_orig,
+            pages_digital=pages_digital,
+            source=DigitizedWork.OTHER,
         )
 
         cmd = adjust_excerpts.Command()
@@ -83,7 +89,10 @@ class TestAdjustExcerptsCommand:
         pages_orig = "10-20"
         pages_digital = "12-22"
         DigitizedWork.objects.create(
-            source_id=source_id, pages_orig=pages_orig, pages_digital=pages_digital
+            source_id=source_id,
+            pages_orig=pages_orig,
+            pages_digital=pages_digital,
+            source=DigitizedWork.OTHER,
         )
         cmd = adjust_excerpts.Command()
         cmd.setup()
