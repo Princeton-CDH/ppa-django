@@ -129,7 +129,7 @@ class Command(BaseCommand):
                         self.stdout.write(f"{work_diff:,} works not indexed in Solr")
                 if page_diff:
                     # negative = more pages in solr than expected
-                    if work_diff < 0:
+                    if page_diff < 0:
                         self.stdout.write(
                             self.style.WARNING(
                                 f"{abs(page_diff):,} more pages indexed in Solr than expected"
