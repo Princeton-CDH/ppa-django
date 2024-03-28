@@ -1,9 +1,4 @@
-import csv
 import logging
-from collections import OrderedDict, defaultdict
-from http import HTTPStatus
-from json.decoder import JSONDecodeError
-from pprint import pprint
 
 import requests
 from django.contrib import messages
@@ -12,18 +7,14 @@ from django.core.exceptions import MultipleObjectsReturned, ValidationError
 from django.core.paginator import Paginator
 from django.http import (
     Http404,
-    HttpResponse,
     HttpResponsePermanentRedirect,
-    HttpResponseRedirect,
 )
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import urlencode
-from django.utils.timezone import now
 from django.views.generic import DetailView, ListView
 from django.views.generic.base import RedirectView, TemplateView
 from django.views.generic.edit import FormView
-from parasolr.django import SolrQuerySet
 from parasolr.django.views import SolrLastModifiedMixin
 
 from ppa.archive.forms import (
@@ -227,8 +218,7 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             facet_dict = solrq.get_facets()
             self.form.set_choices_from_facets(facet_dict.facet_fields)
             # needs to be inside try/catch or it will re-trigger any error
-            # @NOTE/@TODO: attrdict's as_dict wasn't working here? casting now
-            facet_ranges = dict(facet_dict.facet_ranges)
+            facet_ranges = facet_dict.facet_ranges
             # facet ranges are used for display; when sending to solr we
             # increase the end bound by one so that year is included;
             # subtract it back so display matches user entered dates
@@ -243,8 +233,8 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             # or an error status set on the response
             context["error"] = "Something went wrong."
 
-        page_groups_keys = set(page_groups.keys())
-        page_highlights_keys = set(page_highlights.keys())
+        set(page_groups.keys())
+        set(page_highlights.keys())
         context.update(
             {
                 "search_form": self.form,
@@ -354,11 +344,12 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
             # only return fields needed for page result display,
             # configure highlighting on page text content
             solr_pageq = (
-                PageSearchQuerySet()  # NOTE: Addition of an aliased queryset changes the _s keys below
-                .search(content="(%s)" % query)
+                PageSearchQuerySet()
+                .search(content_txt_en="(%s)" % query)
                 .filter(group_id='"%s"' % digwork.index_id(), item_type="page")
                 .highlight("content", snippets=3, method="unified")
-                .order_by("order")
+                # .only("title", "order", "id")
+                .order_by("order_i")
             )
 
             try:

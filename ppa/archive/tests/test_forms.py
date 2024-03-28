@@ -188,7 +188,7 @@ def test_get_solr_sort():
     assert searchform.get_solr_sort_field("relevance") == "-score"
     # pub_date_asc, should return fields w/o score and set
     # form template field correctly
-    assert searchform.get_solr_sort_field("pub_date_asc") == "pub_date"
+    assert searchform.get_solr_sort_field("pub_date_asc") == "pub_date_i"
 
     # when sort not specified, tryies to use sort option from form data
     # error without cleaned form data

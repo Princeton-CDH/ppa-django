@@ -39,16 +39,16 @@ class TestDigitizedWorkDetailView(TestCase):
             "knobs and buttons",
         ]
         htid = "chi.78013704"
-        # NOTE: this test is brittle; should refactor to use
+        # FIXME: this test is brittle; should refactor to use
         # actual page indexing logic somehow, to reflect actual indexed fields
         solr_page_docs = [
             {
-                "content": content,
-                "order": i + 1,
-                "item_type": "page",
-                "source_id": htid,
+                "content_txt_en": content,
+                "order_i": i + 1,
+                "item_type_s": "page",
+                "source_id_s": htid,
                 "id": "%s.%s" % (htid, i),
-                "label": i,
+                "label_s": i,
                 "source_t": "HathiTrust",
                 "group_id_s": htid,
             }
@@ -512,10 +512,19 @@ class TestDigitizedWorkListRequest(TestCase):
         SolrClient().update.index(index_data)
         # NOTE: without a sleep, even with commit=True and/or low
         # commitWithin settings, indexed data isn't reliably available
-        while SolrQuerySet().search(item_type="work").count() == 0:
+        index_checks = 0
+        while SolrQuerySet().search(item_type_s="work").count() == 0:
             # sleep until we get records back; 0.1 seems to be enough
             # for local dev with local Solr
             sleep(0.1)
+            # to avoid infinite loop when there's something wrong here,
+            # bail out after a certain number of attempts
+            index_checks += 1
+            if index_checks > 10:
+                raise Exception(
+                    "fixture index data not available after 10 tries, "
+                    + "something is probably wrong"
+                )
 
     def setUp(self):
         # get a work and its detail page to test with

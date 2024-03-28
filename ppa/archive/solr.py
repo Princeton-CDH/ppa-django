@@ -23,17 +23,17 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         "source_url": "source_url_s",
         "title": "title_txt_en",
         "subtitle": "subtitle_txt_en",
-        #"sort_title": "sort_title_t_sort",
+        "sort_title": "sort_title_t_sort",
         "pub_date": "pub_date_i",
         "pub_place": "pub_place_txt_en",
         "publisher": "publisher_txt_en",
         "enumcron": "enumcron_s",
-        #"author": "author_txt_en",
+        "author": "author",
         "first_page": "first_page_i",
         "work_type": "work_type_s",
         "book_journal": "book_journal_s",
         "group_id": "group_id_s",
-        #"collections": "collections_txts_en",
+        "collections": "collections",
         "cluster_id": "cluster_id_s",
         "notes": "notes_txt_en",
         "item_type": "item_type_s",
@@ -111,7 +111,7 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
 
         # @NOTE: Role of order here in separating works from pages (works < pages)
         # may need to be revisited eventually.
-        collapse_filter = '{!collapse field=%s sort="order asc"}' % collapse_on
+        collapse_filter = '{!collapse field=%s sort="order_i asc"}' % collapse_on
 
         # We can apply collapse here since we need it for both keyword query case and not
         # Remember that cluster_id_s is now defined as `str(self.cluster)
@@ -122,7 +122,7 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         # if there is no keyword search present, only works should
         # be returned; add item type filter and use filters from work queryset
         if not self.keyword_query:
-            self.work_filter(item_type="work")
+            self.work_filter(item_type_s="work")
             qs_copy.filter_qs.extend(self._workq.filter_qs)
             # use set to ensure we don't duplicate a filter
             qs_copy.filter_qs = list(set(qs_copy.filter_qs))
@@ -153,7 +153,7 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
             # pass combined workfilter query as a raw query parameter
             qs_copy = qs_copy.raw_query_parameters(work_query=work_query)
 
-        content_query = "content:(%s)" % self.keyword_query
+        content_query = "content_txt_en:(%s)" % self.keyword_query
         qs_copy = qs_copy.search(combined_query).raw_query_parameters(
             content_query=content_query,
             keyword_query=self.keyword_query,
@@ -178,9 +178,10 @@ class PageSearchQuerySet(AliasedSolrQuerySet):
         "order": "order_i",
         "title": "title",
         "label": "label_s",
-        "source_id": "source_id",
+        "source_id": "source_id_s",
         "image_id": "image_id_s",
         "group_id": "group_id_s",
         "cluster_id": "cluster_id_s",
         "item_type": "item_type_s",
+        "content": "content_txt_en",
     }

@@ -291,7 +291,7 @@ class SearchForm(forms.Form):
     )
     # fields to request a facet from solr
     facet_fields = ["collections_exact"]
-    range_facets = ["pub_date"]
+    range_facets = ["pub_date_i"]
 
     # mapping of solr fields to form input
     solr_facet_fields = {"collections_exact": "collections"}
@@ -360,8 +360,8 @@ class SearchForm(forms.Form):
         """
         solr_mapping = {
             "relevance": "-score",
-            "pub_date_asc": "pub_date",
-            "pub_date_desc": "-pub_date",
+            "pub_date_asc": "pub_date_i",
+            "pub_date_desc": "-pub_date_i",
             "title_asc": "sort_title",
             "title_desc": "-sort_title",
             "author_asc": "author_exact",
