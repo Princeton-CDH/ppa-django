@@ -661,33 +661,33 @@
       <str name="defType">lucene</str>
       <!-- <str name="df">text</str> -->
       <str name="keyword_qf">
-          title^20
-          subtitle^15
+          title_txt_en^20
+          subtitle_txt_en^15
           author^80
-          notes^20
-          pub_date
-          enumcron
-          pub_place
-          publisher
-          source_id^10
-          content
+          notes_txt_en^20
+          pub_date_i
+          enumcron_s
+          pub_place_txt_en
+          publisher_txt_en
+          source_id_s^10
+          content_txt_en
       </str>
       <str name="keyword_pf">
-          title^50
-          subtitle^35
+          title_txt_en^50
+          subtitle_txt_en^35
           author^100
-          notes^50
-          content
-          pub_place
-          publisher
+          notes_txt_en^50
+          content_txt_en
+          pub_place_txt_en
+          publisher_txt_en
       </str>
       <str name="search_title_qf">
-        title^80
-        subtitle^25
+        title_txt_en^80
+        subtitle_txt_en^25
       </str>
       <str name="search_title_pf">
-        title^80
-        subtitle^25
+        title_txt_en^80
+        subtitle_txt_en^25
       </str>
     </lst>
   </requestHandler>
