@@ -122,14 +122,8 @@ LOGGING = {
             'handlers': ['console'],
             'level': os.getenv('DJANGO_LOG_LEVEL', 'WARN'),
         },
-        'ppa':  {
-            'handlers': ['console'],
-            'level': 'DEBUG'
-        },
-        'SolrClient':  {
-            'handlers': ['console'],
-            'level': 'WARN'
-        },
+        "ppa": {"handlers": ["console"], "level": "WARN", "propagate": False},
+        "parasolr": {"handlers": ["console"], "level": "WARN", "propagate": False},
     }
 }
 
