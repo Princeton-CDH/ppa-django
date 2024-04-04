@@ -924,7 +924,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         return {
             "id": index_id,
             "source_id": self.source_id,
-            "first_page_i": self.first_page(),
+            "first_page_s": self.first_page(),
             "group_id_s": index_id,  # for grouping pages by work or excerpt
             "source_t": self.get_source_display(),
             "source_url": self.source_url,
