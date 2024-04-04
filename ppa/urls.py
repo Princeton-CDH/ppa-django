@@ -58,16 +58,17 @@ urlpatterns = [
 
 # serve media content for development
 if settings.DEBUG:
-    import debug_toolbar
-
     urlpatterns = [
-        # include debug toolbar urls first to avoid getting caught by other urls
-        re_path(r"^__debug__/", include(debug_toolbar.urls)),
-        re_path(
-            r"^media/(?P<path>.*)$",
-            serve,
-            {
-                "document_root": settings.MEDIA_ROOT,
-            },
-        ),
+        re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
     ] + urlpatterns
+
+    try:
+        # include debug toolbar when available
+        import debug_toolbar
+
+        urlpatterns = [
+            # include debug toolbar urls first to avoid getting caught by other urls
+            re_path(r"^__debug__/", include(debug_toolbar.urls)),
+        ] + urlpatterns
+    except ImportError:
+        pass
