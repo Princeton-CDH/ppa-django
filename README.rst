@@ -109,29 +109,22 @@ either set of assets frequently. These two processes are separate as well::
 Tests
 ~~~~~
 
-Python unit tests are written with `py.test <http://doc.pytest.org/>`_ but use
+Python unit tests are written with `pytest <http://doc.pytest.org/>`_ but use
 Django fixture loading and convenience testing methods when that makes
 things easier. To run them, first install development requirements::
 
     pip install -r dev-requirements.txt
 
-Run tests using py.test.  Note that this currently requires the
-top level project directory be included in your python path.  You can
-accomplish this either by calling pytest via python::
+To run all python unit tests, use:  `pytest`
 
-    python -m pytest
-
-Or, if you wish to use the ``pytest`` command directly, simply add the
-top-level project directory to your python path environment variable::
-
-  setenv PYTHONPATH .  # csh
-  export PYTHONPATH=.  # bash
+Some deprecation warnings for dependencies have been suppressed in
+pytest.ini; to see warnings, run with `pytest -Wd`.
 
 Make sure you configure a test solr connection and set up an empty
 Solr core using the same instructions as for the development core.
 
-Note that python unit tests access a test server over HTTP, and therefore
-expect static files to be compiled – see "Frontend development setup" above
+Some python unit tests access rendered views, and therefore
+expect static files to be compiled; see "Frontend development setup" above
 for how to do this.
 
 In a CI context, we use a fake webpack loader backend that ignores missing assets.
