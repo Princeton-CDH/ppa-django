@@ -505,7 +505,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         """
         url_opts = {"source_id": self.source_id}
         # start page must be specified if set but must not be included if empty
-        if self.pages_digital:
+        if self.pages_orig:
             url_opts["start_page"] = self.first_page()
         return reverse("archive:detail", kwargs=url_opts)
 
@@ -846,10 +846,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
     }
 
     def first_page(self):
-        """Number of the first page in range, if this is an excerpt"""
-        # return digital page for now; may be switching to original
-        # or this method may be going away
-        return self.first_page_digital()
+        """Number of the first page in range, if this is an excerpt
+        (first of original page range, not digital)"""
+        return self.first_page_original()
 
     def first_page_digital(self):
         """Number of the first page in range (digital pages / page index),
@@ -877,7 +876,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         """use source id + first page in range (if any) as solr identifier"""
         first_page = self.first_page()
         if first_page:
-            return "%s-p%d" % (self.source_id, first_page)
+            return "%s-p%s" % (self.source_id, first_page)
         return self.source_id
 
     @classmethod
