@@ -438,7 +438,7 @@ class TestDigitizedWorkDetailView(TestCase):
         assert self.client.get(bogus_dial_excerpt_url).status_code == 404
         # create and retrieve an excerpt; should return 200 ok with correct object
         dial_excerpt = DigitizedWork.objects.create(
-            source_id=self.dial.source_id, pages_digital="200-250"
+            source_id=self.dial.source_id, pages_orig="200-250", pages_digital="202-251"
         )
         response = self.client.get(dial_excerpt.get_absolute_url())
         assert response.status_code == 200
@@ -449,9 +449,21 @@ class TestDigitizedWorkDetailView(TestCase):
         assert response.status_code == 200
         assert response.context["object"] == self.dial
 
-        # create excerpt where there is no existing work
+        # confirm first page regex filter works propertly
+        dial_excerpt2 = DigitizedWork.objects.create(
+            source_id=self.dial.source_id, pages_orig="20-25", pages_digital="22-27"
+        )
+        response = self.client.get(dial_excerpt2.get_absolute_url())
+        # start page 20 should match 20 only and not 200
+        assert response.context["object"] == dial_excerpt2
+
+        # create excerpt where there is no existing work;
+        # set old_workid based on first digital page
         excerpt = DigitizedWork.objects.create(
-            source_id="abc.123456", pages_digital="10-20"
+            source_id="abc.123456",
+            pages_orig="10-20",
+            pages_digital="12-22",
+            old_workid="abc.123456-p12",
         )
         response = self.client.get(excerpt.get_absolute_url())
         # retrieve url for source id with no start apge
@@ -464,8 +476,24 @@ class TestDigitizedWorkDetailView(TestCase):
         assert response["Location"] == excerpt.get_absolute_url()
 
         # if there are *TWO* excerpts for the same source, should 404 instead of redirecting
-        DigitizedWork.objects.create(source_id="abc.123456", pages_digital="30-45")
+        DigitizedWork.objects.create(
+            source_id="abc.123456", pages_orig="30-45", pages_digital="32-47"
+        )
         assert self.client.get(nonexistent_source_url).status_code == 404
+
+        # if we try to find a work by the old id (first digital page),
+        # should redirect
+        response = self.client.get(
+            reverse(
+                "archive:detail",
+                kwargs={
+                    "source_id": excerpt.source_id,
+                    "start_page": excerpt.first_page_digital(),
+                },
+            )
+        )
+        assert response.status_code == 301
+        assert response["Location"] == excerpt.get_absolute_url()
 
 
 class TestDigitizedWorkListRequest(TestCase):
