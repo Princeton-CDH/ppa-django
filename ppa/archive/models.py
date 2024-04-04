@@ -480,6 +480,13 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         blank=True,
         validators=[validate_page_range],
     )
+    old_workid = models.CharField(
+        "Old Work ID",
+        max_length=255,
+        help_text="past work id; used for excerpts previously "
+        + "identified by start of digital page range",
+        blank=True,
+    )
 
     class Meta:
         ordering = ("sort_title",)
