@@ -1,4 +1,0 @@
-pytest>=3.6,<5.4
-pytest-django
-pytest-cov
-django-webpack-loader

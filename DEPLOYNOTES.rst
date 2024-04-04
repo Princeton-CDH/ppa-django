@@ -3,6 +3,12 @@
 Deploy and Upgrade notes
 ========================
 
+3.12
+----
+
+* Settings are now configured with django-split-settings as a module;
+  the path to local_settings.py is now ppa/settings/local_settings.py
+
 3.11.2
 ------
 
