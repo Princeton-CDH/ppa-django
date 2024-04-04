@@ -36,7 +36,7 @@ jobs:
         run: pip install -r dev-requirements.txt
 
       - name: Setup local_settings.py
-        run: python -c "import uuid; print('SECRET_KEY = \'%s\'' % uuid.uuid4())" >> ppa/local_settings.py
+        run: python -c "import uuid; print('SECRET_KEY = \'%s\'' % uuid.uuid4())" >> ppa/settings/local_settings.py
 
       - name: Build Sphinx docs
         run: cd sphinx-docs && make -b coverage html
