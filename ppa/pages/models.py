@@ -248,7 +248,6 @@ class BodyContentBlock(blocks.StreamBlock):
             "ul",
             "hr",
             "blockquote",
-            "document",
             "superscript",
             "subscript",
             "strikethrough",
