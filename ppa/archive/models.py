@@ -495,7 +495,12 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         constraints = [
             models.UniqueConstraint(
                 fields=["source_id", "pages_digital"], name="unique_sourceid_pagerange"
-            )
+            ),
+            # we are now using original page range for unique id,
+            # so require source id + pages_orig to be unique
+            models.UniqueConstraint(
+                fields=["source_id", "pages_orig"], name="unique_sourceid_pages_orig"
+            ),
         ]
 
     def get_absolute_url(self):
