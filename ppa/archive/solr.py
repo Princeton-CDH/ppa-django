@@ -6,7 +6,6 @@ logger = logging.getLogger(__name__)
 
 
 class ArchiveSearchQuerySet(AliasedSolrQuerySet):
-
     # search title query field syntax
     # (query field configured in solr config; searches title & subtitle with
     # boosting)
@@ -32,7 +31,7 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         "collections",
         "source_t",
         "image_id_s",
-        "first_page_i",
+        "first_page_s",
         "source_url",
         "work_type_s",
         "book_journal_s",
@@ -44,7 +43,7 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
     aliases = {
         "source_t": "source",
         "image_id_s": "image_id",
-        "first_page_i": "first_page",
+        "first_page_s": "first_page",
         "work_type_s": "work_type",
         "book_journal_s": "book_journal",
         "group_id_s": "group_id",
@@ -55,8 +54,9 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
     within_cluster_id = None
 
     def __init__(self, solr=None):
-        # field aliases: keys return the fields that will be returned from Solr for search page;
-        # values provide an aliased name if it should be different than solr index field.
+        # field aliases: keys return the fields that will be returned
+        # from Solr for search page; values provide an aliased name if
+        # it should be different than solr index field.
         # use alias if one is set, otherwise use field name
         self.field_aliases = {
             self.aliases.get(key, key): key for key in self.return_fields
@@ -120,12 +120,13 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         # when searching within a cluster, collapse on group id
         collapse_on = "group_id_s" if self.within_cluster_id else "cluster_id_s"
 
-        # @NOTE: Role of order here in separating works from pages (works < pages) may need to be revisited eventually.
+        # NOTE: Role of order here in separating works from pages (works < pages)
+        # may need to be revisited eventually.
         collapse_filter = '{!collapse field=%s sort="order asc"}' % collapse_on
-        
-        # We can apply collapse here since we need it for both keyword query case and not
-        # Remember that cluster_id_s is now defined as `str(self.cluster) if self.cluster else index_id` in models.py.
-        # So collapsing by "cluster" id implicitly includes works with no cluster id set.
+
+        # We can apply collapse here since we need it for default search
+        # cluster id corresponds to index id for works not in a cluster,
+        # so collapsing by cluster id still includes works with no cluster id
         qs_copy = qs_copy.filter(collapse_filter)
 
         # if there is no keyword search present, only works should
@@ -163,16 +164,10 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
             qs_copy = qs_copy.raw_query_parameters(work_query=work_query)
 
         content_query = "content:(%s)" % self.keyword_query
-        qs_copy = (
-            qs_copy.search(combined_query)
-            # .filter(collapse_filter)     # This no longer needed since applied above in `qs_copy = qs_copy.filter(collapse_filter)`
-            .raw_query_parameters(
-                content_query=content_query,
-                keyword_query=self.keyword_query,
-                # expand="true",
-                work_query=work_query,
-                # **{"expand.rows": 1},
-            )
+        qs_copy = qs_copy.search(combined_query).raw_query_parameters(
+            content_query=content_query,
+            keyword_query=self.keyword_query,
+            work_query=work_query,
         )
 
         return qs_copy._base_query_opts()
@@ -182,16 +177,15 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         return super().query_opts()
 
 
-
 class PageSearchQuerySet(AliasedSolrQuerySet):
     # aliases for any fields we want to rename for search and display
     # includes non-renamed fields to push them into the return
     field_aliases = {
-        "id":"id",
-        "score":"score",
-        "order":"order",
-        "title":"title",
-        "label":"label",
+        "id": "id",
+        "score": "score",
+        "order": "order",
+        "title": "title",
+        "label": "label",
         "source_id": "source_id",
         "image_id": "image_id_s",
         "group_id": "group_id_s",
