@@ -204,6 +204,8 @@ USE_TZ = True
 SITE_ID = 1
 
 WAGTAIL_SITE_NAME = "Princeton Prosody Archive"
+# needed by wagtail to generate URLs for notification emails
+WAGTAILADMIN_BASE_URL = "https://prosody.princeton.edu/"
 
 WAGTAILEMBEDS_FINDERS = [
     {"class": "wagtail.embeds.finders.oembed"},
