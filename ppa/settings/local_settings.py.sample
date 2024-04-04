@@ -1,63 +1,36 @@
-# Sample local settings
-# Copy to derrida/local_settings.py and configure
-# includes sensitive configurations, should *not* be
-# checked into version control
+# configurations that should not be checked into version control
+# Copy to ppa/settings/local_settings.py and configure
 
 import os
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-# Configure internal IPs for access to view debug toolbar
-# INTERNAL_IPS = ['127.0.0.1']
-
-ALLOWED_HOSTS = []
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # http://www.miniwebtool.com/django-secret-key-generator/
 SECRET_KEY = ''
 
-
 # Email address for a technical contact.
 # If set, will be used in From header for HathiTrust API requests
 # TECHNICAL_CONTACT = ''
 
-
 # Turn this on in test/QA site to show test banner
-#SHOW_TEST_WARNING = True
+# SHOW_TEST_WARNING = True
 
 # Database
-# https://docs.djangoproject.com/en/1.10/ref/settings/#databases
-DATABASES = {
-    # sqlite for development
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-    # postgresql for qa/prod
-    # "default": {
-    #     "ENGINE": "django.db.backends.postgresql",
-    #     "NAME": "ppa",
-    #     "USER": "ppa",
-    #     "PASSWORD": "ppa",
-    #     "HOST": "",  # empty string for localhost
-    #     "PORT": "",  # empty string for default
-    # },
-}
+# override default database settings as needed
+# default name and user are both "ppa"
+# DATABASES["default"]["NAME"] = ""
+# DATABASES["default"]["USER"] = ""
+DATABASES["default"]["PASSWORD"] = "pass!@#$"
 
-SOLR_CONNECTIONS = {
-    'default': {
-        'URL': 'http://localhost:8983/solr/',
-        'COLLECTION': 'ppa',
-        'CONFIGSET': 'ppa',
-        'TEST': {
-            'COMMITWITHIN': 100
-        }
+# override default Solr configuration as needed
+# default collection and configset are both "ppa"
+SOLR_CONNECTIONS["default"].update(
+    {
+        "URL": "http://localhost:8983/solr/",
+#        "COLLECTION": "ppa",
+#        "CONFIGSET": "ppa",
+        "TEST": {"COMMITWITHIN": 100},
     }
-}
+)
 
 # local path to hathi pairtree data provided via rsync
 HATHI_DATA = '/path/to/hathi_pairtree_root'
@@ -80,13 +53,6 @@ PUCAS_LDAP.update({
     'SEARCH_BASE': '',
     'SEARCH_FILTER': "(uid=%(user)s)",
 })
-
-
-# Absolute path to the directory static files should be collected to.
-# Don't put anything in this directory yourself; store your static files
-# in apps' "static/" subdirectories and in STATICFILES_DIRS.
-# Example: "/home/media/media.lawrence.com/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, STATIC_URL.strip("/"))
 
 # Admin email configuration for error messages
 # ADMINS = [('name', 'email')]
@@ -132,14 +98,3 @@ LOGGING = {
         },
     }
 }
-
-# https://github.com/mozilla/django-csp
-# Content security policy controls - see `settings.py` for policy settings.
-# In development, leave both lines commented out to block & not report.
-# In QA, set REPORT_ONLY to True and specify a "report-only" endpoint.
-# In production, set REPORT_ONLY to False and specify an "enforced" endpoint.
-# CSP_REPORT_ONLY = False
-# CSP_REPORT_URI = ''
-
-# Turn off caching for static assets
-WEBPACK_LOADER['DEFAULT']['CACHE'] = False
