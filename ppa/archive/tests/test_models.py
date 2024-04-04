@@ -553,15 +553,11 @@ class TestDigitizedWork(TestCase):
 
     def test_get_absolute_url(self):
         work = DigitizedWork.objects.filter(pages_orig="").first()
-        print(work)
         assert work.get_absolute_url() == reverse(
             "archive:detail", kwargs={"source_id": work.source_id}
         )
 
         work.pages_orig = "11-13"
-        print(work)
-        print(work.first_page())
-        print(work.first_page_original())
         assert work.get_absolute_url() == reverse(
             "archive:detail", kwargs={"source_id": work.source_id, "start_page": 11}
         )
