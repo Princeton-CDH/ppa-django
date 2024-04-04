@@ -21,8 +21,9 @@ urlpatterns = [
         views.DigitizedWorkByRecordId.as_view(),
         name="record-id",
     ),
+    # excerpt original page may be numeric or alpha (e.g., roman numerals)
     re_path(
-        r"^(?P<source_id>[^-]+)-p(?P<start_page>\d+)/",
+        r"^(?P<source_id>[^-]+)-p(?P<start_page>[\da-zA-Z]+)/",
         views.DigitizedWorkDetailView.as_view(),
         name="detail",
     ),

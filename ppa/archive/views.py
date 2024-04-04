@@ -299,10 +299,10 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
         start_page = self.kwargs.get("start_page")
         # if start page is specified, filter to get the correct excerpt
         if start_page:
-            qs = source_qs.filter(pages_digital__startswith=start_page)
+            qs = source_qs.filter(pages_orig__regex=f"^{start_page}([,-]|\b)")
         # if start page is NOT specified, ensure we do not retrieve an excerpt
         else:
-            qs = source_qs.filter(pages_digital__exact="")
+            qs = source_qs.filter(pages_orig__exact="")
 
         #  if qs is empty and start page is not set, check if there is _one_ excerpt
         # for the source id; if there is, we want to return a permanent redirect
