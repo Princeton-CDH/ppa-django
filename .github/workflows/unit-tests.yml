@@ -7,9 +7,6 @@ on:
     - cron: "0 16 * * 2"
 
 env:
-  DB_NAME: ppa
-  DB_USER: ppa
-  DB_PASSWORD: ppa
   DJANGO_ENV: test
 
 jobs:
@@ -50,13 +47,6 @@ jobs:
         ports:
           - 8983:8983
     steps:
-      # Set the value of DJANGO_DB_BACKEND which is used in ci/testsettings.py to
-      # configure django's ORM based on whether we're testing postgres or mysql
-      - name: Set django database backend adapter
-        env:
-          BACKEND: postgresql
-        run: echo "DJANGO_DB_BACKEND=$(echo "$BACKEND")" >> $GITHUB_ENV
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
