@@ -29,5 +29,6 @@ django-adminlogentries
 django-import-export
 psycopg2-binary
 multiprocess
+django-split-settings
 # only needed for the 'generate_textcorpus' manage command
 orjsonl

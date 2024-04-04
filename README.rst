@@ -55,7 +55,7 @@ Initial setup and installation:
 
 - Copy sample local settings and configure for your environment::
 
-   cp ppa/local_settings.py.sample ppa/local_settings.py
+   cp ppa/settings/local_settings.py.sample ppa/settings/local_settings.py
 
 - Create a database, configure in local settings in the `DATABASES` dictionary, change `SECRET_KEY`, and run migrations::
 
