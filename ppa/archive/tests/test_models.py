@@ -552,14 +552,23 @@ class TestDigitizedWork(TestCase):
             assert index_data["id"] == digwork.source_id
 
     def test_get_absolute_url(self):
-        work = DigitizedWork.objects.first()
+        work = DigitizedWork.objects.filter(pages_orig="").first()
+        print(work)
         assert work.get_absolute_url() == reverse(
             "archive:detail", kwargs={"source_id": work.source_id}
         )
 
-        work.pages_digital = "11-13"
+        work.pages_orig = "11-13"
+        print(work)
+        print(work.first_page())
+        print(work.first_page_original())
         assert work.get_absolute_url() == reverse(
             "archive:detail", kwargs={"source_id": work.source_id, "start_page": 11}
+        )
+
+        work.pages_orig = "iii-xi"
+        assert work.get_absolute_url() == reverse(
+            "archive:detail", kwargs={"source_id": work.source_id, "start_page": "iii"}
         )
 
     @patch("ppa.archive.models.HathiBibliographicAPI")
@@ -671,6 +680,17 @@ class TestDigitizedWork(TestCase):
     def test_index_id(self):
         work = DigitizedWork(source_id="chi.79279237")
         assert work.index_id() == work.source_id
+
+        # for excerpts, index id includes first page from original page range
+        excerpt = DigitizedWork(
+            source_id="chi.89279238", pages_orig="3-5", pages_digital="5-7"
+        )
+        assert excerpt.index_id() == f"{excerpt.source_id}-p3"
+
+        excerpt = DigitizedWork(
+            source_id="abc.123459238", pages_orig="ii-iv", pages_digital="3-4"
+        )
+        assert excerpt.index_id() == f"{excerpt.source_id}-pii"
 
     def test_save_suppress(self):
         work = DigitizedWork(source_id="chi.79279237")
