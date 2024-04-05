@@ -110,11 +110,11 @@
             <tr class="source-link">
                 <th scope="row">{{ object.get_source_link_label }}</th>
                 <td>
-                    {% if object.pages_digital %}  {# if page range is defined (excerpt/article), link to first page in range #}
+                    {% if object.pages_digital %}  {# if page range is defined (excerpt/article), link to first *digital* page in range #}
                         {% if object.source == object.HATHI %}
-                        <a href="{% hathi_page_url object.source_id object.first_page %}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
+                        <a href="{% hathi_page_url object.source_id object.first_page_digital %}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
                         {% elif object.source == object.GALE %}
-                        <a href="{% gale_page_url object.source_url object.first_page %}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
+                        <a href="{% gale_page_url object.source_url object.first_page_digital %}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
                         {% endif %}
                     {% else %} {# when there is no page range, use source url #}
                     <a href="{{ object.source_url }}" target="_blank" rel="noopener noreferrer">{{ object.source_id }}</a>
