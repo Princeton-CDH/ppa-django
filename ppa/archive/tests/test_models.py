@@ -803,7 +803,8 @@ class TestDigitizedWork(TestCase):
         work.source = DigitizedWork.OTHER
         work.clean()
 
-    def test_clean_unique_first_page(self):
+    @patch("ppa.archive.models.DigitizedWork.index_items")
+    def test_clean_unique_first_page(self, mock_index_items):
         DigitizedWork.objects.create(
             source_id="chi.79279237", pages_orig="233-244", pages_digital="200-210"
         )
