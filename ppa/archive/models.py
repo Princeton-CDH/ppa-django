@@ -310,6 +310,12 @@ def validate_page_range(value):
         )
 
 
+class DigitizedWorkQuerySet(models.QuerySet):
+    def by_first_page_orig(self, start_page):
+        "find records based on first page in original page range"
+        return self.filter(pages_orig__regex=f"^{start_page}([,-]|\b|$)")
+
+
 class DigitizedWork(ModelIndexable, TrackChangesModel):
     """
     Record to manage digitized works included in PPA and store their basic
@@ -488,6 +494,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         blank=True,
     )
 
+    # use custom queryset
+    objects = DigitizedWorkQuerySet.as_manager()
+
     class Meta:
         ordering = ("sort_title",)
         # require unique combination of source id + page range,
@@ -653,6 +662,23 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             raise ValidationError(
                 "Changing source ID for HathiTrust records is not supported"
             )
+
+        # if original page range is set, check that first page is unique
+        if self.pages_orig:
+            first_page = self.first_page_original()
+            # check for other excerpts in this work with the same first page
+            other_excerpts = DigitizedWork.objects.filter(
+                source_id=self.source_id
+            ).by_first_page_orig(first_page)
+            # if this record has already been saved, exclude it when checking
+            if self.pk:
+                other_excerpts.exclude(pk=self.pk)
+            if other_excerpts.exists():
+                raise ValidationError(
+                    {
+                        "pages_orig": f"First page {first_page} is not unique for this source",
+                    }
+                )
 
     def compare_protected_fields(self, db_obj):
         """Compare protected fields in a

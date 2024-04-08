@@ -803,6 +803,25 @@ class TestDigitizedWork(TestCase):
         work.source = DigitizedWork.OTHER
         work.clean()
 
+    def test_clean_unique_first_page(self):
+        DigitizedWork.objects.create(
+            source_id="chi.79279237", pages_orig="233-244", pages_digital="200-210"
+        )
+        # first original page matches even though range is distinct; unsaved
+        work2 = DigitizedWork(source_id="chi.79279237", pages_orig="233-240")
+        with pytest.raises(
+            ValidationError, match="First page 233 is not unique for this source"
+        ):
+            work2.clean()
+
+        # test updating existing record; same error
+        work2 = DigitizedWork.objects.create(source_id="chi.79279237", pages_orig="232")
+        work2.pages_orig = "233-235"
+        with pytest.raises(
+            ValidationError, match="First page 233 is not unique for this source"
+        ):
+            work2.clean()
+
     def test_clean_fields(self):
         work = DigitizedWork(
             source_id="chi.79279237",
