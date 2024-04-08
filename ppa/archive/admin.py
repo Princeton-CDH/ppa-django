@@ -16,6 +16,7 @@ from ppa.archive.models import (
     ProtectedWorkFieldFlags,
 )
 from ppa.archive.views import ImportView
+from ppa.archive.templatetags.ppa_tags import hathi_page_url, gale_page_url
 
 
 # import/export resource
@@ -175,9 +176,19 @@ class DigitizedWorkAdmin(ExportActionMixin, ExportMixin, admin.ModelAdmin):
     list_collections.short_description = "Collections"
 
     def source_link(self, obj):
-        """Link to source record"""
+        """source id as an html link to source record, when source url is available"""
+        if not obj.source_url:
+            return obj.source_id
+
+        source_url = obj.source_url
+        # hathi/gale excerpt links should include first page
+        if obj.pages_digital:
+            if obj.source == DigitizedWork.HATHI:
+                source_url = hathi_page_url(obj.source_url, obj.first_page_digital())
+            if obj.source == DigitizedWork.GALE:
+                source_url = gale_page_url(obj.source_url, obj.first_page_digital())
         return mark_safe(
-            '<a href="%s" target="_blank">%s</a>' % (obj.source_url, obj.source_id)
+            '<a href="%s" target="_blank">%s</a>' % (source_url, obj.source_id)
         )
 
     source_link.short_description = "Source id"

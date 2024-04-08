@@ -190,8 +190,9 @@ class TestDigitizedWork(TestCase):
         digwork = DigitizedWork(source_id="njp.32101013082597")
         assert str(digwork) == digwork.source_id
 
-        # with pages
-        digwork.pages_digital = "20-25"
+        # with pages - should use *original*, not digital
+        digwork.pages_orig = "20-25"
+        digwork.pages_digital = "22-27"
         assert str(digwork) == "%s (20-25)" % digwork.source_id
 
     def test_display_title(self):
@@ -801,6 +802,26 @@ class TestDigitizedWork(TestCase):
         # not an error for non-hathi
         work.source = DigitizedWork.OTHER
         work.clean()
+
+    @patch("ppa.archive.models.DigitizedWork.index_items")
+    def test_clean_unique_first_page(self, mock_index_items):
+        DigitizedWork.objects.create(
+            source_id="chi.79279237", pages_orig="233-244", pages_digital="200-210"
+        )
+        # first original page matches even though range is distinct; unsaved
+        work2 = DigitizedWork(source_id="chi.79279237", pages_orig="233-240")
+        with pytest.raises(
+            ValidationError, match="First page 233 is not unique for this source"
+        ):
+            work2.clean()
+
+        # test updating existing record; same error
+        work2 = DigitizedWork.objects.create(source_id="chi.79279237", pages_orig="232")
+        work2.pages_orig = "233-235"
+        with pytest.raises(
+            ValidationError, match="First page 233 is not unique for this source"
+        ):
+            work2.clean()
 
     def test_clean_fields(self):
         work = DigitizedWork(
