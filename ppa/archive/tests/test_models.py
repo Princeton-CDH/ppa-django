@@ -190,8 +190,9 @@ class TestDigitizedWork(TestCase):
         digwork = DigitizedWork(source_id="njp.32101013082597")
         assert str(digwork) == digwork.source_id
 
-        # with pages
-        digwork.pages_digital = "20-25"
+        # with pages - should use *original*, not digital
+        digwork.pages_orig = "20-25"
+        digwork.pages_digital = "22-27"
         assert str(digwork) == "%s (20-25)" % digwork.source_id
 
     def test_display_title(self):

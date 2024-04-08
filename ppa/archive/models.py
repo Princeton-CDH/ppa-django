@@ -516,9 +516,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 
     def __str__(self):
         """Default string display. Uses :attr:`source_id`
-        and :attr:`pages_digital` if any"""
-        if self.pages_digital:
-            return "%s (%s)" % (self.source_id, self.pages_digital)
+        and :attr:`pages_orig` if any"""
+        if self.pages_orig:
+            return "%s (%s)" % (self.source_id, self.pages_orig)
         return self.source_id
 
     @property
