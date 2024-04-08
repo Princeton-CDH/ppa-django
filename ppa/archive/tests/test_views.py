@@ -457,6 +457,12 @@ class TestDigitizedWorkDetailView(TestCase):
         # start page 20 should match 20 only and not 200
         assert response.context["object"] == dial_excerpt2
 
+        # single page should also work
+        dial_excerpt2.pages_orig = "20"
+        dial_excerpt2.save()
+        response = self.client.get(dial_excerpt2.get_absolute_url())
+        assert response.context["object"] == dial_excerpt2
+
         # create excerpt where there is no existing work;
         # set old_workid based on first digital page
         excerpt = DigitizedWork.objects.create(
