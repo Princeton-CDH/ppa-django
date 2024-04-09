@@ -184,8 +184,10 @@ class DigitizedWorkAdmin(ExportActionMixin, ExportMixin, admin.ModelAdmin):
         # hathi/gale excerpt links should include first page
         if obj.pages_digital:
             if obj.source == DigitizedWork.HATHI:
-                source_url = hathi_page_url(obj.source_url, obj.first_page_digital())
+                # hathi page url method requires source id
+                source_url = hathi_page_url(obj.source_id, obj.first_page_digital())
             if obj.source == DigitizedWork.GALE:
+                # gale page url method requires source url
                 source_url = gale_page_url(obj.source_url, obj.first_page_digital())
         return mark_safe(
             '<a href="%s" target="_blank">%s</a>' % (source_url, obj.source_id)

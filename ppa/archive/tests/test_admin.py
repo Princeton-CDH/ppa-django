@@ -58,6 +58,8 @@ class TestDigitizedWorkAdmin(TestCase):
         snippet = digadmin.source_link(digwork)
         assert digwork.source_id in snippet
         assert "seq=22" in snippet
+        # hathi url is based on source id, not source url
+        assert digwork.source_url not in snippet
         # Gale
         digwork.source = DigitizedWork.GALE
         snippet = digadmin.source_link(digwork)
