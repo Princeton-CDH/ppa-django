@@ -672,7 +672,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             ).by_first_page_orig(first_page)
             # if this record has already been saved, exclude it when checking
             if self.pk:
-                other_excerpts.exclude(pk=self.pk)
+                other_excerpts = other_excerpts.exclude(pk=self.pk)
             if other_excerpts.exists():
                 raise ValidationError(
                     {

@@ -805,9 +805,14 @@ class TestDigitizedWork(TestCase):
 
     @patch("ppa.archive.models.DigitizedWork.index_items")
     def test_clean_unique_first_page(self, mock_index_items):
-        DigitizedWork.objects.create(
+        digwork = DigitizedWork.objects.create(
             source_id="chi.79279237", pages_orig="233-244", pages_digital="200-210"
         )
+        # save with unrelated change; should not trigger validation error
+        digwork.pages_digital = "201-210"
+        digwork.save()
+        digwork.clean()
+
         # first original page matches even though range is distinct; unsaved
         work2 = DigitizedWork(source_id="chi.79279237", pages_orig="233-240")
         with pytest.raises(
