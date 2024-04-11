@@ -3,6 +3,21 @@
 CHANGELOG
 =========
 
+3.12
+----
+- As an admin, I want the Source ID link in list view to go to the first page of the excerpt for articles and excerpts, so that I can more easily access excerpt content.
+- As a developer, I want a script to do a one-time bulk fix of HathiTrust excerpt page ranges from a spreadsheet so that we can pull the corret content from updated HathiTrust materials.
+- As a developer, I want a script to update all HathiTrust content so that I can refresh locally cached data with OCR improvements and other changes.
+- bugfix: excerpt work ID is now based on sourceID + original page range
+  rather than digital page range
+- bugfix: fix indexing and page count for new excerpts when there are multiple excerpts from a single source
+- bugfix: improved index_pages script error handling for missing page count
+  in database when running in expedited mode
+- new manage command to to report on possible HathiTrust excerpt page range mismatches based on page labels in METS-ALTO
+- utility script to get volume last modification date from public HathiTrust website
+- updated settings to use django-split-settings
+- address deprecation warnings and suppress warnings for dependencies
+
 3.11.4
 ------
 
