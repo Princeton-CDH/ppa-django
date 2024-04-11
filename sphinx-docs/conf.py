@@ -63,7 +63,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "Princeton Prosody Archive"
-copyright = "2018, CDH @ Princeton University"
+copyright = "2024, CDH @ Princeton University"
 author = "CDH @ Princeton University"
 
 # The version info for the project you're documenting, acts as replacement for

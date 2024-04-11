@@ -51,12 +51,35 @@ class TestDigitizedWorkAdmin(TestCase):
         assert (
             snippet == '<a href="%s" target="_blank">njp.32101013082597</a>' % fake_url
         )
+        # excerpt with digital page
+        digwork.pages_digital = "22-30"
+        # - HathiTrust
+        digwork.source = DigitizedWork.HATHI
+        snippet = digadmin.source_link(digwork)
+        assert digwork.source_id in snippet
+        assert "seq=22" in snippet
+        # hathi url is based on source id, not source url
+        assert digwork.source_url not in snippet
+        # Gale
+        digwork.source = DigitizedWork.GALE
+        snippet = digadmin.source_link(digwork)
+        assert "&pg=22" in snippet
+
+        # no url - id only, no link
+        digwork.source_url = ""
+        assert digadmin.source_link(digwork) == digwork.source_id
 
     def test_readonly_fields(self):
         site = AdminSite()
         digadmin = DigitizedWorkAdmin(DigitizedWork, site)
 
-        assert digadmin.get_readonly_fields(Mock()) == digadmin.readonly_fields
+        assert digadmin.get_readonly_fields(Mock(POST={})) == digadmin.readonly_fields
+
+        # when using 'save as new', protected fields should not be read only
+        assert digadmin.get_readonly_fields(Mock(POST={"_saveasnew": 1})) == (
+            "added",
+            "updated",
+        )
 
         # hathi record
         hathi_work = DigitizedWork.objects.first()

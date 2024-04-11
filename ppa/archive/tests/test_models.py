@@ -28,6 +28,7 @@ from ppa.archive.models import (
     DigitizedWork,
     Page,
     ProtectedWorkFieldFlags,
+    ProtectedWorkField,
 )
 
 FIXTURES_PATH = os.path.join(settings.BASE_DIR, "ppa", "archive", "fixtures")
@@ -47,6 +48,13 @@ class TestProtectedFlags(TestCase):
             | ProtectedWorkFieldFlags.sort_title
         )
         assert str(fields) == "enumcron, sort_title, title"
+
+
+class TestProtectedWorkField(TestCase):
+    def test_get_prep_value(self):
+        assert ProtectedWorkField().get_prep_value("1") == 1
+        # handle empty string
+        assert ProtectedWorkField().get_prep_value("") == 0
 
 
 @pytest.mark.django_db
@@ -182,8 +190,9 @@ class TestDigitizedWork(TestCase):
         digwork = DigitizedWork(source_id="njp.32101013082597")
         assert str(digwork) == digwork.source_id
 
-        # with pages
-        digwork.pages_digital = "20-25"
+        # with pages - should use *original*, not digital
+        digwork.pages_orig = "20-25"
+        digwork.pages_digital = "22-27"
         assert str(digwork) == "%s (20-25)" % digwork.source_id
 
     def test_display_title(self):
@@ -544,14 +553,19 @@ class TestDigitizedWork(TestCase):
             assert index_data["id"] == digwork.source_id
 
     def test_get_absolute_url(self):
-        work = DigitizedWork.objects.first()
+        work = DigitizedWork.objects.filter(pages_orig="").first()
         assert work.get_absolute_url() == reverse(
             "archive:detail", kwargs={"source_id": work.source_id}
         )
 
-        work.pages_digital = "11-13"
+        work.pages_orig = "11-13"
         assert work.get_absolute_url() == reverse(
             "archive:detail", kwargs={"source_id": work.source_id, "start_page": 11}
+        )
+
+        work.pages_orig = "iii-xi"
+        assert work.get_absolute_url() == reverse(
+            "archive:detail", kwargs={"source_id": work.source_id, "start_page": "iii"}
         )
 
     @patch("ppa.archive.models.HathiBibliographicAPI")
@@ -633,8 +647,9 @@ class TestDigitizedWork(TestCase):
 
         # return total and digitized work page counts updated
         assert page_count == 2
-        digwork = DigitizedWork.objects.get(source_id=digwork.source_id)
-        assert digwork.page_count == 2
+        # does NOT save automatically
+        db_digwork = DigitizedWork.objects.get(source_id=digwork.source_id)
+        assert db_digwork.page_count is None
 
         # should ignore non-text files
         page_files = ["0001.txt", "00002.txt", "00001.jp2", "00002.jp2"]
@@ -663,6 +678,17 @@ class TestDigitizedWork(TestCase):
         work = DigitizedWork(source_id="chi.79279237")
         assert work.index_id() == work.source_id
 
+        # for excerpts, index id includes first page from original page range
+        excerpt = DigitizedWork(
+            source_id="chi.89279238", pages_orig="3-5", pages_digital="5-7"
+        )
+        assert excerpt.index_id() == f"{excerpt.source_id}-p3"
+
+        excerpt = DigitizedWork(
+            source_id="abc.123459238", pages_orig="ii-iv", pages_digital="3-4"
+        )
+        assert excerpt.index_id() == f"{excerpt.source_id}-pii"
+
     def test_save_suppress(self):
         work = DigitizedWork(source_id="chi.79279237")
         with patch.object(work, "hathi") as mock_hathiobj:
@@ -687,6 +713,33 @@ class TestDigitizedWork(TestCase):
             work.status = work.SUPPRESSED
             work.save()
             mock_hathiobj.delete_pairtree_data.assert_not_called()
+
+    @patch("ppa.archive.models.DigitizedWork.index_items")
+    def test_save_suppress_excerpt(self, mock_index_items):
+        work = DigitizedWork(source_id="chi.79279237", item_type=DigitizedWork.EXCERPT)
+        with patch.object(work, "hathi") as mock_hathiobj:
+            # no change in status - nothing should happen
+            work.save()
+            mock_hathiobj.delete_pairtree_data.assert_not_called()
+
+            # change status to suppressed, no other excerpts in this volume
+            # - data should be deleted
+            work.status = work.SUPPRESSED
+            work.save()
+            assert mock_hathiobj.delete_pairtree_data.call_count == 1
+
+            # second public excerpt from the same valoume
+            DigitizedWork.objects.create(
+                source_id="chi.79279237",
+                item_type=DigitizedWork.EXCERPT,
+                pages_orig="3-5",
+                pages_digital="5-7",
+            )
+            # reset mock so we can check it is not called
+            mock_hathiobj.delete_pairtree_data.reset_mock()
+            work.status = work.SUPPRESSED
+            work.save()
+            assert mock_hathiobj.delete_pairtree_data.call_count == 0
 
     def test_save_sourceid(self):
         # if source_id changes, old id should be removed from solr index
@@ -750,6 +803,31 @@ class TestDigitizedWork(TestCase):
         work.source = DigitizedWork.OTHER
         work.clean()
 
+    @patch("ppa.archive.models.DigitizedWork.index_items")
+    def test_clean_unique_first_page(self, mock_index_items):
+        digwork = DigitizedWork.objects.create(
+            source_id="chi.79279237", pages_orig="233-244", pages_digital="200-210"
+        )
+        # save with unrelated change; should not trigger validation error
+        digwork.pages_digital = "201-210"
+        digwork.save()
+        digwork.clean()
+
+        # first original page matches even though range is distinct; unsaved
+        work2 = DigitizedWork(source_id="chi.79279237", pages_orig="233-240")
+        with pytest.raises(
+            ValidationError, match="First page 233 is not unique for this source"
+        ):
+            work2.clean()
+
+        # test updating existing record; same error
+        work2 = DigitizedWork.objects.create(source_id="chi.79279237", pages_orig="232")
+        work2.pages_orig = "233-235"
+        with pytest.raises(
+            ValidationError, match="First page 233 is not unique for this source"
+        ):
+            work2.clean()
+
     def test_clean_fields(self):
         work = DigitizedWork(
             source_id="chi.79279237",
@@ -776,6 +854,19 @@ class TestDigitizedWork(TestCase):
         with pytest.raises(ValidationError) as err:
             work.clean_fields()
         assert "start value should exceed stop (355-35)" in str(err)
+
+    def test_first_page_digital(self):
+        assert DigitizedWork(pages_digital="133-135").first_page_digital() == 133
+
+    def test_first_page_original(self):
+        # citation-style page range (second number is incomplete)
+        assert DigitizedWork(pages_orig="133-5").first_page_original() == "133"
+        # single page number
+        assert DigitizedWork(pages_orig="133").first_page_original() == "133"
+        # discontinuous page range
+        assert DigitizedWork(pages_orig="133, 134").first_page_original() == "133"
+        # roman numreals
+        assert DigitizedWork(pages_orig="iii-xiv").first_page_original() == "iii"
 
     def test_is_suppressed(self):
         work = DigitizedWork(source_id="chi.79279237")
@@ -997,7 +1088,7 @@ class TestPage(TestCase):
         mets = load_xmlobject_from_file(TestDigitizedWork.metsfile, hathi.MinimalMETS)
         with patch.object(DigitizedWork, "hathi") as mock_hathiobj:
             mock_hathiobj.zipfile_path.return_value = "/path/to/79279237.zip"
-            mock_hathiobj.metsfile_path.return_value = TestDigitizedWork.metsfile
+            mock_hathiobj.mets_xml.return_value = mets
             mock_hathiobj.content_dir = "data"
 
             page_data = Page.page_index_data(work)

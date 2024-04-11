@@ -71,7 +71,9 @@ def hathi_page_url(item_id, order):
 
         {% page_url item_id page.order %}
     """
-    return "{}/pt?id={};view=1up;seq={}".format(HATHI_BASE_URL, item_id, order)
+    return mark_safe(
+        "{}/pt?id={}&view=1up&seq={}".format(HATHI_BASE_URL, item_id, order)
+    )
 
 
 @register.simple_tag

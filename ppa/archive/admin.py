@@ -16,6 +16,7 @@ from ppa.archive.models import (
     ProtectedWorkFieldFlags,
 )
 from ppa.archive.views import ImportView
+from ppa.archive.templatetags.ppa_tags import hathi_page_url, gale_page_url
 
 
 # import/export resource
@@ -75,6 +76,9 @@ class DigitizedWorkResource(resources.ModelResource):
 
 class DigitizedWorkAdmin(ExportActionMixin, ExportMixin, admin.ModelAdmin):
     resource_class = DigitizedWorkResource  # resource for export
+
+    # enable "save as new" button to copy and create a new record
+    save_as = True
 
     list_display = (
         "display_title",
@@ -155,6 +159,12 @@ class DigitizedWorkAdmin(ExportActionMixin, ExportMixin, admin.ModelAdmin):
         """
         if obj and obj.source == DigitizedWork.HATHI:
             return self.hathi_readonly_fields + self.readonly_fields
+
+        if request.POST.get("_saveasnew"):
+            # protected fields must not be read-only in order
+            # to preserve/copy when saving as new
+            return ("added", "updated")
+
         return self.readonly_fields
 
     def list_collections(self, obj):
@@ -166,17 +176,79 @@ class DigitizedWorkAdmin(ExportActionMixin, ExportMixin, admin.ModelAdmin):
     list_collections.short_description = "Collections"
 
     def source_link(self, obj):
-        """Link to source record"""
+        """source id as an html link to source record, when source url is available"""
+        if not obj.source_url:
+            return obj.source_id
+
+        source_url = obj.source_url
+        # hathi/gale excerpt links should include first page
+        if obj.pages_digital:
+            if obj.source == DigitizedWork.HATHI:
+                # hathi page url method requires source id
+                source_url = hathi_page_url(obj.source_id, obj.first_page_digital())
+            if obj.source == DigitizedWork.GALE:
+                # gale page url method requires source url
+                source_url = gale_page_url(obj.source_url, obj.first_page_digital())
         return mark_safe(
-            '<a href="%s" target="_blank">%s</a>' % (obj.source_url, obj.source_id)
+            '<a href="%s" target="_blank">%s</a>' % (source_url, obj.source_id)
         )
 
     source_link.short_description = "Source id"
     source_link.admin_order_field = "source_id"
 
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        # customize behavior when copying a record and saving as new
+        if request.POST.get("_saveasnew"):
+            # if source is unset, this means we are loading the "save as new"
+            # form for a hathitrust record
+            if not request.POST.get("source"):
+                # customize save as new field contents
+                instance = DigitizedWork.objects.get(pk=object_id)
+                # make a copy of the querydict so we can update it
+                post_params = request.POST.copy()
+                # read-only fields should be preserved
+                post_params["source"] = instance.source
+                post_params["source_id"] = instance.source_id
+                post_params["source_url"] = instance.source_url
+                post_params["record_id"] = instance.record_id
+                # copy protected wield flags in simple string format
+                post_params[
+                    "protected_fields"
+                ] = instance.protected_fields.to_simple_str()
+
+                # clear out fields that should be changed when excerpting
+                clear_fields = [
+                    "title",
+                    "sort_title",
+                    "author",
+                    "pages_orig",
+                    "pages_digital",
+                    # "page_count",  # read-only, does not automatically propagate
+                    "notes",
+                    "public_notes",
+                    "collections",
+                    "cluster",
+                ]
+                for field in clear_fields:
+                    try:
+                        del post_params[field]
+                    except KeyError:
+                        pass
+
+                # update request with our modified post parameters
+                request.POST = post_params
+
+        return super().change_view(
+            request,
+            object_id,
+            form_url,
+            extra_context=extra_context,
+        )
+
     def save_model(self, request, obj, form, change):
         """Note any fields in the protected list that have been changed in
         the admin and preserve in database."""
+
         # If new object, created from scratch, nothing to track and preserve
         # or if item is not a HathiTrust item, save and return
         if not change or obj.source != DigitizedWork.HATHI:

@@ -25,7 +25,6 @@ class TestHathiImporter(TestCase):
     fixtures = ["sample_digitized_works"]
 
     def test_filter_existing_ids(self):
-
         digwork_ids = DigitizedWork.objects.values_list("source_id", flat=True)
 
         # all existing - all should be flagged as existing
@@ -267,6 +266,26 @@ class TestHathiImporter(TestCase):
         # third from last arg is file list
         assert cmd_args[-3].startswith("--files-from=")
         assert "ppa_hathi_pathlist" in cmd_args[-3]
+
+
+def test_hathiimporter_init(tmp_path_factory):
+    # no rsync output, no output dir
+    htimporter = HathiImporter(["hvd.1234", "nyp.334455"])
+    assert htimporter.rsync_output is False
+    assert htimporter.output_dir is None
+
+    # rsync output requested with no output dir
+    with pytest.raises(ValueError, match="output_dir is required"):
+        HathiImporter(rsync_output=True)
+
+    # rsync output requested with non-existent output dir
+    with pytest.raises(ValueError, match="not an existing directory"):
+        # rsync output requested with invalid output dir
+        HathiImporter(rsync_output=True, output_dir="/foo/bar/baz")
+
+    # with valid output dir
+    tmpdir = tmp_path_factory.mktemp("output")
+    assert HathiImporter(rsync_output=True, output_dir=str(tmpdir))
 
 
 class TestGaleImporter(TestCase):
