@@ -4,10 +4,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ppa.archive.hathi &#8212; Princeton Prosody Archive 3.11.4 documentation</title>
+    <title>ppa.archive.hathi &#8212; Princeton Prosody Archive 3.12.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=12dfc556" />
-    <script src="../../../_static/documentation_options.js?v=7574ce52"></script>
+    <script src="../../../_static/documentation_options.js?v=1b7a0a1e"></script>
     <script src="../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -250,7 +250,7 @@
 <span class="sd">         &lt;METS:fptr FILEID=&quot;IMG00000001&quot;/&gt;</span>
 <span class="sd">       &lt;METS:file SIZE=&quot;1003&quot; ID=&quot;HTML00000496&quot; MIMETYPE=&quot;text/html&quot; CREATED=&quot;2017-03-20T10:40:21Z&quot;</span>
 <span class="sd">         CHECKSUM=&quot;f0a326c10b2a6dc9ae5e3ede261c9897&quot; SEQ=&quot;00000496&quot; CHECKSUMTYPE=&quot;MD5&quot;&gt;</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
 
     <span class="nd">@cached_property</span>
     <span class="k">def</span> <span class="nf">display_label</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -312,38 +312,49 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;An object for working with a HathiTrust item with data in a</span>
 <span class="sd">    locally configured pairtree datastore.&quot;&quot;&quot;</span>
 
-    <span class="n">hathi_id</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># Pairtree version statement usd by pairtree package</span>
+    <span class="n">pairtree_version_stmt</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;This directory conforms to Pairtree Version 0.1. Updated spec: &quot;</span>
+        <span class="o">+</span> <span class="s2">&quot;http://www.cdlib.org/inside/diglib/pairtree/pairtreespec.html&quot;</span>
+    <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hathi_id</span><span class="p">):</span>
+        <span class="c1"># HathiTrust record id</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hathi_id</span> <span class="o">=</span> <span class="n">hathi_id</span>
-
-    <span class="nd">@cached_property</span>
-    <span class="k">def</span> <span class="nf">pairtree_prefix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;pairtree prefix (first portion of the hathi id, short-form</span>
-<span class="sd">        identifier for owning institution)&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hathi_id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-
-    <span class="nd">@cached_property</span>
-    <span class="k">def</span> <span class="nf">pairtree_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;pairtree identifier (second portion of source id)&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hathi_id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
-
-    <span class="nd">@cached_property</span>
-    <span class="k">def</span> <span class="nf">content_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;content directory for this work within the appropriate</span>
-<span class="sd">        pairtree&quot;&quot;&quot;</span>
-        <span class="c1"># contents are stored in a directory named based on a</span>
-        <span class="c1"># pairtree encoded version of the id</span>
-        <span class="k">return</span> <span class="n">pairtree_path</span><span class="o">.</span><span class="n">id_encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pairtree_id</span><span class="p">)</span>
+        <span class="c1"># Identifiers for owning institution and volume which form the overall</span>
+        <span class="c1"># HathiTrust record id: [lib_id].[vol_id]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lib_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vol_id</span> <span class="o">=</span> <span class="n">hathi_id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># Pairtree prefix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pairtree_prefix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">lib_id</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="c1"># Content directory for this work within the appropriate pairtree</span>
+        <span class="c1"># which is based on a pairtree encoded version of the volume id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">content_dir</span> <span class="o">=</span> <span class="n">pairtree_path</span><span class="o">.</span><span class="n">id_encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vol_id</span><span class="p">)</span>
 
 <div class="viewcode-block" id="HathiObject.pairtree_client">
 <a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiObject.pairtree_client">[docs]</a>
     <span class="k">def</span> <span class="nf">pairtree_client</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a pairtree client for the pairtree datastore this</span>
-<span class="sd">        object belongs to, based on its Hathi prefix id.&quot;&quot;&quot;</span>
+<span class="sd">        object belongs to, based on its HathiTrust record id.&quot;&quot;&quot;</span>
+        <span class="n">store_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">HATHI_DATA</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lib_id</span><span class="p">)</span>
+
+        <span class="c1"># Check if store_dir exists, check if pairtree files exist</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">store_dir</span><span class="p">):</span>
+            <span class="c1"># Check if &quot;pairtree_prefix&quot; file exists. If not, create it.</span>
+            <span class="n">pairtree_prefix_fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">store_dir</span><span class="p">,</span> <span class="s2">&quot;pairtree_prefix&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">pairtree_prefix_fn</span><span class="p">):</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pairtree_prefix_fn</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+                    <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pairtree_prefix</span><span class="p">)</span>
+            <span class="c1"># Check if &quot;pairtree_version0_1&quot; file exists. If not, create it.</span>
+            <span class="c1"># Note: Mimicking paitree packages behavior. File contents are not</span>
+            <span class="c1">#       actually verified</span>
+            <span class="n">pairtree_vn_fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">store_dir</span><span class="p">,</span> <span class="s2">&quot;pairtree_version0_1&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">pairtree_vn_fn</span><span class="p">):</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pairtree_vn_fn</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+                    <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pairtree_version_stmt</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="n">pairtree_client</span><span class="o">.</span><span class="n">PairtreeStorageClient</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pairtree_prefix</span><span class="p">,</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">HATHI_DATA</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pairtree_prefix</span><span class="p">),</span>
+            <span class="n">store_dir</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -362,7 +373,7 @@
             <span class="n">ptree_client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pairtree_client</span><span class="p">()</span>
 
         <span class="c1"># return the pairtree object for current work</span>
-        <span class="k">return</span> <span class="n">ptree_client</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pairtree_id</span><span class="p">,</span> <span class="n">create_if_doesnt_exist</span><span class="o">=</span><span class="n">create</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">ptree_client</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vol_id</span><span class="p">,</span> <span class="n">create_if_doesnt_exist</span><span class="o">=</span><span class="n">create</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="HathiObject.delete_pairtree_data">
@@ -371,7 +382,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete pairtree object from the pairtree datastore.&quot;&quot;&quot;</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Deleting pairtree data for </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hathi_id</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">pairtree_client</span><span class="p">()</span><span class="o">.</span><span class="n">delete_object</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pairtree_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pairtree_client</span><span class="p">()</span><span class="o">.</span><span class="n">delete_object</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vol_id</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">storage_exceptions</span><span class="o">.</span><span class="n">ObjectNotFoundException</span><span class="p">:</span>
             <span class="c1"># data is already gone; warn, but not an error</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
@@ -388,12 +399,13 @@
         <span class="n">parts</span> <span class="o">=</span> <span class="n">pairtree_obj</span><span class="o">.</span><span class="n">list_parts</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">content_dir</span><span class="p">)</span>
         <span class="c1"># find the first zipfile in the list (should only be one)</span>
         <span class="n">filepaths</span> <span class="o">=</span> <span class="p">[</span><span class="n">part</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">parts</span> <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">ext</span><span class="p">)]</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">filepaths</span><span class="p">:</span> 
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">filepaths</span><span class="p">:</span>
             <span class="c1"># An error has occurred -- there is no zip file here in parts</span>
             <span class="k">raise</span> <span class="n">storage_exceptions</span><span class="o">.</span><span class="n">PartNotFoundException</span>
-        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pairtree_obj</span><span class="o">.</span><span class="n">id_to_dirpath</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">content_dir</span><span class="p">,</span> <span class="n">filepaths</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">pairtree_obj</span><span class="o">.</span><span class="n">id_to_dirpath</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">content_dir</span><span class="p">,</span> <span class="n">filepaths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
 
-        
 <div class="viewcode-block" id="HathiObject.zipfile_path">
 <a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiObject.zipfile_path">[docs]</a>
     <span class="k">def</span> <span class="nf">zipfile_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ptree_client</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -406,6 +418,21 @@
     <span class="k">def</span> <span class="nf">metsfile_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ptree_client</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;path to mets xml file within the hathi contents for this work&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_content_path</span><span class="p">(</span><span class="s2">&quot;.mets.xml&quot;</span><span class="p">,</span> <span class="n">ptree_client</span><span class="o">=</span><span class="n">ptree_client</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HathiObject.mets_xml">
+<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.hathi.HathiObject.mets_xml">[docs]</a>
+    <span class="k">def</span> <span class="nf">mets_xml</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MinimalMETS</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;load METS xml file from pairtree and initialize as an instance</span>
+<span class="sd">        of :class:`MinimalMETS`</span>
+
+<span class="sd">        :rtype: :class:`MinimalMETS`</span>
+<span class="sd">        :raises: :class:`storage_exceptions.ObjectNotFoundException` if the</span>
+<span class="sd">            object is not found in pairtree storage</span>
+<span class="sd">        :raises: :class:`storage_exceptions.PartNotFoundException` if the</span>
+<span class="sd">            mets.xml flie is not found in pairtree storage for this object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">xmlmap</span><span class="o">.</span><span class="n">load_xmlobject_from_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metsfile_path</span><span class="p">(),</span> <span class="n">MinimalMETS</span><span class="p">)</span></div>
 </div>
 
 </pre></div>
@@ -472,7 +499,7 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &#169;2018, CDH @ Princeton University.
+      &#169;2024, CDH @ Princeton University.
       
       |
       Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>

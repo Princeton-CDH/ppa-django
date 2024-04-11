@@ -4,10 +4,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ppa.archive.management.commands.hathi_excerpt &#8212; Princeton Prosody Archive 3.11.4 documentation</title>
+    <title>ppa.archive.management.commands.hathi_excerpt &#8212; Princeton Prosody Archive 3.12.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css?v=12dfc556" />
-    <script src="../../../../../_static/documentation_options.js?v=7574ce52"></script>
+    <script src="../../../../../_static/documentation_options.js?v=1b7a0a1e"></script>
     <script src="../../../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
@@ -73,7 +73,7 @@
 <span class="kn">from</span> <span class="nn">django.core.management.base</span> <span class="kn">import</span> <span class="n">BaseCommand</span><span class="p">,</span> <span class="n">CommandError</span>
 <span class="kn">from</span> <span class="nn">parasolr.django.signals</span> <span class="kn">import</span> <span class="n">IndexableSignalHandler</span>
 
-<span class="kn">from</span> <span class="nn">ppa.archive.models</span> <span class="kn">import</span> <span class="n">Collection</span><span class="p">,</span> <span class="n">DigitizedWork</span><span class="p">,</span> <span class="n">Page</span>
+<span class="kn">from</span> <span class="nn">ppa.archive.models</span> <span class="kn">import</span> <span class="n">Collection</span><span class="p">,</span> <span class="n">DigitizedWork</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -125,9 +125,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">excerpt</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
-            <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Excerpted </span><span class="si">{excerpted:,d}</span><span class="s2"> existing records; created </span><span class="si">{created:,d}</span><span class="s2"> new excerpts. </span><span class="si">{error:,d}</span><span class="s2"> errors.&quot;</span><span class="o">.</span><span class="n">format_map</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">stats</span>
-            <span class="p">)</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Excerpted </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;excerpted&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">,d</span><span class="si">}</span><span class="s2"> existing records; &quot;</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;created </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;created&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">,d</span><span class="si">}</span><span class="s2"> new excerpts. &quot;</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">,d</span><span class="si">}</span><span class="s2"> errors.&quot;</span>
         <span class="p">)</span></div>
 
 
@@ -194,12 +194,9 @@
         <span class="n">digwork</span><span class="o">.</span><span class="n">public_notes</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Public Notes&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># Calculate &amp; save number of pages based on page range.</span>
-            <span class="c1"># (automatically calculated on save for excerpt but not</span>
-            <span class="c1"># for newly created items)</span>
-            <span class="c1"># Could trigger parse error if page span is invalid.</span>
-            <span class="n">digwork</span><span class="o">.</span><span class="n">page_count</span> <span class="o">=</span> <span class="n">digwork</span><span class="o">.</span><span class="n">count_pages</span><span class="p">()</span>
             <span class="c1"># save to create or update in the database</span>
+            <span class="c1"># page count is automatically calculated on save for excerpts</span>
+            <span class="c1"># Could trigger parse error if page span is invalid.</span>
             <span class="n">digwork</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
         <span class="k">except</span> <span class="n">intspan</span><span class="o">.</span><span class="n">ParseError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
@@ -221,14 +218,11 @@
 
         <span class="k">if</span> <span class="n">created</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;created&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="c1"># any page range change requires reindexing (potentially slow)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Indexing pages for new excerpt </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">digwork</span><span class="p">)</span>
-            <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">index_items</span><span class="p">(</span><span class="n">Page</span><span class="o">.</span><span class="n">page_index_data</span><span class="p">(</span><span class="n">digwork</span><span class="p">))</span>
-
+            <span class="c1"># pages are automatically indexed when saving a new excerpt</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;excerpted&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="c1"># Indexed pages are automatically updated for existing records on save</span>
             <span class="c1"># when page range has changed.</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;excerpted&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">index_items</span><span class="p">([</span><span class="n">digwork</span><span class="p">])</span></div>
 
@@ -357,7 +351,7 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &#169;2018, CDH @ Princeton University.
+      &#169;2024, CDH @ Princeton University.
       
       |
       Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>

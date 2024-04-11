@@ -4,10 +4,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ppa.archive.views &#8212; Princeton Prosody Archive 3.11.4 documentation</title>
+    <title>ppa.archive.views &#8212; Princeton Prosody Archive 3.12.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=12dfc556" />
-    <script src="../../../_static/documentation_options.js?v=7574ce52"></script>
+    <script src="../../../_static/documentation_options.js?v=1b7a0a1e"></script>
     <script src="../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -353,16 +353,25 @@
         <span class="n">start_page</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;start_page&quot;</span><span class="p">)</span>
         <span class="c1"># if start page is specified, filter to get the correct excerpt</span>
         <span class="k">if</span> <span class="n">start_page</span><span class="p">:</span>
-            <span class="n">qs</span> <span class="o">=</span> <span class="n">source_qs</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pages_digital__startswith</span><span class="o">=</span><span class="n">start_page</span><span class="p">)</span>
+            <span class="n">qs</span> <span class="o">=</span> <span class="n">source_qs</span><span class="o">.</span><span class="n">by_first_page_orig</span><span class="p">(</span><span class="n">start_page</span><span class="p">)</span>
         <span class="c1"># if start page is NOT specified, ensure we do not retrieve an excerpt</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">qs</span> <span class="o">=</span> <span class="n">source_qs</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pages_digital__exact</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">qs</span> <span class="o">=</span> <span class="n">source_qs</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pages_orig__exact</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-        <span class="c1">#  if qs is empty and start page is not set, check if there is _one_ excerpt</span>
-        <span class="c1"># for the source id; if there is, we want to return a permanent redirect</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">qs</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">start_page</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">source_qs</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">qs</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="c1">#  if qs is empty and start page is not set, check if there is _one_ excerpt</span>
+            <span class="c1"># for the source id; if there is, we want to return a permanent redirect</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">start_page</span> <span class="ow">and</span> <span class="n">source_qs</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">redirect_url</span> <span class="o">=</span> <span class="n">source_qs</span><span class="o">.</span><span class="n">first</span><span class="p">()</span><span class="o">.</span><span class="n">get_absolute_url</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">start_page</span><span class="p">:</span>
+                <span class="c1"># if qs empty and start page _is_ set, check for an old id</span>
+                <span class="c1"># (previously excerpt ids were based on digital page range)</span>
+                <span class="n">digwork_oldid</span> <span class="o">=</span> <span class="n">source_qs</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                    <span class="n">old_workid</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(source_id)s</span><span class="s2">-p</span><span class="si">%(start_page)s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">digwork_oldid</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">redirect_url</span> <span class="o">=</span> <span class="n">source_qs</span><span class="o">.</span><span class="n">first</span><span class="p">()</span><span class="o">.</span><span class="n">get_absolute_url</span><span class="p">()</span>
+
         <span class="c1"># otherwise, return a 404</span>
         <span class="k">return</span> <span class="n">qs</span></div>
 
@@ -745,7 +754,7 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &#169;2018, CDH @ Princeton University.
+      &#169;2024, CDH @ Princeton University.
       
       |
       Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>

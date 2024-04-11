@@ -4,10 +4,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ppa.archive.admin &#8212; Princeton Prosody Archive 3.11.4 documentation</title>
+    <title>ppa.archive.admin &#8212; Princeton Prosody Archive 3.12.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=12dfc556" />
-    <script src="../../../_static/documentation_options.js?v=7574ce52"></script>
+    <script src="../../../_static/documentation_options.js?v=1b7a0a1e"></script>
     <script src="../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -48,6 +48,7 @@
     <span class="n">ProtectedWorkFieldFlags</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">ppa.archive.views</span> <span class="kn">import</span> <span class="n">ImportView</span>
+<span class="kn">from</span> <span class="nn">ppa.archive.templatetags.ppa_tags</span> <span class="kn">import</span> <span class="n">hathi_page_url</span><span class="p">,</span> <span class="n">gale_page_url</span>
 
 
 <span class="c1"># import/export resource</span>
@@ -115,6 +116,9 @@
 <a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin">[docs]</a>
 <span class="k">class</span> <span class="nc">DigitizedWorkAdmin</span><span class="p">(</span><span class="n">ExportActionMixin</span><span class="p">,</span> <span class="n">ExportMixin</span><span class="p">,</span> <span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
     <span class="n">resource_class</span> <span class="o">=</span> <span class="n">DigitizedWorkResource</span>  <span class="c1"># resource for export</span>
+
+    <span class="c1"># enable &quot;save as new&quot; button to copy and create a new record</span>
+    <span class="n">save_as</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="n">list_display</span> <span class="o">=</span> <span class="p">(</span>
         <span class="s2">&quot;display_title&quot;</span><span class="p">,</span>
@@ -197,6 +201,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">obj</span> <span class="ow">and</span> <span class="n">obj</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">HATHI</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hathi_readonly_fields</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">readonly_fields</span>
+
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_saveasnew&quot;</span><span class="p">):</span>
+            <span class="c1"># protected fields must not be read-only in order</span>
+            <span class="c1"># to preserve/copy when saving as new</span>
+            <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;added&quot;</span><span class="p">,</span> <span class="s2">&quot;updated&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">readonly_fields</span></div>
 
 
@@ -214,20 +224,82 @@
 <div class="viewcode-block" id="DigitizedWorkAdmin.source_link">
 <a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin.source_link">[docs]</a>
     <span class="k">def</span> <span class="nf">source_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Link to source record&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;source id as an html link to source record, when source url is available&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">obj</span><span class="o">.</span><span class="n">source_url</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">source_id</span>
+
+        <span class="n">source_url</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">source_url</span>
+        <span class="c1"># hathi/gale excerpt links should include first page</span>
+        <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">pages_digital</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">HATHI</span><span class="p">:</span>
+                <span class="c1"># hathi page url method requires source id</span>
+                <span class="n">source_url</span> <span class="o">=</span> <span class="n">hathi_page_url</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">source_id</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">first_page_digital</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">GALE</span><span class="p">:</span>
+                <span class="c1"># gale page url method requires source url</span>
+                <span class="n">source_url</span> <span class="o">=</span> <span class="n">gale_page_url</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">source_url</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">first_page_digital</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">mark_safe</span><span class="p">(</span>
-            <span class="s1">&#39;&lt;a href=&quot;</span><span class="si">%s</span><span class="s1">&quot; target=&quot;_blank&quot;&gt;</span><span class="si">%s</span><span class="s1">&lt;/a&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">source_url</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">source_id</span><span class="p">)</span>
+            <span class="s1">&#39;&lt;a href=&quot;</span><span class="si">%s</span><span class="s1">&quot; target=&quot;_blank&quot;&gt;</span><span class="si">%s</span><span class="s1">&lt;/a&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">source_url</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">source_id</span><span class="p">)</span>
         <span class="p">)</span></div>
 
 
     <span class="n">source_link</span><span class="o">.</span><span class="n">short_description</span> <span class="o">=</span> <span class="s2">&quot;Source id&quot;</span>
     <span class="n">source_link</span><span class="o">.</span><span class="n">admin_order_field</span> <span class="o">=</span> <span class="s2">&quot;source_id&quot;</span>
 
+    <span class="k">def</span> <span class="nf">change_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">object_id</span><span class="p">,</span> <span class="n">form_url</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">extra_context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># customize behavior when copying a record and saving as new</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_saveasnew&quot;</span><span class="p">):</span>
+            <span class="c1"># if source is unset, this means we are loading the &quot;save as new&quot;</span>
+            <span class="c1"># form for a hathitrust record</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;source&quot;</span><span class="p">):</span>
+                <span class="c1"># customize save as new field contents</span>
+                <span class="n">instance</span> <span class="o">=</span> <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pk</span><span class="o">=</span><span class="n">object_id</span><span class="p">)</span>
+                <span class="c1"># make a copy of the querydict so we can update it</span>
+                <span class="n">post_params</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="c1"># read-only fields should be preserved</span>
+                <span class="n">post_params</span><span class="p">[</span><span class="s2">&quot;source&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">source</span>
+                <span class="n">post_params</span><span class="p">[</span><span class="s2">&quot;source_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">source_id</span>
+                <span class="n">post_params</span><span class="p">[</span><span class="s2">&quot;source_url&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">source_url</span>
+                <span class="n">post_params</span><span class="p">[</span><span class="s2">&quot;record_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">record_id</span>
+                <span class="c1"># copy protected wield flags in simple string format</span>
+                <span class="n">post_params</span><span class="p">[</span>
+                    <span class="s2">&quot;protected_fields&quot;</span>
+                <span class="p">]</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">protected_fields</span><span class="o">.</span><span class="n">to_simple_str</span><span class="p">()</span>
+
+                <span class="c1"># clear out fields that should be changed when excerpting</span>
+                <span class="n">clear_fields</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s2">&quot;title&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;sort_title&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;author&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;pages_orig&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;pages_digital&quot;</span><span class="p">,</span>
+                    <span class="c1"># &quot;page_count&quot;,  # read-only, does not automatically propagate</span>
+                    <span class="s2">&quot;notes&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;public_notes&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;collections&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;cluster&quot;</span><span class="p">,</span>
+                <span class="p">]</span>
+                <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">clear_fields</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">del</span> <span class="n">post_params</span><span class="p">[</span><span class="n">field</span><span class="p">]</span>
+                    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                        <span class="k">pass</span>
+
+                <span class="c1"># update request with our modified post parameters</span>
+                <span class="n">request</span><span class="o">.</span><span class="n">POST</span> <span class="o">=</span> <span class="n">post_params</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">change_view</span><span class="p">(</span>
+            <span class="n">request</span><span class="p">,</span>
+            <span class="n">object_id</span><span class="p">,</span>
+            <span class="n">form_url</span><span class="p">,</span>
+            <span class="n">extra_context</span><span class="o">=</span><span class="n">extra_context</span><span class="p">,</span>
+        <span class="p">)</span>
+
 <div class="viewcode-block" id="DigitizedWorkAdmin.save_model">
 <a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.DigitizedWorkAdmin.save_model">[docs]</a>
     <span class="k">def</span> <span class="nf">save_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">form</span><span class="p">,</span> <span class="n">change</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Note any fields in the protected list that have been changed in</span>
 <span class="sd">        the admin and preserve in database.&quot;&quot;&quot;</span>
+
         <span class="c1"># If new object, created from scratch, nothing to track and preserve</span>
         <span class="c1"># or if item is not a HathiTrust item, save and return</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">change</span> <span class="ow">or</span> <span class="n">obj</span><span class="o">.</span><span class="n">source</span> <span class="o">!=</span> <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">HATHI</span><span class="p">:</span>
@@ -457,7 +529,7 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &#169;2018, CDH @ Princeton University.
+      &#169;2024, CDH @ Princeton University.
       
       |
       Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>

@@ -4,10 +4,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; Princeton Prosody Archive 3.11.4 documentation</title>
+    <title>Index &#8212; Princeton Prosody Archive 3.12.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=12dfc556" />
-    <script src="_static/documentation_options.js?v=7574ce52"></script>
+    <script src="_static/documentation_options.js?v=1b7a0a1e"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="#" />
@@ -121,11 +121,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="codedocs.html#ppa.pages.models.BodyContentBlock">BodyContentBlock (class in ppa.pages.models)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.book_journal">book_journal (ppa.archive.models.DigitizedWork attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="codedocs.html#ppa.archive.hathi.HathiBibliographicAPI.brief_record">brief_record() (ppa.archive.hathi.HathiBibliographicAPI method)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.models.DigitizedWorkQuerySet.by_first_page_orig">by_first_page_orig() (ppa.archive.models.DigitizedWorkQuerySet method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -183,10 +185,10 @@
 </li>
       <li><a href="codedocs.html#ppa.archive.admin.CollectionAdmin">CollectionAdmin (class in ppa.archive.admin)</a>
 </li>
-      <li><a href="codedocs.html#ppa.pages.models.CollectionPage">CollectionPage (class in ppa.pages.models)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="codedocs.html#ppa.pages.models.CollectionPage">CollectionPage (class in ppa.pages.models)</a>
+</li>
       <li><a href="codedocs.html#ppa.pages.models.CollectionPage.DoesNotExist">CollectionPage.DoesNotExist</a>
 </li>
       <li><a href="codedocs.html#ppa.pages.models.CollectionPage.MultipleObjectsReturned">CollectionPage.MultipleObjectsReturned</a>
@@ -208,8 +210,6 @@
       <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.compare_protected_fields">compare_protected_fields() (ppa.archive.models.DigitizedWork method)</a>
 </li>
       <li><a href="codedocs.html#ppa.archive.forms.RangeField.compress">compress() (ppa.archive.forms.RangeField method)</a>
-</li>
-      <li><a href="codedocs.html#ppa.archive.hathi.HathiObject.content_dir">content_dir (ppa.archive.hathi.HathiObject attribute)</a>
 </li>
       <li><a href="codedocs.html#ppa.unapi.views.UnAPIView.content_type">content_type (ppa.unapi.views.UnAPIView attribute)</a>
 </li>
@@ -275,6 +275,8 @@
 </li>
       <li><a href="codedocs.html#ppa.archive.views.DigitizedWorkListView">DigitizedWorkListView (class in ppa.archive.views)</a>
 </li>
+      <li><a href="codedocs.html#ppa.archive.models.DigitizedWorkQuerySet">DigitizedWorkQuerySet (class in ppa.archive.models)</a>
+</li>
       <li><a href="codedocs.html#ppa.archive.admin.DigitizedWorkResource">DigitizedWorkResource (class in ppa.archive.admin)</a>
 </li>
       <li><a href="codedocs.html#ppa.common.views.VaryOnHeadersMixin.dispatch">dispatch() (ppa.common.views.VaryOnHeadersMixin method)</a>
@@ -329,6 +331,12 @@
 </li>
       <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.first_page">first_page() (ppa.archive.models.DigitizedWork method)</a>
 </li>
+      <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.first_page_digital">first_page_digital() (ppa.archive.models.DigitizedWork method)</a>
+</li>
+      <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.first_page_original">first_page_original() (ppa.archive.models.DigitizedWork method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="codedocs.html#ppa.archive.views.AddToCollection.form_class">form_class (ppa.archive.views.AddToCollection attribute)</a>
 
       <ul>
@@ -339,8 +347,6 @@
         <li><a href="codedocs.html#ppa.archive.views.ImportView.form_class">(ppa.archive.views.ImportView attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="codedocs.html#ppa.archive.views.ImportView.form_valid">form_valid() (ppa.archive.views.ImportView method)</a>
 </li>
       <li><a href="codedocs.html#ppa.unapi.views.UnAPIView.formats">formats (ppa.unapi.views.UnAPIView attribute)</a>
@@ -643,6 +649,8 @@
 </li>
       <li><a href="codedocs.html#ppa.archive.models.DigitizedWork.metadata_from_marc">metadata_from_marc() (ppa.archive.models.DigitizedWork method)</a>
 </li>
+      <li><a href="codedocs.html#ppa.archive.hathi.HathiObject.mets_xml">mets_xml() (ppa.archive.hathi.HathiObject method)</a>
+</li>
       <li><a href="codedocs.html#ppa.archive.hathi.METSFile">METSFile (class in ppa.archive.hathi)</a>
 </li>
       <li><a href="codedocs.html#ppa.archive.hathi.HathiObject.metsfile_path">metsfile_path() (ppa.archive.hathi.HathiObject method)</a>
@@ -770,11 +778,7 @@
 </li>
       <li><a href="codedocs.html#ppa.archive.hathi.HathiObject.pairtree_client">pairtree_client() (ppa.archive.hathi.HathiObject method)</a>
 </li>
-      <li><a href="codedocs.html#ppa.archive.hathi.HathiObject.pairtree_id">pairtree_id (ppa.archive.hathi.HathiObject attribute)</a>
-</li>
       <li><a href="codedocs.html#ppa.archive.hathi.HathiObject.pairtree_object">pairtree_object() (ppa.archive.hathi.HathiObject method)</a>
-</li>
-      <li><a href="codedocs.html#ppa.archive.hathi.HathiObject.pairtree_prefix">pairtree_prefix (ppa.archive.hathi.HathiObject attribute)</a>
 </li>
       <li><a href="codedocs.html#ppa.pages.models.Person">Person (class in ppa.pages.models)</a>
 </li>
@@ -867,8 +871,6 @@
         <li><a href="codedocs.html#module-ppa.archive.solr">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     ppa.archive.views
 
@@ -876,6 +878,8 @@
         <li><a href="codedocs.html#module-ppa.archive.views">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     ppa.common
 
@@ -1272,7 +1276,7 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &#169;2018, CDH @ Princeton University.
+      &#169;2024, CDH @ Princeton University.
       
       |
       Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>
