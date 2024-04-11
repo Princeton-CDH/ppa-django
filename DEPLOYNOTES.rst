@@ -3,6 +3,32 @@
 Deploy and Upgrade notes
 ========================
 
+3.12
+----
+
+* Settings are now configured with django-split-settings as a module;
+  local_settings.py must be moved to ppa/settings/local_settings.py
+* Index ids for excerpts have changed; this requires reindexing works
+  and pages for excerpts and articles; pages should be indexed
+  after running rsync.  To reindex works::
+
+    python manage.py index -i work
+
+* Local pairtree data should be updated for all HathiTrust works::
+
+    python manage.py hathi_rsync
+
+* After pairtree content has been updated, pages should be updated
+  in Solr::
+
+    python manage.py index_pages
+
+* Digital page ranges for HathiTrust excerpts should be corrected
+  using a CSV file provided by the project team::
+
+    python manage.py adjust_excerpts HT_excerpt_corrections.csv
+
+
 3.11.2
 ------
 

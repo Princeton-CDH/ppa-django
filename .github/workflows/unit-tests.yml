@@ -7,9 +7,7 @@ on:
     - cron: "0 16 * * 2"
 
 env:
-  DB_NAME: ppa
-  DB_USER: ppa
-  DB_PASSWORD: ppa
+  DJANGO_ENV: test
 
 jobs:
   js-unit:
@@ -28,7 +26,7 @@ jobs:
             ${{ runner.os }}-node-
       - run: npm ci
       - run: npm run test:unit
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
         with:
           flags: javascript
 
@@ -49,13 +47,6 @@ jobs:
         ports:
           - 8983:8983
     steps:
-      # Set the value of DJANGO_DB_BACKEND which is used in ci/testsettings.py to
-      # configure django's ORM based on whether we're testing postgres or mysql
-      - name: Set django database backend adapter
-        env:
-          BACKEND: postgresql
-        run: echo "DJANGO_DB_BACKEND=$(echo "$BACKEND")" >> $GITHUB_ENV
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -89,12 +80,10 @@ jobs:
           pip install -r dev-requirements.txt
 
       - name: Setup local_settings.py
-        run: |
-          cp ci/testsettings.py ppa/local_settings.py
-          python -c "import uuid; print('SECRET_KEY = \'%s\'' % uuid.uuid4())" >> ppa/local_settings.py
+        run: python -c "import uuid; print('SECRET_KEY = \'%s\'' % uuid.uuid4())" >> ppa/settings/local_settings.py
 
       - name: Run pytest
-        run: py.test --cov=./ --cov-report=xml
+        run: pytest --cov=./ --cov-report=xml
 
       - name: Upload test coverage to Codecov
         uses: codecov/codecov-action@v4

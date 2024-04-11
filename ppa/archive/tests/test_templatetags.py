@@ -73,7 +73,7 @@ def test_hathi_page_url():
     order = 50
     hathi_url = hathi_page_url(item_id, order)
     assert hathi_url.startswith("%s/pt" % HATHI_BASE_URL)
-    assert hathi_url.endswith("?id=%s;view=1up;seq=%s" % (item_id, order))
+    assert hathi_url.endswith("?id=%s&view=1up&seq=%s" % (item_id, order))
 
 
 def test_gale_page_url():

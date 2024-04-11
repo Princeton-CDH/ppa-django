@@ -1,8 +1,6 @@
 django>=5.0,<5.1
 pucas>=0.8
-# dev parasolr until next release
-git+https://github.com/Princeton-CDH/parasolr@develop#egg=parasolr
-#parasolr>=0.9
+parasolr>=0.9.2
 pairtree
 py-flags
 # pymarc 5+ has incompatible changes
@@ -29,5 +27,6 @@ django-adminlogentries
 django-import-export
 psycopg2-binary
 multiprocess
+django-split-settings
 # only needed for the 'generate_textcorpus' manage command
 orjsonl
