@@ -218,17 +218,16 @@ def test_progressbar(patched_pages_solr_queryset):
     with patch(
         "ppa.archive.management.commands.generate_textcorpus.progressbar"
     ) as mock_iter_progress:
-        cmd = init_cmd(no_progressbar=False, dry_run=True)
-        page_iter = cmd.iter_pages()
-        deque(page_iter, maxlen=0)
+        cmd = init_cmd(progressbar=True, dry_run=True)
+        # call the iterator and convert to list to consume
+        list(cmd.iter_pages())
         mock_iter_progress.assert_called()
 
     with patch(
         "ppa.archive.management.commands.generate_textcorpus.progressbar"
     ) as mock_iter_progress:
-        cmd = init_cmd(no_progressbar=True, dry_run=True)
-        page_iter = cmd.iter_pages()
-        deque(page_iter, maxlen=0)
+        cmd = init_cmd(progressbar=False, dry_run=True)
+        list(cmd.iter_pages())
         mock_iter_progress.assert_not_called()
 
 
@@ -316,10 +315,10 @@ def test_set_params():
             "path": [tdir1, tdir2],
             "no_gzip": [True, False],
             "dry_run": [True, False],
-            "doc_limit": [0, 1000],
+            "doc_limit": [None, 1000],
             "verbosity": [0, 1],
             "batch_size": [1000, 10000],
-            "no_progressbar": [True, False],
+            "progressbar": [True, False],
         }
         cmd = init_cmd()
         for run in range(10):
@@ -330,18 +329,10 @@ def test_set_params():
             assert cmd.path == optiond["path"]
             assert cmd.uncompressed == optiond["no_gzip"]
             assert cmd.is_dry_run == optiond["dry_run"]
-            assert (
-                cmd.doclimit is None
-                if not optiond["doc_limit"]
-                else optiond["doc_limit"]
-            )
-            assert cmd.verbose == bool(optiond["verbosity"] > 1)
-            assert cmd.progress == (not bool(optiond["no_progressbar"]))
-            assert (
-                cmd.batch_size == optiond["batch_size"]
-                if optiond["batch_size"]
-                else generate_textcorpus.DEFAULT_BATCH_SIZE
-            )
+            assert cmd.doclimit == optiond["doc_limit"]
+            assert cmd.verbosity == optiond["verbosity"]
+            assert cmd.progress == optiond["progressbar"]
+            assert cmd.batch_size == optiond["batch_size"]
 
 
 def test_default_args(patched_works_solr_queryset):
@@ -350,8 +341,8 @@ def test_default_args(patched_works_solr_queryset):
         os.chdir(tdir)
         cmd = init_cmd()
         assert cmd.path == "ppa_corpus_" + generate_textcorpus.nowstr()
-        assert not cmd.doclimit
-        assert not cmd.verbose
+        assert cmd.doclimit is None
+        assert cmd.verbosity == cmd.v_normal
         assert not cmd.uncompressed
         assert cmd.batch_size == generate_textcorpus.DEFAULT_BATCH_SIZE
     os.chdir(herenow)

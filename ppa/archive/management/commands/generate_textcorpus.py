@@ -36,6 +36,8 @@ Notes:
       iterates over the collection the quickest.
 
 """
+
+import argparse
 import os
 from datetime import datetime
 import json
@@ -54,6 +56,10 @@ class Command(BaseCommand):
     """
     Custom manage command to generate a text corpus from text indexed in Solr.
     """
+
+    #: normal verbosity level
+    v_normal = 1
+    verbosity = v_normal
 
     # fields we want from pages, in solr syntax: newfieldname:oldfieldname
     PAGE_FIELDLIST = {
@@ -100,9 +106,9 @@ class Command(BaseCommand):
         parser.add_argument(
             "--doc-limit",
             type=int,
-            default=0,
-            help="Limit on the number of documents for corpus generation."
-            "The default of 0 considers ALL documents.",
+            default=None,
+            help="Limit the number of documents for corpus generation. "
+            "By default, includes ALL documents.",
         )
 
         # add --batch-size argument (for solr querying)
@@ -128,9 +134,12 @@ class Command(BaseCommand):
             help="Do not save anything, just iterate over solr",
         )
 
-        # add --no-progressbar argument (don't show progress bar)
+        # control progress bar display on by default
         parser.add_argument(
-            "--no-progressbar", action="store_true", help="Hide the progress bar"
+            "--progress",
+            help="Show progress",
+            action=argparse.BooleanOptionalAction,
+            default=True,
         )
 
     #### SOLR ####
@@ -252,17 +261,10 @@ class Command(BaseCommand):
             self.path, "ppa_pages.jsonl" + ("" if self.uncompressed else ".gz")
         )
         self.is_dry_run = options.get("dry_run")
-        self.doclimit = (
-            options.get("doc_limit") if options.get("doc_limit", 0) > 0 else None
-        )
-        verbosity_int = options.get("verbosity", 0)
-        self.verbose = verbosity_int > 1  # extra verbose
-        self.progress = not options.get("no_progressbar")
-        self.batch_size = (
-            options.get("batch_size")
-            if options.get("batch_size", 0) > 0
-            else DEFAULT_BATCH_SIZE
-        )
+        self.doclimit = options.get("doc_limit")
+        self.verbosity = options.get("verbosity", self.verbosity)
+        self.progress = options.get("progressbar")
+        self.batch_size = options.get("batch_size", DEFAULT_BATCH_SIZE)
         self.query_set = SolrQuerySet()
 
     def handle(self, *args, **options):
@@ -270,7 +272,7 @@ class Command(BaseCommand):
 
         # ensure path
         if not self.is_dry_run:
-            if self.verbose:
+            if self.verbosity >= self.v_normal:
                 print(f"saving PPA text corpus to: {self.path}")
             os.makedirs(self.path, exist_ok=True)
 
