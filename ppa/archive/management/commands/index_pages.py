@@ -3,13 +3,13 @@ Custom multiprocessing Solr index script for page index data.
 """
 
 import queue
-from multiprocess import Process, Queue, cpu_count
 from time import sleep
 
 import progressbar
 from django.core.management.base import BaseCommand
 from django.db import models
 from parasolr.django import SolrClient, SolrQuerySet
+from multiprocess import Process, Queue, cpu_count
 
 from ppa.archive.models import DigitizedWork, Page
 from ppa.archive.solr import PageSearchQuerySet
@@ -25,7 +25,16 @@ def page_index_data(work_q, page_data_q):
             digwork = work_q.get(timeout=1)
             # — might be nice to chunk, but most books are small
             # enough it doesn't matter that much
-            page_data_q.put(list(Page.page_index_data(digwork)))
+            page_data = list(Page.page_index_data(digwork))
+            page_data_q.put(page_data)
+
+        # by default, signals propagate to all processes;
+        # take advantage of that to stop gracefully
+        except KeyboardInterrupt:
+            # if we get a ctrl-c / keyboard interrupt, stop processing
+            # even though queue is not empty
+            return
+
         except queue.Empty:
             # worker is done when the work queue is empty
             return
@@ -46,11 +55,20 @@ def process_index_queue(index_data_q, total_to_index, work_q):
         try:
             # get data from the queue and put it into Solr
             # block with a timeout
-            index_data = index_data_q.get(timeout=5)
+            index_data = index_data_q.get(timeout=1)
             solr.update.index(index_data)
             # increase count based on the number of items in the list
             count += len(index_data)
             progbar.update(count)
+
+        # by default, signals propagate to all processes;
+        # take advantage of that to stop gracefully
+        except KeyboardInterrupt:
+            # if we get a ctrl-c / keyboard interrupt, stop adding
+            # works to queue even though not all indexing will be finished
+            print("KeyboardInterrupt, exiting indexing queue")
+            return
+
         except queue.Empty:
             # only end if work q is also empty; otherwise, loop again
             # indexer has just gotten ahead of page index data
@@ -68,6 +86,7 @@ class Command(BaseCommand):
     #: normal verbosity level
     v_normal = 1
     verbosity = v_normal
+    sources = {name: code for code, name in DigitizedWork.SOURCE_CHOICES}
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -79,6 +98,9 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "source_ids", nargs="*", help="List of specific items to index (optional)"
+        )
+        parser.add_argument(
+            "--source", help="Limit to one source", choices=Command.sources.keys()
         )
         parser.add_argument(
             "--expedite",
@@ -101,15 +123,24 @@ class Command(BaseCommand):
 
         if not source_ids:
             digiworks = DigitizedWork.items_to_index()
+
+            # if single-source indexing is specified, filter items by source
+            source = kwargs.get("source")
+            if source:
+                digiworks = digiworks.filter(source=self.sources[source])
+
+            # TODO: how to calculate total pages to index for single source?
             num_pages = Page.total_to_index()
         else:
             digiworks = DigitizedWork.objects.filter(source_id__in=source_ids)
+
             digwork_pages = digiworks.aggregate(page_count=models.Sum("page_count"))
             num_pages = digwork_pages["page_count"]
 
         # if reindexing everything, check db totals against solr
         if not source_ids and self.verbosity >= self.v_normal:
             # check totals
+            # TODO: optionally filter by source type?
             solr_count = self.get_solr_totals()
 
             work_diff = digiworks.count() - solr_count.get("work", 0)
@@ -193,19 +224,36 @@ class Command(BaseCommand):
 
         # start multiple processes to populate the page index data queue
         # (need at least 1 page data process, no matter what was specified)
+        data_feeders = []
         for i in range(max(1, kwargs["processes"] - 1)):
-            Process(target=page_index_data, args=(work_q, page_data_q)).start()
+            process = Process(target=page_index_data, args=(work_q, page_data_q))
+            process.start()
+            data_feeders.append(process)
 
         # give the page data a head start, since indexing is faster
-        sleep(10)
+        sleep(1)
         # start a single indexing process
         indexer = Process(
             target=process_index_queue,
             args=(page_data_q, num_pages, work_q),
         )
         indexer.start()
-        # block until indexer has completed
-        indexer.join()
+        try:
+            # block until indexer has completed, but catch keyboard interrupt
+            indexer.join()
+        except KeyboardInterrupt:
+            # if user interrupts indexing with Ctrl-C,
+            # terminate and join all the processes
+            indexer.terminate()
+            indexer.join()
+            for proc in data_feeders:
+                proc.terminate()
+                proc.join()
+
+            work_q.close()
+            work_q.cancel_join_thread()
+            page_data_q.close()
+            page_data_q.cancel_join_thread()
 
         # print a summary of solr totals by item type
         if self.verbosity >= self.v_normal:
@@ -217,8 +265,13 @@ class Command(BaseCommand):
             self.stdout.write(
                 "\nItems in Solr by item type: %s" % (", ".join(item_totals))
             )
+        return
 
     def get_solr_totals(self):
         facets = SolrQuerySet().all().facet("item_type").get_facets()
         # facet returns an ordered dict
-        return facets.facet_fields.item_type
+        if facets and facets.facet_fields:
+            return facets.facet_fields.get("item_type", {})
+
+        # if facets or facet_fields not set, count for all types is zero
+        return {}
