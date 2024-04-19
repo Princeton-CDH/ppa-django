@@ -117,8 +117,22 @@
     <field name="author_exact" type="string" multiValued="false" required="false" stored="true"/>
     <field name="collections" type="text_en" multiValued="true" required="false" stored="true"/>
     <field name="collections_exact" type="string" multiValued="true" required="false" stored="true"/>
-    <field name="last_modified" type="pdate" default="NOW" multiValued="false" required="false" stored="true" />
+    <field name="content" type="text_en" multiValued="false" required="false" stored="true"/>
+    <field name="enumcron" type="string" multiValued="false" required="false" stored="true"/>
+    <field name="item_type" type="string" multiValued="false" required="false" stored="true"/>
+    <field name="label" type="string" multiValued="false" required="false" stored="true"/>
+    <field name="last_modified" type="pdate" default="NOW" multiValued="false" required="false" stored="true"/>
+    <field name="notes" type="text_en" multiValued="false" required="false" stored="true"/>
+    <field name="order" type="pint" multiValued="false" required="false" stored="true"/>
+    <field name="pub_date" type="pint" multiValued="false" required="false" stored="true"/>
+    <field name="pub_place" type="text_en" multiValued="false" required="false" stored="true"/>
+    <field name="publisher" type="text_en" multiValued="false" required="false" stored="true"/>
     <field name="sort_title" type="text_string" multiValued="false" required="false" stored="true"/>
+    <field name="source_id" type="string" multiValued="false" required="false" stored="true"/>
+    <field name="source_url" type="string" multiValued="false" required="false" stored="true"/>
+    <field name="subtitle" type="text_en" multiValued="false" required="false" stored="true"/>
+    <field name="tags" type="text_en" multiValued="true" required="false" stored="true"/>
+    <field name="title" type="text_en" multiValued="false" required="false" stored="true"/>
 
     <!-- copyField commands copy one field to another at the time a document
        is added to the index.  It's used either to index the same field differently,
