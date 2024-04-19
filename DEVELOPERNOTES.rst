@@ -30,7 +30,7 @@ Create a new core with the `ppa` configset::
 
 When the configset has changed, copy in the updated solr config files::
 
-    docker cp solr_conf/* solr84:/opt/solr/server/solr/configsets/ppa/
+    docker cp solr_conf/* solr84:/var/solr/data/configsets/ppa/
 
 Setup
 -----
