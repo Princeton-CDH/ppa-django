@@ -551,10 +551,19 @@ class TestDigitizedWorkListRequest(TestCase):
         SolrClient().update.index(index_data)
         # NOTE: without a sleep, even with commit=True and/or low
         # commitWithin settings, indexed data isn't reliably available
+        index_checks = 0
         while SolrQuerySet().search(item_type="work").count() == 0:
             # sleep until we get records back; 0.1 seems to be enough
             # for local dev with local Solr
             sleep(0.1)
+            # to avoid infinite loop when there's something wrong here,
+            # bail out after a certain number of attempts
+            index_checks += 1
+            if index_checks > 10:
+                raise Exception(
+                    "fixture index data not available after 10 tries, "
+                    + "something is probably wrong"
+                )
 
     def setUp(self):
         # get a work and its detail page to test with
