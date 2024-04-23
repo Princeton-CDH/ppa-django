@@ -219,6 +219,9 @@
     <dynamicField name="*_txts_en" type="text_en"  indexed="true"  stored="true"  multiValued="true"/>
     <fieldType name="text_en" class="solr.TextField" positionIncrementGap="100">
       <analyzer>
+        <!-- reconnect hyphenated words that wrap around a newline -->
+        <!-- NOTE: can't use HyphenatedWordsFilterFactory because our tokenizer strips hyphens -->
+        <charFilter name="patternReplace" pattern="(\w+)[-¬]\s*\n" replacement="$1"/>
         <tokenizer name="standard"/>
         <!-- Case insensitive stop word removal. -->
         <filter name="stop" ignoreCase="true" words="lang/stopwords_en.txt"/>
@@ -227,7 +230,7 @@
         <filter name="keywordRepeat"/>
         <filter name="stemmerOverride" dictionary="stemdict_ppa.txt"/>
         <filter name="porterStem"/>
-        <!-- TODO: "This filter is a better substitute for the combined behavior of the
+        <!-- icuFolding is a better substitute for the combined behavior of the
              ASCII Folding Filter, Lower Case Filter, and ICU Normalizer 2 Filter.
         -->
         <filter name="icuFolding"/>
