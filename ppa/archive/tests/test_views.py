@@ -517,7 +517,7 @@ class TestDigitizedWorkListRequest(TestCase):
         # and index it in solr
         sample_page_content = [
             "something about winter and wintry and wintriness",
-            "something else delightful",
+            "something else delightful; be-\ncome prominent facts",
             "an alternate thing with words like blood and bone not in the title",
         ]
         sample_page_content_other = [
@@ -804,6 +804,12 @@ class TestDigitizedWorkListRequest(TestCase):
         # errors"; not sure how to trigger this error anymore!
         # response = self.client.get(url, {'query': '"incomplete phrase'})
         # self.assertContains(response, 'Unable to parse search query')
+
+    def test_search_hyphenation(self):
+        # hyphenation filter
+        response = self.client.get(self.url, {"query": "become"})
+        self.assertContains(response, "1 digitized work")
+        self.assertContains(response, self.wintry.source_id)
 
     def test_search_within_cluster(self):
         response = self.client.get(self.url, {"cluster": "treatisewinter"})
