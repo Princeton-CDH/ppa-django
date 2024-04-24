@@ -517,7 +517,7 @@ class TestDigitizedWorkListRequest(TestCase):
         # and index it in solr
         sample_page_content = [
             "something about winter and wintry and wintriness",
-            "something else delightful",
+            "something else delightful; be-\ncome prominent facts",
             "an alternate thing with words like blood and bone not in the title",
         ]
         sample_page_content_other = [
@@ -551,10 +551,19 @@ class TestDigitizedWorkListRequest(TestCase):
         SolrClient().update.index(index_data)
         # NOTE: without a sleep, even with commit=True and/or low
         # commitWithin settings, indexed data isn't reliably available
+        index_checks = 0
         while SolrQuerySet().search(item_type="work").count() == 0:
             # sleep until we get records back; 0.1 seems to be enough
             # for local dev with local Solr
             sleep(0.1)
+            # to avoid infinite loop when there's something wrong here,
+            # bail out after a certain number of attempts
+            index_checks += 1
+            if index_checks > 10:
+                raise Exception(
+                    "fixture index data not available after 10 tries, "
+                    + "something is probably wrong"
+                )
 
     def setUp(self):
         # get a work and its detail page to test with
@@ -795,6 +804,12 @@ class TestDigitizedWorkListRequest(TestCase):
         # errors"; not sure how to trigger this error anymore!
         # response = self.client.get(url, {'query': '"incomplete phrase'})
         # self.assertContains(response, 'Unable to parse search query')
+
+    def test_search_hyphenation(self):
+        # hyphenation filter
+        response = self.client.get(self.url, {"query": "become"})
+        self.assertContains(response, "1 digitized work")
+        self.assertContains(response, self.wintry.source_id)
 
     def test_search_within_cluster(self):
         response = self.client.get(self.url, {"cluster": "treatisewinter"})
