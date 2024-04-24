@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ppa.archive.management.commands.generate_textcorpus &#8212; Princeton Prosody Archive 3.12.0 documentation</title>
+    <title>ppa.archive.management.commands.generate_textcorpus &#8212; Princeton Prosody Archive 3.12.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css?v=12dfc556" />
-    <script src="../../../../../_static/documentation_options.js?v=1b7a0a1e"></script>
-    <script src="../../../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../../../_static/documentation_options.js?v=bf028e07"></script>
+    <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" />
@@ -35,12 +35,9 @@
 <span class="sd">text corpus from Solr.  It should be run *after* content has been indexed</span>
 <span class="sd">into Solr via the **index** manage command.</span>
 
-<span class="sd">The full text corpus is generated from Solr; this script makes the </span>
-<span class="sd">following assumptions:</span>
-<span class="sd">    * Suppressed works and pages are not indexed </span>
-<span class="sd">        (expected behavior, if db and Solr are synchronized)</span>
-<span class="sd">    * Each work has a single source (Gale or Hathi) </span>
-<span class="sd">        even though it is indexed in Solr as a list    </span>
+<span class="sd">The full text corpus is generated from Solr; it does not include content</span>
+<span class="sd">for suppressed works or their pages (note that this depends on Solr</span>
+<span class="sd">content being current).</span>
 
 <span class="sd">Examples:</span>
 
@@ -57,7 +54,7 @@
 <span class="sd">        python manage.py generate_textcorpus --doc-limit 100</span>
 
 <span class="sd">    - Cron-style run (no progress bar, but logs)</span>
-<span class="sd">        python manage.py generate_textcorpus --no-progressbar --verbosity 2</span>
+<span class="sd">        python manage.py generate_textcorpus --no-progress --verbosity 2</span>
 
 <span class="sd">Notes:</span>
 
@@ -68,6 +65,8 @@
 <span class="sd">      iterates over the collection the quickest.</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">import</span> <span class="nn">json</span>
@@ -76,7 +75,6 @@
 <span class="kn">from</span> <span class="nn">parasolr.django</span> <span class="kn">import</span> <span class="n">SolrQuerySet</span>
 <span class="kn">from</span> <span class="nn">progressbar</span> <span class="kn">import</span> <span class="n">progressbar</span>
 <span class="kn">import</span> <span class="nn">orjsonl</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span>
 
 <span class="n">DEFAULT_BATCH_SIZE</span> <span class="o">=</span> <span class="mi">10000</span>
 <span class="n">TIMESTAMP_FMT</span> <span class="o">=</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">_%H%M&quot;</span>
@@ -89,31 +87,36 @@
 <span class="sd">    Custom manage command to generate a text corpus from text indexed in Solr.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># fields we want from pages, in solr syntax: newfieldname:oldfieldname</span>
-    <span class="n">PAGE_FIELDLIST</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;id&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;work_id&quot;</span><span class="p">:</span> <span class="s2">&quot;group_id_s&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;order&quot;</span><span class="p">:</span> <span class="s2">&quot;order&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;label&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;tags&quot;</span><span class="p">:</span> <span class="s2">&quot;tags&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;content&quot;</span><span class="p">,</span>
-    <span class="p">}</span>
+    <span class="c1">#: normal verbosity level</span>
+    <span class="n">v_normal</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">verbosity</span> <span class="o">=</span> <span class="n">v_normal</span>
 
-    <span class="n">WORK_FIELDLIST</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;work_id&quot;</span><span class="p">:</span> <span class="s2">&quot;group_id_s&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;source_id&quot;</span><span class="p">:</span> <span class="s2">&quot;source_id&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;cluster_id&quot;</span><span class="p">:</span> <span class="s2">&quot;cluster_id_s&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;title&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;author&quot;</span><span class="p">:</span> <span class="s2">&quot;author_exact&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;pub_year&quot;</span><span class="p">:</span> <span class="s2">&quot;pub_date&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;publisher&quot;</span><span class="p">:</span> <span class="s2">&quot;publisher&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;pub_place&quot;</span><span class="p">:</span> <span class="s2">&quot;pub_place&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;collections&quot;</span><span class="p">:</span> <span class="s2">&quot;collections_exact&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;work_type&quot;</span><span class="p">:</span> <span class="s2">&quot;work_type_s&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="s2">&quot;source_t&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;source_url&quot;</span><span class="p">:</span> <span class="s2">&quot;source_url&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;sort_title&quot;</span><span class="p">:</span> <span class="s2">&quot;sort_title&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;subtitle&quot;</span><span class="p">:</span> <span class="s2">&quot;subtitle&quot;</span><span class="p">,</span>
+    <span class="c1"># fields to return from Solr; output_name: solr_field_name</span>
+    <span class="n">FIELDLIST</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;id&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;work_id&quot;</span><span class="p">:</span> <span class="s2">&quot;group_id_s&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;order&quot;</span><span class="p">:</span> <span class="s2">&quot;order&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;label&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tags&quot;</span><span class="p">:</span> <span class="s2">&quot;tags&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;content&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;work&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;work_id&quot;</span><span class="p">:</span> <span class="s2">&quot;group_id_s&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;source_id&quot;</span><span class="p">:</span> <span class="s2">&quot;source_id&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;cluster_id&quot;</span><span class="p">:</span> <span class="s2">&quot;cluster_id_s&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;title&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;author&quot;</span><span class="p">:</span> <span class="s2">&quot;author_exact&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;pub_year&quot;</span><span class="p">:</span> <span class="s2">&quot;pub_date&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;publisher&quot;</span><span class="p">:</span> <span class="s2">&quot;publisher&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;pub_place&quot;</span><span class="p">:</span> <span class="s2">&quot;pub_place&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;collections&quot;</span><span class="p">:</span> <span class="s2">&quot;collections_exact&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;work_type&quot;</span><span class="p">:</span> <span class="s2">&quot;work_type_s&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="s2">&quot;source_t&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;source_url&quot;</span><span class="p">:</span> <span class="s2">&quot;source_url&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;sort_title&quot;</span><span class="p">:</span> <span class="s2">&quot;sort_title&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;subtitle&quot;</span><span class="p">:</span> <span class="s2">&quot;subtitle&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
     <span class="p">}</span>
 
     <span class="c1"># Argument parsing</span>
@@ -121,10 +124,9 @@
 <a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.generate_textcorpus.Command.add_arguments">[docs]</a>
     <span class="k">def</span> <span class="nf">add_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Build CLI arguments for command.</span>
+<span class="sd">        Configure additional CLI arguments</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># add --path argument for output storage</span>
+        <span class="c1"># add --path argument for output</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
             <span class="s2">&quot;--path&quot;</span><span class="p">,</span>
             <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Directory path to save corpus file(s).&quot;</span>
@@ -136,9 +138,9 @@
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
             <span class="s2">&quot;--doc-limit&quot;</span><span class="p">,</span>
             <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
-            <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Limit on the number of documents for corpus generation.&quot;</span>
-            <span class="s2">&quot;The default of 0 considers ALL documents.&quot;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Limit the number of documents for corpus generation. &quot;</span>
+            <span class="s2">&quot;By default, includes ALL documents.&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="c1"># add --batch-size argument (for solr querying)</span>
@@ -149,12 +151,13 @@
             <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of docs to query from solr at one time&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="c1"># add --no-gzip argument (save as .jsonl instead of .jsonl.gz)</span>
+        <span class="c1"># control compression of pages jsonl output (enabled by default)</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="s2">&quot;--no-gzip&quot;</span><span class="p">,</span>
-            <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Save uncompressed as ppa_pages.jsonl &quot;</span>
-            <span class="s2">&quot;instead of compressed as ppa_pages.jsonl.gz&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--gzip&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Save pages as compressed or uncompressed &quot;</span>
+            <span class="s2">&quot;(ppa_pages.jsonl or ppa_pages.jsonl.gz)&quot;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">BooleanOptionalAction</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="c1"># add --dry-run argument (don&#39;t save anything, just iterate)</span>
@@ -164,9 +167,12 @@
             <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Do not save anything, just iterate over solr&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="c1"># add --no-progressbar argument (don&#39;t show progress bar)</span>
+        <span class="c1"># control progress bar display (on by default)</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="s2">&quot;--no-progressbar&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Hide the progress bar&quot;</span>
+            <span class="s2">&quot;--progress&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Show progress&quot;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">BooleanOptionalAction</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -176,47 +182,44 @@
 <a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.generate_textcorpus.Command.iter_solr">[docs]</a>
     <span class="k">def</span> <span class="nf">iter_solr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_type</span><span class="o">=</span><span class="s2">&quot;page&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Iterate over solr documents of a certain `item_type`.</span>
+<span class="sd">        Returns a generator Solr documents for the requested `item_type`</span>
+<span class="sd">        (page or work).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># get params</span>
-        <span class="n">batch_size</span><span class="p">,</span> <span class="n">lim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">doclimit</span>
-
-        <span class="c1"># search for this item type, order by id</span>
-        <span class="n">qset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query_set</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">item_type</span><span class="o">=</span><span class="n">item_type</span><span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
-
-        <span class="c1"># if we&#39;re looking for pages, rename those fields</span>
-        <span class="k">if</span> <span class="n">item_type</span> <span class="o">==</span> <span class="s2">&quot;page&quot;</span><span class="p">:</span>
-            <span class="n">qset</span> <span class="o">=</span> <span class="n">qset</span><span class="o">.</span><span class="n">only</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">PAGE_FIELDLIST</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">item_type</span> <span class="o">==</span> <span class="s2">&quot;work&quot;</span><span class="p">:</span>
-            <span class="n">qset</span> <span class="o">=</span> <span class="n">qset</span><span class="o">.</span><span class="n">only</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">WORK_FIELDLIST</span><span class="p">)</span>
+        <span class="c1"># filter to the requested item type, order by id,</span>
+        <span class="c1"># and return the configured set of fields</span>
+        <span class="n">qset</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">query_set</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">item_type</span><span class="o">=</span><span class="n">item_type</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">only</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">FIELDLIST</span><span class="p">[</span><span class="n">item_type</span><span class="p">])</span>
+        <span class="p">)</span>
 
         <span class="c1"># get the total count for this query</span>
         <span class="n">total</span> <span class="o">=</span> <span class="n">qset</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">total</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">CommandError</span><span class="p">(</span><span class="s2">&quot;No records found in solr for query.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">CommandError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No </span><span class="si">{</span><span class="n">item_type</span><span class="si">}</span><span class="s2"> records found in Solr.&quot;</span><span class="p">)</span>
 
-        <span class="c1"># if we want fewer than that, decrease &quot;total&quot;</span>
-        <span class="c1"># (this has the effect of pulling from solr only what we need,</span>
-        <span class="c1"># since we limit how many rows we pull by this amount)</span>
-        <span class="k">if</span> <span class="n">lim</span> <span class="ow">and</span> <span class="n">total</span> <span class="o">&gt;</span> <span class="n">lim</span><span class="p">:</span>
-            <span class="n">total</span> <span class="o">=</span> <span class="n">lim</span>
+        <span class="c1"># if a doc limit is requested, decrease the total to pull from Solr</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">doclimit</span><span class="p">:</span>
+            <span class="n">total</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">total</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">doclimit</span><span class="p">)</span>
+
         <span class="c1"># define a generator to iterate solr with</span>
         <span class="n">batch_iterator</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">result</span>
-            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">total</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">total</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">qset</span><span class="p">[</span>
-                <span class="n">step</span> <span class="p">:</span> <span class="p">(</span><span class="n">step</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">step</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">total</span> <span class="k">else</span> <span class="n">total</span>
+                <span class="n">step</span> <span class="p">:</span> <span class="p">(</span><span class="n">step</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">step</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">total</span>
+                <span class="k">else</span> <span class="n">total</span>
             <span class="p">]</span>
         <span class="p">)</span>
 
-        <span class="c1"># if progress bar wanted, tack one on</span>
+        <span class="c1"># if progress bar is enabled, wrap the generator</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">progress</span><span class="p">:</span>
             <span class="n">batch_iterator</span> <span class="o">=</span> <span class="n">progressbar</span><span class="p">(</span>
-                <span class="n">batch_iterator</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="n">total</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Iterating </span><span class="si">{</span><span class="n">item_type</span><span class="si">}</span><span class="s2">s: &quot;</span>
+                <span class="n">batch_iterator</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="n">total</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Exporting </span><span class="si">{</span><span class="n">item_type</span><span class="si">}</span><span class="s2">s: &quot;</span>
             <span class="p">)</span>
 
-        <span class="c1"># yield from this generator, progress bar or no</span>
+        <span class="c1"># yield from this generator</span>
         <span class="k">yield from</span> <span class="n">batch_iterator</span></div>
 
 
@@ -224,16 +227,9 @@
 <a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.generate_textcorpus.Command.iter_works">[docs]</a>
     <span class="k">def</span> <span class="nf">iter_works</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Simply calls `.iter_solr()` with `item_type` as `&#39;work&#39;`</span>
+<span class="sd">        Yield results from :meth:`iter_solr` with `item_type=work`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_solr</span><span class="p">(</span><span class="n">item_type</span><span class="o">=</span><span class="s2">&quot;work&quot;</span><span class="p">):</span>
-            <span class="c1"># source does not need to be a list, will only be one</span>
-            <span class="c1"># see module docstring for more info</span>
-
-            <span class="n">d</span><span class="p">[</span><span class="s2">&quot;source&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;source&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-
-            <span class="c1"># yield now</span>
-            <span class="k">yield</span> <span class="n">d</span></div>
+        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_solr</span><span class="p">(</span><span class="n">item_type</span><span class="o">=</span><span class="s2">&quot;work&quot;</span><span class="p">)</span></div>
 
 
     <span class="c1"># save pages</span>
@@ -241,7 +237,7 @@
 <a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.generate_textcorpus.Command.iter_pages">[docs]</a>
     <span class="k">def</span> <span class="nf">iter_pages</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Simply calls `.iter_solr()` with `item_type` as `&#39;page&#39;`</span>
+<span class="sd">        Yield results from :meth:`iter_solr` with `item_type=page`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_solr</span><span class="p">(</span><span class="n">item_type</span><span class="o">=</span><span class="s2">&quot;page&quot;</span><span class="p">)</span></div>
 
@@ -259,13 +255,13 @@
         <span class="c1"># save if not a dry run</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_dry_run</span><span class="p">:</span>
             <span class="c1"># save json</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path_meta</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">of</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path_works_json</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">of</span><span class="p">:</span>
                 <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">of</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
             <span class="c1"># save csv</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path_meta_csv</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">csvfile</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path_works_csv</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">csvfile</span><span class="p">:</span>
                 <span class="c1"># fieldnames we already know</span>
-                <span class="n">fieldnames</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">WORK_FIELDLIST</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                <span class="n">fieldnames</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">FIELDLIST</span><span class="p">[</span><span class="s2">&quot;work&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
                 <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictWriter</span><span class="p">(</span><span class="n">csvfile</span><span class="p">,</span> <span class="n">fieldnames</span><span class="o">=</span><span class="n">fieldnames</span><span class="p">)</span>
                 <span class="n">writer</span><span class="o">.</span><span class="n">writeheader</span><span class="p">()</span>
                 <span class="n">writer</span><span class="o">.</span><span class="n">writerows</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
@@ -275,15 +271,15 @@
 <a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.generate_textcorpus.Command.save_pages">[docs]</a>
     <span class="k">def</span> <span class="nf">save_pages</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Save the page-level metadata as a jsonl file</span>
+<span class="sd">        Save the page-level data as a jsonl file</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1">### save pages</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_dry_run</span><span class="p">:</span>
-            <span class="c1"># iterate in place</span>
-            <span class="n">deque</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_pages</span><span class="p">(),</span> <span class="n">maxlen</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="c1"># consume the generator</span>
+            <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_pages</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># save to jsonl or jsonl.gz</span>
-            <span class="n">orjsonl</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path_texts</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_pages</span><span class="p">())</span></div>
+            <span class="n">orjsonl</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path_pages_json</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_pages</span><span class="p">())</span></div>
 
 
     <span class="c1">### running script</span>
@@ -299,24 +295,15 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ppa_corpus_</span><span class="si">{</span><span class="n">nowstr</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">path_meta</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;ppa_metadata.json&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">path_meta_csv</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;ppa_metadata.csv&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">uncompressed</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;no_gzip&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">path_texts</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;ppa_pages.jsonl&quot;</span> <span class="o">+</span> <span class="p">(</span><span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">uncompressed</span> <span class="k">else</span> <span class="s2">&quot;.gz&quot;</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_works_json</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;ppa_metadata.json&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_works_csv</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;ppa_metadata.csv&quot;</span><span class="p">)</span>
+        <span class="n">jsonl_ext</span> <span class="o">=</span> <span class="s2">&quot;jsonl.gz&quot;</span> <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gzip&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;jsonl&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_pages_json</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ppa_pages.</span><span class="si">{</span><span class="n">jsonl_ext</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_dry_run</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dry_run&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">doclimit</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;doc_limit&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;doc_limit&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span>
-        <span class="p">)</span>
-        <span class="n">verbosity_int</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;verbosity&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbosity_int</span> <span class="o">&gt;</span> <span class="mi">1</span>  <span class="c1"># extra verbose</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">progress</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;no_progressbar&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;batch_size&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;batch_size&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
-            <span class="k">else</span> <span class="n">DEFAULT_BATCH_SIZE</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doclimit</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;doc_limit&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;verbosity&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">progress</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;progress&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;batch_size&quot;</span><span class="p">,</span> <span class="n">DEFAULT_BATCH_SIZE</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">query_set</span> <span class="o">=</span> <span class="n">SolrQuerySet</span><span class="p">()</span></div>
 
 
@@ -325,10 +312,10 @@
     <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
 
-        <span class="c1"># ensure path</span>
+        <span class="c1"># ensure output path exists</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_dry_run</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;saving PPA text corpus to: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_normal</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving files in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># save metadata</span>
@@ -390,7 +377,7 @@
 </ul>
 
 
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../../../../search.html" method="get">
@@ -398,7 +385,7 @@
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script><div class="powered_by">
 <p>Powered by:</p>
 <a href="http://cdh.princeton.edu/">
@@ -414,7 +401,7 @@
       &#169;2024, CDH @ Princeton University.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
     </div>

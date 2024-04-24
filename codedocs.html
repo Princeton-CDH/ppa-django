@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Code Documentation &#8212; Princeton Prosody Archive 3.12.0 documentation</title>
+    <title>Code Documentation &#8212; Princeton Prosody Archive 3.12.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=12dfc556" />
-    <script src="_static/documentation_options.js?v=1b7a0a1e"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/documentation_options.js?v=bf028e07"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -2058,22 +2058,9 @@ database and create a lookup based on the codes used in the spreadsheet.</p>
 <p><strong>generate_textcorpus</strong> is a custom manage command to generate a plain
 text corpus from Solr.  It should be run <em>after</em> content has been indexed
 into Solr via the <strong>index</strong> manage command.</p>
-<p>The full text corpus is generated from Solr; this script makes the 
-following assumptions:</p>
-<blockquote>
-<div><ul class="simple">
-<li><dl class="simple">
-<dt>Suppressed works and pages are not indexed </dt><dd><p>(expected behavior, if db and Solr are synchronized)</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>Each work has a single source (Gale or Hathi) </dt><dd><p>even though it is indexed in Solr as a list</p>
-</dd>
-</dl>
-</li>
-</ul>
-</div></blockquote>
+<p>The full text corpus is generated from Solr; it does not include content
+for suppressed works or their pages (note that this depends on Solr
+content being current).</p>
 <p>Examples:</p>
 <blockquote>
 <div><ul class="simple">
@@ -2098,7 +2085,7 @@ following assumptions:</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>Cron-style run (no progress bar, but logs)</dt><dd><p>python manage.py generate_textcorpus –no-progressbar –verbosity 2</p>
+<dt>Cron-style run (no progress bar, but logs)</dt><dd><p>python manage.py generate_textcorpus –no-progress –verbosity 2</p>
 </dd>
 </dl>
 </li>
@@ -2120,7 +2107,7 @@ iterates over the collection the quickest.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="ppa.archive.management.commands.generate_textcorpus.Command.add_arguments">
 <span class="sig-name descname"><span class="pre">add_arguments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parser</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_textcorpus.html#Command.add_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_textcorpus.Command.add_arguments" title="Link to this definition">¶</a></dt>
-<dd><p>Build CLI arguments for command.</p>
+<dd><p>Configure additional CLI arguments</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2133,19 +2120,20 @@ this method.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="ppa.archive.management.commands.generate_textcorpus.Command.iter_pages">
 <span class="sig-name descname"><span class="pre">iter_pages</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_textcorpus.html#Command.iter_pages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_textcorpus.Command.iter_pages" title="Link to this definition">¶</a></dt>
-<dd><p>Simply calls <cite>.iter_solr()</cite> with <cite>item_type</cite> as <cite>‘page’</cite></p>
+<dd><p>Yield results from <a class="reference internal" href="#ppa.archive.management.commands.generate_textcorpus.Command.iter_solr" title="ppa.archive.management.commands.generate_textcorpus.Command.iter_solr"><code class="xref py py-meth docutils literal notranslate"><span class="pre">iter_solr()</span></code></a> with <cite>item_type=page</cite></p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ppa.archive.management.commands.generate_textcorpus.Command.iter_solr">
 <span class="sig-name descname"><span class="pre">iter_solr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'page'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_textcorpus.html#Command.iter_solr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_textcorpus.Command.iter_solr" title="Link to this definition">¶</a></dt>
-<dd><p>Iterate over solr documents of a certain <cite>item_type</cite>.</p>
+<dd><p>Returns a generator Solr documents for the requested <cite>item_type</cite>
+(page or work).</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ppa.archive.management.commands.generate_textcorpus.Command.iter_works">
 <span class="sig-name descname"><span class="pre">iter_works</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_textcorpus.html#Command.iter_works"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_textcorpus.Command.iter_works" title="Link to this definition">¶</a></dt>
-<dd><p>Simply calls <cite>.iter_solr()</cite> with <cite>item_type</cite> as <cite>‘work’</cite></p>
+<dd><p>Yield results from <a class="reference internal" href="#ppa.archive.management.commands.generate_textcorpus.Command.iter_solr" title="ppa.archive.management.commands.generate_textcorpus.Command.iter_solr"><code class="xref py py-meth docutils literal notranslate"><span class="pre">iter_solr()</span></code></a> with <cite>item_type=work</cite></p>
 </dd></dl>
 
 <dl class="py method">
@@ -2157,13 +2145,19 @@ this method.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="ppa.archive.management.commands.generate_textcorpus.Command.save_pages">
 <span class="sig-name descname"><span class="pre">save_pages</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_textcorpus.html#Command.save_pages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_textcorpus.Command.save_pages" title="Link to this definition">¶</a></dt>
-<dd><p>Save the page-level metadata as a jsonl file</p>
+<dd><p>Save the page-level data as a jsonl file</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ppa.archive.management.commands.generate_textcorpus.Command.set_params">
 <span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/management/commands/generate_textcorpus.html#Command.set_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.management.commands.generate_textcorpus.Command.set_params" title="Link to this definition">¶</a></dt>
 <dd><p>Run the command, generating metadata.jsonl and pages.jsonl</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ppa.archive.management.commands.generate_textcorpus.Command.v_normal">
+<span class="sig-name descname"><span class="pre">v_normal</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#ppa.archive.management.commands.generate_textcorpus.Command.v_normal" title="Link to this definition">¶</a></dt>
+<dd><p>normal verbosity level</p>
 </dd></dl>
 
 </dd></dl>
@@ -2375,7 +2369,7 @@ description, for use in previews on the site and plain-text metadata
 previews.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags">
-<span class="sig-name descname"><span class="pre">allowed_tags</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['em',</span> <span class="pre">'strong',</span> <span class="pre">'ul',</span> <span class="pre">'blockquote',</span> <span class="pre">'abbr',</span> <span class="pre">'b',</span> <span class="pre">'li',</span> <span class="pre">'p',</span> <span class="pre">'code',</span> <span class="pre">'ol',</span> <span class="pre">'i',</span> <span class="pre">'acronym']</span></em><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">allowed_tags</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['b',</span> <span class="pre">'p',</span> <span class="pre">'li',</span> <span class="pre">'ul',</span> <span class="pre">'ol',</span> <span class="pre">'em',</span> <span class="pre">'strong',</span> <span class="pre">'code',</span> <span class="pre">'i',</span> <span class="pre">'abbr',</span> <span class="pre">'blockquote',</span> <span class="pre">'acronym']</span></em><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags" title="Link to this definition">¶</a></dt>
 <dd><p>allowed tags for bleach html stripping in description</p>
 </dd></dl>
 
@@ -3117,6 +3111,7 @@ to normal template view behavior and displays format information.</p>
 <li><a class="reference internal" href="#ppa.archive.management.commands.generate_textcorpus.Command.save_metadata"><code class="docutils literal notranslate"><span class="pre">Command.save_metadata()</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.management.commands.generate_textcorpus.Command.save_pages"><code class="docutils literal notranslate"><span class="pre">Command.save_pages()</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.management.commands.generate_textcorpus.Command.set_params"><code class="docutils literal notranslate"><span class="pre">Command.set_params()</span></code></a></li>
+<li><a class="reference internal" href="#ppa.archive.management.commands.generate_textcorpus.Command.v_normal"><code class="docutils literal notranslate"><span class="pre">Command.v_normal</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#ppa.archive.management.commands.generate_textcorpus.nowstr"><code class="docutils literal notranslate"><span class="pre">nowstr()</span></code></a></li>
@@ -3263,7 +3258,7 @@ to normal template view behavior and displays format information.</p>
 </ul>
 
   </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -3271,7 +3266,7 @@ to normal template view behavior and displays format information.</p>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script><div class="powered_by">
 <p>Powered by:</p>
 <a href="http://cdh.princeton.edu/">
@@ -3287,7 +3282,7 @@ to normal template view behavior and displays format information.</p>
       &#169;2024, CDH @ Princeton University.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
       |
