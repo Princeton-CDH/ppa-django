@@ -3,6 +3,14 @@
 CHANGELOG
 =========
 
+3.12.1
+------
+
+* Upgrade to Solr 9.
+  * Updated Solr configuration includes support for searching on words
+    hyphenated across line breaks
+
+
 3.12
 ----
 - As an admin, I want the Source ID link in list view to go to the first page of the excerpt for articles and excerpts, so that I can more easily access excerpt content.
