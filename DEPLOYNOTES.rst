@@ -3,6 +3,17 @@
 Deploy and Upgrade notes
 ========================
 
+3.12.1
+------
+
+This release updates PPA to run against Solr 9, with a new configset.
+Solr configuration should be updated and all content should be indexed
+into the new Solr 9 core::
+
+    python manage.py index -i work
+    python manage.py index_pages
+
+
 3.12
 ----
 
