@@ -3,12 +3,9 @@
 text corpus from Solr.  It should be run *after* content has been indexed
 into Solr via the **index** manage command.
 
-The full text corpus is generated from Solr; this script makes the 
-following assumptions:
-    * Suppressed works and pages are not indexed 
-        (expected behavior, if db and Solr are synchronized)
-    * Each work has a single source (Gale or Hathi) 
-        even though it is indexed in Solr as a list    
+The full text corpus is generated from Solr; it does not include content
+for suppressed works or their pages (note that this depends on Solr
+content being current).
 
 Examples:
 
@@ -25,7 +22,7 @@ Examples:
         python manage.py generate_textcorpus --doc-limit 100
 
     - Cron-style run (no progress bar, but logs)
-        python manage.py generate_textcorpus --no-progressbar --verbosity 2
+        python manage.py generate_textcorpus --no-progress --verbosity 2
 
 Notes:
 
