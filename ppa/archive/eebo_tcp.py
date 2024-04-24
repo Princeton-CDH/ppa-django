@@ -34,23 +34,24 @@ class Page(xmlmap.XmlObject):
         for i, text in enumerate(self.text_contents):
             # lxml handles text between elements as "tail" text;
             # the parent of the tail text is the preceding element
+            if text.is_tail:
+                # if text precedes a GAP tag, include the display content
+                # from the DISP attribute (for now)
+                if text.getparent().tag == "GAP":
+                    yield text.getparent().get("DISP")
 
-            # stop when hit we a tail text that comes after a page break tag
-            # other than this page break (i.e., not the first tail text)
-            # or when we hit the end of a section (DIV1)
-            if i > 0 and text.is_tail and text.getparent().tag in ["PB", "DIV1"]:
-                break
-
-            # if text precedes a GAP tag, include the display content (for now)
-            if text.is_tail and text.getparent().tag == "GAP":
-                yield text.getparent().get("DISP")
+                # stop when hit the tail text that comes after the second
+                # page break tag (not the first tail text after current PB)
+                # or when we hit the end of a section (DIV1)
+                if i > 0 and text.getparent().tag in ["PB", "DIV1"]:
+                    break
 
             yield text
 
     def __str__(self):
         # TODO: should we do anything with divider character ∣ ?
         # does this indicate page breaks in the original?
-        # (it can occur in the middle of words; check and introduce soft hyphen?)
+        # (it can occur in the middle of words; do we check and introduce hyphens? remove?)
         return "".join(self.page_contents())
 
 
