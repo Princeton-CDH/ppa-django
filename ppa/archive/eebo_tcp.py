@@ -24,7 +24,7 @@ class Page(xmlmap.XmlObject):
         return f"<Page {self.label} ({self.section_type})>"
 
     def page_contents(self):
-        "generator of text strings between this page break and the next one"
+        """generator of text strings between this page break and the next one"""
 
         # strictly speaking we are returning lxml "smart strings"
         # (lxml.etree._ElementUnicodeResult)
