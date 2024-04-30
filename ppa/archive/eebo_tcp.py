@@ -8,29 +8,30 @@ from eulxml import xmlmap
 class Page(xmlmap.XmlObject):
     """A page of content in an EEBO-TCP text"""
 
-    # not sure how these are used; repeat in pairs? page label (?)
+    #: reference id for image scan (two pages per image)
     ref = xmlmap.StringField("@REF")
-    #: page number (optional)
+    #: source page number (optional)
     number = xmlmap.StringField("@N")
 
     # parent div type =~ page type / label ?
     section_type = xmlmap.StringField("ancestor::DIV1/@TYPE")
 
-    # page breaks delimit content instead of containing it;
-    # use following axis to find all text nodes following this page break
+    # page beginning tags delimit content instead of containing it;
+    # use following axis to find all text nodes following this page beginning
     text_contents = xmlmap.StringListField("following::text()")
 
     def __repr__(self):
         return f"<Page {self.label} ({self.section_type})>"
 
     def page_contents(self):
-        """generator of text strings between this page break and the next one"""
+        """generator of text strings between this page beginning tag and
+        the next one"""
 
         # strictly speaking we are returning lxml "smart strings"
         # (lxml.etree._ElementUnicodeResult)
 
         # iterate and yield text following the current page
-        # break until we hit the next page break
+        # break until we hit the next page beginning
         for i, text in enumerate(self.text_contents):
             # lxml handles text between elements as "tail" text;
             # the parent of the tail text is the preceding element
@@ -41,7 +42,7 @@ class Page(xmlmap.XmlObject):
                     yield text.getparent().get("DISP")
 
                 # stop when hit the tail text that comes after the second
-                # page break tag (not the first tail text after current PB)
+                # page beginning tag (not the first tail text after current PB)
                 # or when we hit the end of a section (DIV1)
                 if i > 0 and text.getparent().tag in ["PB", "DIV1"]:
                     break
@@ -61,8 +62,8 @@ class Text(xmlmap.XmlObject):
 
     # EEBO-TCP TEI does not use or declare any namespaces
 
-    # pages are delimited by page breaks, which may occur at
+    # pages are delimited by page beginning tags, which may occur at
     # various levels nested within divs, paragraphs, etc
 
-    #: list of page objects, identified by starting page break tag (PB)
+    #: list of page objects, identified by page beginning tag (PB)
     pages = xmlmap.NodeListField("EEBO/TEXT//PB", Page)
