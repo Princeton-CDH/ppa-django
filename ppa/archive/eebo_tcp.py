@@ -51,11 +51,13 @@ class Page(xmlmap.XmlObject):
 
             yield text
 
+    divider = "∣"
+
     def __str__(self):
-        # TODO: should we do anything with divider character ∣ ?
-        # does this indicate page breaks in the original?
-        # (it can occur in the middle of words; do we check and introduce hyphens? remove?)
-        return "".join(self.page_contents())
+        # NOTE: P4 EEBO-TCP content uses unicode divider character ∣
+        # to indicate page breaks that caused hyphenated words
+        # in the original text; remove them
+        return "".join(self.page_contents()).replace(self.divider, "")
 
 
 class Text(xmlmap.XmlObject):
