@@ -33,18 +33,20 @@ class Page(xmlmap.XmlObject):
         # iterate and yield text following the current page
         # break until we hit the next page beginning
         for i, text in enumerate(self.text_contents):
+            parent = text.getparent()
+
             # lxml handles text between elements as "tail" text;
             # the parent of the tail text is the preceding element
-            if text.is_tail:
+            if text.is_tail and parent.tag == "GAP":
                 # if text precedes a GAP tag, include the display content
                 # from the DISP attribute (for now)
-                if text.getparent().tag == "GAP":
-                    yield text.getparent().get("DISP")
+                yield text.getparent().get("DISP")
 
-                # stop when hit the tail text that comes after the second
-                # page beginning tag (not the first tail text after current PB)
-                # or when we hit the end of a section (DIV1)
-                if i > 0 and text.getparent().tag in ["PB", "DIV1"]:
+            if text.is_tail and parent.tag == "PB":
+                # the first loop is the first text node in the current page;
+                # any iteration after that that comes after a PB
+                # is the end of this page
+                if i > 0:
                     break
 
             yield text
