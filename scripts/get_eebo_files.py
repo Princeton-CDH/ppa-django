@@ -31,6 +31,9 @@ from os.path import basename
 from pathlib import Path
 from zipfile import ZipFile
 
+from lxml import objectify
+import pymarc
+
 
 def group_ids(idlist: list) -> dict[str, list]:
     # given a list of of EEBO-TCP ids, return a dictionary of lists
@@ -66,8 +69,8 @@ def extract_from_zipfile(
     return count
 
 
-def get_xml_files(eebo_path: Path, base_ids: list, output_dir: Path):
-    print(f"Exporting XML for {len(base_ids)} unique volumes to {output_dir}")
+def extract_xml_files(eebo_path: Path, base_ids: list, output_path: Path):
+    print(f"Exporting XML for {len(base_ids)} unique volumes to {output_path}")
 
     # make sure we can use the specified output path
     if not output_path.exists():
@@ -121,7 +124,58 @@ def get_xml_files(eebo_path: Path, base_ids: list, output_dir: Path):
         print(f"Only exported {total_exported} volumes, something went wrong...")
 
 
-# def get_marcl_files(args.eebo_path, base_ids, args.output_dir):
+def get_marc_ids(eebo_path: Path, base_ids: list) -> dict[str, str]:
+    # setup requires EEBO-TCP id mapping file in eebo data dir
+    idmapfile = eebo_path / "IDmap.eebo_2015.xml"
+    idmapxml = objectify.parse(idmapfile)
+
+    # convert list of ids to a set for fast lookup
+    tcp_ids = set(base_ids)
+    # construct a dictionary mapping of MARC ESTC ids to extract
+    # and their corresponding TCP id
+    idmapping = {}
+    for tcpitem in idmapxml.findall("TCPitem"):
+        # NOTE: some ids are missing ESTC tag but doesn't come up in our set
+        if tcpitem.tcpID in tcp_ids:
+            # the ID that matches our records is in the BIBNO element, e.g.
+            # <BIBNO T="oclc">12226320</BIBNO>
+            # convert to string for comparison with marcreader id
+            idmapping[str(tcpitem.BIBNO)] = tcpitem.tcpID
+
+    print(f"Found {len(idmapping)} ESTC ids for {len(base_ids)} TCP ids")
+    return idmapping
+
+
+def extract_marc_files(eebo_path: Path, base_ids: list, output_path: Path):
+    # get mapping from TCP id to marc ESTC id
+    idmap = get_marc_ids(eebo_path, base_ids)
+
+    extracted = 0
+    expected = len(idmap)
+    marcfile_path = eebo_path / "eebo.mrc"
+    with marcfile_path.open("rb") as marcfile:
+        reader = pymarc.MARCReader(marcfile, to_unicode=True, utf8_handling="replace")
+        # iterate through all records to find the ones we care about (this is slow)
+        read_records = 0
+        for record in reader:
+            read_records += 1
+            # ESTC id is 001 identifier
+            estc_id = record["001"].value().strip()
+            # if this is an id we care about, extract
+            if estc_id in idmap:
+                # use tcp id for output filename
+                # create individual binary marc file with TCP id
+                marc_output = output_path / f"{idmap[estc_id]}.mrc"
+                record.force_utf8 = True
+                marc_output.open("wb").write(record.as_marc())
+                extracted += 1
+                # stop iterating once we've found all the records we want,
+                # saves us from reading ~1k records for our set
+                if extracted == expected:
+                    break
+
+    print(f"Extracted {extracted} MARC records")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -154,4 +208,5 @@ if __name__ == "__main__":
     eebo_path = Path(args.eebo_dir)
     output_path = Path(args.output_dir)
 
-    get_xml_files(eebo_path, base_ids, output_path)
+    extract_xml_files(eebo_path, base_ids, output_path)
+    extract_marc_files(eebo_path, base_ids, output_path)
