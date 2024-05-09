@@ -17,6 +17,9 @@ import csv
 from pathlib import Path
 
 from django.conf import settings
+from django.contrib.admin.models import ADDITION, LogEntry
+from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand, CommandError
 from parasolr.django.signals import IndexableSignalHandler
 import pymarc
@@ -56,6 +59,10 @@ class Command(BaseCommand):
         to_import = self.load_csv(kwargs["csv"])
         # currently the CSV only specifiec OB, no other collections
         original_bibliography = Collection.objects.get(name="Original Bibliography")
+
+        # get script user and content type for creating log entries
+        self.script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
+        self.digwork_contentype = ContentType.objects.get_for_model(DigitizedWork)
 
         for row in to_import:
             print(row)
@@ -102,7 +109,15 @@ class Command(BaseCommand):
             if row["OB?"] == "Y":
                 digwork.collections.add(original_bibliography)
 
-            # add log entry
+            # create log entry to document db record creation
+            LogEntry.objects.log_action(
+                user_id=self.script_user.pk,
+                content_type_id=self.digwork_contentype.pk,
+                object_id=digwork.pk,
+                object_repr=str(digwork),
+                change_message="Created via eebo_import manage command",
+                action_flag=ADDITION,
+            )
 
         # second step for all newly imported works
         # - index pages
