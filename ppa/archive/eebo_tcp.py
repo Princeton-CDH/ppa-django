@@ -5,6 +5,12 @@ Code for working with EEBO-TCP (Text Creation Partnership) content.
 from eulxml import xmlmap
 
 
+def short_id(volume_id):
+    # volume ids in import spreadsheet are in this format: A25820.0001.001
+    # TCP records use the first portion only
+    return volume_id.split(".")[0]
+
+
 class Page(xmlmap.XmlObject):
     """A page of content in an EEBO-TCP text"""
 

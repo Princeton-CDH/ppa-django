@@ -33,3 +33,8 @@ def test_eebo_tcp_page_contents():
     assert last_page_content.rstrip().endswith(
         "CHAP. XXXVIII. The Peroration. 258\nFINIS."
     )
+
+
+def test_short_id():
+    assert eebo_tcp.short_id("A25820.0001.001") == "A25820"
+    assert eebo_tcp.short_id("A25820") == "A25820"
