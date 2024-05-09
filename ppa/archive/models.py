@@ -324,10 +324,12 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 
     HATHI = "HT"
     GALE = "G"
+    EEBO = "E"
     OTHER = "O"
     SOURCE_CHOICES = (
         (HATHI, "HathiTrust"),
         (GALE, "Gale"),
+        (EEBO, "EEBO-TCP"),
         (OTHER, "Other"),
     )
     #: source of the record, HathiTrust or elsewhere
@@ -574,9 +576,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 
     @property
     def has_fulltext(self):
-        """Checks if an item has full text (currently only items from
-        HathiTrust or Gale)."""
-        return self.source in [self.HATHI, self.GALE]
+        """Checks if an item has full text (i.e., items from
+        HathiTrust, Gale, or EEBO-TCP)."""
+        return self.source in [self.HATHI, self.GALE, self.EEBO]
 
     @cached_property
     def hathi(self):
@@ -658,9 +660,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 
         # should not be editable in admin, but add a validation check
         # just in case
-        if self.has_changed("source_id") and self.source == self.HATHI:
+        if self.has_changed("source_id") and self.source in [self.HATHI, self.EEBO]:
             raise ValidationError(
-                "Changing source ID for HathiTrust records is not supported"
+                "Changing source ID for HathiTrust or EEBO-TCP record is not supported"
             )
 
         # if original page range is set, check that first page is unique
