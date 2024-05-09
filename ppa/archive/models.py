@@ -22,6 +22,7 @@ from wagtail.admin.panels import FieldPanel
 from wagtail.fields import RichTextField
 from wagtail.snippets.models import register_snippet
 
+from ppa.archive import eebo_tcp
 from ppa.archive.gale import GaleAPI, MARCRecordNotFound, get_marc_record
 from ppa.archive.hathi import HathiBibliographicAPI, HathiObject
 
@@ -1221,6 +1222,8 @@ class Page(Indexable):
                 return cls.hathi_page_index_data(digwork)
             if digwork.source == digwork.GALE:
                 return cls.gale_page_index_data(digwork)
+            if digwork.source == digwork.EEBO:
+                return cls.eebo_page_index_data(digwork)
 
         # return an empty list for anything else
         return []
@@ -1331,3 +1334,35 @@ class Page(Indexable):
                 # image id needed for thumbnail url; use solr dynamic field
                 "image_id_s": page["image"]["id"],
             }
+
+    @classmethod
+    def eebo_page_index_data(cls, digwork):
+        # get page span from digitized work
+        page_span = digwork.page_span
+        max_page = None
+        if page_span:
+            max_page = max(page_span)
+        digwork_index_id = digwork.index_id()
+
+        for i, page_info in enumerate(eebo_tcp.page_data(digwork.source_id), 1):
+            # if indexing a page range, stop iterating once we are
+            # past the highest page in range
+            if max_page and i > max_page:
+                break
+            # if the document has a page range defined, skip any pages not in range
+            if page_span and i not in page_span:
+                continue
+
+            page_info.update(
+                {
+                    "id": f"{digwork_index_id}.{i}",
+                    "source_id": digwork.source_id,
+                    "group_id_s": digwork_index_id,  # for grouping with work record
+                    "cluster_id_s": digwork.index_cluster_id,  # for grouping with cluster
+                    "order": i,
+                    # make sure label is set; fallback to sequence number if no label
+                    "label": page_info.get("label") or i,
+                    "item_type": "page",
+                }
+            )
+            yield page_info

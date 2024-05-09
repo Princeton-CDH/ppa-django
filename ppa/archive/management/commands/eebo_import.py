@@ -64,10 +64,12 @@ class Command(BaseCommand):
         self.script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
         self.digwork_contentype = ContentType.objects.get_for_model(DigitizedWork)
 
-        digworks = []
+        imported_works = []
 
         for row in to_import:
             source_id = eebo_tcp.short_id(row["Volume ID"])
+            # this is meant to be a one-time import; how to handle existing records?
+            # is that a dev-only problem?
 
             # create new unsaved digitized work with source type, source id
             # and any curation notes from the spreadsheet
@@ -120,13 +122,14 @@ class Command(BaseCommand):
                 action_flag=ADDITION,
             )
             # add to list
-            digworks.append(digwork)
+            imported_works.append(digwork)
 
-        # index imported works in Solr
-        DigitizedWork.index_items(digworks)
-
-        # second step for all newly imported works
-        # - index pages
+        # index all imported works in Solr
+        DigitizedWork.index_items(imported_works)
+        # TODO: can we use the index pages command instead?
+        # # then index all the pages
+        # for work in imported_works:
+        #     DigitizedWork.index_items(Page.page_index_data(work))
 
     def load_csv(self, path):
         """Load a CSV file with items to be imported."""
