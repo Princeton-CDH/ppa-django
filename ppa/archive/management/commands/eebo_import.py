@@ -64,8 +64,9 @@ class Command(BaseCommand):
         self.script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
         self.digwork_contentype = ContentType.objects.get_for_model(DigitizedWork)
 
+        digworks = []
+
         for row in to_import:
-            print(row)
             source_id = eebo_tcp.short_id(row["Volume ID"])
 
             # create new unsaved digitized work with source type, source id
@@ -118,6 +119,11 @@ class Command(BaseCommand):
                 change_message="Created via eebo_import manage command",
                 action_flag=ADDITION,
             )
+            # add to list
+            digworks.append(digwork)
+
+        # index imported works in Solr
+        DigitizedWork.index_items(digworks)
 
         # second step for all newly imported works
         # - index pages
