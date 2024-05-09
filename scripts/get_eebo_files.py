@@ -1,4 +1,25 @@
 #!/usr/bin/env python
+"""
+Use this script to extract a subset of EEBO-TCP P4 XML files from the
+EEBO-TCP phase 1 and phase 2 data files.
+
+Setup:
+
+- Download EEBO-TCP phase 1 and 2 bulk files from https://textcreationpartnership.org/faq/#faq05
+- Extract the contents of phase 1 and 2 zip files to a single directory; this
+  should include the following files and directories:
+  - IDnos_in_phase1.txt
+  - IDnos_in_phase2.txt
+  - P4_XML_TCP/
+  - P4_XML_TCP_Ph2/
+- Get a copy of EEBO MARC records from Proquest through your library;
+  copy the complete marc file to your EEBO-TCP data directory as `eebo.mrc`
+- Download EEBO-TCP mapping to MARC records at https://textcreationpartnership.org/using-tcp-content/eebo-tcp-cataloging-records/
+- Extract to the same directory with EEBO-TCP content; expected file name
+  is `IDmap.eebo_2015.xml`
+
+"""
+
 import argparse
 import csv
 from collections import defaultdict
@@ -10,7 +31,7 @@ if __name__ == "__main__":
         description="Extract EEBO-TCP P4 XML files from zip files"
     )
     parser.add_argument(
-        "input", help="Spreadsheet with EEBO IDs to select as column 'Volume ID'"
+        "input", help="CSV file with EEBO IDs to select as column 'Volume ID'"
     )
     parser.add_argument(
         "eebo_path", help="Path to location where EEBO-TCP content has been extracted"
