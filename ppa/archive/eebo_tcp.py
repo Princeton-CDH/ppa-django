@@ -92,3 +92,11 @@ def page_data(volume_id):
             "tags": page.section_type,
         }
         yield page_info
+
+
+def page_count(volume_id):
+    xml_path = Path(settings.EEBO_DATA) / f"{short_id(volume_id)}.P4.xml"
+    tcp_text = xmlmap.load_xmlobject_from_file(xml_path, Text)
+    # provisional page count based on number of page beginning tags
+    # TODO: do we want to count pages with no content?
+    return len(tcp_text.pages)
