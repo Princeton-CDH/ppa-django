@@ -24,8 +24,8 @@ from django.core.management.base import BaseCommand, CommandError
 from parasolr.django.signals import IndexableSignalHandler
 import pymarc
 
-from ppa.archive.models import Collection, DigitizedWork
 from ppa.archive import eebo_tcp
+from ppa.archive.models import Collection, DigitizedWork
 
 
 class Command(BaseCommand):
@@ -106,6 +106,10 @@ class Command(BaseCommand):
                 # probably not right, but use for now to distinguish
                 digwork.pages_orig = row["Section identifier"] or row["Sequence number"]
 
+            else:
+                # for non-excerpts we need to get page count
+                digwork.page_count = eebo_tcp.page_count(digwork.source_id)
+
             # save the new record
             digwork.save()
             # if this record belongs to Original Bibligraphy, associate collection
@@ -126,10 +130,22 @@ class Command(BaseCommand):
 
         # index all imported works in Solr
         DigitizedWork.index_items(imported_works)
-        # TODO: can we use the index pages command instead?
-        # # then index all the pages
-        # for work in imported_works:
-        #     DigitizedWork.index_items(Page.page_index_data(work))
+        # then index all the pages for non-excerpt works
+        # (excerpt pages are indexed automatically on save)
+        # using index_pages command because it has been optimized
+        full_work_ids = [
+            digwork.source_id
+            for digwork in imported_works
+            if digwork.item_type == DigitizedWork.FULL
+        ]
+        if full_work_ids:
+            # TODO: more efficient to use index_pages command,
+            # but calling it from here doesn't seem to work (hangs even when complete)
+            # maybe prompt the user to index eebo by source?
+            self.stdout.write(f"Indexing pages for {len(full_work_ids)} full works")
+            # index_pages.Command().handle(source_ids=full_work_ids)
+            # FIXME: this hangs and doesn't know it's done
+            # call_command("index_pages", *full_work_ids)
 
     def load_csv(self, path):
         """Load a CSV file with items to be imported."""
