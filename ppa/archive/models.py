@@ -1344,11 +1344,16 @@ class Page(Indexable):
             max_page = max(page_span)
         digwork_index_id = digwork.index_id()
 
-        for i, page_info in enumerate(eebo_tcp.page_data(digwork.source_id), 1):
+        page_generator = eebo_tcp.page_data(digwork.source_id)
+
+        for i, page_info in enumerate(page_generator, 1):
             # if indexing a page range, stop iterating once we are
             # past the highest page in range
             if max_page and i > max_page:
-                break
+                page_generator.close()
+                # NOTE: on OSX, when used with multiproc index_pages, requires
+                # envionment variable OBJC_DISABLE_INITIALIZE_FORK_SAFETY="YES"
+
             # if the document has a page range defined, skip any pages not in range
             if page_span and i not in page_span:
                 continue
