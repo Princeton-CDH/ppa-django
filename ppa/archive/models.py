@@ -1228,6 +1228,10 @@ class Page(Indexable):
 
         # get page span from digitized work, to handle excerpts
         page_span = digwork.page_span
+        # if indexing an excerpt, determine highest page to be indexed
+        max_page = None
+        if page_span:
+            max_page = max(page_span)
         # index id is used to group work and pages; also fallback for cluster id
         # for works that are not part of a cluster
         digwork_index_id = digwork.index_id()
@@ -1236,6 +1240,13 @@ class Page(Indexable):
         for i, page_info in enumerate(pages, 1):
             # page info is expected to contain page_id, content, order, label
             # may contain tags, image id, image url
+
+            # if indexing a page range, stop iterating once we are
+            # past the highest page in range and close the generator
+            if max_page and i > max_page:
+                pages.close()
+                # NOTE: on OSX, when used with multiproc index_pages, requires
+                # envionment variable OBJC_DISABLE_INITIALIZE_FORK_SAFETY="YES"
 
             # if the document has a page range defined, skip any pages not in range
             if page_span and i not in page_span:
