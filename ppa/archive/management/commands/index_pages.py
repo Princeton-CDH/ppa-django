@@ -202,8 +202,8 @@ class Command(BaseCommand):
         for i in range(num_processes):
             Process(target=page_index_data, args=(work_q, page_data_q)).start()
 
-        # give the page data a head start, since indexing is faster
-        sleep(10)
+        # give the page data a slight head start, since indexing is faster
+        sleep(2)
         # start a single indexing process
         indexer = Process(
             target=process_index_queue,
