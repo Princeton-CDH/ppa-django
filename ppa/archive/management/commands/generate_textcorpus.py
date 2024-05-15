@@ -93,7 +93,7 @@ class Command(BaseCommand):
         # add --path argument for output
         parser.add_argument(
             "--path",
-            help="Directory path to save corpus file(s)."
+            help="Directory path to save corpus file(s). "
             "Defaults to ./ppa_corpus_{timestamp}",
             default=None,
         )
@@ -119,7 +119,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--gzip",
             help="Save pages as compressed or uncompressed "
-            "(ppa_pages.jsonl or ppa_pages.jsonl.gz)",
+            "(ppa_pages.jsonl or ppa_pages.jsonl.gz) [default: %(default)s]",
             action=argparse.BooleanOptionalAction,
             default=True,
         )
