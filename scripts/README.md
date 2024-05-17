@@ -28,6 +28,6 @@ with columns corresponding to htids and their extracted version timestamps.
 
 - `get_eebo_files.py`
 
-One-time script to extracts a subset of EEBO-TCP P4 XML and MARC records
+One-time script that extracts a subset of EEBO-TCP P4 XML and MARC records
 for import into the PPA application. Setup and expected files are documented
 at the top of the script.
