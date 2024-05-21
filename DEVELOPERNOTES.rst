@@ -42,7 +42,7 @@ updated in Solr's main directory: ``solr/server/solr/[CORE]/conf/solrconfig.xml`
 Updating HathiTrust records and generating a fresh text corpus
 --------------------------------------------------------------
 
-These command should be run on the production server as the deploy user
+These commands should be run on the production server as the deploy user
 with the python virtual environment activated.
 
 Update all HathiTrust documents with rsync::
