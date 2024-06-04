@@ -12,7 +12,7 @@ from django.utils.http import urlencode
 from parasolr.django import SolrClient, SolrQuerySet
 
 from ppa.archive.forms import ImportForm, ModelMultipleChoiceFieldWithEmpty, SearchForm
-from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork
+from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork, Page
 from ppa.archive.solr import ArchiveSearchQuerySet
 from ppa.archive.templatetags.ppa_tags import (
     gale_page_url,
@@ -38,26 +38,20 @@ class TestDigitizedWorkDetailView(TestCase):
             "something about dials and clocks",
             "knobs and buttons",
         ]
-        htid = "chi.78013704"
-        # NOTE: this test is brittle; should refactor to use
-        # actual page indexing logic somehow, to reflect actual indexed fields
-        solr_page_docs = [
-            {
-                "content": content,
-                "order": i + 1,
-                "item_type": "page",
-                "source_id": htid,
-                "id": "%s.%s" % (htid, i),
-                "label": i,
-                "source_t": "HathiTrust",
-                "group_id_s": htid,
-            }
-            for i, content in enumerate(sample_page_content)
-        ]
-        # dial = DigitizedWork.objects.get(source_id='chi.78013704')
-        # solr_work_docs = [dial.index_data()]
-        # index_data = solr_work_docs + solr_page_docs
-        SolrClient().update.index(solr_page_docs, commit=True)
+        # use an unsaved digwork and hathi mock to index page data
+        # using actual page indexing logic and fields
+        digwork = DigitizedWork(source_id="chi.78013704")
+        with patch.object(digwork, "hathi") as mockhathi:
+            mock_pages = [
+                {
+                    "content": content,
+                    "order": i + 1,
+                    "label": i,
+                }
+                for i, content in enumerate(sample_page_content)
+            ]
+            mockhathi.page_data.return_value = mock_pages
+            SolrClient().update.index(list(Page.page_index_data(digwork)))
 
     def setUp(self):
         # get a work and its detail page to test with
