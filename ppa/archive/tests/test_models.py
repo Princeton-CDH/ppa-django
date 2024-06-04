@@ -13,7 +13,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db.models.query import QuerySet
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from pairtree import pairtree_client, pairtree_path, storage_exceptions
 from parasolr.django.indexing import ModelIndexable
@@ -1140,6 +1140,8 @@ class TestPage(TestCase):
         nonhathi_work = DigitizedWork(source=DigitizedWork.OTHER)
         assert not list(Page.page_index_data(nonhathi_work))
 
+    # username is required to init GaleAPI class, but API is not actually used
+    @override_settings(GALE_API_USERNAME="unused")
     @patch.object(gale.GaleAPI, "get_item")
     def test_gale_page_index_data(self, mock_gale_get_item):
         gale_work = DigitizedWork(source=DigitizedWork.GALE, source_id="CW123456")
