@@ -197,13 +197,14 @@ class GaleAPI:
             # converted to integer to drop leading zeroes
             page_label = page.get("folioNumber", int(page_number))
             info = {
-                "id": page_number,
+                "page_id": page_number,
                 "content": page.get("ocrText"),  # some pages have no text
                 "label": page_label,
                 # image id needed for thumbnail url; use solr dynamic field
                 "image_id_s": page["image"]["id"],
                 # index image url since we will need it when Gale API changes
-                "image_url_s": page["image"]["url"],
+                # (expect to be present in Gale API; may not be present in unit tests)
+                "image_url_s": page["image"].get("url"),
             }
             yield info
 

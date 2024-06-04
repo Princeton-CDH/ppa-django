@@ -1,15 +1,15 @@
 import json
 import os
 import tempfile
+import types
 from datetime import date
 from unittest.mock import Mock, patch
+from zipfile import ZipFile
 
 import pymarc
 import pytest
 import requests
-import requests_oauthlib
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, override_settings
 from eulxml.xmlmap import load_xmlobject_from_file
 from pairtree import pairtree_client, pairtree_path, storage_exceptions
@@ -22,7 +22,6 @@ FIXTURES_PATH = os.path.join(settings.BASE_DIR, "ppa", "archive", "fixtures")
 
 @patch("ppa.archive.hathi.requests")
 class TestHathiBibliographicAPI(TestCase):
-
     bibdata = os.path.join(FIXTURES_PATH, "bibdata_brief_njp.32101013082597.json")
 
     def test_brief_record(self, mockrequests):
@@ -101,7 +100,8 @@ class TestHathiBibliographicRecord(TestCase):
         assert record.record_id == "008883512"
         assert (
             record.title
-            == "Lectures on the literature of the age of Elizabeth, and Characters of Shakespear's plays,"
+            == "Lectures on the literature of the age of Elizabeth, "
+            + "and Characters of Shakespear's plays,"
         )
         assert record.pub_dates == ["1882"]
         copy_details = record.copy_details("njp.32101013082597")
@@ -115,7 +115,8 @@ class TestHathiBibliographicRecord(TestCase):
         assert record.record_id == "008883512"
         assert (
             record.title
-            == "Lectures on the literature of the age of Elizabeth, and Characters of Shakespear's plays,"
+            == "Lectures on the literature of the age of Elizabeth, "
+            + "and Characters of Shakespear's plays,"
         )
         assert record.pub_dates == ["1882"]
         copy_details = record.copy_details("njp.32101013082597")
@@ -219,7 +220,6 @@ class TestHathiBaseAPI(TestCase):
 
 
 class TestHathiObject:
-
     ht_tempdir = tempfile.TemporaryDirectory(prefix="ht_text_pd")
 
     def test_init(self):
@@ -235,36 +235,36 @@ class TestHathiObject:
         store_dir = os.path.join(settings.HATHI_DATA, hobj.lib_id)
 
         # Case 1: Initialize client without directory
-        ptree_client = hobj.pairtree_client()
+        hobj.pairtree_client()
 
         # assert file "pairtree_prefix" exists with correct contents
         ptree_pfx_fn = os.path.join(store_dir, "pairtree_prefix")
         with open(ptree_pfx_fn) as reader:
             ptree_pfx_contents = reader.read()
         assert ptree_pfx_contents == hobj.pairtree_prefix
-      
+
         # assert file "pairtree_version0_1" exists with correct contents
         ptree_vn_fn = os.path.join(store_dir, "pairtree_version0_1")
         with open(ptree_vn_fn) as reader:
-          ptree_vn_contents = reader.read()
+            ptree_vn_contents = reader.read()
         assert ptree_vn_contents == hobj.pairtree_version_stmt
-        
+
         # Case 2: initialize client with directory but without files
         os.remove(ptree_pfx_fn)
         os.remove(ptree_vn_fn)
 
-        ptree_client = hobj.pairtree_client()
+        hobj.pairtree_client()
 
         # assert file "pairtree_prefix" exists with correct contents
         ptree_pfx_fn = os.path.join(store_dir, "pairtree_prefix")
         with open(ptree_pfx_fn) as reader:
             ptree_pfx_contents = reader.read()
         assert ptree_pfx_contents == hobj.pairtree_prefix
-      
+
         # assert file "pairtree_version0_1" exists with correct contents
         ptree_vn_fn = os.path.join(store_dir, "pairtree_version0_1")
         with open(ptree_vn_fn) as reader:
-          ptree_vn_contents = reader.read()
+            ptree_vn_contents = reader.read()
         assert ptree_vn_contents == hobj.pairtree_version_stmt
 
     @patch("ppa.archive.hathi.pairtree_client")
@@ -324,12 +324,10 @@ class TestHathiObject:
 
             # test broken zipfile path
             mock_ptree_obj.list_parts.return_value = [
-                fn
-                for fn in contents
-                if not fn.endswith('.zip')
+                fn for fn in contents if not fn.endswith(".zip")
             ]
             # assert that it raises this exception
-            with pytest.raises(storage_exceptions.PartNotFoundException):   
+            with pytest.raises(storage_exceptions.PartNotFoundException):
                 hobj.zipfile_path(my_ptree_client)
 
     @override_settings(HATHI_DATA=ht_tempdir.name)
@@ -372,3 +370,43 @@ class TestHathiObject:
             )
             hobj.delete_pairtree_data()
             # not currently testing that warning is logged
+
+    @patch("ppa.archive.hathi.ZipFile", spec=ZipFile)
+    @override_settings(HATHI_DATA=ht_tempdir.name)
+    def test_hathi_page_data(self, mockzipfile):
+        mockzip_obj = mockzipfile.return_value.__enter__.return_value
+        page_files = ["0001.txt", "00002.txt"]
+        mockzip_obj.namelist.return_value = page_files
+        # simulate reading zip file contents
+        contents = ("page content for one", "hello! pshaw! what?")
+        mockzip_obj.open.return_value.__enter__.return_value.read.return_value.decode.side_effect = (  # noqa: e501
+            contents
+        )
+
+        hobj = hathi.HathiObject(hathi_id="chi.79279237")
+        metsfile = os.path.join(FIXTURES_PATH, "79279237.mets.xml")
+
+        # page data comes from mets
+        mets = load_xmlobject_from_file(metsfile, hathi.MinimalMETS)
+        with patch.object(hobj, "zipfile_path") as mock_zipfile_path:
+            mock_zipfile_path.return_value = "/path/to/79279237.zip"
+            with patch.object(hobj, "mets_xml") as mock_mets_xml:
+                mock_mets_xml.return_value = mets
+                hobj.content_dir = "data"
+
+                page_data = hobj.page_data()
+                assert isinstance(page_data, types.GeneratorType)
+
+                for i, data in enumerate(page_data):
+                    mets_page = mets.structmap_pages[i]
+                    assert data["page_id"] == mets_page.text_file.sequence
+                    assert data["content"] == contents[i]
+                    assert data["order"] == mets_page.order
+                    assert data["label"] == mets_page.display_label
+                    assert "tags" in data
+                    assert data["tags"] == mets_page.label.split(", ")
+
+                # not suppressed but no data
+                mock_mets_xml.side_effect = storage_exceptions.ObjectNotFoundException
+                # should log an error, not currently tested
+                assert not list(hobj.page_data())
