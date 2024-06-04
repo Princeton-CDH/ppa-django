@@ -1206,107 +1206,26 @@ class Page(Indexable):
         return "page"
 
     @classmethod
-    def page_index_data(cls, digwork):
+    def page_index_data(cls, digwork, gale_record=None):
         """Get page content for the specified digitized work from Hathi
-        pairtree and return data to be indexed in solr."""
+        pairtree and return data to be indexed in solr.
 
-        # TODO: how to share common fields/logic across sources?
+        Takes an optional Gale item record as returned by the Gale API,
+        to avoid loading API content twice. (Used on import)"""
 
-        # Only index pages for items that are not suppressed
-        if not digwork.is_suppressed:
-            # get index page data based on the source
-            if digwork.source == digwork.HATHI:
-                return cls.hathi_page_index_data(digwork)
-            if digwork.source == digwork.GALE:
-                return cls.gale_page_index_data(digwork)
+        # suppressed items are not indexed; bail out
+        if digwork.is_suppressed:
+            return []
 
-        # return an empty list for anything else
-        return []
-
-    # implementation-specific page content: (maybe not order?)
-    #         "content": pagefile.read().decode("utf-8"),
-    #                                "order": page.order,
-    #                                "label": page.display_label,
-    #                                "tags": page.label.split
-
-    @classmethod
-    def hathi_page_index_data(cls, digwork):
-        """Get page content for the specified digitized work from Hathi
-        pairtree and return data to be indexed in solr."""
-
-        # load mets record to pull metadata about the images
-        try:
-            mmets = digwork.hathi.mets_xml()
-        except storage_exceptions.ObjectNotFoundException:
-            logger.error(
-                "Pairtree data for %s not found but status is %s",
-                digwork.source_id,
-                digwork.get_status_display(),
-            )
+        # get a generator of page data from the appropriate source
+        if digwork.source == digwork.HATHI:
+            pages = digwork.hathi.page_data()
+        elif digwork.source == digwork.GALE:
+            pages = GaleAPI().get_item_pages(digwork.source_id, gale_record=gale_record)
+        else:
+            # no other sources currently support full-text indexing
             return
 
-        # get page span from digitized work
-        page_span = digwork.page_span
-        digwork_index_id = digwork.index_id()
-        # digwork index id is fallback for cluster, since it is used
-        # to collapse works and pages that belong together
-
-        # read zipfile contents in place, without unzipping
-        try:
-            zpath = digwork.hathi.zipfile_path()
-        except storage_exceptions.PartNotFoundException:
-            # missing file inside pairtree for this
-            logging.error(f"Missing pairtree data for: {digwork}")
-            return
-
-        with ZipFile(zpath) as ht_zip:
-            # yield a generator of index data for each page; iterate
-            # over pages in METS structmap
-            for i, page in enumerate(mmets.structmap_pages, 1):
-                # if the document has a page range defined, skip any pages not in range
-                if page_span and i not in page_span:
-                    continue
-                # zipfile spec uses / for path regardless of OS
-                pagefilename = "/".join(
-                    [digwork.hathi.content_dir, page.text_file_location]
-                )
-                try:
-                    with ht_zip.open(pagefilename) as pagefile:
-                        try:
-                            yield {
-                                "id": "%s.%s"
-                                % (digwork_index_id, page.text_file.sequence),
-                                "source_id": digwork.source_id,
-                                # for grouping with work record
-                                "group_id_s": digwork_index_id,
-                                # for grouping with cluster
-                                "cluster_id_s": digwork.index_cluster_id,
-                                "content": pagefile.read().decode("utf-8"),
-                                "order": page.order,
-                                "label": page.display_label,
-                                "tags": page.label.split(", ") if page.label else [],
-                                "item_type": "page",
-                            }
-                        except StopIteration:
-                            return
-                except KeyError:
-                    # we know of one HathiTrust work (uc1.$b31619) where
-                    # the METS references pages that are not present in the zip file;
-                    # they are at the end of the document and don't have any
-                    # page content, so log a warning but don't treat as an error
-                    logger.warn(
-                        "Indexing %s pages: "
-                        + "%s referenced in METS but not found in zip file",
-                        digwork,
-                        pagefilename,
-                    )
-
-    @classmethod
-    def gale_page_index_data(cls, digwork, gale_record=None):
-        """Get page content for the specified digitized work from Gale
-        API and return data to be indexed in solr. Takes an optional gale_record
-        parameter (item record as returned by Gale API), to avoid
-        making an extra API call if data is already available."""
         # get page span from digitized work, to handle excerpts
         page_span = digwork.page_span
         # index id is used to group work and pages; also fallback for cluster id
@@ -1314,22 +1233,26 @@ class Page(Indexable):
         digwork_index_id = digwork.index_id()
 
         # enumerate with 1-based index for digital page number
-        for i, page_info in enumerate(
-            GaleAPI().get_item_pages(digwork.source_id, gale_record=gale_record), 1
-        ):
-            # page info is expected to contain content, order, label
-            # may contain tags, image id
+        for i, page_info in enumerate(pages, 1):
+            # page info is expected to contain page_id, content, order, label
+            # may contain tags, image id, image url
 
             # if the document has a page range defined, skip any pages not in range
             if page_span and i not in page_span:
                 continue
 
-            # add common fields needed for all pages across sources
+            # remove page id and use in combination with digwork index id
+            # to generate unique id.
+            try:
+                page_id = page_info.pop("page_id")
+            except KeyError:
+                # if page id is not set, use enumeration id
+                page_id = i
+
+            # update withcommon fields needed for all pages across sources
             page_info.update(
                 {
-                    # combine page id with digwork index id to ensure unique
-                    # use page id if passed in, otherwise use enumeration sequence
-                    "id": f"{digwork_index_id}.{page_info.get('id', i)}",
+                    "id": f"{digwork_index_id}.{page_id}",
                     "source_id": digwork.source_id,
                     "group_id_s": digwork_index_id,  # for grouping with work record
                     "cluster_id_s": digwork.index_cluster_id,  # for grouping with cluster
