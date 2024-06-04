@@ -1223,6 +1223,12 @@ class Page(Indexable):
         # return an empty list for anything else
         return []
 
+    # implementation-specific page content: (maybe not order?)
+    #         "content": pagefile.read().decode("utf-8"),
+    #                                "order": page.order,
+    #                                "label": page.display_label,
+    #                                "tags": page.label.split
+
     @classmethod
     def hathi_page_index_data(cls, digwork):
         """Get page content for the specified digitized work from Hathi
@@ -1301,31 +1307,34 @@ class Page(Indexable):
         API and return data to be indexed in solr. Takes an optional gale_record
         parameter (item record as returned by Gale API), to avoid
         making an extra API call if data is already available."""
-        if gale_record is None:
-            gale_record = GaleAPI().get_item(digwork.source_id)
-
-        # get page span from digitized work
+        # get page span from digitized work, to handle excerpts
         page_span = digwork.page_span
+        # index id is used to group work and pages; also fallback for cluster id
+        # for works that are not part of a cluster
         digwork_index_id = digwork.index_id()
-        # digwork index id is fallback for cluster, since it is used
-        # to collapse works and pages that belong together
 
-        for i, page in enumerate(gale_record["pageResponse"]["pages"], 1):
-            page_number = page["pageNumber"]
-            # folio number not yet set for all volumes; fallback to page number
-            page_label = page.get("folioNumber", int(page_number))
+        # enumerate with 1-based index for digital page number
+        for i, page_info in enumerate(
+            GaleAPI().get_item_pages(digwork.source_id, gale_record=gale_record), 1
+        ):
+            # page info is expected to contain content, order, label
+            # may contain tags, image id
+
             # if the document has a page range defined, skip any pages not in range
             if page_span and i not in page_span:
                 continue
-            yield {
-                "id": "%s.%s" % (digwork_index_id, page_number),
-                "source_id": digwork.source_id,
-                "group_id_s": digwork_index_id,  # for grouping with work record
-                "cluster_id_s": digwork.index_cluster_id,  # for grouping with cluster
-                "content": page.get("ocrText"),  # some pages have no text
-                "order": i,
-                "label": page_label,
-                "item_type": "page",
-                # image id needed for thumbnail url; use solr dynamic field
-                "image_id_s": page["image"]["id"],
-            }
+
+            # add common fields needed for all pages across sources
+            page_info.update(
+                {
+                    # combine page id with digwork index id to ensure unique
+                    # use page id if passed in, otherwise use enumeration sequence
+                    "id": f"{digwork_index_id}.{page_info.get('id', i)}",
+                    "source_id": digwork.source_id,
+                    "group_id_s": digwork_index_id,  # for grouping with work record
+                    "cluster_id_s": digwork.index_cluster_id,  # for grouping with cluster
+                    "order": i,
+                    "item_type": "page",
+                }
+            )
+            yield page_info
