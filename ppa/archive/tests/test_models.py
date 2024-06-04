@@ -1144,19 +1144,19 @@ class TestPage(TestCase):
         nonhathi_work = DigitizedWork(source=DigitizedWork.OTHER)
         assert not list(Page.page_index_data(nonhathi_work))
 
-    @patch("ppa.archive.models.GaleAPI", spec=gale.GaleAPI)
-    def test_gale_page_index_data(self, mock_gale_api):
+    @patch.object(gale.GaleAPI, "get_item")
+    def test_gale_page_index_data(self, mock_gale_get_item):
         gale_work = DigitizedWork(source=DigitizedWork.GALE, source_id="CW123456")
         test_pages = [
             {
                 "pageNumber": "0001",
                 "folioNumber": "i",
-                "image": {"id": "09876001234567"}
+                "image": {"id": "09876001234567", "url": "http://example.com/img/1"}
                 # some pages have no ocr text
             },
             {
                 "pageNumber": "0002",
-                "image": {"id": "08765002345678"},
+                "image": {"id": "08765002345678", "url": "http://example.com/img/2"},
                 "ocrText": "more test content",
             },
         ]
@@ -1164,7 +1164,7 @@ class TestPage(TestCase):
             "doc": {},  # unused for this test
             "pageResponse": {"pages": test_pages},
         }
-        mock_gale_api.return_value.get_item.return_value = api_response
+        mock_gale_get_item.return_value = api_response
         page_data = list(Page.page_index_data(gale_work))
         assert len(page_data) == 2
         for i, index_data in enumerate(page_data):
@@ -1182,11 +1182,12 @@ class TestPage(TestCase):
                 assert index_data["label"] == int(test_pages[i]["pageNumber"])
             assert index_data["item_type"] == "page"
             assert index_data["image_id_s"] == test_pages[i]["image"]["id"]
+            assert index_data["image_url_s"] == test_pages[i]["image"]["url"]
 
         # skip api call if item data is passed in
-        mock_gale_api.reset_mock()
+        mock_gale_get_item.reset_mock()
         page_data = list(Page.gale_page_index_data(gale_work, api_response))
-        assert mock_gale_api.return_value.get_item.call_count == 0
+        assert mock_gale_get_item.get_item.call_count == 0
         assert len(page_data) == 2
 
         # limit if page range specified
