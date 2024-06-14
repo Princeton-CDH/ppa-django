@@ -6,6 +6,7 @@ import logging
 import os.path
 import time
 from datetime import datetime
+from zipfile import ZipFile
 
 import pymarc
 import requests
@@ -346,3 +347,52 @@ class HathiObject:
             mets.xml flie is not found in pairtree storage for this object
         """
         return xmlmap.load_xmlobject_from_file(self.metsfile_path(), MinimalMETS)
+
+    def page_data(self):
+        """Return a generator of page content for this HathiTrust work
+        based on pairtree and METS data, for indexing pages in Solr."""
+
+        # load mets record to pull metadata about the images
+        try:
+            mmets = self.mets_xml()
+        except storage_exceptions.ObjectNotFoundException:
+            logger.error(f"Pairtree data for {self.hathi_id} not found")
+            return
+
+        # read zipfile contents in place, without unzipping
+        try:
+            zpath = self.zipfile_path()
+        except storage_exceptions.PartNotFoundException:
+            # missing file inside pairtree if this error occurs
+            logging.error(f"Missing pairtree data for: {self.hathi_id}")
+            return
+
+        with ZipFile(zpath) as ht_zip:
+            # yield a generator of index data for each page; iterate
+            # over pages in METS structmap
+            for i, page in enumerate(mmets.structmap_pages, 1):
+                # zipfile spec uses / for path regardless of OS
+                pagefilename = "/".join([self.content_dir, page.text_file_location])
+                try:
+                    with ht_zip.open(pagefilename) as pagefile:
+                        try:
+                            yield {
+                                "page_id": page.text_file.sequence,
+                                "content": pagefile.read().decode("utf-8"),
+                                "order": page.order,
+                                "label": page.display_label,
+                                "tags": page.label.split(", ") if page.label else [],
+                            }
+                        except StopIteration:
+                            return
+                except KeyError:
+                    # we know of one HathiTrust work (uc1.$b31619) where
+                    # the METS references pages that are not present in the zip file;
+                    # they are at the end of the document and don't have any
+                    # page content, so log a warning but don't treat as an error
+                    logger.warn(
+                        "Indexing %s pages: "
+                        + "%s referenced in METS but not found in zip file",
+                        self.hathi_id,
+                        pagefilename,
+                    )

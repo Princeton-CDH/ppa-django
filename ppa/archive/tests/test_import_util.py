@@ -344,6 +344,8 @@ class TestGaleImporter(TestCase):
         # should set status in results dict for reporting
         assert importer.results[test_id] == not_found_error
 
+    # username is required to init GaleAPI class, but API is not actually used
+    @override_settings(GALE_API_USERNAME="unused")
     @patch("ppa.archive.import_util.get_marc_record")
     @patch("ppa.archive.import_util.GaleAPI")
     def test_import_digitizedwork_success(self, mock_gale_api, mock_get_marc_record):
