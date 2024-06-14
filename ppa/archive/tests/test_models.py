@@ -15,7 +15,6 @@ from django.core.exceptions import ValidationError
 from django.db.models.query import QuerySet
 from django.test import TestCase, override_settings
 from django.urls import reverse
-from eulxml.xmlmap import load_xmlobject_from_file
 from pairtree import pairtree_client, pairtree_path, storage_exceptions
 from parasolr.django.indexing import ModelIndexable
 
@@ -1070,68 +1069,65 @@ class TestPage(TestCase):
         # page data for each work
         assert items == mock_page_data + mock_page_data + mock_page_data
 
-    @patch("ppa.archive.models.ZipFile", spec=ZipFile)
-    @override_settings(HATHI_DATA="/tmp/ht_text_pd")
-    def test_hathi_page_index_data(self, mockzipfile):
-        mockzip_obj = mockzipfile.return_value.__enter__.return_value
-        page_files = ["0001.txt", "00002.txt"]
-        mockzip_obj.namelist.return_value = page_files
-        # simulate reading zip file contents
-        contents = ("page content for one", "hello! pshaw! what?")
-        mockzip_obj.open.return_value.__enter__.return_value.read.return_value.decode.side_effect = (  # noqa: e501
-            contents
-        )
-
-        work = DigitizedWork(source_id="chi.79279237")
-
-        # page data comes from mets
-        mets = load_xmlobject_from_file(TestDigitizedWork.metsfile, hathi.MinimalMETS)
+    def test_hathi_page_index_data(self):
+        work = DigitizedWork(source_id="chi.79279237", source=DigitizedWork.HATHI)
+        # page data comes from hathi object; patch in mock page info
+        mock_page_data = [
+            {
+                "page_id": "001",
+                "content": "some page text",
+                "order": 1,
+                "label": "i",
+                "tags": ["a", "b"],
+            },
+            {
+                "page_id": "002",
+                "content": "second page of text",
+                "order": 2,
+                "label": "ii",
+                "tags": ["c"],
+            },
+            {
+                "page_id": "003",
+                "content": "yet more content",
+                "order": 3,
+                "label": "iii",
+            },
+        ]
         with patch.object(DigitizedWork, "hathi") as mock_hathiobj:
-            mock_hathiobj.zipfile_path.return_value = "/path/to/79279237.zip"
-            mock_hathiobj.mets_xml.return_value = mets
-            mock_hathiobj.content_dir = "data"
-
+            # page data modifies the generated data before yielding,
+            # but we want to reference our fixture, so return a copy
+            mock_hathiobj.page_data.return_value = [p.copy() for p in mock_page_data]
             page_data = Page.page_index_data(work)
             assert isinstance(page_data, types.GeneratorType)
 
             for i, data in enumerate(page_data):
-                mets_page = mets.structmap_pages[i]
-                assert data["id"] == ".".join(
-                    [work.source_id, mets_page.text_file.sequence]
-                )
+                assert data["id"] == f"{work.source_id}.{mock_page_data[i]['page_id']}"
                 assert data["source_id"] == work.source_id
-                assert data["content"] == contents[i]
-                assert data["order"] == mets_page.order
+                assert data["content"] == mock_page_data[i]["content"]
+                assert data["order"] == mock_page_data[i]["order"]
                 assert data["item_type"] == "page"
-                assert data["label"] == mets_page.display_label
-                assert "tags" in data
-                assert data["tags"] == mets_page.label.split(", ")
+                assert data["label"] == mock_page_data[i]["label"]
+                if "tags" in mock_page_data[i]:
+                    assert data["tags"] == mock_page_data[i]["tags"]
+                else:
+                    assert "tags" not in data
 
-            # limit pages if specified
-            excerpt = DigitizedWork(source_id="chi.79279237", pages_digital="2-3")
-            # repopulate mocks
-            mockzip_obj = mockzipfile.return_value.__enter__.return_value
-            mockzip_obj.namelist.return_value = page_files
-            # simulate reading zip file contents
-            contents = ("page content for one", "hello! pshaw! what?")
-            mockzip_obj.open.return_value.__enter__.return_value.read.return_value.decode.side_effect = (  # noqa: E501
-                contents
-            )
+        # limit pages if specified, for excerpts
+        excerpt = DigitizedWork(source_id="chi.79279237", pages_digital="2-3")
+        with patch.object(DigitizedWork, "hathi") as mock_hathiobj:
+            # page data modifies the generated data before yielding,
+            # but we want to reference our fixture, so return a copy
+            mock_hathiobj.page_data.return_value = [p.copy() for p in mock_page_data]
+
             page_data = list(Page.page_index_data(excerpt))
             assert len(page_data) == 2
             # should use index id instead of source id as basis for solr id
             # first page data (0) is index 1 in mets because excerpt starts at page 2
-            assert page_data[0]["id"] == "%s.%s" % (
-                excerpt.index_id(),
-                mets.structmap_pages[1].text_file.sequence,
+            assert (
+                page_data[0]["id"]
+                == f"{excerpt.index_id()}.{mock_page_data[1]['page_id']}"
             )
-
-            # not suppressed but no data
-            mock_hathiobj.metsfile_path.side_effect = (
-                storage_exceptions.ObjectNotFoundException
-            )
-            # should log an error, not currently tested
-            assert not list(Page.page_index_data(work))
 
     def test_page_index_data_suppressed(self):
         # if item is suppressed - no page data
@@ -1144,19 +1140,21 @@ class TestPage(TestCase):
         nonhathi_work = DigitizedWork(source=DigitizedWork.OTHER)
         assert not list(Page.page_index_data(nonhathi_work))
 
-    @patch("ppa.archive.models.GaleAPI", spec=gale.GaleAPI)
-    def test_gale_page_index_data(self, mock_gale_api):
+    # username is required to init GaleAPI class, but API is not actually used
+    @override_settings(GALE_API_USERNAME="unused")
+    @patch.object(gale.GaleAPI, "get_item")
+    def test_gale_page_index_data(self, mock_gale_get_item):
         gale_work = DigitizedWork(source=DigitizedWork.GALE, source_id="CW123456")
         test_pages = [
             {
                 "pageNumber": "0001",
                 "folioNumber": "i",
-                "image": {"id": "09876001234567"}
+                "image": {"id": "09876001234567", "url": "http://example.com/img/1"}
                 # some pages have no ocr text
             },
             {
                 "pageNumber": "0002",
-                "image": {"id": "08765002345678"},
+                "image": {"id": "08765002345678", "url": "http://example.com/img/2"},
                 "ocrText": "more test content",
             },
         ]
@@ -1164,7 +1162,7 @@ class TestPage(TestCase):
             "doc": {},  # unused for this test
             "pageResponse": {"pages": test_pages},
         }
-        mock_gale_api.return_value.get_item.return_value = api_response
+        mock_gale_get_item.return_value = api_response
         page_data = list(Page.page_index_data(gale_work))
         assert len(page_data) == 2
         for i, index_data in enumerate(page_data):
@@ -1182,16 +1180,17 @@ class TestPage(TestCase):
                 assert index_data["label"] == int(test_pages[i]["pageNumber"])
             assert index_data["item_type"] == "page"
             assert index_data["image_id_s"] == test_pages[i]["image"]["id"]
+            assert index_data["image_url_s"] == test_pages[i]["image"]["url"]
 
         # skip api call if item data is passed in
-        mock_gale_api.reset_mock()
-        page_data = list(Page.gale_page_index_data(gale_work, api_response))
-        assert mock_gale_api.return_value.get_item.call_count == 0
+        mock_gale_get_item.reset_mock()
+        page_data = list(Page.page_index_data(gale_work, api_response))
+        assert mock_gale_get_item.get_item.call_count == 0
         assert len(page_data) == 2
 
         # limit if page range specified
         gale_excerpt = DigitizedWork(
             source=DigitizedWork.GALE, source_id="CW123456", pages_digital="2-3"
         )
-        page_data = list(Page.gale_page_index_data(gale_excerpt, api_response))
+        page_data = list(Page.page_index_data(gale_excerpt, api_response))
         assert len(page_data) == 1
