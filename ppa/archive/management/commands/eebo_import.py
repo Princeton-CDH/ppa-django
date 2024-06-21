@@ -139,13 +139,10 @@ class Command(BaseCommand):
             if digwork.item_type == DigitizedWork.FULL
         ]
         if full_work_ids:
-            # TODO: more efficient to use index_pages command,
-            # but calling it from here doesn't seem to work (hangs even when complete)
-            # maybe prompt the user to index eebo by source?
-            self.stdout.write(f"Indexing pages for {len(full_work_ids)} full works")
-            # index_pages.Command().handle(source_ids=full_work_ids)
-            # FIXME: this hangs and doesn't know it's done
-            # call_command("index_pages", *full_work_ids)
+            # calling index_pages command doesn't work from here;
+            # just tell the user what command to run
+            self.stdout.write("Now index pages for the full works with this command:")
+            self.stdout.write(f"python manage.py index_pages {' '.join(full_work_ids)}")
 
     def load_csv(self, path):
         """Load a CSV file with items to be imported."""
