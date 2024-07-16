@@ -1129,6 +1129,18 @@ class TestPage(TestCase):
                 == f"{excerpt.index_id()}.{mock_page_data[1]['page_id']}"
             )
 
+    @override_settings(EEBO_DATA=FIXTURES_PATH)
+    def test_page_index_data_eebotcp(self):
+        work = DigitizedWork(source_id="A25820", source=DigitizedWork.EEBO)
+        page_data = Page.page_index_data(work)
+        assert isinstance(page_data, types.GeneratorType)
+
+        # first page should have an inferred page label
+        page_data = list(page_data)
+        assert page_data[0]["label"] == "[1]"
+        assert "Licensed,\nROBERT MIDGLEY." in page_data[0]["content"]
+        # eebo-tcp page data logic is tested more thoroughly elsewheer
+
     def test_page_index_data_suppressed(self):
         # if item is suppressed - no page data
         work = DigitizedWork(source_id="chi.79279237")
