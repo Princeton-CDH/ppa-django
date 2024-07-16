@@ -522,7 +522,7 @@ class GaleImporter(DigitizedWorkImporter):
 
         # item record used for import includes page metadata;
         # for efficiency, index pages at import time with the same api response
-        DigitizedWork.index_items(Page.gale_page_index_data(digwork, item_record))
+        DigitizedWork.index_items(Page.page_index_data(digwork, item_record))
 
         # return the newly created record
         return digwork
