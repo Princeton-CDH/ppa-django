@@ -22,3 +22,12 @@ with columns corresponding to htids and their extracted version timestamps.
     already exists, then the output file corresponds to a new (non-existing)
     file `version-labels/version-labels-[current date]-[i].tsv` where `i`
     is the smallest possible, postive integer.
+
+
+## EEBO-TCP subset
+
+- `get_eebo_files.py`
+
+One-time script that extracts a subset of EEBO-TCP P4 XML and MARC records
+for import into the PPA application. Setup and expected files are documented
+at the top of the script.
