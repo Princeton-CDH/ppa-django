@@ -52,9 +52,11 @@ class Command(BaseCommand):
             raise CommandError(
                 "Path for EEBO_DATA must be configured in Django settings"
             )
-        eebo_data_path = Path(settings.EEBO_DATA)
-        if not eebo_data_path.exists():
-            raise CommandError(f"EEBO_DATA directory {eebo_data_path} does not exist")
+        self.eebo_data_path = Path(settings.EEBO_DATA)
+        if not self.eebo_data_path.exists():
+            raise CommandError(
+                f"EEBO_DATA directory {self.eebo_data_path} does not exist"
+            )
 
         to_import = self.load_csv(kwargs["csv"])
         # currently the CSV only specifiec OB, no other collections
@@ -67,53 +69,7 @@ class Command(BaseCommand):
         imported_works = []
 
         for row in to_import:
-            source_id = eebo_tcp.short_id(row["Volume ID"])
-            # this is meant to be a one-time import; how to handle existing records?
-            # is that a dev-only problem?
-
-            # create new unsaved digitized work with source type, source id
-            # and any curation notes from the spreadsheet
-            digwork = DigitizedWork(
-                source=DigitizedWork.EEBO,
-                source_id=source_id,
-                source_url=row["URL"],
-                notes=row["Notes"],  # curation notes (not public notes)
-            )
-            # populate metadata from marc record
-            # path marc record
-            marc_path = eebo_data_path / f"{source_id}.mrc"
-            with marc_path.open("rb") as marc_filehandle:
-                marc_reader = pymarc.MARCReader(marc_filehandle)
-                # get the first record (file contains one one record only)
-                marc_record = next(marc_reader)
-                digwork.metadata_from_marc(marc_record, populate=True)
-
-            # if this is an excerpt, set item type, page range, and
-            # override metadata from the spreadsheet
-            if row["Excerpt? Y/N"] == "Y":
-                digwork.item_type = DigitizedWork.EXCERPT
-                digwork.author = row["Author"]
-                digwork.title = row["Title"]
-                # clear out any subtitle set from MARC record
-                digwork.subtitle = ""
-                # sort title and book/journal title must be set manually for excerpts
-                digwork.sort_title = row["Sort Titles (EXCERPT ONLY)"]
-                digwork.book_journal = row["Book/journal title (EXCERPT ONLY)"]
-
-                # for all other fields, we use publication info from MARC
-
-                # confirm if this is pages digital or orig
-                digwork.pages_digital = row["Sequence number"]
-                # ask about pages orig
-                # probably not right, but use for now to distinguish
-                digwork.pages_orig = row["Section identifier"] or row["Sequence number"]
-
-            else:
-                # for non-excerpts we need to get page count
-                digwork.page_count = eebo_tcp.page_count(digwork.source_id)
-
-            # save the new record
-            digwork.save()
+            digwork = self.create_eebo_digwork(row)
             # if this record belongs to Original Bibligraphy, associate collection
             if row["OB?"] == "Y":
                 digwork.collections.add(original_bibliography)
@@ -145,6 +101,56 @@ class Command(BaseCommand):
             # just tell the user what command to run
             self.stdout.write("Now index pages for the full works with this command:")
             self.stdout.write(f"python manage.py index_pages {' '.join(full_work_ids)}")
+
+    def create_eebo_digwork(self, row):
+        source_id = eebo_tcp.short_id(row["Volume ID"])
+        # NOTE: for simplicity, this is written as a a one-time import.
+        # for development, use admin filter by source to delete and re-import
+
+        # create new unsaved digitized work with source type, source id
+        # and any curation notes from the spreadsheet
+        digwork = DigitizedWork(
+            source=DigitizedWork.EEBO,
+            source_id=source_id,
+            source_url=row["URL"],
+            notes=row["Notes"],  # curation notes (not public notes)
+        )
+        # populate metadata from marc record
+        # path marc record
+        marc_path = self.eebo_data_path / f"{source_id}.mrc"
+        with marc_path.open("rb") as marc_filehandle:
+            marc_reader = pymarc.MARCReader(marc_filehandle)
+            # get the first record (file contains one one record only)
+            marc_record = next(marc_reader)
+            digwork.metadata_from_marc(marc_record, populate=True)
+
+        # if this is an excerpt, set item type, page range, and
+        # override metadata from the spreadsheet
+        if row["Excerpt? Y/N"] == "Y":
+            digwork.item_type = DigitizedWork.EXCERPT
+            digwork.author = row["Author"]
+            digwork.title = row["Title"]
+            # clear out any subtitle set from MARC record
+            digwork.subtitle = ""
+            # sort title and book/journal title must be set manually for excerpts
+            digwork.sort_title = row["Sort Titles (EXCERPT ONLY)"]
+            digwork.book_journal = row["Book/journal title (EXCERPT ONLY)"]
+            # for all other fields, we use publication info from MARC
+
+            # digital page range in spreadsheet
+            digwork.pages_digital = row["Sequence number"]
+            # section identifier - unique identifier for a section in eebo-tcp,
+            # use as pages orig for this content for now
+            digwork.pages_orig = row["Section identifier"]
+
+        else:
+            # for non-excerpts, calculate number of pages
+            digwork.page_count = eebo_tcp.page_count(digwork.source_id)
+
+        # save the new record
+        digwork.save()
+
+        return digwork
 
     def load_csv(self, path):
         """Load a CSV file with items to be imported."""
