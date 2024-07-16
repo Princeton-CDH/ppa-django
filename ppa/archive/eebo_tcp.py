@@ -29,7 +29,7 @@ class Page(xmlmap.XmlObject):
     text_contents = xmlmap.StringListField("following::text()")
 
     def __repr__(self):
-        return f"<Page {self.label} ({self.section_type})>"
+        return f"<Page {self.number or '-'} ({self.section_type})>"
 
     def page_contents(self):
         """generator of text strings between this page beginning tag and
@@ -89,7 +89,7 @@ def page_data(volume_id):
         page_info = {
             "label": page.number,
             "content": str(page),
-            "tags": page.section_type,
+            "tags": [page.section_type],
         }
         yield page_info
 
@@ -98,5 +98,5 @@ def page_count(volume_id):
     xml_path = Path(settings.EEBO_DATA) / f"{short_id(volume_id)}.P4.xml"
     tcp_text = xmlmap.load_xmlobject_from_file(xml_path, Text)
     # provisional page count based on number of page beginning tags
-    # TODO: do we want to count pages with no content?
+    # NOTE: for simplicity, we include pages with no content
     return len(tcp_text.pages)
