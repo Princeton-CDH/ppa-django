@@ -139,9 +139,8 @@ class Command(BaseCommand):
 
             # digital page range in spreadsheet
             digwork.pages_digital = row["Sequence number"]
-            # section identifier - unique identifier for a section in eebo-tcp,
-            # use as pages orig for this content for now
-            digwork.pages_orig = row["Section identifier"]
+            # original page range in spreadsheet
+            digwork.pages_orig = row["Original page range"]
 
         else:
             # for non-excerpts, calculate number of pages
