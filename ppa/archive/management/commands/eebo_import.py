@@ -77,7 +77,7 @@ class Command(BaseCommand):
                 source=DigitizedWork.EEBO,
                 source_id=source_id,
                 source_url=row["URL"],
-                notes=row["Notes"],  # TODO: confirm if we want to keep this
+                notes=row["Notes"],  # curation notes (not public notes)
             )
             # populate metadata from marc record
             # path marc record
@@ -96,9 +96,11 @@ class Command(BaseCommand):
                 digwork.title = row["Title"]
                 # clear out any subtitle set from MARC record
                 digwork.subtitle = ""
-                # TODO sort title
+                # sort title and book/journal title must be set manually for excerpts
+                digwork.sort_title = row["Sort Titles (EXCERPT ONLY)"]
+                digwork.book_journal = row["Book/journal title (EXCERPT ONLY)"]
 
-                # TODO: use publication info from spreadsheet or MARC?
+                # for all other fields, we use publication info from MARC
 
                 # confirm if this is pages digital or orig
                 digwork.pages_digital = row["Sequence number"]
