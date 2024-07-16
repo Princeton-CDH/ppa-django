@@ -314,7 +314,7 @@ def validate_page_range(value):
 class DigitizedWorkQuerySet(models.QuerySet):
     def by_first_page_orig(self, start_page):
         "find records based on first page in original page range"
-        return self.filter(pages_orig__regex=f"^{start_page}([,-:]|\b|$)")
+        return self.filter(pages_orig__regex=f"^{start_page}([,-]|:|\b|$)")
 
 
 class DigitizedWork(ModelIndexable, TrackChangesModel):
