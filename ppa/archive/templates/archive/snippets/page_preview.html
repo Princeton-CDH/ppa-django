@@ -4,6 +4,9 @@ keyword search.  Used on both DigitizedWork list and detail views.
 
 Expected context variables:
   - item_id: source id for the work the page belongs to
+  - source: source name (e.g., HathiTrust, Gale, etc), for generating appropriate link
+  - source_url: link to full record
+  - image_url: image url (needed for Gale image urls)
   - page: page result with page.order attribute (page label/order, for determining thumbnail url)
   - highlights: dictionary of Solr highlighting results
 {% endcomment %}
@@ -32,7 +35,7 @@ Expected context variables:
           </noscript>
           {% elif source == 'Gale' %}
           {# NOTE: may want to move to a template tag at some point #}
-          {% with 2x_img="https://callisto.ggsrv.com/imgsrv/FastFetch/UBER2/"|add:image_id|add:"?format=png&boundbox=725+450" 1x_img="https://callisto.ggsrv.com/imgsrv/FastFetch/UBER2/"|add:image_id|add:"?format=png&boundbox=225+350" %}
+          {% with 2x_img=""|add:image_url|add:"?format=png&boundbox=725+450" 1x_img=""|add:image_url|add:"?format=png&boundbox=225+350" %}
           <img src="{{ 1x_img }}" srcset="{{ 1x_img}}, {{ 2x_img }} 2x"
               alt="page {{ page.label }}"/>
           {% endwith %}
