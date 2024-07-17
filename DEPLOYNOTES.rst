@@ -3,6 +3,11 @@
 Deploy and Upgrade notes
 ========================
 
+3.13
+----
+
+* EEBO-TPC import requires configuring **EEBO_DATA** path in local settings.
+
 3.12.1
 ------
 
