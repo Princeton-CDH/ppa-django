@@ -1,8 +1,16 @@
 """
 Code for working with EEBO-TCP (Text Creation Partnership) content.
 """
+from pathlib import Path
 
+from django.conf import settings
 from eulxml import xmlmap
+
+
+def short_id(volume_id):
+    # volume ids in import spreadsheet are in this format: A25820.0001.001
+    # TCP records use the first portion only
+    return volume_id.split(".")[0]
 
 
 class Page(xmlmap.XmlObject):
@@ -21,7 +29,7 @@ class Page(xmlmap.XmlObject):
     text_contents = xmlmap.StringListField("following::text()")
 
     def __repr__(self):
-        return f"<Page {self.label} ({self.section_type})>"
+        return f"<Page {self.number or '-'} ({self.section_type})>"
 
     def page_contents(self):
         """generator of text strings between this page beginning tag and
@@ -71,3 +79,24 @@ class Text(xmlmap.XmlObject):
 
     #: list of page objects, identified by page beginning tag (PB)
     pages = xmlmap.NodeListField("EEBO/TEXT//PB", Page)
+
+
+def page_data(volume_id):
+    xml_path = Path(settings.EEBO_DATA) / f"{short_id(volume_id)}.P4.xml"
+    tcp_text = xmlmap.load_xmlobject_from_file(xml_path, Text)
+
+    for page in tcp_text.pages:
+        page_info = {
+            "label": page.number,
+            "content": str(page),
+            "tags": [page.section_type],
+        }
+        yield page_info
+
+
+def page_count(volume_id):
+    xml_path = Path(settings.EEBO_DATA) / f"{short_id(volume_id)}.P4.xml"
+    tcp_text = xmlmap.load_xmlobject_from_file(xml_path, Text)
+    # provisional page count based on number of page beginning tags
+    # NOTE: for simplicity, we include pages with no content
+    return len(tcp_text.pages)

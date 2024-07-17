@@ -22,6 +22,7 @@ from wagtail.admin.panels import FieldPanel
 from wagtail.fields import RichTextField
 from wagtail.snippets.models import register_snippet
 
+from ppa.archive import eebo_tcp
 from ppa.archive.gale import GaleAPI, MARCRecordNotFound, get_marc_record
 from ppa.archive.hathi import HathiBibliographicAPI, HathiObject
 
@@ -313,7 +314,7 @@ def validate_page_range(value):
 class DigitizedWorkQuerySet(models.QuerySet):
     def by_first_page_orig(self, start_page):
         "find records based on first page in original page range"
-        return self.filter(pages_orig__regex=f"^{start_page}([,-]|\b|$)")
+        return self.filter(pages_orig__regex=f"^{start_page}([,-]|:|\b|$)")
 
 
 class DigitizedWork(ModelIndexable, TrackChangesModel):
@@ -324,10 +325,12 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 
     HATHI = "HT"
     GALE = "G"
+    EEBO = "E"
     OTHER = "O"
     SOURCE_CHOICES = (
         (HATHI, "HathiTrust"),
         (GALE, "Gale"),
+        (EEBO, "EEBO-TCP"),
         (OTHER, "Other"),
     )
     #: source of the record, HathiTrust or elsewhere
@@ -574,9 +577,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 
     @property
     def has_fulltext(self):
-        """Checks if an item has full text (currently only items from
-        HathiTrust or Gale)."""
-        return self.source in [self.HATHI, self.GALE]
+        """Checks if an item has full text (i.e., items from
+        HathiTrust, Gale, or EEBO-TCP)."""
+        return self.source in [self.HATHI, self.GALE, self.EEBO]
 
     @cached_property
     def hathi(self):
@@ -658,9 +661,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 
         # should not be editable in admin, but add a validation check
         # just in case
-        if self.has_changed("source_id") and self.source == self.HATHI:
+        if self.has_changed("source_id") and self.source in [self.HATHI, self.EEBO]:
             raise ValidationError(
-                "Changing source ID for HathiTrust records is not supported"
+                "Changing source ID for HathiTrust or EEBO-TCP record is not supported"
             )
 
         # if original page range is set, check that first page is unique
@@ -1222,6 +1225,8 @@ class Page(Indexable):
             pages = digwork.hathi.page_data()
         elif digwork.source == digwork.GALE:
             pages = GaleAPI().get_item_pages(digwork.source_id, gale_record=gale_record)
+        elif digwork.source == digwork.EEBO:
+            pages = eebo_tcp.page_data(digwork.source_id)
         else:
             # no other sources currently support full-text indexing
             return
@@ -1229,9 +1234,7 @@ class Page(Indexable):
         # get page span from digitized work, to handle excerpts
         page_span = digwork.page_span
         # if indexing an excerpt, determine highest page to be indexed
-        max_page = None
-        if page_span:
-            max_page = max(page_span)
+        max_page = max(page_span) if page_span else None
         # index id is used to group work and pages; also fallback for cluster id
         # for works that are not part of a cluster
         digwork_index_id = digwork.index_id()
@@ -1246,7 +1249,7 @@ class Page(Indexable):
             if max_page and i > max_page:
                 pages.close()
                 # NOTE: on OSX, when used with multiproc index_pages, requires
-                # envionment variable OBJC_DISABLE_INITIALIZE_FORK_SAFETY="YES"
+                # environment variable OBJC_DISABLE_INITIALIZE_FORK_SAFETY="YES"
 
             # if the document has a page range defined, skip any pages not in range
             if page_span and i not in page_span:
@@ -1260,7 +1263,7 @@ class Page(Indexable):
                 # if page id is not set, use enumeration id
                 page_id = i
 
-            # update withcommon fields needed for all pages across sources
+            # update with common fields needed for all pages across sources
             page_info.update(
                 {
                     "id": f"{digwork_index_id}.{page_id}",
@@ -1268,6 +1271,9 @@ class Page(Indexable):
                     "group_id_s": digwork_index_id,  # for grouping with work record
                     "cluster_id_s": digwork.index_cluster_id,  # for grouping with cluster
                     "order": i,
+                    # make sure label is set;
+                    # fallback to sequence number if no label, but mark with brackets
+                    "label": page_info.get("label") or f"[{i}]",
                     "item_type": "page",
                 }
             )

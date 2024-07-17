@@ -9,6 +9,7 @@ from time import sleep
 import progressbar
 from django.core.management.base import BaseCommand
 from django.db import models
+from django.template.defaultfilters import pluralize
 from parasolr.django import SolrClient, SolrQuerySet
 
 from ppa.archive.models import DigitizedWork, Page
@@ -89,10 +90,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         self.verbosity = kwargs.get("verbosity", self.v_normal)
-        if self.verbosity >= self.v_normal:
-            self.stdout.write(
-                "Indexing with %d processes" % max(2, kwargs["processes"])
-            )
+        num_processes = kwargs.get("processes", cpu_count())
         work_q = Queue()
         page_data_q = Queue()
         # populate the work queue with digitized works that have
@@ -106,6 +104,15 @@ class Command(BaseCommand):
             digiworks = DigitizedWork.objects.filter(source_id__in=source_ids)
             digwork_pages = digiworks.aggregate(page_count=models.Sum("page_count"))
             num_pages = digwork_pages["page_count"]
+
+        # if only indexing specific items by id, don't start more indexing processes
+        # than there are records to index
+        if source_ids:
+            num_processes = min(num_processes, len(source_ids))
+        if self.verbosity >= self.v_normal:
+            self.stdout.write(
+                f"Indexing with {num_processes} process{pluralize(num_processes, 'es')}"
+            )
 
         # if reindexing everything, check db totals against solr
         if not source_ids and self.verbosity >= self.v_normal:
@@ -192,12 +199,11 @@ class Command(BaseCommand):
             work_q.put(digwork)
 
         # start multiple processes to populate the page index data queue
-        # (need at least 1 page data process, no matter what was specified)
-        for i in range(max(1, kwargs["processes"] - 1)):
+        for i in range(num_processes):
             Process(target=page_index_data, args=(work_q, page_data_q)).start()
 
-        # give the page data a head start, since indexing is faster
-        sleep(10)
+        # give the page data a slight head start, since indexing is faster
+        sleep(2)
         # start a single indexing process
         indexer = Process(
             target=process_index_queue,
