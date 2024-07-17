@@ -346,7 +346,7 @@ def test_process_index_queue(mock_solrclient, mock_progbar):
 
     assert index_q.get.call_count == 4
     assert work_q.empty.call_count == 2
-    index_q.get.assert_called_with(timeout=5)
+    index_q.get.assert_called_with(timeout=1)
 
     mock_solrclient.return_value.update.index.assert_any_call(mockdata1)
     mock_solrclient.return_value.update.index.assert_any_call(mockdata2)
@@ -373,8 +373,8 @@ class TestIndexPagesCommand(TestCase):
         with patch(
             "ppa.archive.management.commands.index_pages.SolrQuerySet", new=mock_solrqs
         ):
-            mock_solrqs.return_value.get_facets.return_value.facet_fields.item_type = {
-                "pages": 153
+            mock_solrqs.return_value.get_facets.return_value.facet_fields = {
+                "item_type": {"pages": 153}
             }
 
             # test calling from command line

@@ -1048,6 +1048,18 @@ class TestPage(TestCase):
         expected = sum(DigitizedWork.objects.all().values_list("page_count", flat=True))
         assert Page.total_to_index() == expected
 
+    def test_total_to_index_by_source(self):
+        # fixture is all hathi; add one record from another source
+        DigitizedWork.objects.create(
+            source=DigitizedWork.GALE, source_id="CW123456", page_count=12
+        )
+        for source in [DigitizedWork.HATHI, DigitizedWork.GALE, DigitizedWork.EEBO]:
+            page_counts = DigitizedWork.objects.filter(source=source).values_list(
+                "page_count", flat=True
+            )
+            expected = sum(page_counts) if page_counts else 0
+            assert Page.total_to_index(source=source) == expected
+
     @patch("ppa.archive.models.DigitizedWork.items_to_index")
     @patch.object(Page, "page_index_data")
     def test_items_to_index(self, mock_page_idx_data, mock_items_idx):

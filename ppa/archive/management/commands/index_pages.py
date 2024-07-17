@@ -119,6 +119,7 @@ class Command(BaseCommand):
         # page content to be indexed
         source_ids = kwargs.get("source_ids", [])
 
+        # unless specific ids are specified, get all works for indexing
         if not source_ids:
             digiworks = DigitizedWork.items_to_index()
 
@@ -126,9 +127,10 @@ class Command(BaseCommand):
             source = kwargs.get("source")
             if source:
                 digiworks = digiworks.filter(source=self.sources[source])
-
-            # TODO: how to calculate total pages to index for single source?
-            num_pages = Page.total_to_index()
+                # calculate total pages to index for single source
+                num_pages = Page.total_to_index(source=self.sources[source])
+            else:
+                num_pages = Page.total_to_index()
         else:
             digiworks = DigitizedWork.objects.filter(source_id__in=source_ids)
 
@@ -146,9 +148,8 @@ class Command(BaseCommand):
 
         # if reindexing everything, check db totals against solr
         if not source_ids and self.verbosity >= self.v_normal:
-            # check totals
-            # TODO: optionally filter by source type?
-            solr_count = self.get_solr_totals()
+            # check totals; filter by source if specified
+            solr_count = self.get_solr_totals(source=kwargs.get("source"))
 
             work_diff = digiworks.count() - solr_count.get("work", 0)
             page_diff = num_pages - solr_count.get("page", 0)
@@ -275,8 +276,20 @@ class Command(BaseCommand):
             )
         return
 
-    def get_solr_totals(self):
-        facets = SolrQuerySet().all().facet("item_type").get_facets()
+    def get_solr_totals(self, source=None):
+        # query for all items and facet by item type to get work/page counts
+        solr_items = SolrQuerySet().all().facet("item_type")
+
+        # filter by source when specified
+        if source is not None:
+            # source is present on works but not pages;
+            # use a join query to filter on pages associated with works by source
+            source_filter = f'source_t:"{source}"'
+            solr_items = solr_items.search(
+                f"{source_filter} OR {{!join from=id to=group_id_s}}{source_filter}"
+            )
+
+        facets = solr_items.get_facets()
         # facet returns an ordered dict
         if facets and facets.facet_fields:
             return facets.facet_fields.get("item_type", {})
