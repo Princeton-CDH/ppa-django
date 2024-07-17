@@ -8,6 +8,7 @@ from time import sleep
 import progressbar
 from django.core.management.base import BaseCommand
 from django.db import models
+from django.template.defaultfilters import pluralize
 from parasolr.django import SolrClient, SolrQuerySet
 from multiprocess import Process, Queue, cpu_count
 
@@ -111,10 +112,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         self.verbosity = kwargs.get("verbosity", self.v_normal)
-        if self.verbosity >= self.v_normal:
-            self.stdout.write(
-                "Indexing with %d processes" % max(2, kwargs["processes"])
-            )
+        num_processes = kwargs.get("processes", cpu_count())
         work_q = Queue()
         page_data_q = Queue()
         # populate the work queue with digitized works that have
@@ -136,6 +134,15 @@ class Command(BaseCommand):
 
             digwork_pages = digiworks.aggregate(page_count=models.Sum("page_count"))
             num_pages = digwork_pages["page_count"]
+
+        # if only indexing specific items by id, don't start more indexing processes
+        # than there are records to index
+        if source_ids:
+            num_processes = min(num_processes, len(source_ids))
+        if self.verbosity >= self.v_normal:
+            self.stdout.write(
+                f"Indexing with {num_processes} process{pluralize(num_processes, 'es')}"
+            )
 
         # if reindexing everything, check db totals against solr
         if not source_ids and self.verbosity >= self.v_normal:
@@ -232,6 +239,7 @@ class Command(BaseCommand):
 
         # give the page data a head start, since indexing is faster
         sleep(1)
+
         # start a single indexing process
         indexer = Process(
             target=process_index_queue,
