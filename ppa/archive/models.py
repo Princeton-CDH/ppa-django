@@ -276,7 +276,7 @@ class SignalHandlers:
         logger.debug(
             "cluster delete, reindexing %d works and %d pages",
             digworks.count(),
-            page_count["page_count"],
+            page_count.get("page_count", 0),
         )
 
         # NOTE: this sends pre/post clear signal, but it's not obvious
@@ -1193,14 +1193,14 @@ class Page(Indexable):
                 yield page_data
 
     @classmethod
-    def total_to_index(cls):
+    def total_to_index(cls, source=None):
         """Calculate the total number of pages to be indexed by
         aggregating page count of items to index in the database."""
+        digworks = DigitizedWork.items_to_index()
+        if source is not None:
+            digworks = digworks.filter(source=source)
         return (
-            DigitizedWork.items_to_index().aggregate(
-                total_pages=models.Sum("page_count")
-            )["total_pages"]
-            or 0
+            digworks.aggregate(total_pages=models.Sum("page_count"))["total_pages"] or 0
         )
 
     @classmethod
