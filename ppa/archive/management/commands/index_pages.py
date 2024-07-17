@@ -118,24 +118,25 @@ class Command(BaseCommand):
         # populate the work queue with digitized works that have
         # page content to be indexed
         source_ids = kwargs.get("source_ids", [])
+        # optionally filter to single source (e.g., HathiTrust, Gale, etc)
+        source = kwargs.get("source")
 
-        # unless specific ids are specified, get all works for indexing
-        if not source_ids:
-            digiworks = DigitizedWork.items_to_index()
-
-            # if single-source indexing is specified, filter items by source
-            source = kwargs.get("source")
-            if source:
-                digiworks = digiworks.filter(source=self.sources[source])
-                # calculate total pages to index for single source
-                num_pages = Page.total_to_index(source=self.sources[source])
-            else:
-                num_pages = Page.total_to_index()
-        else:
-            digiworks = DigitizedWork.objects.filter(source_id__in=source_ids)
-
+        # get all works for indexing, with prefetching
+        digiworks = DigitizedWork.items_to_index()
+        # if source ids are specified, filter and count accordingdly
+        if source_ids:
+            digiworks = digiworks.filter(source_id__in=source_ids)
             digwork_pages = digiworks.aggregate(page_count=models.Sum("page_count"))
             num_pages = digwork_pages["page_count"]
+
+        # if single-source indexing is specified, filter items by source
+        elif source:
+            digiworks = digiworks.filter(source=self.sources[source])
+            # calculate total pages to index for single source
+            num_pages = Page.total_to_index(source=self.sources[source])
+        else:
+            # not filtering by source or id; calculate total pages to index
+            num_pages = Page.total_to_index()
 
         # if only indexing specific items by id, don't start more indexing processes
         # than there are records to index
