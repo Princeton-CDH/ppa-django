@@ -8,6 +8,7 @@ Expected context variables:
   - highlights: dictionary of Solr highlighting results
 {% endcomment %}
 {% load ppa_tags %}
+{% with page_link=source_url %}{# link to source url by default; override if page url is available #}
 <div class="page">
   {% if source == 'HathiTrust' %}
     {% hathi_page_url item_id page.order as page_link %}
@@ -50,3 +51,4 @@ Expected context variables:
         {% endfor %}
     </div>
 </div>
+{% endwith %}
