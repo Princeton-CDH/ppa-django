@@ -39,6 +39,38 @@ Solr changes not reflected in search results? ``solrconfig.xml`` must be
 updated in Solr's main directory: ``solr/server/solr/[CORE]/conf/solrconfig.xml``
 
 
+Updating HathiTrust records and generating a fresh text corpus
+--------------------------------------------------------------
+
+These commands should be run on the production server as the deploy user
+with the python virtual environment activated.
+
+Update all HathiTrust documents with rsync::
+
+    python manage.py hathi_rsync
+
+This file will generate a csv report of the files that were updated.
+Use the resulting file to get a list of ids that need to be indexed:
+
+    cut -f 1 -d, ppa_rsync_changes_[TIMESTAMP].csv | sort | uniq | tail -n +2 > htids.txt
+
+Index pages for the documents that were updated via rsync to make sure
+Solr has all the updated page content::
+
+    python manage.py index_pages `cat htids.txt`
+
+Generate a new text corpus::
+
+    python manage.py generate_textcorpus
+
+Use rsync to copy the generated corpus output to a local machine and
+optionally also upload to TigerData.
+
+If you need to filter the corpus to a smaller set of records, use the
+filter utility script in the ppa-nlp repo / corppa python library
+(currently in development branch.)
+
+
 Indexing with multiprocessing
 -----------------------------
 

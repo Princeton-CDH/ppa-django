@@ -181,6 +181,33 @@ class GaleAPI:
         if response:
             return response.json()
 
+    def get_item_pages(self, item_id, gale_record=None):
+        """Return a generator of page content for the specified digitized work
+        from the Gale API. Takes an optional gale_record
+        parameter (item record as returned by Gale API), to avoid
+        making an extra API call if data is already available."""
+        if gale_record is None:
+            gale_record = self.get_item(item_id)
+
+        # iterate through the pages in the response
+        for page in gale_record["pageResponse"]["pages"]:
+            page_number = page["pageNumber"]
+            # page label (original page number) should be set in folioNumber,
+            # but is not set for all volumes; fallback to page number
+            # converted to integer to drop leading zeroes
+            page_label = page.get("folioNumber", int(page_number))
+            info = {
+                "page_id": page_number,
+                "content": page.get("ocrText"),  # some pages have no text
+                "label": page_label,
+                # image id needed for thumbnail url; use solr dynamic field
+                "image_id_s": page["image"]["id"],
+                # index image url since we will need it when Gale API changes
+                # (expect to be present in Gale API; may not be present in unit tests)
+                "image_url_s": page["image"].get("url"),
+            }
+            yield info
+
 
 # MARC records needed for import and metadata are stored in a local pairtree.
 # currently used for Gale/ECCO content
