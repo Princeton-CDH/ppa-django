@@ -1007,6 +1007,11 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         if self.page_span:
             return len(self.page_span)
 
+        if self.source == DigitizedWork.EEBO:
+            # update page count on the instance, but don't save changes
+            self.page_count = eebo_tcp.page_count(self.source_id)
+            return self.page_count
+
         if not self.source == DigitizedWork.HATHI:
             raise storage_exceptions.ObjectNotFoundException(
                 "Using Hathi-specific page count for non-Hathi item"
