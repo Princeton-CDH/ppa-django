@@ -317,6 +317,8 @@ def test_page_index_data(mock_page):
     digwork2 = Mock()
     # return two mock works and then raise queue empty
     work_q.get.side_effect = (digwork1, digwork2, queue.Empty)
+    # page index data must return contents
+    mock_page.page_index_data.return_value = (1, 2, 3)
 
     index_pages.page_index_data(work_q, page_q)
 
