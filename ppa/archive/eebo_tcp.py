@@ -78,13 +78,16 @@ class Text(xmlmap.XmlObject):
     # various levels nested within divs, paragraphs, etc
 
     #: list of page objects, identified by page beginning tag (PB)
-    pages = xmlmap.NodeListField("EEBO/TEXT//PB", Page)
+    pages = xmlmap.NodeListField("EEBO//TEXT//PB", Page)
+
+
+def load_tcp_text(volume_id):
+    xml_path = Path(settings.EEBO_DATA) / f"{short_id(volume_id)}.P4.xml"
+    return xmlmap.load_xmlobject_from_file(xml_path, Text)
 
 
 def page_data(volume_id):
-    xml_path = Path(settings.EEBO_DATA) / f"{short_id(volume_id)}.P4.xml"
-    tcp_text = xmlmap.load_xmlobject_from_file(xml_path, Text)
-
+    tcp_text = load_tcp_text(volume_id)
     for page in tcp_text.pages:
         page_info = {
             "label": page.number,
