@@ -2,6 +2,7 @@
 Custom multiprocessing Solr index script for page index data.
 """
 
+import itertools
 import queue
 from time import sleep
 
@@ -10,10 +11,18 @@ from django.core.management.base import BaseCommand
 from django.db import models
 from django.template.defaultfilters import pluralize
 from parasolr.django import SolrClient, SolrQuerySet
-from multiprocess import Process, Queue, cpu_count
+from multiprocess import Process, JoinableQueue, cpu_count
 
 from ppa.archive.models import DigitizedWork, Page
 from ppa.archive.solr import PageSearchQuerySet
+
+
+def iterator_chunks(iterable, size=100):
+    # iterate a generator in chunks without consuming or checking size
+    # thanks to https://stackoverflow.com/a/24527424/9706217
+    iterator = iter(iterable)
+    for first in iterator:
+        yield itertools.chain([first], itertools.islice(iterator, size - 1))
 
 
 def page_index_data(work_q, page_data_q):
@@ -26,8 +35,10 @@ def page_index_data(work_q, page_data_q):
             digwork = work_q.get(timeout=1)
             # — might be nice to chunk, but most books are small
             # enough it doesn't matter that much
-            page_data = list(Page.page_index_data(digwork))
-            page_data_q.put(page_data)
+            for page_data in iterator_chunks(Page.page_index_data(digwork)):
+                page_data_q.put(list(page_data))
+            # update queue that task has been completed
+            work_q.task_done()
 
         # by default, signals propagate to all processes;
         # take advantage of that to stop gracefully
@@ -61,6 +72,8 @@ def process_index_queue(index_data_q, total_to_index, work_q):
             # increase count based on the number of items in the list
             count += len(index_data)
             progbar.update(count)
+            # update queue - task has been completed
+            index_data_q.task_done()
 
         # by default, signals propagate to all processes;
         # take advantage of that to stop gracefully
@@ -71,9 +84,11 @@ def process_index_queue(index_data_q, total_to_index, work_q):
             return
 
         except queue.Empty:
-            # only end if work q is also empty; otherwise, loop again
-            # indexer has just gotten ahead of page index data
-            if work_q.empty():
+            # if page data queue is empty BUT indexing has started (i.e.
+            # count is not zero, not waiting on initial content)
+            # AND if work q is also empty, then end;
+            # otherwise, loop again: indexer is ahead of page index data
+            if count and work_q.empty():
                 progbar.finish()
                 # finish indexing process
                 return
@@ -113,8 +128,8 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         self.verbosity = kwargs.get("verbosity", self.v_normal)
         num_processes = kwargs.get("processes", cpu_count())
-        work_q = Queue()
-        page_data_q = Queue()
+        self.work_q = JoinableQueue()
+        self.page_data_q = JoinableQueue()
         # populate the work queue with digitized works that have
         # page content to be indexed
         source_ids = kwargs.get("source_ids", [])
@@ -228,41 +243,38 @@ class Command(BaseCommand):
             digiworks = mismatches
 
         for digwork in digiworks:
-            work_q.put(digwork)
+            self.work_q.put(digwork)
 
         # start multiple processes to populate the page index data queue
         # (need at least 1 page data process, no matter what was specified)
-        data_feeders = []
+        self.data_feeders = []
         for i in range(max(1, kwargs["processes"] - 1)):
-            process = Process(target=page_index_data, args=(work_q, page_data_q))
+            process = Process(
+                target=page_index_data, args=(self.work_q, self.page_data_q)
+            )
             process.start()
-            data_feeders.append(process)
+            self.data_feeders.append(process)
 
         # give the page data a head start, since indexing is faster
         sleep(1)
 
         # start a single indexing process
-        indexer = Process(
+        self.indexer = Process(
             target=process_index_queue,
-            args=(page_data_q, num_pages, work_q),
+            args=(self.page_data_q, num_pages, self.work_q),
         )
-        indexer.start()
+        self.indexer.start()
         try:
             # block until indexer has completed, but catch keyboard interrupt
-            indexer.join()
+            self.indexer.join()
         except KeyboardInterrupt:
             # if user interrupts indexing with Ctrl-C,
             # terminate and join all the processes
-            indexer.terminate()
-            indexer.join()
-            for proc in data_feeders:
-                proc.terminate()
-                proc.join()
+            pass
 
-            work_q.close()
-            work_q.cancel_join_thread()
-            page_data_q.close()
-            page_data_q.cancel_join_thread()
+        # when indexing is complete or interrupted with Ctrl-C,
+        # end and join all processes
+        self.end_processes()
 
         # print a summary of solr totals by item type
         if self.verbosity >= self.v_normal:
@@ -275,6 +287,19 @@ class Command(BaseCommand):
                 "\nItems in Solr by item type: %s" % (", ".join(item_totals))
             )
         return
+
+    def end_processes(self):
+        # make sure all processes are closed and joined
+        # to the script will end cleanly
+        self.indexer.terminate()
+        self.indexer.join()
+        for proc in self.data_feeders:
+            proc.terminate()
+            proc.join()
+        self.work_q.close()
+        self.work_q.cancel_join_thread()
+        self.page_data_q.close()
+        self.page_data_q.cancel_join_thread()
 
     def get_solr_totals(self, source=None):
         # query for all items and facet by item type to get work/page counts
