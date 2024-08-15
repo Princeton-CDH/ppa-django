@@ -106,7 +106,7 @@
                 <div class="wrapper">
                     {% for page in results.docs %}
                     {% with highlights=page_highlights|dict_item:page.id %}
-                        {% include 'archive/snippets/page_preview.html' with item_id=item.source_id source=item.source  source_url=item.source_url image_url=item.image_url %}
+                        {% include 'archive/snippets/page_preview.html' with item_id=item.source_id source=item.source  source_url=item.source_url image_url=page.image_url %}
                     {% endwith %}
                     {% endfor %}
                 </div>
