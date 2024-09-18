@@ -12,6 +12,14 @@ from ppa import __version__ as ppa_version
 logger = logging.getLogger(__name__)
 
 
+def get_local_ocr(item_id, page_num):
+    ocr_dir = "/Users/lauret/cdh-dev/ppa/tigerdata-copy/prosody/ppa-ocr/Gale/"
+    stub_dir = item_id[::3][1:]
+    ocr_txt_fp = f"{ocr_dir}/{stub_dir}/{item_id}/{item_id}_{page_num}0.txt"
+    with open(ocr_txt_fp) as reader:
+        return reader.read()
+
+
 class GaleAPIError(Exception):
     """Base exception class for Gale API errors"""
 
@@ -196,10 +204,18 @@ class GaleAPI:
             # but is not set for all volumes; fallback to page number
             # converted to integer to drop leading zeroes
             page_label = page.get("folioNumber", int(page_number))
+            tags = []
+            try: 
+                ocr_text = get_local_ocr(item_id, page_number)
+                tags = ["local_ocr"]
+            except FileNotFoundError:
+                ocr_text = page.get("ocrText"),  # some pages have no text
+
             info = {
                 "page_id": page_number,
-                "content": page.get("ocrText"),  # some pages have no text
+                "content": ocr_text,
                 "label": page_label,
+                "tags": tags,
                 # image id needed for thumbnail url; use solr dynamic field
                 "image_id_s": page["image"]["id"],
                 # index image url since we will need it when Gale API changes
