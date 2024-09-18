@@ -13,8 +13,16 @@ logger = logging.getLogger(__name__)
 
 
 def get_local_ocr(item_id, page_num):
-    ocr_dir = "/Users/lauret/cdh-dev/ppa/tigerdata-copy/prosody/ppa-ocr/Gale/"
-    stub_dir = item_id[::3][1:]
+    """
+    Get local OCR page text for specified page of a single Gale volume
+    """
+    ocr_dir = getattr(settings, "GALE_LOCAL_OCR", None)
+    if not ocr_dir:
+        raise ImproperlyConfigured(
+            "GALE_LOCAL_OCR configuration is required for indexing Gale page content"
+        )
+
+    stub_dir = item_id[::3][1:]  # Following conventions set in ppa-nlp
     ocr_txt_fp = f"{ocr_dir}/{stub_dir}/{item_id}/{item_id}_{page_num}0.txt"
     with open(ocr_txt_fp) as reader:
         return reader.read()
@@ -208,8 +216,9 @@ class GaleAPI:
             try: 
                 ocr_text = get_local_ocr(item_id, page_number)
                 tags = ["local_ocr"]
-            except FileNotFoundError:
+            except FileNotFoundError as e:
                 ocr_text = page.get("ocrText"),  # some pages have no text
+                logger.warning(f'Local OCR not found for {item_id} {page_number}')
 
             info = {
                 "page_id": page_number,
