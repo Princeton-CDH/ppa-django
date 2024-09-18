@@ -44,6 +44,9 @@ GALE_API_USERNAME = ''
 # local path for cached marc record; needed for Gale/ECCO import
 MARC_DATA = ''
 
+# local path for Gale OCR data
+GALE_LOCAL_OCR = ''
+
 # local path for importing and indexing selected EEBO-TCP content
 # should contain xml and marc files named by TCP id
 EEBO_DATA = ""
