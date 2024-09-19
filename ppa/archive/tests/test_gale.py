@@ -287,7 +287,7 @@ class TestGaleAPI(TestCase):
         mock_get_local_ocr.reset_mock()
         mock_get_local_ocr.side_effect = [FileNotFoundError, FileNotFoundError, "local ocr text"]
         page_data = list(gale_api.get_item_pages(item_id, api_response))
-        mcok_get_item.assert_not_called()
+        mock_get_item.assert_not_called()
         assert mock_get_local_ocr.call_count == 3
         assert len(page_data) == 3
 
