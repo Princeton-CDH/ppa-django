@@ -1196,7 +1196,7 @@ class TestPage(TestCase):
                 "image_url_s": "http://example.com/img/3",
             }
         ]
-        mock_gale_get_item_pages.return_value = text_page_data
+        mock_gale_get_item_pages.return_value = test_page_data
         page_data = list(Page.page_index_data(gale_work))
         assert len(page_data) == 3
         for i, index_data in enumerate(page_data):
