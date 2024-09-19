@@ -1277,7 +1277,7 @@ class Page(Indexable):
                     "cluster_id_s": digwork.index_cluster_id,  # for grouping with cluster
                     "order": i,
                     # make sure label is set;
-                    # fallback to sequence number if no label, but mark with brackets
+                    # fallback to sequence number if no (or null) label, but mark with brackets
                     "label": page_info.get("label") or f"[{i}]",
                     "item_type": "page",
                 }

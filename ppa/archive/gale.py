@@ -208,10 +208,6 @@ class GaleAPI:
         # iterate through the pages in the response
         for page in gale_record["pageResponse"]["pages"]:
             page_number = page["pageNumber"]
-            # page label (original page number) should be set in folioNumber,
-            # but is not set for all volumes; fallback to page number
-            # converted to integer to drop leading zeroes
-            page_label = page.get("folioNumber", int(page_number))
             tags = []
             try: 
                 ocr_text = get_local_ocr(item_id, page_number)
@@ -223,7 +219,7 @@ class GaleAPI:
             info = {
                 "page_id": page_number,
                 "content": ocr_text,
-                "label": page_label,
+                "label": page.get("folioNumber"),
                 "tags": tags,
                 # image id needed for thumbnail url; use solr dynamic field
                 "image_id_s": page["image"]["id"],
