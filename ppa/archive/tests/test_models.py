@@ -1200,10 +1200,7 @@ class TestPage(TestCase):
         page_data = list(Page.page_index_data(gale_work))
         assert len(page_data) == 3
         for i, index_data in enumerate(page_data):
-            assert (
-                index_data["id"]
-                == f"{gale_work.source_id}.{test_page_data[i]['page_id']}"
-            )
+            assert index_data["id"] == f"{gale_work.source_id}.000{i+1}"
             assert index_data["source_id"] == gale_work.source_id
             assert index_data["group_id_s"] == gale_work.index_id()
             assert index_data["cluster_id_s"] == gale_work.index_cluster_id
