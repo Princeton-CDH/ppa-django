@@ -243,7 +243,7 @@ class TestGaleAPI(TestCase):
 
     @patch("ppa.archive.gale.get_local_ocr")
     @patch("ppa.archive.gale.GaleAPI.get_item")
-    def test_get_item_pages(self, mock_get_item, mock_get_local_ocr):
+    def test_get_item_pages(self, mock_get_item, mock_get_local_ocr, mockrequests):
         item_id = "CW0123456789"
         # Set up API
         gale_api = gale.GaleAPI()
