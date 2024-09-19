@@ -284,7 +284,7 @@ class TestGaleAPI(TestCase):
 
         # skip apip call if record is provided
         mock_get_item.reset_mock()
-        mock_get_local_ocr.reset()
+        mock_get_local_ocr.reset_mock()
         page_data = list(gale_api.get_item_pages(item_id, api_response))
         mcok_get_item.assert_not_called()
         assert mock_get_local_ocr.call_count == 3
