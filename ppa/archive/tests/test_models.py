@@ -1165,7 +1165,7 @@ class TestPage(TestCase):
         assert not list(Page.page_index_data(nonhathi_work))
 
     # username is required to init GaleAPI class, but API is not actually used
-    @override_settings(GALE_LOCAL_DATA="unused")
+    @override_settings(GALE_LOCAL_OCR="unused")
     @override_settings(GALE_API_USERNAME="unused")
     @patch.object(gale.GaleAPI, "get_item")
     def test_gale_page_index_data(self, mock_gale_get_item):
