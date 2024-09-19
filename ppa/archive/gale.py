@@ -217,7 +217,7 @@ class GaleAPI:
                 ocr_text = get_local_ocr(item_id, page_number)
                 tags = ["local_ocr"]
             except FileNotFoundError as e:
-                ocr_text = page.get("ocrText"),  # some pages have no text
+                ocr_text = page.get("ocrText")  # some pages have no text
                 logger.warning(f'Local OCR not found for {item_id} {page_number}')
 
             info = {

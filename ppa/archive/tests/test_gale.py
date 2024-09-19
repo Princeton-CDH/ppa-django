@@ -12,6 +12,28 @@ from ppa.archive import gale
 from ppa.archive.tests.test_models import FIXTURES_PATH
 
 
+@override_settings()
+def test_get_local_ocr(tmp_path):
+    item_id = "CB0123456789"
+    page_num = "0001"
+    content = "Testing...\n1\n2\n3"
+    # Mock ocr files for testing
+    ocr_dir = tmp_path.join("146", item_id)
+    ocr_dir.mkdir(parents=True)
+    ocr_file = ocr_dir.join(f"{item_dir}_{page_num}0.txt")
+    ocr_file.write_text(content)
+
+    with override_settings(settings.GALE_LOCAL_OCR=f"{tmp_path}"):
+        assert content == get_local_ocr(item_id, page_num)
+
+
+@override_settings()
+def test_get_local_ocr_config_error():
+    del settings.GALE_LOCAL_OCR
+    with pytest.raises(ImproperlyConfigured):
+        get_local_ocr("item_id", "page_num")
+
+
 @override_settings(GALE_API_USERNAME="galeuser123")
 @patch("ppa.archive.gale.requests")
 class TestGaleAPI(TestCase):
@@ -218,6 +240,54 @@ class TestGaleAPI(TestCase):
         gale_api.session.get.return_value.status_code = requests.codes.bad_request
         with pytest.raises(gale.GaleAPIError):
             gale_api.get_item("CW123456")
+
+    @patch("ppa.archive.gale.get_local_ocr")
+    @patch("ppa.archive.gale.GaleAPI.get_item")
+    def test_get_item_pages(self, mock_get_item, mock_get_local_ocr):
+        item_id = "CW0123456789"
+        # Set up API
+        gale_api = gale.GaleAPI()
+        test_pages = [
+            {
+                "pageNumber": "0001",
+                "folioNumber": "i",
+                "image": {"id": "09876001234567", "url": "http://example.com/img/1"}
+                # some pages have no ocr text
+            },
+            {
+                "pageNumber": "0002",
+                "image": {"id": "08765002345678", "url": "http://example.com/img/2"},
+                "ocrText": "more test content",
+            },
+            {
+                "pageNumber": "0003",
+                "image": {"id": "0765400456789", "url": "http://example.com/img/3"},
+                "ocrText": "ignored text",
+            },
+        ]
+        api_response = {
+            "doc": {},  # unused for this test
+            "pageResponse": {"pages": test_pages},
+        }
+        mock_get_item.return_value = api_response
+        # Set up get_local_ocr so that only the 3rd puuuage's text is found
+        mock_get_local_ocr.side_effect = [FileNotFoundError, FileNotFoundError, "local ocr text"]
+        page_data = list(gale_api.get_item_pages(item_id))
+        mock_get_item.called_once()
+        assert mock_get_local_ocr.call_count == 3
+        assert len(page_data) == 3
+        assert [ p["page_id"] for p in page_data ] == ["0001", "0002", "0003"]
+        assert [ p["content"] for p in page_data ] == [None, "more test content", "local ocr text"]
+        assert [ p["tags"] for p in page_data ] == [ [], [], ["local_ocr"] ]
+        assert [ p["image_id_s"] for p in page_data ] == ["09876001234567", "08765002345678", "0765400456789"]
+        assert [ p["image_urls_s"] for p in page_data ] == [f"http://example.com/img/{i+1}" for i in range(3)]
+
+        # skip apip call if record is provided
+        mock_get_item.reset_mock()
+        page_data = list(gale_api.get_item_pages(item_id, api_response))
+        mcok_get_item.assert_not_called()
+        assert mock_get_local_ocr.call_count == 3
+        assert len(page_data) == 3
 
 
 @override_settings(MARC_DATA="/path/to/data/marc")
