@@ -24,14 +24,14 @@ def test_get_local_ocr(tmp_path):
     ocr_file.write_text(content)
 
     with override_settings(GALE_LOCAL_OCR=f"{tmp_path}"):
-        assert content == get_local_ocr(item_id, page_num)
+        assert content == gale.get_local_ocr(item_id, page_num)
 
 
 @override_settings()
 def test_get_local_ocr_config_error():
     del settings.GALE_LOCAL_OCR
     with pytest.raises(ImproperlyConfigured):
-        get_local_ocr("item_id", "page_num")
+        gale.get_local_ocr("item_id", "page_num")
 
 
 @override_settings(GALE_API_USERNAME="galeuser123")
