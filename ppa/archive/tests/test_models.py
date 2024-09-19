@@ -1151,7 +1151,7 @@ class TestPage(TestCase):
         page_data = list(page_data)
         assert page_data[0]["label"] == "[1]"
         assert "Licensed,\nROBERT MIDGLEY." in page_data[0]["content"]
-        # eebo-tcp page data logic is tested more thoroughly elsewheer
+        # eebo-tcp page data logic is tested more thoroughly elsewhere
 
     def test_page_index_data_suppressed(self):
         # if item is suppressed - no page data
@@ -1167,55 +1167,58 @@ class TestPage(TestCase):
     # username is required to init GaleAPI class, but API is not actually used
     @override_settings(GALE_LOCAL_OCR="unused")
     @override_settings(GALE_API_USERNAME="unused")
-    @patch.object(gale.GaleAPI, "get_item")
-    def test_gale_page_index_data(self, mock_gale_get_item):
+    @patch.object(gale.GaleAPI, "get_item_pages")
+    def test_gale_page_index_data(self, mock_gale_get_item_pages):
         gale_work = DigitizedWork(source=DigitizedWork.GALE, source_id="CW123456")
-        test_pages = [
+        test_page_data = [
             {
-                "pageNumber": "0001",
-                "folioNumber": "i",
-                "image": {"id": "09876001234567", "url": "http://example.com/img/1"}
-                # some pages have no ocr text
+                "page_id": "0001",
+                "content": None,
+                "label": "i",
+                "tags": [],
+                "image_id_s": "09876001234567",
+                "image_url_s": "http://example.com/img/1",
             },
             {
-                "pageNumber": "0002",
-                "image": {"id": "08765002345678", "url": "http://example.com/img/2"},
-                "ocrText": "more test content",
+                "page_id": "0002",
+                "content": "original ocr content",
+                "label": None,
+                "tags": [],
+                "image_id_s": "08765002345678",
+                "image_url_s": "http://example.com/img/2",
             },
+            {
+                "page_id": "0003",
+                "content": "local ocr content",
+                "label": None,
+                "tags": ["local_ocr"],
+                "image_id_s": "0765400456789",
+                "image_url_s": "http://example.com/img/3",
+            }
         ]
-        api_response = {
-            "doc": {},  # unused for this test
-            "pageResponse": {"pages": test_pages},
-        }
-        mock_gale_get_item.return_value = api_response
+        mock_gale_get_item_pages.return_value = text_page_data
         page_data = list(Page.page_index_data(gale_work))
-        assert len(page_data) == 2
+        assert len(page_data) == 3
         for i, index_data in enumerate(page_data):
             assert (
                 index_data["id"]
-                == f"{gale_work.source_id}.{test_pages[i]['pageNumber']}"
+                == f"{gale_work.source_id}.{test_page_data[i]['page_id']}"
             )
             assert index_data["source_id"] == gale_work.source_id
-            assert index_data["content"] == test_pages[i].get("ocrText")
+            assert index_data["group_id_s"] == gale_work.index_id()
+            assert index_data["cluster_id_s"] == gale_work.index_cluster_id
             assert index_data["order"] == i + 1
-            # should use folio number when set
-            if "folioNumber" in test_pages[i]:
-                assert index_data["label"] == test_pages[i]["folioNumber"]
-            else:
-                assert index_data["label"] == int(test_pages[i]["pageNumber"])
+            assert index_data["label"] == test_page_data[i]["label"] or f"[{i+1}]"
             assert index_data["item_type"] == "page"
-            assert index_data["image_id_s"] == test_pages[i]["image"]["id"]
-            assert index_data["image_url_s"] == test_pages[i]["image"]["url"]
-
-        # skip api call if item data is passed in
-        mock_gale_get_item.reset_mock()
-        page_data = list(Page.page_index_data(gale_work, api_response))
-        assert mock_gale_get_item.get_item.call_count == 0
-        assert len(page_data) == 2
+            assert "page_id" not in index_data  # this field is not preserved
+            assert index_data["content"] == test_page_data[i]["content"]
+            assert index_data["tags"] == test_page_data[i]["tags"]
+            assert index_data["image_id_s"] == test_page_data[i]["image_id_s"]
+            assert index_data["image_url_s"] == test_page_data[i]["image_url_s"]
 
         # limit if page range specified
         gale_excerpt = DigitizedWork(
-            source=DigitizedWork.GALE, source_id="CW123456", pages_digital="2-3"
+            source=DigitizedWork.GALE, source_id="CW123456", pages_digital="2-4"
         )
-        page_data = list(Page.page_index_data(gale_excerpt, api_response))
-        assert len(page_data) == 1
+        page_data = list(Page.page_index_data(gale_excerpt))
+        assert len(page_data) == 2
