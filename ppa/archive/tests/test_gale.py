@@ -18,9 +18,9 @@ def test_get_local_ocr(tmp_path):
     page_num = "0001"
     content = "Testing...\n1\n2\n3"
     # Mock ocr files for testing
-    ocr_dir = tmp_path.join_path("146", item_id)
+    ocr_dir = tmp_path.joinpath("146", item_id)
     ocr_dir.mkdir(parents=True)
-    ocr_file = ocr_dir.join_path(f"{item_dir}_{page_num}0.txt")
+    ocr_file = ocr_dir.joinpath(f"{item_dir}_{page_num}0.txt")
     ocr_file.write_text(content)
 
     with override_settings(GALE_LOCAL_OCR=f"{tmp_path}"):
