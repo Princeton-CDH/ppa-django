@@ -280,7 +280,7 @@ class TestGaleAPI(TestCase):
         assert [ p["content"] for p in page_data ] == [None, "more test content", "local ocr text"]
         assert [ p["tags"] for p in page_data ] == [ [], [], ["local_ocr"] ]
         assert [ p["image_id_s"] for p in page_data ] == ["09876001234567", "08765002345678", "0765400456789"]
-        assert [ p["image_urls_s"] for p in page_data ] == [f"http://example.com/img/{i+1}" for i in range(3)]
+        assert [ p["image_url_s"] for p in page_data ] == [f"http://example.com/img/{i+1}" for i in range(3)]
 
         # skip apip call if record is provided
         mock_get_item.reset_mock()
