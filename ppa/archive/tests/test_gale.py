@@ -18,7 +18,7 @@ def test_get_local_ocr(tmp_path):
     page_num = "0001"
     content = "Testing...\n1\n2\n3"
     # Mock ocr files for testing
-    ocr_dir = tmp_path.joinpath("146", item_id)
+    ocr_dir = tmp_path.joinpath("147", item_id)
     ocr_dir.mkdir(parents=True)
     ocr_file = ocr_dir.joinpath(f"{item_id}_{page_num}0.txt")
     ocr_file.write_text(content)
@@ -270,7 +270,7 @@ class TestGaleAPI(TestCase):
             "pageResponse": {"pages": test_pages},
         }
         mock_get_item.return_value = api_response
-        # Set up get_local_ocr so that only the 3rd puuuage's text is found
+        # Set up get_local_ocr so that only the 3rd page's text is found
         mock_get_local_ocr.side_effect = [FileNotFoundError, FileNotFoundError, "local ocr text"]
         page_data = list(gale_api.get_item_pages(item_id))
         mock_get_item.called_once()
