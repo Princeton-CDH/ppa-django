@@ -23,7 +23,7 @@ def test_get_local_ocr(tmp_path):
     ocr_file = ocr_dir.join(f"{item_dir}_{page_num}0.txt")
     ocr_file.write_text(content)
 
-    with override_settings(settings.GALE_LOCAL_OCR=f"{tmp_path}"):
+    with override_settings(GALE_LOCAL_OCR=f"{tmp_path}"):
         assert content == get_local_ocr(item_id, page_num)
 
 
