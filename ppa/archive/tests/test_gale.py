@@ -27,7 +27,7 @@ def test_get_local_ocr(tmp_path):
         assert content == gale.get_local_ocr(item_id, page_num)
 
 
-@override_settings()
+@override_settings(GALE_LOCAL_OCR=None)
 def test_get_local_ocr_config_error():
     del settings.GALE_LOCAL_OCR
     with pytest.raises(ImproperlyConfigured):
@@ -283,7 +283,7 @@ class TestGaleAPI(TestCase):
         assert [ p["image_id_s"] for p in page_data ] == ["09876001234567", "08765002345678", "0765400456789"]
         assert [ p["image_url_s"] for p in page_data ] == [f"http://example.com/img/{i+1}" for i in range(3)]
 
-        # skip apip call if record is provided
+        # skip api call if record is provided
         mock_get_item.reset_mock()
         mock_get_local_ocr.reset_mock()
         mock_get_local_ocr.side_effect = [FileNotFoundError, FileNotFoundError, "local ocr text"]
