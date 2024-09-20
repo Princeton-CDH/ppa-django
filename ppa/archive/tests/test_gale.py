@@ -29,7 +29,6 @@ def test_get_local_ocr(tmp_path):
 
 @override_settings(GALE_LOCAL_OCR=None)
 def test_get_local_ocr_config_error():
-    del settings.GALE_LOCAL_OCR
     with pytest.raises(ImproperlyConfigured):
         gale.get_local_ocr("item_id", "page_num")
 
