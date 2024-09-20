@@ -345,6 +345,7 @@ class TestGaleImporter(TestCase):
         assert importer.results[test_id] == not_found_error
 
     # username is required to init GaleAPI class, but API is not actually used
+    @override_settings(GALE_LOCAL_OCR="unused")
     @override_settings(GALE_API_USERNAME="unused")
     @patch("ppa.archive.import_util.get_marc_record")
     @patch("ppa.archive.import_util.GaleAPI")
