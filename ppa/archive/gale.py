@@ -14,7 +14,19 @@ logger = logging.getLogger(__name__)
 
 def get_local_ocr(item_id, page_num):
     """
-    Get local OCR page text for specified page of a single Gale volume
+    Get local OCR page text for specified page of a single Gale volume if available.
+    This requires a base directory (specified by GALE_LOCAL_OCR) to be configured and
+    assumes the following organization:
+        
+        * Volume-level directories are organized in stub directories that correspond to
+          every third number (e.g., CW0128905397 --> 193). So, a Gale volume's OCR data
+          is located in the following directory: GALE_LOCAL_OCR / stub_dir / item_id
+        
+        * A page's local ocr text file is named [volume id]_[page number]0.txt, where the
+          page number is a 4-digit string (e.g., "0004"). So, for page number "0004" in
+          volume CW0128905397, the local ocr file is named "CW0128905397_00040.txt".
+
+    Raises a FileNotFoundError if the local OCR page text does not exist. 
     """
     ocr_dir = getattr(settings, "GALE_LOCAL_OCR", None)
     if not ocr_dir:
@@ -23,7 +35,7 @@ def get_local_ocr(item_id, page_num):
         )
 
     stub_dir = item_id[::3][1:]  # Following conventions set in ppa-nlp
-    ocr_txt_fp = f"{ocr_dir}/{stub_dir}/{item_id}/{item_id}_{page_num}0.txt"
+    ocr_txt_fp = os.path.join(ocr_dir, stub_dir, item_id, f"{item_id}_{page_num}0.txt")
     with open(ocr_txt_fp) as reader:
         return reader.read()
 
@@ -208,6 +220,9 @@ class GaleAPI:
         # iterate through the pages in the response
         for page in gale_record["pageResponse"]["pages"]:
             page_number = page["pageNumber"]
+
+            # Fetch higher quality local OCR text if possible, with fallback to Gale
+            # OCR. Set a tag to indicate the usage of local OCR text.
             tags = []
             try: 
                 ocr_text = get_local_ocr(item_id, page_number)
@@ -219,6 +234,8 @@ class GaleAPI:
             info = {
                 "page_id": page_number,
                 "content": ocr_text,
+                # Don't set label when there isn't one. Fallback labels are set in the
+                # common page indexing code.
                 "label": page.get("folioNumber"),
                 "tags": tags,
                 # image id needed for thumbnail url; use solr dynamic field
