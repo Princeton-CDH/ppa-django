@@ -187,7 +187,8 @@ class PageSearchQuerySet(AliasedSolrQuerySet):
         "title": "title",
         "label": "label",
         "source_id": "source_id",
-        "image_id": "image_id_s",
+        #        "image_id": "image_id_s",  # no longer needed for Gale?
+        "image_url": "image_url_s",
         "group_id": "group_id_s",
         "cluster_id": "cluster_id_s",
     }

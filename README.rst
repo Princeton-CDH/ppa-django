@@ -29,16 +29,12 @@ at `<https://princeton-cdh.github.io/ppa-django/>`_.
    :target: https://github.com/psf/black
    :alt: code style Black
 
-.. image:: https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336
-  :target: https://pycqa.github.io/isort/
-  :alt: imports: isort
-
 This repo uses `git-flow <https://github.com/nvie/gitflow>`_ conventions; **main**
 contains the most recent release, and work in progress will be on the **develop** branch.
 Pull requests should be made against develop.
 
 
-Python 3.11 / Django 5.0 / Node 18.12 / Postgresql 15 / Solr 8
+Python 3.11 / Django 5.0 / Node 18.12 / Postgresql 15 / Solr 9
 
 
 Development instructions

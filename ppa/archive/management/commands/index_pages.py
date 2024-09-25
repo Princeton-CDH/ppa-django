@@ -2,17 +2,27 @@
 Custom multiprocessing Solr index script for page index data.
 """
 
+import itertools
 import queue
-from multiprocess import Process, Queue, cpu_count
 from time import sleep
 
 import progressbar
 from django.core.management.base import BaseCommand
 from django.db import models
+from django.template.defaultfilters import pluralize
 from parasolr.django import SolrClient, SolrQuerySet
+from multiprocess import Process, JoinableQueue, cpu_count
 
 from ppa.archive.models import DigitizedWork, Page
 from ppa.archive.solr import PageSearchQuerySet
+
+
+def iterator_chunks(iterable, size=100):
+    # iterate a generator in chunks without consuming or checking size
+    # thanks to https://stackoverflow.com/a/24527424/9706217
+    iterator = iter(iterable)
+    for first in iterator:
+        yield itertools.chain([first], itertools.islice(iterator, size - 1))
 
 
 def page_index_data(work_q, page_data_q):
@@ -25,7 +35,18 @@ def page_index_data(work_q, page_data_q):
             digwork = work_q.get(timeout=1)
             # — might be nice to chunk, but most books are small
             # enough it doesn't matter that much
-            page_data_q.put(list(Page.page_index_data(digwork)))
+            for page_data in iterator_chunks(Page.page_index_data(digwork)):
+                page_data_q.put(list(page_data))
+            # update queue that task has been completed
+            work_q.task_done()
+
+        # by default, signals propagate to all processes;
+        # take advantage of that to stop gracefully
+        except KeyboardInterrupt:
+            # if we get a ctrl-c / keyboard interrupt, stop processing
+            # even though queue is not empty
+            return
+
         except queue.Empty:
             # worker is done when the work queue is empty
             return
@@ -46,15 +67,28 @@ def process_index_queue(index_data_q, total_to_index, work_q):
         try:
             # get data from the queue and put it into Solr
             # block with a timeout
-            index_data = index_data_q.get(timeout=5)
+            index_data = index_data_q.get(timeout=1)
             solr.update.index(index_data)
             # increase count based on the number of items in the list
             count += len(index_data)
             progbar.update(count)
+            # update queue - task has been completed
+            index_data_q.task_done()
+
+        # by default, signals propagate to all processes;
+        # take advantage of that to stop gracefully
+        except KeyboardInterrupt:
+            # if we get a ctrl-c / keyboard interrupt, stop adding
+            # works to queue even though not all indexing will be finished
+            print("KeyboardInterrupt, exiting indexing queue")
+            return
+
         except queue.Empty:
-            # only end if work q is also empty; otherwise, loop again
-            # indexer has just gotten ahead of page index data
-            if work_q.empty():
+            # if page data queue is empty BUT indexing has started (i.e.
+            # count is not zero, not waiting on initial content)
+            # AND if work q is also empty, then end;
+            # otherwise, loop again: indexer is ahead of page index data
+            if count and work_q.empty():
                 progbar.finish()
                 # finish indexing process
                 return
@@ -68,6 +102,7 @@ class Command(BaseCommand):
     #: normal verbosity level
     v_normal = 1
     verbosity = v_normal
+    sources = {name: code for code, name in DigitizedWork.SOURCE_CHOICES}
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -81,6 +116,9 @@ class Command(BaseCommand):
             "source_ids", nargs="*", help="List of specific items to index (optional)"
         )
         parser.add_argument(
+            "--source", help="Limit to one source", choices=Command.sources.keys()
+        )
+        parser.add_argument(
             "--expedite",
             help="Only index works with page count mismatch between Solr and database",
             action="store_true",
@@ -89,28 +127,45 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         self.verbosity = kwargs.get("verbosity", self.v_normal)
-        if self.verbosity >= self.v_normal:
-            self.stdout.write(
-                "Indexing with %d processes" % max(2, kwargs["processes"])
-            )
-        work_q = Queue()
-        page_data_q = Queue()
+        num_processes = kwargs.get("processes", cpu_count())
+        self.work_q = JoinableQueue()
+        self.page_data_q = JoinableQueue()
         # populate the work queue with digitized works that have
         # page content to be indexed
         source_ids = kwargs.get("source_ids", [])
+        # optionally filter to single source (e.g., HathiTrust, Gale, etc)
+        source = kwargs.get("source")
 
-        if not source_ids:
-            digiworks = DigitizedWork.items_to_index()
-            num_pages = Page.total_to_index()
-        else:
-            digiworks = DigitizedWork.objects.filter(source_id__in=source_ids)
+        # get all works for indexing, with prefetching
+        digiworks = DigitizedWork.items_to_index()
+        # if source ids are specified, filter and count accordingdly
+        if source_ids:
+            digiworks = digiworks.filter(source_id__in=source_ids)
             digwork_pages = digiworks.aggregate(page_count=models.Sum("page_count"))
             num_pages = digwork_pages["page_count"]
 
+        # if single-source indexing is specified, filter items by source
+        elif source:
+            digiworks = digiworks.filter(source=self.sources[source])
+            # calculate total pages to index for single source
+            num_pages = Page.total_to_index(source=self.sources[source])
+        else:
+            # not filtering by source or id; calculate total pages to index
+            num_pages = Page.total_to_index()
+
+        # if only indexing specific items by id, don't start more indexing processes
+        # than there are records to index
+        if source_ids:
+            num_processes = min(num_processes, len(source_ids))
+        if self.verbosity >= self.v_normal:
+            self.stdout.write(
+                f"Indexing with {num_processes} process{pluralize(num_processes, 'es')}"
+            )
+
         # if reindexing everything, check db totals against solr
         if not source_ids and self.verbosity >= self.v_normal:
-            # check totals
-            solr_count = self.get_solr_totals()
+            # check totals; filter by source if specified
+            solr_count = self.get_solr_totals(source=kwargs.get("source"))
 
             work_diff = digiworks.count() - solr_count.get("work", 0)
             page_diff = num_pages - solr_count.get("page", 0)
@@ -189,23 +244,38 @@ class Command(BaseCommand):
             digiworks = mismatches
 
         for digwork in digiworks:
-            work_q.put(digwork)
+            self.work_q.put(digwork)
 
         # start multiple processes to populate the page index data queue
         # (need at least 1 page data process, no matter what was specified)
+        self.data_feeders = []
         for i in range(max(1, kwargs["processes"] - 1)):
-            Process(target=page_index_data, args=(work_q, page_data_q)).start()
+            process = Process(
+                target=page_index_data, args=(self.work_q, self.page_data_q)
+            )
+            process.start()
+            self.data_feeders.append(process)
 
         # give the page data a head start, since indexing is faster
-        sleep(10)
+        sleep(1)
+
         # start a single indexing process
-        indexer = Process(
+        self.indexer = Process(
             target=process_index_queue,
-            args=(page_data_q, num_pages, work_q),
+            args=(self.page_data_q, num_pages, self.work_q),
         )
-        indexer.start()
-        # block until indexer has completed
-        indexer.join()
+        self.indexer.start()
+        try:
+            # block until indexer has completed, but catch keyboard interrupt
+            self.indexer.join()
+        except KeyboardInterrupt:
+            # if user interrupts indexing with Ctrl-C,
+            # terminate and join all the processes
+            pass
+
+        # when indexing is complete or interrupted with Ctrl-C,
+        # end and join all processes
+        self.end_processes()
 
         # print a summary of solr totals by item type
         if self.verbosity >= self.v_normal:
@@ -217,8 +287,38 @@ class Command(BaseCommand):
             self.stdout.write(
                 "\nItems in Solr by item type: %s" % (", ".join(item_totals))
             )
+        return
 
-    def get_solr_totals(self):
-        facets = SolrQuerySet().all().facet("item_type").get_facets()
+    def end_processes(self):
+        # make sure all processes are closed and joined
+        # to the script will end cleanly
+        self.indexer.terminate()
+        self.indexer.join()
+        for proc in self.data_feeders:
+            proc.terminate()
+            proc.join()
+        self.work_q.close()
+        self.work_q.cancel_join_thread()
+        self.page_data_q.close()
+        self.page_data_q.cancel_join_thread()
+
+    def get_solr_totals(self, source=None):
+        # query for all items and facet by item type to get work/page counts
+        solr_items = SolrQuerySet().all().facet("item_type")
+
+        # filter by source when specified
+        if source is not None:
+            # source is present on works but not pages;
+            # use a join query to filter on pages associated with works by source
+            source_filter = f'source_t:"{source}"'
+            solr_items = solr_items.search(
+                f"{source_filter} OR {{!join from=id to=group_id_s}}{source_filter}"
+            )
+
+        facets = solr_items.get_facets()
         # facet returns an ordered dict
-        return facets.facet_fields.item_type
+        if facets and facets.facet_fields:
+            return facets.facet_fields.get("item_type", {})
+
+        # if facets or facet_fields not set, count for all types is zero
+        return {}

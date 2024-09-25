@@ -267,7 +267,8 @@ CSP_IMG_SRC = (
     "'self'",
     "https://babel.hathitrust.org",
     "https://www.google-analytics.com",
-    "https://callisto.ggsrv.com",
+    "https://callisto.ggsrv.com",  # old Gale image server
+    "https://luna.gale.com",  # new Gale image server
 )
 
 # exclude admin and cms urls from csp directives since they're authenticated

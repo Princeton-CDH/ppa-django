@@ -317,6 +317,8 @@ def test_page_index_data(mock_page):
     digwork2 = Mock()
     # return two mock works and then raise queue empty
     work_q.get.side_effect = (digwork1, digwork2, queue.Empty)
+    # page index data must return contents
+    mock_page.page_index_data.return_value = (1, 2, 3)
 
     index_pages.page_index_data(work_q, page_q)
 
@@ -346,7 +348,7 @@ def test_process_index_queue(mock_solrclient, mock_progbar):
 
     assert index_q.get.call_count == 4
     assert work_q.empty.call_count == 2
-    index_q.get.assert_called_with(timeout=5)
+    index_q.get.assert_called_with(timeout=1)
 
     mock_solrclient.return_value.update.index.assert_any_call(mockdata1)
     mock_solrclient.return_value.update.index.assert_any_call(mockdata2)
@@ -373,8 +375,8 @@ class TestIndexPagesCommand(TestCase):
         with patch(
             "ppa.archive.management.commands.index_pages.SolrQuerySet", new=mock_solrqs
         ):
-            mock_solrqs.return_value.get_facets.return_value.facet_fields.item_type = {
-                "pages": 153
+            mock_solrqs.return_value.get_facets.return_value.facet_fields = {
+                "item_type": {"pages": 153}
             }
 
             # test calling from command line
