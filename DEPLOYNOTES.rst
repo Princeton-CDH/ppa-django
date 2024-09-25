@@ -7,6 +7,7 @@ Deploy and Upgrade notes
 ----
 
 * To use local OCR for Gale page content, configure **GALE_LOCAL_OCR** path in local settings.
+* This release updates Gale image url logic to rely on image URLs from the API, which are (or will be) encrypted and rotated periodically. Gale images should be reindexed via cron job using `python manage.py  --source Gale`.
 * EEBO-TPC import requires configuring **EEBO_DATA** path in local settings, but it is not recommended to import EEBO-TCP content in this release.
 
 3.12.1
