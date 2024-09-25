@@ -3,12 +3,26 @@
 CHANGELOG
 =========
 
+3.13
+----
+
+- Enable indexing of local Gale OCR page content instead of Gale API OCR.
+- Enhance **index_pages** manage command to support indexing all records from a single source (e.g. Gale or HathiTrust) and handle interrupts gracefully.
+- Update Gale page indexing to use Gale image URLs, for use with new Gale encrypted image urls
+
+Preliminary support for indexing and displaying EEBO-TCP content:
+
+- New Digitized Work source type for EEBO-TCP
+- New manage command **eebo_import** for bulk import of EEBO-TCP content
+- Support indexing EEBO-TCP page content
+
+**NOTE** : it is not recommended to import EEBO-TCP content until text formatting improvements are implemented.
+
 3.12.1
 ------
+- Upgrade to Solr 9.
 
-* Upgrade to Solr 9.
-  * Updated Solr configuration includes support for searching on words
-    hyphenated across line breaks
+  - Updated Solr configuration includes support for searching on words hyphenated across line breaks
 
 
 3.12
@@ -16,11 +30,9 @@ CHANGELOG
 - As an admin, I want the Source ID link in list view to go to the first page of the excerpt for articles and excerpts, so that I can more easily access excerpt content.
 - As a developer, I want a script to do a one-time bulk fix of HathiTrust excerpt page ranges from a spreadsheet so that we can pull the corret content from updated HathiTrust materials.
 - As a developer, I want a script to update all HathiTrust content so that I can refresh locally cached data with OCR improvements and other changes.
-- bugfix: excerpt work ID is now based on sourceID + original page range
-  rather than digital page range
+- bugfix: excerpt work ID is now based on sourceID + original page range rather than digital page range
 - bugfix: fix indexing and page count for new excerpts when there are multiple excerpts from a single source
-- bugfix: improved index_pages script error handling for missing page count
-  in database when running in expedited mode
+- bugfix: improved index_pages script error handling for missing page count in database when running in expedited mode
 - new manage command to to report on possible HathiTrust excerpt page range mismatches based on page labels in METS-ALTO
 - utility script to get volume last modification date from public HathiTrust website
 - updated settings to use django-split-settings
@@ -99,8 +111,7 @@ other:
 - Switch database backend from MySQL to PostgreSQL
 - Upgrade to Solr 8
 - removed outdated/unused Solr schema code
-- bugfix: progress bar breaking solr page indexing when indexed pages
-  exceeds expected page count
+- bugfix: progress bar breaking solr page indexing when indexed pages exceeds expected page count
 
 
 3.8
