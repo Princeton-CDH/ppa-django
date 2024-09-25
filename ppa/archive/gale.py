@@ -1,3 +1,4 @@
+import os
 import logging
 import time
 
@@ -10,6 +11,34 @@ from pairtree import PairtreeStorageFactory, storage_exceptions
 from ppa import __version__ as ppa_version
 
 logger = logging.getLogger(__name__)
+
+
+def get_local_ocr(item_id, page_num):
+    """
+    Get local OCR page text for specified page of a single Gale volume if available.
+    This requires a base directory (specified by GALE_LOCAL_OCR) to be configured and
+    assumes the following organization:
+        
+        * Volume-level directories are organized in stub directories that correspond to
+          every third number (e.g., CW0128905397 --> 193). So, a Gale volume's OCR data
+          is located in the following directory: GALE_LOCAL_OCR / stub_dir / item_id
+        
+        * A page's local ocr text file is named [volume id]_[page number]0.txt, where the
+          page number is a 4-digit string (e.g., "0004"). So, for page number "0004" in
+          volume CW0128905397, the local ocr file is named "CW0128905397_00040.txt".
+
+    Raises a FileNotFoundError if the local OCR page text does not exist. 
+    """
+    ocr_dir = getattr(settings, "GALE_LOCAL_OCR", None)
+    if not ocr_dir:
+        raise ImproperlyConfigured(
+            "GALE_LOCAL_OCR configuration is required for indexing Gale page content"
+        )
+
+    stub_dir = item_id[::3][1:]  # Following conventions set in ppa-nlp
+    ocr_txt_fp = os.path.join(ocr_dir, stub_dir, item_id, f"{item_id}_{page_num}0.txt")
+    with open(ocr_txt_fp) as reader:
+        return reader.read()
 
 
 class GaleAPIError(Exception):
@@ -180,6 +209,43 @@ class GaleAPI:
         response = self._make_request("v1/item/GALE%%7C%s" % item_id, stream=True)
         if response:
             return response.json()
+
+    def get_item_pages(self, item_id, gale_record=None):
+        """Return a generator of page content for the specified digitized work
+        from the Gale API. Takes an optional gale_record
+        parameter (item record as returned by Gale API), to avoid
+        making an extra API call if data is already available."""
+        if gale_record is None:
+            gale_record = self.get_item(item_id)
+
+        # iterate through the pages in the response
+        for page in gale_record["pageResponse"]["pages"]:
+            page_number = page["pageNumber"]
+
+            # Fetch higher quality local OCR text if possible, with fallback to Gale
+            # OCR. Set a tag to indicate the usage of local OCR text.
+            tags = []
+            try: 
+                ocr_text = get_local_ocr(item_id, page_number)
+                tags = ["local_ocr"]
+            except FileNotFoundError as e:
+                ocr_text = page.get("ocrText")  # some pages have no text
+                logger.warning(f'Local OCR not found for {item_id} {page_number}')
+
+            info = {
+                "page_id": page_number,
+                "content": ocr_text,
+                # Don't set label when there isn't one. Fallback labels are set in the
+                # common page indexing code.
+                "label": page.get("folioNumber"),
+                "tags": tags,
+                # image id needed for thumbnail url; use solr dynamic field
+                "image_id_s": page["image"]["id"],
+                # index image url since we will need it when Gale API changes
+                # (expect to be present in Gale API; may not be present in unit tests)
+                "image_url_s": page["image"].get("url"),
+            }
+            yield info
 
 
 # MARC records needed for import and metadata are stored in a local pairtree.
