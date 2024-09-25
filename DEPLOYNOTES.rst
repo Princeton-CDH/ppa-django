@@ -6,8 +6,8 @@ Deploy and Upgrade notes
 3.13
 ----
 
-* EEBO-TPC import requires configuring **EEBO_DATA** path in local settings.
 * To use local OCR for Gale page content, configure **GALE_LOCAL_OCR** path in local settings.
+* EEBO-TPC import requires configuring **EEBO_DATA** path in local settings, but it is not recommended to import EEBO-TCP content in this release.
 
 3.12.1
 ------
