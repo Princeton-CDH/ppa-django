@@ -5,8 +5,18 @@ CHANGELOG
 
 3.13
 ----
-- Enable indexing of local Gale OCR page content instead of Gale API OCR.
 
+- Enable indexing of local Gale OCR page content instead of Gale API OCR.
+- Enhance **index_pages** manage command to support indexing all records from a single source (e.g. Gale or HathiTrust) and handle interrupts gracefully.
+- Update Gale page indexing to use Gale image URLs, for use with new Gale encrypted image urls
+
+Preliminary support for indexing and displaying EEBO-TCP content:
+
+- New Digitized Work source type for EEBO-TCP
+- New manage command **eebo_import** for bulk import of EEBO-TCP content
+- Support indexing EEBO-TCP page content
+
+**NOTE** : it is not recommended to import EEBO-TCP content until text formatting improvements are implemented.
 
 3.12.1
 ------
