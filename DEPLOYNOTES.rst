@@ -3,6 +3,11 @@
 Deploy and Upgrade notes
 ========================
 
+3.13.1
+------
+* Plausible analytis support requires configuring PLAUSIBLE_ANALYTICS_SCRIPT and PLAUSIBLE_ANALYTICS_404s in local settings 
+
+
 3.13
 ----
 
