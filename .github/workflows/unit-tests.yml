@@ -27,6 +27,8 @@ jobs:
       - run: npm ci
       - run: npm run test:unit
       - uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           flags: javascript
 
@@ -87,6 +89,8 @@ jobs:
 
       - name: Upload test coverage to Codecov
         uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           flags: python
 
