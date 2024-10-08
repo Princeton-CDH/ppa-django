@@ -1,0 +1,7 @@
+{% if INCLUDE_ANALYTICS and PLAUSIBLE_ANALYTICS_SCRIPT %}
+{# plausible analytics #}
+<script defer data-domain="prosody.princeton.edu" src="{{ PLAUSIBLE_ANALYTICS_SCRIPT }} "></script>
+{% if PLAUSIBLE_ANALYTICS_404s %}
+<script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+{% endif %}
+{% endif %}

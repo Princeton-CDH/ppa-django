@@ -14,3 +14,9 @@
 {% block error_message %}
 Oh no! We've scanned six different ways and can't find this page.
 {% endblock %}
+
+{% block head_extras %}
+{% if PLAUSIBLE_ANALYTICS_404s %}
+<script>document.addEventListener('DOMContentLoaded', function () { plausible('404', { props: { path: document.location.pathname } }); });</script>
+{% endif %}
+{% endblock %}
