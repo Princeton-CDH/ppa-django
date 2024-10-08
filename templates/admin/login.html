@@ -1,10 +1,14 @@
-
 {% extends 'admin/login.html' %}
 {% load static %}
 
-{% block stylesheets %}
+{% block extrastyle %}
   {{ block.super }}
   <link type="text/css" rel="stylesheet" href="{% static 'pucas/pu-login.css' %}"/>
+  <style type="text/css">
+  .cas-login a {
+    padding-bottom: 4em;
+  }
+  </style>
 {% endblock %}
 
 {% block content %}

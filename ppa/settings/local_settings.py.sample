@@ -68,8 +68,14 @@ PUCAS_LDAP.update({
 # Email configuration for sending messages
 # EMAIL_SUBJECT_PREFIX = '[PPA] '
 
+# INCLUDE_ANALYTICS = True
+
 # Turn on Google Analytics (or not) via property id
 # GTAGS_ANALYTICS_ID = 'UA-property-id'
+
+# Configure to enable Plausible analytics in production with desired options
+# PLAUSIBLE_ANALYTICS_SCRIPT = "https://plausible.io/js/script.file-downloads.hash.outbound-links.js"
+# PLAUSIBLE_ANALYTICS_404s = True
 
 # Solution following https://stackoverflow.com/a/9541647
 # Sends a logging email even when DEBUG is on
