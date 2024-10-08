@@ -1,5 +1,5 @@
 django>=5.0,<5.1
-pucas>=0.8
+pucas>=0.9
 parasolr>=0.9.2
 pairtree
 py-flags
