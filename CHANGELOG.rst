@@ -5,7 +5,7 @@ CHANGELOG
 
 3.13.1
 ----
-- Add support for Plausible analytics, configurable with PLAUSIBLE_ANALYTICS_SCRIPT and PLAUSIBLE_ANALYTICS_404s in django settings 
+- Add support for Plausible analytics
 
 
 3.13
