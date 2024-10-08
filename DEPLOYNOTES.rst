@@ -5,8 +5,8 @@ Deploy and Upgrade notes
 
 3.13.1
 ------
-* Plausible analytis support requires configuring PLAUSIBLE_ANALYTICS_SCRIPT and PLAUSIBLE_ANALYTICS_404s in local settings 
-
+* To enable Plausible analytics, update local settings to set `INCLUDE_ANALYTICS` to True,
+configure the full plausible javascript url with any options you want as `PLAUSIBLE_ANALYTICS_SCRIPT` and optionally enable 404 checking with `PLAUSIBLE_ANALYTICS_404s = True`
 
 3.13
 ----
