@@ -6,7 +6,7 @@ CHANGELOG
 3.13.1
 ----
 - Add support for Plausible analytics
-
+- Update admin login template to correctly include pucas styles and adjust spacing
 
 3.13
 ----
