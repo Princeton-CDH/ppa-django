@@ -3,8 +3,12 @@
 CHANGELOG
 =========
 
+3.13.2
+------
+- Add `INCLUDE_ANALYTICS` to template context so Plausible analytics can be enabled
+
 3.13.1
-----
+------
 - Add support for Plausible analytics
 - Update admin login template to correctly include pucas styles and adjust spacing
 
