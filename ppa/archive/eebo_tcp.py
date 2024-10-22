@@ -34,20 +34,19 @@ class Page(xmlmap.XmlObject):
     def __repr__(self):
         return f"<Page {self.number or '-'} ({self.section_type})>"
 
-    note_markers = [
-        "*",
-        "†",
-        "‡",
-        "§",
-        "**",
-        "††",
-        "‡‡",
-        "§§",
-        "***",
-        "†††",
-        "‡‡‡",
-        "§§§",
-    ]
+    # footnote indicators
+    note_marks = ["*", "†", "‡", "§"]
+    num_note_marks = len(note_marks)
+
+    def get_note_mark(self, i):
+        """Generate a note marker based on note index and :attr:`note_marks`;
+        symbols are used in order and then doubled, tripled, etc as needed."""
+
+        # use modulo to map to the list of available marks
+        mark_index = i % self.num_note_marks
+        # use division to determine how many times to repeat the mark
+        repeat = int(i / self.num_note_marks) + 1
+        return self.note_marks[mark_index] * repeat
 
     def text_inside_note(self, text):
         """check if a text element occurs within a NOTE element; if so,
@@ -108,10 +107,10 @@ class Page(xmlmap.XmlObject):
                 # index equals length, start a new note at the end of the list of notes
                 if len(notes) == note_index:
                     # some note tags have an N attribute; use if present
-                    # otherwise, use marker from our list based on sequence
-                    note_marker = within_note.get("N", self.note_markers[note_index])
-                    yield note_marker
-                    notes.append(f"\n{note_marker} ")
+                    # otherwise, use a note mark from our list of symbols
+                    note_mark = within_note.get("N", self.get_note_mark(note_index))
+                    yield note_mark
+                    notes.append(f"\n{note_mark} ")
 
                 # add text to the appropriate note
                 notes[note_index] = f"{notes[note_index]}{text}"
