@@ -56,17 +56,16 @@ class Page(xmlmap.XmlObject):
         if not self.notes:
             return None
 
-        within_note = None
         # check if this text is directly inside a note tag
+        within_note = None
+        # check if this is normal text directly inside a note tag
         parent = text.getparent()
-        if parent.tag == "NOTE" and not text.is_tail:
+        if parent.tag == "NOTE" and text.is_text:
             within_note = parent
-        # otherwise, check if text is nested under a note tag
+        # otherwise, check if text is nested somewhere under a note tag
         else:
-            for ancestor in parent.iterancestors():
-                if ancestor.tag == "NOTE":
-                    within_note = ancestor
-                    break
+            note_ancestors = parent.xpath("ancestor::NOTE[1]")
+            within_note = note_ancestors[0] if note_ancestors else None
 
         return within_note
 
@@ -100,7 +99,7 @@ class Page(xmlmap.XmlObject):
             # determine if this text falls inside a note tag
             within_note = self.text_inside_note(text)
             if within_note is not None:
-                # and if so, which one
+                # if text is inside a note, determine which one
                 note_index = self.note_index(within_note)
                 # if this is the first text for this note,
                 # add a marker inline with the text AND the note
@@ -122,7 +121,7 @@ class Page(xmlmap.XmlObject):
             # the parent of the tail text is the preceding element
             if text.is_tail and parent.tag == "GAP":
                 # if text precedes a GAP tag, include the display content
-                # from the DISP ` (for now)
+                # from the DISP (for now)
                 yield text.getparent().get("DISP")
 
             if text.is_tail and parent.tag == "PB":
