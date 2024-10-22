@@ -61,10 +61,24 @@ def test_text_inside_note():
     assert page.text_inside_note(diatribe_note_text) is not None
     # text nested under a tag within a note tag (note is ancestor)
     camden_note_text = text.node.xpath("//NOTE/HI[contains(., 'Cambden')]/text()")[0]
-    assert page.text_inside_note(camden_note_text)
+    assert page.text_inside_note(camden_note_text) is not None
     # text in a tag that is NOT inside a note tag (note is not parent/ancestor)
     europe_hi_text = text.node.xpath("//HI[contains(., 'Europe')]/text()")[0]
     assert page.text_inside_note(europe_hi_text) is None
+
+
+def test_get_note_mark():
+    text = load_xmlobject_from_string(PAGE_WITH_NOTE, eebo_tcp.Text)
+    page = text.pages[0]
+    # lower indexes should map exactly
+    assert page.get_note_mark(0) == "*"
+    assert page.get_note_mark(1) == "†"
+    assert page.get_note_mark(2) == "‡"
+    assert page.get_note_mark(3) == "§"
+    # when index goes past number of available 'marks, repeat the mark
+    assert page.get_note_mark(4) == "**"
+    assert page.get_note_mark(5) == "††"
+    assert page.get_note_mark(8) == "***"
 
 
 def test_eebo_tcp_page_contents_notes():
