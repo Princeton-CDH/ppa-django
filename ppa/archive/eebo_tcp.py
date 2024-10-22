@@ -28,8 +28,60 @@ class Page(xmlmap.XmlObject):
     # use following axis to find all text nodes following this page beginning
     text_contents = xmlmap.StringListField("following::text()")
 
+    # notes on or after this page, for managing footnote text
+    notes = xmlmap.NodeListField("following::NOTE", xmlmap.XmlObject)
+
     def __repr__(self):
         return f"<Page {self.number or '-'} ({self.section_type})>"
+
+    note_markers = [
+        "*",
+        "†",
+        "‡",
+        "§",
+        "**",
+        "††",
+        "‡‡",
+        "§§",
+        "***",
+        "†††",
+        "‡‡‡",
+        "§§§",
+    ]
+
+    def text_inside_note(self, text):
+        """check if a text element occurs within a NOTE element; if so,
+        return the note element"""
+
+        # bail out if there are no notes following this page
+        if not self.notes:
+            return None
+
+        within_note = None
+        # check if this text is directly inside a note tag
+        parent = text.getparent()
+        if parent.tag == "NOTE" and not text.is_tail:
+            within_note = parent
+        # otherwise, check if text is nested under a note tag
+        else:
+            for ancestor in parent.iterancestors():
+                if ancestor.tag == "NOTE":
+                    within_note = ancestor
+                    break
+
+        return within_note
+
+    def note_index(self, note):
+        # given a note element, determine the 0-based index on this page
+
+        # use a for loop so we can bail out once we get a match
+        for i, n in enumerate(self.notes):
+            if n.node == note:
+                return i
+
+        # in normal use the note should be found; raise an exception
+        # if it is not so this will fail loudly
+        raise ValueError
 
     def page_contents(self):
         """generator of text strings between this page beginning tag and
@@ -38,16 +90,40 @@ class Page(xmlmap.XmlObject):
         # strictly speaking we are returning lxml "smart strings"
         # (lxml.etree._ElementUnicodeResult)
 
+        # collect any notes and include after main page text contents
+        notes = []
+
         # iterate and yield text following the current page
         # break until we hit the next page beginning
         for i, text in enumerate(self.text_contents):
             parent = text.getparent()
 
+            # determine if this text falls inside a note tag
+            within_note = self.text_inside_note(text)
+            if within_note is not None:
+                # and if so, which one
+                note_index = self.note_index(within_note)
+                # if this is the first text for this note,
+                # add a marker inline with the text AND the note
+                # index equals length, start a new note at the end of the list of notes
+                if len(notes) == note_index:
+                    # some note tags have an N attribute; use if present
+                    # otherwise, use marker from our list based on sequence
+                    note_marker = within_note.get("N", self.note_markers[note_index])
+                    yield note_marker
+                    notes.append(f"\n{note_marker} ")
+
+                # add text to the appropriate note
+                notes[note_index] = f"{notes[note_index]}{text}"
+
+                # skip to next loop
+                continue
+
             # lxml handles text between elements as "tail" text;
             # the parent of the tail text is the preceding element
             if text.is_tail and parent.tag == "GAP":
                 # if text precedes a GAP tag, include the display content
-                # from the DISP attribute (for now)
+                # from the DISP ` (for now)
                 yield text.getparent().get("DISP")
 
             if text.is_tail and parent.tag == "PB":
@@ -58,6 +134,12 @@ class Page(xmlmap.XmlObject):
                     break
 
             yield text
+
+        # if this page includes notes, yield notes after main text content
+        if notes:
+            # yield two blank lines to separate main text content from notes
+            yield "\n\n"
+            yield from notes
 
     divider = "∣"
 

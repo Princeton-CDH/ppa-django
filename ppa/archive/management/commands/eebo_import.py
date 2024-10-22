@@ -9,7 +9,7 @@ Solr as part of this import script (both works and pages).
 
 Example usage::
 
-    python manage.py eebo_import -c path/to/eebo_works.csv
+    python manage.py eebo_import path/to/eebo_works.csv
 
 """
 
