@@ -6,23 +6,21 @@ Troubleshooting
 Solr setup with Docker
 ----------------------
 
-Note 2022-02-13: PUL is running Solr 8.4. We need to change our tests, documentation, and local environments accordingly.
+Create a new docker container with the Solr 9.2 image::
 
-Create a new docker container with the Solr 8.4 image::
-
-    docker run --name solr84 -p 8983:8983 -t solr:8.4
+    docker run --name solr92 -p 8983:8983 -t solr:9.2
 
 Copy the solr config files in as a configset named `ppa`::
 
-    docker cp solr_conf solr84:/opt/solr/server/solr/configsets/ppa
+    docker cp solr_conf solr92:/opt/solr/server/solr/configsets/ppa
 
 Change ownership  of the configset files to the `solr` user::
 
-    docker exec --user root solr84 /bin/bash -c "chown -R solr:solr /opt/solr/server/solr/configsets/ppa"
+    docker exec --user root solr92 /bin/bash -c "chown -R solr:solr /opt/solr/server/solr/configsets/ppa"
 
 Copy the configsets to the solr data directory::
 
-    docker exec -d solr84 cp -r /opt/solr/server/solr/configsets /var/solr/data
+    docker exec -d solr92 cp -r /opt/solr/server/solr/configsets /var/solr/data
 
 Create a new core with the `ppa` configset::
 
@@ -30,7 +28,7 @@ Create a new core with the `ppa` configset::
 
 When the configset has changed, copy in the updated solr config files::
 
-    docker cp solr_conf/* solr84:/var/solr/data/configsets/ppa/
+    docker cp solr_conf/* solr92:/var/solr/data/configsets/ppa/
 
 Setup
 -----
