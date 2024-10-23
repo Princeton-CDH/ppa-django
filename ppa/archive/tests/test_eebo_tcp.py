@@ -39,6 +39,7 @@ def test_eebo_tcp_page_contents():
     )
 
 
+# ruff: noqa: E501
 # sample xml pages with notes (minimal wrapping tags to load as a text)
 PAGE_WITH_NOTE = """<ETS><EEBO><TEXT><PB N="257" REF="198"/><LG>
 <L>Whom Monarchs like domestick Slaves obey'd,</L>
@@ -46,25 +47,45 @@ PAGE_WITH_NOTE = """<ETS><EEBO><TEXT><PB N="257" REF="198"/><LG>
 <L N="765"><NOTE N="*" PLACE="foot"><HI>This whole line is taken from Sir</HI> John Derhan.</NOTE> A headless Carcass, and a nameless thing.</L>
 </LG></TEXT></EEBO></ETS>"""
 PAGE_WITH_MULTIPLE_NOTES = """<ETS><EEBO><TEXT><P><PB N="3" REF="11"/>
-many Colonies. But now the several Languages that are used in the world do farre exceed this number.<NOTE PLACE="marg">Nat. Hist. lib. 6. cap. 5. <HI>Strabo,</HI> lib. 11.</NOTE> <HI>Pliny</HI> and <HI>Strabo</HI> do both make mention of a great Mart-Town in <HI>Colchos</HI> named <HI>Dioscuria,</HI> to which men of three hundred Nations, and of so many several Languages, were wont to resort for Trading. Which, considering the narrow compass of Traf∣fick before the invention of the magnetic Needle, must needs be but a small proportion, in comparison to those many of the remoter and un∣known parts of the world.</P>
-<P>Some of the <HI>American</HI> Histories relate,<NOTE PLACE="marg">Mr. <HI>Cambden</HI>'s Remains.</NOTE> that in every fourscore miles of that vast Country, and almost in every particular valley of <HI>Peru,</HI> the Inhabitants have a distinct Language. And one who for several years travelled the Northern parts of <HI>America</HI> about <HI>Florida,</HI><NOTE PLACE="marg"><HI>Purchas</HI> Pilg. lib. 8. sect. 4. chap. 1.</NOTE> and could speak six several Languages of those people, doth affirm, that he found, upon his enquiry and converse with them, more than a thousand different Lan∣guages amongst them.</P>
-<P>As for those Languages which seem to have no derivation from, or de∣pendance upon, or affinity with one another,<NOTE PLACE="marg">§. III.</NOTE> they are styled <HI>Linguae ma∣trices,</HI> or <HI>Mother-tongues.</HI> Of these <HI>Ioseph Scaliger</HI>
- affirms there are ele∣ven, and not more, used in <HI>Europe</HI>;<NOTE PLACE="marg">Diatribe de Europaeorum linguis.</NOTE> whereof four are of more general and large extent, and the other seven of a narrower compass and use. Of the more general Tongues
-.</P></TEXT></EEBO></ETS>"""
+many Colonies. But now the several Languages that are used in the 
+world do farre exceed this number.<NOTE PLACE="marg">Nat. Hist. lib. 6. cap. 5. <HI>Strabo,</HI> lib. 11.</NOTE> 
+<HI>Pliny</HI> and <HI>Strabo</HI> do both make mention of a great Mart-Town 
+in <HI>Colchos</HI> named <HI>Dioscuria,</HI> to which men of three hundred 
+Nations, and of so many several Languages, were wont to resort for Trading. 
+Which, considering the narrow compass of Traf∣fick before the invention of 
+the magnetic Needle, must needs be but a small proportion, in comparison 
+to those many of the remoter and un∣known parts of the world.</P>
+<P>Some of the <HI>American</HI> Histories relate,<NOTE PLACE="marg">Mr. <HI>Cambden</HI>'s Remains.</NOTE> that in every
+ fourscore miles of that vast Country, and almost in every particular
+  valley of <HI>Peru,</HI> the Inhabitants have a distinct Language. 
+  And one who for several years travelled the Northern parts of 
+  <HI>America</HI> about <HI>Florida,</HI>
+  <NOTE PLACE="marg"><HI>Purchas</HI> Pilg. lib. 8. sect. 4. chap. 1.</NOTE> 
+  and could speak six several Languages of those people, doth affirm, that 
+  he found, upon his enquiry and converse with them, more than a thousand 
+  different Lan∣guages amongst them.</P>
+<P>As for those Languages which seem to have no derivation from, or 
+de∣pendance upon, or affinity with one another,<NOTE PLACE="marg">§. III.</NOTE> 
+they are styled <HI>Linguae ma∣trices,</HI> or <HI>Mother-tongues.</HI> 
+Of these <HI>Ioseph Scaliger</HI> affirms there are ele∣ven, and not more, 
+used in <HI>Europe</HI>;<NOTE PLACE="marg">Diatribe de Europaeorum linguis.</NOTE> whereof 
+four are of more general and large extent, and the 
+other seven of a narrower compass and use. Of the more general Tongues.</P>
+</TEXT></EEBO></ETS>"""
 
 
-def test_text_inside_note():
+def test_parent_note():
     text = load_xmlobject_from_string(PAGE_WITH_MULTIPLE_NOTES, eebo_tcp.Text)
     page = text.pages[0]
     # text directly inside a note tag (note is parent)
     diatribe_note_text = text.node.xpath("//NOTE[contains(., 'Diatribe')]/text()")[0]
-    assert page.text_inside_note(diatribe_note_text) is not None
+    assert page.parent_note(diatribe_note_text) is not None
     # text nested under a tag within a note tag (note is ancestor)
     camden_note_text = text.node.xpath("//NOTE/HI[contains(., 'Cambden')]/text()")[0]
-    assert page.text_inside_note(camden_note_text) is not None
+    assert page.parent_note(camden_note_text) is not None
     # text in a tag that is NOT inside a note tag (note is not parent/ancestor)
     europe_hi_text = text.node.xpath("//HI[contains(., 'Europe')]/text()")[0]
-    assert page.text_inside_note(europe_hi_text) is None
+    assert page.parent_note(europe_hi_text) is None
 
 
 def test_get_note_mark():
