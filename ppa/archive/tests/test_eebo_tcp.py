@@ -44,7 +44,7 @@ def test_eebo_tcp_page_contents():
 PAGE_WITH_NOTE = """<ETS><EEBO><TEXT><PB N="257" REF="198"/><LG>
 <L>Whom Monarchs like domestick Slaves obey'd,</L>
 <L>On the bleak Shoar now lies th' abandon'd King,</L>
-<L N="765"><NOTE N="*" PLACE="foot"><HI>This whole line is taken from Sir</HI> John Derhan.</NOTE> A headless Carcass, and a nameless thing.</L>
+<L N="765"><NOTE N="✓" PLACE="foot"><HI>This whole line is taken from Sir</HI> John Derhan.</NOTE> A headless Carcass, and a nameless thing.</L>
 </LG></TEXT></EEBO></ETS>"""
 PAGE_WITH_MULTIPLE_NOTES = """<ETS><EEBO><TEXT><P><PB N="3" REF="11"/>
 many Colonies. But now the several Languages that are used in the 
@@ -108,10 +108,10 @@ def test_eebo_tcp_page_contents_notes():
     page_contents = str(text.pages[0])
     # should not display note contents inline
     assert "taken from Sir John Derhan. A headless Carcass," not in page_contents
-    # should display a note marker inline
-    assert "* A headless Carcass" in page_contents
+    # should display a note marker inline using  note marker from the xml
+    assert "✓ A headless Carcass" in page_contents
     # should display note contents with marker at end of content
-    assert page_contents.endswith("* This whole line is taken from Sir John Derhan.")
+    assert page_contents.endswith("✓ This whole line is taken from Sir John Derhan.")
 
     text = load_xmlobject_from_string(PAGE_WITH_MULTIPLE_NOTES, eebo_tcp.Text)
     page_contents = str(text.pages[0])
