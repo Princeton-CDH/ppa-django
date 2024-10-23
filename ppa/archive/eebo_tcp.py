@@ -27,9 +27,8 @@ class Page(xmlmap.XmlObject):
     # page beginning tags delimit content instead of containing it;
     # use following axis to find all text nodes following this page beginning
     text_contents = xmlmap.StringListField("following::text()")
-
-    # notes on or after this page, for managing footnote text
-    notes = xmlmap.NodeListField("following::NOTE", xmlmap.XmlObject)
+    # count following notes as a quick check to bail out of note detection logic
+    has_notes = xmlmap.IntegerField("count(following::NOTE)")
 
     def __repr__(self):
         return f"<Page {self.number or '-'} ({self.section_type})>"
@@ -40,7 +39,8 @@ class Page(xmlmap.XmlObject):
 
     def get_note_mark(self, i):
         """Generate a note marker based on note index and :attr:`note_marks`;
-        symbols are used in order and then doubled, tripled, etc as needed."""
+        symbols are used in order and then doubled, tripled, etc as needed.
+        (Fallback, for use when a note does not have an N attribute.)"""
 
         # use modulo to map to the list of available marks
         mark_index = i % self.num_note_marks
@@ -48,12 +48,12 @@ class Page(xmlmap.XmlObject):
         repeat = int(i / self.num_note_marks) + 1
         return self.note_marks[mark_index] * repeat
 
-    def text_inside_note(self, text):
+    def parent_note(self, text):
         """check if a text element occurs within a NOTE element; if so,
         return the note element"""
 
         # bail out if there are no notes following this page
-        if not self.notes:
+        if not self.has_notes:
             return None
 
         # check if this text is directly inside a note tag
@@ -64,22 +64,11 @@ class Page(xmlmap.XmlObject):
             within_note = parent
         # otherwise, check if text is nested somewhere under a note tag
         else:
+            # get the first/nearest ancestor note, if there is one
             note_ancestors = parent.xpath("ancestor::NOTE[1]")
             within_note = note_ancestors[0] if note_ancestors else None
 
         return within_note
-
-    def note_index(self, note):
-        # given a note element, determine the 0-based index on this page
-
-        # use a for loop so we can bail out once we get a match
-        for i, n in enumerate(self.notes):
-            if n.node == note:
-                return i
-
-        # in normal use the note should be found; raise an exception
-        # if it is not so this will fail loudly
-        raise ValueError
 
     def page_contents(self):
         """generator of text strings between this page beginning tag and
@@ -88,33 +77,38 @@ class Page(xmlmap.XmlObject):
         # strictly speaking we are returning lxml "smart strings"
         # (lxml.etree._ElementUnicodeResult)
 
-        # collect any notes and include after main page text contents
-        notes = []
+        # collect text content for any notes, to be included
+        # after main page text contents
+        notes_text = []
+        # keep track of note count as we encounter them;
+        # used for locally generated footnote marks
+        note_index = 0
 
         # iterate and yield text following the current page
         # break until we hit the next page beginning
         for i, text in enumerate(self.text_contents):
             parent = text.getparent()
 
-            # determine if this text falls inside a note tag
-            within_note = self.text_inside_note(text)
+            # check if this text falls inside a note tag
+            within_note = self.parent_note(text)
             if within_note is not None:
-                # if text is inside a note, determine which one
-                note_index = self.note_index(within_note)
-                # if this is the first text for this note,
-                # add a marker inline with the text AND the note
-                # index equals length, start a new note at the end of the list of notes
-                if len(notes) == note_index:
-                    # some note tags have an N attribute; use if present
-                    # otherwise, use a note mark from our list of symbols
+                # is this the first text in this note?
+                within_note.xpath(".//text()")
+                # print(f"first note text = {first_text}")
+                is_first_text = within_note.xpath(".//text()")[0] == str(text)
+                if is_first_text:
+                    # print(f"hit first note text {text}")
+                    # if this is the first text for this note,
+                    # add a marker inline with the text AND to the note
                     note_mark = within_note.get("N", self.get_note_mark(note_index))
                     yield note_mark
-                    notes.append(f"\n{note_mark} ")
+                    notes_text.append(f"{note_mark} ")
+                    note_index += 1
 
-                # add text to the appropriate note
-                notes[note_index] = f"{notes[note_index]}{text}"
+                # save note text content to be yielded later
+                notes_text.append(text)
 
-                # skip to next loop
+                # skip to next loop without yielding text in current context
                 continue
 
             # lxml handles text between elements as "tail" text;
@@ -134,10 +128,10 @@ class Page(xmlmap.XmlObject):
             yield text
 
         # if this page includes notes, yield notes after main text content
-        if notes:
+        if notes_text:
             # yield two blank lines to separate main text content from notes
             yield "\n\n"
-            yield from notes
+            yield from notes_text
 
     divider = "∣"
 
