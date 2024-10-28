@@ -108,7 +108,7 @@ def test_eebo_tcp_page_contents_notes():
     page_contents = str(text.pages[0])
     # should not display note contents inline
     assert "taken from Sir John Derhan. A headless Carcass," not in page_contents
-    # should display a note marker inline using  note marker from the xml
+    # should display a note marker inline using note marker from the xml
     assert "✓ A headless Carcass" in page_contents
     # should display note contents with marker at end of content
     assert page_contents.endswith("✓ This whole line is taken from Sir John Derhan.")
