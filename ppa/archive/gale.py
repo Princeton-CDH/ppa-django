@@ -1,4 +1,5 @@
 import os
+import json
 import logging
 import time
 
@@ -13,21 +14,21 @@ from ppa import __version__ as ppa_version
 logger = logging.getLogger(__name__)
 
 
-def get_local_ocr(item_id, page_num):
+def _get_local_ocr(item_id, page_num):
     """
     Get local OCR page text for specified page of a single Gale volume if available.
     This requires a base directory (specified by GALE_LOCAL_OCR) to be configured and
     assumes the following organization:
-        
+
         * Volume-level directories are organized in stub directories that correspond to
           every third number (e.g., CW0128905397 --> 193). So, a Gale volume's OCR data
           is located in the following directory: GALE_LOCAL_OCR / stub_dir / item_id
-        
+
         * A page's local ocr text file is named [volume id]_[page number]0.txt, where the
           page number is a 4-digit string (e.g., "0004"). So, for page number "0004" in
           volume CW0128905397, the local ocr file is named "CW0128905397_00040.txt".
 
-    Raises a FileNotFoundError if the local OCR page text does not exist. 
+    Raises a FileNotFoundError if the local OCR page text does not exist.
     """
     ocr_dir = getattr(settings, "GALE_LOCAL_OCR", None)
     if not ocr_dir:
@@ -39,6 +40,13 @@ def get_local_ocr(item_id, page_num):
     ocr_txt_fp = os.path.join(ocr_dir, stub_dir, item_id, f"{item_id}_{page_num}0.txt")
     with open(ocr_txt_fp) as reader:
         return reader.read()
+
+
+def get_local_ocr(item_id):
+    # error handling still TODO
+    ocr_dir = getattr(settings, "GALE_LOCAL_OCR", None)
+    with open(os.path.join(ocr_dir, f"{item_id}.json")) as ocrfile:
+        return json.load(ocrfile)
 
 
 class GaleAPIError(Exception):
@@ -218,6 +226,9 @@ class GaleAPI:
         if gale_record is None:
             gale_record = self.get_item(item_id)
 
+        # todo: needs try/catch error handling
+        local_ocr_text = get_local_ocr(item_id)
+
         # iterate through the pages in the response
         for page in gale_record["pageResponse"]["pages"]:
             page_number = page["pageNumber"]
@@ -225,12 +236,13 @@ class GaleAPI:
             # Fetch higher quality local OCR text if possible, with fallback to Gale
             # OCR. Set a tag to indicate the usage of local OCR text.
             tags = []
-            try: 
-                ocr_text = get_local_ocr(item_id, page_number)
-                tags = ["local_ocr"]
-            except FileNotFoundError as e:
+            ocr_text = local_ocr_text.get(page_number)
+            # TODO: set local ocr tag here
+            if not ocr_text and page_number not in local_ocr_text:
+                # if ocr text is unset and page number is not present,
+                # try getting the ocr from the gale api result
+                logger.warning(f"No local OCR for {item_id} {page_number}")
                 ocr_text = page.get("ocrText")  # some pages have no text
-                logger.warning(f'Local OCR not found for {item_id} {page_number}')
 
             info = {
                 "page_id": page_number,
