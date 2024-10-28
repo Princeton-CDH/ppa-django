@@ -19,6 +19,7 @@ Expected context variables:
     {% gale_page_url source_url page.order as page_link %}
   {# currently no other sources with page level content, so no other case needed #}
   {% endif %}
+    {% if source == 'HathiTrust' or source == 'Gale' %}  {# we currently only support page images for these two #}
     <div class="preview">
         <a href="{{ page_link }}"
           target="_blank" rel="noopener noreferrer">
@@ -39,9 +40,11 @@ Expected context variables:
           <img src="{{ 1x_img }}" srcset="{{ 1x_img}}, {{ 2x_img }} 2x"
               alt="page {{ page.label }}"/>
           {% endwith %}
+          {% else %}
           {% endif %}
         </a>
     </div>
+    {% endif %}
     {% if page.title %}<a>p. {{ page.title }}</a>{% endif %}
     <div class="snippets">
           <p class="page-number">
