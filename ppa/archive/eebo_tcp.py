@@ -28,6 +28,7 @@ class Page(xmlmap.XmlObject):
     # use following axis to find all text nodes following this page beginning
     text_contents = xmlmap.StringListField("following::text()")
     # count following notes as a quick check to bail out of note detection logic
+    # (can't use eulxml boolean field here because it assumes string values for true/false)
     has_notes = xmlmap.IntegerField("count(following::NOTE)")
 
     def __repr__(self):
@@ -94,10 +95,8 @@ class Page(xmlmap.XmlObject):
             if within_note is not None:
                 # is this the first text in this note?
                 within_note.xpath(".//text()")
-                # print(f"first note text = {first_text}")
                 is_first_text = within_note.xpath(".//text()")[0] == str(text)
                 if is_first_text:
-                    # print(f"hit first note text {text}")
                     # if this is the first text for this note,
                     # add a marker inline with the text AND to the note
                     note_mark = within_note.get("N", self.get_note_mark(note_index))
