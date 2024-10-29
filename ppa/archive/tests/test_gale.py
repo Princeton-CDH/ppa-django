@@ -1,3 +1,4 @@
+import json
 import os.path
 from unittest.mock import Mock, patch
 
@@ -15,22 +16,32 @@ from ppa.archive.tests.test_models import FIXTURES_PATH
 @override_settings()
 def test_get_local_ocr(tmp_path):
     item_id = "CB0123456789"
-    page_num = "0001"
-    content = "Testing...\n1\n2\n3"
+    content = {"0001": "Testing...\n1\n2\n3"}
     # Mock ocr files for testing
-    ocr_dir = tmp_path.joinpath("147", item_id)
-    ocr_dir.mkdir(parents=True)
-    ocr_file = ocr_dir.joinpath(f"{item_id}_{page_num}0.txt")
-    ocr_file.write_text(content)
+    ocr_dir = tmp_path / "147"
+    ocr_dir.mkdir()
+    ocr_file = ocr_dir / f"{item_id}.json"
+    with ocr_file.open("w") as outfile:
+        json.dump(content, outfile)
 
     with override_settings(GALE_LOCAL_OCR=f"{tmp_path}"):
-        assert content == gale.get_local_ocr(item_id, page_num)
+        assert content == gale.get_local_ocr(item_id)
 
 
 @override_settings(GALE_LOCAL_OCR=None)
 def test_get_local_ocr_config_error():
     with pytest.raises(ImproperlyConfigured):
-        gale.get_local_ocr("item_id", "page_num")
+        gale.get_local_ocr("item_id")
+
+
+@override_settings(GALE_LOCAL_OCR="/example/path")
+def test_get_local_ocr_invalid_id():
+    with pytest.raises(ValueError):
+        gale.get_local_ocr("item_id")
+    with pytest.raises(ValueError):
+        gale.get_local_ocr("CWabcdefg")
+    with pytest.raises(ValueError):
+        gale.get_local_ocr("AB12345")
 
 
 @override_settings(GALE_API_USERNAME="galeuser123")
@@ -122,7 +133,7 @@ class TestGaleAPI(TestCase):
         ok_response.elapsed.total_seconds.return_value = 3
 
         gale_api.session.get.side_effect = [unauth_response, ok_response]
-        resp = gale_api._make_request("foo", requires_api_key=True)
+        gale_api._make_request("foo", requires_api_key=True)
         # should be called twice: once for initial request, then for retry
         assert mock_get_api_key.call_count == 2
         gale_api.session.get.assert_any_call(
@@ -136,7 +147,7 @@ class TestGaleAPI(TestCase):
         # retry should preserve parameters and streaming option
         gale_api.session.reset_mock()
         gale_api.session.get.side_effect = [unauth_response, ok_response]
-        resp = gale_api._make_request(
+        gale_api._make_request(
             "foo", params={"bar": "baz"}, stream=True, requires_api_key=True
         )
         gale_api.session.get.assert_any_call(
@@ -158,7 +169,7 @@ class TestGaleAPI(TestCase):
         gale_api.session.reset_mock()
         gale_api.session.get.side_effect = [unauth_response, ok_response]
         with pytest.raises(gale.GaleUnauthorized):
-            resp = gale_api._make_request("foo", requires_api_key=False)
+            gale_api._make_request("foo", requires_api_key=False)
         # should not get a new key; should only make the request once
         mock_get_api_key.assert_not_called()
         assert gale_api.session.get.call_count == 1
@@ -168,7 +179,7 @@ class TestGaleAPI(TestCase):
         gale_api.session.reset_mock()
         gale_api.session.get.side_effect = [unauth_response, ok_response]
         with pytest.raises(gale.GaleUnauthorized):
-            resp = gale_api._make_request("foo", requires_api_key=True, retry=1)
+            gale_api._make_request("foo", requires_api_key=True, retry=1)
         # should not get a new key; should only make the request once
         mock_get_api_key.assert_not_called()
         assert gale_api.session.get.call_count == 1
@@ -270,32 +281,42 @@ class TestGaleAPI(TestCase):
         }
         mock_get_item.return_value = api_response
         # Set up get_local_ocr so that only the 3rd page's text is found
-        mock_get_local_ocr.side_effect = [FileNotFoundError, FileNotFoundError, "local ocr text"]
+        mock_get_local_ocr.return_value = {"0003": "local ocr text"}
         page_data = list(gale_api.get_item_pages(item_id))
         mock_get_item.called_once()
-        assert mock_get_local_ocr.call_count == 3
+        # called once per volume
+        assert mock_get_local_ocr.call_count == 1
         assert len(page_data) == 3
-        assert [ p["page_id"] for p in page_data ] == ["0001", "0002", "0003"]
-        assert [ p["content"] for p in page_data ] == [None, "more test content", "local ocr text"]
-        assert [ p["label"] for p in page_data ] == ["i", None, None]
-        assert [ p["tags"] for p in page_data ] == [ [], [], ["local_ocr"] ]
-        assert [ p["image_id_s"] for p in page_data ] == ["09876001234567", "08765002345678", "0765400456789"]
-        assert [ p["image_url_s"] for p in page_data ] == [f"http://example.com/img/{i+1}" for i in range(3)]
+        assert [p["page_id"] for p in page_data] == ["0001", "0002", "0003"]
+        assert [p["content"] for p in page_data] == [
+            None,
+            "more test content",
+            "local ocr text",
+        ]
+        assert [p["label"] for p in page_data] == ["i", None, None]
+        assert [p["tags"] for p in page_data] == [[], [], ["local_ocr"]]
+        assert [p["image_id_s"] for p in page_data] == [
+            "09876001234567",
+            "08765002345678",
+            "0765400456789",
+        ]
+        assert [p["image_url_s"] for p in page_data] == [
+            f"http://example.com/img/{i+1}" for i in range(3)
+        ]
 
         # skip api call if record is provided
         mock_get_item.reset_mock()
         mock_get_local_ocr.reset_mock()
-        mock_get_local_ocr.side_effect = [FileNotFoundError, FileNotFoundError, "local ocr text"]
         page_data = list(gale_api.get_item_pages(item_id, api_response))
         mock_get_item.assert_not_called()
-        assert mock_get_local_ocr.call_count == 3
+        assert mock_get_local_ocr.call_count == 1
         assert len(page_data) == 3
 
 
 @override_settings(MARC_DATA="/path/to/data/marc")
 @patch("ppa.archive.gale.PairtreeStorageFactory")
 def test_get_marc_storage(mock_pairtree_storage_factory):
-    mstore = gale.get_marc_storage()
+    gale.get_marc_storage()
     mock_pairtree_storage_factory.assert_called_with()
     mock_pairtree_storage_factory.return_value.get_store.assert_called_with(
         store_dir=settings.MARC_DATA, uri_base="info:local/"
