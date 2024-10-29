@@ -240,15 +240,13 @@ class GaleAPI:
             ocr_text = None
             if local_ocr_text:
                 ocr_text = local_ocr_text.get(page_number)
-                # if we have content, set local ocr tag
+                # if we have content, set tag to indicate local ocr
                 if ocr_text:
                     tags = ["local_ocr"]
-
                 # we expect empty string if page is present but empty
                 # (e.g., for blank pages)
-
-                # ocr text = None indicates not content not present in the data
-                if ocr_text is None:
+                # ocr text = None indicates page is not present in the data
+                elif ocr_text is None:
                     logger.warning(f"No local OCR for {item_id} {page_number}")
                     # try getting the ocr from the gale api result
                     # (may still be empty, since some pages have no text)
