@@ -400,7 +400,7 @@ class TestGaleImporter(TestCase):
             ).exists()
 
             digwork = importer.import_digitizedwork(
-                "t1234", user=script_user, item_type=DigitizedWork.ARTICLE
+                "CW1234", user=script_user, item_type=DigitizedWork.ARTICLE
             )
             # specified item type should be used
             assert digwork.item_type == DigitizedWork.ARTICLE
