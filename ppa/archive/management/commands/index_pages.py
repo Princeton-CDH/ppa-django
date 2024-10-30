@@ -116,14 +116,25 @@ class Command(BaseCommand):
             "source_ids", nargs="*", help="List of specific items to index (optional)"
         )
         parser.add_argument(
-            "--source", help="Limit to one source", choices=Command.sources.keys()
-        )
-        parser.add_argument(
             "--expedite",
             help="Only index works with page count mismatch between Solr and database",
             action="store_true",
             default=False,
         )
+
+        # add source names as arguments to take advantage of
+        # argparse built in prefixing; lower case args but display proper case
+        source_arg_group = parser.add_argument_group(
+            "Source", "Limit indexing to all works from a specific source"
+        )
+        for source_name in Command.sources.keys():
+            source_arg_group.add_argument(
+                f"--{source_name.lower()}",
+                help=source_name,
+                dest="source",
+                action="store_const",
+                const=source_name,
+            )
 
     def handle(self, *args, **kwargs):
         self.verbosity = kwargs.get("verbosity", self.v_normal)
