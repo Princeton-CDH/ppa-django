@@ -41,8 +41,8 @@ def get_local_ocr(item_id):
 
     # files are in stub directories; following conventions set in ppa-nlp
     stub_dir = item_id[::3][1:]
-    ocr_dir = pathlib.Path(ocr_dir)
-    with (ocr_dir / stub_dir / f"{item_id}.json").open() as ocrfile:
+    ocr_path = pathlib.Path(ocr_dir, stub_dir, f"{item_id}.json")
+    with ocr_path.open() as ocrfile:
         return json.load(ocrfile)
 
 
