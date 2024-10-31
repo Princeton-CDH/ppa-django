@@ -21,7 +21,7 @@ def test_get_local_ocr(tmp_path):
     ocr_dir = tmp_path / "147"
     ocr_dir.mkdir()
     ocr_file = ocr_dir / f"{item_id}.json"
-    with ocr_file.open("w") as outfile:
+    with ocr_file.open("w", encoding="utf-8") as outfile:
         json.dump(content, outfile)
 
     with override_settings(GALE_LOCAL_OCR=f"{tmp_path}"):
