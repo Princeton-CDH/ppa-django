@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ppa.archive.management.commands.hathi_rsync &#8212; Princeton Prosody Archive 3.14.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../../../../_static/documentation_options.js?v=e4f4b189"></script>
+    <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for ppa.archive.management.commands.hathi_rsync</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+
+<span class="kn">from</span> <span class="nn">django.core.management.base</span> <span class="kn">import</span> <span class="n">BaseCommand</span>
+<span class="kn">from</span> <span class="nn">django.template.defaultfilters</span> <span class="kn">import</span> <span class="n">pluralize</span>
+<span class="kn">from</span> <span class="nn">pairtree</span> <span class="kn">import</span> <span class="n">path2id</span>
+
+<span class="kn">from</span> <span class="nn">ppa.archive.import_util</span> <span class="kn">import</span> <span class="n">HathiImporter</span>
+<span class="kn">from</span> <span class="nn">ppa.archive.models</span> <span class="kn">import</span> <span class="n">DigitizedWork</span>
+
+
+<div class="viewcode-block" id="Command">
+<a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.hathi_rsync.Command">[docs]</a>
+<span class="k">class</span> <span class="nc">Command</span><span class="p">(</span><span class="n">BaseCommand</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update HathiTrust pairtree data via rsync&quot;&quot;&quot;</span>
+
+    <span class="n">help</span> <span class="o">=</span> <span class="vm">__doc__</span>
+    <span class="c1">#: normal verbosity level</span>
+    <span class="n">v_normal</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">verbosity</span> <span class="o">=</span> <span class="n">v_normal</span>
+
+<div class="viewcode-block" id="Command.add_arguments">
+<a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.hathi_rsync.Command.add_arguments">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;htids&quot;</span><span class="p">,</span>
+            <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Optional list HathiTrust ids to synchronize&quot;</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Command.handle">
+<a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.hathi_rsync.Command.handle">[docs]</a>
+    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;verbosity&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_normal</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">kwargs</span>
+
+        <span class="c1"># use ids specified via command line when present</span>
+        <span class="n">htids</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;htids&quot;</span><span class="p">,</span> <span class="p">[])</span>
+
+        <span class="c1"># by default, sync data for all non-suppressed hathi source ids</span>
+        <span class="n">digworks</span> <span class="o">=</span> <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">DigitizedWork</span><span class="o">.</span><span class="n">PUBLIC</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">DigitizedWork</span><span class="o">.</span><span class="n">HATHI</span>
+        <span class="p">)</span>
+
+        <span class="c1"># if htids are specified via parameter, use them to filter</span>
+        <span class="c1"># the queryset, to ensure we only sync records that are</span>
+        <span class="c1"># in the database and not suppressed</span>
+        <span class="k">if</span> <span class="n">htids</span><span class="p">:</span>
+            <span class="n">digworks</span> <span class="o">=</span> <span class="n">digworks</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">source_id__in</span><span class="o">=</span><span class="n">htids</span><span class="p">)</span>
+
+        <span class="c1"># generate a list of unique source ids from the queryset</span>
+        <span class="n">working_htids</span> <span class="o">=</span> <span class="n">digworks</span><span class="o">.</span><span class="n">values_list</span><span class="p">(</span><span class="s2">&quot;source_id&quot;</span><span class="p">,</span> <span class="n">flat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">distinct</span><span class="p">()</span>
+
+        <span class="c1"># if htids were explicitly specified, report if any are skipped</span>
+        <span class="k">if</span> <span class="n">htids</span><span class="p">:</span>
+            <span class="n">skipped_htids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">htids</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">working_htids</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">skipped_htids</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">NOTICE</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">skipped_htids</span><span class="p">)</span><span class="si">}</span><span class="s2"> id</span><span class="si">{</span><span class="n">pluralize</span><span class="p">(</span><span class="n">skipped_htids</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
+                        <span class="o">+</span> <span class="s2">&quot;not found in public HathiTrust volumes; &quot;</span>
+                        <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;skipping </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">skipped_htids</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="c1"># bail out if there&#39;s nothing to do</span>
+        <span class="c1"># (e.g., explicit htids only and none valid)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">working_htids</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;No records to synchronize; stopping&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Synchronizing data for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">working_htids</span><span class="p">)</span><span class="si">}</span><span class="s2"> record</span><span class="si">{</span><span class="n">pluralize</span><span class="p">(</span><span class="n">working_htids</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># create a tempdir for rsync logfile; will automatically be cleaned up</span>
+        <span class="n">output_dir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;ppa-rsync_&quot;</span><span class="p">)</span>
+        <span class="c1"># we always want itemized rsync output, so we can report</span>
+        <span class="c1"># on which htids have updated content</span>
+        <span class="n">htimporter</span> <span class="o">=</span> <span class="n">HathiImporter</span><span class="p">(</span>
+            <span class="n">source_ids</span><span class="o">=</span><span class="n">working_htids</span><span class="p">,</span> <span class="n">rsync_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">output_dir</span><span class="o">=</span><span class="n">output_dir</span><span class="o">.</span><span class="n">name</span>
+        <span class="p">)</span>
+        <span class="n">logfile</span> <span class="o">=</span> <span class="n">htimporter</span><span class="o">.</span><span class="n">rsync_data</span><span class="p">()</span>
+
+        <span class="c1"># read the rsync itemized output to identify and report on changes</span>
+        <span class="n">updated_files</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">logfile</span><span class="p">)</span> <span class="k">as</span> <span class="n">rsync_output</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">rsync_output</span><span class="p">:</span>
+                <span class="c1"># check for a line indicating that a file was updated</span>
+                <span class="k">if</span> <span class="s2">&quot; &gt;f&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                    <span class="c1"># rsync itemized output is white-space delimited</span>
+                    <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="c1"># last element is the filename that was updated</span>
+                    <span class="n">filename</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="c1"># itemized info flags precede the filename</span>
+                    <span class="n">flags</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+
+                    <span class="c1"># we only care about zip files and mets.xml files</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.zip&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.xml&quot;</span><span class="p">):</span>
+                        <span class="k">continue</span>
+                    <span class="c1"># reconstruct the hathi id from the filepath</span>
+                    <span class="n">ht_prefix</span><span class="p">,</span> <span class="n">pairtree_dir</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/pairtree_root/&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="c1"># get the directory one level up from the updated file</span>
+                    <span class="n">pairtree_id</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">pairtree_dir</span><span class="p">))</span>
+                    <span class="c1"># use pairtree to determine the id based on the path</span>
+                    <span class="c1"># (handles special characters like those used in ARKs)</span>
+                    <span class="n">htid</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ht_prefix</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">path2id</span><span class="p">(</span><span class="n">pairtree_id</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="n">updated_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;htid&quot;</span><span class="p">:</span> <span class="n">htid</span><span class="p">,</span>
+                            <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span>
+                            <span class="c1"># rsync itemized flags look like &gt;f.st....</span>
+                            <span class="c1"># or &gt;f+++++++ for new files</span>
+                            <span class="s2">&quot;size_changed&quot;</span><span class="p">:</span> <span class="n">flags</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;s&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;modification_time&quot;</span><span class="p">:</span> <span class="n">flags</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;t&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;rsync_flags&quot;</span><span class="p">:</span> <span class="n">flags</span><span class="p">,</span>
+                        <span class="p">}</span>
+                    <span class="p">)</span>
+
+        <span class="c1"># should this behavior only be when updating all?</span>
+        <span class="c1"># if specific htids are specified on the command line, maybe report on them only?</span>
+        <span class="k">if</span> <span class="n">updated_files</span><span class="p">:</span>
+            <span class="n">outfilename</span> <span class="o">=</span> <span class="s2">&quot;ppa_rsync_changes_</span><span class="si">{time}</span><span class="s2">.csv&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">time</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">-%H%M%S&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="c1"># use keys from the first row to populate csv header row</span>
+            <span class="n">fields</span> <span class="o">=</span> <span class="n">updated_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">outfilename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+                <span class="n">csvwriter</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictWriter</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">fieldnames</span><span class="o">=</span><span class="n">fields</span><span class="p">)</span>
+                <span class="n">csvwriter</span><span class="o">.</span><span class="n">writeheader</span><span class="p">()</span>
+                <span class="n">csvwriter</span><span class="o">.</span><span class="n">writerows</span><span class="p">(</span><span class="n">updated_files</span><span class="p">)</span>
+            <span class="n">updated_htids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">i</span><span class="p">[</span><span class="s2">&quot;htid&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">updated_files</span><span class="p">])</span>
+            <span class="n">success_msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Updated </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">updated_files</span><span class="p">)</span><span class="si">}</span><span class="s2"> files for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">updated_htids</span><span class="p">)</span><span class="si">}</span><span class="s2"> volumes; &quot;</span>
+                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;full details in </span><span class="si">{</span><span class="n">outfilename</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">success_msg</span> <span class="o">=</span> <span class="s2">&quot;rsync completed; no changes to report&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">(</span><span class="n">success_msg</span><span class="p">))</span></div>
+</div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../../../index.html">
+    <img class="logo" src="../../../../../_static/ppa_logo.png" alt="Logo" />
+    
+    <h1 class="logo logo-name">Princeton Prosody Archive</h1>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Django web application for "Princeton Prosody Archive" CDH project</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=Princeton-CDH&repo=ppa-django&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../codedocs.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../changelog.html">Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../deploynotes.html">Deploy Notes</a></li>
+</ul>
+
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><div class="powered_by">
+<p>Powered by:</p>
+<a href="http://cdh.princeton.edu/">
+<img src="https://cdh.princeton.edu/static/img/CDH_logo.svg"
+    alt="Center for Digital Humanities @ Princeton" />
+</a>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, CDH @ Princeton University.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ppa.archive.management.commands.eebo_import &#8212; Princeton Prosody Archive 3.14.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../../../../_static/documentation_options.js?v=e4f4b189"></script>
+    <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for ppa.archive.management.commands.eebo_import</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">**eebo_import** is a custom manage command for bulk import of EEBO-TCP</span>
+<span class="sd">materials into the local database for management.  It takes a path to a</span>
+<span class="sd">CSV file and requires that the path to EEBO data is configured</span>
+<span class="sd">in Django settings.</span>
+
+<span class="sd">Items are imported into the database for management and also indexed into</span>
+<span class="sd">Solr as part of this import script (both works and pages).</span>
+
+<span class="sd">Example usage::</span>
+
+<span class="sd">    python manage.py eebo_import path/to/eebo_works.csv</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+<span class="kn">from</span> <span class="nn">django.contrib.admin.models</span> <span class="kn">import</span> <span class="n">ADDITION</span><span class="p">,</span> <span class="n">LogEntry</span>
+<span class="kn">from</span> <span class="nn">django.contrib.auth.models</span> <span class="kn">import</span> <span class="n">User</span>
+<span class="kn">from</span> <span class="nn">django.contrib.contenttypes.models</span> <span class="kn">import</span> <span class="n">ContentType</span>
+<span class="kn">from</span> <span class="nn">django.core.management.base</span> <span class="kn">import</span> <span class="n">BaseCommand</span><span class="p">,</span> <span class="n">CommandError</span>
+<span class="kn">from</span> <span class="nn">parasolr.django.signals</span> <span class="kn">import</span> <span class="n">IndexableSignalHandler</span>
+<span class="kn">import</span> <span class="nn">pymarc</span>
+
+<span class="kn">from</span> <span class="nn">ppa.archive</span> <span class="kn">import</span> <span class="n">eebo_tcp</span>
+<span class="kn">from</span> <span class="nn">ppa.archive.models</span> <span class="kn">import</span> <span class="n">Collection</span><span class="p">,</span> <span class="n">DigitizedWork</span>
+
+
+<div class="viewcode-block" id="Command">
+<a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.eebo_import.Command">[docs]</a>
+<span class="k">class</span> <span class="nc">Command</span><span class="p">(</span><span class="n">BaseCommand</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Import EEBO-TCP content into PPA for management and search&quot;&quot;&quot;</span>
+
+    <span class="n">help</span> <span class="o">=</span> <span class="vm">__doc__</span>
+    <span class="c1">#: normal verbosity level</span>
+    <span class="n">v_normal</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">verbosity</span> <span class="o">=</span> <span class="n">v_normal</span>
+
+<div class="viewcode-block" id="Command.add_arguments">
+<a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.eebo_import.Command.add_arguments">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;csv&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;CSV file with EEBO-TCP items to import.&quot;</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Command.handle">
+<a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.eebo_import.Command.handle">[docs]</a>
+    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;verbosity&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_normal</span><span class="p">)</span>
+
+        <span class="c1"># disconnect signal-based indexing and bulk-index after import</span>
+        <span class="n">IndexableSignalHandler</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
+
+        <span class="c1"># make sure eebo data path is configured in django settings</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="s2">&quot;EEBO_DATA&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">CommandError</span><span class="p">(</span>
+                <span class="s2">&quot;Path for EEBO_DATA must be configured in Django settings&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eebo_data_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">EEBO_DATA</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">eebo_data_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">CommandError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;EEBO_DATA directory </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">eebo_data_path</span><span class="si">}</span><span class="s2"> does not exist&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">to_import</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_csv</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;csv&quot;</span><span class="p">])</span>
+        <span class="c1"># currently the CSV only specifiec OB, no other collections</span>
+        <span class="n">original_bibliography</span> <span class="o">=</span> <span class="n">Collection</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Original Bibliography&quot;</span><span class="p">)</span>
+
+        <span class="c1"># get script user and content type for creating log entries</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">script_user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">SCRIPT_USERNAME</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">digwork_contentype</span> <span class="o">=</span> <span class="n">ContentType</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_for_model</span><span class="p">(</span><span class="n">DigitizedWork</span><span class="p">)</span>
+
+        <span class="n">imported_works</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">to_import</span><span class="p">:</span>
+            <span class="n">digwork</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_eebo_digwork</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+            <span class="c1"># if this record belongs to Original Bibligraphy, associate collection</span>
+            <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;OB?&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Y&quot;</span><span class="p">:</span>
+                <span class="n">digwork</span><span class="o">.</span><span class="n">collections</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">original_bibliography</span><span class="p">)</span>
+
+            <span class="c1"># create log entry to document db record creation</span>
+            <span class="n">LogEntry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">log_action</span><span class="p">(</span>
+                <span class="n">user_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">script_user</span><span class="o">.</span><span class="n">pk</span><span class="p">,</span>
+                <span class="n">content_type_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">digwork_contentype</span><span class="o">.</span><span class="n">pk</span><span class="p">,</span>
+                <span class="n">object_id</span><span class="o">=</span><span class="n">digwork</span><span class="o">.</span><span class="n">pk</span><span class="p">,</span>
+                <span class="n">object_repr</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">digwork</span><span class="p">),</span>
+                <span class="n">change_message</span><span class="o">=</span><span class="s2">&quot;Created via eebo_import manage command&quot;</span><span class="p">,</span>
+                <span class="n">action_flag</span><span class="o">=</span><span class="n">ADDITION</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="c1"># add to list</span>
+            <span class="n">imported_works</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">digwork</span><span class="p">)</span>
+
+        <span class="c1"># index all imported works in Solr</span>
+        <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">index_items</span><span class="p">(</span><span class="n">imported_works</span><span class="p">)</span>
+        <span class="c1"># then index all the pages for non-excerpt works</span>
+        <span class="c1"># (excerpt pages are indexed automatically on save)</span>
+        <span class="c1"># using index_pages command because it has been optimized</span>
+        <span class="n">full_work_ids</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">digwork</span><span class="o">.</span><span class="n">source_id</span>
+            <span class="k">for</span> <span class="n">digwork</span> <span class="ow">in</span> <span class="n">imported_works</span>
+            <span class="k">if</span> <span class="n">digwork</span><span class="o">.</span><span class="n">item_type</span> <span class="o">==</span> <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">FULL</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">full_work_ids</span><span class="p">:</span>
+            <span class="c1"># calling index_pages command doesn&#39;t work from here;</span>
+            <span class="c1"># just tell the user what command to run</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Now index pages for the full works with this command:&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;python manage.py index_pages </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">full_work_ids</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">create_eebo_digwork</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+        <span class="n">source_id</span> <span class="o">=</span> <span class="n">eebo_tcp</span><span class="o">.</span><span class="n">short_id</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;Volume ID&quot;</span><span class="p">])</span>
+        <span class="c1"># NOTE: for simplicity, this is written as a a one-time import.</span>
+        <span class="c1"># for development, use admin filter by source to delete and re-import</span>
+
+        <span class="c1"># create new unsaved digitized work with source type, source id</span>
+        <span class="c1"># and any curation notes from the spreadsheet</span>
+        <span class="n">digwork</span> <span class="o">=</span> <span class="n">DigitizedWork</span><span class="p">(</span>
+            <span class="n">source</span><span class="o">=</span><span class="n">DigitizedWork</span><span class="o">.</span><span class="n">EEBO</span><span class="p">,</span>
+            <span class="n">source_id</span><span class="o">=</span><span class="n">source_id</span><span class="p">,</span>
+            <span class="n">source_url</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;URL&quot;</span><span class="p">],</span>
+            <span class="n">notes</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;Notes&quot;</span><span class="p">],</span>  <span class="c1"># curation notes (not public notes)</span>
+        <span class="p">)</span>
+        <span class="c1"># populate metadata from marc record</span>
+        <span class="c1"># path marc record</span>
+        <span class="n">marc_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eebo_data_path</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">source_id</span><span class="si">}</span><span class="s2">.mrc&quot;</span>
+        <span class="k">with</span> <span class="n">marc_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">marc_filehandle</span><span class="p">:</span>
+            <span class="n">marc_reader</span> <span class="o">=</span> <span class="n">pymarc</span><span class="o">.</span><span class="n">MARCReader</span><span class="p">(</span><span class="n">marc_filehandle</span><span class="p">)</span>
+            <span class="c1"># get the first record (file contains one one record only)</span>
+            <span class="n">marc_record</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">marc_reader</span><span class="p">)</span>
+            <span class="n">digwork</span><span class="o">.</span><span class="n">metadata_from_marc</span><span class="p">(</span><span class="n">marc_record</span><span class="p">,</span> <span class="n">populate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># if this is an excerpt, set item type, page range, and</span>
+        <span class="c1"># override metadata from the spreadsheet</span>
+        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;Excerpt? Y/N&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Y&quot;</span><span class="p">:</span>
+            <span class="n">digwork</span><span class="o">.</span><span class="n">item_type</span> <span class="o">=</span> <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">EXCERPT</span>
+            <span class="n">digwork</span><span class="o">.</span><span class="n">author</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;Author&quot;</span><span class="p">]</span>
+            <span class="n">digwork</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;Title&quot;</span><span class="p">]</span>
+            <span class="c1"># clear out any subtitle set from MARC record</span>
+            <span class="n">digwork</span><span class="o">.</span><span class="n">subtitle</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="c1"># sort title and book/journal title must be set manually for excerpts</span>
+            <span class="n">digwork</span><span class="o">.</span><span class="n">sort_title</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;Sort Titles (EXCERPT ONLY)&quot;</span><span class="p">]</span>
+            <span class="n">digwork</span><span class="o">.</span><span class="n">book_journal</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;Book/journal title (EXCERPT ONLY)&quot;</span><span class="p">]</span>
+            <span class="c1"># for all other fields, we use publication info from MARC</span>
+
+            <span class="c1"># digital page range in spreadsheet</span>
+            <span class="n">digwork</span><span class="o">.</span><span class="n">pages_digital</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;Sequence number&quot;</span><span class="p">]</span>
+            <span class="c1"># original page range in spreadsheet</span>
+            <span class="n">digwork</span><span class="o">.</span><span class="n">pages_orig</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;Original page range&quot;</span><span class="p">]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># for non-excerpts, calculate number of pages</span>
+            <span class="n">digwork</span><span class="o">.</span><span class="n">page_count</span> <span class="o">=</span> <span class="n">eebo_tcp</span><span class="o">.</span><span class="n">page_count</span><span class="p">(</span><span class="n">digwork</span><span class="o">.</span><span class="n">source_id</span><span class="p">)</span>
+
+        <span class="c1"># save the new record</span>
+        <span class="n">digwork</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">digwork</span>
+
+<div class="viewcode-block" id="Command.load_csv">
+<a class="viewcode-back" href="../../../../../codedocs.html#ppa.archive.management.commands.eebo_import.Command.load_csv">[docs]</a>
+    <span class="k">def</span> <span class="nf">load_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a CSV file with items to be imported.&quot;&quot;&quot;</span>
+        <span class="c1"># adapted from gale import script</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8-sig&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">csvfile</span><span class="p">:</span>
+                <span class="n">csvreader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">csvfile</span><span class="p">)</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">csvreader</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CommandError</span><span class="p">(</span><span class="s2">&quot;Error loading the specified CSV file: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;Volume ID&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">CommandError</span><span class="p">(</span><span class="s2">&quot;Volume ID column is required in CSV file&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span></div>
+</div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../../../index.html">
+    <img class="logo" src="../../../../../_static/ppa_logo.png" alt="Logo" />
+    
+    <h1 class="logo logo-name">Princeton Prosody Archive</h1>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Django web application for "Princeton Prosody Archive" CDH project</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=Princeton-CDH&repo=ppa-django&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../codedocs.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../changelog.html">Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../deploynotes.html">Deploy Notes</a></li>
+</ul>
+
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><div class="powered_by">
+<p>Powered by:</p>
+<a href="http://cdh.princeton.edu/">
+<img src="https://cdh.princeton.edu/static/img/CDH_logo.svg"
+    alt="Center for Digital Humanities @ Princeton" />
+</a>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, CDH @ Princeton University.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
