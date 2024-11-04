@@ -3,6 +3,13 @@
 CHANGELOG
 =========
 
+3.14
+----
+
+- Revise EEBO-TCP content import logic to render tagged notes at the bottom of the page instead of displaying inline
+- Optimize local OCR page indexing for Gale content by loading OCR from a single JSON file per volume
+- Revise **index_pages** manage command arguments for indexing all records from a single source to make it easier to use (lowercase, support prefixes when unambiguous)
+
 3.13.2
 ------
 - Add `INCLUDE_ANALYTICS` to template context so Plausible analytics can be enabled
