@@ -304,6 +304,15 @@ class TestGaleAPI(TestCase):
             f"http://example.com/img/{i+1}" for i in range(3)
         ]
 
+        # page present but content empty should still return a local ocr tag
+        mock_get_local_ocr.return_value = {"0001": "", "0002": "", "0003": ""}
+        page_data = list(gale_api.get_item_pages(item_id))
+        assert [p["tags"] for p in page_data] == [
+            ["local_ocr"],
+            ["local_ocr"],
+            ["local_ocr"],
+        ]
+
         # skip api call if record is provided
         mock_get_item.reset_mock()
         mock_get_local_ocr.reset_mock()
