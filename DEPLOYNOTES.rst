@@ -3,6 +3,13 @@
 Deploy and Upgrade notes
 ========================
 
+3.14
+----
+
+* Configuration for local page-level OCR for Gale content (**GALE_LOCAL_OCR**) should be updated to reference a directory the formatted content with a single path JSON file.
+* EEBO-TCP content can now be imported using the `eebo_import` manage command; this requires the **EEBO_DATA** path to be configured in local settings.
+* Gale pages should be indexed periodically so encrypted image urls will be current. It is recommended to use 4 processes (`-p 4`) when indexing on a VM with 2 CPUs, since the API and filesystem reads cause non-computational delays.
+
 3.13.1
 ------
 * To enable Plausible analytics, update local settings to set `INCLUDE_ANALYTICS` to True,
