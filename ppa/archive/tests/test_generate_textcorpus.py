@@ -353,6 +353,9 @@ def test_set_params(options, expected, tmp_path):
 def test_default_args(mock_iter_works, mock_iter_pages, tmp_path):
     # testing default args requires running with call_commmand
     cmd = generate_textcorpus.Command()
+    # change working directory to temp path to avoid accumulating empty
+    # export directories in the project working director
+    os.chdir(tmp_path)
     call_command(cmd)
     assert cmd.path == "ppa_corpus_" + generate_textcorpus.nowstr()
     assert cmd.doclimit is None
