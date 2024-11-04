@@ -1,6 +1,27 @@
 Troubleshooting
 ===============
 
+Local Solr setup
+----------------
+Install Solr via `brew <https://formulae.brew.sh/formula/solr>`::
+
+  brew install solr
+
+Copy the Solr config files in as a configset named `ppa`::
+
+  cp -r solr_conf /opt/homebrew/opt/solr/server/solr/configsets/ppa
+
+Create symbolic link to configsets in the Solr home directory::
+
+    ln -s /opt/homebrew/opt/solr/server/solr/configsets /opt/homebrew/var/lib/solr/
+
+Create a new core with the `ppa` configset (Solr must be running)::
+
+    curl "http://localhost:8983/solr/admin/cores?action=CREATE&name=ppa&configSet=ppa"
+
+When the configset has changed, copy in the updated Solr config files::
+
+    cp solr_conf/* /opt/homewbrew/var/lib/solr/configsets/ppa/
 
 
 Solr setup with Docker
