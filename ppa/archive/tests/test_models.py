@@ -491,6 +491,9 @@ class TestDigitizedWork(TestCase):
         assert digwork.author
         assert digwork.pub_date == 1882
 
+    def test_index_item_type(self):
+        assert DigitizedWork.index_item_type() == "work"
+
     def test_index_data(self):
         digwork = DigitizedWork.objects.create(
             source_id="njp.32101013082597",
@@ -668,6 +671,14 @@ class TestDigitizedWork(TestCase):
         with pytest.raises(storage_exceptions.ObjectNotFoundException) as err:
             work.count_pages()
         assert "Using Hathi-specific page count" in str(err)
+
+    @patch("ppa.archive.models.eebo_tcp.page_count")
+    def test_count_pages_eebo(self, mock_eebo_page_count):
+        work = DigitizedWork(source_id="A1234", source=DigitizedWork.EEBO)
+        mock_eebo_page_count.return_value = 123
+        work.count_pages()
+        assert work.page_count == 123
+        mock_eebo_page_count.assert_called_with(work.source_id)
 
     def test_count_pages_excerpt(self):
         work = DigitizedWork(source_id="CW79279237", pages_digital="1-10")
@@ -873,6 +884,13 @@ class TestDigitizedWork(TestCase):
 
         work.status = DigitizedWork.SUPPRESSED
         assert work.is_suppressed
+
+    def test_is_public(self):
+        work = DigitizedWork(source_id="chi.79279237")
+        # default status for new records is public
+        assert work.is_public()
+        work.status = DigitizedWork.SUPPRESSED
+        assert not work.is_public()
 
     @patch("ppa.archive.models.DigitizedWork.populate_from_bibdata")
     @patch("ppa.archive.models.HathiBibliographicAPI")
@@ -1153,6 +1171,18 @@ class TestPage(TestCase):
         assert "Licensed,\nROBERT MIDGLEY." in page_data[0]["content"]
         # eebo-tcp page data logic is tested more thoroughly elsewhere
 
+    @override_settings(EEBO_DATA=FIXTURES_PATH)
+    def test_page_index_data_excerpt(self):
+        work = DigitizedWork(
+            source_id="A25820",
+            source=DigitizedWork.EEBO,
+            item_type=DigitizedWork.EXCERPT,
+            pages_digital="2-10",
+        )
+        page_data = Page.page_index_data(work)
+        assert isinstance(page_data, types.GeneratorType)
+        assert len(list(page_data)) == 9
+
     def test_page_index_data_suppressed(self):
         # if item is suppressed - no page data
         work = DigitizedWork(source_id="chi.79279237")
@@ -1194,7 +1224,7 @@ class TestPage(TestCase):
                 "tags": ["local_ocr"],
                 "image_id_s": "0765400456789",
                 "image_url_s": "http://example.com/img/3",
-            }
+            },
         ]
         mock_gale_get_item_pages.return_value = test_page_data
         page_data = list(Page.page_index_data(gale_work))
@@ -1219,3 +1249,7 @@ class TestPage(TestCase):
         )
         page_data = list(Page.page_index_data(gale_excerpt))
         assert len(page_data) == 2
+
+
+def test_cluster_repr():
+    assert repr(Cluster(cluster_id="group-one")) == "<cluster group-one>"
