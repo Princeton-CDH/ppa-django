@@ -9,6 +9,7 @@ CHANGELOG
 - Revise EEBO-TCP content import logic to render tagged notes at the bottom of the page instead of displaying inline
 - Optimize local OCR page indexing for Gale content by loading OCR from a single JSON file per volume
 - Revise **index_pages** manage command arguments for indexing all records from a single source to make it easier to use (lowercase, support prefixes when unambiguous)
+- Bug fix: clean up a unit test that was generating an empty text corpus directory in the local working directory
 
 3.13.2
 ------
