@@ -272,7 +272,7 @@ class TestGaleAPI(TestCase):
             {
                 "pageNumber": "0003",
                 "image": {"id": "0765400456789", "url": "http://example.com/img/3"},
-                "ocrText": "ignored text",
+                "ocrText": "fallback gale text",
             },
         ]
         api_response = {
@@ -319,8 +319,21 @@ class TestGaleAPI(TestCase):
         assert [p["content"] for p in page_data] == [
             None,
             "more test content",
-            "ignored text",
+            "fallback gale text",
         ]
+        # TODO: check logging
+
+        # confirm json decode error is handled appropriately
+        mock_get_local_ocr.side_effect = json.decoder.JSONDecodeError(
+            "invalid json", "file.json", 1
+        )
+        page_data = list(gale_api.get_item_pages(item_id))
+        assert [p["content"] for p in page_data] == [
+            None,
+            "more test content",
+            "fallback gale text",
+        ]
+        # TODO: check logging
 
         # skip api call if record is provided
         mock_get_item.reset_mock()
