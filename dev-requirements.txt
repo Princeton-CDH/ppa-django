@@ -5,3 +5,4 @@ pytest-cov
 django-debug-toolbar
 sphinx>=7.2
 pre-commit
+ruff
