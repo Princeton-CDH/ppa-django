@@ -272,7 +272,7 @@ class TestGaleAPI(TestCase):
         # Set up get_local_ocr so that only the 3rd page's text is found
         mock_get_local_ocr.side_effect = [FileNotFoundError, FileNotFoundError, "local ocr text"]
         page_data = list(gale_api.get_item_pages(item_id))
-        mock_get_item.called_once()
+        mock_get_item.assert_called_once()
         assert mock_get_local_ocr.call_count == 3
         assert len(page_data) == 3
         assert [ p["page_id"] for p in page_data ] == ["0001", "0002", "0003"]
