@@ -31,4 +31,4 @@ django-split-settings
 # only needed for the 'generate_textcorpus' manage command
 orjsonl
 # TODO: Switch to develop once feature branch is merged
-git+https://github.com/Princeton-CDH/ppa-nlp@feature/hathi-paths#egg=corppa
+git+https://github.com/Princeton-CDH/ppa-nlp@develop#egg=corppa
