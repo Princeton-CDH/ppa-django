@@ -65,7 +65,7 @@ class Command(BaseCommand):
         # use ids specified via command line when present
         htids = kwargs.get("htids", [])
 
-        # by default, sync data for all non-suppressed hathi source ids
+        # by default, download images for all non-suppressed hathi source ids
         digworks = DigitizedWork.objects.filter(
             status=DigitizedWork.PUBLIC, source=DigitizedWork.HATHI
         )
