@@ -31,7 +31,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--htids",
             nargs="*",
-            help="Optional list HathiTrust ids to download",
+            help="Optional list of HathiTrust ids (by default, downloads images for all public HathiTrust volumes)",
         )
         parser.add_argument(
             "--progress",
