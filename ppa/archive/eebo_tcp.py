@@ -21,6 +21,8 @@ class Page(xmlmap.XmlObject):
     #: source page number (optional)
     number = xmlmap.StringField("@N")
 
+    index = xmlmap.IntegerField("count(preceding::PB) + 1")
+
     # parent div type =~ page type / label ?
     section_type = xmlmap.StringField("ancestor::DIV1/@TYPE")
 
@@ -141,6 +143,19 @@ class Page(xmlmap.XmlObject):
         return "".join(self.page_contents()).replace(self.divider, "")
 
 
+class LineGroup(xmlmap.XmlObject):
+    """A group of poetry lines in an EEBO-TCP text"""
+
+    #: number for the immediate preceding page begin tag
+    start_page = xmlmap.NodeField("preceding::PB[1]", Page)
+    continue_page = xmlmap.NodeField("./PB[1]", Page)
+    #: language
+    language = xmlmap.StringField("@LANG")
+    #: citation / bibliography
+    source = xmlmap.StringField("preceding-sibling::BIBL[1]")
+    text = xmlmap.StringField(".")
+
+
 class Text(xmlmap.XmlObject):
     """:class:~`eulxml.xmlmap.XmlObject` for extracting page text from
     EEBO-TCP P4 xml"""
@@ -152,6 +167,7 @@ class Text(xmlmap.XmlObject):
 
     #: list of page objects, identified by page beginning tag (PB)
     pages = xmlmap.NodeListField("EEBO//TEXT//PB", Page)
+    line_groups = xmlmap.NodeListField("EEBO//TEXT//LG", LineGroup)
 
 
 def load_tcp_text(volume_id):
