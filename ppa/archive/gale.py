@@ -229,6 +229,8 @@ class GaleAPI:
             local_ocr_text = get_local_ocr(item_id)
         except FileNotFoundError:
             logger.warning(f"Local OCR not found for {item_id}")
+        except json.decoder.JSONDecodeError:
+            logger.warning(f"JSON decode error on local OCR file for {item_id}")
 
         # iterate through the pages in the response
         for page in gale_record["pageResponse"]["pages"]:
@@ -247,7 +249,9 @@ class GaleAPI:
                 tags = ["local_ocr"]
             # If page is not present in the data, use Gale OCR as fallback
             else:
-                logger.warning(f"No local OCR for {item_id} {page_number}")
+                # don't warn for every page when no OCR text is found
+                if local_ocr_text:
+                    logger.warning(f"No local OCR for {item_id} {page_number}")
                 # try getting the ocr from the gale api result
                 # (may be empty, since some pages have no text)
                 ocr_text = page.get("ocrText")
