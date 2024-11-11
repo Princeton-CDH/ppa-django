@@ -321,7 +321,10 @@ class TestGaleAPI(TestCase):
             "more test content",
             "fallback gale text",
         ]
-        # TODO: check logging
+        # NOTE: would be nice to test logging, but can't get
+        # pytest caplog or unittest logging assertions to work
+        # since the logging is already captured and displayed by the
+        # test runner
 
         # confirm json decode error is handled appropriately
         mock_get_local_ocr.side_effect = json.decoder.JSONDecodeError(
@@ -333,7 +336,7 @@ class TestGaleAPI(TestCase):
             "more test content",
             "fallback gale text",
         ]
-        # TODO: check logging
+        # would be nice to test logging here also
 
         # skip api call if record is provided
         mock_get_item.reset_mock()
