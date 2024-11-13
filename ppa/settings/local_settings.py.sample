@@ -105,7 +105,7 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'DEBUG'
         },
-        'SolrClient':  {
+        'parasolr':  {
             'handlers': ['console'],
             'level': 'WARN'
         },
