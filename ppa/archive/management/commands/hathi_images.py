@@ -9,7 +9,7 @@ import logging
 import requests
 from pathlib import Path
 import signal
-from time import sleep
+import time
 from typing import Self
 
 from tqdm import tqdm
@@ -63,16 +63,22 @@ class DownloadStats:
         self.thumbnail.update(other.thumbnail)
 
     def get_report(self) -> str:
+        # No actions logged
+        if not self.full and not self.thumbnail:
+            return "No actions taken"
+
+        # Report actions taken
         report = ""
         for action in ["fetch", "skip", "error"]:
-            if action == "error":
-                # Only report errors when an error is present
-                if not self.full[action] and not self.thumbnail[action]:
-                    continue
+            # Only report action when it has been taken
+            if not self.full[action] and not self.thumbnail[action]:
+                continue
             action_str = self.ACTION_STRS[action]
+            n_full = self.full[action]
+            n_thumbnail = self.thumbnail[action]
             if report:
                 report += "\n"
-            report += f"{action_str}: {self.full[action]} images & {self.thumbnail[action]} thumbnails"
+            report += f"{action_str}: {n_full} images & {n_thumbnail} thumbnails"
         return report
 
 
@@ -101,12 +107,6 @@ class Command(BaseCommand):
             "--htids",
             nargs="+",
             help="Optional list of HathiTrust ids (by default, downloads images for all public HathiTrust volumes)",
-        )
-        parser.add_argument(
-            "--crawl-delay",
-            type=int,
-            help="Delay to be applied between each download in seconds. Default: 1",
-            default=1,
         )
         parser.add_argument(
             "--image-width",
@@ -141,39 +141,34 @@ class Command(BaseCommand):
             self.interrupted = True
             self.stdout.write(self.style.WARNING(
                 "Command will exit once this volume's image download is "
-                "complete.\n Ctrl-C / Interrupt to quit immediately"
+                "complete.\nCtrl-C / Interrupt to quit immediately"
                 )
             )
 
     def download_image(self, page_url: str, out_file: Path) -> bool:
+        """
+        Attempts to download and save an image from the specified URL.
+        Returns a boolean corresponding to whether the download was successful
+        """
         response = requests.get(page_url)
-        # log response time
-        logger.debug(f"Response time: {response.elapsed.total_seconds()}")
-        self.stdout.write(str(response.headers))
         success = False
         if response.status_code == requests.codes.ok:
             with out_file.open(mode="wb") as writer:
                 writer.write(response.content)
             success = True
-            # For checking throttling rates
-            # TODO: Consider removing once crawl delays are determined
-            choke_str = "x-choke info:"
-            for choke_sfx in ['allowed', 'credit', 'delta', 'max', 'rate']:
-                header = f"x-choke-{choke_sfx}"
-                if header in response.headers:
-                    choke_str += f"\n  {header}: {response.headers[header]}"
-            logger.debug(choke_str)
         elif response.status_code == 503:
-            logger.debug("WARNING: Received 503 status code. Throttling may have occurred")
-        # Apply crawl delay after request
-        sleep(self.crawl_delay)
+            logger.debug("Received 503 status code. Throttling may have occurred")
         return success
 
 
     def download_volume_images(self, vol_id:str, page_range: Iterable) -> DownloadStats:
-        # Determine output volume & thumbnail directories (create as needed)
+        """
+        For a given volume, download the pages corresponding to the provided page range.
+        """
+        # Get volume directory
         vol_dir = self.output_dir / get_vol_dir(vol_id)
         vol_dir.mkdir(parents=True, exist_ok=True)
+        # Get volume's thumbnail directory
         thumbnail_dir = vol_dir / "thumbnails"
         thumbnail_dir.mkdir(exist_ok=True)
             
@@ -182,6 +177,7 @@ class Command(BaseCommand):
             
         # Fetch images
         stats = DownloadStats()
+        start_time = time.time()
         for page_num in page_range:
             image_name = f"{clean_htid}.{page_num:08d}.jpg"
 
@@ -205,12 +201,15 @@ class Command(BaseCommand):
             # Update progress bar
             if self.show_progress:
                 self.progress_bar.update()
+        # Log volume page completion rates
+        duration = time.time() - start_time
+        page_rate = duration / len(page_range)
+        logger.debug(f"{vol_id}: Compelted in {duration:.2f}s ({page_rate:.2f} sec/page)")
         return stats
 
 
     def handle(self, *args, **kwargs):
         self.output_dir = kwargs["output_dir"]
-        self.crawl_delay = kwargs["crawl_delay"]
         self.full_width = kwargs["image_width"]
         self.thumbnail_width = kwargs["thumbnail_width"]
         self.show_progress = kwargs["progress"]
@@ -257,6 +256,10 @@ class Command(BaseCommand):
        
         overall_stats = DownloadStats()
         for i, digwork in enumerate(digworks):
+            # Check if we need to exit early
+            if self.interrupted:
+                break
+            
             vol_id = digwork.source_id
             # Determine page range
             if digwork.item_type == DigitizedWork.FULL:
@@ -271,15 +274,13 @@ class Command(BaseCommand):
                     f"{vol_id} ({i+1}/{n_vols})"
                 )
 
+            # Download volume images & update overall stats
             vol_stats = self.download_volume_images(vol_id, page_range)
             overall_stats.update(vol_stats)
-            # Update overall progress bar
-            # Check if we need to exit early
-            if self.interrupted:
-                break
-        # Close progres bar
+        # Close progress bar
         if self.show_progress:
             self.progress_bar.close()
+        # If interrupted, report the number of volumes completed.
         if self.interrupted:
             self.stdout.write(self.style.WARNING(f"Exited early with {i} volumes completed."))
         self.stdout.write(self.style.SUCCESS(overall_stats.get_report()))
