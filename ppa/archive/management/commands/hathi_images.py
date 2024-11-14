@@ -5,12 +5,14 @@ and thumbnail page images for a list of HathiTrust volumes.
 import argparse
 from collections import Counter
 from collections.abc import Iterable
+import logging
 import requests
 from pathlib import Path
+import signal
 from time import sleep
 from typing import Self
 
-import progressbar
+from tqdm import tqdm
 from django.core.management.base import BaseCommand, CommandError
 from django.template.defaultfilters import pluralize
 from corppa.utils.path_utils import encode_htid, get_vol_dir
@@ -18,9 +20,19 @@ from corppa.utils.path_utils import encode_htid, get_vol_dir
 from ppa.archive.models import DigitizedWork
 from ppa.archive.templatetags.ppa_tags import page_image_url
 
+logger = logging.getLogger(__name__)
+
 
 class DownloadStats:
-    ACTION_TYPES = {"fetch", "skip"}
+    # Support actions
+    ACTION_TYPES = {"fetch", "skip", "error"}
+    # Associated strings used for reporting
+    ACTION_STRS = {
+        "fetch": "Fetched",
+        "skip": "Skipped",
+        "error": "Missed",
+    }
+
     def __init__(self):
         # Stats for full size images
         self.full = Counter()
@@ -43,17 +55,25 @@ class DownloadStats:
     def log_skip(self, image_type: str) -> None:
         self._log_action(image_type, "skip")
 
+    def log_error(self, image_type: str) -> None:
+        self._log_action(image_type, "error")
+
     def update(self, other: Self) -> None:
         self.full.update(other.full)
         self.thumbnail.update(other.thumbnail)
 
     def get_report(self) -> str:
-        return (
-            f"Fetched {self.full['fetch']} images & "
-            f"{self.thumbnail['fetch']} thumbnails; "
-            f"Skipped {self.full['skip']} images & "
-            f"{self.thumbnail['skip']} thumbnails"
-        )
+        report = ""
+        for action in ["fetch", "skip", "error"]:
+            if action == "error":
+                # Only report errors when an error is present
+                if not self.full[action] and not self.thumbnail[action]:
+                    continue
+            action_str = self.ACTION_STRS[action]
+            if report:
+                report += "\n"
+            report += f"{action_str}: {self.full[action]} images & {self.thumbnail[action]} thumbnails"
+        return report
 
 
 class Command(BaseCommand):
@@ -63,9 +83,9 @@ class Command(BaseCommand):
     Note: Excerpts cannot be specified individually, only by source (collectively)
     """
     help = __doc__
-    #: normal verbosity level
-    v_normal = 1
-    verbosity = v_normal
+
+    # Interrupt flag to exit gracefully (i.e. between volumes) when a signal is caught
+    interrupted = False
 
     # Argument parsing
     def add_arguments(self, parser):
@@ -106,17 +126,45 @@ class Command(BaseCommand):
             help="Display progress bars to track download progress",
             default=True,
         )
-   
+  
+    def interrupt_handler(self, signum, frame):
+        """
+        For handling of SIGINT, as possible. For the first SIGINT, a flag is set
+        so that the command will exit after the current volume's image download
+        is complete. Additionally, the default signal handler is restored so a
+        second SIGINT will cause the command to immediately exit.
+        """
+        if signum == signal.SIGINT:
+            # Restore default signal handler
+            signal.signal(signal.SIGINT, signal.SIG_DFL)
+            # Set interrupt flag
+            self.interrupted = True
+            self.stdout.write(self.style.WARNING(
+                "Command will exit once this volume's image download is "
+                "complete.\n Ctrl-C / Interrupt to quit immediately"
+                )
+            )
+
     def download_image(self, page_url: str, out_file: Path) -> bool:
         response = requests.get(page_url)
+        # log response time
+        logger.debug(f"Response time: {response.elapsed.total_seconds()}")
+        self.stdout.write(str(response.headers))
         success = False
         if response.status_code == requests.codes.ok:
             with out_file.open(mode="wb") as writer:
                 writer.write(response.content)
             success = True
-        else:
-            if self.verbosity > self.v_normal:
-                self.stdout(f"Warning: Failed to fetch image {out_file.name}")
+            # For checking throttling rates
+            # TODO: Consider removing once crawl delays are determined
+            choke_str = "x-choke info:"
+            for choke_sfx in ['allowed', 'credit', 'delta', 'max', 'rate']:
+                header = f"x-choke-{choke_sfx}"
+                if header in response.headers:
+                    choke_str += f"\n  {header}: {response.headers[header]}"
+            logger.debug(choke_str)
+        elif response.status_code == 503:
+            logger.debug("WARNING: Received 503 status code. Throttling may have occurred")
         # Apply crawl delay after request
         sleep(self.crawl_delay)
         return success
@@ -132,44 +180,31 @@ class Command(BaseCommand):
         # Get filename-friendly version of htid
         clean_htid = encode_htid(vol_id)
             
-        # Setup volume-level progress bar
-        volume_progress = None
-        if self.show_progress:
-            volume_progress = progressbar.ProgressBar(
-                line_offset=1, redirect_stdout=True, max_value=len(page_range), max_error=False
-            )
-            volume_progress.start()
-
         # Fetch images
         stats = DownloadStats()
         for page_num in page_range:
             image_name = f"{clean_htid}.{page_num:08d}.jpg"
 
-            # Fetch thumbnail if file does not exist
-            page_thumbnail = thumbnail_dir / image_name
-            if not page_thumbnail.is_file():
-                thumbnail_url = page_image_url(vol_id, page_num, self.thumbnail_width)
-                success = self.download_image(thumbnail_url, page_thumbnail)
-                # TODO: Should we log something different if the download fails?
-                stats.log_download("thumbnail")
-            else:
-                stats.log_skip("thumbnail")
+            for image_type in ["full", "thumbnail"]:
+                image_dir = vol_dir if image_type == "full" else thumbnail_dir
+                image = image_dir / image_name
+                image_width = getattr(self, f"{image_type}_width")
 
-            # Fetch "full" image if file does not exist
-            page_image = vol_dir / image_name
-            if not page_image.is_file():
-                image_url = page_image_url(vol_id, page_num, self.full_width)
-                success = self.download_image(image_url, page_image)
-                stats.log_download("full")
-            else:
-                stats.log_skip("full")
-                
-            # Update volume-specific progress bar
-            if volume_progress:
-                volume_progress.increment()
-        # Finish volume-specific progress bar
-        if volume_progress:
-            volume_progress.finish()
+                # Fetch image does not exist
+                if not image.is_file():
+                    image_url = page_image_url(vol_id, page_num, image_width)
+                    success = self.download_image(image_url, image)
+                    if success:
+                        stats.log_download(image_type)
+                    else:
+                        stats.log_error(image_type)
+                        logger.debug(f"Failed to download {image_type} image {image_name}")
+                else:
+                    stats.log_skip(image_type)
+
+            # Update progress bar
+            if self.show_progress:
+                self.progress_bar.update()
         return stats
 
 
@@ -178,7 +213,6 @@ class Command(BaseCommand):
         self.crawl_delay = kwargs["crawl_delay"]
         self.full_width = kwargs["image_width"]
         self.thumbnail_width = kwargs["thumbnail_width"]
-        self.verbosity = kwargs.get("verbosity", self.verbosity)
         self.show_progress = kwargs["progress"]
 
         # Validate input arguments
@@ -187,7 +221,7 @@ class Command(BaseCommand):
                 f"Output directory '{self.output_dir}' does not exist or is not a directory"
             )
         if self.thumbnail_width > 250:
-            raise CommandError(f"Thumbnail width cannot be more than 250 pixels")
+            raise CommandError("Thumbnail width cannot be more than 250 pixels")
 
         # use ids specified via command line when present
         htids = kwargs.get("htids", [])
@@ -208,34 +242,44 @@ class Command(BaseCommand):
         if not digworks.exists():
             self.stdout.write("No records to download; stopping")
             return
+        
+        # Bind handler for interrupt signal
+        signal.signal(signal.SIGINT, self.interrupt_handler)
 
+        n_vols = digworks.count()
         self.stdout.write(
-            f"Downloading images for {digworks.count()} record{pluralize(digworks)}"
+            f"Downloading images for {n_vols} record{pluralize(digworks)}",
         )
 
-        # setup main progress bar
-        overall_progress = None
+        # Initialize progress bar
         if self.show_progress:
-            overall_progress = progressbar.ProgressBar(
-                line_offset=0, redirect_stdout=True, max_value=digworks.count(), max_error=False
-            )
-            overall_progress.start()
-
+            self.progress_bar = tqdm()
+       
         overall_stats = DownloadStats()
-        for digwork in digworks:
+        for i, digwork in enumerate(digworks):
             vol_id = digwork.source_id
             # Determine page range
             if digwork.item_type == DigitizedWork.FULL:
                 page_range = range(1, digwork.page_count+1)
             else:
                 page_range = digwork.page_span
-            
+           
+            # Update progress bar
+            if self.show_progress:
+                self.progress_bar.reset(total=len(page_range))
+                self.progress_bar.set_description(
+                    f"{vol_id} ({i+1}/{n_vols})"
+                )
+
             vol_stats = self.download_volume_images(vol_id, page_range)
             overall_stats.update(vol_stats)
             # Update overall progress bar
-            if overall_progress:
-                overall_progress.increment()
-        if overall_progress:
-            overall_progress.finish()
-        self.stdout.write("\n\n")  # To avoid overwriting progress bars
+            # Check if we need to exit early
+            if self.interrupted:
+                break
+        # Close progres bar
+        if self.show_progress:
+            self.progress_bar.close()
+        if self.interrupted:
+            self.stdout.write(self.style.WARNING(f"Exited early with {i} volumes completed."))
         self.stdout.write(self.style.SUCCESS(overall_stats.get_report()))

@@ -88,11 +88,11 @@ class TestDownloadStats:
 
     def test_report(self):
         stats_a = DownloadStats()
-        report_a = "Fetched 0 images & 0 thumbnails; Skipped 0 images & 0 thumbnails"
+        report_a = "Fetched: 0 images & 0 thumbnails\nSkipped: 0 images & 0 thumbnails"
         assert stats_a.get_report() == report_a 
 
         stats_b = DownloadStats()
         stats_b.full.update({"fetch": 5, "skip": 1})
         stats_b.thumbnail.update({"fetch": 3, "skip": 2})
-        report_b = "Fetched 5 images & 3 thumbnails; Skipped 1 images & 2 thumbnails"
+        report_b = "Fetched: 5 images & 3 thumbnails\nSkipped: 1 images & 2 thumbnails"
         assert stats_b.get_report() == report_b
