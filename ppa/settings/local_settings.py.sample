@@ -103,11 +103,13 @@ LOGGING = {
         },
         'ppa':  {
             'handlers': ['console'],
-            'level': 'DEBUG'
+            'level': 'DEBUG',
+            'propagate': False,
         },
         'parasolr':  {
             'handlers': ['console'],
-            'level': 'WARN'
+            'level': 'WARN',
+            'propagate': False,
         },
     }
 }
