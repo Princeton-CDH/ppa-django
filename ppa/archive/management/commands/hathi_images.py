@@ -228,12 +228,17 @@ class Command(BaseCommand):
             raise CommandError("Thumbnail width cannot be more than 250 pixels")
 
         # use ids specified via command line when present
-        htids = kwargs.get("htids", [])
+        htids = kwargs["htids"]
 
         # by default, download images for all non-suppressed hathi source ids
         digworks = DigitizedWork.objects.filter(
             status=DigitizedWork.PUBLIC, source=DigitizedWork.HATHI
         )
+
+        # if collection is specified via parameter, use it to filter the querset
+        collection = kwargs.get("collection")
+        if collection:
+            digworks = digworks.filter(collections__name=collection)
 
         # if htids are specified via parameter, use them to filter
         # the queryset, to ensure we only sync records that are
