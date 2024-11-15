@@ -62,13 +62,13 @@ class TestDownloadStats:
     def test_log_download(self, mock_log_action):
         stats = hathi_images.DownloadStats()
         stats.log_download("image_type")
-        mock_log_action.called_once_with("image_type", "fetch")
+        mock_log_action.assert_called_once_with("image_type", "fetch")
 
     @patch.object(hathi_images.DownloadStats, "_log_action")
     def test_log_skip(self, mock_log_action):
         stats = hathi_images.DownloadStats()
-        stats.log_download("image_type")
-        mock_log_action.called_once_with("image_type", "skip")
+        stats.log_skip("image_type")
+        mock_log_action.assert_called_once_with("image_type", "skip")
 
     def test_update(self):
         stats_a = hathi_images.DownloadStats()
@@ -120,21 +120,21 @@ class TestHathiImagesCommand:
             "Ctrl-C / Interrupt to quit immediately\n"
         )
 
-    @patch("requests.get")
-    def test_download_image(self, mock_get, tmp_path):
+    def test_download_image(self, tmp_path):
         cmd = hathi_images.Command()
+        cmd.session = Mock()
         
         # Not ok status
-        mock_get.return_value = Mock(status_code=503)
+        cmd.session.get.return_value = Mock(status_code=503)
         result = cmd.download_image("page_url", "out_file")
-        assert mock_get.called_once_with("page_url")
+        cmd.session.get.assert_called_once_with("page_url")
         assert result is False
 
         # Ok status
         out_file = tmp_path / "test.jpg"
-        mock_get.reset_mock()
-        mock_get.return_value = Mock(status_code=200, content=b"image content")
+        cmd.session.reset_mock()
+        cmd.session.get.return_value = Mock(status_code=200, content=b"image content")
         result = cmd.download_image("page_url", out_file)
-        assert mock_get.called_once_with("page_url")
+        cmd.session.get.assert_called_once_with("page_url")
         assert result is True
         assert out_file.read_text() == "image content"
