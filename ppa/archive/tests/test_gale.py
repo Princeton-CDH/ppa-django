@@ -283,7 +283,7 @@ class TestGaleAPI(TestCase):
         # Set up get_local_ocr so that only the 3rd page's text is found
         mock_get_local_ocr.return_value = {"0003": "local ocr text"}
         page_data = list(gale_api.get_item_pages(item_id))
-        mock_get_item.called_once()
+        mock_get_item.assert_called_once()
         # called once per volume
         assert mock_get_local_ocr.call_count == 1
         assert len(page_data) == 3
