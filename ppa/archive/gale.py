@@ -1,5 +1,6 @@
-import os
+import json
 import logging
+import pathlib
 import time
 
 import pymarc
@@ -13,32 +14,36 @@ from ppa import __version__ as ppa_version
 logger = logging.getLogger(__name__)
 
 
-def get_local_ocr(item_id, page_num):
+def get_local_ocr(item_id):
     """
-    Get local OCR page text for specified page of a single Gale volume if available.
+    Load local OCR page text for the specified Gale volume, if available.
     This requires a base directory (specified by GALE_LOCAL_OCR) to be configured and
     assumes the following organization:
-        
+
         * Volume-level directories are organized in stub directories that correspond to
           every third number (e.g., CW0128905397 --> 193). So, a Gale volume's OCR data
-          is located in the following directory: GALE_LOCAL_OCR / stub_dir / item_id
-        
-        * A page's local ocr text file is named [volume id]_[page number]0.txt, where the
-          page number is a 4-digit string (e.g., "0004"). So, for page number "0004" in
-          volume CW0128905397, the local ocr file is named "CW0128905397_00040.txt".
+          is located in the following directory: GALE_LOCAL_OCR / stub_dir / item_id.json
 
-    Raises a FileNotFoundError if the local OCR page text does not exist. 
+        * Page text is stored as a JSON dictionary with keys based on Gale page numbers,
+          which is a 4-digit string (e.g., "0004").
+
+    Raises a FileNotFoundError if the local OCR page text does not exist.
     """
     ocr_dir = getattr(settings, "GALE_LOCAL_OCR", None)
     if not ocr_dir:
         raise ImproperlyConfigured(
             "GALE_LOCAL_OCR configuration is required for indexing Gale page content"
         )
+    # check that the id looks as expected (appease github codeql security concerns)
+    # first two characters are CW or CB; rest of the id is numeric
+    if not all([item_id[:2] in ["CW", "CB"], item_id[2:].isnumeric()]):
+        raise ValueError(f"{item_id} is not a valid Gale item identifier")
 
-    stub_dir = item_id[::3][1:]  # Following conventions set in ppa-nlp
-    ocr_txt_fp = os.path.join(ocr_dir, stub_dir, item_id, f"{item_id}_{page_num}0.txt")
-    with open(ocr_txt_fp) as reader:
-        return reader.read()
+    # files are in stub directories; following conventions set in ppa-nlp
+    stub_dir = item_id[::3][1:]
+    ocr_path = pathlib.Path(ocr_dir, stub_dir, f"{item_id}.json")
+    with ocr_path.open() as ocrfile:
+        return json.load(ocrfile)
 
 
 class GaleAPIError(Exception):
@@ -218,19 +223,38 @@ class GaleAPI:
         if gale_record is None:
             gale_record = self.get_item(item_id)
 
+        local_ocr_text = None
+        try:
+            # Use higher quality local OCR text if available
+            local_ocr_text = get_local_ocr(item_id)
+        except FileNotFoundError:
+            logger.warning(f"Local OCR not found for {item_id}")
+        except json.decoder.JSONDecodeError:
+            logger.warning(f"JSON decode error on local OCR file for {item_id}")
+
         # iterate through the pages in the response
         for page in gale_record["pageResponse"]["pages"]:
             page_number = page["pageNumber"]
 
-            # Fetch higher quality local OCR text if possible, with fallback to Gale
-            # OCR. Set a tag to indicate the usage of local OCR text.
+            # Use local OCR text if we have it, with fallback to Gale
+            # OCR. Set a tag to indicate when local OCR is present.
             tags = []
-            try: 
-                ocr_text = get_local_ocr(item_id, page_number)
+            ocr_text = None
+            if local_ocr_text and page_number in local_ocr_text:
+                ocr_text = local_ocr_text.get(page_number)
+                # if we have content for this page, set tag to indicate local ocr.
+                # If page is present but content is the empty string
+                # (i.e., blank page), still set tag since it was the local OCR
+                # that determined the page was blank
                 tags = ["local_ocr"]
-            except FileNotFoundError as e:
-                ocr_text = page.get("ocrText")  # some pages have no text
-                logger.warning(f'Local OCR not found for {item_id} {page_number}')
+            # If page is not present in the data, use Gale OCR as fallback
+            else:
+                # don't warn for every page when no OCR text is found
+                if local_ocr_text:
+                    logger.warning(f"No local OCR for {item_id} {page_number}")
+                # try getting the ocr from the gale api result
+                # (may be empty, since some pages have no text)
+                ocr_text = page.get("ocrText")
 
             info = {
                 "page_id": page_number,

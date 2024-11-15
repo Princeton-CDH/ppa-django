@@ -67,6 +67,12 @@ Hathi Excerpt
 .. automodule:: ppa.archive.management.commands.hathi_excerpt
     :members:
 
+Hathi rsync
+~~~~~~~~~~~~~
+
+.. automodule:: ppa.archive.management.commands.hathi_rsync
+    :members:
+
 Gale Import
 ~~~~~~~~~~~~
 
@@ -77,6 +83,12 @@ Generate Corpus
 ~~~~~~~~~~~~~~~
 
 .. automodule:: ppa.archive.management.commands.generate_textcorpus
+    :members:
+
+EEBO-TCP Import
+~~~~~~~~~~~~~~~
+
+.. automodule:: ppa.archive.management.commands.eebo_import
     :members:
 
 Common
