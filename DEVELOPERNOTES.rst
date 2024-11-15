@@ -1,6 +1,46 @@
 Troubleshooting
 ===============
 
+Local Solr setup
+----------------
+Install Solr via `brew <https://formulae.brew.sh/formula/solr>`::
+
+    brew install solr
+
+Copy the Solr config files in as a configset named `ppa`::
+
+    cp -r solr_conf /opt/homebrew/opt/solr/server/solr/configsets/ppa
+
+Create symbolic link to configsets in the Solr home directory::
+
+    ln -s /opt/homebrew/opt/solr/server/solr/configsets /opt/homebrew/var/lib/solr/
+
+Create a new core with the `ppa` configset (Solr must be running)::
+
+    curl "http://localhost:8983/solr/admin/cores?action=CREATE&name=ppa&configSet=ppa"
+
+When the configset has changed, copy in the updated Solr config files::
+
+    cp solr_conf/* /opt/homewbrew/var/lib/solr/configsets/ppa/
+
+Start Solr by running the following command::
+
+    /opt/homebrew/opt/solr/bin/solr start -f
+
+
+Local PostgreSQL
+----------------
+Install PostgreSQL via `brew <https://formulae.brew.sh/formula/postgresql@15>`::
+
+    brew install postgresql@15
+
+Start PostgreSQL (or restart after an ugrade)::
+
+    brew services start postgresql@15
+
+Add PostgreSQL to your PATH::
+
+    echo 'export PATH="/opt/homebrew/opt/postgresql@15/bin:$PATH"' >> ~/.zshrc
 
 
 Solr setup with Docker
@@ -92,7 +132,7 @@ To replace a local development database with a dump of production data::
 
     psql -d postgres -c "DROP DATABASE cdh_ppa;"
     psql -d postgres -c "CREATE DATABASE cdh_ppa;"
-    psql -d postgres -U cdh_ppa < data/13_daily_cdh_ppa_cdh_ppa_2023-01-11.Wednesday.sql
+    psql cdh_ppa < data/13_daily_cdh_ppa_cdh_ppa_2023-01-11.Wednesday.sql
 
 
 Updating Wagtail test fixture
