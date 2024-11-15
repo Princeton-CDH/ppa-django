@@ -204,7 +204,7 @@ class Command(BaseCommand):
         # Log volume page completion rates
         duration = time.time() - start_time
         page_rate = duration / len(page_range)
-        logger.debug(f"{vol_id}: Compelted in {duration:.2f}s ({page_rate:.2f} sec/page)")
+        logger.debug(f"{vol_id}: Completed in {duration:.2f}s ({page_rate:.2f} sec/page)")
         return stats
 
 
