@@ -109,6 +109,11 @@ class Command(BaseCommand):
             help="Optional list of HathiTrust ids (by default, downloads images for all public HathiTrust volumes)",
         )
         parser.add_argument(
+            "--collection",
+            type=str,
+            help="Filter volumes by provided PPA collection",
+        )
+        parser.add_argument(
             "--image-width",
             type=int,
             help="Width for full-size images in pixels. Default: 800",
@@ -150,7 +155,7 @@ class Command(BaseCommand):
         Attempts to download and save an image from the specified URL.
         Returns a boolean corresponding to whether the download was successful
         """
-        response = requests.get(page_url)
+        response = self.session.get(page_url)
         success = False
         if response.status_code == requests.codes.ok:
             with out_file.open(mode="wb") as writer:
@@ -249,6 +254,9 @@ class Command(BaseCommand):
         self.stdout.write(
             f"Downloading images for {n_vols} record{pluralize(digworks)}",
         )
+
+        # Create requests session
+        self.session = requests.Session()
 
         # Initialize progress bar
         if self.show_progress:
