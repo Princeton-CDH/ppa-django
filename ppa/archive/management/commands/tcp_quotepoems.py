@@ -11,17 +11,12 @@ from ppa.archive.models import DigitizedWork
 
 
 class Command(BaseCommand):
-    """Report on linegroups in EEBO-TCP content"""
+    """Generate a spreadsheet of quoted poetry in EEBO-TCP and ECCO-TCP content"""
 
     help = __doc__
     #: normal verbosity level
     v_normal = 1
     verbosity = v_normal
-
-    # def add_arguments(self, parser):
-    #     parser.add_argument(
-    #         "csv", type=str, help="CSV file with EEBO-TCP items to import."
-    #     )
 
     def handle(self, *args, **kwargs):
         self.verbosity = kwargs.get("verbosity", self.v_normal)
