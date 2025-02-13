@@ -13,7 +13,15 @@ def short_id(volume_id):
     return volume_id.split(".")[0]
 
 
-class Page(xmlmap.XmlObject):
+# P4 TCP TEI does not use namespaces but P5 does
+TEI_NAMESPACE = "http://www.tei-c.org/ns/1.0"
+
+
+class TeiXmlObject(xmlmap.XmlObject):
+    ROOT_NAMESPACES = {"t": TEI_NAMESPACE}
+
+
+class Page(TeiXmlObject):
     """A page of content in an EEBO-TCP text"""
 
     #: reference id for image scan (two pages per image)
@@ -143,22 +151,26 @@ class Page(xmlmap.XmlObject):
         return "".join(self.page_contents()).replace(self.divider, "")
 
 
-class LineGroup(xmlmap.XmlObject):
+class LineGroup(TeiXmlObject):
     """A group of poetry lines in an EEBO-TCP text"""
 
     #: number for the immediate preceding page begin tag
-    start_page = xmlmap.NodeField("preceding::PB[1]", Page)
-    continue_page = xmlmap.NodeField("./PB[1]", Page)
+    start_page = xmlmap.NodeField("(preceding::PB|preceding::t:pb)[1]", Page)
+    continue_page = xmlmap.NodeField("./PB[1]|./t:pb[1]", Page)
     #: language
-    language = xmlmap.StringField("@LANG")
+    language = xmlmap.StringField("@LANG|@xml:lang")
     #: citation / bibliography
-    source = xmlmap.StringField("preceding-sibling::BIBL[1]")
-    text = xmlmap.StringField(".")
+    source = xmlmap.StringField(
+        # in TCP P4 this is sometimes available as BIBL;
+        # in P5, preceding head tag may have a label
+        "(preceding-sibling::BIBL|preceding-sibling::t:head)[1]"
+    )
+    text = xmlmap.StringField(".")  # NOTE: doesn't handle gaps; maybe that's fine
 
 
-class Text(xmlmap.XmlObject):
+class Text(TeiXmlObject):
     """:class:~`eulxml.xmlmap.XmlObject` for extracting page text from
-    EEBO-TCP P4 xml"""
+    EEBO-TCP P4 xml or P5 xml"""
 
     # EEBO-TCP TEI does not use or declare any namespaces
 
@@ -166,8 +178,8 @@ class Text(xmlmap.XmlObject):
     # various levels nested within divs, paragraphs, etc
 
     #: list of page objects, identified by page beginning tag (PB)
-    pages = xmlmap.NodeListField("EEBO//TEXT//PB", Page)
-    line_groups = xmlmap.NodeListField("EEBO//TEXT//LG", LineGroup)
+    pages = xmlmap.NodeListField("EEBO//TEXT//PB|.//t:text//t:pb", Page)
+    line_groups = xmlmap.NodeListField("EEBO//TEXT//LG|.//t:text//t:lg", LineGroup)
 
 
 def load_tcp_text(volume_id):
