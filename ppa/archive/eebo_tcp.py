@@ -2,6 +2,7 @@
 Code for working with EEBO-TCP (Text Creation Partnership) content.
 """
 from pathlib import Path
+import string
 
 from django.conf import settings
 from eulxml import xmlmap
@@ -151,13 +152,35 @@ class Page(TeiXmlObject):
         return "".join(self.page_contents()).replace(self.divider, "")
 
 
+# we actually probably want quoted poetry
+# <Q><L>... - single line or two lines
+# or
+# <Q><BIBL><LG><l>...</LG>
+# - may have multiple line groups; may have translation in parallel (eng/latin) on line group
+# lg may have type, e.g. type=sonnet
+# but sometimes a Q has multiple line groups with their own BIBL entry...
+
+# sometimes PB is nested but no content before it, e.g. A04254
+# <Q><PB REF="49"/>
+# L>Out through his cairt, quhair Eous vvas eik</L>
+# <L>VVith other thre, quhilk Phaëton had dravvin.</L></Q></P>
+
+# translation table for removing punctuation
+rm_punctuation = str.maketrans("", "", string.punctuation)
+
+
+def has_text(content):
+    # check if content has any text, ignoring punctuation and whitespace
+    # (in some cases, line groups have only gap tags indicating foreign
+    # language with punctuation but no actual text)
+    # special case: consider &c. punctuation
+    return content.replace("&c.", "").translate(rm_punctuation).strip() != ""
+
+
 class LineGroup(TeiXmlObject):
     """A group of poetry lines in an EEBO-TCP text"""
 
-    #: number for the immediate preceding page begin tag
-    start_page = xmlmap.NodeField("(preceding::PB|preceding::t:pb)[1]", Page)
-    continue_page = xmlmap.NodeField("./PB[1]|./t:pb[1]", Page)
-    #: language
+    #: language (available for some line groups)
     language = xmlmap.StringField("@LANG|@xml:lang")
     #: citation / bibliography
     source = xmlmap.StringField(
@@ -166,6 +189,73 @@ class LineGroup(TeiXmlObject):
         "(preceding-sibling::BIBL|preceding-sibling::t:head)[1]"
     )
     text = xmlmap.StringField(".")  # NOTE: doesn't handle gaps; maybe that's fine
+    lg_type = xmlmap.StringField("@TYPE")
+
+    def has_text(self):
+        return has_text(self.text)
+
+
+class QuotedPoem(TeiXmlObject):
+    """Quoted poetry stanzas or lines in an EEBO-TCP text"""
+
+    #: list of line groups (LG), e.g. an entire quoted stanza
+    line_groups = xmlmap.NodeListField("LG|t:lg", LineGroup)
+    #: lines quoted directly, not within a line group
+    # lines = xmlmap.NodeListField("L|t:l", Line)
+
+    #: number for the immediate preceding page begin tag
+    start_page = xmlmap.NodeField("preceding::PB[1]|preceding::t:pb[1]", Page)
+    continue_page = xmlmap.NodeField("./PB[1]|./t:pb[1]", Page)
+
+    #: full text of this node; prefer text_by_page
+    text = xmlmap.StringField(".")  # NOTE: does not include gaps
+
+    #: all text nodes within this quote, at any depth
+    text_contents = xmlmap.StringListField(".//text()")
+
+    def has_text(self):
+        return has_text(self.text)
+
+    def text_by_page(self, include_large_gaps=True):
+        """generator of poetry text chunks per page"""
+
+        # current chunk of text
+        current_text = []
+
+        # iterate and yield text following the current page
+        # break until we hit the next page beginning
+        for i, text in enumerate(self.text_contents):
+            parent = text.getparent()
+
+            # lxml handles text between elements as "tail" text;
+            # the parent of the tail text is the preceding element
+            if text.is_tail and parent.tag == "GAP":
+                # if text precedes a GAP tag, include the display content
+                # from the DISP.
+                # *include* content like: 〈 in non-Latin alphabet 〉
+                # so we can more easily filter it out later, unless
+                # include_large_gaps is false
+                if include_large_gaps or "1 letter" in parent.get("EXTENT", ""):
+                    current_text.append(parent.get("DISP"))
+
+            if text.is_tail and parent.tag == "PB":
+                # if we hit the text after a page begin tag,
+                # yield the previous text and start a new chunk
+
+                chunk = "".join(current_text)
+                # if content is only whitespace and punctuation,
+                # yield empty string
+                yield chunk if has_text(chunk) else ""
+
+                current_text = []
+
+            current_text.append(text)
+
+        # yield any remaining text
+        chunk = "".join(current_text)
+        # if content is only whitespace and punctuation,
+        # yield empty string
+        yield chunk if has_text(chunk) else ""
 
 
 class Text(TeiXmlObject):
@@ -179,7 +269,10 @@ class Text(TeiXmlObject):
 
     #: list of page objects, identified by page beginning tag (PB)
     pages = xmlmap.NodeListField("EEBO//TEXT//PB|.//t:text//t:pb", Page)
-    line_groups = xmlmap.NodeListField("EEBO//TEXT//LG|.//t:text//t:lg", LineGroup)
+    #: list of quoted poems, identified by Q that contains LG or L
+    quoted_poems = xmlmap.NodeListField(
+        "EEBO//TEXT//Q[LG or L]|.//t:text//t:q[t:lg or t:l]", QuotedPoem
+    )
 
 
 def load_tcp_text(volume_id):
