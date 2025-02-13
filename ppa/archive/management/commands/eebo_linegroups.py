@@ -3,6 +3,7 @@ import csv
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from django.template.defaultfilters import pluralize
 from eulxml import xmlmap
 
 from ppa.archive import eebo_tcp
@@ -54,17 +55,11 @@ class Command(BaseCommand):
             csvwriter = csv.DictWriter(
                 csvfile,
                 fieldnames=[
+                    "page_id",
                     "source_id",
                     "source_title",
-                    # "source_excerpt",
-                    # "excerpt_digital_pages",
-                    "start_page_index",
-                    "end_page_index",
-                    "start_page_n",
-                    "end_page_n",
                     "text",
-                    "source_note",
-                    "language",
+                    "notes",
                 ],
             )
             csvwriter.writeheader()
@@ -72,51 +67,67 @@ class Command(BaseCommand):
             # eebo-tcp works
             for work in digworks:
                 tcp_text = eebo_tcp.load_tcp_text(work.source_id)
-                csvwriter.writerows(self.linegroups_for_text(work, tcp_text))
+                csvwriter.writerows(self.get_quoted_poems(work, tcp_text))
 
             # ecco-tcp works
             for work in ecco_digworks:
                 tcp_text = xmlmap.load_xmlobject_from_file(
                     self.ecco_tcp_path / f"{work.source_id}.xml", eebo_tcp.Text
                 )
-                csvwriter.writerows(self.linegroups_for_text(work, tcp_text))
+                csvwriter.writerows(self.get_quoted_poems(work, tcp_text))
 
-    def linegroups_for_text(self, work, tcp_text):
+    def get_quoted_poems(self, work, tcp_text):
         # given a DigitizedWork and a TCP text, return a list of
-        # dictionaries with line groups found
-        linegroups = []
-        for lg in tcp_text.line_groups:
-            # TODO: PB REF != page number necessarily...
-            # get based on index?
-            # TODO: can we do better on page numbers?
+        # dictionaries with information about quoted poems
+        poems = []
+        work_index_id = work.index_id()
+        for qpoem in tcp_text.quoted_poems:
+            page_index = int(qpoem.start_page.index)
 
-            # TODO: skip if it's all gap / foreign language / no text
-
-            # if work is an excerpt, only include line groups in range
+            # if this is in an excerpt, check if it is in range
             if work.item_type != DigitizedWork.FULL:
-                # if line groups start page is not in page span, skip
-                if int(lg.start_page.index) not in work.page_span:
+                # if quoted poem start page is not in page span, skip
+                if page_index not in work.page_span:
                     continue
 
-            # otherwise, add line group details to the CSV
-            linegroups.append(
-                {
-                    "source_id": work.source_id,
-                    "source_title": work.title,
-                    # "source_excerpt": "N"
-                    # if work.item_type == DigitizedWork.FULL
-                    # else "Y",
-                    # "excerpt_digital_pages": work.pages_digital,
-                    "start_page_index": lg.start_page.index,
-                    "end_page_index": lg.continue_page.index
-                    if lg.continue_page
-                    else None,
-                    "start_page_n": lg.start_page.number,
-                    "end_page_n": lg.continue_page.number if lg.continue_page else None,
-                    # "text": str(lg),
-                    "text": lg.text,
-                    "source_note": lg.source,
-                    "language": lg.language,
-                }
-            )
-        return linegroups
+            # quoted poems may wrap across page boundaries
+            # output run row per paged chunk of poem text
+            poem_chunks = list(qpoem.text_by_page())
+            for i, text_chunk in enumerate(poem_chunks):
+                # in some cases a chunk may have no text content
+                # but it still indicates a page break
+                if not text_chunk:
+                    continue
+
+                page = page_index + i
+
+                # page id must match what we use for ppa indexing & text export
+                # we use work index id (= volume id or volume+start page for excerpt)
+                # in combination with page id; for eebo-tcp, this is 1-based page index
+                # for ECCO, we use page number from ecco api
+                # NOTE: manually confirmed ids match for an EEBO-TCP work
+                # TODO: confirm these match for ECCO
+                page_id = f"{work_index_id}.{page}"
+                notes = []
+                # add a note if we wrapped pages and previous chunk had content
+                if i != 0 and poem_chunks[i - 1]:
+                    notes.append("Continued quotation from previous page")
+                # in at least one case, we have any linegroups with language
+                # information; include that in the notes
+                languages = [lg.language for lg in qpoem.line_groups if lg.language]
+                if languages:
+                    notes.append(
+                        f"Language{pluralize(languages)}: {','.join(languages)}"
+                    )
+
+                # add quoted poem details to list of dictionaries for output
+                poems.append(
+                    {
+                        "page_id": page_id,
+                        "source_id": work.source_id,
+                        "source_title": work.title,
+                        "text": text_chunk.strip(),
+                        "notes": "\n".join(notes),
+                    }
+                )
+        return poems

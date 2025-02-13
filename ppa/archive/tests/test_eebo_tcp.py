@@ -162,3 +162,113 @@ def test_page_data():
     assert page_info[0]["tags"] == ["license"]
     # page with a page number
     assert page_info[13]["label"] == "1"
+
+
+# test quoted poetry & line group logic
+
+LG_EEBO_TCP_FIXTURE_ID = "A45116"
+LG_TCP_FIXTURE = os.path.join(FIXTURES_PATH, f"{LG_EEBO_TCP_FIXTURE_ID}.P4.xml")
+
+
+@override_settings(EEBO_DATA=FIXTURES_PATH)
+def test_text_quotedpoems():
+    # first fixture has no Q/LG tags but does have Q/L
+    tcp_text = load_xmlobject_from_file(TCP_FIXTURE, eebo_tcp.Text)
+    assert len(tcp_text.quoted_poems) == 72
+    # fixture with known poetry has 72 quoted poems, 129 linegroups
+    lg_tcp_text = load_xmlobject_from_file(LG_TCP_FIXTURE, eebo_tcp.Text)
+    assert len(lg_tcp_text.quoted_poems) == 751
+
+
+@override_settings(EEBO_DATA=FIXTURES_PATH)
+def test_quotedpoem_init():
+    lg_text = load_xmlobject_from_file(LG_TCP_FIXTURE, eebo_tcp.Text)
+    # second quoted poetry lines: Begin then, O my dearest, sacred Dame,
+    qpoem = lg_text.quoted_poems[1]
+    assert isinstance(qpoem, eebo_tcp.QuotedPoem)
+    # should have access to preceding PB as a page object
+    # immediately preceding <PB> should be n=2 ref=3
+    assert isinstance(qpoem.start_page, eebo_tcp.Page)
+    assert qpoem.start_page.number == "2"
+    assert qpoem.start_page.ref == "3"
+    # this one has no continue page
+    assert not qpoem.continue_page
+    assert (
+        qpoem.text
+        == """Begin then, O my dearest, sacred Dame,
+Daughter of Phoebus and of Memory,
+That dost Ennoble, with Immortal Name,
+The Warlike Worthies of Antiquity,
+In thy great Volume of Eternity.
+Begin, O Clio, &c. Spen. B. 3. C. 3."""
+    )
+
+
+@override_settings(EEBO_DATA=FIXTURES_PATH)
+def test_quotedpoem_has_text():
+    lg_text = load_xmlobject_from_file(LG_TCP_FIXTURE, eebo_tcp.Text)
+    # first quoted poem is gap  / foreign language : commas + whitespace only
+    assert not lg_text.quoted_poems[0].has_text()
+    # second qouted poem has text
+    assert lg_text.quoted_poems[1].has_text()
+
+
+@override_settings(EEBO_DATA=FIXTURES_PATH)
+def test_quotedpoem_text_by_page():
+    lg_text = load_xmlobject_from_file(LG_TCP_FIXTURE, eebo_tcp.Text)
+    # quoted poem at index 55 has a q before <pb> and then <l> after
+    qpoem = lg_text.quoted_poems[55]
+    text_chunks = list(qpoem.text_by_page())
+
+    # there is an empty chunk before the page break
+    assert text_chunks[0] == ""
+    # then the lines of poetry
+    assert (
+        text_chunks[1]
+        == """
+Et Gemina Auratus Taurino Cornua vultu
+Eridanus. Georg. 4.
+Et sic Tauriformis volvitur Aufidus
+Cum saevit, horrendamque cultis
+Diluviem Meditatur agris. Hor. Car. Lib. 4. Od. 14."""
+    )
+
+    # first quoted poem is gap / foreign and punctuation only; empty if excluded
+    assert list(lg_text.quoted_poems[0].text_by_page(include_large_gaps=False)) == [""]
+    # test including them
+    assert list(lg_text.quoted_poems[0].text_by_page()) == [
+        """〈 in non-Latin alphabet 〉.
+〈 in non-Latin alphabet 〉."""
+    ]
+
+
+@override_settings(EEBO_DATA=FIXTURES_PATH)
+def _test_quotedpoem_multipage():
+    lg_text = load_xmlobject_from_file(LG_TCP_FIXTURE, eebo_tcp.Text)
+    for i, qp in enumerate(lg_text.quoted_poems):
+        if qp.continue_page:
+            print(f"{i} poem has continue page")
+            print(repr(qp.continue_page))
+
+
+@override_settings(EEBO_DATA=FIXTURES_PATH)
+def test_linegroup_init():
+    lg_text = load_xmlobject_from_file(LG_TCP_FIXTURE, eebo_tcp.Text)
+    # second line group in 12th quoted poem: Tum Tartarus ipse
+    linegroup = lg_text.quoted_poems[11].line_groups[1]
+    assert isinstance(linegroup, eebo_tcp.LineGroup)
+    # text content: multiline, with newlines between/before/after tags
+    assert (
+        linegroup.text
+        == """\nTum Tartarus ipse,
+Bis patet in praeceps tantum, tenditque sub umbras;
+Quantus ad AEthereum Coeli suspectus Olympum. AEn. 6.\n"""
+    )
+
+    # this one also has no source/heading and no language tag
+    # (even though it's in Latin)
+    assert not linegroup.source
+    assert not linegroup.language
+
+    # first line group in this quoted poem has no content
+    assert not lg_text.quoted_poems[11].line_groups[0].has_text()
