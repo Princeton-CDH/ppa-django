@@ -22,43 +22,12 @@ class TeiXmlObject(xmlmap.XmlObject):
     ROOT_NAMESPACES = {"t": TEI_NAMESPACE}
 
 
-class Page(TeiXmlObject):
-    """A page of content in an EEBO-TCP text"""
+class MixedText(TeiXmlObject):
+    divider = "∣"
 
-    #: reference id for image scan (two pages per image)
-    ref = xmlmap.StringField("@REF")
-    #: source page number (optional)
-    number = xmlmap.StringField("@N")
-
-    index = xmlmap.IntegerField("count(preceding::PB) + 1")
-
-    # parent div type =~ page type / label ?
-    section_type = xmlmap.StringField("ancestor::DIV1/@TYPE")
-
-    # page beginning tags delimit content instead of containing it;
-    # use following axis to find all text nodes following this page beginning
-    text_contents = xmlmap.StringListField("following::text()")
     # count following notes as a quick check to bail out of note detection logic
     # (can't use eulxml boolean field here because it assumes string values for true/false)
     has_notes = xmlmap.IntegerField("count(following::NOTE)")
-
-    def __repr__(self):
-        return f"<Page {self.number or '-'} ({self.section_type})>"
-
-    # footnote indicators
-    note_marks = ["*", "†", "‡", "§"]
-    num_note_marks = len(note_marks)
-
-    def get_note_mark(self, i):
-        """Generate a note marker based on note index and :attr:`note_marks`;
-        symbols are used in order and then doubled, tripled, etc as needed.
-        (Fallback, for use when a note does not have an N attribute.)"""
-
-        # use modulo to map to the list of available marks
-        mark_index = i % self.num_note_marks
-        # use division to determine how many times to repeat the mark
-        repeat = int(i / self.num_note_marks) + 1
-        return self.note_marks[mark_index] * repeat
 
     def parent_note(self, text):
         """check if a text element occurs within a NOTE element; if so,
@@ -81,6 +50,42 @@ class Page(TeiXmlObject):
             within_note = note_ancestors[0] if note_ancestors else None
 
         return within_note
+
+
+class Page(MixedText):
+    """A page of content in an EEBO-TCP text"""
+
+    #: reference id for image scan (two pages per image)
+    ref = xmlmap.StringField("@REF")
+    #: source page number (optional)
+    number = xmlmap.StringField("@N")
+
+    index = xmlmap.IntegerField("count(preceding::PB) + 1")
+
+    # parent div type =~ page type / label ?
+    section_type = xmlmap.StringField("ancestor::DIV1/@TYPE")
+
+    # page beginning tags delimit content instead of containing it;
+    # use following axis to find all text nodes following this page beginning
+    text_contents = xmlmap.StringListField("following::text()")
+
+    def __repr__(self):
+        return f"<Page {self.number or '-'} ({self.section_type})>"
+
+    # footnote indicators
+    note_marks = ["*", "†", "‡", "§"]
+    num_note_marks = len(note_marks)
+
+    def get_note_mark(self, i):
+        """Generate a note marker based on note index and :attr:`note_marks`;
+        symbols are used in order and then doubled, tripled, etc as needed.
+        (Fallback, for use when a note does not have an N attribute.)"""
+
+        # use modulo to map to the list of available marks
+        mark_index = i % self.num_note_marks
+        # use division to determine how many times to repeat the mark
+        repeat = int(i / self.num_note_marks) + 1
+        return self.note_marks[mark_index] * repeat
 
     def page_contents(self):
         """generator of text strings between this page beginning tag and
@@ -143,8 +148,6 @@ class Page(TeiXmlObject):
             yield "\n\n"
             yield from notes_text
 
-    divider = "∣"
-
     def __str__(self):
         # NOTE: P4 EEBO-TCP content uses unicode divider character ∣
         # to indicate page breaks that caused hyphenated words
@@ -195,7 +198,21 @@ class LineGroup(TeiXmlObject):
         return has_text(self.text)
 
 
-class QuotedPoem(TeiXmlObject):
+class Note(TeiXmlObject):
+    place = xmlmap.StringField("@PLACE")
+    text = xmlmap.StringField(".")
+
+    @property
+    def label(self):
+        if self.place == "marg":
+            return "Marginal Note"
+        return f"Note {self.place}"
+
+    def __str__(self):
+        return self.text.replace(MixedText.divider, "")
+
+
+class QuotedPoem(MixedText):
     """Quoted poetry stanzas or lines in an EEBO-TCP text"""
 
     #: list of line groups (LG), e.g. an entire quoted stanza
@@ -213,6 +230,9 @@ class QuotedPoem(TeiXmlObject):
     #: all text nodes within this quote, at any depth
     text_contents = xmlmap.StringListField(".//text()")
 
+    #: some records include notes with a citation
+    notes = xmlmap.NodeListField("NOTE", Note)
+
     def has_text(self):
         return has_text(self.text)
 
@@ -226,6 +246,16 @@ class QuotedPoem(TeiXmlObject):
         # break until we hit the next page beginning
         for i, text in enumerate(self.text_contents):
             parent = text.getparent()
+
+            # check if this text falls inside a note tag
+            within_note = self.parent_note(text)
+            if within_note is not None:
+                # for poem excerpts, don't include note markers or content
+
+                # NOTE: the fact that we don't output
+                # the note marker means that poem excerpts with notes
+                # will NOT match ppa page content exactly
+                continue
 
             # lxml handles text between elements as "tail" text;
             # the parent of the tail text is the preceding element
@@ -242,7 +272,7 @@ class QuotedPoem(TeiXmlObject):
                 # if we hit the text after a page begin tag,
                 # yield the previous text and start a new chunk
 
-                chunk = "".join(current_text)
+                chunk = "".join(current_text).replace(self.divider, "")
                 # if content is only whitespace and punctuation,
                 # yield empty string
                 yield chunk if has_text(chunk) else ""
@@ -252,7 +282,8 @@ class QuotedPoem(TeiXmlObject):
             current_text.append(text)
 
         # yield any remaining text
-        chunk = "".join(current_text)
+        # replace page divider character to match ppa page text
+        chunk = "".join(current_text).replace(self.divider, "")
         # if content is only whitespace and punctuation,
         # yield empty string
         yield chunk if has_text(chunk) else ""
