@@ -1,5 +1,6 @@
 import pathlib
 import csv
+import re
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
@@ -7,7 +8,7 @@ from django.template.defaultfilters import pluralize
 from eulxml import xmlmap
 
 from ppa.archive import eebo_tcp
-from ppa.archive.models import DigitizedWork
+from ppa.archive.models import DigitizedWork, Page
 
 
 class Command(BaseCommand):
@@ -46,7 +47,7 @@ class Command(BaseCommand):
 
             ecco_digworks = DigitizedWork.objects.filter(source_id__in=ecco_tcp_ids)
 
-        with open("tcp-linegroups.csv", "w", encoding="utf-8-sig") as csvfile:
+        with open("tcp_quotedpoems.csv", "w", encoding="utf-8-sig") as csvfile:
             csvwriter = csv.DictWriter(
                 csvfile,
                 fieldnames=[
@@ -54,6 +55,8 @@ class Command(BaseCommand):
                     "source_id",
                     "source_title",
                     "text",
+                    "start",
+                    "end",
                     "notes",
                 ],
             )
@@ -76,6 +79,11 @@ class Command(BaseCommand):
         # dictionaries with information about quoted poems
         poems = []
         work_index_id = work.index_id()
+        # for page span index we need access to text as indexed in solr
+        # for convine
+        work_page_contents = Page.page_index_data(work)
+        page_data = next(work_page_contents)
+
         for qpoem in tcp_text.quoted_poems:
             page_index = int(qpoem.start_page.index)
 
@@ -89,6 +97,8 @@ class Command(BaseCommand):
             # output run row per paged chunk of poem text
             poem_chunks = list(qpoem.text_by_page())
             for i, text_chunk in enumerate(poem_chunks):
+                text_chunk = text_chunk.strip()  # remove whitespace on the edges
+
                 # in some cases a chunk may have no text content
                 # but it still indicates a page break
                 if not text_chunk:
@@ -100,9 +110,30 @@ class Command(BaseCommand):
                 # we use work index id (= volume id or volume+start page for excerpt)
                 # in combination with page id; for eebo-tcp, this is 1-based page index
                 # for ECCO, we use page number from ecco api
-                # NOTE: manually confirmed ids match for an EEBO-TCP work
-                # TODO: confirm these match for ECCO
-                page_id = f"{work_index_id}.{page}"
+
+                if work.source == DigitizedWork.EEBO:
+                    # eebo page ids are numbered as is
+                    # NOTE: have manually confirmed ids match for EEBO-TCP works
+                    page_id = f"{work_index_id}.{page}"
+                elif work.source == DigitizedWork.GALE:
+                    # gale/ecco page ids have leading zeroes
+                    page_id = f"{work_index_id}.{page:04d}"
+                    # TODO: figure out how/if TCP pages match up with Gale/ECCO ...
+                    # maybe counting front-matter differently?
+
+                # since we find quoted poems sequentially, we can consume
+                # pages from the page index data generator until we find the
+                # page with the current page id
+                while page_data["id"] != page_id:
+                    page_data = next(work_page_contents)
+
+                # print(f"page {page} page id {page_id};  page data {page_data['id']}")
+
+                # if excerpt cannot be found on page text, start/end will be None
+                start_index, end_index = get_excerpt_span(
+                    text_chunk, page_data["content"]
+                )
+
                 notes = []
                 # add a note if we wrapped pages and previous chunk had content
                 if i != 0 and poem_chunks[i - 1]:
@@ -114,6 +145,9 @@ class Command(BaseCommand):
                     notes.append(
                         f"Language{pluralize(languages)}: {','.join(languages)}"
                     )
+                # some documents have marginal notes with a citation
+                for note in qpoem.notes:
+                    notes.append(f"{note.label}: {note}")
 
                 # add quoted poem details to list of dictionaries for output
                 poems.append(
@@ -121,8 +155,44 @@ class Command(BaseCommand):
                         "page_id": page_id,
                         "source_id": work.source_id,
                         "source_title": work.title,
-                        "text": text_chunk.strip(),
+                        "text": text_chunk,
+                        "start": start_index,
+                        "end": end_index,
                         "notes": "\n".join(notes),
                     }
                 )
         return poems
+
+
+# regex to check for note markers
+note_marks_charset = f"[{''.join(eebo_tcp.Page.note_marks)}]"
+re_note_marks = re.compile(note_marks_charset)
+
+
+def get_excerpt_span(excerpt, page_text):
+    start_index = end_index = None
+    try:
+        # best case scenario: the entire text matches exactly
+        start_index = page_text.index(excerpt)
+        end_index = start_index + len(excerpt)
+    except ValueError:
+        if re_note_marks.search(page_text):
+            # if excerpt includes two whitepace characters in a row,
+            # we may be missing a footnote marker
+            if re.search("\s\s", excerpt):
+                excerpt_pattern = re.sub(
+                    "(\s)(\s)", f"\1{note_marks_charset}?\2", excerpt
+                )
+                match = re.search(excerpt_pattern, page_text)
+                if match:
+                    start_index, end_index = match.span()
+
+        if not start_index:
+            lines = excerpt.split("\n")
+            # if we have more than one line, try by first/last?
+            if len(lines) > 1:
+                print("attempting to find start/end based on first/last line")
+                start, _ = get_excerpt_span(lines[0], page_text)
+                _, end = get_excerpt_span(lines[-1], page_text)
+
+    return (start_index, end_index)
