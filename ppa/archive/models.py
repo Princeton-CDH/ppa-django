@@ -180,8 +180,7 @@ class ProtectedWorkField(models.Field):
     :class:`ProtectedWorkFieldFlags` object and stores as integer."""
 
     description = (
-        "A field that stores an instance of :class:`ProtectedWorkFieldFlags` "
-        "as an integer."
+        "A field that stores an instance of :class:`ProtectedWorkFieldFlags` as an integer."
     )
 
     def __init__(self, verbose_name=None, name=None, **kwargs):
@@ -221,9 +220,7 @@ class SignalHandlers:
             # if the collection has any works associated
             works = instance.digitizedwork_set.all()
             if works.exists():
-                logger.debug(
-                    "collection save, reindexing %d related works", works.count()
-                )
+                logger.debug(f"collection save, reindexing {works.count()} related works")
                 DigitizedWork.index_items(works)
 
     @staticmethod
@@ -234,7 +231,7 @@ class SignalHandlers:
         digwork_ids = instance.digitizedwork_set.values_list("id", flat=True)
         # find the items based on the list of ids to reindex
         digworks = DigitizedWork.objects.filter(id__in=list(digwork_ids))
-        logger.debug("collection delete, reindexing %d works" % len(digworks))
+        logger.debug(f"collection delete, reindexing {len(digworks)} works")
 
         # NOTE: this sends pre/post clear signal, but it's not obvious
         # how to take advantage of that
@@ -252,11 +249,11 @@ class SignalHandlers:
             works = instance.digitizedwork_set.all()
             if works.exists():
                 # get a total of page count for affected works
-                page_count = works.aggregate(page_count=models.Sum("page_count"))
+                page_count = works.aggregate(page_count=models.Sum("page_count", default=0))
                 logger.debug(
                     "cluster id has changed, reindexing %d works and %d pages",
                     works.count(),
-                    page_count.get("page_count", 0),
+                    page_count["page_count"],
                 )
                 DigitizedWork.index_items(works)
                 # reindex pages (this may be slow...)
@@ -272,11 +269,11 @@ class SignalHandlers:
         # find the items based on the list of ids to reindex
         digworks = DigitizedWork.objects.filter(id__in=list(digwork_ids))
         # get a total of page count for affected works
-        page_count = digworks.aggregate(page_count=models.Sum("page_count"))
+        page_count = digworks.aggregate(page_count=models.Sum("page_count", default=0))
         logger.debug(
             "cluster delete, reindexing %d works and %d pages",
             digworks.count(),
-            page_count.get("page_count", 0),
+            page_count["page_count"],
         )
 
         # NOTE: this sends pre/post clear signal, but it's not obvious
@@ -295,7 +292,7 @@ class SignalHandlers:
             logger.debug(
                 "Cluster changed for %s; indexing %d pages",
                 instance,
-                instance.page_count,
+                instance.page_count or 0,
             )
             instance.index_items(Page.page_index_data(instance))
 
@@ -425,9 +422,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
     collections = models.ManyToManyField(Collection, blank=True)
 
     #: optional cluster for aggregating works
-    cluster = models.ForeignKey(
-        Cluster, blank=True, null=True, on_delete=models.SET_NULL
-    )
+    cluster = models.ForeignKey(Cluster, blank=True, null=True, on_delete=models.SET_NULL)
 
     #: date added to the archive
     added = models.DateTimeField(auto_now_add=True)
@@ -629,9 +624,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 
         # if excerpt page range has changed
         # OR this is a new record with a page range
-        if self.has_changed("pages_digital") or (
-            self.pk is None and self.pages_digital
-        ):
+        if self.has_changed("pages_digital") or (self.pk is None and self.pages_digital):
             # update the page count if possible (i.e., not a Gale record)
             self.page_count = self.count_pages()
             # if page range changed on existing record, clear out old index
@@ -765,9 +758,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         field_data["sort_title"] = marc_record.title()[non_sort:].strip(' "[')
         field_data["author"] = marc_record.author() or ""
         # remove a note present on some records and strip whitespace
-        field_data["author"] = (
-            field_data["author"].replace("[from old catalog]", "").strip()
-        )
+        field_data["author"] = field_data["author"].replace("[from old catalog]", "").strip()
         # removing trailing period, except when it is part of an
         # initial or known abbreviation (i.e, Esq.)
         # Look for single initial, but support initials with no spaces
@@ -815,9 +806,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         # *only* if they wrap the whole text
         for field in ["publisher", "pub_place"]:
             if field in field_data:
-                field_data[field] = re.sub(
-                    r"^\[(.*)\]$", r"\1", field_data[field]
-                ).strip()
+                field_data[field] = re.sub(r"^\[(.*)\]$", r"\1", field_data[field]).strip()
 
         if populate:
             # conditionally update fields that are protected (or not)
@@ -874,9 +863,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             "post_save": SignalHandlers.cluster_save,
             "pre_delete": SignalHandlers.cluster_delete,
         },
-        "archive.DigitizedWork": {
-            "post_save": SignalHandlers.handle_digwork_cluster_change
-        },
+        "archive.DigitizedWork": {"post_save": SignalHandlers.handle_digwork_cluster_change},
     }
 
     def first_page(self):
@@ -1027,11 +1014,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             # some aggregate packages retrieved from Data API
             # include jp2 and xml files as well as txt; only count text
             page_count = len(
-                [
-                    filename
-                    for filename in ht_zip.namelist()
-                    if filename.endswith(".txt")
-                ]
+                [filename for filename in ht_zip.namelist() if filename.endswith(".txt")]
             )
             logger.debug(
                 "Counted %d pages in zipfile in %f sec", page_count, time.time() - start
@@ -1072,8 +1055,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
                     return record.as_marc()
                 except MARCRecordNotFound:
                     logger.warning(
-                        "MARC record for %s/%s not found"
-                        % (self.source_id, self.record_id)
+                        f"MARC record for {self.source_id}/{self.record_id} not found"
                     )
                     return ""
 
@@ -1088,7 +1070,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             return "View on Gale Primary Sources"
         if self.source == DigitizedWork.OTHER:
             return "View external record"
-        return "View on %s" % self.get_source_display()
+        return f"View on {self.get_source_display()}"
 
     @staticmethod
     def add_from_hathi(htid, bib_api=None, update=False, log_msg_src=None, user=None):
