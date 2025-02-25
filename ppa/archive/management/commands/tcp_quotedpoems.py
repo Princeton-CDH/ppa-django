@@ -253,44 +253,34 @@ re_note_marks = re.compile(note_marks_charset)
 
 
 def get_excerpt_span(excerpt, page_text):
+    """Given an excerpt of poetry from TCP XML and the text from a page
+    of PPA, find and return the start and end indices of the excerpt
+    on the page, if possible. Returns a tuple of start index, end index;
+    indices are None if not found.
+    """
     start_index = end_index = None
     # ecco-tcp includes long S that ecco-ocr renders as f
     # for simplicity, replace in both texts before comparing
     # (since this is a single-character replacement, it doesn't impact index)
     _excerpt = excerpt.replace("ſ", "f")
     _page_text = page_text.replace("ſ", "f")
+    # also long hyphens vs short in ecco; use ftfy ?
 
     try:
         # best case scenario: the entire text matches exactly
         start_index = _page_text.index(_excerpt)
         end_index = start_index + len(excerpt)
     except ValueError:
-        # if re_note_marks.search(page_text):
-        # TODO: flip this! remove the note marks from the page text instead?
-
-        # if excerpt includes two whitepace characters in a row,
-        # we may be missing a footnote marker
-        # if re.search("\s\s", excerpt):
-        #     # print("double whitespace, looking for not marks")
-        #     excerpt_pattern = re.sub(
-        #         "(\s)(\s)", f"\1{note_marks_charset}?\2", excerpt
-        #     )
-        #     match = re.search(excerpt_pattern, page_text)
-        #     if match:
-        #         start_index, end_index = match.span()
+        # some mismatches are due to the note marks;
+        # could try removing the note marks from the page text to find
+        # the content start and end?
 
         if not start_index:
             lines = _excerpt.split("\n")
-            # if we have more than one line, try by first/last?
+            # if we have more than one line, try to get
+            # start and end based on  first and last line
             if len(lines) > 1:
-                # print("attempting to find start/end based on first/last line")
-                # print(lines[0].strip())
                 start_index, _ = get_excerpt_span(lines[0].strip(), page_text)
-                # print(f"first line: found start={start} end={_}")
                 _, end_index = get_excerpt_span(lines[-1].strip(), page_text)
-                # print(lines[-1].strip())
-                # print(f"last line: found start={_} end={end}")
-                # if start or end:
-                # print(f"found something start={start} end={end}")
 
     return (start_index, end_index)
