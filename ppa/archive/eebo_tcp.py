@@ -1,6 +1,7 @@
 """
 Code for working with EEBO-TCP (Text Creation Partnership) content.
 """
+from collections import namedtuple
 from pathlib import Path
 import string
 
@@ -16,6 +17,13 @@ def short_id(volume_id):
 
 # P4 TCP TEI does not use namespaces but P5 does
 TEI_NAMESPACE = "http://www.tei-c.org/ns/1.0"
+
+
+# namespaced tags look like {http://www.tei-c.org/ns/1.0}tagname
+# create a named tuple of short tag name -> namespaced tag name
+_p5_tags = ["bibl", "gap", "pb", "l", "desc", "note"]
+TagNames = namedtuple("TagNames", _p5_tags)
+P5_TAG = TagNames(**{tag: "{%s}%s" % (TEI_NAMESPACE, tag) for tag in _p5_tags})
 
 
 class TeiXmlObject(xmlmap.XmlObject):
@@ -41,7 +49,7 @@ class MixedText(TeiXmlObject):
         within_note = None
         # check if this is normal text directly inside a note tag
         parent = text.getparent()
-        if parent.tag == "NOTE" and text.is_text:
+        if parent.tag in ["NOTE", P5_TAG.note] and text.is_text:
             within_note = parent
         # otherwise, check if text is nested somewhere under a note tag
         else:
@@ -58,9 +66,12 @@ class Page(MixedText):
     #: reference id for image scan (two pages per image)
     ref = xmlmap.StringField("@REF")
     #: source page number (optional)
-    number = xmlmap.StringField("@N")
+    number = xmlmap.StringField("@N|@n")
+    #: facimile id (TCP P5 only)
+    facsimile = xmlmap.StringField("@facs")
 
-    index = xmlmap.IntegerField("count(preceding::PB) + 1")
+    #: page index, based on count of preceding <PB> tags
+    index = xmlmap.IntegerField("count(preceding::PB|preceding::t:pb) + 1")
 
     # parent div type =~ page type / label ?
     section_type = xmlmap.StringField("ancestor::DIV1/@TYPE")
@@ -209,7 +220,7 @@ class Note(TeiXmlObject):
         return f"Note {self.place}"
 
     def __str__(self):
-        return self.text.replace(MixedText.divider, "")
+        return self.text.replace(MixedText.divSider, "")
 
 
 class QuotedPoem(MixedText):
@@ -219,6 +230,10 @@ class QuotedPoem(MixedText):
     line_groups = xmlmap.NodeListField("LG|t:lg", LineGroup)
     #: lines quoted directly, not within a line group
     # lines = xmlmap.NodeListField("L|t:l", Line)
+
+    #: citation / bibliography
+    #: may occur before/after a list of lines, within a linegroup, within a note
+    source = xmlmap.StringField(".//BIBL|t:bibl", normalize=True)
 
     #: number for the immediate preceding page begin tag
     start_page = xmlmap.NodeField("preceding::PB[1]|preceding::t:pb[1]", Page)
@@ -247,10 +262,16 @@ class QuotedPoem(MixedText):
         for i, text in enumerate(self.text_contents):
             parent = text.getparent()
 
+            # omit text in bibliography note
+            if parent.tag in ["BIBL", P5_TAG.bibl]:
+                continue
+
             # check if this text falls inside a note tag
             within_note = self.parent_note(text)
             if within_note is not None:
                 # for poem excerpts, don't include note markers or content
+                # TODO: exception - if note has an n attribute with a marker, output that
+                # Gale/ECCO format seems to be this: (a)
 
                 # NOTE: the fact that we don't output
                 # the note marker means that poem excerpts with notes
@@ -266,9 +287,31 @@ class QuotedPoem(MixedText):
                 # so we can more easily filter it out later, unless
                 # include_large_gaps is false
                 if include_large_gaps or "1 letter" in parent.get("EXTENT", ""):
-                    current_text.append(parent.get("DISP"))
+                    display = parent.get("DISP", None)
+                    if display:
+                        current_text.append(display)
 
-            if text.is_tail and parent.tag == "PB":
+            # P5: skip text directly within a gap tag
+            # (before or after desc tag) to avoid unwanted whitespace
+            if (text.is_text and parent.tag == P5_TAG.gap) or (
+                text.is_tail and parent.tag == P5_TAG.desc
+            ):
+                continue
+
+            if text.is_text and parent.tag == P5_TAG.desc:
+                # when we hit a desc tag, check the parent gap tag
+                # to determine if it should be skipped
+                outer_parent = parent.getparent()
+                # skip unless we are including large gaps or gap extent
+                # is a single letter
+                if outer_parent.tag == P5_TAG.gap:
+                    if not (
+                        include_large_gaps
+                        or "1 letter" in outer_parent.get("extent", "")
+                    ):
+                        continue
+
+            if text.is_tail and parent.tag in ["PB", P5_TAG.pb]:
                 # if we hit the text after a page begin tag,
                 # yield the previous text and start a new chunk
 
@@ -279,14 +322,22 @@ class QuotedPoem(MixedText):
 
                 current_text = []
 
+            # special case: P5 indentation is causing extra whitespace
+            # For any text that is only whitespace and starts
+            # with a newline, replace with a single newline
+            if text.strip() == "" and text.startswith("\n"):
+                # replace with regular text - this must be last check
+                text = "\n"
+
             current_text.append(text)
 
         # yield any remaining text
         # replace page divider character to match ppa page text
-        chunk = "".join(current_text).replace(self.divider, "")
-        # if content is only whitespace and punctuation,
-        # yield empty string
-        yield chunk if has_text(chunk) else ""
+        if current_text:
+            chunk = "".join(current_text).replace(self.divider, "")
+            # if content is only whitespace and punctuation,
+            # yield empty string
+            yield chunk if has_text(chunk) else ""
 
 
 class Text(TeiXmlObject):
