@@ -168,6 +168,8 @@ def test_page_data():
 
 LG_EEBO_TCP_FIXTURE_ID = "A45116"
 LG_TCP_FIXTURE = os.path.join(FIXTURES_PATH, f"{LG_EEBO_TCP_FIXTURE_ID}.P4.xml")
+ECCO_TCP_FIXTURE_ID = "CW0115281335"
+ECCO_TCP_FIXTURE = os.path.join(FIXTURES_PATH, f"{ECCO_TCP_FIXTURE_ID}.xml")
 
 
 @override_settings(EEBO_DATA=FIXTURES_PATH)
@@ -178,6 +180,13 @@ def test_text_quotedpoems():
     # fixture with known poetry has 72 quoted poems, 129 linegroups
     lg_tcp_text = load_xmlobject_from_file(LG_TCP_FIXTURE, eebo_tcp.Text)
     assert len(lg_tcp_text.quoted_poems) == 751
+
+
+@override_settings(ECCO_TCP_DATA=FIXTURES_PATH)
+def test_ecco_text_quotedpoems():
+    # ecco-tcp fixture has 12 quoted poetry excerpts
+    tcp_text = load_xmlobject_from_file(ECCO_TCP_FIXTURE, eebo_tcp.Text)
+    assert len(tcp_text.quoted_poems) == 12
 
 
 @override_settings(EEBO_DATA=FIXTURES_PATH)
@@ -202,6 +211,59 @@ The Warlike Worthies of Antiquity,
 In thy great Volume of Eternity.
 Begin, O Clio, &c. Spen. B. 3. C. 3."""
     )
+
+
+@override_settings(ECCO_TCP_DATA=FIXTURES_PATH)
+def test_ecco_quotedpoem_init():
+    tcp_text = load_xmlobject_from_file(ECCO_TCP_FIXTURE, eebo_tcp.Text)
+    qpoem = tcp_text.quoted_poems[0]
+    assert isinstance(qpoem.start_page, eebo_tcp.Page)
+    assert qpoem.start_page.number == "viii"
+    assert qpoem.start_page.index == 7
+    assert qpoem.start_page.ref is None
+    assert qpoem.start_page.facsimile == "tcp:0771900501:7"
+    # this one has no continue page
+    assert not qpoem.continue_page
+    # markup / indentation is introducing a lot of extra whitespace;
+    # ignore for now and test that we have the text content we want
+    expected_text = '''" For Conſcience, like a fiery horſe,
+" Will ſtumble, if you check his courſe:
+" But ride him with an eaſy rein,
+" And rub him down with worldly gain,
+" He'll carry you through thick and thin,
+" Safe, although dirty, to your inn."'''
+    expected_lines = expected_text.split("\n")
+    for line in expected_lines:
+        assert line in qpoem.text
+    assert qpoem.text.strip().startswith(expected_lines[0])
+    assert qpoem.text.strip().endswith(expected_lines[-1])
+
+
+# example ecco-tcp poem with bibliographic note
+ecco_quotedpoem_bibl = """<q xmlns="http://www.tei-c.org/ns/1.0">
+  <sp>
+     <speaker>Queen.</speaker>
+     <l>What, is my Richard both in ſhape and mind</l>
+     <l>Transform'd and weak? Hath Bolingbroke de<g ref="char:EOLhyphen"/>pos'd</l>
+     <l>Thine intellect? Hath he been in thy heart?</l>
+     <l>The lion, dying, thruſteth forth his paw,</l>
+     <l>And wounds the earth, if nothing elſe, with rage</l>
+     <l>To be o'erpower'd: and wilt thou, pupil-like,</l>
+     <l>Take thy correction mildly, kiſs the rod,</l>
+     <l>And fawn on rage with baſe humility?</l>
+  </sp>
+  <bibl>Richard II. act 5. ſc. 1.</bibl>
+</q>"""
+
+
+def test_ecco_quotedpoem_bibl():
+    # ecco-tcp fixture has 12 quoted poetry excerpts
+    qpoem = load_xmlobject_from_string(ecco_quotedpoem_bibl, eebo_tcp.QuotedPoem)
+    # can access the citation
+    assert qpoem.source == "Richard II. act 5. ſc. 1."
+    # citation not included in poem text
+    print(qpoem.text_by_page())
+    assert qpoem.source not in qpoem.text_by_page()
 
 
 @override_settings(EEBO_DATA=FIXTURES_PATH)
@@ -240,6 +302,25 @@ Diluviem Meditatur agris. Hor. Car. Lib. 4. Od. 14."""
         """〈 in non-Latin alphabet 〉.
 〈 in non-Latin alphabet 〉."""
     ]
+
+
+# example ecco-tcp poem with gap for missing letter
+ecco_quotedpoem_gap = """<q xmlns="http://www.tei-c.org/ns/1.0">
+  <l>Interea magno miſceri murmure pontum</l>
+  <l>Emiſſamque hyemem ſenſit Neptunus, et imis</l>
+  <l>Stagna refuſa vadis: <hi>graviter commotu<gap reason="illegible" resp="#OXF" extent="1 letter">
+           <desc>•</desc>
+        </gap>,</hi> et alto</l>
+  <l>Proſpiciens, ſummâ <hi>placidum</hi> caput extulit undâ.</l>
+  <bibl>Aeneid. i. 128.</bibl>
+</q>"""
+
+
+def test_quotedpoem_text_by_page_p5_gap():
+    qpoem = load_xmlobject_from_string(ecco_quotedpoem_gap, eebo_tcp.QuotedPoem)
+    text = list(qpoem.text_by_page())[0]
+    # desc character should be included without surrounding whitespace
+    assert "Stagna refuſa vadis: graviter commotu•, et alto" in text
 
 
 @override_settings(EEBO_DATA=FIXTURES_PATH)
