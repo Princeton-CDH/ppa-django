@@ -208,22 +208,14 @@ class Command(BaseCommand):
                 for note in qpoem.notes:
                     notes.append(f"{note.label}: {note}")
 
-                if start_index is not None and end_index is not None:
-                    # if both indices were found, use to get excerpt content
-                    # from authoritative ppa page text
-                    # alignment is not needed
-                    needs_alignment = False
-                    ppa_excerpt_text = page_data["content"][start_index:end_index]
+                # alignment could be used if we can't find indices,,
+                # but it is not guaranteed to be reliable and we don't have a way to check;
+                # for now, omit any excerpts that couldn't be found
+                if start_index is None or end_index is None:
+                    continue
 
-                else:
-                    # if any of the indices were not be found,
-                    # set placeholders and use the xml text, then flag for alignment
-                    needs_alignment = True
-                    # these numbers don't matter, just need to be valid
-                    start_index = 0
-                    end_index = 10
-                    # initialize with the text from the xml as basis for alignment
-                    ppa_excerpt_text = text_chunk
+                # get excerpt text the canonical page text
+                ppa_excerpt_text = page_data["content"][start_index:end_index]
 
                 poem_excerpt = Excerpt(
                     page_id=page_id,
@@ -233,14 +225,6 @@ class Command(BaseCommand):
                     notes="\n".join(notes),
                     detection_methods={"xml"},
                 )
-                if needs_alignment:
-                    # if indices were not determined, use alignment to adjust
-                    poem_excerpt = poem_excerpt.correct_page_excerpt(
-                        page_data["content"]
-                    )
-                    # TODO: should we add a note about alignment ?
-                    # and/or should we check that original span and aligned are similar?
-
                 poems.append(poem_excerpt.to_csv())
         return poems
 
