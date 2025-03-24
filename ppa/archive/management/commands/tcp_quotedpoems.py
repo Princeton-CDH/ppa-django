@@ -7,6 +7,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.template.defaultfilters import pluralize
 from eulxml import xmlmap
 import progressbar
+from corppa.poetry_detection.core import Excerpt
 
 from ppa.archive import eebo_tcp, gale
 from ppa.archive.models import DigitizedWork, Page
@@ -71,19 +72,8 @@ class Command(BaseCommand):
                 ecco_digworks = DigitizedWork.objects.filter(source_id__in=ecco_tcp_ids)
 
         with open("tcp_quotedpoems.csv", "w", encoding="utf-8-sig") as csvfile:
-            csvwriter = csv.DictWriter(
-                csvfile,
-                fieldnames=[
-                    "page_id",
-                    "source_id",
-                    "source_title",
-                    "text",
-                    "ppa_excerpt_text",
-                    "start",
-                    "end",
-                    "notes",
-                ],
-            )
+            csvwriter = csv.DictWriter(csvfile, fieldnames=Excerpt.fieldnames())
+
             csvwriter.writeheader()
             count_qpoems = 0
 
@@ -218,32 +208,40 @@ class Command(BaseCommand):
                 for note in qpoem.notes:
                     notes.append(f"{note.label}: {note}")
 
-                # add quoted poem details to list of dictionaries for output
-                ppa_excerpt_text = ""
-                excerpt_length = len(text_chunk)
-                if start_index and end_index:
+                if start_index is not None and end_index is not None:
+                    # if both indices were found, use to get excerpt content
+                    # from authoritative ppa page text
+                    # alignment is not needed
+                    needs_alignment = False
                     ppa_excerpt_text = page_data["content"][start_index:end_index]
-                elif start_index:
-                    ppa_excerpt_text = page_data["content"][
-                        start_index : start_index + excerpt_length
-                    ]
-                elif end_index:
-                    ppa_excerpt_text = page_data["content"][
-                        end_index - excerpt_length : end_index
-                    ]
 
-                poems.append(
-                    {
-                        "page_id": page_id,
-                        "source_id": work.source_id,
-                        "source_title": work.title,
-                        "text": text_chunk,
-                        "ppa_excerpt_text": ppa_excerpt_text,
-                        "start": start_index,
-                        "end": end_index,
-                        "notes": "\n".join(notes),
-                    }
+                else:
+                    # if any of the indices were not be found,
+                    # set placeholders and use the xml text, then flag for alignment
+                    needs_alignment = True
+                    # these numbers don't matter, just need to be valid
+                    start_index = 0
+                    end_index = 10
+                    # initialize with the text from the xml as basis for alignment
+                    ppa_excerpt_text = text_chunk
+
+                poem_excerpt = Excerpt(
+                    page_id=page_id,
+                    ppa_span_text=ppa_excerpt_text,
+                    ppa_span_start=start_index,
+                    ppa_span_end=end_index,
+                    notes="\n".join(notes),
+                    detection_methods={"xml"},
                 )
+                if needs_alignment:
+                    # if indices were not determined, use alignment to adjust
+                    poem_excerpt = poem_excerpt.correct_page_excerpt(
+                        page_data["content"]
+                    )
+                    # TODO: should we add a note about alignment ?
+                    # and/or should we check that original span and aligned are similar?
+
+                poems.append(poem_excerpt.to_csv())
         return poems
 
 
@@ -271,10 +269,35 @@ def get_excerpt_span(excerpt, page_text):
         start_index = _page_text.index(_excerpt)
         end_index = start_index + len(excerpt)
     except ValueError:
-        # some mismatches are due to the note marks;
-        # could try removing the note marks from the page text to find
-        # the content start and end?
+        # if exact text match failed, try whitespace-agnostic regex match
 
+        # escape any special characters in the text like *, (), etc
+        # (re.escape does too much because it turns spaces into '\ '')
+        regex_safe_excerpt = (
+            excerpt.replace("*", "\*").replace("(", "\(").replace(")", "\)")
+        )
+        # replace ſ with character set to match any of ſ, s, or f
+        regex_safe_excerpt = regex_safe_excerpt.replace("ſ", "[ſfs]")
+        # collapse any repeated whitespace to a single whitespace,
+        # then replace with a regex to match on any whitespace
+        regex_pattern = re.sub("\s+", " ", regex_safe_excerpt).replace(" ", r"\s*")
+        try:
+            text_re = re.compile(regex_pattern, flags=re.MULTILINE | re.UNICODE)
+        except SyntaxError:
+            # regex compilation could failed, e.g. due to unescaped special
+            # characters; should probably have debug logging, but ignore for now
+            pass
+
+        # if regex compilation succeeded, do a regex search and
+        # get start and end indices from resulting match, if found
+        if text_re is not None:
+            match = text_re.search(_page_text)
+            if match:
+                start_index = match.start()
+                end_index = match.end()
+
+        # if full excerpt match fails on a multiline excerpt,
+        # try searching for first and last line independently
         if not start_index:
             lines = _excerpt.split("\n")
             # if we have more than one line, try to get
