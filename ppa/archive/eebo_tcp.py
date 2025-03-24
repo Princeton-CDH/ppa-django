@@ -1,6 +1,7 @@
 """
 Code for working with EEBO-TCP (Text Creation Partnership) content.
 """
+
 from collections import namedtuple
 from pathlib import Path
 import string
@@ -58,6 +59,24 @@ class MixedText(TeiXmlObject):
             within_note = note_ancestors[0] if note_ancestors else None
 
         return within_note
+
+    def within_bibl(self, text):
+        """Check if a text element occurs within a BIBL element; if so,
+        return the BIBL element"""
+        # check if this text is directly inside a bibl tag
+        within_bibl = None
+        # check if this is normal text directly inside a note tag
+        parent = text.getparent()
+        if parent.tag in ["BIBL", P5_TAG.bibl] and text.is_text:
+            within_bibl = parent
+        # otherwise, check if text is nested somewhere under a note tag
+        else:
+            # get the first/nearest ancestor note, if there is one
+            # NOTE: skipping p5 version for now - complains about namespace
+            bibl_ancestors = parent.xpath("ancestor::BIBL")
+            within_bibl = bibl_ancestors[0] if bibl_ancestors else None
+
+        return within_bibl
 
 
 class Page(MixedText):
@@ -262,8 +281,9 @@ class QuotedPoem(MixedText):
         for i, text in enumerate(self.text_contents):
             parent = text.getparent()
 
-            # omit text in bibliography note
-            if parent.tag in ["BIBL", P5_TAG.bibl]:
+            # omit text anywhere under a bibliography note
+            # (may have nested tags like <hi>)
+            if self.within_bibl(text) is not None:
                 continue
 
             # check if this text falls inside a note tag
