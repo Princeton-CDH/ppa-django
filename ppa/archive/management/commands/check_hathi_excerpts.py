@@ -9,8 +9,12 @@ from ppa.archive.models import DigitizedWork
 from ppa.archive.templatetags.ppa_tags import hathi_page_url
 
 
-class Command(BaseCommand):
+class Command(BaseCommand):  # pragma: no cover
     """Check page alignment for excerpted HathiTrust digitized items."""
+
+    # this is an experimental script to attempt automated checking
+    # of excerpt page alignment; we decided not to pursue
+    # because the data is too messy to reliably check
 
     help = __doc__
 
