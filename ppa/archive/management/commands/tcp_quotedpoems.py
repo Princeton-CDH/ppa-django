@@ -268,7 +268,7 @@ def get_excerpt_span(excerpt, page_text):
         try:
             text_re = re.compile(regex_pattern, flags=re.MULTILINE | re.UNICODE)
         except SyntaxError:
-            # regex compilation could failed, e.g. due to unescaped special
+            # regex compilation could fail, e.g. due to unescaped special
             # characters; should probably have debug logging, but ignore for now
             pass
 

@@ -61,8 +61,8 @@ class MixedText(TeiXmlObject):
         return within_note
 
     def within_bibl(self, text):
-        """Check if a text element occurs within a BIBL element; if so,
-        return the BIBL element"""
+        """Check if a text element occurs within a bibliography element (BIBL);
+        if so, return the element."""
         # check if this text is directly inside a bibl tag
         within_bibl = None
         # check if this is normal text directly inside a note tag
