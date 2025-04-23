@@ -11,7 +11,7 @@ import pytest
 import requests
 from django.conf import settings
 from django.test import TestCase, override_settings
-from eulxml.xmlmap import load_xmlobject_from_file
+from neuxml.xmlmap.core import load_xmlobject_from_file
 from pairtree import pairtree_client, pairtree_path, storage_exceptions
 
 from ppa import __version__

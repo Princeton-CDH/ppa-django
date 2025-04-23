@@ -2,7 +2,7 @@ import os.path
 import types
 
 from django.test import override_settings
-from eulxml.xmlmap import load_xmlobject_from_file, load_xmlobject_from_string
+from neuxml.xmlmap.core import load_xmlobject_from_file, load_xmlobject_from_string
 
 from ppa.archive import eebo_tcp
 from ppa.archive.tests.test_models import FIXTURES_PATH
