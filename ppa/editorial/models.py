@@ -95,21 +95,16 @@ class EditorialPage(Page, PagePreviewDescriptionMixin):
 
     # preliminary streamfield; we may need other options for content
     # (maybe a footnotes block?)
-    body = StreamField(
-        BodyContentBlock,
-        use_json_field=True,
-    )
+    body = StreamField(BodyContentBlock)
     authors = StreamField(
         [("author", SnippetChooserBlock(Person))],
         blank=True,
         help_text="Select or create people snippets to add as authors.",
-        use_json_field=True,
     )
     editors = StreamField(
         [("editor", SnippetChooserBlock(Person))],
         blank=True,
         help_text="Select or create people snippets to add as editors.",
-        use_json_field=True,
     )
     doi = models.CharField(
         "DOI",
