@@ -1,4 +1,4 @@
-django>=5.0,<5.1
+django>=5.1,<5.2
 pucas>=0.9
 parasolr>=0.9.2
 pairtree
