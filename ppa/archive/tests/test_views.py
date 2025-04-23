@@ -1155,7 +1155,7 @@ class TestAddToCollection(TestCase):
         # check that the error message rendered for a missing Collection
         self.assertContains(
             response,
-            '<ul class="errorlist"><li>Please select at least one '
+            '<ul class="errorlist" id="id_collections_error"><li>Please select at least one '
             "Collection</li></ul>",
             html=True,
         )
