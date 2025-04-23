@@ -7,6 +7,7 @@ from django.test import SimpleTestCase, RequestFactory
 from django.urls import reverse
 from wagtail.models import Page, Site
 from wagtail.images.models import Image
+from wagtail.rich_text import RichText
 from wagtail.test.utils import WagtailPageTestCase
 from wagtail.test.utils.form_data import nested_form_data, rich_text, streamfield
 
@@ -208,13 +209,13 @@ class TestContentPage(WagtailPageTestCase):
         content_page2 = ContentPage(
             title="What is Prosody?",
             body=[
-                ("captioned_image", '<img src="milton-example.png"/>'),
+                ("captioned_image", {"image": '<img src="milton-example.png"/>'}),
                 (
                     "paragraph",
-                    "<p>Prosody today means both the study of "
-                    'and <a href="#">pronunciation</a></p>',
+                    RichText("<p>Prosody today means both the study of "
+                    'and <a href="#">pronunciation</a></p>'),
                 ),
-                ("paragraph", "<p>More content here...</p>"),
+                ("paragraph", RichText("<p>More content here...</p>")),
             ],
         )
         # should ignore image block and use first paragraph content
