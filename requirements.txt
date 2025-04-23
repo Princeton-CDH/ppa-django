@@ -11,7 +11,7 @@ progressbar2
 django-semanticui-forms
 lxml
 eulxml
-wagtail>=6.3,<6.4
+wagtail>=6.4,<6.5
 django-taggit>=4.0
 bleach
 django-fullurl
