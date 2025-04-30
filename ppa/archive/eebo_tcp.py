@@ -7,7 +7,7 @@ from pathlib import Path
 import string
 
 from django.conf import settings
-from neuxml.xmlmap import core, fields
+from eulxml import xmlmap
 
 
 def short_id(volume_id):
@@ -27,7 +27,7 @@ TagNames = namedtuple("TagNames", _p5_tags)
 P5_TAG = TagNames(**{tag: "{%s}%s" % (TEI_NAMESPACE, tag) for tag in _p5_tags})
 
 
-class TeiXmlObject(core.XmlObject):
+class TeiXmlObject(xmlmap.XmlObject):
     ROOT_NAMESPACES = {"t": TEI_NAMESPACE}
 
 
@@ -35,8 +35,8 @@ class MixedText(TeiXmlObject):
     divider = "∣"
 
     # count following notes as a quick check to bail out of note detection logic
-    # (can't use neuxml boolean field here because it assumes string values for true/false)
-    has_notes = fields.IntegerField("count(following::NOTE)")
+    # (can't use eulxml boolean field here because it assumes string values for true/false)
+    has_notes = xmlmap.IntegerField("count(following::NOTE)")
 
     def parent_note(self, text):
         """check if a text element occurs within a NOTE element; if so,
@@ -83,21 +83,21 @@ class Page(MixedText):
     """A page of content in an EEBO-TCP text"""
 
     #: reference id for image scan (two pages per image)
-    ref = fields.StringField("@REF")
+    ref = xmlmap.StringField("@REF")
     #: source page number (optional)
-    number = fields.StringField("@N|@n")
+    number = xmlmap.StringField("@N|@n")
     #: facimile id (TCP P5 only)
-    facsimile = fields.StringField("@facs")
+    facsimile = xmlmap.StringField("@facs")
 
     #: page index, based on count of preceding <PB> tags
-    index = fields.IntegerField("count(preceding::PB|preceding::t:pb) + 1")
+    index = xmlmap.IntegerField("count(preceding::PB|preceding::t:pb) + 1")
 
     # parent div type =~ page type / label ?
-    section_type = fields.StringField("ancestor::DIV1/@TYPE")
+    section_type = xmlmap.StringField("ancestor::DIV1/@TYPE")
 
     # page beginning tags delimit content instead of containing it;
     # use following axis to find all text nodes following this page beginning
-    text_contents = fields.StringListField("following::text()")
+    text_contents = xmlmap.StringListField("following::text()")
 
     def __repr__(self):
         return f"<Page {self.number or '-'} ({self.section_type})>"
@@ -214,23 +214,23 @@ class LineGroup(TeiXmlObject):
     """A group of poetry lines in an EEBO-TCP text"""
 
     #: language (available for some line groups)
-    language = fields.StringField("@LANG|@xml:lang")
+    language = xmlmap.StringField("@LANG|@xml:lang")
     #: citation / bibliography
-    source = fields.StringField(
+    source = xmlmap.StringField(
         # in TCP P4 this is sometimes available as BIBL;
         # in P5, preceding head tag may have a label
         "(preceding-sibling::BIBL|preceding-sibling::t:head)[1]"
     )
-    text = fields.StringField(".")  # NOTE: doesn't handle gaps; maybe that's fine
-    lg_type = fields.StringField("@TYPE")
+    text = xmlmap.StringField(".")  # NOTE: doesn't handle gaps; maybe that's fine
+    lg_type = xmlmap.StringField("@TYPE")
 
     def has_text(self):
         return has_text(self.text)
 
 
 class Note(TeiXmlObject):
-    place = fields.StringField("@PLACE")
-    text = fields.StringField(".")
+    place = xmlmap.StringField("@PLACE")
+    text = xmlmap.StringField(".")
 
     @property
     def label(self):
@@ -246,26 +246,26 @@ class QuotedPoem(MixedText):
     """Quoted poetry stanzas or lines in an EEBO-TCP text"""
 
     #: list of line groups (LG), e.g. an entire quoted stanza
-    line_groups = fields.NodeListField("LG|t:lg", LineGroup)
+    line_groups = xmlmap.NodeListField("LG|t:lg", LineGroup)
     #: lines quoted directly, not within a line group
-    # lines = fields.NodeListField("L|t:l", Line)
+    # lines = xmlmap.NodeListField("L|t:l", Line)
 
     #: citation / bibliography
     #: may occur before/after a list of lines, within a linegroup, within a note
-    source = fields.StringField(".//BIBL|t:bibl", normalize=True)
+    source = xmlmap.StringField(".//BIBL|t:bibl", normalize=True)
 
     #: number for the immediate preceding page begin tag
-    start_page = fields.NodeField("preceding::PB[1]|preceding::t:pb[1]", Page)
-    continue_page = fields.NodeField("./PB[1]|./t:pb[1]", Page)
+    start_page = xmlmap.NodeField("preceding::PB[1]|preceding::t:pb[1]", Page)
+    continue_page = xmlmap.NodeField("./PB[1]|./t:pb[1]", Page)
 
     #: full text of this node; prefer text_by_page
-    text = fields.StringField(".")  # NOTE: does not include gaps
+    text = xmlmap.StringField(".")  # NOTE: does not include gaps
 
     #: all text nodes within this quote, at any depth
-    text_contents = fields.StringListField(".//text()")
+    text_contents = xmlmap.StringListField(".//text()")
 
     #: some records include notes with a citation
-    notes = fields.NodeListField("NOTE", Note)
+    notes = xmlmap.NodeListField("NOTE", Note)
 
     def has_text(self):
         return has_text(self.text)
@@ -361,7 +361,7 @@ class QuotedPoem(MixedText):
 
 
 class Text(TeiXmlObject):
-    """:class:~`neuxml.xmlmap.XmlObject` for extracting page text from
+    """:class:~`eulxml.xmlmap.XmlObject` for extracting page text from
     EEBO-TCP P4 xml or P5 xml"""
 
     # EEBO-TCP TEI does not use or declare any namespaces
@@ -370,16 +370,16 @@ class Text(TeiXmlObject):
     # various levels nested within divs, paragraphs, etc
 
     #: list of page objects, identified by page beginning tag (PB)
-    pages = fields.NodeListField("EEBO//TEXT//PB|.//t:text//t:pb", Page)
+    pages = xmlmap.NodeListField("EEBO//TEXT//PB|.//t:text//t:pb", Page)
     #: list of quoted poems, identified by Q that contains LG or L
-    quoted_poems = fields.NodeListField(
+    quoted_poems = xmlmap.NodeListField(
         "EEBO//TEXT//Q[LG or L]|.//t:text//t:q[t:lg or t:l]", QuotedPoem
     )
 
 
 def load_tcp_text(volume_id):
     xml_path = Path(settings.EEBO_DATA) / f"{short_id(volume_id)}.P4.xml"
-    return core.load_xmlobject_from_file(xml_path, Text)
+    return xmlmap.load_xmlobject_from_file(xml_path, Text)
 
 
 def page_data(volume_id):
@@ -395,7 +395,7 @@ def page_data(volume_id):
 
 def page_count(volume_id):
     xml_path = Path(settings.EEBO_DATA) / f"{short_id(volume_id)}.P4.xml"
-    tcp_text = core.load_xmlobject_from_file(xml_path, Text)
+    tcp_text = xmlmap.load_xmlobject_from_file(xml_path, Text)
     # provisional page count based on number of page beginning tags
     # NOTE: for simplicity, we include pages with no content
     return len(tcp_text.pages)

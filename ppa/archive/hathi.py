@@ -12,7 +12,7 @@ import pymarc
 import requests
 from cached_property import cached_property
 from django.conf import settings
-from neuxml.xmlmap import core, fields
+from eulxml import xmlmap
 from pairtree import pairtree_client, pairtree_path, storage_exceptions
 
 from ppa import __version__ as ppa_version
@@ -163,8 +163,8 @@ class HathiBibliographicRecord:
             return pymarc.parse_xml_to_array(io.StringIO(marcxml))[0]
 
 
-class _METS(core.XmlObject):
-    """Base :class:`~neuxml.xmlmap.XmlObject`. with METS namespace configured"""
+class _METS(xmlmap.XmlObject):
+    """Base :class:`~eulxml.xmlmap.XmlObject`. with METS namespace configured"""
 
     ROOT_NAMESPACES = {"m": "http://www.loc.gov/METS/"}
 
@@ -173,13 +173,13 @@ class StructMapPage(_METS):
     """Single logical page within a METS StructMap"""
 
     #: page order
-    order = fields.IntegerField("@ORDER")
+    order = xmlmap.IntegerField("@ORDER")
     #: page label
-    label = fields.StringField("@LABEL")
+    label = xmlmap.StringField("@LABEL")
     #: order label
-    orderlabel = fields.StringField("@ORDERLABEL")
+    orderlabel = xmlmap.StringField("@ORDERLABEL")
     #: identifier for a text or ocr file, from a file pointer
-    text_file_id = fields.StringField(
+    text_file_id = xmlmap.StringField(
         'm:fptr/@FILEID[contains(., "TXT") or contains(. , "OCR")]'
     )
 
@@ -217,11 +217,11 @@ class METSFile(_METS):
     """File location information within a METS document."""
 
     #: xml identifier
-    id = fields.StringField("@ID")
+    id = xmlmap.StringField("@ID")
     #: sequence attribute
-    sequence = fields.StringField("@SEQ")
+    sequence = xmlmap.StringField("@SEQ")
     #: file location
-    location = fields.StringField("m:FLocat/@xlink:href")
+    location = xmlmap.StringField("m:FLocat/@xlink:href")
     # example file
     """<METS:file SIZE="1" ID="TXT00000001" MIMETYPE="text/plain"
         CREATED="2016-06-24T09:04:15Z" CHECKSUM="68b329da9893e34099c7d8ad5cb9c940"
@@ -230,11 +230,11 @@ class METSFile(_METS):
 
 
 class MinimalMETS(_METS):
-    """Minimal :class:`~neuxml.xmlmap.XmlObject` for METS that maps only
+    """Minimal :class:`~eulxml.xmlmap.XmlObject` for METS that maps only
     what is needed to support page indexing for :mod:`ppa`."""
 
     #: list of struct map pages as :class:`StructMapPage`
-    structmap_pages = fields.NodeListField(
+    structmap_pages = xmlmap.NodeListField(
         'm:structMap[@TYPE="physical"]//m:div[@TYPE="page"]', StructMapPage
     )
 
@@ -346,7 +346,7 @@ class HathiObject:
         :raises: :class:`storage_exceptions.PartNotFoundException` if the
             mets.xml flie is not found in pairtree storage for this object
         """
-        return core.load_xmlobject_from_file(self.metsfile_path(), MinimalMETS)
+        return xmlmap.load_xmlobject_from_file(self.metsfile_path(), MinimalMETS)
 
     def page_data(self):
         """Return a generator of page content for this HathiTrust work

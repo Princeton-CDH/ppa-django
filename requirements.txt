@@ -10,9 +10,7 @@ django-apptemplates
 progressbar2
 django-semanticui-forms
 lxml
-# TODO: switch to released neuxml when 1.0.0 is out
-git+https://github.com/Princeton-CDH/neuxml@main
-# neuxml
+eulxml
 wagtail>=6.4,<6.5
 django-taggit>=4.0
 bleach

@@ -5,7 +5,7 @@ import re
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.template.defaultfilters import pluralize
-from neuxml.xmlmap import core
+from eulxml import xmlmap
 import progressbar
 from corppa.poetry_detection.core import Excerpt
 
@@ -109,7 +109,7 @@ class Command(BaseCommand):
                 count = 0  # reset count for progress bar for ecco-tcp subset
                 progbar.update(count)
                 for work in ecco_digworks:
-                    tcp_text = core.load_xmlobject_from_file(
+                    tcp_text = xmlmap.load_xmlobject_from_file(
                         self.ecco_tcp_path / f"{work.source_id}.xml", eebo_tcp.Text
                     )
                     quoted_poems = self.get_quoted_poems(work, tcp_text)
