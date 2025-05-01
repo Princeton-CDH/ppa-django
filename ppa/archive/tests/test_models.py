@@ -687,6 +687,16 @@ class TestDigitizedWork(TestCase):
         work = DigitizedWork(source_id="CW79279237", pages_digital="1-10")
         assert work.count_pages() == 10
 
+    @patch("ppa.archive.models.ZipFile", spec=ZipFile)
+    @patch("ppa.archive.hathi.HathiObject.zipfile_path")
+    def test_count_pages_no_ptree(self, mock_zipfile_path, mock_zip_file):
+        work = DigitizedWork(source_id="chi.89279238")
+        with patch.object(work.hathi, "pairtree_client") as mock_pairtree_client:
+            # should use self.hathi.pairtree_client() if ptree not provided as arg
+            work.count_pages()
+            mock_zipfile_path.assert_called_with(mock_pairtree_client.return_value)
+            mock_zip_file.assert_called_with(mock_zipfile_path.return_value)
+
     def test_index_id(self):
         work = DigitizedWork(source_id="chi.79279237")
         assert work.index_id() == work.source_id
