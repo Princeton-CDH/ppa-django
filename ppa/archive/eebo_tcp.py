@@ -7,7 +7,7 @@ from pathlib import Path
 import string
 
 from django.conf import settings
-from eulxml import xmlmap
+from neuxml import xmlmap
 
 
 def short_id(volume_id):
@@ -35,7 +35,7 @@ class MixedText(TeiXmlObject):
     divider = "∣"
 
     # count following notes as a quick check to bail out of note detection logic
-    # (can't use eulxml boolean field here because it assumes string values for true/false)
+    # (can't use neuxml boolean field here because it assumes string values for true/false)
     has_notes = xmlmap.IntegerField("count(following::NOTE)")
 
     def parent_note(self, text):
@@ -361,7 +361,7 @@ class QuotedPoem(MixedText):
 
 
 class Text(TeiXmlObject):
-    """:class:~`eulxml.xmlmap.XmlObject` for extracting page text from
+    """:class:~`neuxml.xmlmap.XmlObject` for extracting page text from
     EEBO-TCP P4 xml or P5 xml"""
 
     # EEBO-TCP TEI does not use or declare any namespaces
