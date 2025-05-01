@@ -12,7 +12,7 @@ import pymarc
 import requests
 from cached_property import cached_property
 from django.conf import settings
-from eulxml import xmlmap
+from neuxml import xmlmap
 from pairtree import pairtree_client, pairtree_path, storage_exceptions
 
 from ppa import __version__ as ppa_version
@@ -164,7 +164,7 @@ class HathiBibliographicRecord:
 
 
 class _METS(xmlmap.XmlObject):
-    """Base :class:`~eulxml.xmlmap.XmlObject`. with METS namespace configured"""
+    """Base :class:`~neuxml.xmlmap.XmlObject`. with METS namespace configured"""
 
     ROOT_NAMESPACES = {"m": "http://www.loc.gov/METS/"}
 
@@ -230,7 +230,7 @@ class METSFile(_METS):
 
 
 class MinimalMETS(_METS):
-    """Minimal :class:`~eulxml.xmlmap.XmlObject` for METS that maps only
+    """Minimal :class:`~neuxml.xmlmap.XmlObject` for METS that maps only
     what is needed to support page indexing for :mod:`ppa`."""
 
     #: list of struct map pages as :class:`StructMapPage`

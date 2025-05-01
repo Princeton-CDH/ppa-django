@@ -5,7 +5,7 @@ import re
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.template.defaultfilters import pluralize
-from eulxml import xmlmap
+from neuxml import xmlmap
 import progressbar
 from corppa.poetry_detection.core import Excerpt
 
