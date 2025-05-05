@@ -1,6 +1,8 @@
 exclude_patterns:
 - "**/node_modules/"
-- "**/settings.py"
+- "**/settings/**"
+- "ppa/archive/management/commands/check_hathi_excerpts.py"
+- "ppa/archive/management/commands/import_clusters.py"
 - "*.config.js"
 - "*.conf.js"
 - "sitemedia/semantic/"
