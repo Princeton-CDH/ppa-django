@@ -324,12 +324,19 @@ def test_quotedpoem_text_by_page_p5_gap():
 
 
 @override_settings(EEBO_DATA=FIXTURES_PATH)
-def _test_quotedpoem_multipage():
+def test_quotedpoem_multipage():
     lg_text = load_xmlobject_from_file(LG_TCP_FIXTURE, eebo_tcp.Text)
+    multipage_poems = []
+    singlepage_poems = []
     for i, qp in enumerate(lg_text.quoted_poems):
         if qp.continue_page:
-            print(f"{i} poem has continue page")
-            print(repr(qp.continue_page))
+            multipage_poems.append(i)
+        else:
+            singlepage_poems.append(i)
+    # check singlepage poems identified
+    assert all(n_poem in singlepage_poems for n_poem in [0, 1, 2, 3])
+    # check some multipage poems identified
+    assert all(n_poem in multipage_poems for n_poem in [44, 55, 62, 84, 111])
 
 
 @override_settings(EEBO_DATA=FIXTURES_PATH)

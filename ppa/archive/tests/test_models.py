@@ -493,6 +493,8 @@ class TestDigitizedWork(TestCase):
 
     def test_index_item_type(self):
         assert DigitizedWork.index_item_type() == "work"
+        assert DigitizedWork().index_item_type() == "work"
+
 
     def test_index_data(self):
         digwork = DigitizedWork.objects.create(
@@ -676,13 +678,24 @@ class TestDigitizedWork(TestCase):
     def test_count_pages_eebo(self, mock_eebo_page_count):
         work = DigitizedWork(source_id="A1234", source=DigitizedWork.EEBO)
         mock_eebo_page_count.return_value = 123
-        work.count_pages()
+        result = work.count_pages()
+        assert result == 123
         assert work.page_count == 123
-        mock_eebo_page_count.assert_called_with(work.source_id)
+        mock_eebo_page_count.assert_called_once_with(work.source_id)
 
     def test_count_pages_excerpt(self):
         work = DigitizedWork(source_id="CW79279237", pages_digital="1-10")
         assert work.count_pages() == 10
+
+    @patch("ppa.archive.models.ZipFile", spec=ZipFile)
+    @patch("ppa.archive.hathi.HathiObject.zipfile_path")
+    def test_count_pages_no_ptree(self, mock_zipfile_path, mock_zip_file):
+        work = DigitizedWork(source_id="chi.89279238")
+        with patch.object(work.hathi, "pairtree_client") as mock_pairtree_client:
+            # should use self.hathi.pairtree_client() if ptree not provided as arg
+            work.count_pages()
+            mock_zipfile_path.assert_called_with(mock_pairtree_client.return_value)
+            mock_zip_file.assert_called_with(mock_zipfile_path.return_value)
 
     def test_index_id(self):
         work = DigitizedWork(source_id="chi.79279237")
@@ -889,6 +902,10 @@ class TestDigitizedWork(TestCase):
         work = DigitizedWork(source_id="chi.79279237")
         # default status for new records is public
         assert work.is_public()
+        
+        work.status = DigitizedWork.PUBLIC
+        assert work.is_public()
+
         work.status = DigitizedWork.SUPPRESSED
         assert not work.is_public()
 
@@ -1250,6 +1267,12 @@ class TestPage(TestCase):
         page_data = list(Page.page_index_data(gale_excerpt))
         assert len(page_data) == 2
 
+def test_cluster_str():
+    cluster_id = "group-one" 
+    assert str(Cluster(cluster_id=cluster_id)) == cluster_id
 
-def test_cluster_repr():
+
+@patch.object(Cluster, "__str__")
+def test_cluster_repr(mock_str):
+    mock_str.return_value = "group-one"
     assert repr(Cluster(cluster_id="group-one")) == "<cluster group-one>"
