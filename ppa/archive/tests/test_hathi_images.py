@@ -70,6 +70,12 @@ class TestDownloadStats:
         stats.log_skip("image_type")
         mock_log_action.assert_called_once_with("image_type", "skip")
 
+    @patch.object(hathi_images.DownloadStats, "_log_action")
+    def test_log_error(self, mock_log_action):
+        stats = hathi_images.DownloadStats()
+        stats.log_error("image_type")
+        mock_log_action.assert_called_once_with("image_type", "error")
+
     def test_update(self):
         stats_a = hathi_images.DownloadStats()
         stats_b = hathi_images.DownloadStats()
