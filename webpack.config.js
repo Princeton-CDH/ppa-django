@@ -104,8 +104,9 @@ module.exports = env => ({
         extensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.scss'] // enables importing these without extensions
     },
     devServer: {
-        contentBase: path.join(__dirname, 'bundles'), // serve this as webroot
-        overlay: true,
+        static: {
+            directory: path.join(__dirname, 'bundles'), // serve this as webroot
+        },
         port: 3000,
         allowedHosts: ['localhost'],
         headers: {
@@ -113,10 +114,10 @@ module.exports = env => ({
             'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
             'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization',
         },
-        stats: { // hides file-level verbose output when server is running
-            children: false,
-            modules: false,
-        }
+        client: {
+            logging: 'warn',
+            overlay: true,
+        },
     },
     devtool: devMode ? 'eval-source-map' : 'source-map', // allow sourcemaps in dev & qa
     optimization: {
