@@ -23,6 +23,7 @@ module.exports = env => ({
         home: './js/home.js', // homepage (parallax)
         search: './js/search.js', // scripts & styles for search page
         searchWithin: './ts/searchWithin.ts', // components & styles for search within work page
+        pdf: './js/controllers/pdf.js' // wagtail stimulus extension for PDF generation
     },
     output: {
         path: path.resolve(__dirname, 'bundles'), // where to output bundles

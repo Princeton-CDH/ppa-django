@@ -1,9 +1,10 @@
 from datetime import date
 
+from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models
 from django.http import Http404
-from wagtail.admin.panels import FieldPanel
+from wagtail.admin.panels import FieldPanel, Panel
 from wagtail.fields import RichTextField, StreamField
 from wagtail.models import Page
 from wagtail.snippets.blocks import SnippetChooserBlock
@@ -89,6 +90,33 @@ validate_doi = RegexValidator(
 )
 
 
+class GeneratePdfPanel(Panel):
+    """Panel for asynchronous PDF generation in JavaScript; must be a
+    Panel subclass to have access to EditoralPage's instance URL"""
+
+    class BoundPanel(Panel.BoundPanel):
+        template_name = "wagtailadmin/panels/pdf_panel.html"
+
+        def get_context_data(self, parent_context=None):
+            """Override to insert live page URL and docraptor API key"""
+            context = super().get_context_data(parent_context)
+            url = self.instance.get_url()
+            # disable if unpublished, or has unpublished changes
+            if (
+                not url
+                or not self.instance.live
+                or self.instance.has_unpublished_changes
+            ):
+                url = ""
+            context.update(
+                {
+                    "url": url,
+                    "docraptor_api_key": getattr(settings, "DOCRAPTOR_API_KEY", ""),
+                }
+            )
+            return context
+
+
 class EditorialPage(Page, PagePreviewDescriptionMixin):
     """Editorial page, for scholarly, educational, or other essay-like
     content related to the site"""
@@ -125,6 +153,7 @@ class EditorialPage(Page, PagePreviewDescriptionMixin):
         FieldPanel("editors"),
         FieldPanel("doi"),
         FieldPanel("pdf"),
+        GeneratePdfPanel(),  # use custom panel for PDF generation
         FieldPanel("body"),
     ]
 
