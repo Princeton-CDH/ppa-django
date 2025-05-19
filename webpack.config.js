@@ -54,7 +54,7 @@ module.exports = env => ({
             { // load and compile styles to CSS
                 test: /\.(sa|sc|c)ss$/,
                 use: [
-                    devMode ? 'style-loader' : MiniCssExtractPlugin.loader, // use style-loader for hot reload in dev
+                    MiniCssExtractPlugin.loader,
                     { loader: 'css-loader', options: { url: false } },
                     'postcss-loader', // for autoprefixer
                     {
@@ -107,6 +107,9 @@ module.exports = env => ({
     devServer: {
         static: {
             directory: path.join(__dirname, 'bundles'), // serve this as webroot
+        },
+        devMiddleware: {
+            writeToDisk: true,
         },
         port: 3000,
         allowedHosts: ['localhost'],
