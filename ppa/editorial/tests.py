@@ -160,7 +160,8 @@ class TestGeneratePdfPanel:
 
         # should use page's URL; api key from settings
         assert context["url"] == page.get_url()
-        assert context["docraptor_api_key"] == "test-api-key"
+        assert context["DOCRAPTOR_API_KEY"] == "test-api-key"
+        assert not context["DOCRAPTOR_LIMIT_NOTE"]
 
         # make an unpublished change. URL should now be an empty string
         page.title = "test"
