@@ -154,3 +154,20 @@ to use the `--natural-foreign` option::
 
 7. Remove any extra user accounts from the fixture (like `script`)
 8. Use `git diff` to check for any other major changes.
+
+
+Testing local DocRaptor PDF generation
+--------------------------------------
+
+In order for DocRaptor to read any content, you must open your localhost to the
+public with a service like Cloudflare Tunnel, e.g.::
+
+    npx cloudflared tunnel --url http://localhost:8000
+
+Then in Wagtail Site settings, set the default Site's hostname to the tunnel's
+public hostname (no protocol/slashes), and port 80. That way,
+``GeneratePdfPanel.BoundPanel.instance.get_url()`` resolves to a public URL.
+
+Note that this will not work in Webpack dev mode.
+
+When finished, set the default Site back to ``localhost`` and port 8000.
