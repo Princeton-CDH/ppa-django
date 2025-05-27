@@ -2,14 +2,16 @@ from datetime import date
 
 import pytest
 from django.http import Http404
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.test.client import RequestFactory
 from wagtail.models import Site
 from wagtail.url_routing import RouteResult
 from wagtail.test.utils import WagtailPageTestCase
 from wagtail.test.utils.form_data import nested_form_data, rich_text, streamfield
+from unittest.mock import patch
 
-from ppa.editorial.models import EditorialIndexPage, EditorialPage
+from ppa.editorial.models import EditorialIndexPage, EditorialPage, GeneratePdfPanel
+from ppa.editorial.wagtail_hooks import editor_js
 from ppa.pages.models import HomePage, Person
 
 
@@ -140,6 +142,40 @@ class TestEditorialIndexPage(WagtailPageTestCase):
             "%s" % editorial_with_authors.first_published_at.strftime("%Y-%m-%d"),
             count=1,
         )
+
+@pytest.mark.django_db
+class TestGeneratePdfPanel:
+    @override_settings(DOCRAPTOR_API_KEY="test-api-key")
+    def test_get_context_data(self):
+        # create a new page
+        site = Site.objects.first()
+        parent = site.root_page
+        page = EditorialPage(title="Test Page", slug="test-page", live=True)
+        parent.add_child(instance=page)
+
+        # bind panel to EditorialPage and get for page instance
+        panel = GeneratePdfPanel()
+        bound_panel = panel.bind_to_model(EditorialPage).get_bound_panel(instance=page)
+        context = bound_panel.get_context_data()
+
+        # should use page's URL; api key from settings
+        assert context["url"] == page.get_url()
+        assert context["DOCRAPTOR_API_KEY"] == "test-api-key"
+        assert not context["DOCRAPTOR_LIMIT_NOTE"]
+
+        # make an unpublished change. URL should now be an empty string
+        page.title = "test"
+        rev = page.save_revision()
+        bound_panel = panel.bind_to_model(EditorialPage).get_bound_panel(instance=page)
+        context = bound_panel.get_context_data()
+        assert context["url"] == ""
+
+        # publish the change. URL should work again
+        page.publish(rev)
+        page.refresh_from_db()
+        bound_panel = panel.bind_to_model(EditorialPage).get_bound_panel(instance=page)
+        context = bound_panel.get_context_data()
+        assert context["url"] == page.get_url()
 
 
 class TestEditorialPage(WagtailPageTestCase):
@@ -320,3 +356,13 @@ class TestPerson(TestCase):
     def test_str(self):
         p = Person(name="A person")
         assert str(p) == "A person"
+
+class TestWagtailHooks:
+    @patch("ppa.editorial.wagtail_hooks.render_bundle")
+    def test_editor_js(self, mock_render_bundle):
+        # should call render_bundle
+        mock_script_tag = "<script src='pdf.js'></script>"
+        mock_render_bundle.return_value = mock_script_tag
+        inserted_js = editor_js()
+        mock_render_bundle.assert_called_once_with({}, "pdf", "js")
+        assert str(inserted_js) == mock_script_tag
