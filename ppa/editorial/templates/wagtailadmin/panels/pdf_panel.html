@@ -1,8 +1,8 @@
-{% if docraptor_api_key %}
+{% if DOCRAPTOR_API_KEY %}
     <div
         data-controller="pdf"
         data-pdf-url-value="{{ url }}"
-        data-pdf-apikey-value="{{ docraptor_api_key }}"
+        data-pdf-apikey-value="{{ DOCRAPTOR_API_KEY }}"
     >
         <h3 data-pdf-target="heading">Generate a PDF copy of this page:</h3>
         <div>
@@ -30,10 +30,12 @@
             </button>
             <span data-pdf-target="downloadFinal"></span>
             <p class="help">
-                Limited to 5 PDFs per month. Check
-                <a href="https://docraptor.com/users/usage">DocRaptor Usage</a>
+                {{ DOCRAPTOR_LIMIT_NOTE|default_if_none:"Limited to 5 PDFs per month." }}
+                Check <a href="https://docraptor.com/users/usage">DocRaptor Usage</a>
                 for current usage.
             </p>
         </div>
     </div>
+{% else %}
+    <div class="help">A DocRaptor API key must be configured to enable PDF generation.</div>
 {% endif %}

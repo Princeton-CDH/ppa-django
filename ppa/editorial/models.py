@@ -115,7 +115,8 @@ class GeneratePdfPanel(Panel):
             context.update(
                 {
                     "url": url,
-                    "docraptor_api_key": getattr(settings, "DOCRAPTOR_API_KEY", ""),
+                    "DOCRAPTOR_API_KEY": getattr(settings, "DOCRAPTOR_API_KEY", None),
+                    "DOCRAPTOR_LIMIT_NOTE": getattr(settings, "DOCRAPTOR_LIMIT_NOTE", None),
                 }
             )
             return context
