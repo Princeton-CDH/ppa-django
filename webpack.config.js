@@ -23,6 +23,7 @@ module.exports = env => ({
         home: './js/home.js', // homepage (parallax)
         search: './js/search.js', // scripts & styles for search page
         searchWithin: './ts/searchWithin.ts', // components & styles for search within work page
+        pdf: './js/controllers/pdf.js' // wagtail stimulus extension for PDF generation
     },
     output: {
         path: path.resolve(__dirname, 'bundles'), // where to output bundles
@@ -53,7 +54,7 @@ module.exports = env => ({
             { // load and compile styles to CSS
                 test: /\.(sa|sc|c)ss$/,
                 use: [
-                    devMode ? 'style-loader' : MiniCssExtractPlugin.loader, // use style-loader for hot reload in dev
+                    MiniCssExtractPlugin.loader,
                     { loader: 'css-loader', options: { url: false } },
                     'postcss-loader', // for autoprefixer
                     {
@@ -104,8 +105,12 @@ module.exports = env => ({
         extensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.scss'] // enables importing these without extensions
     },
     devServer: {
-        contentBase: path.join(__dirname, 'bundles'), // serve this as webroot
-        overlay: true,
+        static: {
+            directory: path.join(__dirname, 'bundles'), // serve this as webroot
+        },
+        devMiddleware: {
+            writeToDisk: true,
+        },
         port: 3000,
         allowedHosts: ['localhost'],
         headers: {
@@ -113,10 +118,10 @@ module.exports = env => ({
             'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
             'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization',
         },
-        stats: { // hides file-level verbose output when server is running
-            children: false,
-            modules: false,
-        }
+        client: {
+            logging: 'warn',
+            overlay: true,
+        },
     },
     devtool: devMode ? 'eval-source-map' : 'source-map', // allow sourcemaps in dev & qa
     optimization: {

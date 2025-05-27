@@ -9,7 +9,7 @@
         "url": "https://github.com/Princeton-CDH/ppa-django.git"
     },
     "scripts": {
-        "dev": "webpack serve --progress --hot --inline",
+        "dev": "webpack serve --progress --hot",
         "dev:semantic": "gulp --gulpfile sitemedia/semantic/gulpfile.js",
         "start": "npm run dev",
         "test": "npm run test:unit && npm run test:a11y",

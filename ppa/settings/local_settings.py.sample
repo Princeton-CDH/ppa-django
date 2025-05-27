@@ -113,3 +113,11 @@ LOGGING = {
         },
     }
 }
+
+# Configure to allow DocRaptor PDF generation for Editorial pages in Wagtail.
+# DOCRAPTOR_API_KEY = ''
+
+# A note that will display next to DocRaptor PDF generation buttons on the
+# Editorial edit page. If unset, reads "Limited to 5 PDFs per month." Only
+# displayed if DOCRAPTOR_API_KEY is configured.
+# DOCRAPTOR_LIMIT_NOTE = ''
