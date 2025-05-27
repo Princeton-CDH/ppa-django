@@ -101,15 +101,8 @@ class GeneratePdfPanel(Panel):
             """Override to insert live page URL and docraptor API key"""
             context = super().get_context_data(parent_context)
 
-            # NOTE: To test this in development, in order for DocRaptor to read
-            # any content, you must open your localhost to the public with a
-            # service like Cloudflare Tunnel, e.g.
-            #   npx cloudflared tunnel --url http://localhost:8000
-            # Then in Wagtail Site settings, set the default Site's hostname to
-            # the tunnel's public hostname (no protocol/slashes), and port 80.
-            # That way, self.instance.get_url() will resolve to a public URL.
-            # Note that this will not work in webpack dev mode.
-            # When finished, set the default Site back to localhost port 8000.
+            # NOTE: See DEVELOPERNOTES.rst for instructions to test this in
+            # development, under "Testing local DocRaptor PDF generation."
             url = self.instance.get_url()
 
             # disable if unpublished, or has unpublished changes
