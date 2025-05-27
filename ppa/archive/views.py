@@ -314,9 +314,9 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
                 # (previously excerpt ids were based on digital page range)
                 digwork_oldid = source_qs.filter(
                     old_workid="%(source_id)s-p%(start_page)s" % self.kwargs
-                ).first()
-                if digwork_oldid:
-                    self.redirect_url = source_qs.first().get_absolute_url()
+                )
+                if digwork_oldid.exists():
+                    self.redirect_url = digwork_oldid.first().get_absolute_url()
 
         # otherwise, return a 404
         return qs
