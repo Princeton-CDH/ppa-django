@@ -95,7 +95,11 @@
 	}
 
 	main, #editorial p, #editorial h2, #editorial h3 {
-	    font-size: 20px;
+	    font-size: 16px;
+	}
+
+	#editorial figcaption *, #editorial .footnotes * {
+		font-size: 12px;
 	}
 
 	h1 {
