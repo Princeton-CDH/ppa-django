@@ -58,7 +58,18 @@ describe('ImageLazyLoader', () => {
         this.images = Array.from(document.querySelectorAll('img'))
     })
 
-    it('should call loadImage once per image if IntersectionObserver isn\'t available')
+
+    it('should call loadImage once per image if IntersectionObserver isn\'t available', function() {
+        // ensure IntersectionObserver undefined
+        const realIntersectionObserver = window.IntersectionObserver;
+        delete window.IntersectionObserver
+        // mock loadImage
+        const mockLoadImage = jasmine.createSpy('loadImage')
+        new ImageLazyLoader(this.images, mockLoadImage)
+        expect(mockLoadImage).toHaveBeenCalledTimes(this.images.length)
+        // restore IntersectionObserver
+        window.IntersectionObserver = realIntersectionObserver;
+    })
 
     it('should instantiate a single IntersectionObsever when created', function() {
         let mockIOConstructor = jasmine.createSpy().and.callThrough()

@@ -111,7 +111,6 @@ describe('Reactive Form', () => {
             })
         })
 
-        // failing in ci, working locally
         it('should observe state changes for checkboxes', function() {
             $('#checkbox').click() // checked
             expect(this.checkboxSpy).toHaveBeenCalledWith(true)
