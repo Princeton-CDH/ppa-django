@@ -89,18 +89,23 @@ describe('ImageLazyLoader', () => {
         expect(mockIOObserve).toHaveBeenCalledTimes(3)
     })
 
-    xit('should call unobserver() when each image is intersecting the viewport', function() {
+    it('should call unobserver() when each image is intersecting the viewport', function() {
         let mockIOUnobserve = jasmine.createSpy().and.callThrough()
-        let mockIOConstructor = jasmine.createSpy().and.callThrough()
+        let observerCallback
         class mockIntersectionObserver {
-            constructor() { mockIOConstructor() }
+            constructor(callback) {
+                observerCallback = callback
+            }
             observe() {}
             unobserve() { mockIOUnobserve() }
         }
         window.IntersectionObserver = mockIntersectionObserver
         this.loader = new ImageLazyLoader(this.images)
         let mockEntry = { isIntersecting: true, target: this.images[0] }
-        observerCallback([mockEntry])
+        // mock image entering the viewport
+        observerCallback([mockEntry], {
+            unobserve: mockIOUnobserve
+        })
         expect(mockIOUnobserve).toHaveBeenCalledWith(this.images[0])
     })
 
