@@ -73,7 +73,7 @@ describe('Reactive Form', () => {
             this.initialState = $('#form').serializeArray()
         })
 
-        xit('should get called when state changes', function(done) {
+        it('should get called when state changes', function(done) {
             $('#checkbox').click() // make a change
             expect(this.onStateChangeSpy).toHaveBeenCalledTimes(1)
             $('#text').val('hello') // make another change
@@ -111,8 +111,7 @@ describe('Reactive Form', () => {
             })
         })
 
-        // failing in ci, working locally
-        xit('should observe state changes for checkboxes', function() {
+        it('should observe state changes for checkboxes', function() {
             $('#checkbox').click() // checked
             expect(this.checkboxSpy).toHaveBeenCalledWith(true)
             $('#checkbox').click() // unchecked
@@ -126,16 +125,16 @@ describe('Reactive Form', () => {
             expect(this.radio1Spy).toHaveBeenCalledWith(true)
         })
 
-        xit('should observe state changes for text inputs', function(done) {
+        it('should observe state changes for text inputs', function(done) {
             $('#text').val('hello')
             $('#text')[0].dispatchEvent(new Event('input'))  // fake the input event
             setTimeout(() => {  // have to wait for the event to be picked up
                 expect(this.textSpy).toHaveBeenCalledWith('hello')
                 done()
-            }, 500)  // this comes from .debounceTime(500) on the method
+            }, 600)  // this comes from .debounceTime(500) on the method, + buffer
         })
 
-        xit('should ignore repeated values for text inputs', function(done) {
+        it('should ignore repeated values for text inputs', function(done) {
             $('#text').val('hello')
             $('#text')[0].dispatchEvent(new Event('input'))
             $('#text')[0].dispatchEvent(new Event('input'))
@@ -143,7 +142,7 @@ describe('Reactive Form', () => {
             setTimeout(() => {
                 expect(this.textSpy).toHaveBeenCalledTimes(1)
                 done()
-            }, 500)
+            }, 600)
         })
 
         it('should observe state changes for number inputs', function(done) {
@@ -152,10 +151,10 @@ describe('Reactive Form', () => {
             setTimeout(() => {
                 expect(this.numberSpy).toHaveBeenCalledWith('1990')
                 done()
-            }, 500)
+            }, 600)
         })
 
-        xit('should ignore repeated values for number inputs', function(done) {
+        it('should ignore repeated values for number inputs', function(done) {
             $('#number').val('1990')
             $('#number')[0].dispatchEvent(new Event('input'))
             $('#number')[0].dispatchEvent(new Event('input'))
@@ -163,7 +162,7 @@ describe('Reactive Form', () => {
             setTimeout(() => {
                 expect(this.numberSpy).toHaveBeenCalledTimes(1)
                 done()
-            }, 500)
+            }, 600)
         })
     })
 })
