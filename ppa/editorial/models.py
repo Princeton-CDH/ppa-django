@@ -4,7 +4,9 @@ from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models
 from django.http import Http404
+from django.utils.safestring import mark_safe
 from wagtail.admin.panels import FieldPanel, Panel
+from wagtail.contrib.settings.models import BaseGenericSetting, register_setting
 from wagtail.fields import RichTextField, StreamField
 from wagtail.models import Page
 from wagtail.snippets.blocks import SnippetChooserBlock
@@ -85,9 +87,33 @@ class EditorialIndexPage(Page):
             return super().route(request, path_components)
 
 
-validate_doi = RegexValidator(
-    regex=r"^10[.][0-9]{4,}", message="DOI in short form, starting with 10."
-)
+@register_setting(icon="cog")
+class DocraptorSettings(BaseGenericSetting):
+    docraptor_api_key = models.CharField(
+        "DocRaptor API key",
+        max_length=255,
+        blank=True,
+        help_text=mark_safe(
+            "API Key for DocRaptor, found on your "
+            '<a href="https://docraptor.com/doc_logs">DocRaptor account page</a>. '
+            "Required to enable PDF generation."
+        ),
+    )
+    docraptor_limit_note = models.TextField(
+        "DocRaptor limit note",
+        default="Limited to 5 PDFs per month.",
+        help_text="A note that will appear in the editor if the API key is present, "
+        "informing users of the document limit. It is 5 per month on the free plan; "
+        "edit here if plan is upgraded.",
+    )
+
+    panels = [
+        FieldPanel("docraptor_api_key"),
+        FieldPanel("docraptor_limit_note"),
+    ]
+
+    class Meta:
+        verbose_name = "DocRaptor Settings"
 
 
 class GeneratePdfPanel(Panel):
@@ -112,14 +138,13 @@ class GeneratePdfPanel(Panel):
                 or self.instance.has_unpublished_changes
             ):
                 url = ""
-            context.update(
-                {
-                    "url": url,
-                    "DOCRAPTOR_API_KEY": getattr(settings, "DOCRAPTOR_API_KEY", None),
-                    "DOCRAPTOR_LIMIT_NOTE": getattr(settings, "DOCRAPTOR_LIMIT_NOTE", None),
-                }
-            )
+            context.update({"url": url})
             return context
+
+
+validate_doi = RegexValidator(
+    regex=r"^10[.][0-9]{4,}", message="DOI in short form, starting with 10."
+)
 
 
 class EditorialPage(Page, PagePreviewDescriptionMixin):
