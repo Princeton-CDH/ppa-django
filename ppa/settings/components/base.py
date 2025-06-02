@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     # 'wagtail.contrib.forms',
     "wagtail.contrib.legacy.richtext",
     "wagtail.contrib.redirects",
+    "wagtail.contrib.settings",
     "wagtail.sites",
     "wagtail.users",
     "wagtail.snippets",
@@ -129,6 +130,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "ppa.context_extras",
                 "ppa.context_processors.template_globals",
+                "wagtail.contrib.settings.context_processors.settings",
             ],
             "loaders": [
                 "apptemplates.Loader",
