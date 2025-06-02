@@ -47,19 +47,19 @@ class ImageLazyLoader {
     /**
      * @param {Array<Element>} images
      */
-    constructor(images) {
+    constructor(images, loadImg = loadImage) {
         if ('IntersectionObserver' in window) {
             let observer = new IntersectionObserver((items, observer) => {
                 items.forEach(item => {
                     if (item.isIntersecting) {
-                        loadImage(item.target)
+                        loadImg(item.target)
                         observer.unobserve(item.target)
                     }
                 })
             })
             images.forEach(img => observer.observe(img))
         } else {
-            images.forEach(img => loadImage(img))
+            images.forEach(img => loadImg(img))
         }
     }
 }

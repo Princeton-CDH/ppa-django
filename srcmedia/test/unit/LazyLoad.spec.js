@@ -58,7 +58,18 @@ describe('ImageLazyLoader', () => {
         this.images = Array.from(document.querySelectorAll('img'))
     })
 
-    it('should call loadImage once per image if IntersectionObserver isn\'t available')
+
+    it('should call loadImage once per image if IntersectionObserver isn\'t available', function() {
+        // ensure IntersectionObserver undefined
+        const realIntersectionObserver = window.IntersectionObserver;
+        delete window.IntersectionObserver
+        // mock loadImage
+        const mockLoadImage = jasmine.createSpy('loadImage')
+        new ImageLazyLoader(this.images, mockLoadImage)
+        expect(mockLoadImage).toHaveBeenCalledTimes(this.images.length)
+        // restore IntersectionObserver
+        window.IntersectionObserver = realIntersectionObserver;
+    })
 
     it('should instantiate a single IntersectionObsever when created', function() {
         let mockIOConstructor = jasmine.createSpy().and.callThrough()
@@ -89,18 +100,23 @@ describe('ImageLazyLoader', () => {
         expect(mockIOObserve).toHaveBeenCalledTimes(3)
     })
 
-    xit('should call unobserver() when each image is intersecting the viewport', function() {
+    it('should call unobserver() when each image is intersecting the viewport', function() {
         let mockIOUnobserve = jasmine.createSpy().and.callThrough()
-        let mockIOConstructor = jasmine.createSpy().and.callThrough()
+        let observerCallback
         class mockIntersectionObserver {
-            constructor() { mockIOConstructor() }
+            constructor(callback) {
+                observerCallback = callback
+            }
             observe() {}
             unobserve() { mockIOUnobserve() }
         }
         window.IntersectionObserver = mockIntersectionObserver
         this.loader = new ImageLazyLoader(this.images)
         let mockEntry = { isIntersecting: true, target: this.images[0] }
-        observerCallback([mockEntry])
+        // mock image entering the viewport
+        observerCallback([mockEntry], {
+            unobserve: mockIOUnobserve
+        })
         expect(mockIOUnobserve).toHaveBeenCalledWith(this.images[0])
     })
 
