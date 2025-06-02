@@ -1,8 +1,10 @@
-{% if DOCRAPTOR_API_KEY %}
+{% load wagtailsettings_tags %}
+{% get_settings %}
+{% if settings.editorial.DocraptorSettings.docraptor_api_key %}
     <div
         data-controller="pdf"
         data-pdf-url-value="{{ url }}"
-        data-pdf-apikey-value="{{ DOCRAPTOR_API_KEY }}"
+        data-pdf-apikey-value="{{ settings.editorial.DocraptorSettings.docraptor_api_key }}"
     >
         <h3 data-pdf-target="heading">Generate a PDF copy of this page:</h3>
         <div>
@@ -30,7 +32,7 @@
             </button>
             <span data-pdf-target="downloadFinal"></span>
             <p class="help">
-                {{ DOCRAPTOR_LIMIT_NOTE|default_if_none:"Limited to 5 PDFs per month." }}
+                {{ settings.editorial.DocraptorSettings.docraptor_limit_note }}
                 Check <a href="https://docraptor.com/users/usage">DocRaptor Usage</a>
                 for current usage.
             </p>
