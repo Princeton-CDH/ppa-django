@@ -67,7 +67,7 @@
         "karma-webpack": "^5.0.0",
         "pa11y-ci": "^2.4.2",
         "ts-jest": "^29.1.2",
-        "webpack-dev-server": "^4.15.1"
+        "webpack-dev-server": "^5.2.1"
     },
     "volta": {
         "node": "18.12.1"
