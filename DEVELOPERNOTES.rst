@@ -166,7 +166,10 @@ public with a service like Cloudflare Tunnel, e.g.::
 
 Then in Wagtail Site settings, set the default Site's hostname to the tunnel's
 public hostname (no protocol/slashes), and port 80. That way,
-``GeneratePdfPanel.BoundPanel.instance.get_url()`` resolves to a public URL.
+``GeneratePdfPanel.BoundPanel.instance.full_url`` resolves to a public URL.
+
+Finally, set your ALLOWED_HOSTS setting to allow traffic via that domain,
+or simply set ``ALLOWED_HOSTS = ["*"]``.
 
 Note that this will not work in Webpack dev mode.
 
