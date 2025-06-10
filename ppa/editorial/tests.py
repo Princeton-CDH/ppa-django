@@ -159,7 +159,7 @@ class TestGeneratePdfPanel:
         context = bound_panel.get_context_data()
 
         # should use page's URL
-        assert context["url"] == page.get_url()
+        assert context["url"] == page.full_url
 
         # make an unpublished change. URL should now be an empty string
         page.title = "test"
@@ -173,7 +173,7 @@ class TestGeneratePdfPanel:
         page.refresh_from_db()
         bound_panel = panel.bind_to_model(EditorialPage).get_bound_panel(instance=page)
         context = bound_panel.get_context_data()
-        assert context["url"] == page.get_url()
+        assert context["url"] == page.full_url
 
 
 class TestDocraptorSettings(TestCase):
