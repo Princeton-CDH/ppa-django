@@ -5,7 +5,7 @@ via ajax, e.g. to update the search results.
 {% endcomment %}
 <div class="data">
     <pre class="count">
-        Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}
+        Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}{% if not search_form.cluster.value %} or cluster{{ paginator.count|pluralize }} of works{% endif %}
     </pre>
     {{ facet_ranges.pub_date|json_script:"facets" }}
 </div>
