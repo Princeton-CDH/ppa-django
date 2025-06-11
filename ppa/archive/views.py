@@ -4,7 +4,7 @@ import requests
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import MultipleObjectsReturned, ValidationError
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.http import (
     Http404,
     HttpResponsePermanentRedirect,
@@ -31,6 +31,19 @@ from ppa.common.views import AjaxTemplateMixin
 logger = logging.getLogger(__name__)
 
 
+class GracefulPaginator(Paginator):
+    """Paginator override to gracefully handle out-of-range errors.
+    Adapted from https://forum.djangoproject.com/t/23037"""
+
+    def page(self, number):
+        """Get the page by the supplied number. Reset to 1 if the supplied page is out of range."""
+        try:
+            number = self.validate_number(number)
+        except (PageNotAnInteger, EmptyPage):
+            number = 1
+        return super().page(number)
+
+
 class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
     """Search and browse digitized works.  Based on Solr index
     of works and pages."""
@@ -40,6 +53,7 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
     ajax_template_name = "archive/snippets/results_list.html"
     form_class = SearchForm
     paginate_by = 50
+    paginator_class = GracefulPaginator
     #: title for metadata / preview
     meta_title = "Princeton Prosody Archive"
     #: page description for metadata/preview
