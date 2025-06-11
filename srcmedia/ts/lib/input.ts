@@ -70,7 +70,7 @@ class RxTextInput extends RxInput implements Reactive<RxTextInputState> {
         // Update state when the user types in a new value, with debounce
         fromEvent(this.element, 'input').pipe(
             map(() => ({ value: this.element.value })),
-            debounceTime(500),
+            debounceTime(750),
             distinctUntilChanged()
         ).subscribe(this.update)
     }

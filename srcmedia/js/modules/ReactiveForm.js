@@ -26,7 +26,7 @@ export default class ReactiveForm {
             default:
                 return observable.pipe(
                     map(e => e.target.value), // returns string
-                    debounceTime(500), // filter out fast repetitive events
+                    debounceTime(750), // filter out fast repetitive events
                     distinctUntilChanged(), // filter out non-changes
                 )
         }
