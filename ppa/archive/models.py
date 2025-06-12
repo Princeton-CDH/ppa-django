@@ -1265,3 +1265,19 @@ class Page(Indexable):
                 }
             )
             yield page_info
+
+
+@register_snippet
+class SourceNote(models.Model):
+    source = models.CharField(
+        max_length=2,
+        choices=DigitizedWork.SOURCE_CHOICES,
+        unique=True,  # only allow one note per source
+    )
+    note = RichTextField(
+        features=["bold", "italic", "link"],
+        help_text="A brief note to appear next to the source name in search results, as a tooltip",
+    )
+
+    def __str__(self):
+        return self.get_source_display()
