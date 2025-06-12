@@ -12,7 +12,7 @@ from django.utils.http import urlencode
 from parasolr.django import SolrClient, SolrQuerySet
 
 from ppa.archive.forms import ImportForm, ModelMultipleChoiceFieldWithEmpty, SearchForm
-from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork, Page
+from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork, Page, SourceNote
 from ppa.archive.solr import ArchiveSearchQuerySet
 from ppa.archive.templatetags.ppa_tags import (
     gale_page_url,
@@ -1248,6 +1248,34 @@ class TestDigitizedWorkListView(TestCase):
         # no cluster should also be fine
         assert self.client.get(archive_list_url).status_code == 200
 
+    @pytest.mark.usefixtures("mock_solr_queryset")
+    def test_source_notes(self):
+        # create a source note
+        sn = SourceNote.objects.create(source=DigitizedWork.HATHI, note="Example note")
+        hathi_key = dict(DigitizedWork.SOURCE_CHOICES)[DigitizedWork.HATHI]
+        assert str(sn) == hathi_key
+        # set up various mocks for DigitizedWorkListView.get_context_data
+        with patch(
+            "ppa.archive.views.ArchiveSearchQuerySet", new=self.mock_solr_queryset()
+        ) as mock_queryset_cls:
+            mock_qs = mock_queryset_cls.return_value
+            mock_facets = Mock()
+            mock_facets.facet_fields = {}
+            mock_facets.facet_ranges = {"pub_date": {"end": 2025}}
+            mock_qs.get_facets.return_value = mock_facets
+            mock_page_obj = Mock()
+            mock_page_obj.object_list = mock_qs
+            digworkview = DigitizedWorkListView()
+            digworkview.object_list = mock_qs
+            digworkview.form = Mock(is_valid=Mock(return_value=True))
+            digworkview.kwargs = {}
+            with patch.object(digworkview, "paginate_queryset", return_value=(Mock(), mock_page_obj, mock_qs, Mock())):
+                with patch.object(digworkview, "get_pages", return_value=({}, {})):
+                    context = digworkview.get_context_data()
+                    # note should be in context var, keyed on source display
+                    assert "source_notes" in context
+                    assert hathi_key in context["source_notes"]
+                    assert context["source_notes"][hathi_key] == sn.note
 
 class TestImportView(TestCase):
     superuser = {"username": "super", "password": str(uuid.uuid4())}

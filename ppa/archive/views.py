@@ -24,7 +24,7 @@ from ppa.archive.forms import (
     SearchWithinWorkForm,
 )
 from ppa.archive.import_util import GaleImporter, HathiImporter
-from ppa.archive.models import NO_COLLECTION_LABEL, DigitizedWork
+from ppa.archive.models import NO_COLLECTION_LABEL, DigitizedWork, SourceNote
 from ppa.archive.solr import ArchiveSearchQuerySet, PageSearchQuerySet
 from ppa.common.views import AjaxTemplateMixin
 
@@ -261,6 +261,10 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
                 "NO_COLLECTION_LABEL": NO_COLLECTION_LABEL,
                 "page_title": self.meta_title,
                 "page_description": self.meta_description,
+                # dict of source tooltip notes keyed on source label (as that's what is indexed)
+                "source_notes": {
+                    sn.get_source_display(): sn.note for sn in SourceNote.objects.all()
+                },
             }
         )
         return context
