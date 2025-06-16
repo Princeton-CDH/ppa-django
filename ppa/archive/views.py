@@ -294,6 +294,7 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
     slug_url_kwarg = "source_id"
     form_class = SearchWithinWorkForm
     paginate_by = 50
+    paginator_class = GracefulPaginator
     # redirect url for a full volume converted to a single excerpt
     redirect_url = None
 
