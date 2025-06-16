@@ -5,6 +5,9 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.http import Http404
 from django.utils.safestring import mark_safe
+from modelcluster.fields import ParentalKey
+from modelcluster.contrib.taggit import ClusterTaggableManager
+from taggit.models import TaggedItemBase
 from wagtail.admin.panels import FieldPanel, Panel
 from wagtail.contrib.settings.models import BaseGenericSetting, register_setting
 from wagtail.fields import RichTextField, StreamField
@@ -142,6 +145,13 @@ class GeneratePdfPanel(Panel):
             return context
 
 
+class EditorialPageTag(TaggedItemBase):
+    """Through model for tagging EditorialPage instances"""
+    content_object = ParentalKey(
+        "editorial.EditorialPage", on_delete=models.CASCADE, related_name="tagged_items"
+    )
+
+
 validate_doi = RegexValidator(
     regex=r"^10[.][0-9]{4,}", message="DOI in short form, starting with 10."
 )
@@ -177,8 +187,10 @@ class EditorialPage(Page, PagePreviewDescriptionMixin):
         max_length=255,
         help_text="URL for a PDF of this article, if available",
     )
+    tags = ClusterTaggableManager(through=EditorialPageTag, blank=True)
     content_panels = Page.content_panels + [
         FieldPanel("description"),
+        FieldPanel("tags"),
         FieldPanel("authors"),
         FieldPanel("editors"),
         FieldPanel("doi"),
