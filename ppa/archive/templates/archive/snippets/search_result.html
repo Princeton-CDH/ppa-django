@@ -96,11 +96,9 @@
     <div class="page-previews container">
         {% if page_groups and page_highlights %}
         {% with results=page_groups|dict_item:item.id %}
-            {% if results.numFound > 2 %}
             <span class="total-pages">
                 {{ results.numFound|intcomma }} matching page{{ results.numFound|pluralize }}
             </span>
-            {% endif %}
             <div class="pages">
                 {% if page_highlights %}
                 <div class="wrapper">
