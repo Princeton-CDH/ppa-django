@@ -19,7 +19,7 @@ from ppa.archive.templatetags.ppa_tags import (
     hathi_page_url,
     page_image_url,
 )
-from ppa.archive.views import DigitizedWorkListView, ImportView
+from ppa.archive.views import DigitizedWorkListView, GracefulPaginator, ImportView
 
 
 class TestDigitizedWorkDetailView(TestCase):
@@ -1163,6 +1163,26 @@ class TestAddToCollection(TestCase):
             "<p> Please select digitized works from the admin interface. </p>",
             html=True,
         )
+
+
+class TestGracefulPaginator:
+    @patch("ppa.archive.views.Paginator.page")
+    def test_page(self, mock_super_page):
+        objects = [Mock() for _ in range(100)]
+        paginator = GracefulPaginator(objects, 10)
+        paginator.page(1)
+        mock_super_page.assert_called_with(1)
+        paginator.page(5)
+        mock_super_page.assert_called_with(5)
+        # should be 1 for all out of range numbers
+        paginator.page(100)
+        mock_super_page.assert_called_with(1)
+        paginator.page(-1)
+        mock_super_page.assert_called_with(1)
+        paginator.page(1.5)
+        mock_super_page.assert_called_with(1)
+        paginator.page("not a number")
+        mock_super_page.assert_called_with(1)
 
 
 class TestDigitizedWorkListView(TestCase):
