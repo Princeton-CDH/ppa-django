@@ -47,6 +47,17 @@
                         <dd>{{ item.publisher }}</dd>
                     </div>
                     {% endif %}
+                    {% if item.source %}
+                    <div class="source">
+                        <dt>Source</dt>
+                        <dd>
+                            {{ item.source }}{% if source_notes|dict_item:item.source %}
+                            <span class="source-popup" data-html="{{ source_notes|dict_item:item.source }}" data-position="top center">
+                                <i class="ui question circle icon"></i>
+                            </span>{% endif %}
+                        </dd>
+                    </div>
+                    {% endif %}
                     {% if item.enumcron %}
                     <div class="volume">
                         <dt>Volume</dt>
