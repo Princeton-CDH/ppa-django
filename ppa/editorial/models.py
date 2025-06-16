@@ -129,7 +129,7 @@ class GeneratePdfPanel(Panel):
 
             # NOTE: See DEVELOPERNOTES.rst for instructions to test this in
             # development, under "Testing local DocRaptor PDF generation."
-            url = self.instance.get_url()
+            url = self.instance.full_url
 
             # disable if unpublished, or has unpublished changes
             if (
