@@ -81,7 +81,7 @@ describe('Reactive Form', () => {
             setTimeout(() => { // have to wait for the event to be picked up
                 expect(this.onStateChangeSpy).toHaveBeenCalledTimes(2)
                 done()
-            }, 500) // this comes from .debounceTime(500) on fromInput()
+            }, 850) // this comes from .debounceTime(750) on fromInput()
         })
 
         it('should receive the state as a parameter', function() {
@@ -131,7 +131,7 @@ describe('Reactive Form', () => {
             setTimeout(() => {  // have to wait for the event to be picked up
                 expect(this.textSpy).toHaveBeenCalledWith('hello')
                 done()
-            }, 600)  // this comes from .debounceTime(500) on the method, + buffer
+            }, 850)  // this comes from .debounceTime(750) on the method, + buffer
         })
 
         it('should ignore repeated values for text inputs', function(done) {
@@ -142,7 +142,7 @@ describe('Reactive Form', () => {
             setTimeout(() => {
                 expect(this.textSpy).toHaveBeenCalledTimes(1)
                 done()
-            }, 600)
+            }, 850)
         })
 
         it('should observe state changes for number inputs', function(done) {
@@ -151,7 +151,7 @@ describe('Reactive Form', () => {
             setTimeout(() => {
                 expect(this.numberSpy).toHaveBeenCalledWith('1990')
                 done()
-            }, 600)
+            }, 850)
         })
 
         it('should ignore repeated values for number inputs', function(done) {
@@ -162,7 +162,7 @@ describe('Reactive Form', () => {
             setTimeout(() => {
                 expect(this.numberSpy).toHaveBeenCalledTimes(1)
                 done()
-            }, 600)
+            }, 850)
         })
     })
 })
