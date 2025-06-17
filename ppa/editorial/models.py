@@ -1,13 +1,13 @@
 from datetime import date
 
-from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models
+from django.db.models.aggregates import Count
 from django.http import Http404
 from django.utils.safestring import mark_safe
 from modelcluster.fields import ParentalKey
 from modelcluster.contrib.taggit import ClusterTaggableManager
-from taggit.models import TaggedItemBase
+from taggit.models import Tag, TaggedItemBase
 from wagtail.admin.panels import FieldPanel, Panel
 from wagtail.contrib.settings.models import BaseGenericSetting, register_setting
 from wagtail.fields import RichTextField, StreamField
@@ -33,9 +33,29 @@ class EditorialIndexPage(Page):
         """Add published editorial posts to template context, most recent first"""
         context = super().get_context(request)
 
+        posts = EditorialPage.objects.child_of(self).live()
+
+        # handle filter by tag
+        tag = request.GET.get("tag")
+        if tag:
+            posts = posts.filter(tags__slug=tag)
+
+        # sort
+        posts = posts.order_by("-first_published_at")
+
         # Add extra variables and return the updated context
-        context["posts"] = (
-            EditorialPage.objects.child_of(self).live().order_by("-first_published_at")
+        context.update(
+            {
+                "posts": posts,
+                "selected_tag": tag,
+                "tags": Tag.objects.annotate(
+                    count=Count(
+                        "editorial_editorialpagetag_items",
+                        # only count live posts
+                        filter=models.Q(editorial_editorialpagetag_items__content_object__live=True),
+                    )
+                ).filter(count__gt=0).order_by("-count", "name"),
+            }
         )
         return context
 
