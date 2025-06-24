@@ -29,19 +29,44 @@ class TestEditorialIndexPage(WagtailPageTestCase):
         self.assertCanCreateAt(HomePage, EditorialIndexPage)
 
     def test_get_context(self):
+        rf = RequestFactory()
         index_page = EditorialIndexPage.objects.first()
         ed_page = EditorialPage.objects.first()
-        context = index_page.get_context({})
+        request = rf.get(index_page.get_url())
+        context = index_page.get_context(request)
         assert "posts" in context
         posts = [post.specific for post in context["posts"]]
         assert ed_page in posts
 
+        # should be in order by most recently published
+        new_page = EditorialPage(title="Test Page", slug="test-page", live=True)
+        index_page.add_child(instance=new_page)
+        context = index_page.get_context(request)
+        assert context["posts"].first().id == new_page.id
+
+        # test tags
+        assert not context["tags"]
+        ed_page.tags.add("abc", "new tag")
+        ed_page.save()
+        new_page.tags.add("new tag")
+        new_page.save()
+        context = index_page.get_context(request)
+        assert context["tags"].count() == 2
+        # tag with more pages should come first
+        assert context["tags"].first().name == "new tag"
+        assert context["tags"].first().count == 2
+        assert not context["selected_tag"]
+
+        # test filter by tag
+        request = rf.get(index_page.get_url(), data={"tag": "abc"})
+        context = index_page.get_context(request)
+        assert new_page not in context["posts"]
+        assert context["selected_tag"] == "abc"
+
         # unpublish
         index_page.get_children().all().unpublish()
-        context = index_page.get_context({})
+        context = index_page.get_context(request)
         assert ed_page not in context["posts"]
-
-        # TODO: test with multiple, check sort order
 
     def test_route(self):
         # test route method directly
