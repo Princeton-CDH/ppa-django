@@ -1,5 +1,5 @@
 {% extends 'pages/content_page.html' %}
-{% load wagtailcore_tags %}
+{% load wagtailcore_tags static %}
 
 {% block page-context-id %}list-editorial{% endblock %}
 
@@ -18,6 +18,18 @@
             {% firstof page.title page_title object.title %}
         </h1>
         <div class="page-description">{{ page.intro|richtext }}</div>
+        {% if tags %}
+            <div class="page-tags">
+                <span class="tags-label">Filter by tag</span>:
+                {% for tag in tags %}
+                    <a href="?{% querystring_replace tag=tag.slug %}"{% if selected_tag == tag.slug %} class="selected"{% endif %}>{{ tag }}</a>
+                    ({{ tag.count }})
+                {% endfor %}
+            </div>
+            {% if selected_tag %}
+                <a href="{{ page.url }}" class="clear-filter">View all</a>
+            {% endif %}
+        {% endif %}
     </div>
 </div>
 <div class="ui vertical basic segment">

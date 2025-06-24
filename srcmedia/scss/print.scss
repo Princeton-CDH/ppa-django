@@ -148,7 +148,8 @@
 				display: none !important;
 			}
 		}
-		.pdf {  // hide link to pdf (since this is used to generate pdf)
+		.pdf, // hide link to pdf (since this is used to generate pdf)
+		.tags { // hide tags
 			display: none;
 		}
 	}
