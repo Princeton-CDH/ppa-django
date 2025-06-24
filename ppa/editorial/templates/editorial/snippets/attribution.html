@@ -44,9 +44,8 @@
 {% endif %}
 {% if page.tags.exists %}
     <p class="tags">
-        Tags:
         {% for tag in page.tags.all %}
-            <a href="{% pageurl page.get_parent %}?tag={{ tag.slug }}">{{ tag }}</a>{% if not forloop.last %}, {% endif %}
+            <a href="{% pageurl page.get_parent %}?tag={{ tag.slug }}">#{{ tag }}</a>
         {% endfor %}
     </p>
     {% endif %}
