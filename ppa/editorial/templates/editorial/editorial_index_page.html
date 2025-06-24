@@ -20,7 +20,7 @@
         <div class="page-description">{{ page.intro|richtext }}</div>
         {% if tags %}
             <div class="page-tags">
-                <span class="tags-label">Tags</span>:
+                <span class="tags-label">Filter by tag</span>:
                 {% for tag in tags %}
                     <a href="?{% querystring_replace tag=tag.slug %}"{% if selected_tag == tag.slug %} class="selected"{% endif %}>{{ tag }}</a>
                     ({{ tag.count }}){% if not forloop.last %}, {% endif %}
