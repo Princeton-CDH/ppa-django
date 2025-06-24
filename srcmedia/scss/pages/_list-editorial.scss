@@ -28,6 +28,9 @@
         a.selected {
             font-weight: 600;
         }
+        a::before {
+            content: "#";
+        }
         @media (min-width: $tablet) {
             font-size: 1.2rem;
         }

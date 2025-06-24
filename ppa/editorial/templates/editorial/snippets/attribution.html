@@ -45,7 +45,7 @@
 {% if page.tags.exists %}
     <p class="tags">
         {% for tag in page.tags.all %}
-            <a href="{% pageurl page.get_parent %}?tag={{ tag.slug }}">#{{ tag }}</a>
+            <a href="{% pageurl page.get_parent %}?tag={{ tag.slug }}">{{ tag }}</a>
         {% endfor %}
     </p>
     {% endif %}
