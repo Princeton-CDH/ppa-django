@@ -23,14 +23,11 @@
                 <span class="tags-label">Filter by tag</span>:
                 {% for tag in tags %}
                     <a href="?{% querystring_replace tag=tag.slug %}"{% if selected_tag == tag.slug %} class="selected"{% endif %}>{{ tag }}</a>
-                    ({{ tag.count }}){% if not forloop.last %}, {% endif %}
+                    ({{ tag.count }})
                 {% endfor %}
             </div>
             {% if selected_tag %}
-                <a href="{{ page.url }}" class="clear-filter">
-                    <img src="{% static 'img/icons/Delete.svg' %}" alt="Clear filter">
-                    <span>Clear filter</span>
-                </a>
+                <a href="{{ page.url }}" class="clear-filter">View all</a>
             {% endif %}
         {% endif %}
     </div>
