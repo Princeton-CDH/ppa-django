@@ -7,10 +7,13 @@
 --------------------*/
 
 @fontName              : 'Open Sans';
+@googleFontName        : 'Open+Sans';
 @headerFontName        : 'Gentium Book Basic';
 
 @pageFont              : 'Open Sans', Helvetica, sans-serif;
 @headerFont            : 'Gentium Book Basic', Palatino, serif;
+@importGoogleFonts     : true;
+@importFonts           : false;
 
 /*-------------------
       Base Sizes
