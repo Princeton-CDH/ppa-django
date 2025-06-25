@@ -58,7 +58,7 @@ describe('Reactive Form', () => {
         })
 
         it('should update when the form updates', function() {
-            $('#checkbox').click() // click it and request its state via the getter
+            $('#checkbox').trigger('click') // click it and request its state via the getter
             expect(this.rf.state.filter(el => el.name == 'checkbox')[0].value).toBe('on')
         })
     })
@@ -74,7 +74,7 @@ describe('Reactive Form', () => {
         })
 
         it('should get called when state changes', function(done) {
-            $('#checkbox').click() // make a change
+            $('#checkbox').trigger('click') // make a change
             expect(this.onStateChangeSpy).toHaveBeenCalledTimes(1)
             $('#text').val('hello') // make another change
             $('#text')[0].dispatchEvent(new Event('input')) // fake the input event
@@ -85,7 +85,7 @@ describe('Reactive Form', () => {
         })
 
         it('should receive the state as a parameter', function() {
-            $('#checkbox').click() // new state will create a new object in the state array
+            $('#checkbox').trigger('click') // new state will create a new object in the state array
             for (let field of this.initialState) { // all original fields should still be in state
                 expect(this.onStateChangeSpy.calls.mostRecent().args[0]).toContain(field) // ugly but necessary...
             } // new checkbox state should also be in state
@@ -112,16 +112,16 @@ describe('Reactive Form', () => {
         })
 
         it('should observe state changes for checkboxes', function() {
-            $('#checkbox').click() // checked
+            $('#checkbox').trigger('click') // checked
             expect(this.checkboxSpy).toHaveBeenCalledWith(true)
-            $('#checkbox').click() // unchecked
+            $('#checkbox').trigger('click') // unchecked
             expect(this.checkboxSpy).toHaveBeenCalledWith(false)
         })
 
         it('should observe state changes for radios', function() {
-            $('#radio2').click() // choose radio option 2
+            $('#radio2').trigger('click') // choose radio option 2
             expect(this.radio2Spy).toHaveBeenCalledWith(true)
-            $('#radio1').click() // choose radio option 1
+            $('#radio1').trigger('click') // choose radio option 1
             expect(this.radio1Spy).toHaveBeenCalledWith(true)
         })
 
