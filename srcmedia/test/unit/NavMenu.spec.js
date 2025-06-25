@@ -29,7 +29,7 @@ describe('NavMenu', () => {
         it('binds handler to keypress event for $aboutMenu', function() {
             // minimal test to ensure binding happened
             const e = $.Event('keydown')
-            e.keyCode = 40
+            e.code = 'ArrowDown'
             this.an.$textSelector.trigger(e)
             expect(document.activeElement.getAttribute('href')).toBe('/history/')
         })
@@ -44,14 +44,12 @@ describe('NavMenu', () => {
         })
 
         it('moves up and down the menu based on arrow keys', function() {
-            const down = 40
-            const up = 38
             const text = document.querySelector('.about > .text')
             const historyLink = document.querySelector('a[href="/history/"]')
             const prosodyLink = document.querySelector('a[href="/prosody/"]')
 
             spyOn(historyLink, 'focus').and.callThrough()
-            const e1 = $.Event('keydown', { keyCode: down })
+            const e1 = $.Event('keydown', { code: 'ArrowDown' })
 
             // start at about and walk down two
             $(text).trigger(e1);
@@ -59,17 +57,17 @@ describe('NavMenu', () => {
 
             // get current focused DOM node and simulate the keydown correctly
             spyOn(prosodyLink, 'focus').and.callThrough()
-            const e2 = $.Event('keydown', { keyCode: down })
+            const e2 = $.Event('keydown', { code: 'ArrowDown' })
             $(historyLink).trigger(e2)
             expect(prosodyLink.focus).toHaveBeenCalled()
 
             // now walk back up
-            const e3 = $.Event('keydown', { keyCode: up })
+            const e3 = $.Event('keydown', { code: 'ArrowUp' })
             $(prosodyLink).trigger(e3)
             expect(document.activeElement.getAttribute('href')).toBe('/history/')
 
             // back to text (about)
-            const e4 = $.Event('keydown', { keyCode: up })
+            const e4 = $.Event('keydown', { code: 'ArrowUp' })
             $(historyLink).trigger(e4)
             expect(document.activeElement.classList.contains('text')).toBe(true)
 
