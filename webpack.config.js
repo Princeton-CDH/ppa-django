@@ -72,6 +72,32 @@ module.exports = env => ({
                 ],
             },
             {
+                // CSS and LESS loaders for Fomantic-UI
+                test: /\.less$/,
+                use: [
+                    MiniCssExtractPlugin.loader,
+                    {
+                        loader: 'css-loader',
+                        options: {
+                            url: false,
+                        },
+                    },
+                    {
+                        loader: 'less-loader',
+                        options: {
+                            implementation: require('less'),
+                            lessOptions: {
+                                javascriptEnabled: true,
+                                paths: [
+                                    path.resolve(__dirname, 'sitemedia/semantic/src'),
+                                    path.resolve(__dirname, 'node_modules'),
+                                ],
+                            },
+                        },
+                    },
+                ],
+            },
+            {
                 // load images
                 test: /\.(png|svg|jpg|jpeg|gif)$/i,
                 type: 'asset/resource',
@@ -102,7 +128,12 @@ module.exports = env => ({
         // ...(devMode ? [] : [new CleanWebpackPlugin('bundles')]), // clear out bundle dir when rebuilding in prod/qa
     ],
     resolve: {
-        extensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.scss'] // enables importing these without extensions
+        extensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.scss'], // enables importing these without extensions
+        alias: {
+            // aliases for semantic-ui-less internal relative path resolution
+            '../../theme.config$': path.join(__dirname, 'sitemedia/semantic/src/theme.config'),
+            '../semantic-ui/site': path.join(__dirname, 'sitemedia/semantic/src/site')
+        }
     },
     devServer: {
         static: {
