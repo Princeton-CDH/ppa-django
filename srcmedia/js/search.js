@@ -66,6 +66,7 @@ $(function(){
             }))
             $('.workscount').removeClass('loading') // turn off the loader
             new ImageLazyLoader($('img[data-src]').get()) // re-bind lazy loaded images
+            $('.source-popup').popup({hoverable: true}) // initialize tooltip popups in results
         })
         advancedSearchIndicator()
     }
