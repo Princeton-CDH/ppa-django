@@ -2,10 +2,20 @@ import os.path
 import types
 
 from django.test import override_settings
+from lxml.etree import Resolver
 from neuxml.xmlmap import load_xmlobject_from_file, load_xmlobject_from_string
 
 from ppa.archive import eebo_tcp
 from ppa.archive.tests.test_models import FIXTURES_PATH
+
+
+class EmptyDTDResolver(Resolver):
+    """Test suite DTD resolver that resolves remote DTDs as empty docs."""
+
+    def resolve(self, url, pubid, context):
+        if url.startswith("http"):
+            return self.resolve_empty(context)
+        return super().resolve(url, pubid, context)
 
 
 EEBO_TCP_FIXTURE_ID = "A25820"
@@ -13,7 +23,9 @@ TCP_FIXTURE = os.path.join(FIXTURES_PATH, f"{EEBO_TCP_FIXTURE_ID}.P4.xml")
 
 
 def test_eebo_tcp_page_contents():
-    tcp_text = load_xmlobject_from_file(TCP_FIXTURE, eebo_tcp.Text)
+    tcp_text = load_xmlobject_from_file(
+        TCP_FIXTURE, eebo_tcp.Text, resolver=EmptyDTDResolver()
+    )
 
     # text after second pb ref=5
     page_ref5_content = str(tcp_text.pages[9])
@@ -132,7 +144,9 @@ def test_short_id():
 
 
 def test_page_object():
-    tcp_text = load_xmlobject_from_file(TCP_FIXTURE, eebo_tcp.Text)
+    tcp_text = load_xmlobject_from_file(
+        TCP_FIXTURE, eebo_tcp.Text, resolver=EmptyDTDResolver()
+    )
     assert isinstance(tcp_text.pages[0], eebo_tcp.Page)
     assert tcp_text.pages[0].ref == "1"
     assert tcp_text.pages[0].number is None
@@ -175,10 +189,14 @@ ECCO_TCP_FIXTURE = os.path.join(FIXTURES_PATH, f"{ECCO_TCP_FIXTURE_ID}.xml")
 @override_settings(EEBO_DATA=FIXTURES_PATH)
 def test_text_quotedpoems():
     # first fixture has no Q/LG tags but does have Q/L
-    tcp_text = load_xmlobject_from_file(TCP_FIXTURE, eebo_tcp.Text)
+    tcp_text = load_xmlobject_from_file(
+        TCP_FIXTURE, eebo_tcp.Text, resolver=EmptyDTDResolver()
+    )
     assert len(tcp_text.quoted_poems) == 72
     # fixture with known poetry has 72 quoted poems, 129 linegroups
-    lg_tcp_text = load_xmlobject_from_file(LG_TCP_FIXTURE, eebo_tcp.Text)
+    lg_tcp_text = load_xmlobject_from_file(
+        LG_TCP_FIXTURE, eebo_tcp.Text, resolver=EmptyDTDResolver()
+    )
     assert len(lg_tcp_text.quoted_poems) == 751
 
 
@@ -191,7 +209,9 @@ def test_ecco_text_quotedpoems():
 
 @override_settings(EEBO_DATA=FIXTURES_PATH)
 def test_quotedpoem_init():
-    lg_text = load_xmlobject_from_file(LG_TCP_FIXTURE, eebo_tcp.Text)
+    lg_text = load_xmlobject_from_file(
+        LG_TCP_FIXTURE, eebo_tcp.Text, resolver=EmptyDTDResolver()
+    )
     # second quoted poetry lines: Begin then, O my dearest, sacred Dame,
     qpoem = lg_text.quoted_poems[1]
     assert isinstance(qpoem, eebo_tcp.QuotedPoem)
@@ -268,7 +288,9 @@ def test_ecco_quotedpoem_bibl():
 
 @override_settings(EEBO_DATA=FIXTURES_PATH)
 def test_quotedpoem_has_text():
-    lg_text = load_xmlobject_from_file(LG_TCP_FIXTURE, eebo_tcp.Text)
+    lg_text = load_xmlobject_from_file(
+        LG_TCP_FIXTURE, eebo_tcp.Text, resolver=EmptyDTDResolver()
+    )
     # first quoted poem is gap  / foreign language : commas + whitespace only
     assert not lg_text.quoted_poems[0].has_text()
     # second qouted poem has text
@@ -277,7 +299,9 @@ def test_quotedpoem_has_text():
 
 @override_settings(EEBO_DATA=FIXTURES_PATH)
 def test_quotedpoem_text_by_page():
-    lg_text = load_xmlobject_from_file(LG_TCP_FIXTURE, eebo_tcp.Text)
+    lg_text = load_xmlobject_from_file(
+        LG_TCP_FIXTURE, eebo_tcp.Text, resolver=EmptyDTDResolver()
+    )
     # quoted poem at index 55 has a q before <pb> and then <l> after
     qpoem = lg_text.quoted_poems[55]
     text_chunks = list(qpoem.text_by_page())
@@ -325,7 +349,9 @@ def test_quotedpoem_text_by_page_p5_gap():
 
 @override_settings(EEBO_DATA=FIXTURES_PATH)
 def test_quotedpoem_multipage():
-    lg_text = load_xmlobject_from_file(LG_TCP_FIXTURE, eebo_tcp.Text)
+    lg_text = load_xmlobject_from_file(
+        LG_TCP_FIXTURE, eebo_tcp.Text, resolver=EmptyDTDResolver()
+    )
     multipage_poems = []
     singlepage_poems = []
     for i, qp in enumerate(lg_text.quoted_poems):
@@ -341,7 +367,9 @@ def test_quotedpoem_multipage():
 
 @override_settings(EEBO_DATA=FIXTURES_PATH)
 def test_linegroup_init():
-    lg_text = load_xmlobject_from_file(LG_TCP_FIXTURE, eebo_tcp.Text)
+    lg_text = load_xmlobject_from_file(
+        LG_TCP_FIXTURE, eebo_tcp.Text, resolver=EmptyDTDResolver()
+    )
     # second line group in 12th quoted poem: Tum Tartarus ipse
     linegroup = lg_text.quoted_poems[11].line_groups[1]
     assert isinstance(linegroup, eebo_tcp.LineGroup)
