@@ -34,7 +34,7 @@ contains the most recent release, and work in progress will be on the **develop*
 Pull requests should be made against develop.
 
 
-Python 3.12 / Django 5.2 / Node 18.12 / Postgresql 15 / Solr 9
+Python 3.12 / Django 5.2 / Node 20 / Postgresql 15 / Solr 9
 
 
 Development instructions
