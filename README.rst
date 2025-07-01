@@ -89,13 +89,7 @@ before running the server.
     npm install
     npm run build
 
-With the following alternative npm scripts, you can choose whether or not to
-include sourcemaps::
-
-    npm run build:qa # just the custom files, with sourcemaps
-    npm run build:prod # just the custom files, no sourcemaps
-
-Finally, you can run a development server with hot reload if you'll be changing
+You can also run a development server with hot reload if you'll be changing
 assets frequently::
 
     npm run dev # serve built code from memory, with hot reload

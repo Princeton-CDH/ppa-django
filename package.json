@@ -14,9 +14,7 @@
         "test": "npm run test:unit && npm run test:a11y",
         "test:unit": "karma start --single-run && jest --collectCoverage",
         "test:a11y": "pa11y-ci --sitemap http://localhost:8000/sitemap-pages.xml",
-        "build": "npm run build:prod",
-        "build:qa": "NODE_ENV=production webpack",
-        "build:prod": "NODE_ENV=production webpack"
+        "build": "NODE_ENV=production webpack"
     },
     "dependencies": {
         "@babel/core": "^7.23.9",
