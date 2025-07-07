@@ -68,7 +68,7 @@ Initial setup and installation:
   See developer notes for setup instructions for using docker with `solr:8.4` image.
 
 - Bulk import (*provisional*): requires a local copy of HathiTrust data as
-  pairtree provided by rsync.  Configure the path in `localsettings.py`
+  pairtree provided by rsync.  Configure the path in `local_settings.py`
   and then run::
 
     python manage.py hathi_import
