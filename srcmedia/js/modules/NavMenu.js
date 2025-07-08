@@ -29,8 +29,15 @@ export default class AboutNav {
      * @param {JQuery.KeyDownEvent} ev - a jQuery keydown event
     */
     keydownHandler(ev) {
+        // handle different jquery versions
+        let code;
+        if (Object.hasOwn(ev, "code")) {
+            code = ev.code;
+        } else if (Object.hasOwn(ev, "originalEvent")) {
+            code = ev.originalEvent.code;
+        }
         // if down arrow, target the next link element
-        if (ev.originalEvent.code === 'ArrowDown') {
+        if (code === 'ArrowDown') {
             // using raw JS to determine we're on a link element
             if (ev.target.nodeName === 'A') {
                 // if on a link, get its parent, next sibling, and child a element
@@ -48,7 +55,7 @@ export default class AboutNav {
             }
         }
         // if up arrow, target the previous link element or about menu text
-        if (ev.originalEvent.code === 'ArrowUp') {
+        if (code === 'ArrowUp') {
             // check if there's a previous link
             const $nextLink = $(ev.target).parent().prev().children('a')
             // if there isn't, target the about text that has tabindex for
