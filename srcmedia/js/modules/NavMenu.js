@@ -30,7 +30,7 @@ export default class AboutNav {
     */
     keydownHandler(ev) {
         // if down arrow, target the next link element
-        if (ev.code === 'ArrowDown') {
+        if (ev.originalEvent.code === 'ArrowDown') {
             // using raw JS to determine we're on a link element
             if (ev.target.nodeName === 'A') {
                 // if on a link, get its parent, next sibling, and child a element
@@ -48,7 +48,7 @@ export default class AboutNav {
             }
         }
         // if up arrow, target the previous link element or about menu text
-        if (ev.code === 'ArrowUp') {
+        if (ev.originalEvent.code === 'ArrowUp') {
             // check if there's a previous link
             const $nextLink = $(ev.target).parent().prev().children('a')
             // if there isn't, target the about text that has tabindex for
