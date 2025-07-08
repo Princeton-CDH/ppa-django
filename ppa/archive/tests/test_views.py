@@ -400,7 +400,7 @@ class TestDigitizedWorkDetailView(TestCase):
 
     def test_search_within_error(self):
         # test raising a generic solr error
-        with patch("ppa.archive.views.Paginator") as mock_page:
+        with patch("ppa.archive.views.GracefulPaginator") as mock_page:
             mock_page.side_effect = requests.exceptions.ConnectionError
             response = self.client.get(self.dial_url, {"query": "knobs"})
             self.assertContains(response, "Something went wrong.")
@@ -1227,6 +1227,23 @@ class TestDigitizedWorkListView(TestCase):
             )
             mock_qs.get_response.assert_called_with(rows=100)
             assert highlights == mock_qs.get_highlighting()
+
+    def test_paginate_queryset(self):
+        with patch("ppa.archive.views.GracefulPaginator") as mock_paginator:
+            digworkview = DigitizedWorkListView()
+            digworkview.paginator_class = mock_paginator
+            qs = DigitizedWork.objects.all()
+
+            # numeric page number
+            digworkview.kwargs = {"page": 10}
+            digworkview.paginate_queryset(qs, digworkview.paginate_by)
+            mock_paginator.return_value.page.assert_called_once_with(10)
+
+            # non-numeric page number: should use page 1
+            mock_paginator.reset_mock()
+            digworkview.kwargs = {"page": "fake"}
+            digworkview.paginate_queryset(qs, digworkview.paginate_by)
+            mock_paginator.return_value.page.assert_called_once_with(1)
 
     @pytest.mark.usefixtures("mock_solr_queryset")
     def test_get_queryset(self):
