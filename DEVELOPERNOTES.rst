@@ -115,11 +115,10 @@ If for some reason you don't want to copy all the data, you can
 configure your local settings to use the PPA staging server as the
 HathiTrust rsync server and import content that way.
 
-Use these settings:
-```python
-HATHITRUST_RSYNC_SERVER = "pulsys@cdh-test-prosody1.princeton.edu"
-HATHITRUST_RSYNC_PATH = "/mnt/nfs/cdh/prosody/data/ht_text_pd"
-```
+Use these settings::
+
+    HATHITRUST_RSYNC_SERVER = "pulsys@cdh-test-prosody1.princeton.edu"
+    HATHITRUST_RSYNC_PATH = "/mnt/nfs/cdh/prosody/data/ht_text_pd"
 
 You should then be able to use the `hathi_add` manage command or
 the admin interface to import specific HathiTrust records by id.
@@ -148,7 +147,7 @@ Update all HathiTrust documents with rsync::
     python manage.py hathi_rsync
 
 This file will generate a csv report of the files that were updated.
-Use the resulting file to get a list of ids that need to be indexed:
+Use the resulting file to get a list of ids that need to be indexed::
 
     cut -f 1 -d, ppa_rsync_changes_[TIMESTAMP].csv | sort | uniq | tail -n +2 > htids.txt
 
