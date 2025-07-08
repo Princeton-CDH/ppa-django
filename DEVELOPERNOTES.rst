@@ -1,7 +1,7 @@
 Developer notes
 ===============
 
-Additional details for setup, troubleshooting, and other procedures.
+
 
 
 Local Solr setup
@@ -97,7 +97,8 @@ Use rsync over ssh and copy these to a local staging area, and then configure
 the paths in your local settings file:
 - `HATHI_DATA`: path to the top-level HathiTrust pairtree folder
 - `EEBO_DATA`: path to the eebo_tcp folder
-- `GALE_LOCAL_OCR`: path to Gale-by-vol local OCR content
+- `MARC_DATA`: path to MARC pairtree data for Gale records (required for import)
+- `GALE_LOCAL_OCR`: path to Gale-by-vol local OCR content (optional)
 
 Indexing Gale/ECCO records requires access to the Gale API; you must configure
 *GALE_API_USERNAME* in local settings.
@@ -116,19 +117,24 @@ HathiTrust rsync server and import content that way.
 
 Use these settings:
 ```python
-HATHITRUST_RSYNC_SERVER = "pulsys@cdh-test-prosody1"
+HATHITRUST_RSYNC_SERVER = "pulsys@cdh-test-prosody1.princeton.edu"
 HATHITRUST_RSYNC_PATH = "/mnt/nfs/cdh/prosody/data/ht_text_pd"
 ```
 
 You should then be able to use the `hathi_add` manage command or
 the admin interface to import specific HathiTrust records by id.
-(The application will still use the HathiTrust bibliographic API for metadata.)
+Note that the application will make calls to the HathiTrust bibliographic API
+for metadata, which is used in tandem with local full-text content.
 
 Gale/ECCO records can also be imported by id using the `gale_import`
-manage command.  Page content will pull from local OCR content when available.
+manage command.  Page content will be pulled from local OCR content when
+the files are available and the `GALE_LOCAL_OCR` path is configured.
+Access to the Gale API requires `GALE_API_USERNAME` to be configured.
 
 EEBO-TCP records can be imported using the `eebo_import` script; this
-requires a CSV file with the records to be imported.
+requires a CSV file with the records to be imported.  A copy of the CSV
+used for the production import is available in this repository
+at `scripts/eebo_works.csv`.
 
 
 Updating HathiTrust records and generating a fresh text corpus
