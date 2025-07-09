@@ -1,9 +1,11 @@
 import re
 
+from django import template
 from django.template.defaultfilters import stringfilter
-from django.template.defaulttags import register
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
+
+register = template.Library()
 
 
 @register.filter
@@ -113,3 +115,20 @@ def solr_highlight(value, autoescape=True):
             ]
         )
     )
+
+
+@register.filter
+def first_page(page_range):
+    """Extract first page number from a page range like '25-30' or '25'"""
+    if not page_range:
+        return ""
+    return page_range.split("-")[0].strip()
+
+
+@register.filter
+def last_page(page_range):
+    """Extract last page number from a page range like '25-30' or '25'"""
+    if not page_range:
+        return ""
+    parts = page_range.split("-")
+    return parts[-1].strip() if len(parts) > 1 else parts[0].strip()
