@@ -5,6 +5,7 @@ from django.utils.safestring import SafeString
 
 from ppa.archive.templatetags.ppa_tags import (
     HATHI_BASE_URL,
+    absolute_url,
     dict_item,
     gale_page_url,
     hathi_page_url,
@@ -103,3 +104,19 @@ Sbelley, <em>Prometheus</em>, II. v.
     # check that output is unchanged if autoescape is off
     highlighted = solr_highlight(val, autoescape=False)
     assert highlighted == val
+
+
+def test_absolute_url():
+    """Test the absolute_url template tag"""
+    mock_request = Mock()
+    mock_request.build_absolute_uri.return_value = (
+        "http://testserver/archive/detail/abc123/"
+    )
+    context = {"request": mock_request}
+
+    result = absolute_url(context, "/archive/detail/abc123/")
+
+    # Should call build_absolute_uri with the relative URL
+    mock_request.build_absolute_uri.assert_called_once_with("/archive/detail/abc123/")
+    # Should return the absolute URL
+    assert result == "http://testserver/archive/detail/abc123/"
