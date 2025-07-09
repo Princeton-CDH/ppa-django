@@ -93,7 +93,6 @@ INSTALLED_APPS = [
     "parasolr",
     "ppa.archive",
     "ppa.common",
-    "ppa.unapi",
     "ppa.pages",
     "ppa.editorial",
 ]
