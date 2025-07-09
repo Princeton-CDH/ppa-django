@@ -1,6 +1,6 @@
 {% extends "base.html"  %}
 {% load render_bundle from webpack_loader %}
-{% load static semanticui humanize %}
+{% load static semanticui humanize ppa_tags%}
 
 {% block js %}
 {% if object.has_fulltext %}
@@ -14,7 +14,19 @@
 <meta name="twitter:data1" content="{{ object.pub_date }}" />
 <meta name="twitter:label2" content="Author" />
 <meta name="twitter:data2" content="{{ object.author }}" />
+
+<!-- COinS for Zotero item type recognition (Dublin Core via unAPI provides complete metadata) -->
+{% if object.item_type == object.FULL %}
+<span class="Z3988" title="ctx_ver=Z39.88-2004&amp;rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&amp;rft.genre=book"></span>
+{% elif object.item_type == object.EXCERPT %}
+<span class="Z3988" title="ctx_ver=Z39.88-2004&amp;rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&amp;rft.genre=bookitem"></span>
+{% elif object.item_type == object.ARTICLE %}
+<span class="Z3988" title="ctx_ver=Z39.88-2004&amp;rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&amp;rft.genre=article"></span>
+{% endif %}
+
 {% endblock %}
+
+
 
 {% block head_extras %}
     <link rel="unapi-server" type="application/xml" title="unAPI"
@@ -36,9 +48,8 @@
     <div class="work-type icon" aria-label="{{ object.get_item_type_display|lower }}"></div>
     {% endif %}
     <h1 class="header">{{ object.title }}</h1>
-    {% if object.item_type == object.FULL %} {# unapi metadata only available for full works #}
+    {# unapi metadata available for all item types #}
     <abbr class="unapi-id" title="{{ object.index_id }}"></abbr>
-    {% endif %}
     <table class="metadata ui very basic table">
         <tbody>
             {% if object.subtitle %}
