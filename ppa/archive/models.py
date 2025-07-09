@@ -1100,9 +1100,6 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         if metadata_format == "dc":
             return self.get_dublin_core_xml(is_excerpt, page_info)
 
-        elif metadata_format == "json":
-            return self.get_dublin_core_json(is_excerpt, page_info)
-
         # elif metadata_format == "marc":
         #     # SIMPLIFIED: Generate MARC from Dublin Core instead of external sources
         #     return self.generate_marc_from_database()
@@ -1234,53 +1231,6 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             xml_output = xml_output.decode("utf-8")
 
         return xml_output
-
-    def get_dublin_core_json(self, is_excerpt=False, page_info=None):
-        """Generate Dublin Core JSON from database fields"""
-
-        # Handle publisher with fallback
-        if self.publisher and self.publisher not in ["-", "n.p.", ""]:
-            publisher = self.publisher
-        else:
-            publisher = "Princeton Prosody Archive"
-
-        # Base metadata
-        data = {
-            "title": self.title,
-            "creator": self.author or "",
-            "publisher": publisher,
-            "date": str(self.pub_date) if self.pub_date else "",
-            "identifier": self.source_id,
-            "type": "Text",
-            "source": self.source or "",
-            "language": "en",  # You can adjust this based on your data
-        }
-
-        # Handle excerpts
-        if is_excerpt or self.item_type in [self.EXCERPT, self.ARTICLE]:
-            data.update(
-                {
-                    "item_type": self.item_type.lower(),
-                    "book_journal": self.book_journal or "",
-                    "pages_original": self.pages_orig or "",
-                    "pages_digital": self.pages_digital or "",
-                    "type": "Text.Excerpt"
-                    if self.item_type == self.EXCERPT
-                    else "Text.Article",
-                }
-            )
-
-            if self.book_journal:
-                data["source"] = self.book_journal
-                data["title"] = f"{self.title} (from {self.book_journal})"
-        else:
-            # For full works, add page count
-            if self.page_count:
-                data["extent"] = f"Pages: {self.page_count}"
-
-        import json
-
-        return json.dumps(data, indent=2)
 
     def get_source_link_label(self):
         """Source-specific label for link on public item detail view."""
