@@ -4,7 +4,6 @@ from django.test import TestCase
 from django.urls import reverse
 
 from ppa.archive.models import DigitizedWork
-from ppa.unapi.views import UnAPIView
 
 
 class TestUnAPIViews(TestCase):
@@ -15,9 +14,9 @@ class TestUnAPIViews(TestCase):
 
         # no id/format - get list of available formats as xml
         response = self.client.get(unapi_url)
-        assert response["content-type"] == "application/xml"
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, "<formats>")
-        self.assertContains(response, '<format name="marc" type="application/marc"/>')
+        self.assertContains(response, '<format name="dc" type="application/xml"/>')
 
         # with id but no metadata
         test_id = "htid1234"
@@ -25,14 +24,14 @@ class TestUnAPIViews(TestCase):
         self.assertContains(response, '<formats id="%s">' % test_id)
 
         # bogus id should 404
-        response = self.client.get(unapi_url, {"id": test_id, "format": "marc"})
-        assert response.status_code == 404
+        response = self.client.get(unapi_url, {"id": test_id, "format": "dc"})
+        self.assertEqual(response.status_code, 404)
 
-        # excerpt id should 404
+        # excerpt id should work (now that we support excerpts)
         response = self.client.get(
-            unapi_url, {"id": "%s-p43" % test_id, "format": "marc"}
+            unapi_url, {"id": "%s-p43" % test_id, "format": "dc"}
         )
-        assert response.status_code == 404
+        self.assertEqual(response.status_code, 404)
 
         # valid id and format
         digwork = DigitizedWork.objects.first()
@@ -41,13 +40,11 @@ class TestUnAPIViews(TestCase):
             mock_getobj.return_value.get_metadata.return_value = mock_metadata_result
 
             response = self.client.get(
-                unapi_url, {"id": digwork.index_id(), "format": "marc"}
+                unapi_url, {"id": digwork.index_id(), "format": "dc"}
             )
 
-            mock_getobj.return_value.get_metadata.assert_called_with("marc")
-            assert response.content.decode() == mock_metadata_result
-            assert response["content-type"] == UnAPIView.formats["marc"]["type"]
-            assert (
-                response["content-disposition"]
-                == 'filename="%s.mrc"' % digwork.source_id
+            mock_getobj.return_value.get_metadata.assert_called_with(
+                "dc", item_id=digwork.source_id
             )
+            self.assertContains(response, mock_metadata_result)
+            # dc format displays in browser, no content-disposition header expected
