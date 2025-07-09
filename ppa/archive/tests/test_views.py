@@ -955,6 +955,71 @@ class TestDigitizedWorkListRequest(TestCase):
             assert "paginator" in response.context
             self.assertContains(response, "Something went wrong.")
 
+    def test_coins_metadata_full_work(self):
+        """Test COinS metadata generation for full works"""
+        response = self.client.get(self.url)
+        assert response.status_code == 200
+
+        # Check for COinS Z3988 spans
+        self.assertContains(response, 'class="Z3988"')
+        self.assertContains(response, "ctx_ver=Z39.88-2004")
+        self.assertContains(response, "rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook")
+        self.assertContains(response, "rft.genre=book")
+
+    @patch("ppa.archive.models.DigitizedWork.index_items")
+    def test_coins_metadata_excerpt(self, mock_index_items):
+        """Test COinS metadata for excerpts"""
+        # Create an excerpt for testing
+        excerpt = DigitizedWork.objects.create(
+            source_id="test.excerpt",
+            title="Test Excerpt",
+            book_journal="Test Journal",
+            pages_orig="10-15",
+            item_type=DigitizedWork.EXCERPT,
+            status=DigitizedWork.PUBLIC,
+        )
+        excerpt.index()
+
+        response = self.client.get(self.url)
+        assert response.status_code == 200
+
+        # Check for excerpt-specific COinS metadata
+        self.assertContains(response, "rft.genre=bookitem")
+        self.assertContains(response, "rft.btitle=")  # book title field
+
+    @patch("ppa.archive.models.DigitizedWork.index_items")
+    def test_coins_metadata_article(self, mock_index_items):
+        """Test COinS metadata for articles"""
+        # Create an article for testing
+        article = DigitizedWork.objects.create(
+            source_id="test.article",
+            title="Test Article",
+            book_journal="Test Journal",
+            item_type=DigitizedWork.ARTICLE,
+            status=DigitizedWork.PUBLIC,
+        )
+        article.index()
+
+        response = self.client.get(self.url)
+        assert response.status_code == 200
+
+        # Check for article-specific COinS metadata
+        self.assertContains(
+            response, "rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal"
+        )
+        self.assertContains(response, "rft.genre=article")
+        self.assertContains(response, "rft.jtitle=")  # journal title field
+
+    def test_coins_absolute_urls(self):
+        """Test that COinS metadata includes absolute URLs"""
+        response = self.client.get(self.url)
+        assert response.status_code == 200
+
+        # Check that COinS includes absolute URLs with rft_id parameter
+        self.assertContains(response, "rft_id=http")
+        # Should contain the domain
+        self.assertContains(response, "testserver")
+
 
 @pytest.mark.django_db
 def test_archive_list_empty_solr(client, empty_solr):
