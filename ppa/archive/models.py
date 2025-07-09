@@ -23,14 +23,49 @@ from wagtail.fields import RichTextField
 from wagtail.snippets.models import register_snippet
 
 from ppa.archive import eebo_tcp
-from ppa.archive.gale import GaleAPI, MARCRecordNotFound, get_marc_record
+from ppa.archive.gale import GaleAPI
 from ppa.archive.hathi import HathiBibliographicAPI, HathiObject
+
+# Import xmlmap for Dublin Core generation
+from eulxml import xmlmap
 
 logger = logging.getLogger(__name__)
 
 
 #: label to use for items that are not in a collection
 NO_COLLECTION_LABEL = "Uncategorized"
+
+
+class DublinCoreXMLObject(xmlmap.XmlObject):
+    """Dublin Core XML object for generating metadata in Dublin Core format."""
+
+    ROOT_NAME = "dublin_core"
+    ROOT_NAMESPACES = {
+        "dc": "http://purl.org/dc/elements/1.1/",
+        "dcterms": "http://purl.org/dc/terms/",
+    }
+
+    # Dublin Core elements
+    title = xmlmap.StringField("dc:title")
+    creator = xmlmap.StringField("dc:creator")
+    contributor = xmlmap.StringField("dc:contributor")
+    editor = xmlmap.StringField("dc:editor")
+    series_editor = xmlmap.StringField("dc:seriesEditor")
+    translator = xmlmap.StringField("dc:translator")
+    book_author = xmlmap.StringField("dc:bookAuthor")
+    reviewed_author = xmlmap.StringField("dc:reviewedAuthor")
+    publisher = xmlmap.StringField("dc:publisher")
+    date = xmlmap.StringField("dc:date")
+    identifier = xmlmap.StringField("dc:identifier")
+    dc_type = xmlmap.StringField("dc:type")
+    dc_format = xmlmap.StringField("dc:format")
+    source = xmlmap.StringField("dc:source")
+    language = xmlmap.StringField("dc:language")
+    relation = xmlmap.StringField("dc:relation")
+    description = xmlmap.StringField("dc:description")
+
+    # Dublin Core Terms elements
+    extent = xmlmap.StringField("dcterms:extent")
 
 
 class TrackChangesModel(models.Model):
@@ -179,9 +214,7 @@ class ProtectedWorkField(models.Field):
     """PositiveSmallIntegerField subclass that returns a
     :class:`ProtectedWorkFieldFlags` object and stores as integer."""
 
-    description = (
-        "A field that stores an instance of :class:`ProtectedWorkFieldFlags` as an integer."
-    )
+    description = "A field that stores an instance of :class:`ProtectedWorkFieldFlags` as an integer."
 
     def __init__(self, verbose_name=None, name=None, **kwargs):
         """Make the field unnullable; by default, not allowed to be blank."""
@@ -220,7 +253,9 @@ class SignalHandlers:
             # if the collection has any works associated
             works = instance.digitizedwork_set.all()
             if works.exists():
-                logger.debug(f"collection save, reindexing {works.count()} related works")
+                logger.debug(
+                    f"collection save, reindexing {works.count()} related works"
+                )
                 DigitizedWork.index_items(works)
 
     @staticmethod
@@ -249,7 +284,9 @@ class SignalHandlers:
             works = instance.digitizedwork_set.all()
             if works.exists():
                 # get a total of page count for affected works
-                page_count = works.aggregate(page_count=models.Sum("page_count", default=0))
+                page_count = works.aggregate(
+                    page_count=models.Sum("page_count", default=0)
+                )
                 logger.debug(
                     "cluster id has changed, reindexing %d works and %d pages",
                     works.count(),
@@ -422,7 +459,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
     collections = models.ManyToManyField(Collection, blank=True)
 
     #: optional cluster for aggregating works
-    cluster = models.ForeignKey(Cluster, blank=True, null=True, on_delete=models.SET_NULL)
+    cluster = models.ForeignKey(
+        Cluster, blank=True, null=True, on_delete=models.SET_NULL
+    )
 
     #: date added to the archive
     added = models.DateTimeField(auto_now_add=True)
@@ -624,7 +663,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 
         # if excerpt page range has changed
         # OR this is a new record with a page range
-        if self.has_changed("pages_digital") or (self.pk is None and self.pages_digital):
+        if self.has_changed("pages_digital") or (
+            self.pk is None and self.pages_digital
+        ):
             # update the page count if possible (i.e., not a Gale record)
             self.page_count = self.count_pages()
             # if page range changed on existing record, clear out old index
@@ -758,7 +799,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         field_data["sort_title"] = marc_record.title()[non_sort:].strip(' "[')
         field_data["author"] = marc_record.author() or ""
         # remove a note present on some records and strip whitespace
-        field_data["author"] = field_data["author"].replace("[from old catalog]", "").strip()
+        field_data["author"] = (
+            field_data["author"].replace("[from old catalog]", "").strip()
+        )
         # removing trailing period, except when it is part of an
         # initial or known abbreviation (i.e, Esq.)
         # Look for single initial, but support initials with no spaces
@@ -806,7 +849,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         # *only* if they wrap the whole text
         for field in ["publisher", "pub_place"]:
             if field in field_data:
-                field_data[field] = re.sub(r"^\[(.*)\]$", r"\1", field_data[field]).strip()
+                field_data[field] = re.sub(
+                    r"^\[(.*)\]$", r"\1", field_data[field]
+                ).strip()
 
         if populate:
             # conditionally update fields that are protected (or not)
@@ -863,7 +908,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             "post_save": SignalHandlers.cluster_save,
             "pre_delete": SignalHandlers.cluster_delete,
         },
-        "archive.DigitizedWork": {"post_save": SignalHandlers.handle_digwork_cluster_change},
+        "archive.DigitizedWork": {
+            "post_save": SignalHandlers.handle_digwork_cluster_change
+        },
     }
 
     def first_page(self):
@@ -1014,7 +1061,11 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             # some aggregate packages retrieved from Data API
             # include jp2 and xml files as well as txt; only count text
             page_count = len(
-                [filename for filename in ht_zip.namelist() if filename.endswith(".txt")]
+                [
+                    filename
+                    for filename in ht_zip.namelist()
+                    if filename.endswith(".txt")
+                ]
             )
             logger.debug(
                 "Counted %d pages in zipfile in %f sec", page_count, time.time() - start
@@ -1034,35 +1085,202 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         # if empty, returns an empty set
         return intspan(self.pages_digital)
 
-    def get_metadata(self, metadata_format):
+    def get_metadata(self, metadata_format, item_id=None):
         """Get metadata for this item in the specified format.
-        Currently only supports marc."""
-        if metadata_format == "marc":
-            # get metadata from hathi bib api and serialize
-            # as binary marc
-            if self.source == DigitizedWork.HATHI:
-                bib_api = HathiBibliographicAPI()
-                bibdata = bib_api.record("htid", self.source_id)
-                return bibdata.marcxml.as_marc()
+        Now supports Dublin Core and handles excerpts properly."""
 
-            if self.source == DigitizedWork.GALE:
-                # get record from local marc pairtree storage using ESTC id
-                # (stored as record id)
-                try:
-                    record = get_marc_record(self.record_id)
-                    # specify encoding to avoid errors
-                    record.force_utf8 = True
-                    return record.as_marc()
-                except MARCRecordNotFound:
-                    logger.warning(
-                        f"MARC record for {self.source_id}/{self.record_id} not found"
-                    )
-                    return ""
+        # Handle excerpts - extract page info from item_id if present
+        is_excerpt = False
+        page_info = None
 
-            return ""
+        if item_id:
+            is_excerpt = item_id and "-p" in item_id
+            page_info = item_id.split("-p")[1] if is_excerpt else None
 
-        # error for unknown
+        if metadata_format == "dc":
+            return self.get_dublin_core_xml(is_excerpt, page_info)
+
+        elif metadata_format == "json":
+            return self.get_dublin_core_json(is_excerpt, page_info)
+
+        # elif metadata_format == "marc":
+        #     # SIMPLIFIED: Generate MARC from Dublin Core instead of external sources
+        #     return self.generate_marc_from_database()
+
+        # error for unknown format
         raise ValueError("Unsupported format %s" % metadata_format)
+
+    # def generate_marc_from_database(self):
+    #     """Generate MARC record from database fields (replaces external MARC fetching)"""
+    #     import pymarc
+
+    #     record = pymarc.Record()
+    #     record.add_field(pymarc.Field(tag='001', data=self.source_id))
+    #     record.add_field(pymarc.Field(tag='245', indicators=['0','0'],
+    #                              subfields=['a', self.title]))
+    #     if self.author:
+    #         record.add_field(pymarc.Field(tag='100', indicators=['1',' '],
+    #                                  subfields=['a', self.author]))
+    #     if self.publisher:
+    #         record.add_field(pymarc.Field(tag='260', indicators=[' ',' '],
+    #                                  subfields=['b', self.publisher, 'c', str(self.pub_date)]))
+
+    #     return record.as_marc()
+
+    def get_dublin_core_xml(self, is_excerpt=False, page_info=None):
+        """Generate Dublin Core XML from database fields using xmlmap
+
+        Example usage:
+            >>> work = DigitizedWork(title="Sample Book", author="John Doe")
+            >>> xml = work.get_dublin_core_xml()
+            >>> # Returns properly formatted Dublin Core XML with namespaces
+
+        Args:
+            is_excerpt (bool): Whether this is an excerpt or full work
+            page_info (str): Page information for excerpts
+
+        Returns:
+            str: Formatted Dublin Core XML with proper namespaces and encoding
+        """
+
+        # Create Dublin Core XML object
+        dc_obj = DublinCoreXMLObject()
+
+        # Set basic metadata fields
+        dc_obj.title = self.title or ""
+        dc_obj.identifier = self.source_id or ""
+
+        # Set correct dc:type for Zotero recognition
+        if is_excerpt or self.item_type == self.EXCERPT:
+            dc_obj.dc_type = "Text.BookSection"
+        elif self.item_type == self.ARTICLE:
+            dc_obj.dc_type = "Text.JournalArticle"
+        else:
+            dc_obj.dc_type = "Text"
+
+        dc_obj.dc_format = "text/html"
+        dc_obj.language = "en"
+
+        # Handle date
+        if self.pub_date:
+            dc_obj.date = str(self.pub_date)
+
+        # Handle publisher with fallback
+        if self.publisher and self.publisher not in ["-", "n.p.", ""]:
+            dc_obj.publisher = self.publisher
+        else:
+            dc_obj.publisher = "Princeton Prosody Archive"
+
+        # Set author/creator
+        dc_obj.creator = self.author or ""
+
+        # Handle different item types and set appropriate fields
+        if self.item_type == self.ARTICLE:
+            # For articles, set empty fields for Zotero compatibility
+            dc_obj.contributor = ""
+            dc_obj.editor = ""
+            dc_obj.reviewed_author = ""
+            dc_obj.translator = ""
+            if self.book_journal:
+                dc_obj.source = self.book_journal
+            else:
+                dc_obj.source = ""
+
+        elif is_excerpt or self.item_type == self.EXCERPT:
+            # For excerpts/book sections
+            dc_obj.contributor = ""
+            dc_obj.editor = ""
+            dc_obj.series_editor = ""
+            dc_obj.translator = ""
+
+            if self.book_journal:
+                dc_obj.book_author = self.book_journal
+                dc_obj.source = self.book_journal
+                dc_obj.title = f"{self.title} (from {self.book_journal})"
+            else:
+                dc_obj.book_author = ""
+                dc_obj.source = ""
+
+            if self.pages_orig:
+                dc_obj.relation = f"Pages {self.pages_orig}"
+
+            if self.book_journal:
+                dc_obj.description = f"{self.item_type} from {self.book_journal}"
+
+            if self.pages_digital:
+                dc_obj.extent = f"Digital pages: {self.pages_digital}"
+
+        else:
+            # For full works/books
+            dc_obj.contributor = ""
+            dc_obj.editor = ""
+            dc_obj.series_editor = ""
+            dc_obj.translator = ""
+
+            if self.source:
+                dc_obj.source = self.source
+            else:
+                dc_obj.source = ""
+
+            # Add page count for full works
+            if self.page_count:
+                dc_obj.extent = f"Pages: {self.page_count}"
+
+        # Serialize to XML with pretty printing
+        xml_output = dc_obj.serialize(pretty=True)
+
+        # Handle both string and bytes return from serialize
+        if isinstance(xml_output, bytes):
+            xml_output = xml_output.decode("utf-8")
+
+        return xml_output
+
+    def get_dublin_core_json(self, is_excerpt=False, page_info=None):
+        """Generate Dublin Core JSON from database fields"""
+
+        # Handle publisher with fallback
+        if self.publisher and self.publisher not in ["-", "n.p.", ""]:
+            publisher = self.publisher
+        else:
+            publisher = "Princeton Prosody Archive"
+
+        # Base metadata
+        data = {
+            "title": self.title,
+            "creator": self.author or "",
+            "publisher": publisher,
+            "date": str(self.pub_date) if self.pub_date else "",
+            "identifier": self.source_id,
+            "type": "Text",
+            "source": self.source or "",
+            "language": "en",  # You can adjust this based on your data
+        }
+
+        # Handle excerpts
+        if is_excerpt or self.item_type in [self.EXCERPT, self.ARTICLE]:
+            data.update(
+                {
+                    "item_type": self.item_type.lower(),
+                    "book_journal": self.book_journal or "",
+                    "pages_original": self.pages_orig or "",
+                    "pages_digital": self.pages_digital or "",
+                    "type": "Text.Excerpt"
+                    if self.item_type == self.EXCERPT
+                    else "Text.Article",
+                }
+            )
+
+            if self.book_journal:
+                data["source"] = self.book_journal
+                data["title"] = f"{self.title} (from {self.book_journal})"
+        else:
+            # For full works, add page count
+            if self.page_count:
+                data["extent"] = f"Pages: {self.page_count}"
+
+        import json
+
+        return json.dumps(data, indent=2)
 
     def get_source_link_label(self):
         """Source-specific label for link on public item detail view."""
