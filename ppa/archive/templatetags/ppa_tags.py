@@ -132,3 +132,12 @@ def last_page(page_range):
         return ""
     parts = page_range.split("-")
     return parts[-1].strip() if len(parts) > 1 else parts[0].strip()
+
+
+@register.simple_tag(takes_context=True)
+def absolute_url(context, relative_url):
+    """Build an absolute URL from a relative URL using the current request.
+    Because COinS requires absolute URLs in the rft_id parameter for Zotero to properly link back to PPA.
+    """
+    request = context["request"]
+    return request.build_absolute_uri(relative_url)
