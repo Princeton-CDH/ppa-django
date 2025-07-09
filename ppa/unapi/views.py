@@ -20,11 +20,17 @@ class UnAPIView(TemplateView):
     template_name = "unapi/formats.xml"
     #: default content type, when serving format information
     content_type = "application/xml"
+
     #: available metadata formats
-    formats = {"marc": {"type": "application/marc"}}
+    formats = {
+        "dc": {"type": "application/xml"},  # Dublin Core XML
+    }
+
     #: file extension for metadata formats, as a convenience to set
     #: download filename extension
-    file_extension = {"marc": "mrc"}
+    file_extension = {
+        # Currently empty - dc format displays in browser instead of download
+    }
 
     def get(self, *args, **kwargs):
         """Override get to check if id and format are specified; if they
@@ -39,11 +45,15 @@ class UnAPIView(TemplateView):
                 content=self.get_metadata(item_id, metadata_format),
                 content_type=self.formats[metadata_format]["type"],
             )
-            # set filename for downloadable content, to aid in testing/debugging
-            response["Content-Disposition"] = 'filename="%s.%s"' % (
-                item_id,
-                self.file_extension[metadata_format],
-            )
+            # Only set download filename for specific formats
+            # DC format displays in browser instead of forcing download
+            if metadata_format in self.file_extension:
+                response["Content-Disposition"] = 'filename="%s.%s"' % (
+                    item_id,
+                    self.file_extension[metadata_format],
+                )
+            # For dc format, no Content-Disposition = display in browser
+
             return response
 
         # otherwise, return information about available formats
@@ -59,12 +69,25 @@ class UnAPIView(TemplateView):
 
     def get_metadata(self, item_id, data_format):
         """get item and requested metadata"""
-        # To distinguish excerpts, unapi id uses index/group id,
+        # For excerpts, unapi id uses index/group id,
         # which combines source id with first page number.
-        # We currently don't have MARC records for excerpts/articles,
-        # so just 404 for any excerpt ids.
+
         if "-p" in item_id:
-            raise Http404
-        # for non-excerpt, index id is equivalent to source id
-        item = get_object_or_404(DigitizedWork, source_id=item_id)
-        return item.get_metadata(data_format)
+            # For excerpts, extract source_id and page number
+            base_source_id, page_part = item_id.split("-p", 1)
+            page_num = page_part
+
+            # Find the specific excerpt by source_id and first page
+            item = (
+                DigitizedWork.objects.by_first_page_orig(page_num)
+                .filter(source_id=base_source_id)
+                .first()
+            )
+            if not item:
+                raise Http404
+        else:
+            # For full works, index id is equivalent to source id
+            item = get_object_or_404(DigitizedWork, source_id=item_id)
+
+        # Pass the full item_id (including page info) to handle excerpts
+        return item.get_metadata(data_format, item_id=item_id)
