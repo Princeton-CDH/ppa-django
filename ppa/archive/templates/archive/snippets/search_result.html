@@ -1,21 +1,23 @@
-{% load static humanize ppa_tags %}
+{% load static humanize ppa_tags fullurl %}
 
 <li class="item {{ item.work_type }}">
 
     {# Generate URL once for use in both COinS and main link #}
     {% if item.first_page %}
         {% url 'archive:detail' source_id=item.source_id start_page=item.first_page as detail_url %}
+        {% fullurl 'archive:detail' source_id=item.source_id start_page=item.first_page as detail_url_absolute %}
     {% else %}
         {% url 'archive:detail' item.source_id as detail_url %}
+        {% fullurl 'archive:detail' item.source_id as detail_url_absolute %}
     {% endif %}
 
     {# COinS metadata for Zotero multi-item detection on list pages #}
     {% if item.work_type == "full-work" %}
-        <span class="Z3988" title="ctx_ver=Z39.88-2004&amp;rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&amp;rft.genre=book{% if item.title %}&amp;rft.title={{ item.title|urlencode }}{% endif %}{% if item.author %}&amp;rft.au={{ item.author|urlencode }}{% endif %}{% if item.pub_date %}&amp;rft.date={{ item.pub_date|urlencode }}{% endif %}{% if item.publisher %}&amp;rft.pub={{ item.publisher|urlencode }}{% endif %}&amp;rft_id={% if detail_url %}{% absolute_url detail_url|urlencode %}{% else %}{{ request.build_absolute_uri|urlencode }}{% endif %}"></span>
+        <span class="Z3988" title="ctx_ver=Z39.88-2004&amp;rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&amp;rft.genre=book{% if item.title %}&amp;rft.title={{ item.title|urlencode }}{% endif %}{% if item.author %}&amp;rft.au={{ item.author|urlencode }}{% endif %}{% if item.pub_date %}&amp;rft.date={{ item.pub_date|urlencode }}{% endif %}{% if item.publisher %}&amp;rft.pub={{ item.publisher|urlencode }}{% endif %}&amp;rft_id={{ detail_url_absolute|urlencode }}"></span>
     {% elif item.work_type == "excerpt" %}
-        <span class="Z3988" title="ctx_ver=Z39.88-2004&amp;rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&amp;rft.genre=bookitem{% if item.title %}&amp;rft.atitle={{ item.title|urlencode }}{% endif %}{% if item.book_journal %}&amp;rft.btitle={{ item.book_journal|urlencode }}{% endif %}{% if item.author %}&amp;rft.au={{ item.author|urlencode }}{% endif %}{% if item.pub_date %}&amp;rft.date={{ item.pub_date|urlencode }}{% endif %}{% if item.publisher %}&amp;rft.pub={{ item.publisher|urlencode }}{% endif %}&amp;rft_id={% if detail_url %}{% absolute_url detail_url|urlencode %}{% else %}{{ request.build_absolute_uri|urlencode }}{% endif %}"></span>
+        <span class="Z3988" title="ctx_ver=Z39.88-2004&amp;rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&amp;rft.genre=bookitem{% if item.title %}&amp;rft.atitle={{ item.title|urlencode }}{% endif %}{% if item.book_journal %}&amp;rft.btitle={{ item.book_journal|urlencode }}{% endif %}{% if item.author %}&amp;rft.au={{ item.author|urlencode }}{% endif %}{% if item.pub_date %}&amp;rft.date={{ item.pub_date|urlencode }}{% endif %}{% if item.publisher %}&amp;rft.pub={{ item.publisher|urlencode }}{% endif %}&amp;rft_id={{ detail_url_absolute|urlencode }}"></span>
     {% elif item.work_type == "article" %}
-        <span class="Z3988" title="ctx_ver=Z39.88-2004&amp;rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&amp;rft.genre=article{% if item.title %}&amp;rft.atitle={{ item.title|urlencode }}{% endif %}{% if item.book_journal %}&amp;rft.jtitle={{ item.book_journal|urlencode }}{% endif %}{% if item.author %}&amp;rft.au={{ item.author|urlencode }}{% endif %}{% if item.pub_date %}&amp;rft.date={{ item.pub_date|urlencode }}{% endif %}{% if item.publisher %}&amp;rft.pub={{ item.publisher|urlencode }}{% endif %}&amp;rft_id={% if detail_url %}{% absolute_url detail_url|urlencode %}{% else %}{{ request.build_absolute_uri|urlencode }}{% endif %}"></span>
+        <span class="Z3988" title="ctx_ver=Z39.88-2004&amp;rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&amp;rft.genre=article{% if item.title %}&amp;rft.atitle={{ item.title|urlencode }}{% endif %}{% if item.book_journal %}&amp;rft.jtitle={{ item.book_journal|urlencode }}{% endif %}{% if item.author %}&amp;rft.au={{ item.author|urlencode }}{% endif %}{% if item.pub_date %}&amp;rft.date={{ item.pub_date|urlencode }}{% endif %}{% if item.publisher %}&amp;rft.pub={{ item.publisher|urlencode }}{% endif %}&amp;rft_id={{ detail_url_absolute|urlencode }}"></span>
     {% endif %}
 
     <a href="{{ detail_url }}{% if query %}?query={{ query }}{% endif %}" class="detail">
