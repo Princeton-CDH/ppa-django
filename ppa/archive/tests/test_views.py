@@ -12,7 +12,6 @@ from django.utils.http import urlencode
 from parasolr.django import SolrClient, SolrQuerySet
 
 from ppa.archive.forms import ImportForm, ModelMultipleChoiceFieldWithEmpty, SearchForm
-from ppa.archive.solr import ArchiveSearchQuerySet
 from ppa.archive.models import (
     NO_COLLECTION_LABEL,
     Collection,
@@ -20,6 +19,7 @@ from ppa.archive.models import (
     Page,
     SourceNote,
 )
+from ppa.archive.solr import ArchiveSearchQuerySet
 from ppa.archive.templatetags.ppa_tags import (
     gale_page_url,
     hathi_page_url,
@@ -977,28 +977,7 @@ class TestDigitizedWorkListRequest(TestCase):
             item_type=DigitizedWork.EXCERPT,
             status=DigitizedWork.PUBLIC,
         )
-        # Add to the test collection so it appears in search results
-        excerpt.collections.add(self.collection)
         excerpt.index()
-
-        # Wait for the excerpt to be specifically indexed and available in search results
-        # Check that it appears in the collection-filtered results that the view uses
-        index_checks = 0
-        while index_checks <= 30:
-            # Mimic the view's search logic with collection filtering
-            search_results = (
-                ArchiveSearchQuerySet()
-                .work_filter(collections_exact__in=[f'"{self.collection.name}"'])
-                .search(item_type="work")
-            )
-            # Check if our specific excerpt appears in collection-filtered results
-            excerpt_found = any(
-                result.source_id == "test.excerpt" for result in search_results
-            )
-            if excerpt_found:
-                break
-            sleep(0.2)
-            index_checks += 1
 
         response = self.client.get(self.url)
         assert response.status_code == 200
@@ -1017,28 +996,7 @@ class TestDigitizedWorkListRequest(TestCase):
             item_type=DigitizedWork.ARTICLE,
             status=DigitizedWork.PUBLIC,
         )
-        # Add to the test collection so it appears in search results
-        article.collections.add(self.collection)
         article.index()
-
-        # Wait for the article to be specifically indexed and available in search results
-        # Check that it appears in the collection-filtered results that the view uses
-        index_checks = 0
-        while index_checks <= 30:
-            # Mimic the view's search logic with collection filtering
-            search_results = (
-                ArchiveSearchQuerySet()
-                .work_filter(collections_exact__in=[f'"{self.collection.name}"'])
-                .search(item_type="work")
-            )
-            # Check if our specific article appears in collection-filtered results
-            article_found = any(
-                result.source_id == "test.article" for result in search_results
-            )
-            if article_found:
-                break
-            sleep(0.2)
-            index_checks += 1
 
         response = self.client.get(self.url)
         assert response.status_code == 200

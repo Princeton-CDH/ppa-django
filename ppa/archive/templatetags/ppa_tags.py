@@ -171,12 +171,13 @@ def _get_work_type_string(item, is_model_instance):
         return type_map.get(item.item_type, "full-work")
     else:
         # Solr results store work_type as string
-        # Use the helper function to get the work_type consistently
-        work_type = _get_item_value(item, "work_type")
+        # Try both the aliased field name and the original Solr field name
+        work_type = _get_item_value(item, "work_type") or _get_item_value(
+            item, "work_type_s"
+        )
 
-        # If that didn't work, try the original Solr field name
-        if not work_type:
-            work_type = _get_item_value(item, "work_type_s")
+        # Note: work_type_s is the original Solr field, work_type is the aliased version
+        # Both should be checked to handle different search result contexts
 
         # Default to full-work if no work_type found
         return work_type or "full-work"
