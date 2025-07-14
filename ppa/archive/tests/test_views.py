@@ -977,14 +977,18 @@ class TestDigitizedWorkListRequest(TestCase):
             item_type=DigitizedWork.EXCERPT,
             status=DigitizedWork.PUBLIC,
         )
+        # Add to the test collection so it appears in search results
+        excerpt.collections.add(self.collection)
         excerpt.index()
 
         # Wait for the excerpt to be indexed and available in search results
+        # Use a longer timeout and more frequent checks since indexing can be slow
         index_checks = 0
-        while (
-            SolrQuerySet().search(item_type="work").count() < 4 and index_checks <= 10
-        ):
-            sleep(0.1)
+        while index_checks <= 30:
+            work_count = SolrQuerySet().search(item_type="work").count()
+            if work_count >= 4:  # 3 fixtures + 1 new excerpt
+                break
+            sleep(0.2)
             index_checks += 1
 
         response = self.client.get(self.url)
@@ -1004,14 +1008,18 @@ class TestDigitizedWorkListRequest(TestCase):
             item_type=DigitizedWork.ARTICLE,
             status=DigitizedWork.PUBLIC,
         )
+        # Add to the test collection so it appears in search results
+        article.collections.add(self.collection)
         article.index()
 
         # Wait for the article to be indexed and available in search results
+        # Use a longer timeout and more frequent checks since indexing can be slow
         index_checks = 0
-        while (
-            SolrQuerySet().search(item_type="work").count() < 4 and index_checks <= 10
-        ):
-            sleep(0.1)
+        while index_checks <= 30:
+            work_count = SolrQuerySet().search(item_type="work").count()
+            if work_count >= 4:  # 3 fixtures + 1 new article
+                break
+            sleep(0.2)
             index_checks += 1
 
         response = self.client.get(self.url)
