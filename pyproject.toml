@@ -1,6 +1,6 @@
 [tool.ruff]
 # allow longer line length
-line-length = 120
+line-length = 95
 
 # don't be as strict with formatting in migrations
 extend-exclude = ["ppa/*/migrations/*.py"]
