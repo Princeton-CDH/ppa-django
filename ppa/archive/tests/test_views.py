@@ -979,6 +979,14 @@ class TestDigitizedWorkListRequest(TestCase):
         )
         excerpt.index()
 
+        # Wait for the excerpt to be indexed and available in search results
+        index_checks = 0
+        while (
+            SolrQuerySet().search(item_type="work").count() < 4 and index_checks <= 10
+        ):
+            sleep(0.1)
+            index_checks += 1
+
         response = self.client.get(self.url)
         assert response.status_code == 200
 
@@ -997,6 +1005,14 @@ class TestDigitizedWorkListRequest(TestCase):
             status=DigitizedWork.PUBLIC,
         )
         article.index()
+
+        # Wait for the article to be indexed and available in search results
+        index_checks = 0
+        while (
+            SolrQuerySet().search(item_type="work").count() < 4 and index_checks <= 10
+        ):
+            sleep(0.1)
+            index_checks += 1
 
         response = self.client.get(self.url)
         assert response.status_code == 200
