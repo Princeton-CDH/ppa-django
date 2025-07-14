@@ -150,6 +150,7 @@ def test_coins_data_full_work():
     mock_work.author = "Test Author"
     mock_work.pub_date = "1850"
     mock_work.publisher = "Test Publisher"
+    mock_work.pub_place = "Cambridge"
     mock_work.get_absolute_url.return_value = "/archive/detail/test123/"
 
     # Mock request context
@@ -168,6 +169,7 @@ def test_coins_data_full_work():
     assert result["rft.au"] == "Test Author"
     assert result["rft.date"] == "1850"
     assert result["rft.pub"] == "Test Publisher"
+    assert result["rft.place"] == "Cambridge"
     assert result["rft_id"] == "http://testserver/archive/detail/test123/"
 
 
@@ -183,6 +185,7 @@ def test_coins_data_excerpt():
     mock_work.title = "Test Excerpt"
     mock_work.author = "Test Author"
     mock_work.book_journal = "Test Book"
+    mock_work.pub_place = "Oxford"
     mock_work.pages_orig = "10-15"
     mock_work.get_absolute_url.return_value = "/archive/detail/test123/"
 
@@ -200,6 +203,7 @@ def test_coins_data_excerpt():
     assert result["rft.atitle"] == "Test Excerpt"
     assert result["rft.btitle"] == "Test Book"
     assert result["rft.au"] == "Test Author"
+    assert result["rft.place"] == "Oxford"
     assert result["rft.pages"] == "10-15"
     assert result["rft.spage"] == "10"
     assert result["rft.epage"] == "15"
