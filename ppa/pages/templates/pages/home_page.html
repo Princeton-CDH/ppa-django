@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load render_bundle from webpack_loader %}
-{% load static humanize wagtailcore_tags %}
+{% load static humanize wagtailcore_tags ppa_tags %}
 
 {% block js %}
 {% render_bundle 'home' 'js' %}
