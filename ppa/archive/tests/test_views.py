@@ -1023,8 +1023,6 @@ class TestDigitizedWorkListRequest(TestCase):
 
         # Wait for the article to be specifically indexed and available in search results
         # Check that it appears in the collection-filtered results that the view uses
-        from ppa.archive.solr import ArchiveSearchQuerySet
-
         index_checks = 0
         while index_checks <= 30:
             # Mimic the view's search logic with collection filtering
