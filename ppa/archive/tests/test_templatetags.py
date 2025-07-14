@@ -261,7 +261,7 @@ def test_coins_data_solr_result():
     )
     context = {"request": mock_request}
 
-    with patch("ppa.archive.templatetags.ppa_tags.reverse") as mock_reverse:
+    with patch("django.urls.reverse") as mock_reverse:
         mock_reverse.return_value = "/archive/detail/test456/"
         result = coins_data(context, mock_item)
 
@@ -288,8 +288,10 @@ def test_coins_encode():
     assert '<span class="Z3988"' in str(result)
     assert "title=" in str(result)
     # Should URL encode values
-    assert "Test%20%26%20Title" in str(result)  # URL encoded title
-    assert "http%3A//example.com/test%3Fparam%3Dvalue" in str(result)  # URL encoded URL
+    assert "Test+%26+Title" in str(result)  # URL encoded title (+ for spaces)
+    assert "http%3A%2F%2Fexample.com%2Ftest%3Fparam%3Dvalue" in str(
+        result
+    )  # URL encoded URL
     # Should use &amp; between parameters
     assert "&amp;" in str(result)
 
