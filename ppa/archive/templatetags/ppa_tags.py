@@ -171,7 +171,15 @@ def _get_work_type_string(item, is_model_instance):
         return type_map.get(item.item_type, "full-work")
     else:
         # Solr results store work_type as string
-        return _get_item_value(item, "work_type", "full-work")
+        # Use the helper function to get the work_type consistently
+        work_type = _get_item_value(item, "work_type")
+
+        # If that didn't work, try the original Solr field name
+        if not work_type:
+            work_type = _get_item_value(item, "work_type_s")
+
+        # Default to full-work if no work_type found
+        return work_type or "full-work"
 
 
 def _generate_absolute_url(context, item, is_model_instance):
@@ -207,62 +215,75 @@ def _add_common_fields(data, item):
         data["pub"] = _get_item_value(item, "publisher")
 
 
+def _add_full_work_fields(data, item):
+    """Add full-work specific COinS fields."""
+    data.update({"rft_val_fmt": "info:ofi/fmt:kev:mtx:book", "rft.genre": "book"})
+    # For books, title goes in rft.title
+    if "title" in data:
+        data["rft.title"] = data.pop("title")
+
+
+def _add_excerpt_fields(data, item, is_model_instance):
+    """Add excerpt specific COinS fields."""
+    data.update({"rft_val_fmt": "info:ofi/fmt:kev:mtx:book", "rft.genre": "bookitem"})
+    # For excerpts, title is article title, book_journal is book title
+    if "title" in data:
+        data["rft.atitle"] = data.pop("title")
+    if _get_item_value(item, "book_journal"):
+        data["rft.btitle"] = _get_item_value(item, "book_journal")
+    # Add page information for excerpts (only available for model instances)
+    if is_model_instance and _get_item_value(item, "pages_orig"):
+        pages_orig = _get_item_value(item, "pages_orig")
+        data["rft.pages"] = pages_orig
+        data["rft.spage"] = first_page(pages_orig)
+        data["rft.epage"] = last_page(pages_orig)
+
+
+def _add_page_info_from_url(data, context):
+    """Add page information from URL parameters when pages_orig is not available."""
+    if context and "request" in context:
+        resolver_match = getattr(context["request"], "resolver_match", None)
+        if resolver_match and resolver_match.kwargs:
+            start_page = resolver_match.kwargs.get("start_page")
+            if start_page:
+                # Use the specific page from URL as both start and end page
+                data["rft.spage"] = start_page
+                data["rft.epage"] = start_page
+                data["rft.pages"] = start_page
+
+
+def _add_article_fields(data, item, is_model_instance, context):
+    """Add article specific COinS fields."""
+    data.update({"rft_val_fmt": "info:ofi/fmt:kev:mtx:journal", "rft.genre": "article"})
+    # For articles, title is article title, book_journal is journal title
+    if "title" in data:
+        data["rft.atitle"] = data.pop("title")
+    if _get_item_value(item, "book_journal"):
+        data["rft.jtitle"] = _get_item_value(item, "book_journal")
+    # Add volume and page information for articles (only available for model instances)
+    if is_model_instance:
+        if _get_item_value(item, "enumcron"):
+            data["rft.volume"] = _get_item_value(item, "enumcron")
+        if _get_item_value(item, "pages_orig"):
+            pages_orig = _get_item_value(item, "pages_orig")
+            data["rft.pages"] = pages_orig
+            data["rft.spage"] = first_page(pages_orig)
+            data["rft.epage"] = last_page(pages_orig)
+        else:
+            # If no pages_orig, check for current page from URL parameters
+            _add_page_info_from_url(data, context)
+
+
 def _add_work_type_specific_fields(
     data, item, work_type_str, is_model_instance, context
 ):
     """Add work type specific fields and metadata format."""
     if work_type_str == "full-work":
-        data.update({"rft_val_fmt": "info:ofi/fmt:kev:mtx:book", "rft.genre": "book"})
-        # For books, title goes in rft.title
-        if "title" in data:
-            data["rft.title"] = data.pop("title")
-
+        _add_full_work_fields(data, item)
     elif work_type_str == "excerpt":
-        data.update(
-            {"rft_val_fmt": "info:ofi/fmt:kev:mtx:book", "rft.genre": "bookitem"}
-        )
-        # For excerpts, title is article title, book_journal is book title
-        if "title" in data:
-            data["rft.atitle"] = data.pop("title")
-        if _get_item_value(item, "book_journal"):
-            data["rft.btitle"] = _get_item_value(item, "book_journal")
-        # Add page information for excerpts (only available for model instances)
-        if is_model_instance and _get_item_value(item, "pages_orig"):
-            pages_orig = _get_item_value(item, "pages_orig")
-            data["rft.pages"] = pages_orig
-            data["rft.spage"] = first_page(pages_orig)
-            data["rft.epage"] = last_page(pages_orig)
-
+        _add_excerpt_fields(data, item, is_model_instance)
     elif work_type_str == "article":
-        data.update(
-            {"rft_val_fmt": "info:ofi/fmt:kev:mtx:journal", "rft.genre": "article"}
-        )
-        # For articles, title is article title, book_journal is journal title
-        if "title" in data:
-            data["rft.atitle"] = data.pop("title")
-        if _get_item_value(item, "book_journal"):
-            data["rft.jtitle"] = _get_item_value(item, "book_journal")
-        # Add volume and page information for articles (only available for model instances)
-        if is_model_instance:
-            if _get_item_value(item, "enumcron"):
-                data["rft.volume"] = _get_item_value(item, "enumcron")
-            if _get_item_value(item, "pages_orig"):
-                pages_orig = _get_item_value(item, "pages_orig")
-                data["rft.pages"] = pages_orig
-                data["rft.spage"] = first_page(pages_orig)
-                data["rft.epage"] = last_page(pages_orig)
-            else:
-                # If no pages_orig, check for current page from URL parameters
-                # This handles cases where we're viewing a specific page of an article
-                if context and "request" in context:
-                    resolver_match = getattr(context["request"], "resolver_match", None)
-                    if resolver_match and resolver_match.kwargs:
-                        start_page = resolver_match.kwargs.get("start_page")
-                        if start_page:
-                            # Use the specific page from URL as both start and end page
-                            data["rft.spage"] = start_page
-                            data["rft.epage"] = start_page
-                            data["rft.pages"] = start_page
+        _add_article_fields(data, item, is_model_instance, context)
 
 
 def _convert_to_coins_format(data):
