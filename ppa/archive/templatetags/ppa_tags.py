@@ -168,14 +168,18 @@ def coins_data(context, item):
     # Determine if this is a model instance or Solr result
     is_model_instance = hasattr(item, "_meta")
 
-    # Helper function to get attribute/key from either object or dict
+    # Helper function to get attribute/key from either object or dict:
+    # Search results come from Solr as dictionaries: item['title']
+    # Detail pages use Django models as objects: item.title
     def get_item_value(obj, key, default=None):
         if isinstance(obj, dict):
             return obj.get(key, default)
         else:
             return getattr(obj, key, default)
 
-    # Get work type - model instances use constants, Solr uses strings
+    # Get work type:
+    # Model instances have constants (item.FULL='F')
+    # Solr has strings ('full-work')
     if is_model_instance:
         work_type = item.item_type
         # Map model constants to our internal strings for consistency
@@ -189,11 +193,12 @@ def coins_data(context, item):
         # Solr results store work_type as string
         work_type_str = get_item_value(item, "work_type", "full-work")
 
-    # Generate absolute URL - model instances have get_absolute_url method, Solr results need URL building
+    # Generate absolute URL:
+    # model instances have get_absolute_url method
+    # Solr results need URL building
     if is_model_instance:
         absolute_url = context["request"].build_absolute_uri(item.get_absolute_url())
     else:
-        # For Solr results, we need to build the URL first
         source_id = get_item_value(item, "source_id")
         first_page = get_item_value(item, "first_page")
 
@@ -237,7 +242,7 @@ def coins_data(context, item):
         data.update(
             {"rft_val_fmt": "info:ofi/fmt:kev:mtx:book", "rft.genre": "bookitem"}
         )
-        # For excerpts, title is article title, book_journal is book title
+        # For excerpts, `title` is article title, `book_journal` is book title
         if "title" in data:
             data["rft.atitle"] = data.pop("title")
         if get_item_value(item, "book_journal"):
@@ -258,7 +263,8 @@ def coins_data(context, item):
             data["rft.atitle"] = data.pop("title")
         if get_item_value(item, "book_journal"):
             data["rft.jtitle"] = get_item_value(item, "book_journal")
-        # Add volume and page information for articles (only available for model instances)
+        # Add volume and page information for articles
+        # only available for model instances; Solr results do not have this information
         if is_model_instance:
             if get_item_value(item, "enumcron"):
                 data["rft.volume"] = get_item_value(item, "enumcron")
