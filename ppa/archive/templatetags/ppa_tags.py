@@ -221,6 +221,9 @@ def _add_full_work_fields(data, item):
     # For books, title goes in rft.title
     if "title" in data:
         data["rft.title"] = data.pop("title")
+    # Add publication place for books
+    if _get_item_value(item, "pub_place"):
+        data["rft.place"] = _get_item_value(item, "pub_place")
 
 
 def _add_excerpt_fields(data, item, is_model_instance):
@@ -231,6 +234,9 @@ def _add_excerpt_fields(data, item, is_model_instance):
         data["rft.atitle"] = data.pop("title")
     if _get_item_value(item, "book_journal"):
         data["rft.btitle"] = _get_item_value(item, "book_journal")
+    # Add publication place for book sections
+    if _get_item_value(item, "pub_place"):
+        data["rft.place"] = _get_item_value(item, "pub_place")
     # Add page information for excerpts (only available for model instances)
     if is_model_instance and _get_item_value(item, "pages_orig"):
         pages_orig = _get_item_value(item, "pages_orig")
