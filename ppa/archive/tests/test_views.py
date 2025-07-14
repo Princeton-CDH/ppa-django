@@ -12,6 +12,7 @@ from django.utils.http import urlencode
 from parasolr.django import SolrClient, SolrQuerySet
 
 from ppa.archive.forms import ImportForm, ModelMultipleChoiceFieldWithEmpty, SearchForm
+from ppa.archive.solr import ArchiveSearchQuerySet
 from ppa.archive.models import (
     NO_COLLECTION_LABEL,
     Collection,
@@ -19,7 +20,6 @@ from ppa.archive.models import (
     Page,
     SourceNote,
 )
-from ppa.archive.solr import ArchiveSearchQuerySet
 from ppa.archive.templatetags.ppa_tags import (
     gale_page_url,
     hathi_page_url,
@@ -981,12 +981,21 @@ class TestDigitizedWorkListRequest(TestCase):
         excerpt.collections.add(self.collection)
         excerpt.index()
 
-        # Wait for the excerpt to be indexed and available in search results
-        # Use a longer timeout and more frequent checks since indexing can be slow
+        # Wait for the excerpt to be specifically indexed and available in search results
+        # Check that it appears in the collection-filtered results that the view uses
         index_checks = 0
         while index_checks <= 30:
-            work_count = SolrQuerySet().search(item_type="work").count()
-            if work_count >= 4:  # 3 fixtures + 1 new excerpt
+            # Mimic the view's search logic with collection filtering
+            search_results = (
+                ArchiveSearchQuerySet()
+                .work_filter(collections_exact__in=[f'"{self.collection.name}"'])
+                .search(item_type="work")
+            )
+            # Check if our specific excerpt appears in collection-filtered results
+            excerpt_found = any(
+                result.source_id == "test.excerpt" for result in search_results
+            )
+            if excerpt_found:
                 break
             sleep(0.2)
             index_checks += 1
@@ -1012,12 +1021,23 @@ class TestDigitizedWorkListRequest(TestCase):
         article.collections.add(self.collection)
         article.index()
 
-        # Wait for the article to be indexed and available in search results
-        # Use a longer timeout and more frequent checks since indexing can be slow
+        # Wait for the article to be specifically indexed and available in search results
+        # Check that it appears in the collection-filtered results that the view uses
+        from ppa.archive.solr import ArchiveSearchQuerySet
+
         index_checks = 0
         while index_checks <= 30:
-            work_count = SolrQuerySet().search(item_type="work").count()
-            if work_count >= 4:  # 3 fixtures + 1 new article
+            # Mimic the view's search logic with collection filtering
+            search_results = (
+                ArchiveSearchQuerySet()
+                .work_filter(collections_exact__in=[f'"{self.collection.name}"'])
+                .search(item_type="work")
+            )
+            # Check if our specific article appears in collection-filtered results
+            article_found = any(
+                result.source_id == "test.article" for result in search_results
+            )
+            if article_found:
                 break
             sleep(0.2)
             index_checks += 1
