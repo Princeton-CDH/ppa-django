@@ -3,7 +3,7 @@
 <li class="item {{ item.work_type }}">
 
     {# Generate URL for main link #}
-    {% if item.first_page %}
+    {% if item.first_page %}  {# generating detail url for excerpts requires specifying start page #}
         {% url 'archive:detail' source_id=item.source_id start_page=item.first_page as detail_url %}
     {% else %}
         {% url 'archive:detail' item.source_id as detail_url %}
