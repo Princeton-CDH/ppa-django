@@ -76,6 +76,22 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
         # otherwise, process response normally
         return super(DigitizedWorkListView, self).get(*args, **kwargs)
 
+    def paginate_queryset(self, queryset, page_size):
+        """Graceful paginate_queryset override to handle non-numeric inputs.
+        Adapted from https://stackoverflow.com/a/61214021/394067"""
+        try:
+            return super().paginate_queryset(queryset, page_size)
+        except Http404:
+            # handle a 404, e.g. a non-numeric page number was entered
+            paginator = self.get_paginator(
+                queryset,
+                page_size,
+                orphans=self.get_paginate_orphans(),
+                allow_empty_first_page=self.get_allow_empty(),
+            )
+            page = paginator.page(1)
+            return (paginator, page, page.object_list, page.has_other_pages())
+
     def get_queryset(self, **kwargs):
         form_opts = self.request.GET.copy()
         # if relevance sort is requested but there is no keyword search
@@ -294,7 +310,6 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
     slug_url_kwarg = "source_id"
     form_class = SearchWithinWorkForm
     paginate_by = 50
-    paginator_class = GracefulPaginator
     # redirect url for a full volume converted to a single excerpt
     redirect_url = None
 
@@ -394,7 +409,7 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
             )
 
             try:
-                paginator = Paginator(solr_pageq, per_page=self.paginate_by)
+                paginator = GracefulPaginator(solr_pageq, per_page=self.paginate_by)
                 page_num = self.request.GET.get("page", 1)
                 current_page = paginator.page(page_num)
                 paged_result = current_page.object_list

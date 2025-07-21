@@ -9,7 +9,7 @@ cached_property
 django-apptemplates
 progressbar2
 django-semanticui-forms
-lxml
+lxml>=5.4.0,<6.0.0
 # TODO: switch to released neuxml when 1.0.0 is out
 git+https://github.com/Princeton-CDH/neuxml@main
 # neuxml
