@@ -123,9 +123,9 @@ work you are doing, you may not need all three.
 HathiTrust
 """"""""""
 
-The HathiTrust data is fairly large; for many development tasks, it is 
+The HathiTrust data is fairly large; for many development tasks, it is
 sufficient to work with a subset of the data. To import specific volumes
-available in PPA staging, you can configure your local settings to use the 
+available in PPA staging, you can configure your local settings to use the
 PPA staging server as the HathiTrust rsync server:
 
 Use these settings::
@@ -142,16 +142,26 @@ Gale/ECCO
 """"""""""
 
 Gale/ECCO records can also be imported by id using the ``gale_import``
-manage command.  Page content will be pulled from local OCR content when
+manage command. Import requires the ``MARC_DATA`` path and MARC pairtree data.
+Page content will be pulled from local OCR content when
 the ``GALE_LOCAL_OCR`` path is configured and files are available.
+
 Access to the Gale API requires a ``GALE_API_USERNAME`` to be configured.
+This configuration can be found in the local settings file on the staging
+and production servers, and is also available as an encrypted variable in
+`cdh-ansible <https://github.com/Princeton-CDH/cdh-ansible/>`_. With
+a working local install of cdh-ansible with the ansible vault password, run::
+
+    ./bin/vault_vars.py decrypt inventory/group_vars/prosody/vault.yml
+
 
 EEBO-TCP
 """"""""
 
 EEBO-TCP records can be imported using the ``eebo_import`` script; this
-requires a CSV file with the records to be imported.  A copy of the CSV
-used for the production import is available in this repository
+requires the ``EEBO_DATA`` folder and configuration and a CSV file with
+the records to be imported.  A copy of the CSV used for the production
+import is available in this repository
 at ``scripts/eebo_works.csv``.
 
 
@@ -183,8 +193,8 @@ Use rsync to copy the generated corpus output to a local machine and
 optionally also upload to TigerData.
 
 If you need to filter the corpus to a smaller set of records, use the
-`filter utility script <https://princeton-cdh.github.io/corppa/eop-docs.html#filter-utility>`_ 
-in the `corppa python library <https://github.com/Princeton-CDH/corppa>`_. 
+`filter utility script <https://princeton-cdh.github.io/corppa/eop-docs.html#filter-utility>`_
+in the `corppa python library <https://github.com/Princeton-CDH/corppa>`_.
 
 
 Indexing with multiprocessing
