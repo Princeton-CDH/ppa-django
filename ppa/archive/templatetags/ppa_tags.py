@@ -119,8 +119,11 @@ def solr_highlight(value, autoescape=True):
 
 
 def _get_item_value(obj, key, default=None):
-    """Get value from Solr object."""
-    return getattr(obj, key, default)
+    """Get value from Solr object or dictionary."""
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    else:
+        return getattr(obj, key, default)
 
 
 def _generate_absolute_url(context, item):
@@ -158,56 +161,56 @@ def _add_common_fields(item):
 
 def _add_full_work_fields(item, existing_data):
     """Return fields specific to full works."""
-    fields = {"rft_val_fmt": "info:ofi/fmt:kev:mtx:book", "rft.genre": "book"}
+    fields = {"rft_val_fmt": "info:ofi/fmt:kev:mtx:book", "genre": "book"}
     if "title" in existing_data:
-        fields["rft.title"] = existing_data["title"]
+        fields["title"] = existing_data["title"]
     if _get_item_value(item, "pub_place"):
-        fields["rft.place"] = _get_item_value(item, "pub_place")
+        fields["place"] = _get_item_value(item, "pub_place")
     return fields
 
 
 def _add_excerpt_fields(item, existing_data):
     """Return fields specific to excerpts."""
-    fields = {"rft_val_fmt": "info:ofi/fmt:kev:mtx:book", "rft.genre": "bookitem"}
+    fields = {"rft_val_fmt": "info:ofi/fmt:kev:mtx:book", "genre": "bookitem"}
     if "title" in existing_data:
-        fields["rft.atitle"] = existing_data["title"]
+        fields["atitle"] = existing_data["title"]
     if _get_item_value(item, "book_journal"):
-        fields["rft.btitle"] = _get_item_value(item, "book_journal")
+        fields["btitle"] = _get_item_value(item, "book_journal")
     if _get_item_value(item, "pub_place"):
-        fields["rft.place"] = _get_item_value(item, "pub_place")
+        fields["place"] = _get_item_value(item, "pub_place")
     # Add page information for excerpts if available
     if _get_item_value(item, "first_page"):
         first_page = _get_item_value(item, "first_page")
         last_page = _get_item_value(item, "last_page")
-        fields["rft.spage"] = first_page
-        fields["rft.epage"] = last_page or first_page
-        # For rft.pages, use full range if we have both pages, otherwise just first page
+        fields["spage"] = first_page
+        fields["epage"] = last_page or first_page
+        # For pages, use full range if we have both pages, otherwise just first page
         if last_page and last_page != first_page:
-            fields["rft.pages"] = f"{first_page}-{last_page}"
+            fields["pages"] = f"{first_page}-{last_page}"
         else:
-            fields["rft.pages"] = first_page
+            fields["pages"] = first_page
     return fields
 
 
 def _add_article_fields(item, existing_data):
     """Return fields specific to articles."""
-    fields = {"rft_val_fmt": "info:ofi/fmt:kev:mtx:journal", "rft.genre": "article"}
+    fields = {"rft_val_fmt": "info:ofi/fmt:kev:mtx:journal", "genre": "article"}
     if "title" in existing_data:
-        fields["rft.atitle"] = existing_data["title"]
+        fields["atitle"] = existing_data["title"]
     if _get_item_value(item, "book_journal"):
-        fields["rft.jtitle"] = _get_item_value(item, "book_journal")
+        fields["jtitle"] = _get_item_value(item, "book_journal")
     if _get_item_value(item, "enumcron"):
-        fields["rft.volume"] = _get_item_value(item, "enumcron")
+        fields["volume"] = _get_item_value(item, "enumcron")
     if _get_item_value(item, "first_page"):
         first_page = _get_item_value(item, "first_page")
         last_page = _get_item_value(item, "last_page")
-        fields["rft.spage"] = first_page
-        fields["rft.epage"] = last_page or first_page
-        # For rft.pages, use full range if we have both pages, otherwise just first page
+        fields["spage"] = first_page
+        fields["epage"] = last_page or first_page
+        # For pages, use full range if we have both pages, otherwise just first page
         if last_page and last_page != first_page:
-            fields["rft.pages"] = f"{first_page}-{last_page}"
+            fields["pages"] = f"{first_page}-{last_page}"
         else:
-            fields["rft.pages"] = first_page
+            fields["pages"] = first_page
     return fields
 
 
@@ -220,18 +223,6 @@ def _add_work_type_specific_fields(item, existing_data, work_type_str):
     elif work_type_str == "article":
         return _add_article_fields(item, existing_data)
     return {}
-
-
-def _convert_to_coins_format(existing_data):
-    """Return fields converted to COinS format."""
-    fields = {}
-    if "au" in existing_data:
-        fields["rft.au"] = existing_data["au"]
-    if "date" in existing_data:
-        fields["rft.date"] = existing_data["date"]
-    if "pub" in existing_data:
-        fields["rft.pub"] = existing_data["pub"]
-    return fields
 
 
 @register.simple_tag(takes_context=True)
@@ -249,19 +240,18 @@ def coins_data(context, item):
     common_fields = _add_common_fields(item)
     data.update(common_fields)
 
-    # Add work-type-specific fields (may need to transform existing fields like title)
+    # Add work-type-specific fields
     work_type_fields = _add_work_type_specific_fields(item, data, work_type_str)
     data.update(work_type_fields)
 
-    # Convert format and remove fields that were transformed
-    coins_fields = _convert_to_coins_format(data)
-    data.update(coins_fields)
+    # Add rft. prefix to fields (except those already prefixed)
+    coins_fields = {
+        f"rft.{k}" if not k.startswith(("rft", "ctx_ver")) else k: v
+        for k, v in data.items()
+        if v is not None  # Skip None values
+    }
 
-    # Remove the original common fields that were converted to COinS format
-    for field in ["au", "date", "pub", "title"]:
-        data.pop(field, None)
-
-    return data
+    return coins_fields
 
 
 @register.filter
