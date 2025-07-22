@@ -327,3 +327,83 @@ def test_coins_encode():
     # Test edge cases
     assert coins_encode({}) == ""  # Empty dictionary
     assert coins_encode(None) == ""  # None input
+
+
+def test_coins_data_raw_solr_fields():
+    """Test coins_data with raw Solr field names (with _s suffixes).
+    This tests the scenario where Solr aliasing isn't working properly
+    and we get the raw field names instead of clean aliases.
+    """
+    # Mock Solr object with raw field names as they actually exist in Solr
+    mock_item = Mock()
+    mock_item.work_type_s = "excerpt"  # Raw Solr field name
+    mock_item.title = "Test Excerpt"
+    mock_item.author = "Test Author"
+    mock_item.book_journal_s = "Test Book"  # Raw Solr field name
+    mock_item.pub_place = "Oxford"
+    mock_item.first_page_s = "10"  # Raw Solr field name
+    mock_item.last_page_s = "15"  # Raw Solr field name
+    mock_item.source_id = "test123"
+
+    # Mock getattr to return None for clean field names, simulating broken aliasing
+    def mock_getattr(obj, name, default=None):
+        if hasattr(obj, name):
+            return getattr(obj, name)
+        return default
+
+    # Make clean field names return None (simulating broken aliasing)
+    mock_item.work_type = None
+    mock_item.book_journal = None
+    mock_item.first_page = None
+    mock_item.last_page = None
+
+    mock_request = Mock()
+    mock_request.build_absolute_uri.return_value = (
+        "http://testserver/archive/detail/test123/"
+    )
+    context = {"request": mock_request}
+
+    with patch("django.urls.reverse") as mock_reverse:
+        mock_reverse.return_value = "/archive/detail/test123/"
+        result = coins_data(context, mock_item)
+
+    # If the code only looks for clean field names, this should fail
+    # because work_type would be None, defaulting to "full-work"
+    # But we want it to find work_type_s and use "excerpt"
+    assert result["rft.genre"] == "bookitem"  # Should be excerpt behavior
+    assert result["rft.atitle"] == "Test Excerpt"
+
+
+def test_coins_data_mixed_field_names():
+    """Test coins_data with a mix of clean and raw field names.
+    This simulates partial aliasing where some fields are aliased and others aren't.
+    """
+    mock_item = Mock()
+    # Some fields have clean names (aliasing working)
+    mock_item.work_type = "article"
+    mock_item.title = "Test Article"
+    mock_item.author = "Test Author"
+
+    # Some fields only have raw names (aliasing broken for these)
+    mock_item.book_journal_s = "Test Journal"  # Only raw name available
+    mock_item.book_journal = None  # Clean name not available
+    mock_item.enumcron = "Vol. 5"
+    mock_item.first_page_s = "25"  # Only raw name
+    mock_item.first_page = None  # Clean name not available
+    mock_item.last_page_s = "30"
+    mock_item.last_page = None
+    mock_item.source_id = "test123"
+
+    mock_request = Mock()
+    mock_request.build_absolute_uri.return_value = (
+        "http://testserver/archive/detail/test123/"
+    )
+    context = {"request": mock_request}
+
+    with patch("django.urls.reverse") as mock_reverse:
+        mock_reverse.return_value = "/archive/detail/test123/"
+        result = coins_data(context, mock_item)
+
+    assert result["rft_val_fmt"] == "info:ofi/fmt:kev:mtx:journal"
+    assert result["rft.genre"] == "article"
+    assert result["rft.atitle"] == "Test Article"
