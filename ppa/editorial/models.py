@@ -2,8 +2,14 @@ from datetime import date
 
 from django.core.validators import RegexValidator
 from django.db import models
+from django.db.models.aggregates import Count
 from django.http import Http404
-from wagtail.admin.panels import FieldPanel
+from django.utils.safestring import mark_safe
+from modelcluster.fields import ParentalKey
+from modelcluster.contrib.taggit import ClusterTaggableManager
+from taggit.models import Tag, TaggedItemBase
+from wagtail.admin.panels import FieldPanel, Panel
+from wagtail.contrib.settings.models import BaseGenericSetting, register_setting
 from wagtail.fields import RichTextField, StreamField
 from wagtail.models import Page
 from wagtail.snippets.blocks import SnippetChooserBlock
@@ -27,9 +33,29 @@ class EditorialIndexPage(Page):
         """Add published editorial posts to template context, most recent first"""
         context = super().get_context(request)
 
+        posts = EditorialPage.objects.child_of(self).live()
+
+        # handle filter by tag
+        tag = request.GET.get("tag")
+        if tag:
+            posts = posts.filter(tags__slug=tag)
+
+        # sort
+        posts = posts.order_by("-first_published_at")
+
         # Add extra variables and return the updated context
-        context["posts"] = (
-            EditorialPage.objects.child_of(self).live().order_by("-first_published_at")
+        context.update(
+            {
+                "posts": posts,
+                "selected_tag": tag,
+                "tags": Tag.objects.annotate(
+                    count=Count(
+                        "editorial_editorialpagetag_items",
+                        # only count live posts
+                        filter=models.Q(editorial_editorialpagetag_items__content_object__live=True),
+                    )
+                ).filter(count__gt=0).order_by("-count", "name"),
+            }
         )
         return context
 
@@ -84,6 +110,68 @@ class EditorialIndexPage(Page):
             return super().route(request, path_components)
 
 
+@register_setting(icon="cog")
+class DocraptorSettings(BaseGenericSetting):
+    docraptor_api_key = models.CharField(
+        "DocRaptor API key",
+        max_length=255,
+        blank=True,
+        help_text=mark_safe(
+            "API Key for DocRaptor, found on your "
+            '<a href="https://docraptor.com/doc_logs">DocRaptor account page</a>. '
+            "Required to enable PDF generation."
+        ),
+    )
+    docraptor_limit_note = models.TextField(
+        "DocRaptor limit note",
+        default="Limited to 5 PDFs per month.",
+        help_text="A note that will appear in the editor if the API key is present, "
+        "informing users of the document limit. It is 5 per month on the free plan; "
+        "edit here if plan is upgraded.",
+    )
+
+    panels = [
+        FieldPanel("docraptor_api_key"),
+        FieldPanel("docraptor_limit_note"),
+    ]
+
+    class Meta:
+        verbose_name = "DocRaptor Settings"
+
+
+class GeneratePdfPanel(Panel):
+    """Panel for asynchronous PDF generation in JavaScript; must be a
+    Panel subclass to have access to EditoralPage's instance URL"""
+
+    class BoundPanel(Panel.BoundPanel):
+        template_name = "wagtailadmin/panels/pdf_panel.html"
+
+        def get_context_data(self, parent_context=None):
+            """Override to insert live page URL and docraptor API key"""
+            context = super().get_context_data(parent_context)
+
+            # NOTE: See DEVELOPERNOTES.rst for instructions to test this in
+            # development, under "Testing local DocRaptor PDF generation."
+            url = self.instance.full_url
+
+            # disable if unpublished, or has unpublished changes
+            if (
+                not url
+                or not self.instance.live
+                or self.instance.has_unpublished_changes
+            ):
+                url = ""
+            context.update({"url": url})
+            return context
+
+
+class EditorialPageTag(TaggedItemBase):
+    """Through model for tagging EditorialPage instances"""
+    content_object = ParentalKey(
+        "editorial.EditorialPage", on_delete=models.CASCADE, related_name="tagged_items"
+    )
+
+
 validate_doi = RegexValidator(
     regex=r"^10[.][0-9]{4,}", message="DOI in short form, starting with 10."
 )
@@ -95,21 +183,16 @@ class EditorialPage(Page, PagePreviewDescriptionMixin):
 
     # preliminary streamfield; we may need other options for content
     # (maybe a footnotes block?)
-    body = StreamField(
-        BodyContentBlock,
-        use_json_field=True,
-    )
+    body = StreamField(BodyContentBlock)
     authors = StreamField(
         [("author", SnippetChooserBlock(Person))],
         blank=True,
         help_text="Select or create people snippets to add as authors.",
-        use_json_field=True,
     )
     editors = StreamField(
         [("editor", SnippetChooserBlock(Person))],
         blank=True,
         help_text="Select or create people snippets to add as editors.",
-        use_json_field=True,
     )
     doi = models.CharField(
         "DOI",
@@ -124,12 +207,15 @@ class EditorialPage(Page, PagePreviewDescriptionMixin):
         max_length=255,
         help_text="URL for a PDF of this article, if available",
     )
+    tags = ClusterTaggableManager(through=EditorialPageTag, blank=True)
     content_panels = Page.content_panels + [
         FieldPanel("description"),
+        FieldPanel("tags"),
         FieldPanel("authors"),
         FieldPanel("editors"),
         FieldPanel("doi"),
         FieldPanel("pdf"),
+        GeneratePdfPanel(),  # use custom panel for PDF generation
         FieldPanel("body"),
     ]
 

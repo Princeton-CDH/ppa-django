@@ -23,8 +23,9 @@ from wagtail.fields import RichTextField
 from wagtail.snippets.models import register_snippet
 
 from ppa.archive import eebo_tcp
-from ppa.archive.gale import GaleAPI, MARCRecordNotFound, get_marc_record
+from ppa.archive.gale import GaleAPI
 from ppa.archive.hathi import HathiBibliographicAPI, HathiObject
+
 
 logger = logging.getLogger(__name__)
 
@@ -222,7 +223,7 @@ class SignalHandlers:
             works = instance.digitizedwork_set.all()
             if works.exists():
                 logger.debug(
-                    "collection save, reindexing %d related works", works.count()
+                    f"collection save, reindexing {works.count()} related works"
                 )
                 DigitizedWork.index_items(works)
 
@@ -234,7 +235,7 @@ class SignalHandlers:
         digwork_ids = instance.digitizedwork_set.values_list("id", flat=True)
         # find the items based on the list of ids to reindex
         digworks = DigitizedWork.objects.filter(id__in=list(digwork_ids))
-        logger.debug("collection delete, reindexing %d works" % len(digworks))
+        logger.debug(f"collection delete, reindexing {len(digworks)} works")
 
         # NOTE: this sends pre/post clear signal, but it's not obvious
         # how to take advantage of that
@@ -252,11 +253,13 @@ class SignalHandlers:
             works = instance.digitizedwork_set.all()
             if works.exists():
                 # get a total of page count for affected works
-                page_count = works.aggregate(page_count=models.Sum("page_count"))
+                page_count = works.aggregate(
+                    page_count=models.Sum("page_count", default=0)
+                )
                 logger.debug(
                     "cluster id has changed, reindexing %d works and %d pages",
                     works.count(),
-                    page_count.get("page_count", 0),
+                    page_count["page_count"],
                 )
                 DigitizedWork.index_items(works)
                 # reindex pages (this may be slow...)
@@ -272,11 +275,11 @@ class SignalHandlers:
         # find the items based on the list of ids to reindex
         digworks = DigitizedWork.objects.filter(id__in=list(digwork_ids))
         # get a total of page count for affected works
-        page_count = digworks.aggregate(page_count=models.Sum("page_count"))
+        page_count = digworks.aggregate(page_count=models.Sum("page_count", default=0))
         logger.debug(
             "cluster delete, reindexing %d works and %d pages",
             digworks.count(),
-            page_count.get("page_count", 0),
+            page_count["page_count"],
         )
 
         # NOTE: this sends pre/post clear signal, but it's not obvious
@@ -295,7 +298,7 @@ class SignalHandlers:
             logger.debug(
                 "Cluster changed for %s; indexing %d pages",
                 instance,
-                instance.page_count,
+                instance.page_count or 0,
             )
             instance.index_items(Page.page_index_data(instance))
 
@@ -906,6 +909,32 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         if match:
             return match.group(1)
 
+    def last_page(self):
+        """Number of the last page in range, if this is an excerpt
+        (last of original page range, not digital)"""
+        return self.last_page_original()
+
+    def last_page_digital(self):
+        """Number of the last page in range (digital pages / page index),
+        if this is an excerpt.
+
+        :return: last page number for digital page range; None if no page range
+        :rtype: int, None
+        """
+        if self.pages_digital:
+            return list(self.page_span)[-1]
+
+    def last_page_original(self):
+        """Number of the last page in range (original page numbering) if this is an excerpt
+
+        :return: last page number for original page range; None if no page range
+        :rtype: str, None
+        """
+        if not self.pages_orig:
+            return ""
+        parts = str(self.pages_orig).split("-")
+        return parts[-1].strip() if parts else str(self.pages_orig)
+
     def index_id(self):
         """use source id + first page in range (if any) as solr identifier"""
         first_page = self.first_page()
@@ -954,6 +983,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             "id": index_id,
             "source_id": self.source_id,
             "first_page_s": self.first_page(),
+            "last_page_s": self.last_page(),
             "group_id_s": index_id,  # for grouping pages by work or excerpt
             "source_t": self.get_source_display(),
             "source_url": self.source_url,
@@ -1051,44 +1081,13 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         # if empty, returns an empty set
         return intspan(self.pages_digital)
 
-    def get_metadata(self, metadata_format):
-        """Get metadata for this item in the specified format.
-        Currently only supports marc."""
-        if metadata_format == "marc":
-            # get metadata from hathi bib api and serialize
-            # as binary marc
-            if self.source == DigitizedWork.HATHI:
-                bib_api = HathiBibliographicAPI()
-                bibdata = bib_api.record("htid", self.source_id)
-                return bibdata.marcxml.as_marc()
-
-            if self.source == DigitizedWork.GALE:
-                # get record from local marc pairtree storage using ESTC id
-                # (stored as record id)
-                try:
-                    record = get_marc_record(self.record_id)
-                    # specify encoding to avoid errors
-                    record.force_utf8 = True
-                    return record.as_marc()
-                except MARCRecordNotFound:
-                    logger.warning(
-                        "MARC record for %s/%s not found"
-                        % (self.source_id, self.record_id)
-                    )
-                    return ""
-
-            return ""
-
-        # error for unknown
-        raise ValueError("Unsupported format %s" % metadata_format)
-
     def get_source_link_label(self):
         """Source-specific label for link on public item detail view."""
         if self.source == DigitizedWork.GALE:
             return "View on Gale Primary Sources"
         if self.source == DigitizedWork.OTHER:
             return "View external record"
-        return "View on %s" % self.get_source_display()
+        return f"View on {self.get_source_display()}"
 
     @staticmethod
     def add_from_hathi(htid, bib_api=None, update=False, log_msg_src=None, user=None):
@@ -1283,3 +1282,21 @@ class Page(Indexable):
                 }
             )
             yield page_info
+
+
+@register_snippet
+class SourceNote(models.Model):
+    source = models.CharField(
+        max_length=2,
+        choices=DigitizedWork.SOURCE_CHOICES,
+        unique=True,  # only allow one note per source
+    )
+    note = RichTextField(
+        features=["bold", "italic", "link"],
+        help_text=(
+            "A brief note to appear next to the source name in search results, as a tooltip"
+        ),
+    )
+
+    def __str__(self):
+        return self.get_source_display()

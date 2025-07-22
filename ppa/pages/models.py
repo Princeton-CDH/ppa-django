@@ -324,7 +324,7 @@ class PagePreviewDescriptionMixin(models.Model):
 class ContentPage(Page, PagePreviewDescriptionMixin):
     """Basic content page model."""
 
-    body = StreamField(BodyContentBlock, use_json_field=True)
+    body = StreamField(BodyContentBlock)
 
     content_panels = Page.content_panels + [
         FieldPanel("description"),
@@ -368,16 +368,14 @@ class ContributorPage(Page, PagePreviewDescriptionMixin):
         blank=True,
         help_text="Select and order people to be listed as project \
         contributors.",
-        use_json_field=True,
     )
     board = StreamField(
         [("person", SnippetChooserBlock(Person))],
         blank=True,
         help_text="Select and order people to be listed as board members.",
-        use_json_field=True,
     )
 
-    body = StreamField(BodyContentBlock, blank=True, use_json_field=True)
+    body = StreamField(BodyContentBlock, blank=True)
 
     content_panels = Page.content_panels + [
         FieldPanel("description"),

@@ -493,6 +493,7 @@ class TestDigitizedWork(TestCase):
 
     def test_index_item_type(self):
         assert DigitizedWork.index_item_type() == "work"
+        assert DigitizedWork().index_item_type() == "work"
 
     def test_index_data(self):
         digwork = DigitizedWork.objects.create(
@@ -570,47 +571,6 @@ class TestDigitizedWork(TestCase):
             "archive:detail", kwargs={"source_id": work.source_id, "start_page": "iii"}
         )
 
-    @patch("ppa.archive.models.HathiBibliographicAPI")
-    def test_get_metadata_hathi(self, mock_hathibib):
-        work = DigitizedWork(source_id="ht:1234")
-
-        # unsupported metadata format should error
-        with pytest.raises(ValueError):
-            work.get_metadata("bogus")
-
-        # for marc, should call hathi bib api and return marc in binary form
-        mdata = work.get_metadata("marc")
-        mock_hathibib.assert_any_call()
-        mock_bibapi = mock_hathibib.return_value
-        mock_bibapi.record.assert_called_with("htid", work.source_id)
-        mock_bibdata = mock_bibapi.record.return_value
-        mock_bibdata.marcxml.as_marc.assert_any_call()
-        assert mdata == mock_bibdata.marcxml.as_marc.return_value
-
-    def test_get_metadata_other(self):
-        # non-hathi record: for now, not supported
-        nonhathi_work = DigitizedWork(source=DigitizedWork.OTHER, source_id="788423659")
-        # should not error, but nothing to return
-        assert not nonhathi_work.get_metadata("marc")
-
-    @patch("ppa.archive.models.get_marc_record")
-    def test_get_metadata_gale(self, mock_get_marc_record):
-        work = DigitizedWork(
-            source_id="CW123456", source=DigitizedWork.GALE, record_id="T012345"
-        )
-
-        # for marc, should call hathi bib api and return marc in binary form
-        mdata = work.get_metadata("marc")
-        mock_get_marc_record.assert_called_with(work.record_id)
-        assert mock_get_marc_record.return_value.force_utf8
-        mock_get_marc_record.return_value.as_marc.assert_called_with()
-
-        assert mdata == mock_get_marc_record.return_value.as_marc.return_value
-
-        # simulate not found; should not error
-        mock_get_marc_record.side_effect = gale.MARCRecordNotFound
-        assert not work.get_metadata("marc")
-
     @patch("ppa.archive.models.ZipFile", spec=ZipFile)
     def test_count_pages(self, mockzipfile):
         prefix, pt_id = ("ab", "12345:6")
@@ -676,13 +636,24 @@ class TestDigitizedWork(TestCase):
     def test_count_pages_eebo(self, mock_eebo_page_count):
         work = DigitizedWork(source_id="A1234", source=DigitizedWork.EEBO)
         mock_eebo_page_count.return_value = 123
-        work.count_pages()
+        result = work.count_pages()
+        assert result == 123
         assert work.page_count == 123
-        mock_eebo_page_count.assert_called_with(work.source_id)
+        mock_eebo_page_count.assert_called_once_with(work.source_id)
 
     def test_count_pages_excerpt(self):
         work = DigitizedWork(source_id="CW79279237", pages_digital="1-10")
         assert work.count_pages() == 10
+
+    @patch("ppa.archive.models.ZipFile", spec=ZipFile)
+    @patch("ppa.archive.hathi.HathiObject.zipfile_path")
+    def test_count_pages_no_ptree(self, mock_zipfile_path, mock_zip_file):
+        work = DigitizedWork(source_id="chi.89279238")
+        with patch.object(work.hathi, "pairtree_client") as mock_pairtree_client:
+            # should use self.hathi.pairtree_client() if ptree not provided as arg
+            work.count_pages()
+            mock_zipfile_path.assert_called_with(mock_pairtree_client.return_value)
+            mock_zip_file.assert_called_with(mock_zipfile_path.return_value)
 
     def test_index_id(self):
         work = DigitizedWork(source_id="chi.79279237")
@@ -889,6 +860,10 @@ class TestDigitizedWork(TestCase):
         work = DigitizedWork(source_id="chi.79279237")
         # default status for new records is public
         assert work.is_public()
+
+        work.status = DigitizedWork.PUBLIC
+        assert work.is_public()
+
         work.status = DigitizedWork.SUPPRESSED
         assert not work.is_public()
 
@@ -1251,5 +1226,12 @@ class TestPage(TestCase):
         assert len(page_data) == 2
 
 
-def test_cluster_repr():
+def test_cluster_str():
+    cluster_id = "group-one"
+    assert str(Cluster(cluster_id=cluster_id)) == cluster_id
+
+
+@patch.object(Cluster, "__str__")
+def test_cluster_repr(mock_str):
+    mock_str.return_value = "group-one"
     assert repr(Cluster(cluster_id="group-one")) == "<cluster group-one>"

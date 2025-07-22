@@ -4,12 +4,15 @@ import pytest
 from django.http import Http404
 from django.test import TestCase
 from django.test.client import RequestFactory
+from django.template.loader import render_to_string
 from wagtail.models import Site
 from wagtail.url_routing import RouteResult
 from wagtail.test.utils import WagtailPageTestCase
 from wagtail.test.utils.form_data import nested_form_data, rich_text, streamfield
+from unittest.mock import patch
 
-from ppa.editorial.models import EditorialIndexPage, EditorialPage
+from ppa.editorial.models import DocraptorSettings, EditorialIndexPage, EditorialPage, GeneratePdfPanel
+from ppa.editorial.wagtail_hooks import editor_js
 from ppa.pages.models import HomePage, Person
 
 
@@ -26,19 +29,44 @@ class TestEditorialIndexPage(WagtailPageTestCase):
         self.assertCanCreateAt(HomePage, EditorialIndexPage)
 
     def test_get_context(self):
+        rf = RequestFactory()
         index_page = EditorialIndexPage.objects.first()
         ed_page = EditorialPage.objects.first()
-        context = index_page.get_context({})
+        request = rf.get(index_page.get_url())
+        context = index_page.get_context(request)
         assert "posts" in context
         posts = [post.specific for post in context["posts"]]
         assert ed_page in posts
 
+        # should be in order by most recently published
+        new_page = EditorialPage(title="Test Page", slug="test-page", live=True)
+        index_page.add_child(instance=new_page)
+        context = index_page.get_context(request)
+        assert context["posts"].first().id == new_page.id
+
+        # test tags
+        assert not context["tags"]
+        ed_page.tags.add("abc", "new tag")
+        ed_page.save()
+        new_page.tags.add("new tag")
+        new_page.save()
+        context = index_page.get_context(request)
+        assert context["tags"].count() == 2
+        # tag with more pages should come first
+        assert context["tags"].first().name == "new tag"
+        assert context["tags"].first().count == 2
+        assert not context["selected_tag"]
+
+        # test filter by tag
+        request = rf.get(index_page.get_url(), data={"tag": "abc"})
+        context = index_page.get_context(request)
+        assert new_page not in context["posts"]
+        assert context["selected_tag"] == "abc"
+
         # unpublish
         index_page.get_children().all().unpublish()
-        context = index_page.get_context({})
+        context = index_page.get_context(request)
         assert ed_page not in context["posts"]
-
-        # TODO: test with multiple, check sort order
 
     def test_route(self):
         # test route method directly
@@ -141,6 +169,55 @@ class TestEditorialIndexPage(WagtailPageTestCase):
             count=1,
         )
 
+@pytest.mark.django_db
+class TestGeneratePdfPanel:
+    def test_get_context_data(self):
+        # create a new page
+        site = Site.objects.first()
+        parent = site.root_page
+        page = EditorialPage(title="Test Page", slug="test-page", live=True)
+        parent.add_child(instance=page)
+
+        # bind panel to EditorialPage and get for page instance
+        panel = GeneratePdfPanel()
+        bound_panel = panel.bind_to_model(EditorialPage).get_bound_panel(instance=page)
+        context = bound_panel.get_context_data()
+
+        # should use page's URL
+        assert context["url"] == page.full_url
+
+        # make an unpublished change. URL should now be an empty string
+        page.title = "test"
+        rev = page.save_revision()
+        bound_panel = panel.bind_to_model(EditorialPage).get_bound_panel(instance=page)
+        context = bound_panel.get_context_data()
+        assert context["url"] == ""
+
+        # publish the change. URL should work again
+        page.publish(rev)
+        page.refresh_from_db()
+        bound_panel = panel.bind_to_model(EditorialPage).get_bound_panel(instance=page)
+        context = bound_panel.get_context_data()
+        assert context["url"] == page.full_url
+
+
+class TestDocraptorSettings(TestCase):
+    def test_docraptor_settings(self):
+        site = Site.objects.first()
+        docraptor_settings = DocraptorSettings.load(site)
+
+        # no api key set: should render message about configuration
+        docraptor_settings.docraptor_api_key = ""
+        pdf_panel = render_to_string("wagtailadmin/panels/pdf_panel.html")
+        self.assertNotIn("Generate a PDF", pdf_panel)
+        self.assertIn("A DocRaptor API key must be configured", pdf_panel)
+
+        # api key set: should render panel
+        docraptor_settings.docraptor_api_key = "fake_key"
+        docraptor_settings.save()
+        pdf_panel = render_to_string("wagtailadmin/panels/pdf_panel.html")
+        self.assertIn("Generate a PDF", pdf_panel)
+        self.assertNotIn("A DocRaptor API key must be configured", pdf_panel)
 
 class TestEditorialPage(WagtailPageTestCase):
     fixtures = ["wagtail_pages"]
@@ -320,3 +397,13 @@ class TestPerson(TestCase):
     def test_str(self):
         p = Person(name="A person")
         assert str(p) == "A person"
+
+class TestWagtailHooks:
+    @patch("ppa.editorial.wagtail_hooks.render_bundle")
+    def test_editor_js(self, mock_render_bundle):
+        # should call render_bundle
+        mock_script_tag = "<script src='pdf.js'></script>"
+        mock_render_bundle.return_value = mock_script_tag
+        inserted_js = editor_js()
+        mock_render_bundle.assert_called_once_with({}, "pdf", "js")
+        assert str(inserted_js) == mock_script_tag

@@ -1,11 +1,18 @@
-{% load static humanize %}
+{% load static humanize ppa_tags %}
 
 <li class="item {{ item.work_type }}">
-    {% if item.work_type == "full-work" %} {# unapi metadata only available for full works #}
-    <abbr class="unapi-id" title="{{ item.group_id }}" aria-hidden="true"></abbr>
+
+    {# Generate URL for main link #}
+    {% if item.first_page %}  {# generating detail url for excerpts requires specifying start page #}
+        {% url 'archive:detail' source_id=item.source_id start_page=item.first_page as detail_url %}
+    {% else %}
+        {% url 'archive:detail' item.source_id as detail_url %}
     {% endif %}
 
-    <a href="{% if item.first_page %}{% url 'archive:detail' source_id=item.source_id start_page=item.first_page %}{% else %}{% url 'archive:detail' item.source_id %}{% endif %}{% if query %}?query={{ query }}{% endif %}" class="detail">
+    {# COinS metadata for Zotero multi-item detection on list pages #}
+    {% coins_data item as coins_metadata %}{{ coins_metadata|coins_encode }}
+
+    <a href="{{ detail_url }}{% if query %}?query={{ query }}{% endif %}" class="detail">
         <div class="brief-result container">
             <div class="title column">
                 <div class="labels">
@@ -45,6 +52,17 @@
                     <div class="publisher">
                         <dt>Publisher</dt>
                         <dd>{{ item.publisher }}</dd>
+                    </div>
+                    {% endif %}
+                    {% if item.source %}
+                    <div class="source">
+                        <dt>Source</dt>
+                        <dd>
+                            {{ item.source }}{% if source_notes|dict_item:item.source %}
+                            <span class="source-popup" data-html="{{ source_notes|dict_item:item.source }}" data-position="top center">
+                                <i class="ui question circle icon"></i>
+                            </span>{% endif %}
+                        </dd>
                     </div>
                     {% endif %}
                     {% if item.enumcron %}
@@ -96,11 +114,9 @@
     <div class="page-previews container">
         {% if page_groups and page_highlights %}
         {% with results=page_groups|dict_item:item.id %}
-            {% if results.numFound > 2 %}
             <span class="total-pages">
                 {{ results.numFound|intcomma }} matching page{{ results.numFound|pluralize }}
             </span>
-            {% endif %}
             <div class="pages">
                 {% if page_highlights %}
                 <div class="wrapper">

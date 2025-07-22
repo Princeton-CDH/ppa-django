@@ -1,0 +1,43 @@
+{% load wagtailsettings_tags %}
+{% get_settings %}
+{% if settings.editorial.DocraptorSettings.docraptor_api_key %}
+    <div
+        data-controller="pdf"
+        data-pdf-url-value="{{ url }}"
+        data-pdf-apikey-value="{{ settings.editorial.DocraptorSettings.docraptor_api_key }}"
+    >
+        <h3 data-pdf-target="heading">Generate a PDF copy of this page:</h3>
+        <div>
+            <button
+                class="button button-secondary"
+                data-pdf-target="preview"
+                data-action="pdf#generatePdf"
+                type="button"
+            >
+                Generate preview PDF
+            </button>
+            <span data-pdf-target="downloadPreview"></span>
+            <p class="help">
+                Unlimited previews allowed, but will be watermarked.
+            </p>
+        </div>
+        <div>
+            <button
+                class="button button-secondary warning"
+                data-pdf-target="final"
+                data-action="pdf#generatePdf"
+                type="button"
+            >
+                Generate final PDF
+            </button>
+            <span data-pdf-target="downloadFinal"></span>
+            <p class="help">
+                {{ settings.editorial.DocraptorSettings.docraptor_limit_note }}
+                Check <a href="https://docraptor.com/users/usage">DocRaptor Usage</a>
+                for current usage.
+            </p>
+        </div>
+    </div>
+{% else %}
+    <div class="help">A DocRaptor API key must be configured to enable PDF generation.</div>
+{% endif %}
