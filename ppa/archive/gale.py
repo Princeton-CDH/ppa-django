@@ -156,8 +156,17 @@ class GaleAPI:
         # when api key expires, API returns:
         # HTTP Status 401 - Authentication Failed: Invalid or Expired API key
         # If we get a 401 on a request that requires an api key, try getting a new one
-        if resp.status_code == requests.codes.unauthorized:
-            # If we get a 401 on a request that requires an api key,
+        if resp.status_code in [
+            requests.codes.unauthorized,
+            requests.codes.server_error,
+        ]:
+            # occasionally we get a 500 error when indexing all pages
+            # refreshing API key and trying again, but log the error
+            if resp.status_code == requests.code.server_error:
+                # Not sure yet if response has any meaningful content
+                logger.error(f"500 error on {rqst_url}: {resp.content}")
+
+            # If we get a 401 or 500 on a request that requires an api key,
             # get a fresh key and then try the same request again
             if requires_api_key and retry < 1:
                 self.refresh_api_key()
