@@ -119,11 +119,21 @@ def solr_highlight(value, autoescape=True):
 
 
 def _get_item_value(obj, key, default=None):
-    """Get value from Solr object or dictionary."""
+    """Get value from Solr object or dictionary.
+    For Solr objects, tries clean field name first, then falls back to
+    raw Solr field name with _s suffix if aliasing isn't working.
+    """
     if isinstance(obj, dict):
         return obj.get(key, default)
     else:
-        return getattr(obj, key, default)
+        # Try clean field name first (from aliasing)
+        value = getattr(obj, key, None)
+        if value is not None:
+            return value
+
+        # Fall back to raw Solr field name with _s suffix
+        raw_field_name = f"{key}_s"
+        return getattr(obj, raw_field_name, default)
 
 
 def _generate_absolute_url(context, item):
