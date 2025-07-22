@@ -145,72 +145,76 @@ def _generate_absolute_url(context, item):
 
 def _add_common_fields(item):
     """Return common metadata fields from Solr object."""
-    fields = {}
-    if _get_item_value(item, "title"):
-        fields["title"] = _get_item_value(item, "title")
-    if _get_item_value(item, "author"):
-        fields["au"] = _get_item_value(item, "author")
-    if _get_item_value(item, "pub_date"):
-        fields["date"] = _get_item_value(item, "pub_date")
-    if _get_item_value(item, "publisher"):
-        fields["pub"] = _get_item_value(item, "publisher")
-    if _get_item_value(item, "pub_place"):
-        fields["pub_place"] = _get_item_value(item, "pub_place")
-    return fields
+    return {
+        "title": _get_item_value(item, "title"),
+        "au": _get_item_value(item, "author"),
+        "date": _get_item_value(item, "pub_date"),
+        "pub": _get_item_value(item, "publisher"),
+        "pub_place": _get_item_value(item, "pub_place"),
+    }
 
 
 def _add_full_work_fields(item, existing_data):
     """Return fields specific to full works."""
-    fields = {"rft_val_fmt": "info:ofi/fmt:kev:mtx:book", "genre": "book"}
-    if "title" in existing_data:
-        fields["title"] = existing_data["title"]
-    if _get_item_value(item, "pub_place"):
-        fields["place"] = _get_item_value(item, "pub_place")
-    return fields
+    return {
+        "rft_val_fmt": "info:ofi/fmt:kev:mtx:book",
+        "genre": "book",
+        "title": existing_data.get("title"),
+        "place": _get_item_value(item, "pub_place"),
+    }
 
 
 def _add_excerpt_fields(item, existing_data):
     """Return fields specific to excerpts."""
-    fields = {"rft_val_fmt": "info:ofi/fmt:kev:mtx:book", "genre": "bookitem"}
-    if "title" in existing_data:
-        fields["atitle"] = existing_data["title"]
-    if _get_item_value(item, "book_journal"):
-        fields["btitle"] = _get_item_value(item, "book_journal")
-    if _get_item_value(item, "pub_place"):
-        fields["place"] = _get_item_value(item, "pub_place")
+    fields = {
+        "rft_val_fmt": "info:ofi/fmt:kev:mtx:book",
+        "genre": "bookitem",
+        "atitle": existing_data.get("title"),
+        "btitle": _get_item_value(item, "book_journal"),
+        "place": _get_item_value(item, "pub_place"),
+    }
+
     # Add page information for excerpts if available
-    if _get_item_value(item, "first_page"):
-        first_page = _get_item_value(item, "first_page")
+    first_page = _get_item_value(item, "first_page")
+    if first_page:
         last_page = _get_item_value(item, "last_page")
-        fields["spage"] = first_page
-        fields["epage"] = last_page or first_page
-        # For pages, use full range if we have both pages, otherwise just first page
-        if last_page and last_page != first_page:
-            fields["pages"] = f"{first_page}-{last_page}"
-        else:
-            fields["pages"] = first_page
+        fields.update(
+            {
+                "spage": first_page,
+                "epage": last_page or first_page,
+                "pages": f"{first_page}-{last_page}"
+                if last_page and last_page != first_page
+                else first_page,
+            }
+        )
+
     return fields
 
 
 def _add_article_fields(item, existing_data):
     """Return fields specific to articles."""
-    fields = {"rft_val_fmt": "info:ofi/fmt:kev:mtx:journal", "genre": "article"}
-    if "title" in existing_data:
-        fields["atitle"] = existing_data["title"]
-    if _get_item_value(item, "book_journal"):
-        fields["jtitle"] = _get_item_value(item, "book_journal")
-    if _get_item_value(item, "enumcron"):
-        fields["volume"] = _get_item_value(item, "enumcron")
-    if _get_item_value(item, "first_page"):
-        first_page = _get_item_value(item, "first_page")
+    fields = {
+        "rft_val_fmt": "info:ofi/fmt:kev:mtx:journal",
+        "genre": "article",
+        "atitle": existing_data.get("title"),
+        "jtitle": _get_item_value(item, "book_journal"),
+        "volume": _get_item_value(item, "enumcron"),
+    }
+
+    # Add page information for articles if available
+    first_page = _get_item_value(item, "first_page")
+    if first_page:
         last_page = _get_item_value(item, "last_page")
-        fields["spage"] = first_page
-        fields["epage"] = last_page or first_page
-        # For pages, use full range if we have both pages, otherwise just first page
-        if last_page and last_page != first_page:
-            fields["pages"] = f"{first_page}-{last_page}"
-        else:
-            fields["pages"] = first_page
+        fields.update(
+            {
+                "spage": first_page,
+                "epage": last_page or first_page,
+                "pages": f"{first_page}-{last_page}"
+                if last_page and last_page != first_page
+                else first_page,
+            }
+        )
+
     return fields
 
 
