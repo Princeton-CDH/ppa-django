@@ -180,7 +180,10 @@ class ProtectedWorkField(models.Field):
     """PositiveSmallIntegerField subclass that returns a
     :class:`ProtectedWorkFieldFlags` object and stores as integer."""
 
-    description = "A field that stores an instance of :class:`ProtectedWorkFieldFlags` as an integer."
+    description = (
+        "A field that stores an instance of :class:`ProtectedWorkFieldFlags` "
+        "as an integer."
+    )
 
     def __init__(self, verbose_name=None, name=None, **kwargs):
         """Make the field unnullable; by default, not allowed to be blank."""
@@ -906,6 +909,32 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         if match:
             return match.group(1)
 
+    def last_page(self):
+        """Number of the last page in range, if this is an excerpt
+        (last of original page range, not digital)"""
+        return self.last_page_original()
+
+    def last_page_digital(self):
+        """Number of the last page in range (digital pages / page index),
+        if this is an excerpt.
+
+        :return: last page number for digital page range; None if no page range
+        :rtype: int, None
+        """
+        if self.pages_digital:
+            return list(self.page_span)[-1]
+
+    def last_page_original(self):
+        """Number of the last page in range (original page numbering) if this is an excerpt
+
+        :return: last page number for original page range; None if no page range
+        :rtype: str, None
+        """
+        if not self.pages_orig:
+            return ""
+        parts = str(self.pages_orig).split("-")
+        return parts[-1].strip() if parts else str(self.pages_orig)
+
     def index_id(self):
         """use source id + first page in range (if any) as solr identifier"""
         first_page = self.first_page()
@@ -954,6 +983,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             "id": index_id,
             "source_id": self.source_id,
             "first_page_s": self.first_page(),
+            "last_page_s": self.last_page(),
             "group_id_s": index_id,  # for grouping pages by work or excerpt
             "source_t": self.get_source_display(),
             "source_url": self.source_url,
@@ -1263,7 +1293,9 @@ class SourceNote(models.Model):
     )
     note = RichTextField(
         features=["bold", "italic", "link"],
-        help_text="A brief note to appear next to the source name in search results, as a tooltip",
+        help_text=(
+            "A brief note to appear next to the source name in search results, as a tooltip"
+        ),
     )
 
     def __str__(self):
