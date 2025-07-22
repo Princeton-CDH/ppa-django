@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Deploy and Upgrade notes &#8212; Princeton Prosody Archive 3.14.1 documentation</title>
+    <title>Deploy and Upgrade notes &#8212; Princeton Prosody Archive 3.15.0-dev documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
-    <script src="_static/documentation_options.js?v=408c3590"></script>
+    <script src="_static/documentation_options.js?v=7b7f12ef"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -35,22 +35,28 @@
   <section id="deploy-and-upgrade-notes">
 <span id="deploynotes"></span><h1>Deploy and Upgrade notes<a class="headerlink" href="#deploy-and-upgrade-notes" title="Link to this heading">¶</a></h1>
 <section id="id1">
-<h2>3.14<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
+<h2>3.15<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The footer has been updated such that the Technical page must now be manually set to appear in menus in Wagtail.</p></li>
+</ul>
+</section>
+<section id="id2">
+<h2>3.14<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Configuration for local page-level OCR for Gale content (<strong>GALE_LOCAL_OCR</strong>) should be updated to reference a directory the formatted content with a single path JSON file.</p></li>
 <li><p>EEBO-TCP content can now be imported using the <cite>eebo_import</cite> manage command; this requires the <strong>EEBO_DATA</strong> path to be configured in local settings.</p></li>
 <li><p>Gale pages should be indexed periodically so encrypted image urls will be current. It is recommended to use 4 processes (<cite>-p 4</cite>) when indexing on a VM with 2 CPUs, since the API and filesystem reads cause non-computational delays.</p></li>
 </ul>
 </section>
-<section id="id2">
-<h2>3.13.1<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h2>
+<section id="id3">
+<h2>3.13.1<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>To enable Plausible analytics, update local settings to set <cite>INCLUDE_ANALYTICS</cite> to True,</p></li>
 </ul>
 <p>configure the full plausible javascript url with any options you want as <cite>PLAUSIBLE_ANALYTICS_SCRIPT</cite> and optionally enable 404 checking with <cite>PLAUSIBLE_ANALYTICS_404s = True</cite></p>
 </section>
-<section id="id3">
-<h2>3.13<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h2>
+<section id="id4">
+<h2>3.13<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h2>
 <ul>
 <li><p>To use local OCR for Gale page content, configure <strong>GALE_LOCAL_OCR</strong> path in local settings.</p></li>
 <li><p>This release updates Gale image url logic to rely on image URLs from the API, which are (or will be) encrypted and rotated periodically.</p></li>
@@ -60,8 +66,8 @@
 <li><p>EEBO-TPC import requires configuring <strong>EEBO_DATA</strong> path in local settings, but it is not recommended to import EEBO-TCP content in this release.</p></li>
 </ul>
 </section>
-<section id="id4">
-<h2>3.12.1<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h2>
+<section id="id5">
+<h2>3.12.1<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h2>
 <p>This release updates PPA to run against Solr 9, with a new configset.
 Solr configuration should be updated and all content should be indexed
 into the new Solr 9 core:</p>
@@ -70,8 +76,8 @@ into the new Solr 9 core:</p>
 </pre></div>
 </div>
 </section>
-<section id="id5">
-<h2>3.12<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h2>
+<section id="id6">
+<h2>3.12<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h2>
 <ul>
 <li><p>Settings are now configured with django-split-settings as a module;
 local_settings.py must be moved to ppa/settings/local_settings.py</p></li>
@@ -101,8 +107,8 @@ using a CSV file provided by the project team:</p>
 </li>
 </ul>
 </section>
-<section id="id6">
-<h2>3.11.2<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h2>
+<section id="id7">
+<h2>3.11.2<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h2>
 <ul>
 <li><p>This version includes a wagtail upgrade, which requires running a script
 to rebuild the references index:</p>
@@ -118,8 +124,8 @@ must update the wagtail index:</p>
 </li>
 </ul>
 </section>
-<section id="id7">
-<h2>3.10<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h2>
+<section id="id8">
+<h2>3.10<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Project contributors with specific years of involvement should be updated to
 move years from their name to the new project years field</p></li>
@@ -129,14 +135,14 @@ move years from their name to the new project years field</p></li>
 <li><p>Editorial articles can link to published PDF versions of the article</p></li>
 </ul>
 </section>
-<section id="id8">
-<h2>3.9<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h2>
+<section id="id9">
+<h2>3.9<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Noted that PUL is running Solr 8.4; tests, documentation, and local environments ought to change accordingly.</p></li>
 </ul>
 </section>
-<section id="id9">
-<h2>3.8<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h2>
+<section id="id10">
+<h2>3.8<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h2>
 <ul>
 <li><p>Now using nodejs v16.14; should be installed on destination servers.
 On CentOS, <cite>sudo yum install nodejs-16.15.0</cite> should work.</p></li>
@@ -149,8 +155,8 @@ script and CSV provided by project team.</p></li>
 </li>
 </ul>
 </section>
-<section id="id10">
-<h2>3.7<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h2>
+<section id="id11">
+<h2>3.7<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h2>
 <ul>
 <li><p>Gale API client requires <strong>GALE_API_USERNAME</strong> and <strong>MARC_DATA</strong> in local
 settings.</p></li>
@@ -179,8 +185,8 @@ correctly, and pages and works are grouped correctly in search results:</p>
 </li>
 </ul>
 </section>
-<section id="id11">
-<h2>3.6<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h2>
+<section id="id12">
+<h2>3.6<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Updates to javascript build tools used to compile fomantic-UI now require that
 the version of nodejs be at least v10. This is already specified via the
@@ -188,8 +194,8 @@ README, but take care that deployment environments respect it or build
 errors will occur.</p></li>
 </ul>
 </section>
-<section id="id12">
-<h2>3.5<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h2>
+<section id="id13">
+<h2>3.5<a class="headerlink" href="#id13" title="Link to this heading">¶</a></h2>
 <ul>
 <li><p>Configuration and Solr schema changes are needed, now that PPA uses
 parasolr for Solr schema management and indexing.</p>
@@ -216,8 +222,8 @@ Configurations for <strong>HATHITRUST_OAUTH_KEY</strong> and  <strong>HATHITRUST
 are no longer needed in local settings.</p></li>
 </ul>
 </section>
-<section id="id13">
-<h2>3.2<a class="headerlink" href="#id13" title="Link to this heading">¶</a></h2>
+<section id="id14">
+<h2>3.2<a class="headerlink" href="#id14" title="Link to this heading">¶</a></h2>
 <ul>
 <li><p>Requires configurations for <strong>HATHITRUST_OAUTH_KEY</strong> and
 <strong>HATHITRUST_OAUTH_SECRET</strong> in order to use HathiTrust Data API
@@ -234,16 +240,16 @@ HTTP response headers requires a schema update and work reindex:</p>
 </li>
 </ul>
 </section>
-<section id="id14">
-<h2>3.0.1<a class="headerlink" href="#id14" title="Link to this heading">¶</a></h2>
+<section id="id15">
+<h2>3.0.1<a class="headerlink" href="#id15" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Title searching and boosting requires an update to <code class="docutils literal notranslate"><span class="pre">solrconfig.xml</span></code>.
 Before deploying new code, <code class="docutils literal notranslate"><span class="pre">solr_conf/solconfig.xml</span></code> should be copied
 to the core’s <cite>conf</cite> directory and the core reloaded, or Solr restarted.</p></li>
 </ul>
 </section>
-<section id="id15">
-<h2>3.0<a class="headerlink" href="#id15" title="Link to this heading">¶</a></h2>
+<section id="id16">
+<h2>3.0<a class="headerlink" href="#id16" title="Link to this heading">¶</a></h2>
 <ul>
 <li><p>Solr field boosting requires an updated <code class="docutils literal notranslate"><span class="pre">solrconfig.xml</span></code>. Before deploying
 new code, <code class="docutils literal notranslate"><span class="pre">solr_conf/solconfig.xml</span></code> should be copied to the core’s
@@ -265,8 +271,8 @@ an existing contributor content page, it should be removed and
 replaced with a contributor page with the slug <cite>contributor</cite>.</p></li>
 </ul>
 </section>
-<section id="id16">
-<h2>0.11<a class="headerlink" href="#id16" title="Link to this heading">¶</a></h2>
+<section id="id17">
+<h2>0.11<a class="headerlink" href="#id17" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">GTAGS_ANALYTICS_ID</span></code> should include the property ID for the site, in order</dt><dd><p>to enable Google Analytics on non-preview pages.</p>
@@ -275,8 +281,8 @@ replaced with a contributor page with the slug <cite>contributor</cite>.</p></li
 </li>
 </ul>
 </section>
-<section id="id17">
-<h2>0.10<a class="headerlink" href="#id17" title="Link to this heading">¶</a></h2>
+<section id="id18">
+<h2>0.10<a class="headerlink" href="#id18" title="Link to this heading">¶</a></h2>
 <ul>
 <li><p>Switching from Mezzanine to Wagtail requires a manual migration <em>before</em>
 installing the new version to avoid migration dependency conflicts:</p>
@@ -310,8 +316,8 @@ and then all content must be reindexed:</p>
 site content needed for main site navigation.</p></li>
 </ul>
 </section>
-<section id="id18">
-<h2>0.9<a class="headerlink" href="#id18" title="Link to this heading">¶</a></h2>
+<section id="id19">
+<h2>0.9<a class="headerlink" href="#id19" title="Link to this heading">¶</a></h2>
 <ul>
 <li><p>Configure a <strong>TECHNICAL_CONTACT</strong> email address in local settings
 to set a <strong>From</strong> header on requests made against the HathiTrust API.</p></li>
@@ -438,24 +444,25 @@ progress bar):</p>
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Deploy and Upgrade notes</a><ul>
-<li><a class="reference internal" href="#id1">3.14</a></li>
-<li><a class="reference internal" href="#id2">3.13.1</a></li>
-<li><a class="reference internal" href="#id3">3.13</a></li>
-<li><a class="reference internal" href="#id4">3.12.1</a></li>
-<li><a class="reference internal" href="#id5">3.12</a></li>
-<li><a class="reference internal" href="#id6">3.11.2</a></li>
-<li><a class="reference internal" href="#id7">3.10</a></li>
-<li><a class="reference internal" href="#id8">3.9</a></li>
-<li><a class="reference internal" href="#id9">3.8</a></li>
-<li><a class="reference internal" href="#id10">3.7</a></li>
-<li><a class="reference internal" href="#id11">3.6</a></li>
-<li><a class="reference internal" href="#id12">3.5</a></li>
-<li><a class="reference internal" href="#id13">3.2</a></li>
-<li><a class="reference internal" href="#id14">3.0.1</a></li>
-<li><a class="reference internal" href="#id15">3.0</a></li>
-<li><a class="reference internal" href="#id16">0.11</a></li>
-<li><a class="reference internal" href="#id17">0.10</a></li>
-<li><a class="reference internal" href="#id18">0.9</a></li>
+<li><a class="reference internal" href="#id1">3.15</a></li>
+<li><a class="reference internal" href="#id2">3.14</a></li>
+<li><a class="reference internal" href="#id3">3.13.1</a></li>
+<li><a class="reference internal" href="#id4">3.13</a></li>
+<li><a class="reference internal" href="#id5">3.12.1</a></li>
+<li><a class="reference internal" href="#id6">3.12</a></li>
+<li><a class="reference internal" href="#id7">3.11.2</a></li>
+<li><a class="reference internal" href="#id8">3.10</a></li>
+<li><a class="reference internal" href="#id9">3.9</a></li>
+<li><a class="reference internal" href="#id10">3.8</a></li>
+<li><a class="reference internal" href="#id11">3.7</a></li>
+<li><a class="reference internal" href="#id12">3.6</a></li>
+<li><a class="reference internal" href="#id13">3.5</a></li>
+<li><a class="reference internal" href="#id14">3.2</a></li>
+<li><a class="reference internal" href="#id15">3.0.1</a></li>
+<li><a class="reference internal" href="#id16">3.0</a></li>
+<li><a class="reference internal" href="#id17">0.11</a></li>
+<li><a class="reference internal" href="#id18">0.10</a></li>
+<li><a class="reference internal" href="#id19">0.9</a></li>
 <li><a class="reference internal" href="#search-filtering-and-highlighting">0.8 Search filtering and highlighting</a></li>
 <li><a class="reference internal" href="#bulk-import-and-simple-search">0.5 Bulk Import and Simple Search</a></li>
 </ul>
