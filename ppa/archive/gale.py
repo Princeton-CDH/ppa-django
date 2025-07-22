@@ -162,7 +162,7 @@ class GaleAPI:
         ]:
             # occasionally we get a 500 error when indexing all pages
             # refreshing API key and trying again, but log the error
-            if resp.status_code == requests.code.server_error:
+            if resp.status_code == requests.codes.server_error:
                 # Not sure yet if response has any meaningful content
                 logger.error(f"500 error on {rqst_url}: {resp.content}")
 
