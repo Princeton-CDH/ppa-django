@@ -495,7 +495,6 @@ class TestDigitizedWork(TestCase):
         assert DigitizedWork.index_item_type() == "work"
         assert DigitizedWork().index_item_type() == "work"
 
-
     def test_index_data(self):
         digwork = DigitizedWork.objects.create(
             source_id="njp.32101013082597",
@@ -571,47 +570,6 @@ class TestDigitizedWork(TestCase):
         assert work.get_absolute_url() == reverse(
             "archive:detail", kwargs={"source_id": work.source_id, "start_page": "iii"}
         )
-
-    @patch("ppa.archive.models.HathiBibliographicAPI")
-    def test_get_metadata_hathi(self, mock_hathibib):
-        work = DigitizedWork(source_id="ht:1234")
-
-        # unsupported metadata format should error
-        with pytest.raises(ValueError):
-            work.get_metadata("bogus")
-
-        # for marc, should call hathi bib api and return marc in binary form
-        mdata = work.get_metadata("marc")
-        mock_hathibib.assert_any_call()
-        mock_bibapi = mock_hathibib.return_value
-        mock_bibapi.record.assert_called_with("htid", work.source_id)
-        mock_bibdata = mock_bibapi.record.return_value
-        mock_bibdata.marcxml.as_marc.assert_any_call()
-        assert mdata == mock_bibdata.marcxml.as_marc.return_value
-
-    def test_get_metadata_other(self):
-        # non-hathi record: for now, not supported
-        nonhathi_work = DigitizedWork(source=DigitizedWork.OTHER, source_id="788423659")
-        # should not error, but nothing to return
-        assert not nonhathi_work.get_metadata("marc")
-
-    @patch("ppa.archive.models.get_marc_record")
-    def test_get_metadata_gale(self, mock_get_marc_record):
-        work = DigitizedWork(
-            source_id="CW123456", source=DigitizedWork.GALE, record_id="T012345"
-        )
-
-        # for marc, should call hathi bib api and return marc in binary form
-        mdata = work.get_metadata("marc")
-        mock_get_marc_record.assert_called_with(work.record_id)
-        assert mock_get_marc_record.return_value.force_utf8
-        mock_get_marc_record.return_value.as_marc.assert_called_with()
-
-        assert mdata == mock_get_marc_record.return_value.as_marc.return_value
-
-        # simulate not found; should not error
-        mock_get_marc_record.side_effect = gale.MARCRecordNotFound
-        assert not work.get_metadata("marc")
 
     @patch("ppa.archive.models.ZipFile", spec=ZipFile)
     def test_count_pages(self, mockzipfile):
@@ -902,7 +860,7 @@ class TestDigitizedWork(TestCase):
         work = DigitizedWork(source_id="chi.79279237")
         # default status for new records is public
         assert work.is_public()
-        
+
         work.status = DigitizedWork.PUBLIC
         assert work.is_public()
 
@@ -1267,8 +1225,9 @@ class TestPage(TestCase):
         page_data = list(Page.page_index_data(gale_excerpt))
         assert len(page_data) == 2
 
+
 def test_cluster_str():
-    cluster_id = "group-one" 
+    cluster_id = "group-one"
     assert str(Cluster(cluster_id=cluster_id)) == cluster_id
 
 

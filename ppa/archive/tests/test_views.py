@@ -12,7 +12,13 @@ from django.utils.http import urlencode
 from parasolr.django import SolrClient, SolrQuerySet
 
 from ppa.archive.forms import ImportForm, ModelMultipleChoiceFieldWithEmpty, SearchForm
-from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork, Page, SourceNote
+from ppa.archive.models import (
+    NO_COLLECTION_LABEL,
+    Collection,
+    DigitizedWork,
+    Page,
+    SourceNote,
+)
 from ppa.archive.solr import ArchiveSearchQuerySet
 from ppa.archive.templatetags.ppa_tags import (
     gale_page_url,
@@ -206,24 +212,6 @@ class TestDigitizedWorkDetailView(TestCase):
         )
         self.assertContains(response, article.title)
         self.assertContains(response, article.book_journal)
-
-    def test_unapi(self):
-        response = self.client.get(self.dial_url)
-        # unapi server link present
-        self.assertContains(
-            response,
-            """<link rel="unapi-server" type="application/xml"
-            title="unAPI" href="%s" />"""
-            % reverse("unapi"),
-            msg_prefix="unapi server link should be set",
-            html=True,
-        )
-        # unapi id present
-        self.assertContains(
-            response,
-            '<abbr class="unapi-id" title="%s"></abbr>' % self.dial.source_id,
-            msg_prefix="unapi id should be embedded for each work",
-        )
 
     def test_admin_display(self):
         # get the detail view page and check that the response is 200
@@ -546,7 +534,9 @@ class TestDigitizedWorkListRequest(TestCase):
         # NOTE: without a sleep, even with commit=True and/or low
         # commitWithin settings, indexed data isn't reliably available
         index_checks = 0
-        while SolrQuerySet().search(item_type="work").count() == 0 and index_checks <= 10:
+        while (
+            SolrQuerySet().search(item_type="work").count() == 0 and index_checks <= 10
+        ):
             # sleep until we get records back; 0.1 seems to be enough
             # for local dev with local Solr
             sleep(0.1)
@@ -584,16 +574,6 @@ class TestDigitizedWorkListRequest(TestCase):
             response,
             '<p class="result-number">2</p>',
             msg_prefix="results have multiple numbers",
-        )
-
-        # unapi server link present
-        self.assertContains(
-            response,
-            """<link rel="unapi-server" type="application/xml"
-            title="unAPI" href="%s" />"""
-            % reverse("unapi"),
-            msg_prefix="unapi server link should be set",
-            html=True,
         )
 
         # should not have scores for all results, as not logged in
@@ -975,6 +955,27 @@ class TestDigitizedWorkListRequest(TestCase):
             assert "paginator" in response.context
             self.assertContains(response, "Something went wrong.")
 
+    def test_coins_metadata_full_work(self):
+        """Test COinS metadata generation for full works"""
+        response = self.client.get(self.url)
+        assert response.status_code == 200
+
+        # Check for COinS Z3988 spans
+        self.assertContains(response, 'class="Z3988"')
+        self.assertContains(response, "ctx_ver=Z39.88-2004")
+        self.assertContains(response, "rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook")
+        self.assertContains(response, "rft.genre=book")
+
+    def test_coins_absolute_urls(self):
+        """Test that COinS metadata includes absolute URLs"""
+        response = self.client.get(self.url)
+        assert response.status_code == 200
+
+        # Check that COinS includes absolute URLs with rft_id parameter
+        self.assertContains(response, "rft_id=http")
+        # Should contain the domain
+        self.assertContains(response, "testserver")
+
 
 @pytest.mark.django_db
 def test_archive_list_empty_solr(client, empty_solr):
@@ -1306,13 +1307,18 @@ class TestDigitizedWorkListView(TestCase):
             digworkview.object_list = mock_qs
             digworkview.form = Mock(is_valid=Mock(return_value=True))
             digworkview.kwargs = {}
-            with patch.object(digworkview, "paginate_queryset", return_value=(Mock(), mock_page_obj, mock_qs, Mock())):
+            with patch.object(
+                digworkview,
+                "paginate_queryset",
+                return_value=(Mock(), mock_page_obj, mock_qs, Mock()),
+            ):
                 with patch.object(digworkview, "get_pages", return_value=({}, {})):
                     context = digworkview.get_context_data()
                     # note should be in context var, keyed on source display
                     assert "source_notes" in context
                     assert hathi_key in context["source_notes"]
                     assert context["source_notes"][hathi_key] == sn.note
+
 
 class TestImportView(TestCase):
     superuser = {"username": "super", "password": str(uuid.uuid4())}

@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<formats{% if id %} id="{{ id }}"{% endif %}>
-    {% for name, details in formats.items %}
-    <format name="{{ name }}" {% for key, val in details.items %}{{ key }}="{{ val }}"{% endfor %}/>
-    {% endfor %}
-</formats>
