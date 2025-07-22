@@ -142,12 +142,4 @@ Models
     :members:
 
 
-Unapi
------
-.. automodule:: ppa.unapi
-    :members:
 
-Views
-^^^^^
-.. automodule:: ppa.unapi.views
-    :members:

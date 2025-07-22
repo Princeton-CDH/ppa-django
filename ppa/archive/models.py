@@ -23,8 +23,9 @@ from wagtail.fields import RichTextField
 from wagtail.snippets.models import register_snippet
 
 from ppa.archive import eebo_tcp
-from ppa.archive.gale import GaleAPI, MARCRecordNotFound, get_marc_record
+from ppa.archive.gale import GaleAPI
 from ppa.archive.hathi import HathiBibliographicAPI, HathiObject
+
 
 logger = logging.getLogger(__name__)
 
@@ -180,7 +181,8 @@ class ProtectedWorkField(models.Field):
     :class:`ProtectedWorkFieldFlags` object and stores as integer."""
 
     description = (
-        "A field that stores an instance of :class:`ProtectedWorkFieldFlags` as an integer."
+        "A field that stores an instance of :class:`ProtectedWorkFieldFlags` "
+        "as an integer."
     )
 
     def __init__(self, verbose_name=None, name=None, **kwargs):
@@ -220,7 +222,9 @@ class SignalHandlers:
             # if the collection has any works associated
             works = instance.digitizedwork_set.all()
             if works.exists():
-                logger.debug(f"collection save, reindexing {works.count()} related works")
+                logger.debug(
+                    f"collection save, reindexing {works.count()} related works"
+                )
                 DigitizedWork.index_items(works)
 
     @staticmethod
@@ -249,7 +253,9 @@ class SignalHandlers:
             works = instance.digitizedwork_set.all()
             if works.exists():
                 # get a total of page count for affected works
-                page_count = works.aggregate(page_count=models.Sum("page_count", default=0))
+                page_count = works.aggregate(
+                    page_count=models.Sum("page_count", default=0)
+                )
                 logger.debug(
                     "cluster id has changed, reindexing %d works and %d pages",
                     works.count(),
@@ -422,7 +428,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
     collections = models.ManyToManyField(Collection, blank=True)
 
     #: optional cluster for aggregating works
-    cluster = models.ForeignKey(Cluster, blank=True, null=True, on_delete=models.SET_NULL)
+    cluster = models.ForeignKey(
+        Cluster, blank=True, null=True, on_delete=models.SET_NULL
+    )
 
     #: date added to the archive
     added = models.DateTimeField(auto_now_add=True)
@@ -624,7 +632,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 
         # if excerpt page range has changed
         # OR this is a new record with a page range
-        if self.has_changed("pages_digital") or (self.pk is None and self.pages_digital):
+        if self.has_changed("pages_digital") or (
+            self.pk is None and self.pages_digital
+        ):
             # update the page count if possible (i.e., not a Gale record)
             self.page_count = self.count_pages()
             # if page range changed on existing record, clear out old index
@@ -758,7 +768,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         field_data["sort_title"] = marc_record.title()[non_sort:].strip(' "[')
         field_data["author"] = marc_record.author() or ""
         # remove a note present on some records and strip whitespace
-        field_data["author"] = field_data["author"].replace("[from old catalog]", "").strip()
+        field_data["author"] = (
+            field_data["author"].replace("[from old catalog]", "").strip()
+        )
         # removing trailing period, except when it is part of an
         # initial or known abbreviation (i.e, Esq.)
         # Look for single initial, but support initials with no spaces
@@ -806,7 +818,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         # *only* if they wrap the whole text
         for field in ["publisher", "pub_place"]:
             if field in field_data:
-                field_data[field] = re.sub(r"^\[(.*)\]$", r"\1", field_data[field]).strip()
+                field_data[field] = re.sub(
+                    r"^\[(.*)\]$", r"\1", field_data[field]
+                ).strip()
 
         if populate:
             # conditionally update fields that are protected (or not)
@@ -863,7 +877,9 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             "post_save": SignalHandlers.cluster_save,
             "pre_delete": SignalHandlers.cluster_delete,
         },
-        "archive.DigitizedWork": {"post_save": SignalHandlers.handle_digwork_cluster_change},
+        "archive.DigitizedWork": {
+            "post_save": SignalHandlers.handle_digwork_cluster_change
+        },
     }
 
     def first_page(self):
@@ -892,6 +908,32 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         match = re.match(r"([\da-z]+)([,-]|\b)", self.pages_orig)
         if match:
             return match.group(1)
+
+    def last_page(self):
+        """Number of the last page in range, if this is an excerpt
+        (last of original page range, not digital)"""
+        return self.last_page_original()
+
+    def last_page_digital(self):
+        """Number of the last page in range (digital pages / page index),
+        if this is an excerpt.
+
+        :return: last page number for digital page range; None if no page range
+        :rtype: int, None
+        """
+        if self.pages_digital:
+            return list(self.page_span)[-1]
+
+    def last_page_original(self):
+        """Number of the last page in range (original page numbering) if this is an excerpt
+
+        :return: last page number for original page range; None if no page range
+        :rtype: str, None
+        """
+        if not self.pages_orig:
+            return ""
+        parts = str(self.pages_orig).split("-")
+        return parts[-1].strip() if parts else str(self.pages_orig)
 
     def index_id(self):
         """use source id + first page in range (if any) as solr identifier"""
@@ -941,6 +983,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             "id": index_id,
             "source_id": self.source_id,
             "first_page_s": self.first_page(),
+            "last_page_s": self.last_page(),
             "group_id_s": index_id,  # for grouping pages by work or excerpt
             "source_t": self.get_source_display(),
             "source_url": self.source_url,
@@ -1014,7 +1057,11 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             # some aggregate packages retrieved from Data API
             # include jp2 and xml files as well as txt; only count text
             page_count = len(
-                [filename for filename in ht_zip.namelist() if filename.endswith(".txt")]
+                [
+                    filename
+                    for filename in ht_zip.namelist()
+                    if filename.endswith(".txt")
+                ]
             )
             logger.debug(
                 "Counted %d pages in zipfile in %f sec", page_count, time.time() - start
@@ -1033,36 +1080,6 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         # convert the specified page numbers into an intspan
         # if empty, returns an empty set
         return intspan(self.pages_digital)
-
-    def get_metadata(self, metadata_format):
-        """Get metadata for this item in the specified format.
-        Currently only supports marc."""
-        if metadata_format == "marc":
-            # get metadata from hathi bib api and serialize
-            # as binary marc
-            if self.source == DigitizedWork.HATHI:
-                bib_api = HathiBibliographicAPI()
-                bibdata = bib_api.record("htid", self.source_id)
-                return bibdata.marcxml.as_marc()
-
-            if self.source == DigitizedWork.GALE:
-                # get record from local marc pairtree storage using ESTC id
-                # (stored as record id)
-                try:
-                    record = get_marc_record(self.record_id)
-                    # specify encoding to avoid errors
-                    record.force_utf8 = True
-                    return record.as_marc()
-                except MARCRecordNotFound:
-                    logger.warning(
-                        f"MARC record for {self.source_id}/{self.record_id} not found"
-                    )
-                    return ""
-
-            return ""
-
-        # error for unknown
-        raise ValueError("Unsupported format %s" % metadata_format)
 
     def get_source_link_label(self):
         """Source-specific label for link on public item detail view."""
@@ -1276,7 +1293,9 @@ class SourceNote(models.Model):
     )
     note = RichTextField(
         features=["bold", "italic", "link"],
-        help_text="A brief note to appear next to the source name in search results, as a tooltip",
+        help_text=(
+            "A brief note to appear next to the source name in search results, as a tooltip"
+        ),
     )
 
     def __str__(self):
