@@ -36,7 +36,8 @@ class GracefulPaginator(Paginator):
     Adapted from https://forum.djangoproject.com/t/23037"""
 
     def page(self, number):
-        """Get the page by the supplied number. Reset to 1 if the supplied page is out of range."""
+        """Get the page by the supplied number. Reset to 1 if the supplied page is out of
+        range."""
         try:
             number = self.validate_number(number)
         except (PageNotAnInteger, EmptyPage):
@@ -275,7 +276,8 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
                 "NO_COLLECTION_LABEL": NO_COLLECTION_LABEL,
                 "page_title": self.meta_title,
                 "page_description": self.meta_description,
-                # dict of source tooltip notes keyed on source label (as that's what is indexed)
+                # dict of source tooltip notes keyed on source label
+                # (as that's what is indexed)
                 "source_notes": {
                     sn.get_source_display(): sn.note for sn in SourceNote.objects.all()
                 },
@@ -366,6 +368,19 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
         # if suppressed, don't do any further processing
         if digwork.is_suppressed:
             return context
+
+        # Fetch Solr data for COinS metadata (ignore if Solr unavailable)
+        try:
+            solr_results = list(
+                ArchiveSearchQuerySet().filter(id=digwork.index_id())[:1]
+            )
+            if solr_results:
+                context["solr_object"] = solr_results[0]
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.RequestException,
+        ):
+            pass
 
         context.update(
             {"page_title": digwork.title, "page_description": digwork.public_notes}
