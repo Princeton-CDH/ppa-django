@@ -138,20 +138,19 @@ def test_last_page():
 
 
 def test_coins_data_full_work():
-    """Test coins_data template tag for full works"""
-    # Mock a DigitizedWork instance
+    """Test coins_data template tag for full works from Solr"""
+    from unittest.mock import patch
+
+    # Mock a Solr result object
     mock_work = Mock()
-    mock_work._meta = True  # Mark as model instance
-    mock_work.item_type = "F"  # Full work
-    mock_work.FULL = "F"
-    mock_work.EXCERPT = "E"
-    mock_work.ARTICLE = "A"
+    mock_work.work_type = "full-work"
     mock_work.title = "Test Book"
     mock_work.author = "Test Author"
     mock_work.pub_date = "1850"
     mock_work.publisher = "Test Publisher"
     mock_work.pub_place = "Cambridge"
-    mock_work.get_absolute_url.return_value = "/archive/detail/test123/"
+    mock_work.source_id = "test123"
+    mock_work.first_page = None
 
     # Mock request context
     mock_request = Mock()
@@ -160,7 +159,9 @@ def test_coins_data_full_work():
     )
     context = {"request": mock_request}
 
-    result = coins_data(context, mock_work)
+    with patch("django.urls.reverse") as mock_reverse:
+        mock_reverse.return_value = "/archive/detail/test123/"
+        result = coins_data(context, mock_work)
 
     assert result["ctx_ver"] == "Z39.88-2004"
     assert result["rft_val_fmt"] == "info:ofi/fmt:kev:mtx:book"
@@ -174,20 +175,19 @@ def test_coins_data_full_work():
 
 
 def test_coins_data_excerpt():
-    """Test coins_data template tag for excerpts"""
-    # Mock a DigitizedWork instance
+    """Test coins_data template tag for excerpts from Solr"""
+    from unittest.mock import patch
+
+    # Mock a Solr result object
     mock_work = Mock()
-    mock_work._meta = True  # Mark as model instance
-    mock_work.item_type = "E"  # Excerpt
-    mock_work.FULL = "F"
-    mock_work.EXCERPT = "E"
-    mock_work.ARTICLE = "A"
+    mock_work.work_type = "excerpt"
     mock_work.title = "Test Excerpt"
     mock_work.author = "Test Author"
     mock_work.book_journal = "Test Book"
     mock_work.pub_place = "Oxford"
-    mock_work.pages_orig = "10-15"
-    mock_work.get_absolute_url.return_value = "/archive/detail/test123/"
+    mock_work.first_page = "10"
+    mock_work.last_page = "15"
+    mock_work.source_id = "test123"
 
     # Mock request context
     mock_request = Mock()
@@ -196,7 +196,9 @@ def test_coins_data_excerpt():
     )
     context = {"request": mock_request}
 
-    result = coins_data(context, mock_work)
+    with patch("django.urls.reverse") as mock_reverse:
+        mock_reverse.return_value = "/archive/detail/test123/"
+        result = coins_data(context, mock_work)
 
     assert result["rft_val_fmt"] == "info:ofi/fmt:kev:mtx:book"
     assert result["rft.genre"] == "bookitem"
@@ -210,20 +212,19 @@ def test_coins_data_excerpt():
 
 
 def test_coins_data_article():
-    """Test coins_data template tag for articles"""
-    # Mock a DigitizedWork instance
+    """Test coins_data template tag for articles from Solr"""
+    from unittest.mock import patch
+
+    # Mock a Solr result object
     mock_work = Mock()
-    mock_work._meta = True  # Mark as model instance
-    mock_work.item_type = "A"  # Article
-    mock_work.FULL = "F"
-    mock_work.EXCERPT = "E"
-    mock_work.ARTICLE = "A"
+    mock_work.work_type = "article"
     mock_work.title = "Test Article"
     mock_work.author = "Test Author"
     mock_work.book_journal = "Test Journal"
     mock_work.enumcron = "Vol. 5"
-    mock_work.pages_orig = "25-30"
-    mock_work.get_absolute_url.return_value = "/archive/detail/test123/"
+    mock_work.first_page = "25"
+    mock_work.last_page = "30"
+    mock_work.source_id = "test123"
 
     # Mock request context
     mock_request = Mock()
@@ -232,7 +233,9 @@ def test_coins_data_article():
     )
     context = {"request": mock_request}
 
-    result = coins_data(context, mock_work)
+    with patch("django.urls.reverse") as mock_reverse:
+        mock_reverse.return_value = "/archive/detail/test123/"
+        result = coins_data(context, mock_work)
 
     assert result["rft_val_fmt"] == "info:ofi/fmt:kev:mtx:journal"
     assert result["rft.genre"] == "article"
