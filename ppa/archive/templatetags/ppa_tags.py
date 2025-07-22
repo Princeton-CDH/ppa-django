@@ -118,94 +118,34 @@ def solr_highlight(value, autoescape=True):
     )
 
 
-@register.filter
-def first_page(page_range):
-    """Extract first page number from a page range like '25-30' or '25'"""
-    if not page_range:
-        return ""
-    return page_range.split("-")[0].strip()
-
-
-@register.filter
-def last_page(page_range):
-    """Extract the last page number from a page range string.
-
-    Examples:
-        'xii-xvi' => 'xvi'
-        '100-105' => '105'
-        '42' => '42'
-    """
-    if not page_range:
-        return ""
-
-    # Use regex to find the last page number in various formats
-    # Handles ranges like '12-15', 'xii-xvi', or single pages like '42'
-    match = re.search(
-        r"([a-z\d]+)(?:\s*[,-]\s*([a-z\d]+))*$", str(page_range), re.IGNORECASE
-    )
-    if match:
-        # If there are multiple groups, return the last non-None group
-        # This handles both ranges (returns second group) and single pages (returns first group)
-        groups = match.groups()
-        return groups[-1] if groups[-1] is not None else groups[0]
-    return str(page_range)
-
-
 def _get_item_value(obj, key, default=None):
-    """Helper function to get attribute/key from either object or dict."""
+    """Get value from Solr object or dictionary."""
     if isinstance(obj, dict):
         return obj.get(key, default)
     else:
+        # For Solr objects, access attributes directly
         return getattr(obj, key, default)
 
 
-def _get_work_type_string(item, is_model_instance):
-    """Convert work type to standardized string format."""
-    if is_model_instance:
-        # Map model constants to our internal strings for consistency
-        type_map = {
-            item.FULL: "full-work",
-            item.EXCERPT: "excerpt",
-            item.ARTICLE: "article",
-        }
-        return type_map.get(item.item_type, "full-work")
-    else:
-        # Solr results store work_type as string
-        # Try both the aliased field name and the original Solr field name
-        work_type = _get_item_value(item, "work_type") or _get_item_value(
-            item, "work_type_s"
+def _generate_absolute_url(context, item):
+    """Generate absolute URL for the item from Solr result."""
+    from django.urls import reverse
+
+    source_id = _get_item_value(item, "source_id")
+    first_page = _get_item_value(item, "first_page")
+
+    if first_page:
+        detail_url = reverse(
+            "archive:detail",
+            kwargs={"source_id": source_id, "start_page": first_page},
         )
-
-        # Note: work_type_s is the original Solr field, work_type is the aliased version
-        # Both should be checked to handle different search result contexts
-
-        # Default to full-work if no work_type found
-        return work_type or "full-work"
-
-
-def _generate_absolute_url(context, item, is_model_instance):
-    """Generate absolute URL for the item."""
-    if is_model_instance:
-        return context["request"].build_absolute_uri(item.get_absolute_url())
     else:
-        # For Solr results, we need to build the URL first
-        from django.urls import reverse
-
-        source_id = _get_item_value(item, "source_id")
-        first_page = _get_item_value(item, "first_page")
-
-        if first_page:
-            detail_url = reverse(
-                "archive:detail",
-                kwargs={"source_id": source_id, "start_page": first_page},
-            )
-        else:
-            detail_url = reverse("archive:detail", kwargs={"source_id": source_id})
-        return context["request"].build_absolute_uri(detail_url)
+        detail_url = reverse("archive:detail", kwargs={"source_id": source_id})
+    return context["request"].build_absolute_uri(detail_url)
 
 
 def _add_common_fields(data, item):
-    """Add common metadata fields to the data dictionary."""
+    """Add common metadata fields from Solr object."""
     if _get_item_value(item, "title"):
         data["title"] = _get_item_value(item, "title")
     if _get_item_value(item, "author"):
@@ -214,87 +154,74 @@ def _add_common_fields(data, item):
         data["date"] = _get_item_value(item, "pub_date")
     if _get_item_value(item, "publisher"):
         data["pub"] = _get_item_value(item, "publisher")
+    if _get_item_value(item, "pub_place"):
+        data["pub_place"] = _get_item_value(item, "pub_place")
 
 
 def _add_full_work_fields(data, item):
-    """Add full-work specific COinS fields."""
+    """Add fields specific to full works."""
     data.update({"rft_val_fmt": "info:ofi/fmt:kev:mtx:book", "rft.genre": "book"})
-    # For books, title goes in rft.title
     if "title" in data:
         data["rft.title"] = data.pop("title")
-    # Add publication place for books
     if _get_item_value(item, "pub_place"):
         data["rft.place"] = _get_item_value(item, "pub_place")
 
 
-def _add_excerpt_fields(data, item, is_model_instance):
-    """Add excerpt specific COinS fields."""
+def _add_excerpt_fields(data, item):
+    """Add fields specific to excerpts."""
     data.update({"rft_val_fmt": "info:ofi/fmt:kev:mtx:book", "rft.genre": "bookitem"})
-    # For excerpts, title is article title, book_journal is book title
     if "title" in data:
         data["rft.atitle"] = data.pop("title")
     if _get_item_value(item, "book_journal"):
         data["rft.btitle"] = _get_item_value(item, "book_journal")
-    # Add publication place for book sections
     if _get_item_value(item, "pub_place"):
         data["rft.place"] = _get_item_value(item, "pub_place")
-    # Add page information for excerpts (only available for model instances)
-    if is_model_instance and _get_item_value(item, "pages_orig"):
-        pages_orig = _get_item_value(item, "pages_orig")
-        data["rft.pages"] = pages_orig
-        data["rft.spage"] = first_page(pages_orig)
-        data["rft.epage"] = last_page(pages_orig)
+    # Add page information for excerpts if available
+    if _get_item_value(item, "first_page"):
+        first_page = _get_item_value(item, "first_page")
+        last_page = _get_item_value(item, "last_page")
+        data["rft.spage"] = first_page
+        data["rft.epage"] = last_page or first_page
+        # For rft.pages, use full range if we have both pages, otherwise just first page
+        if last_page and last_page != first_page:
+            data["rft.pages"] = f"{first_page}-{last_page}"
+        else:
+            data["rft.pages"] = first_page
 
 
-def _add_page_info_from_url(data, context):
-    """Add page information from URL parameters when pages_orig is not available."""
-    if context and "request" in context:
-        resolver_match = getattr(context["request"], "resolver_match", None)
-        if resolver_match and resolver_match.kwargs:
-            start_page = resolver_match.kwargs.get("start_page")
-            if start_page:
-                # Use the specific page from URL as both start and end page
-                data["rft.spage"] = start_page
-                data["rft.epage"] = start_page
-                data["rft.pages"] = start_page
-
-
-def _add_article_fields(data, item, is_model_instance, context):
-    """Add article specific COinS fields."""
+def _add_article_fields(data, item):
+    """Add fields specific to articles."""
     data.update({"rft_val_fmt": "info:ofi/fmt:kev:mtx:journal", "rft.genre": "article"})
-    # For articles, title is article title, book_journal is journal title
     if "title" in data:
         data["rft.atitle"] = data.pop("title")
     if _get_item_value(item, "book_journal"):
         data["rft.jtitle"] = _get_item_value(item, "book_journal")
-    # Add volume and page information for articles (only available for model instances)
-    if is_model_instance:
-        if _get_item_value(item, "enumcron"):
-            data["rft.volume"] = _get_item_value(item, "enumcron")
-        if _get_item_value(item, "pages_orig"):
-            pages_orig = _get_item_value(item, "pages_orig")
-            data["rft.pages"] = pages_orig
-            data["rft.spage"] = first_page(pages_orig)
-            data["rft.epage"] = last_page(pages_orig)
+    if _get_item_value(item, "enumcron"):
+        data["rft.volume"] = _get_item_value(item, "enumcron")
+    if _get_item_value(item, "first_page"):
+        first_page = _get_item_value(item, "first_page")
+        last_page = _get_item_value(item, "last_page")
+        data["rft.spage"] = first_page
+        data["rft.epage"] = last_page or first_page
+        # For rft.pages, use full range if we have both pages, otherwise just first page
+        if last_page and last_page != first_page:
+            data["rft.pages"] = f"{first_page}-{last_page}"
         else:
-            # If no pages_orig, check for current page from URL parameters
-            _add_page_info_from_url(data, context)
+            data["rft.pages"] = first_page
 
 
-def _add_work_type_specific_fields(
-    data, item, work_type_str, is_model_instance, context
-):
-    """Add work type specific fields and metadata format."""
+def _add_work_type_specific_fields(data, item, work_type_str):
+    """Add fields based on work type."""
     if work_type_str == "full-work":
         _add_full_work_fields(data, item)
     elif work_type_str == "excerpt":
-        _add_excerpt_fields(data, item, is_model_instance)
+        _add_excerpt_fields(data, item)
     elif work_type_str == "article":
-        _add_article_fields(data, item, is_model_instance, context)
+        _add_article_fields(data, item)
 
 
 def _convert_to_coins_format(data):
-    """Convert common fields to proper COinS format with rft. prefix."""
+    """Convert common fields to COinS format."""
     if "au" in data:
         data["rft.au"] = data.pop("au")
     if "date" in data:
@@ -305,36 +232,17 @@ def _convert_to_coins_format(data):
 
 @register.simple_tag(takes_context=True)
 def coins_data(context, item):
-    """Generate COinS metadata dictionary for Zotero.
+    """Generate COinS metadata dictionary for Zotero from Solr results."""
+    work_type_str = _get_item_value(item, "work_type", "full-work")
+    absolute_url = _generate_absolute_url(context, item)
 
-    Handles both DigitizedWork model instances and Solr search results,
-    adapting field access and work type detection accordingly.
-
-    Args:
-        context: Django template context (for request)
-        item: DigitizedWork instance or Solr search result dict
-
-    Returns:
-        dict: COinS metadata fields ready for encoding
-    """
-    # Determine if this is a model instance or Solr result
-    is_model_instance = hasattr(item, "_meta")
-
-    # Get work type and absolute URL
-    work_type_str = _get_work_type_string(item, is_model_instance)
-    absolute_url = _generate_absolute_url(context, item, is_model_instance)
-
-    # Build base metadata dictionary
     data = {
         "ctx_ver": "Z39.88-2004",
         "rft_id": absolute_url,
     }
 
-    # Add common and type-specific fields
     _add_common_fields(data, item)
-    _add_work_type_specific_fields(
-        data, item, work_type_str, is_model_instance, context
-    )
+    _add_work_type_specific_fields(data, item, work_type_str)
     _convert_to_coins_format(data)
 
     return data
@@ -342,30 +250,15 @@ def coins_data(context, item):
 
 @register.filter
 def coins_encode(coins_data):
-    """Convert COinS metadata dictionary to encoded span element.
-
-    Takes a dictionary of COinS fields and converts it to a properly
-    encoded HTML span element for Zotero detection.
-
-    Args:
-        coins_data (dict): COinS metadata dictionary from coins_data tag
-
-    Returns:
-        SafeString: HTML span element with encoded COinS metadata
-    """
+    """Convert COinS metadata dictionary to encoded HTML span element."""
     if not coins_data:
         return ""
 
-    # Build the title attribute with properly encoded key=value pairs
     title_parts = []
     for key, value in coins_data.items():
-        if value:  # Only include non-empty values
-            # URL encode the value and ensure it's a string
-            encoded_value = urlencode({"": str(value)})[1:]  # Remove leading '='
+        if value:
+            encoded_value = urlencode({"": str(value)})[1:]
             title_parts.append(f"{key}={encoded_value}")
 
-    # Ensure all parts are strings before joining
     title_attr = "&amp;".join(str(part) for part in title_parts)
-
-    # Return the complete span element
-    return mark_safe(f'<span class="Z3988" title="{title_attr}"></span>')  # nosec B308
+    return mark_safe(f'<span class="Z3988" title="{title_attr}"></span>')
