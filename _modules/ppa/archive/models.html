@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ppa.archive.models &#8212; Princeton Prosody Archive 3.15.0-dev documentation</title>
+    <title>ppa.archive.models &#8212; Princeton Prosody Archive 3.14.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
-    <script src="../../../_static/documentation_options.js?v=7b7f12ef"></script>
+    <script src="../../../_static/documentation_options.js?v=408c3590"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -242,7 +242,8 @@
 <span class="sd">    :class:`ProtectedWorkFieldFlags` object and stores as integer.&quot;&quot;&quot;</span>
 
     <span class="n">description</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="s2">&quot;A field that stores an instance of :class:`ProtectedWorkFieldFlags` as an integer.&quot;</span>
+        <span class="s2">&quot;A field that stores an instance of :class:`ProtectedWorkFieldFlags` &quot;</span>
+        <span class="s2">&quot;as an integer.&quot;</span>
     <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -299,7 +300,9 @@
             <span class="c1"># if the collection has any works associated</span>
             <span class="n">works</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">digitizedwork_set</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">works</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;collection save, reindexing </span><span class="si">{</span><span class="n">works</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="si">}</span><span class="s2"> related works&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">&quot;collection save, reindexing </span><span class="si">%d</span><span class="s2"> related works&quot;</span><span class="p">,</span> <span class="n">works</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+                <span class="p">)</span>
                 <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">index_items</span><span class="p">(</span><span class="n">works</span><span class="p">)</span></div>
 
 
@@ -313,7 +316,7 @@
         <span class="n">digwork_ids</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">digitizedwork_set</span><span class="o">.</span><span class="n">values_list</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">flat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="c1"># find the items based on the list of ids to reindex</span>
         <span class="n">digworks</span> <span class="o">=</span> <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">id__in</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">digwork_ids</span><span class="p">))</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;collection delete, reindexing </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">digworks</span><span class="p">)</span><span class="si">}</span><span class="s2"> works&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;collection delete, reindexing </span><span class="si">%d</span><span class="s2"> works&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">digworks</span><span class="p">))</span>
 
         <span class="c1"># NOTE: this sends pre/post clear signal, but it&#39;s not obvious</span>
         <span class="c1"># how to take advantage of that</span>
@@ -334,11 +337,11 @@
             <span class="n">works</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">digitizedwork_set</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">works</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
                 <span class="c1"># get a total of page count for affected works</span>
-                <span class="n">page_count</span> <span class="o">=</span> <span class="n">works</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">page_count</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="s2">&quot;page_count&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+                <span class="n">page_count</span> <span class="o">=</span> <span class="n">works</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">page_count</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="s2">&quot;page_count&quot;</span><span class="p">))</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                     <span class="s2">&quot;cluster id has changed, reindexing </span><span class="si">%d</span><span class="s2"> works and </span><span class="si">%d</span><span class="s2"> pages&quot;</span><span class="p">,</span>
                     <span class="n">works</span><span class="o">.</span><span class="n">count</span><span class="p">(),</span>
-                    <span class="n">page_count</span><span class="p">[</span><span class="s2">&quot;page_count&quot;</span><span class="p">],</span>
+                    <span class="n">page_count</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page_count&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
                 <span class="p">)</span>
                 <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">index_items</span><span class="p">(</span><span class="n">works</span><span class="p">)</span>
                 <span class="c1"># reindex pages (this may be slow...)</span>
@@ -357,11 +360,11 @@
         <span class="c1"># find the items based on the list of ids to reindex</span>
         <span class="n">digworks</span> <span class="o">=</span> <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">id__in</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">digwork_ids</span><span class="p">))</span>
         <span class="c1"># get a total of page count for affected works</span>
-        <span class="n">page_count</span> <span class="o">=</span> <span class="n">digworks</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">page_count</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="s2">&quot;page_count&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">page_count</span> <span class="o">=</span> <span class="n">digworks</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">page_count</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="s2">&quot;page_count&quot;</span><span class="p">))</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="s2">&quot;cluster delete, reindexing </span><span class="si">%d</span><span class="s2"> works and </span><span class="si">%d</span><span class="s2"> pages&quot;</span><span class="p">,</span>
             <span class="n">digworks</span><span class="o">.</span><span class="n">count</span><span class="p">(),</span>
-            <span class="n">page_count</span><span class="p">[</span><span class="s2">&quot;page_count&quot;</span><span class="p">],</span>
+            <span class="n">page_count</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page_count&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
         <span class="p">)</span>
 
         <span class="c1"># NOTE: this sends pre/post clear signal, but it&#39;s not obvious</span>
@@ -383,7 +386,7 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                 <span class="s2">&quot;Cluster changed for </span><span class="si">%s</span><span class="s2">; indexing </span><span class="si">%d</span><span class="s2"> pages&quot;</span><span class="p">,</span>
                 <span class="n">instance</span><span class="p">,</span>
-                <span class="n">instance</span><span class="o">.</span><span class="n">page_count</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="n">instance</span><span class="o">.</span><span class="n">page_count</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">instance</span><span class="o">.</span><span class="n">index_items</span><span class="p">(</span><span class="n">Page</span><span class="o">.</span><span class="n">page_index_data</span><span class="p">(</span><span class="n">instance</span><span class="p">))</span></div>
 </div>
@@ -526,7 +529,9 @@
     <span class="n">collections</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">Collection</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="c1">#: optional cluster for aggregating works</span>
-    <span class="n">cluster</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">Cluster</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">SET_NULL</span><span class="p">)</span>
+    <span class="n">cluster</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span>
+        <span class="n">Cluster</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">SET_NULL</span>
+    <span class="p">)</span>
 
     <span class="c1">#: date added to the archive</span>
     <span class="n">added</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -742,7 +747,9 @@
 
         <span class="c1"># if excerpt page range has changed</span>
         <span class="c1"># OR this is a new record with a page range</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_changed</span><span class="p">(</span><span class="s2">&quot;pages_digital&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pk</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">pages_digital</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_changed</span><span class="p">(</span><span class="s2">&quot;pages_digital&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pk</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">pages_digital</span>
+        <span class="p">):</span>
             <span class="c1"># update the page count if possible (i.e., not a Gale record)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">page_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">count_pages</span><span class="p">()</span>
             <span class="c1"># if page range changed on existing record, clear out old index</span>
@@ -888,7 +895,9 @@
         <span class="n">field_data</span><span class="p">[</span><span class="s2">&quot;sort_title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">marc_record</span><span class="o">.</span><span class="n">title</span><span class="p">()[</span><span class="n">non_sort</span><span class="p">:]</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39; &quot;[&#39;</span><span class="p">)</span>
         <span class="n">field_data</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">marc_record</span><span class="o">.</span><span class="n">author</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
         <span class="c1"># remove a note present on some records and strip whitespace</span>
-        <span class="n">field_data</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">field_data</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;[from old catalog]&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">field_data</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">field_data</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;[from old catalog]&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="p">)</span>
         <span class="c1"># removing trailing period, except when it is part of an</span>
         <span class="c1"># initial or known abbreviation (i.e, Esq.)</span>
         <span class="c1"># Look for single initial, but support initials with no spaces</span>
@@ -936,7 +945,9 @@
         <span class="c1"># *only* if they wrap the whole text</span>
         <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;publisher&quot;</span><span class="p">,</span> <span class="s2">&quot;pub_place&quot;</span><span class="p">]:</span>
             <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">field_data</span><span class="p">:</span>
-                <span class="n">field_data</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^\[(.*)\]$&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;\1&quot;</span><span class="p">,</span> <span class="n">field_data</span><span class="p">[</span><span class="n">field</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="n">field_data</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span>
+                    <span class="sa">r</span><span class="s2">&quot;^\[(.*)\]$&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;\1&quot;</span><span class="p">,</span> <span class="n">field_data</span><span class="p">[</span><span class="n">field</span><span class="p">]</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">populate</span><span class="p">:</span>
             <span class="c1"># conditionally update fields that are protected (or not)</span>
@@ -997,7 +1008,9 @@
             <span class="s2">&quot;post_save&quot;</span><span class="p">:</span> <span class="n">SignalHandlers</span><span class="o">.</span><span class="n">cluster_save</span><span class="p">,</span>
             <span class="s2">&quot;pre_delete&quot;</span><span class="p">:</span> <span class="n">SignalHandlers</span><span class="o">.</span><span class="n">cluster_delete</span><span class="p">,</span>
         <span class="p">},</span>
-        <span class="s2">&quot;archive.DigitizedWork&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;post_save&quot;</span><span class="p">:</span> <span class="n">SignalHandlers</span><span class="o">.</span><span class="n">handle_digwork_cluster_change</span><span class="p">},</span>
+        <span class="s2">&quot;archive.DigitizedWork&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;post_save&quot;</span><span class="p">:</span> <span class="n">SignalHandlers</span><span class="o">.</span><span class="n">handle_digwork_cluster_change</span>
+        <span class="p">},</span>
     <span class="p">}</span>
 
 <div class="viewcode-block" id="DigitizedWork.first_page">
@@ -1177,7 +1190,11 @@
             <span class="c1"># some aggregate packages retrieved from Data API</span>
             <span class="c1"># include jp2 and xml files as well as txt; only count text</span>
             <span class="n">page_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">filename</span> <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">ht_zip</span><span class="o">.</span><span class="n">namelist</span><span class="p">()</span> <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.txt&quot;</span><span class="p">)]</span>
+                <span class="p">[</span>
+                    <span class="n">filename</span>
+                    <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">ht_zip</span><span class="o">.</span><span class="n">namelist</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.txt&quot;</span><span class="p">)</span>
+                <span class="p">]</span>
             <span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                 <span class="s2">&quot;Counted </span><span class="si">%d</span><span class="s2"> pages in zipfile in </span><span class="si">%f</span><span class="s2"> sec&quot;</span><span class="p">,</span> <span class="n">page_count</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
@@ -1221,7 +1238,8 @@
                     <span class="k">return</span> <span class="n">record</span><span class="o">.</span><span class="n">as_marc</span><span class="p">()</span>
                 <span class="k">except</span> <span class="n">MARCRecordNotFound</span><span class="p">:</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;MARC record for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">source_id</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">record_id</span><span class="si">}</span><span class="s2"> not found&quot;</span>
+                        <span class="s2">&quot;MARC record for </span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2"> not found&quot;</span>
+                        <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_id</span><span class="p">)</span>
                     <span class="p">)</span>
                     <span class="k">return</span> <span class="s2">&quot;&quot;</span>
 
@@ -1239,7 +1257,7 @@
             <span class="k">return</span> <span class="s2">&quot;View on Gale Primary Sources&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="n">DigitizedWork</span><span class="o">.</span><span class="n">OTHER</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;View external record&quot;</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;View on </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_source_display</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span></div>
+        <span class="k">return</span> <span class="s2">&quot;View on </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_source_display</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="DigitizedWork.add_from_hathi">
@@ -1453,25 +1471,6 @@
             <span class="p">)</span>
             <span class="k">yield</span> <span class="n">page_info</span></div>
 </div>
-
-
-
-<div class="viewcode-block" id="SourceNote">
-<a class="viewcode-back" href="../../../codedocs.html#ppa.archive.admin.SourceNote">[docs]</a>
-<span class="nd">@register_snippet</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">SourceNote</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
-    <span class="n">source</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
-        <span class="n">max_length</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-        <span class="n">choices</span><span class="o">=</span><span class="n">DigitizedWork</span><span class="o">.</span><span class="n">SOURCE_CHOICES</span><span class="p">,</span>
-        <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># only allow one note per source</span>
-    <span class="p">)</span>
-    <span class="n">note</span> <span class="o">=</span> <span class="n">RichTextField</span><span class="p">(</span>
-        <span class="n">features</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span> <span class="s2">&quot;italic&quot;</span><span class="p">,</span> <span class="s2">&quot;link&quot;</span><span class="p">],</span>
-        <span class="n">help_text</span><span class="o">=</span><span class="s2">&quot;A brief note to appear next to the source name in search results, as a tooltip&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_source_display</span><span class="p">()</span></div>
 
 </pre></div>
 

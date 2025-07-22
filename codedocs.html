@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Code Documentation &#8212; Princeton Prosody Archive 3.15.0-dev documentation</title>
+    <title>Code Documentation &#8212; Princeton Prosody Archive 3.14.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
-    <script src="_static/documentation_options.js?v=7b7f12ef"></script>
+    <script src="_static/documentation_options.js?v=408c3590"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -833,21 +833,6 @@ reindex pages if cluster id has changed</p>
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="ppa.archive.models.SourceNote">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.models.</span></span><span class="sig-name descname"><span class="pre">SourceNote</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">note</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#SourceNote"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.models.SourceNote" title="Link to this definition">¶</a></dt>
-<dd><dl class="py exception">
-<dt class="sig sig-object py" id="ppa.archive.models.SourceNote.DoesNotExist">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#ppa.archive.models.SourceNote.DoesNotExist" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="ppa.archive.models.SourceNote.MultipleObjectsReturned">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#ppa.archive.models.SourceNote.MultipleObjectsReturned" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
 <dt class="sig sig-object py" id="ppa.archive.models.TrackChangesModel">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.models.</span></span><span class="sig-name descname"><span class="pre">TrackChangesModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/models.html#TrackChangesModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.models.TrackChangesModel" title="Link to this definition">¶</a></dt>
 <dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code> mixin that keeps a copy of initial
@@ -1065,32 +1050,6 @@ doesn’t support highlighting on collapsed items.</p>
 <dd><p>alias of <a class="reference internal" href="#ppa.archive.models.DigitizedWork" title="ppa.archive.models.DigitizedWork"><code class="xref py py-class docutils literal notranslate"><span class="pre">DigitizedWork</span></code></a></p>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="ppa.archive.views.DigitizedWorkListView.paginate_queryset">
-<span class="sig-name descname"><span class="pre">paginate_queryset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">queryset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#DigitizedWorkListView.paginate_queryset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.views.DigitizedWorkListView.paginate_queryset" title="Link to this definition">¶</a></dt>
-<dd><p>Graceful paginate_queryset override to handle non-numeric inputs.
-Adapted from <a class="reference external" href="https://stackoverflow.com/a/61214021/394067">https://stackoverflow.com/a/61214021/394067</a></p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="ppa.archive.views.DigitizedWorkListView.paginator_class">
-<span class="sig-name descname"><span class="pre">paginator_class</span></span><a class="headerlink" href="#ppa.archive.views.DigitizedWorkListView.paginator_class" title="Link to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="#ppa.archive.views.GracefulPaginator" title="ppa.archive.views.GracefulPaginator"><code class="xref py py-class docutils literal notranslate"><span class="pre">GracefulPaginator</span></code></a></p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="ppa.archive.views.GracefulPaginator">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.views.</span></span><span class="sig-name descname"><span class="pre">GracefulPaginator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_page</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orphans</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_empty_first_page</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_messages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#GracefulPaginator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.views.GracefulPaginator" title="Link to this definition">¶</a></dt>
-<dd><p>Paginator override to gracefully handle out-of-range errors.
-Adapted from <a class="reference external" href="https://forum.djangoproject.com/t/23037">https://forum.djangoproject.com/t/23037</a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="ppa.archive.views.GracefulPaginator.page">
-<span class="sig-name descname"><span class="pre">page</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/views.html#GracefulPaginator.page"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.views.GracefulPaginator.page" title="Link to this definition">¶</a></dt>
-<dd><p>Get the page by the supplied number. Reset to 1 if the supplied page is out of range.</p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1136,7 +1095,7 @@ via browser or other tools.</p>
 <span id="forms"></span><h3>Forms<a class="headerlink" href="#module-ppa.archive.forms" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="ppa.archive.forms.AddToCollectionForm">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.forms.</span></span><span class="sig-name descname"><span class="pre">AddToCollectionForm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_id='id_%s'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_class=&lt;class</span> <span class="pre">'django.forms.utils.ErrorList'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_suffix=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_permitted=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_order=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_required_attribute=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">renderer=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bound_field_class=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#AddToCollectionForm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.forms.AddToCollectionForm" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.forms.</span></span><span class="sig-name descname"><span class="pre">AddToCollectionForm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_id='id_%s'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_class=&lt;class</span> <span class="pre">'django.forms.utils.ErrorList'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_suffix=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_permitted=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_order=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_required_attribute=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">renderer=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#AddToCollectionForm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.forms.AddToCollectionForm" title="Link to this definition">¶</a></dt>
 <dd><p>Form to select a set of :class:ppa.archive.models.Collection to which
 to bulk add a queryset of :class:ppa.archive.models.DigitizedWork</p>
 <dl class="py property">
@@ -1181,7 +1140,7 @@ without resulting in extra choices when normalized.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="ppa.archive.forms.ImportForm">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.forms.</span></span><span class="sig-name descname"><span class="pre">ImportForm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_id='id_%s'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_class=&lt;class</span> <span class="pre">'django.forms.utils.ErrorList'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_suffix=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_permitted=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_order=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_required_attribute=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">renderer=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bound_field_class=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#ImportForm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.forms.ImportForm" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.forms.</span></span><span class="sig-name descname"><span class="pre">ImportForm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_id='id_%s'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_class=&lt;class</span> <span class="pre">'django.forms.utils.ErrorList'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_suffix=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_permitted=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_order=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_required_attribute=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">renderer=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#ImportForm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.forms.ImportForm" title="Link to this definition">¶</a></dt>
 <dd><p>Form to import records from sources that support import.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="ppa.archive.forms.ImportForm.get_source_ids">
@@ -1364,7 +1323,7 @@ Value is cached to avoid repeatedly calculating it.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="ppa.archive.forms.SearchWithinWorkForm">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.forms.</span></span><span class="sig-name descname"><span class="pre">SearchWithinWorkForm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_id='id_%s'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_class=&lt;class</span> <span class="pre">'django.forms.utils.ErrorList'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_suffix=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_permitted=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_order=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_required_attribute=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">renderer=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bound_field_class=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#SearchWithinWorkForm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.forms.SearchWithinWorkForm" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.archive.forms.</span></span><span class="sig-name descname"><span class="pre">SearchWithinWorkForm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_id='id_%s'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_class=&lt;class</span> <span class="pre">'django.forms.utils.ErrorList'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_suffix=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_permitted=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_order=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_required_attribute=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">renderer=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/archive/forms.html#SearchWithinWorkForm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.forms.SearchWithinWorkForm" title="Link to this definition">¶</a></dt>
 <dd><p>Form to search for occurrences of a string within a particular instance
 of a digitized work.</p>
 <dl class="py attribute">
@@ -1644,13 +1603,13 @@ already been initialized, to avoid repeated initialization
 <dd><p>File location information within a METS document.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ppa.archive.hathi.METSFile.id">
-<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;neuxml.xmlmap.fields.StringField&gt;</span></em><a class="headerlink" href="#ppa.archive.hathi.METSFile.id" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;eulxml.xmlmap.fields.StringField&gt;</span></em><a class="headerlink" href="#ppa.archive.hathi.METSFile.id" title="Link to this definition">¶</a></dt>
 <dd><p>xml identifier</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ppa.archive.hathi.METSFile.location">
-<span class="sig-name descname"><span class="pre">location</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;neuxml.xmlmap.fields.StringField&gt;</span></em><a class="headerlink" href="#ppa.archive.hathi.METSFile.location" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">location</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;eulxml.xmlmap.fields.StringField&gt;</span></em><a class="headerlink" href="#ppa.archive.hathi.METSFile.location" title="Link to this definition">¶</a></dt>
 <dd><p>&lt;METS:file SIZE=”1” ID=”TXT00000001” MIMETYPE=”text/plain”
 CREATED=”2016-06-24T09:04:15Z” CHECKSUM=”68b329da9893e34099c7d8ad5cb9c940”
 SEQ=”00000001” CHECKSUMTYPE=”MD5”&gt;</p>
@@ -1658,7 +1617,7 @@ SEQ=”00000001” CHECKSUMTYPE=”MD5”&gt;</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ppa.archive.hathi.METSFile.sequence">
-<span class="sig-name descname"><span class="pre">sequence</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;neuxml.xmlmap.fields.StringField&gt;</span></em><a class="headerlink" href="#ppa.archive.hathi.METSFile.sequence" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sequence</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;eulxml.xmlmap.fields.StringField&gt;</span></em><a class="headerlink" href="#ppa.archive.hathi.METSFile.sequence" title="Link to this definition">¶</a></dt>
 <dd><p>sequence attribute</p>
 </dd></dl>
 
@@ -1671,7 +1630,7 @@ SEQ=”00000001” CHECKSUMTYPE=”MD5”&gt;</p>
 what is needed to support page indexing for <code class="xref py py-mod docutils literal notranslate"><span class="pre">ppa</span></code>.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ppa.archive.hathi.MinimalMETS.structmap_pages">
-<span class="sig-name descname"><span class="pre">structmap_pages</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;neuxml.xmlmap.fields.NodeListField&gt;</span></em><a class="headerlink" href="#ppa.archive.hathi.MinimalMETS.structmap_pages" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">structmap_pages</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;eulxml.xmlmap.fields.NodeListField&gt;</span></em><a class="headerlink" href="#ppa.archive.hathi.MinimalMETS.structmap_pages" title="Link to this definition">¶</a></dt>
 <dd><p>list of struct map pages as <a class="reference internal" href="#ppa.archive.hathi.StructMapPage" title="ppa.archive.hathi.StructMapPage"><code class="xref py py-class docutils literal notranslate"><span class="pre">StructMapPage</span></code></a></p>
 </dd></dl>
 
@@ -1689,19 +1648,19 @@ what is needed to support page indexing for <code class="xref py py-mod docutils
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ppa.archive.hathi.StructMapPage.label">
-<span class="sig-name descname"><span class="pre">label</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;neuxml.xmlmap.fields.StringField&gt;</span></em><a class="headerlink" href="#ppa.archive.hathi.StructMapPage.label" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">label</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;eulxml.xmlmap.fields.StringField&gt;</span></em><a class="headerlink" href="#ppa.archive.hathi.StructMapPage.label" title="Link to this definition">¶</a></dt>
 <dd><p>page label</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ppa.archive.hathi.StructMapPage.order">
-<span class="sig-name descname"><span class="pre">order</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;neuxml.xmlmap.fields.IntegerField&gt;</span></em><a class="headerlink" href="#ppa.archive.hathi.StructMapPage.order" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">order</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;eulxml.xmlmap.fields.IntegerField&gt;</span></em><a class="headerlink" href="#ppa.archive.hathi.StructMapPage.order" title="Link to this definition">¶</a></dt>
 <dd><p>page order</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ppa.archive.hathi.StructMapPage.orderlabel">
-<span class="sig-name descname"><span class="pre">orderlabel</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;neuxml.xmlmap.fields.StringField&gt;</span></em><a class="headerlink" href="#ppa.archive.hathi.StructMapPage.orderlabel" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">orderlabel</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;eulxml.xmlmap.fields.StringField&gt;</span></em><a class="headerlink" href="#ppa.archive.hathi.StructMapPage.orderlabel" title="Link to this definition">¶</a></dt>
 <dd><p>order label</p>
 </dd></dl>
 
@@ -1713,7 +1672,7 @@ what is needed to support page indexing for <code class="xref py py-mod docutils
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ppa.archive.hathi.StructMapPage.text_file_id">
-<span class="sig-name descname"><span class="pre">text_file_id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;neuxml.xmlmap.fields.StringField&gt;</span></em><a class="headerlink" href="#ppa.archive.hathi.StructMapPage.text_file_id" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">text_file_id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;eulxml.xmlmap.fields.StringField&gt;</span></em><a class="headerlink" href="#ppa.archive.hathi.StructMapPage.text_file_id" title="Link to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>&lt;METS:div ORDER=”1” LABEL=”FRONT_COVER, IMAGE_ON_PAGE, IMPLICIT_PAGE_NUMBER” TYPE=”page”&gt;</dt><dd><p>&lt;METS:fptr FILEID=”HTML00000001”/&gt;
 &lt;METS:fptr FILEID=”TXT00000001”/&gt;
@@ -2081,7 +2040,7 @@ Solr as part of this import script (both works and pages).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># import from a csv file</span>
 <span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">gale_import</span> <span class="o">-</span><span class="n">c</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">import</span><span class="o">.</span><span class="n">csv</span>
 <span class="c1"># import specific items</span>
-<span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">gale_import</span> <span class="n">galeid1</span> <span class="n">galeid2</span> <span class="n">galeid3</span>
+<span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">hathi_import</span> <span class="n">galeid1</span> <span class="n">galeid2</span> <span class="n">galeid3</span>
 </pre></div>
 </div>
 <p>When using a CSV file for import, it <em>must</em> include an <strong>ID</strong> field;
@@ -2503,7 +2462,7 @@ description, for use in previews on the site and plain-text metadata
 previews.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags">
-<span class="sig-name descname"><span class="pre">allowed_tags</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['em',</span> <span class="pre">'code',</span> <span class="pre">'i',</span> <span class="pre">'ul',</span> <span class="pre">'b',</span> <span class="pre">'p',</span> <span class="pre">'abbr',</span> <span class="pre">'blockquote',</span> <span class="pre">'li',</span> <span class="pre">'acronym',</span> <span class="pre">'strong',</span> <span class="pre">'ol']</span></em><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">allowed_tags</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['strong',</span> <span class="pre">'b',</span> <span class="pre">'p',</span> <span class="pre">'blockquote',</span> <span class="pre">'ul',</span> <span class="pre">'abbr',</span> <span class="pre">'acronym',</span> <span class="pre">'ol',</span> <span class="pre">'li',</span> <span class="pre">'i',</span> <span class="pre">'code',</span> <span class="pre">'em']</span></em><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags" title="Link to this definition">¶</a></dt>
 <dd><p>allowed tags for bleach html stripping in description</p>
 </dd></dl>
 
@@ -2683,21 +2642,6 @@ roughly like a scholarly blog.</p>
 <section id="id5">
 <h3>Models<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
 <dl class="py class" id="module-ppa.editorial.models">
-<dt class="sig sig-object py" id="ppa.editorial.models.DocraptorSettings">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.editorial.models.</span></span><span class="sig-name descname"><span class="pre">DocraptorSettings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">docraptor_api_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">docraptor_limit_note</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/editorial/models.html#DocraptorSettings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.editorial.models.DocraptorSettings" title="Link to this definition">¶</a></dt>
-<dd><dl class="py exception">
-<dt class="sig sig-object py" id="ppa.editorial.models.DocraptorSettings.DoesNotExist">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#ppa.editorial.models.DocraptorSettings.DoesNotExist" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="ppa.editorial.models.DocraptorSettings.MultipleObjectsReturned">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#ppa.editorial.models.DocraptorSettings.MultipleObjectsReturned" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
 <dt class="sig sig-object py" id="ppa.editorial.models.EditorialIndexPage">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.editorial.models.</span></span><span class="sig-name descname"><span class="pre">EditorialIndexPage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/editorial/models.html#EditorialIndexPage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.editorial.models.EditorialIndexPage" title="Link to this definition">¶</a></dt>
 <dd><p>Editorial index page; list recent editorial articles.</p>
@@ -2748,40 +2692,6 @@ content related to the site</p>
 and the specified parent page. Adapted from default logic to include
 publication date.
 (Parent is passed in for previewing unsaved pages)</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="ppa.editorial.models.EditorialPageTag">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.editorial.models.</span></span><span class="sig-name descname"><span class="pre">EditorialPageTag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/editorial/models.html#EditorialPageTag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.editorial.models.EditorialPageTag" title="Link to this definition">¶</a></dt>
-<dd><p>Through model for tagging EditorialPage instances</p>
-<dl class="py exception">
-<dt class="sig sig-object py" id="ppa.editorial.models.EditorialPageTag.DoesNotExist">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#ppa.editorial.models.EditorialPageTag.DoesNotExist" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="ppa.editorial.models.EditorialPageTag.MultipleObjectsReturned">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#ppa.editorial.models.EditorialPageTag.MultipleObjectsReturned" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="ppa.editorial.models.GeneratePdfPanel">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ppa.editorial.models.</span></span><span class="sig-name descname"><span class="pre">GeneratePdfPanel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">heading</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">help_text</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_form_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">icon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/editorial/models.html#GeneratePdfPanel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.editorial.models.GeneratePdfPanel" title="Link to this definition">¶</a></dt>
-<dd><p>Panel for asynchronous PDF generation in JavaScript; must be a
-Panel subclass to have access to EditoralPage’s instance URL</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="ppa.editorial.models.GeneratePdfPanel.BoundPanel">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BoundPanel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">panel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">form</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/editorial/models.html#GeneratePdfPanel.BoundPanel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.editorial.models.GeneratePdfPanel.BoundPanel" title="Link to this definition">¶</a></dt>
-<dd><dl class="py method">
-<dt class="sig sig-object py" id="ppa.editorial.models.GeneratePdfPanel.BoundPanel.get_context_data">
-<span class="sig-name descname"><span class="pre">get_context_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent_context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ppa/editorial/models.html#GeneratePdfPanel.BoundPanel.get_context_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.editorial.models.GeneratePdfPanel.BoundPanel.get_context_data" title="Link to this definition">¶</a></dt>
-<dd><p>Override to insert live page URL and docraptor API key</p>
-</dd></dl>
-
 </dd></dl>
 
 </dd></dl>
@@ -3041,11 +2951,6 @@ to normal template view behavior and displays format information.</p>
 <li><a class="reference internal" href="#ppa.archive.models.SignalHandlers.handle_digwork_cluster_change"><code class="docutils literal notranslate"><span class="pre">SignalHandlers.handle_digwork_cluster_change()</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#ppa.archive.models.SourceNote"><code class="docutils literal notranslate"><span class="pre">SourceNote</span></code></a><ul>
-<li><a class="reference internal" href="#ppa.archive.models.SourceNote.DoesNotExist"><code class="docutils literal notranslate"><span class="pre">SourceNote.DoesNotExist</span></code></a></li>
-<li><a class="reference internal" href="#ppa.archive.models.SourceNote.MultipleObjectsReturned"><code class="docutils literal notranslate"><span class="pre">SourceNote.MultipleObjectsReturned</span></code></a></li>
-</ul>
-</li>
 <li><a class="reference internal" href="#ppa.archive.models.TrackChangesModel"><code class="docutils literal notranslate"><span class="pre">TrackChangesModel</span></code></a><ul>
 <li><a class="reference internal" href="#ppa.archive.models.TrackChangesModel.has_changed"><code class="docutils literal notranslate"><span class="pre">TrackChangesModel.has_changed()</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.models.TrackChangesModel.initial_value"><code class="docutils literal notranslate"><span class="pre">TrackChangesModel.initial_value()</span></code></a></li>
@@ -3089,12 +2994,6 @@ to normal template view behavior and displays format information.</p>
 <li><a class="reference internal" href="#ppa.archive.views.DigitizedWorkListView.meta_description"><code class="docutils literal notranslate"><span class="pre">DigitizedWorkListView.meta_description</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.views.DigitizedWorkListView.meta_title"><code class="docutils literal notranslate"><span class="pre">DigitizedWorkListView.meta_title</span></code></a></li>
 <li><a class="reference internal" href="#ppa.archive.views.DigitizedWorkListView.model"><code class="docutils literal notranslate"><span class="pre">DigitizedWorkListView.model</span></code></a></li>
-<li><a class="reference internal" href="#ppa.archive.views.DigitizedWorkListView.paginate_queryset"><code class="docutils literal notranslate"><span class="pre">DigitizedWorkListView.paginate_queryset()</span></code></a></li>
-<li><a class="reference internal" href="#ppa.archive.views.DigitizedWorkListView.paginator_class"><code class="docutils literal notranslate"><span class="pre">DigitizedWorkListView.paginator_class</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#ppa.archive.views.GracefulPaginator"><code class="docutils literal notranslate"><span class="pre">GracefulPaginator</span></code></a><ul>
-<li><a class="reference internal" href="#ppa.archive.views.GracefulPaginator.page"><code class="docutils literal notranslate"><span class="pre">GracefulPaginator.page()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#ppa.archive.views.ImportView"><code class="docutils literal notranslate"><span class="pre">ImportView</span></code></a><ul>
@@ -3434,11 +3333,6 @@ to normal template view behavior and displays format information.</p>
 </li>
 <li><a class="reference internal" href="#module-ppa.editorial">Editorial</a><ul>
 <li><a class="reference internal" href="#id5">Models</a><ul>
-<li><a class="reference internal" href="#ppa.editorial.models.DocraptorSettings"><code class="docutils literal notranslate"><span class="pre">DocraptorSettings</span></code></a><ul>
-<li><a class="reference internal" href="#ppa.editorial.models.DocraptorSettings.DoesNotExist"><code class="docutils literal notranslate"><span class="pre">DocraptorSettings.DoesNotExist</span></code></a></li>
-<li><a class="reference internal" href="#ppa.editorial.models.DocraptorSettings.MultipleObjectsReturned"><code class="docutils literal notranslate"><span class="pre">DocraptorSettings.MultipleObjectsReturned</span></code></a></li>
-</ul>
-</li>
 <li><a class="reference internal" href="#ppa.editorial.models.EditorialIndexPage"><code class="docutils literal notranslate"><span class="pre">EditorialIndexPage</span></code></a><ul>
 <li><a class="reference internal" href="#ppa.editorial.models.EditorialIndexPage.DoesNotExist"><code class="docutils literal notranslate"><span class="pre">EditorialIndexPage.DoesNotExist</span></code></a></li>
 <li><a class="reference internal" href="#ppa.editorial.models.EditorialIndexPage.MultipleObjectsReturned"><code class="docutils literal notranslate"><span class="pre">EditorialIndexPage.MultipleObjectsReturned</span></code></a></li>
@@ -3450,18 +3344,6 @@ to normal template view behavior and displays format information.</p>
 <li><a class="reference internal" href="#ppa.editorial.models.EditorialPage.DoesNotExist"><code class="docutils literal notranslate"><span class="pre">EditorialPage.DoesNotExist</span></code></a></li>
 <li><a class="reference internal" href="#ppa.editorial.models.EditorialPage.MultipleObjectsReturned"><code class="docutils literal notranslate"><span class="pre">EditorialPage.MultipleObjectsReturned</span></code></a></li>
 <li><a class="reference internal" href="#ppa.editorial.models.EditorialPage.set_url_path"><code class="docutils literal notranslate"><span class="pre">EditorialPage.set_url_path()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#ppa.editorial.models.EditorialPageTag"><code class="docutils literal notranslate"><span class="pre">EditorialPageTag</span></code></a><ul>
-<li><a class="reference internal" href="#ppa.editorial.models.EditorialPageTag.DoesNotExist"><code class="docutils literal notranslate"><span class="pre">EditorialPageTag.DoesNotExist</span></code></a></li>
-<li><a class="reference internal" href="#ppa.editorial.models.EditorialPageTag.MultipleObjectsReturned"><code class="docutils literal notranslate"><span class="pre">EditorialPageTag.MultipleObjectsReturned</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#ppa.editorial.models.GeneratePdfPanel"><code class="docutils literal notranslate"><span class="pre">GeneratePdfPanel</span></code></a><ul>
-<li><a class="reference internal" href="#ppa.editorial.models.GeneratePdfPanel.BoundPanel"><code class="docutils literal notranslate"><span class="pre">GeneratePdfPanel.BoundPanel</span></code></a><ul>
-<li><a class="reference internal" href="#ppa.editorial.models.GeneratePdfPanel.BoundPanel.get_context_data"><code class="docutils literal notranslate"><span class="pre">GeneratePdfPanel.BoundPanel.get_context_data()</span></code></a></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>

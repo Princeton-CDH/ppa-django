@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ppa.archive.gale &#8212; Princeton Prosody Archive 3.15.0-dev documentation</title>
+    <title>ppa.archive.gale &#8212; Princeton Prosody Archive 3.14.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
-    <script src="../../../_static/documentation_options.js?v=7b7f12ef"></script>
+    <script src="../../../_static/documentation_options.js?v=408c3590"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -206,17 +206,8 @@
         <span class="c1"># when api key expires, API returns:</span>
         <span class="c1"># HTTP Status 401 - Authentication Failed: Invalid or Expired API key</span>
         <span class="c1"># If we get a 401 on a request that requires an api key, try getting a new one</span>
-        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="ow">in</span> <span class="p">[</span>
-            <span class="n">requests</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">unauthorized</span><span class="p">,</span>
-            <span class="n">requests</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">server_error</span><span class="p">,</span>
-        <span class="p">]:</span>
-            <span class="c1"># occasionally we get a 500 error when indexing all pages</span>
-            <span class="c1"># refreshing API key and trying again, but log the error</span>
-            <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="n">requests</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">server_error</span><span class="p">:</span>
-                <span class="c1"># Not sure yet if response has any meaningful content</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;500 error on </span><span class="si">{</span><span class="n">rqst_url</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-            <span class="c1"># If we get a 401 or 500 on a request that requires an api key,</span>
+        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="n">requests</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">unauthorized</span><span class="p">:</span>
+            <span class="c1"># If we get a 401 on a request that requires an api key,</span>
             <span class="c1"># get a fresh key and then try the same request again</span>
             <span class="k">if</span> <span class="n">requires_api_key</span> <span class="ow">and</span> <span class="n">retry</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">refresh_api_key</span><span class="p">()</span>

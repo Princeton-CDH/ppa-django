@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>neuxml.xmlmap.fields &#8212; Princeton Prosody Archive 3.15.0-dev documentation</title>
+    <title>eulxml.xmlmap.fields &#8212; Princeton Prosody Archive 3.14.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
-    <script src="../../../_static/documentation_options.js?v=7b7f12ef"></script>
+    <script src="../../../_static/documentation_options.js?v=408c3590"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -30,11 +30,10 @@
 
           <div class="body" role="main">
             
-  <h1>Source code for neuxml.xmlmap.fields</h1><div class="highlight"><pre>
-<span></span><span class="c1"># file neuxml/xmlmap/fields.py</span>
+  <h1>Source code for eulxml.xmlmap.fields</h1><div class="highlight"><pre>
+<span></span><span class="c1"># file eulxml/xmlmap/fields.py</span>
 <span class="c1">#</span>
-<span class="c1">#   Copyright 2025 Center for Digital Humanities, Princeton University</span>
-<span class="c1">#   Copyright 2010,2011 Emory University Libraries (eulxml)</span>
+<span class="c1">#   Copyright 2010,2011 Emory University Libraries</span>
 <span class="c1">#</span>
 <span class="c1">#   Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
 <span class="c1">#   you may not use this file except in compliance with the License.</span>
@@ -48,36 +47,29 @@
 <span class="c1">#   See the License for the specific language governing permissions and</span>
 <span class="c1">#   limitations under the License.</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">unicode_literals</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">date</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">lxml</span><span class="w"> </span><span class="kn">import</span> <span class="n">etree</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">lxml.builder</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElementMaker</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">six</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">neuxml.xpath</span><span class="w"> </span><span class="kn">import</span> <span class="n">ast</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">neuxml.xpath.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse</span><span class="p">,</span> <span class="n">serialize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eulxml.utils.compat</span><span class="w"> </span><span class="kn">import</span> <span class="n">u</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eulxml.xpath</span><span class="w"> </span><span class="kn">import</span> <span class="n">ast</span><span class="p">,</span> <span class="n">parse</span><span class="p">,</span> <span class="n">serialize</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;StringField&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;StringListField&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;IntegerField&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;IntegerListField&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;NodeField&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;NodeListField&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;ItemField&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;SimpleBooleanField&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;DateTimeField&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;DateTimeListField&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;DateField&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;DateListField&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;SchemaField&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;FloatField&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;FloatListField&quot;</span><span class="p">,</span>
+    <span class="s1">&#39;StringField&#39;</span><span class="p">,</span> <span class="s1">&#39;StringListField&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;IntegerField&#39;</span><span class="p">,</span> <span class="s1">&#39;IntegerListField&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;NodeField&#39;</span><span class="p">,</span> <span class="s1">&#39;NodeListField&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ItemField&#39;</span><span class="p">,</span> <span class="s1">&#39;SimpleBooleanField&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;DateTimeField&#39;</span><span class="p">,</span> <span class="s1">&#39;DateTimeListField&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;DateField&#39;</span><span class="p">,</span> <span class="s1">&#39;DateListField&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;SchemaField&#39;</span><span class="p">,</span><span class="s1">&#39;FloatField&#39;</span><span class="p">,</span><span class="s1">&#39;FloatListField&#39;</span><span class="p">,</span>
 <span class="p">]</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Field</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for all xmlmap fields.</span>
@@ -92,9 +84,8 @@
     <span class="c1"># track each time a Field instance is created, to retain order</span>
     <span class="n">creation_counter</span> <span class="o">=</span> <span class="mi">0</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">xpath</span><span class="p">,</span> <span class="n">manager</span><span class="p">,</span> <span class="n">mapper</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">help_text</span><span class="o">=</span><span class="kc">None</span>
-    <span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xpath</span><span class="p">,</span> <span class="n">manager</span><span class="p">,</span> <span class="n">mapper</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">help_text</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="c1"># compile xpath in order to catch an invalid xpath at load time</span>
         <span class="n">etree</span><span class="o">.</span><span class="n">XPath</span><span class="p">(</span><span class="n">xpath</span><span class="p">)</span>
         <span class="c1"># NOTE: not saving compiled xpath because namespaces must be</span>
@@ -114,29 +105,21 @@
         <span class="n">Field</span><span class="o">.</span><span class="n">creation_counter</span> <span class="o">+=</span> <span class="mi">1</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_for_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">xpath</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapper</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parsed_xpath</span>
-        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xpath</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapper</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parsed_xpath</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">set_for_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">xpath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parsed_xpath</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapper</span><span class="p">,</span> <span class="n">value</span>
-        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xpath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parsed_xpath</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapper</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">delete_for_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">xpath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parsed_xpath</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapper</span>
-        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xpath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parsed_xpath</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapper</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Displays the module, class and name of the field.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="s2">&quot;&lt;</span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2">&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__module__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
-
+        <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">%s</span><span class="s1">.</span><span class="si">%s</span><span class="s1">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__module__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
 
 <span class="c1"># data mappers to translate between identified xml nodes and Python values</span>
-
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Mapper</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="c1"># generic mapper to_xml function</span>
@@ -144,33 +127,30 @@
         <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">value</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">u</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">StringMapper</span><span class="p">(</span><span class="n">Mapper</span><span class="p">):</span>
-    <span class="n">XPATH</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">XPath</span><span class="p">(</span><span class="s2">&quot;string()&quot;</span><span class="p">)</span>
-
+    <span class="n">XPATH</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">XPath</span><span class="p">(</span><span class="s1">&#39;string()&#39;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">XPATH</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">XPath</span><span class="p">(</span><span class="s2">&quot;normalize-space(string())&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">XPATH</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">XPath</span><span class="p">(</span><span class="s1">&#39;normalize-space(string())&#39;</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">string_types</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">node</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">XPATH</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 
-
 <span class="k">class</span><span class="w"> </span><span class="nc">IntegerMapper</span><span class="p">(</span><span class="n">Mapper</span><span class="p">):</span>
-    <span class="n">XPATH</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">XPath</span><span class="p">(</span><span class="s2">&quot;number()&quot;</span><span class="p">)</span>
-
+    <span class="n">XPATH</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">XPath</span><span class="p">(</span><span class="s1">&#39;number()&#39;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="c1"># xpath functions such as count return a float and must be converted to int</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">string_types</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
                 <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 
             <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">XPATH</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
@@ -178,15 +158,13 @@
             <span class="c1"># anything that can&#39;t be converted to an Integer</span>
             <span class="k">return</span> <span class="kc">None</span>
 
-
 <span class="k">class</span><span class="w"> </span><span class="nc">FloatMapper</span><span class="p">(</span><span class="n">Mapper</span><span class="p">):</span>
-    <span class="n">XPATH</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">XPath</span><span class="p">(</span><span class="s2">&quot;number()&quot;</span><span class="p">)</span>
-
+    <span class="n">XPATH</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">XPath</span><span class="p">(</span><span class="s1">&#39;number()&#39;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">string_types</span><span class="p">):</span>
                 <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 
             <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">XPATH</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
@@ -194,10 +172,8 @@
             <span class="c1"># anything that can&#39;t be converted to an Float</span>
             <span class="k">return</span> <span class="kc">None</span>
 
-
 <span class="k">class</span><span class="w"> </span><span class="nc">SimpleBooleanMapper</span><span class="p">(</span><span class="n">Mapper</span><span class="p">):</span>
-    <span class="n">XPATH</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">XPath</span><span class="p">(</span><span class="s2">&quot;string()&quot;</span><span class="p">)</span>
-
+    <span class="n">XPATH</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">XPath</span><span class="p">(</span><span class="s1">&#39;string()&#39;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">true</span><span class="p">,</span> <span class="n">false</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">true</span> <span class="o">=</span> <span class="n">true</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">false</span> <span class="o">=</span> <span class="n">false</span>
@@ -212,19 +188,17 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">None</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">string_types</span><span class="p">):</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">node</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">XPATH</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">true</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">false</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">false</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">false</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> \
+                <span class="n">value</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">false</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="c1"># what happens if it is neither of these?</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-            <span class="s2">&quot;Boolean field value &#39;</span><span class="si">%s</span><span class="s2">&#39; is neither &#39;</span><span class="si">%s</span><span class="s2">&#39; nor &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span>
-            <span class="o">%</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">true</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">false</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Boolean field value &#39;</span><span class="si">%s</span><span class="s2">&#39; is neither &#39;</span><span class="si">%s</span><span class="s2">&#39; nor &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">true</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">false</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">to_xml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
@@ -236,56 +210,57 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">DateTimeMapper</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="n">XPATH</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">XPath</span><span class="p">(</span><span class="s2">&quot;string()&quot;</span><span class="p">)</span>
+    <span class="n">XPATH</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">XPath</span><span class="p">(</span><span class="s1">&#39;string()&#39;</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="nb">format</span>
         <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">XPATH</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">XPath</span><span class="p">(</span><span class="s2">&quot;normalize-space(string())&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">XPATH</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">XPath</span><span class="p">(</span><span class="s1">&#39;normalize-space(string())&#39;</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">string_types</span><span class="p">):</span>
             <span class="n">rep</span> <span class="o">=</span> <span class="n">node</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">XPATH</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">rep</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;Z&quot;</span><span class="p">):</span>  <span class="c1"># strip Z</span>
+        <span class="k">if</span> <span class="n">rep</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;Z&#39;</span><span class="p">):</span> <span class="c1"># strip Z</span>
             <span class="n">rep</span> <span class="o">=</span> <span class="n">rep</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">rep</span><span class="p">[</span><span class="o">-</span><span class="mi">6</span><span class="p">]</span> <span class="ow">in</span> <span class="s2">&quot;+-&quot;</span><span class="p">:</span>  <span class="c1"># strip tz</span>
+        <span class="k">if</span> <span class="n">rep</span><span class="p">[</span><span class="o">-</span><span class="mi">6</span><span class="p">]</span> <span class="ow">in</span> <span class="s1">&#39;+-&#39;</span><span class="p">:</span> <span class="c1"># strip tz</span>
             <span class="n">rep</span> <span class="o">=</span> <span class="n">rep</span><span class="p">[:</span><span class="o">-</span><span class="mi">6</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">format</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">rep</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">rep</span><span class="p">,</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%M:%S&quot;</span><span class="p">)</span>
+                <span class="n">dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">rep</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">T%H:%M:%S&#39;</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
                 <span class="c1"># if initial format fails, attempt to parse with microseconds</span>
-                <span class="n">dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">rep</span><span class="p">,</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%M:%S.</span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">rep</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">T%H:%M:%S.</span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">dt</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">to_xml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
         <span class="n">val</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">format</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">))</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">isoformat</span><span class="p">())</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">isoformat</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">val</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">DateMapper</span><span class="p">(</span><span class="n">DateTimeMapper</span><span class="p">):</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">format</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="nb">format</span> <span class="o">=</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span>
+            <span class="nb">format</span> <span class="o">=</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">DateMapper</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="nb">format</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">string_types</span><span class="p">):</span>
             <span class="n">rep</span> <span class="o">=</span> <span class="n">node</span>
-        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">):</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">):</span>
             <span class="n">rep</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">text</span>
 
         <span class="n">dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">rep</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">)</span>
@@ -313,18 +288,17 @@
 
 <span class="c1"># internal xml utility functions for use by managers</span>
 
-
 <span class="k">def</span><span class="w"> </span><span class="nf">_find_terminal_step</span><span class="p">(</span><span class="n">xast</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xast</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Step</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">xast</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xast</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">BinaryExpression</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">xast</span><span class="o">.</span><span class="n">op</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;//&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">xast</span><span class="o">.</span><span class="n">op</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="s1">&#39;//&#39;</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">_find_terminal_step</span><span class="p">(</span><span class="n">xast</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
     <span class="k">return</span> <span class="kc">None</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_find_xml_node</span><span class="p">(</span><span class="n">xpath</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
-    <span class="c1"># In some cases the this will return a value not a node</span>
+    <span class="c1">#In some cases the this will return a value not a node</span>
     <span class="n">matches</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="n">xpath</span><span class="p">,</span> <span class="o">**</span><span class="n">context</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">matches</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">matches</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -338,17 +312,15 @@
             <span class="c1"># check the predicates (if any) to verify they&#39;re constructable</span>
             <span class="k">for</span> <span class="n">pred</span> <span class="ow">in</span> <span class="n">xast</span><span class="o">.</span><span class="n">predicates</span><span class="p">:</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">_predicate_is_constructible</span><span class="p">(</span><span class="n">pred</span><span class="p">):</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="s2">&quot;Missing element for &#39;</span><span class="si">%s</span><span class="s2">&#39;, and node creation is &quot;</span>
-                        <span class="o">+</span> <span class="s2">&quot;supported only for simple child and attribute &quot;</span>
-                        <span class="o">+</span> <span class="s2">&quot;nodes with simple predicates.&quot;</span>
-                    <span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">serialize</span><span class="p">(</span><span class="n">xast</span><span class="p">),)</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Missing element for &#39;</span><span class="si">%s</span><span class="s2">&#39;, and node creation is &quot;</span> <span class="o">+</span>
+                           <span class="s2">&quot;supported only for simple child and attribute &quot;</span> <span class="o">+</span>
+                           <span class="s2">&quot;nodes with simple predicates.&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">serialize</span><span class="p">(</span><span class="n">xast</span><span class="p">),)</span>
                     <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
             <span class="c1"># create the node itself</span>
-            <span class="k">if</span> <span class="n">xast</span><span class="o">.</span><span class="n">axis</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;child&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">xast</span><span class="o">.</span><span class="n">axis</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;child&#39;</span><span class="p">):</span>
                 <span class="n">new_node</span> <span class="o">=</span> <span class="n">_create_child_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">xast</span><span class="p">,</span> <span class="n">insert_index</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">xast</span><span class="o">.</span><span class="n">axis</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;@&quot;</span><span class="p">,</span> <span class="s2">&quot;attribute&quot;</span><span class="p">):</span>
+            <span class="k">elif</span> <span class="n">xast</span><span class="o">.</span><span class="n">axis</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">,</span> <span class="s1">&#39;attribute&#39;</span><span class="p">):</span>
                 <span class="n">new_node</span> <span class="o">=</span> <span class="n">_create_attribute_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">xast</span><span class="p">)</span>
 
             <span class="c1"># and create any nodes necessary for the predicates</span>
@@ -363,7 +335,7 @@
             <span class="k">return</span> <span class="n">node</span>
 
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xast</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">BinaryExpression</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">xast</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;/&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">xast</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s1">&#39;/&#39;</span><span class="p">:</span>
             <span class="n">left_xpath</span> <span class="o">=</span> <span class="n">serialize</span><span class="p">(</span><span class="n">xast</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
             <span class="n">left_node</span> <span class="o">=</span> <span class="n">_find_xml_node</span><span class="p">(</span><span class="n">left_xpath</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">left_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -371,20 +343,18 @@
             <span class="k">return</span> <span class="n">_create_xml_node</span><span class="p">(</span><span class="n">xast</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">left_node</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
 
     <span class="c1"># anything else, throw an exception:</span>
-    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="s2">&quot;Missing element for &#39;</span><span class="si">%s</span><span class="s2">&#39;, and node creation is supported &quot;</span>
-        <span class="o">+</span> <span class="s2">&quot;only for simple child and attribute nodes.&quot;</span>
-    <span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">serialize</span><span class="p">(</span><span class="n">xast</span><span class="p">),)</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Missing element for &#39;</span><span class="si">%s</span><span class="s2">&#39;, and node creation is supported &quot;</span> <span class="o">+</span> \
+           <span class="s2">&quot;only for simple child and attribute nodes.&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">serialize</span><span class="p">(</span><span class="n">xast</span><span class="p">),)</span>
     <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_create_child_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">insert_index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">opts</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">ns_uri</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="s2">&quot;namespaces&quot;</span> <span class="ow">in</span> <span class="n">context</span><span class="p">:</span>
-        <span class="n">opts</span><span class="p">[</span><span class="s2">&quot;nsmap&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;namespaces&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s1">&#39;namespaces&#39;</span> <span class="ow">in</span> <span class="n">context</span><span class="p">:</span>
+        <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;nsmap&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s1">&#39;namespaces&#39;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">node_test</span><span class="o">.</span><span class="n">prefix</span><span class="p">:</span>
-            <span class="n">ns_uri</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;namespaces&quot;</span><span class="p">][</span><span class="n">step</span><span class="o">.</span><span class="n">node_test</span><span class="o">.</span><span class="n">prefix</span><span class="p">]</span>
+            <span class="n">ns_uri</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s1">&#39;namespaces&#39;</span><span class="p">][</span><span class="n">step</span><span class="o">.</span><span class="n">node_test</span><span class="o">.</span><span class="n">prefix</span><span class="p">]</span>
     <span class="n">E</span> <span class="o">=</span> <span class="n">ElementMaker</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="n">ns_uri</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
     <span class="n">new_node</span> <span class="o">=</span> <span class="n">E</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">node_test</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">insert_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -397,7 +367,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_create_attribute_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">step</span><span class="p">):</span>
     <span class="n">node_name</span><span class="p">,</span> <span class="n">node_xpath</span><span class="p">,</span> <span class="n">nsmap</span> <span class="o">=</span> <span class="n">_get_attribute_name</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
     <span class="c1"># create an empty attribute node</span>
-    <span class="n">node</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">node_name</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">node</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">node_name</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
     <span class="c1"># find via xpath so a &#39;smart&#39; string can be returned and set normally</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="n">node_xpath</span><span class="p">,</span> <span class="n">namespaces</span><span class="o">=</span><span class="n">nsmap</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -406,29 +376,29 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_predicate_is_constructible</span><span class="p">(</span><span class="n">pred</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Step</span><span class="p">):</span>
         <span class="c1"># only child and attribute for now</span>
-        <span class="k">if</span> <span class="n">pred</span><span class="o">.</span><span class="n">axis</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;child&quot;</span><span class="p">,</span> <span class="s2">&quot;@&quot;</span><span class="p">,</span> <span class="s2">&quot;attribute&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">pred</span><span class="o">.</span><span class="n">axis</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;child&#39;</span><span class="p">,</span> <span class="s1">&#39;@&#39;</span><span class="p">,</span> <span class="s1">&#39;attribute&#39;</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="c1"># no node tests for now: only name tests</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pred</span><span class="o">.</span><span class="n">node_test</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">NameTest</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="c1"># only constructible if its own predicates are</span>
-        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
-            <span class="p">(</span><span class="ow">not</span> <span class="n">_predicate_is_constructible</span><span class="p">(</span><span class="n">sub_pred</span><span class="p">)</span> <span class="k">for</span> <span class="n">sub_pred</span> <span class="ow">in</span> <span class="n">pred</span><span class="o">.</span><span class="n">predicates</span><span class="p">)</span>
-        <span class="p">):</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="ow">not</span> <span class="n">_predicate_is_constructible</span><span class="p">(</span><span class="n">sub_pred</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">sub_pred</span> <span class="ow">in</span> <span class="n">pred</span><span class="o">.</span><span class="n">predicates</span><span class="p">)):</span>
             <span class="k">return</span> <span class="kc">False</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">BinaryExpression</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">pred</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;/&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pred</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s1">&#39;/&#39;</span><span class="p">:</span>
             <span class="c1"># path expressions are constructible if each side is</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">_predicate_is_constructible</span><span class="p">(</span><span class="n">pred</span><span class="o">.</span><span class="n">left</span><span class="p">):</span>
                 <span class="k">return</span> <span class="kc">False</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">_predicate_is_constructible</span><span class="p">(</span><span class="n">pred</span><span class="o">.</span><span class="n">right</span><span class="p">):</span>
                 <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">elif</span> <span class="n">pred</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;=&quot;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">pred</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s1">&#39;=&#39;</span><span class="p">:</span>
             <span class="c1"># = expressions are constructible for now only if the left side</span>
             <span class="c1"># is constructible and the right side is a literal or variable</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">_predicate_is_constructible</span><span class="p">(</span><span class="n">pred</span><span class="o">.</span><span class="n">left</span><span class="p">):</span>
                 <span class="k">return</span> <span class="kc">False</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pred</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">VariableReference</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pred</span><span class="o">.</span><span class="n">right</span><span class="p">,</span>
+                    <span class="p">(</span><span class="n">six</span><span class="o">.</span><span class="n">integer_types</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">string_types</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">VariableReference</span><span class="p">)):</span>
                 <span class="k">return</span> <span class="kc">False</span>
 
     <span class="c1"># otherwise, i guess we&#39;re ok</span>
@@ -439,11 +409,11 @@
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xast</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Step</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">_create_xml_node</span><span class="p">(</span><span class="n">xast</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xast</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">BinaryExpression</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">xast</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;/&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">xast</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s1">&#39;/&#39;</span><span class="p">:</span>
             <span class="n">left_leaf</span> <span class="o">=</span> <span class="n">_construct_predicate</span><span class="p">(</span><span class="n">xast</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
             <span class="n">right_node</span> <span class="o">=</span> <span class="n">_construct_predicate</span><span class="p">(</span><span class="n">xast</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">left_leaf</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">right_node</span>
-        <span class="k">elif</span> <span class="n">xast</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;=&quot;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">xast</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s1">&#39;=&#39;</span><span class="p">:</span>
             <span class="n">left_leaf</span> <span class="o">=</span> <span class="n">_construct_predicate</span><span class="p">(</span><span class="n">xast</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
             <span class="n">step</span> <span class="o">=</span> <span class="n">_find_terminal_step</span><span class="p">(</span><span class="n">xast</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xast</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">VariableReference</span><span class="p">):</span>
@@ -459,8 +429,9 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_set_in_xml</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">step</span><span class="p">):</span>
+
     <span class="c1"># node could be either an element or an attribute</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">etree</span><span class="o">.</span><span class="n">_Element</span><span class="p">):</span>  <span class="c1"># if it&#39;s an element</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">etree</span><span class="o">.</span><span class="n">_Element</span><span class="p">):</span> <span class="c1"># if it&#39;s an element</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">etree</span><span class="o">.</span><span class="n">_Element</span><span class="p">):</span>
             <span class="c1"># remove node children and graft val children in.</span>
             <span class="n">node</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
@@ -469,8 +440,8 @@
                 <span class="n">node</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">val</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
                 <span class="n">node</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>  <span class="c1"># set node contents to string val</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>  <span class="c1"># no child elements</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># set node contents to string val</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>      <span class="c1"># no child elements</span>
                 <span class="n">node</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">val</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Cannot set string value - not a text node!&quot;</span><span class="p">)</span>
@@ -478,7 +449,7 @@
     <span class="c1"># by default, etree returns a &quot;smart&quot; string for attributes and text.</span>
     <span class="c1"># if it&#39;s not an element (above) then it is either a text node</span>
     <span class="c1"># or an attribute</span>
-    <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s2">&quot;getparent&quot;</span><span class="p">):</span>
+    <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">&#39;getparent&#39;</span><span class="p">):</span>
         <span class="c1"># if node test is text(), set the text of the parent node</span>
         <span class="k">if</span> <span class="n">_is_text_nodetest</span><span class="p">(</span><span class="n">step</span><span class="p">):</span>
             <span class="n">node</span><span class="o">.</span><span class="n">getparent</span><span class="p">()</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">val</span>
@@ -490,31 +461,31 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_remove_xml</span><span class="p">(</span><span class="n">xast</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">if_empty</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove a node or attribute.  For multipart XPaths that are</span>
-<span class="sd">    constructible by :mod:`neuxml.xmlmap`, the corresponding nodes</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Remove a node or attribute.  For multipart XPaths that are</span>
+<span class="sd">    constructible by :mod:`eulxml.xmlmap`, the corresponding nodes</span>
 <span class="sd">    will be removed if they are empty (other than predicates specified</span>
 <span class="sd">    in the XPath).</span>
 
 <span class="sd">    :param xast: parsed xpath (xpath abstract syntax tree) from</span>
-<span class="sd">        :mod:`neuxml.xpath`</span>
+<span class="sd">	:mod:`eulxml.xpath`</span>
 <span class="sd">    :param node: lxml node relative to which xast should be removed</span>
 <span class="sd">    :param context: any context required for the xpath (e.g.,</span>
-<span class="sd">        namespace definitions)</span>
+<span class="sd">    	namespace definitions)</span>
 <span class="sd">    :param if_empty: optional boolean; only remove a node if it is</span>
-<span class="sd">        empty (no attributes and no child nodes); defaults to False</span>
+<span class="sd">	empty (no attributes and no child nodes); defaults to False</span>
 
 <span class="sd">    :returns: True if something was deleted</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xast</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Step</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xast</span><span class="o">.</span><span class="n">node_test</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">NameTest</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">xast</span><span class="o">.</span><span class="n">axis</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;child&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">xast</span><span class="o">.</span><span class="n">axis</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;child&#39;</span><span class="p">):</span>
                 <span class="k">return</span> <span class="n">_remove_child_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">xast</span><span class="p">,</span> <span class="n">if_empty</span><span class="o">=</span><span class="n">if_empty</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">xast</span><span class="o">.</span><span class="n">axis</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;@&quot;</span><span class="p">,</span> <span class="s2">&quot;attribute&quot;</span><span class="p">):</span>
+            <span class="k">elif</span> <span class="n">xast</span><span class="o">.</span><span class="n">axis</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">,</span> <span class="s1">&#39;attribute&#39;</span><span class="p">):</span>
                 <span class="k">return</span> <span class="n">_remove_attribute_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">xast</span><span class="p">)</span>
         <span class="c1"># special case for text()</span>
         <span class="c1"># since it can&#39;t be removed, at least clear out any value in the text node</span>
         <span class="k">elif</span> <span class="n">_is_text_nodetest</span><span class="p">(</span><span class="n">xast</span><span class="p">):</span>
-            <span class="n">node</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
             <span class="k">return</span> <span class="kc">True</span>
 
     <span class="c1"># If the xpath is a multi-step path (e.g., foo[@id=&quot;a&quot;]/bar[@id=&quot;b&quot;]/baz),</span>
@@ -522,14 +493,13 @@
     <span class="c1"># could have been constructed when setting the node and are empty</span>
     <span class="c1"># (other than any predicates defined in the xpath), remove them as well.</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xast</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">BinaryExpression</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">xast</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;/&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">xast</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s1">&#39;/&#39;</span><span class="p">:</span>
             <span class="n">left_xpath</span> <span class="o">=</span> <span class="n">serialize</span><span class="p">(</span><span class="n">xast</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
             <span class="n">left_node</span> <span class="o">=</span> <span class="n">_find_xml_node</span><span class="p">(</span><span class="n">left_xpath</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">left_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="c1"># remove the last element in the xpath</span>
-                <span class="n">removed</span> <span class="o">=</span> <span class="n">_remove_xml</span><span class="p">(</span>
-                    <span class="n">xast</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">left_node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">if_empty</span><span class="o">=</span><span class="n">if_empty</span>
-                <span class="p">)</span>  <span class="c1"># honor current if_empty flag</span>
+                <span class="n">removed</span> <span class="o">=</span> <span class="n">_remove_xml</span><span class="p">(</span><span class="n">xast</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">left_node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span>
+                                      <span class="n">if_empty</span><span class="o">=</span><span class="n">if_empty</span><span class="p">)</span> <span class="c1"># honor current if_empty flag</span>
 
                 <span class="c1"># If the left portion of the xpath is something we</span>
                 <span class="c1"># could have constructed, remove it if it is empty.</span>
@@ -544,49 +514,48 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_remove_child_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">xast</span><span class="p">,</span> <span class="n">if_empty</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove a child node based on the specified xpath.</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Remove a child node based on the specified xpath.</span>
 
 <span class="sd">    :param node: lxml element relative to which the xpath will be</span>
-<span class="sd">        interpreted</span>
+<span class="sd">    	interpreted</span>
 <span class="sd">    :param context: any context required for the xpath (e.g.,</span>
-<span class="sd">        namespace definitions)</span>
+<span class="sd">    	namespace definitions)</span>
 <span class="sd">    :param xast: parsed xpath (xpath abstract syntax tree) from</span>
-<span class="sd">        :mod:`neuxml.xpath`</span>
+<span class="sd">	:mod:`eulxml.xpath`</span>
 <span class="sd">    :param if_empty: optional boolean; only remove a node if it is</span>
-<span class="sd">        empty (no attributes and no child nodes); defaults to False</span>
+<span class="sd">	empty (no attributes and no child nodes); defaults to False</span>
 
 <span class="sd">    :returns: True if a node was deleted</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">xpath</span> <span class="o">=</span> <span class="n">serialize</span><span class="p">(</span><span class="n">xast</span><span class="p">)</span>
     <span class="n">child</span> <span class="o">=</span> <span class="n">_find_xml_node</span><span class="p">(</span><span class="n">xpath</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">child</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># if if_empty was specified and node has children or attributes</span>
         <span class="c1"># other than any predicates defined in the xpath, don&#39;t remove</span>
-        <span class="k">if</span> <span class="n">if_empty</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_empty_except_predicates</span><span class="p">(</span><span class="n">xast</span><span class="p">,</span> <span class="n">child</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">if_empty</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">and</span> \
+               <span class="ow">not</span> <span class="n">_empty_except_predicates</span><span class="p">(</span><span class="n">xast</span><span class="p">,</span> <span class="n">child</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="n">node</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
-
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_remove_attribute_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">xast</span><span class="p">):</span>
     <span class="n">node_name</span><span class="p">,</span> <span class="n">node_xpath</span><span class="p">,</span> <span class="n">nsmap</span> <span class="o">=</span> <span class="n">_get_attribute_name</span><span class="p">(</span><span class="n">xast</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
     <span class="k">del</span> <span class="n">node</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span>
     <span class="k">return</span> <span class="kc">True</span>
 
-
 <span class="k">def</span><span class="w"> </span><span class="nf">_remove_predicates</span><span class="p">(</span><span class="n">xast</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove any constructible predicates specified in the xpath</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Remove any constructible predicates specified in the xpath</span>
 <span class="sd">    relative to the specified node.</span>
 
 <span class="sd">    :param xast: parsed xpath (xpath abstract syntax tree) from</span>
-<span class="sd">        :mod:`neuxml.xpath`</span>
+<span class="sd">	:mod:`eulxml.xpath`</span>
 <span class="sd">    :param node: lxml element which predicates will be removed from</span>
 <span class="sd">    :param context: any context required for the xpath (e.g.,</span>
-<span class="sd">        namespace definitions)</span>
+<span class="sd">    	namespace definitions)</span>
 
 <span class="sd">    :returns: updated a copy of the xast without the predicates that</span>
-<span class="sd">        were successfully removed</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">	were successfully removed</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="c1"># work from a copy since it may be modified</span>
     <span class="n">xast_c</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">xast</span><span class="p">)</span>
     <span class="c1"># check if predicates are constructable</span>
@@ -601,15 +570,16 @@
 
             <span class="c1"># If the xml still matches the constructed value, remove it.</span>
             <span class="c1"># e.g., @type=&#39;text&#39; or level=&#39;leaf&#39;</span>
-            <span class="k">if</span> <span class="n">pred</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;=&quot;</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="n">serialize</span><span class="p">(</span><span class="n">pred</span><span class="p">),</span> <span class="o">**</span><span class="n">context</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pred</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s1">&#39;=&#39;</span> <span class="ow">and</span> \
+                   <span class="n">node</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="n">serialize</span><span class="p">(</span><span class="n">pred</span><span class="p">),</span> <span class="o">**</span><span class="n">context</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
                 <span class="c1"># predicate xpath returns True if node=value</span>
 
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pred</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Step</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="n">pred</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">axis</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;@&quot;</span><span class="p">,</span> <span class="s2">&quot;attribute&quot;</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">pred</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">axis</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">,</span> <span class="s1">&#39;attribute&#39;</span><span class="p">):</span>
                         <span class="k">if</span> <span class="n">_remove_attribute_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">pred</span><span class="o">.</span><span class="n">left</span><span class="p">):</span>
                             <span class="c1"># remove from the xast</span>
                             <span class="n">xast_c</span><span class="o">.</span><span class="n">predicates</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">pred</span><span class="p">)</span>
-                    <span class="k">elif</span> <span class="n">pred</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">axis</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;child&quot;</span><span class="p">):</span>
+                    <span class="k">elif</span> <span class="n">pred</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">axis</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;child&#39;</span><span class="p">):</span>
                         <span class="k">if</span> <span class="n">_remove_child_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">pred</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">if_empty</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
                             <span class="n">xast_c</span><span class="o">.</span><span class="n">predicates</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">pred</span><span class="p">)</span>
 
@@ -621,25 +591,23 @@
 
     <span class="k">return</span> <span class="n">xast_c</span>
 
-
 <span class="k">def</span><span class="w"> </span><span class="nf">_empty_except_predicates</span><span class="p">(</span><span class="n">xast</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if a node is empty (no child nodes or attributes) except</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Check if a node is empty (no child nodes or attributes) except</span>
 <span class="sd">    for any predicates defined in the specified xpath.</span>
 
 <span class="sd">    :param xast: parsed xpath (xpath abstract syntax tree) from</span>
-<span class="sd">        :mod:`neuxml.xpath`</span>
+<span class="sd">	:mod:`eulxml.xpath`</span>
 <span class="sd">    :param node: lxml element to check</span>
 <span class="sd">    :param context: any context required for the xpath (e.g.,</span>
-<span class="sd">        namespace definitions)</span>
+<span class="sd">    	namespace definitions)</span>
 
 <span class="sd">    :returns: boolean indicating if the element is empty or not</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="c1"># copy the node, remove predicates, and check for any remaining</span>
     <span class="c1"># child nodes or attributes</span>
     <span class="n">node_c</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
     <span class="n">_remove_predicates</span><span class="p">(</span><span class="n">xast</span><span class="p">,</span> <span class="n">node_c</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">node_c</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">node_c</span><span class="o">.</span><span class="n">attrib</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
-
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_get_attribute_name</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
     <span class="c1"># calculate attribute name, xpath, and nsmap based on node info and context namespaces</span>
@@ -647,38 +615,36 @@
         <span class="n">nsmap</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">ns_uri</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">node_name</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">node_test</span><span class="o">.</span><span class="n">name</span>
-        <span class="n">node_xpath</span> <span class="o">=</span> <span class="s2">&quot;@</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">node_name</span>
+        <span class="n">node_xpath</span> <span class="o">=</span> <span class="s1">&#39;@</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">node_name</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># if node has a prefix, the namespace *should* be defined in context</span>
-        <span class="k">if</span> <span class="s2">&quot;namespaces&quot;</span> <span class="ow">in</span> <span class="n">context</span> <span class="ow">and</span> <span class="n">step</span><span class="o">.</span><span class="n">node_test</span><span class="o">.</span><span class="n">prefix</span> <span class="ow">in</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;namespaces&quot;</span><span class="p">]:</span>
-            <span class="n">ns_uri</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;namespaces&quot;</span><span class="p">][</span><span class="n">step</span><span class="o">.</span><span class="n">node_test</span><span class="o">.</span><span class="n">prefix</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;namespaces&#39;</span> <span class="ow">in</span> <span class="n">context</span> <span class="ow">and</span> <span class="n">step</span><span class="o">.</span><span class="n">node_test</span><span class="o">.</span><span class="n">prefix</span> <span class="ow">in</span> <span class="n">context</span><span class="p">[</span><span class="s1">&#39;namespaces&#39;</span><span class="p">]:</span>
+            <span class="n">ns_uri</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s1">&#39;namespaces&#39;</span><span class="p">][</span><span class="n">step</span><span class="o">.</span><span class="n">node_test</span><span class="o">.</span><span class="n">prefix</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">ns_uri</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="c1"># we could throw an exception here if ns_uri wasn&#39;t found, but</span>
             <span class="c1"># for now assume the user knows what he&#39;s doing...</span>
 
-        <span class="n">node_xpath</span> <span class="o">=</span> <span class="s2">&quot;@</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">node_test</span><span class="o">.</span><span class="n">prefix</span><span class="p">,</span> <span class="n">step</span><span class="o">.</span><span class="n">node_test</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="n">node_name</span> <span class="o">=</span> <span class="s2">&quot;{</span><span class="si">%s</span><span class="s2">}</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">ns_uri</span><span class="p">,</span> <span class="n">step</span><span class="o">.</span><span class="n">node_test</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">node_xpath</span> <span class="o">=</span> <span class="s1">&#39;@</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">node_test</span><span class="o">.</span><span class="n">prefix</span><span class="p">,</span> <span class="n">step</span><span class="o">.</span><span class="n">node_test</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">node_name</span> <span class="o">=</span> <span class="s1">&#39;{</span><span class="si">%s</span><span class="s1">}</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">ns_uri</span><span class="p">,</span> <span class="n">step</span><span class="o">.</span><span class="n">node_test</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="n">nsmap</span> <span class="o">=</span> <span class="p">{</span><span class="n">step</span><span class="o">.</span><span class="n">node_test</span><span class="o">.</span><span class="n">prefix</span><span class="p">:</span> <span class="n">ns_uri</span><span class="p">}</span>
 
     <span class="k">return</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">node_xpath</span><span class="p">,</span> <span class="n">nsmap</span>
 
-
 <span class="k">def</span><span class="w"> </span><span class="nf">_is_text_nodetest</span><span class="p">(</span><span class="n">step</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fields selected with an xpath of text() need special handling; Check if</span>
-<span class="sd">    a xpath step is a text() node test.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Fields selected with an xpath of text() need special handling; Check if</span>
+<span class="sd">    a xpath step is a text() node test. &#39;&#39;&#39;</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">step</span><span class="o">.</span><span class="n">node_test</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;text&quot;</span>
-    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">step</span><span class="o">.</span><span class="n">node_test</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;text&#39;</span>
+    <span class="k">except</span><span class="p">:</span>
         <span class="k">pass</span>
     <span class="k">return</span> <span class="kc">False</span>
-
 
 <span class="c1"># managers to map operations to either a single identified node or a</span>
 <span class="c1"># list of them</span>
 
-
 <span class="k">class</span><span class="w"> </span><span class="nc">SingleNodeManager</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instantiate_on_get</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="c1"># DEPRECATED: don&#39;t use instantiate_on_get. Use create_for_node() as</span>
         <span class="c1"># described in XmlObjectType.__new__ comments and used by NodeField.</span>
@@ -701,10 +667,8 @@
                 <span class="n">removed</span> <span class="o">=</span> <span class="n">_remove_xml</span><span class="p">(</span><span class="n">xast</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
                 <span class="c1"># if a node can&#39;t be removed, warn since it could have unexpected results</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">removed</span><span class="p">:</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-<span class="w">                        </span><span class="sd">&quot;&quot;&quot;Could not remove xml for &#39;%s&#39; from %r&quot;&quot;&quot;</span>
-                        <span class="o">%</span> <span class="p">(</span><span class="n">serialize</span><span class="p">(</span><span class="n">xast</span><span class="p">),</span> <span class="n">node</span><span class="p">)</span>
-                    <span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;Could not remove xml for &#39;</span><span class="si">%s</span><span class="s1">&#39; from </span><span class="si">%r</span><span class="s1">&#39;&#39;&#39;</span> <span class="o">%</span> \
+                                <span class="p">(</span><span class="n">serialize</span><span class="p">(</span><span class="n">xast</span><span class="p">),</span> <span class="n">node</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">match</span> <span class="o">=</span> <span class="n">_create_xml_node</span><span class="p">(</span><span class="n">xast</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
@@ -740,16 +704,15 @@
 <span class="sd">    Supports the methods that Python documentation indicates should be provided</span>
 <span class="sd">    by Mutable sequences, with the exceptions of reverse and sort; in the</span>
 <span class="sd">    particular case of :class:`NodeListField`, it is unclear how a list of</span>
-<span class="sd">    :class:`~neuxml.xmlmap.XmlObject` should be sorted, or whether or not such</span>
+<span class="sd">    :class:`~eulxml.xmlmap.XmlObject` should be sorted, or whether or not such</span>
 <span class="sd">    a thing would be useful or meaningful for XML content.</span>
 
-<span class="sd">    When a new element is appended to a :class:`~neuxml.xmlmap.fields.NodeList`,</span>
+<span class="sd">    When a new element is appended to a :class:`~eulxml.xmlmap.fields.NodeList`,</span>
 <span class="sd">    it will be added to the XML immediately after the last element in the list.</span>
 <span class="sd">    In the case of an empty list, the new content will be appended at the end of</span>
 <span class="sd">    the appropriate XML parent node.  For XML content where element order is important</span>
 <span class="sd">    for schema validity, extra care may be required when constructing content.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xpath</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">mapper</span><span class="p">,</span> <span class="n">xast</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">xpath</span> <span class="o">=</span> <span class="n">xpath</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node</span> <span class="o">=</span> <span class="n">node</span>
@@ -765,15 +728,15 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xpath</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parallel to :meth:`neuxml.xmlmap.XmlObject.is_empty`.  A</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Parallel to :meth:`eulxml.xmlmap.XmlObject.is_empty`.  A</span>
 <span class="sd">        NodeList is considered to be empty if every element in the</span>
-<span class="sd">        list is empty.&quot;&quot;&quot;</span>
+<span class="sd">        list is empty.&#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">is_empty</span><span class="p">()</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># data in list form - basis for several other list-y functions</span>
-        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mapper</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">match</span><span class="p">)</span> <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">matches</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapper</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">match</span><span class="p">)</span> <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">matches</span> <span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
@@ -800,7 +763,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_key_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="c1"># check argument type for getitem, setitem, delitem</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="nb">slice</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="nb">slice</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">integer_types</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span>
         <span class="k">assert</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">slice</span><span class="p">),</span> <span class="s2">&quot;Slice indexing is not supported&quot;</span>
 
@@ -822,7 +785,7 @@
                 <span class="n">insert_index</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="n">match</span> <span class="o">=</span> <span class="n">_create_xml_node</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xast</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="n">insert_index</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">key</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matches</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t set at index </span><span class="si">%d</span><span class="s2"> - out of range&quot;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t set at index </span><span class="si">%d</span><span class="s2"> - out of range&quot;</span> <span class="o">%</span> <span class="n">key</span> <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">match</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matches</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
@@ -831,7 +794,7 @@
             <span class="c1"># replace the indexed node with the node specified</span>
             <span class="c1"># NOTE: lxml does not require dom-style import before append/replace</span>
             <span class="k">match</span><span class="o">.</span><span class="n">getparent</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">match</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">node</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>  <span class="c1"># not a NodeListField - set single-node value in xml</span>
+        <span class="k">else</span><span class="p">:</span>       <span class="c1"># not a NodeListField - set single-node value in xml</span>
             <span class="c1"># terminal (rightmost) step informs how we update the xml</span>
             <span class="n">step</span> <span class="o">=</span> <span class="n">_find_terminal_step</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xast</span><span class="p">)</span>
             <span class="n">_set_in_xml</span><span class="p">(</span><span class="n">match</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapper</span><span class="o">.</span><span class="n">to_xml</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
@@ -839,14 +802,15 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_key_type</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">key</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matches</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t delete at index </span><span class="si">%d</span><span class="s2"> - out of range&quot;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t delete at index </span><span class="si">%d</span><span class="s2"> - out of range&quot;</span> <span class="o">%</span> <span class="n">key</span> <span class="p">)</span>
 
         <span class="n">match</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matches</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
         <span class="k">match</span><span class="o">.</span><span class="n">getparent</span><span class="p">()</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
 
-    <span class="c1"># according to python docs, Mutable sequences should provide the following methods:</span>
-    <span class="c1"># append, count, index, extend, insert, pop, remove, reverse and sort</span>
-    <span class="c1"># NOTE: not implementing sort/reverse at this time; not clear</span>
+
+<span class="c1"># according to python docs, Mutable sequences should provide the following methods:</span>
+<span class="c1"># append, count, index, extend, insert, pop, remove, reverse and sort</span>
+<span class="c1"># NOTE: not implementing sort/reverse at this time; not clear</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="s2">&quot;Return the number of times x appears in the list.&quot;</span>
@@ -864,7 +828,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove the first item from the list whose value is x,</span>
 <span class="sd">        or error if there is no such item.&quot;&quot;&quot;</span>
-        <span class="k">del</span> <span class="bp">self</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">x</span><span class="p">)]</span>
+        <span class="k">del</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">x</span><span class="p">)])</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">pop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove the item at the given position in the list, and return it.</span>
@@ -872,7 +836,7 @@
         <span class="k">if</span> <span class="n">i</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">i</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
         <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-        <span class="k">del</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">del</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">val</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
@@ -891,10 +855,8 @@
             <span class="c1"># then use default set logic</span>
             <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span>
-                <span class="s2">&quot;Can&#39;t insert &#39;</span><span class="si">%s</span><span class="s2">&#39; at index </span><span class="si">%d</span><span class="s2"> - list length is only </span><span class="si">%d</span><span class="s2">&quot;</span>
-                <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
-            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t insert &#39;</span><span class="si">%s</span><span class="s2">&#39; at index </span><span class="si">%d</span><span class="s2"> - list length is only </span><span class="si">%d</span><span class="s2">&quot;</span> \
+                            <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)))</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">NodeListManager</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -917,10 +879,12 @@
             <span class="n">current_list</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
 
 
+
+
 <span class="c1"># finished field classes mixing a manager and a mapper</span>
 
-
 <span class="k">class</span><span class="w"> </span><span class="nc">StringField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Map an XPath expression to a single Python string. If the XPath</span>
 <span class="sd">    expression evaluates to an empty NodeList, a StringField evaluates to</span>
 <span class="sd">    `None`.</span>
@@ -937,16 +901,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">choices</span> <span class="o">=</span> <span class="n">choices</span>
         <span class="c1"># FIXME: handle at a higher level, common to all/more field types?</span>
         <span class="c1">#        does choice list need to be checked in the python ?</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">StringField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">xpath</span><span class="p">,</span>
-            <span class="n">manager</span><span class="o">=</span><span class="n">SingleNodeManager</span><span class="p">(),</span>
-            <span class="n">mapper</span><span class="o">=</span><span class="n">StringMapper</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">),</span>
-            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">StringField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">xpath</span><span class="p">,</span>
+                <span class="n">manager</span> <span class="o">=</span> <span class="n">SingleNodeManager</span><span class="p">(),</span>
+                <span class="n">mapper</span> <span class="o">=</span> <span class="n">StringMapper</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">StringListField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Map an XPath expression to a list of Python strings. If the XPath</span>
 <span class="sd">    expression evaluates to an empty NodeList, a StringListField evaluates to</span>
 <span class="sd">    an empty list.</span>
@@ -957,22 +918,17 @@
 
 <span class="sd">    Takes an optional list of choices to restrict possible values.</span>
 
-<span class="sd">    Actual return type is :class:`~neuxml.xmlmap.fields.NodeList`, which can be</span>
+<span class="sd">    Actual return type is :class:`~eulxml.xmlmap.fields.NodeList`, which can be</span>
 <span class="sd">    treated like a regular Python list, and includes set and delete functionality.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xpath</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">choices</span> <span class="o">=</span> <span class="n">choices</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">StringListField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">xpath</span><span class="p">,</span>
-            <span class="n">manager</span><span class="o">=</span><span class="n">NodeListManager</span><span class="p">(),</span>
-            <span class="n">mapper</span><span class="o">=</span><span class="n">StringMapper</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">),</span>
-            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-        <span class="p">)</span>
-
+        <span class="nb">super</span><span class="p">(</span><span class="n">StringListField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">xpath</span><span class="p">,</span>
+                <span class="n">manager</span> <span class="o">=</span> <span class="n">NodeListManager</span><span class="p">(),</span>
+                <span class="n">mapper</span> <span class="o">=</span> <span class="n">StringMapper</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">FloatField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Map an XPath expression to a single Python float. If the XPath</span>
 <span class="sd">    expression evaluates to an empty NodeList, an FloatField evaluates to</span>
 <span class="sd">    `None`.</span>
@@ -981,27 +937,27 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xpath</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">FloatField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">xpath</span><span class="p">,</span> <span class="n">manager</span><span class="o">=</span><span class="n">SingleNodeManager</span><span class="p">(),</span> <span class="n">mapper</span><span class="o">=</span><span class="n">FloatMapper</span><span class="p">(),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-        <span class="p">)</span>
-
+        <span class="nb">super</span><span class="p">(</span><span class="n">FloatField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">xpath</span><span class="p">,</span>
+                <span class="n">manager</span> <span class="o">=</span> <span class="n">SingleNodeManager</span><span class="p">(),</span>
+                <span class="n">mapper</span> <span class="o">=</span> <span class="n">FloatMapper</span><span class="p">(),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">FloatListField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Map an XPath expression to a list of Python floats. If the XPath</span>
 <span class="sd">    expression evaluates to an empty NodeList, an IntegerListField evaluates to</span>
 <span class="sd">    an empty list.</span>
 
-<span class="sd">    Actual return type is :class:`~neuxml.xmlmap.fields.NodeList`, which can be</span>
+<span class="sd">    Actual return type is :class:`~eulxml.xmlmap.fields.NodeList`, which can be</span>
 <span class="sd">    treated like a regular Python list, and includes set and delete functionality.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xpath</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">FloatListField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">xpath</span><span class="p">,</span> <span class="n">manager</span><span class="o">=</span><span class="n">NodeListManager</span><span class="p">(),</span> <span class="n">mapper</span><span class="o">=</span><span class="n">FloatMapper</span><span class="p">(),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-        <span class="p">)</span>
-
+        <span class="nb">super</span><span class="p">(</span><span class="n">FloatListField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">xpath</span><span class="p">,</span>
+                <span class="n">manager</span> <span class="o">=</span> <span class="n">NodeListManager</span><span class="p">(),</span>
+                <span class="n">mapper</span> <span class="o">=</span> <span class="n">FloatMapper</span><span class="p">(),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">IntegerField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Map an XPath expression to a single Python integer. If the XPath</span>
 <span class="sd">    expression evaluates to an empty NodeList, an IntegerField evaluates to</span>
 <span class="sd">    `None`.</span>
@@ -1010,27 +966,30 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xpath</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">IntegerField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">xpath</span><span class="p">,</span> <span class="n">manager</span><span class="o">=</span><span class="n">SingleNodeManager</span><span class="p">(),</span> <span class="n">mapper</span><span class="o">=</span><span class="n">IntegerMapper</span><span class="p">(),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-        <span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">IntegerField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">xpath</span><span class="p">,</span>
+                <span class="n">manager</span> <span class="o">=</span> <span class="n">SingleNodeManager</span><span class="p">(),</span>
+                <span class="n">mapper</span> <span class="o">=</span> <span class="n">IntegerMapper</span><span class="p">(),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">IntegerListField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Map an XPath expression to a list of Python integers. If the XPath</span>
 <span class="sd">    expression evaluates to an empty NodeList, an IntegerListField evaluates to</span>
 <span class="sd">    an empty list.</span>
 
-<span class="sd">    Actual return type is :class:`~neuxml.xmlmap.fields.NodeList`, which can be</span>
+<span class="sd">    Actual return type is :class:`~eulxml.xmlmap.fields.NodeList`, which can be</span>
 <span class="sd">    treated like a regular Python list, and includes set and delete functionality.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xpath</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">IntegerListField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">xpath</span><span class="p">,</span> <span class="n">manager</span><span class="o">=</span><span class="n">NodeListManager</span><span class="p">(),</span> <span class="n">mapper</span><span class="o">=</span><span class="n">IntegerMapper</span><span class="p">(),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-        <span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">IntegerListField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">xpath</span><span class="p">,</span>
+                <span class="n">manager</span> <span class="o">=</span> <span class="n">NodeListManager</span><span class="p">(),</span>
+                <span class="n">mapper</span> <span class="o">=</span> <span class="n">IntegerMapper</span><span class="p">(),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">SimpleBooleanField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Map an XPath expression to a Python boolean.  Constructor takes additional</span>
 <span class="sd">    parameter of true, false values for comparison and setting in xml.  This only</span>
 <span class="sd">    handles simple boolean that can be read and set via string comparison.</span>
@@ -1039,13 +998,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xpath</span><span class="p">,</span> <span class="n">true</span><span class="p">,</span> <span class="n">false</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">SimpleBooleanField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">xpath</span><span class="p">,</span>
-            <span class="n">manager</span><span class="o">=</span><span class="n">SingleNodeManager</span><span class="p">(),</span>
-            <span class="n">mapper</span><span class="o">=</span><span class="n">SimpleBooleanMapper</span><span class="p">(</span><span class="n">true</span><span class="p">,</span> <span class="n">false</span><span class="p">),</span>
-            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SimpleBooleanField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">xpath</span><span class="p">,</span>
+                <span class="n">manager</span> <span class="o">=</span> <span class="n">SingleNodeManager</span><span class="p">(),</span>
+                <span class="n">mapper</span> <span class="o">=</span> <span class="n">SimpleBooleanMapper</span><span class="p">(</span><span class="n">true</span><span class="p">,</span> <span class="n">false</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">DateTimeField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
@@ -1056,13 +1012,13 @@
 <span class="sd">    `None`.</span>
 
 <span class="sd">    :param format: optional date-time format.  Used with</span>
-<span class="sd">        :meth:`datetime.datetime.strptime` and</span>
-<span class="sd">        :meth:`datetime.datetime.strftime` to convert between XML text</span>
-<span class="sd">        and Python :class:`datetime.datetime` objects.  If no format</span>
-<span class="sd">        is specified, XML dates are converted from full ISO date time</span>
-<span class="sd">        format, with or without microseconds, and dates are written</span>
-<span class="sd">        out to XML in ISO format via</span>
-<span class="sd">        :meth:`datetime.datetime.isoformat`.</span>
+<span class="sd">	:meth:`datetime.datetime.strptime` and</span>
+<span class="sd">	:meth:`datetime.datetime.strftime` to convert between XML text</span>
+<span class="sd">	and Python :class:`datetime.datetime` objects.  If no format</span>
+<span class="sd">	is specified, XML dates are converted from full ISO date time</span>
+<span class="sd">	format, with or without microseconds, and dates are written</span>
+<span class="sd">	out to XML in ISO format via</span>
+<span class="sd">	:meth:`datetime.datetime.isoformat`.</span>
 
 <span class="sd">    :param normalize: optional parameter to indicate string contents</span>
 <span class="sd">        should have whitespace normalized before converting to</span>
@@ -1072,12 +1028,12 @@
 <span class="sd">    For example, given the field definition::</span>
 
 <span class="sd">      last_update = DateTimeField(&#39;last_update&#39;, format=&quot;%d-%m-%Y %H:%M:%S&quot;,</span>
-<span class="sd">                normalize=True)</span>
+<span class="sd">      	  normalize=True)</span>
 
 <span class="sd">    and the XML::</span>
 
 <span class="sd">      &lt;last_update&gt;</span>
-<span class="sd">             21-04-2012 00:00:00</span>
+<span class="sd">   	  21-04-2012 00:00:00</span>
 <span class="sd">      &lt;/last_update&gt;</span>
 
 <span class="sd">    accessing the field would return::</span>
@@ -1088,13 +1044,9 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xpath</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">DateTimeField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">xpath</span><span class="p">,</span>
-            <span class="n">manager</span><span class="o">=</span><span class="n">SingleNodeManager</span><span class="p">(),</span>
-            <span class="n">mapper</span><span class="o">=</span><span class="n">DateTimeMapper</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="nb">format</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">),</span>
-            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DateTimeField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">xpath</span><span class="p">,</span>
+                <span class="n">manager</span> <span class="o">=</span> <span class="n">SingleNodeManager</span><span class="p">(),</span>
+                <span class="n">mapper</span> <span class="o">=</span> <span class="n">DateTimeMapper</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="nb">format</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">DateTimeListField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
@@ -1105,7 +1057,7 @@
 <span class="sd">    :class:`DateTimeListField` evaluates to an empty list.  Date</span>
 <span class="sd">    formatting is as described in :class:`DateTimeField`.</span>
 
-<span class="sd">    Actual return type is :class:`~neuxml.xmlmap.fields.NodeList`, which can be</span>
+<span class="sd">    Actual return type is :class:`~eulxml.xmlmap.fields.NodeList`, which can be</span>
 <span class="sd">    treated like a regular Python list, and includes set and delete functionality.</span>
 
 <span class="sd">    :param format: optional date-time format.  See</span>
@@ -1119,17 +1071,13 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xpath</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">DateTimeListField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">xpath</span><span class="p">,</span>
-            <span class="n">manager</span><span class="o">=</span><span class="n">NodeListManager</span><span class="p">(),</span>
-            <span class="n">mapper</span><span class="o">=</span><span class="n">DateTimeMapper</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="nb">format</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">),</span>
-            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DateTimeListField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">xpath</span><span class="p">,</span>
+                <span class="n">manager</span> <span class="o">=</span> <span class="n">NodeListManager</span><span class="p">(),</span>
+                <span class="n">mapper</span> <span class="o">=</span> <span class="n">DateTimeMapper</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="nb">format</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">DateField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Map an XPath expression to a single Python :class:`datetime.date`,</span>
 <span class="sd">    roughly comparable to :class:`DateTimeField`.</span>
 
@@ -1140,46 +1088,39 @@
 <span class="sd">        should have whitespace normalized before converting to</span>
 <span class="sd">        :class:`~datetime.date`.  By default, no normalization is</span>
 <span class="sd">        done.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xpath</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">DateField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">xpath</span><span class="p">,</span>
-            <span class="n">manager</span><span class="o">=</span><span class="n">SingleNodeManager</span><span class="p">(),</span>
-            <span class="n">mapper</span><span class="o">=</span><span class="n">DateMapper</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="nb">format</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">),</span>
-            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DateField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">xpath</span><span class="p">,</span>
+                <span class="n">manager</span> <span class="o">=</span> <span class="n">SingleNodeManager</span><span class="p">(),</span>
+                <span class="n">mapper</span> <span class="o">=</span> <span class="n">DateMapper</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="nb">format</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">DateListField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Map an XPath expression to a list of Python</span>
 <span class="sd">    :class:`datetime.date` objects. See :class:`DateField` and</span>
 <span class="sd">    :class:`DateTimeListField` for more details.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xpath</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">DateListField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">xpath</span><span class="p">,</span>
-            <span class="n">manager</span><span class="o">=</span><span class="n">NodeListManager</span><span class="p">(),</span>
-            <span class="n">mapper</span><span class="o">=</span><span class="n">DateMapper</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="nb">format</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">),</span>
-            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DateListField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">xpath</span><span class="p">,</span>
+                <span class="n">manager</span> <span class="o">=</span> <span class="n">NodeListManager</span><span class="p">(),</span>
+                <span class="n">mapper</span> <span class="o">=</span> <span class="n">DateMapper</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="nb">format</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">NodeField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Map an XPath expression to a single</span>
-<span class="sd">    :class:`~neuxml.xmlmap.XmlObject` subclass instance. If the XPath</span>
+<span class="sd">    :class:`~eulxml.xmlmap.XmlObject` subclass instance. If the XPath</span>
 <span class="sd">    expression evaluates to an empty NodeList, a NodeField evaluates</span>
 <span class="sd">    to `None`.</span>
 
 <span class="sd">    Normally a ``NodeField``&#39;s ``node_class`` is a class. As a special</span>
 <span class="sd">    exception, it may be the string ``&quot;self&quot;``, in which case it recursively</span>
-<span class="sd">    refers to objects of its containing :class:`~neuxml.xmlmap.XmlObject` class.</span>
+<span class="sd">    refers to objects of its containing :class:`~eulxml.xmlmap.XmlObject` class.</span>
 
-<span class="sd">    If an :class:`~neuxml.xmlmap.XmlObject` contains a NodeField named</span>
+<span class="sd">    If an :class:`~eulxml.xmlmap.XmlObject` contains a NodeField named</span>
 <span class="sd">    ``foo``, then the object will automatically have a</span>
 <span class="sd">    ``create_foo()`` method in addition to its ``foo`` property. Code</span>
 <span class="sd">    can call this ``create_foo()`` method to create the child element</span>
@@ -1193,20 +1134,14 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xpath</span><span class="p">,</span> <span class="n">node_class</span><span class="p">,</span> <span class="n">instantiate_on_get</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">NodeField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">xpath</span><span class="p">,</span>
-            <span class="n">manager</span><span class="o">=</span><span class="n">SingleNodeManager</span><span class="p">(</span><span class="n">instantiate_on_get</span><span class="o">=</span><span class="n">instantiate_on_get</span><span class="p">),</span>
-            <span class="n">mapper</span><span class="o">=</span><span class="n">NodeMapper</span><span class="p">(</span><span class="n">node_class</span><span class="p">),</span>
-            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">NodeField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">xpath</span><span class="p">,</span>
+                <span class="n">manager</span> <span class="o">=</span> <span class="n">SingleNodeManager</span><span class="p">(</span><span class="n">instantiate_on_get</span><span class="o">=</span><span class="n">instantiate_on_get</span><span class="p">),</span>
+                <span class="n">mapper</span> <span class="o">=</span> <span class="n">NodeMapper</span><span class="p">(</span><span class="n">node_class</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_node_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapper</span><span class="o">.</span><span class="n">node_class</span>
-
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_node_class</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mapper</span><span class="o">.</span><span class="n">node_class</span> <span class="o">=</span> <span class="n">val</span>
-
     <span class="n">node_class</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">_get_node_class</span><span class="p">,</span> <span class="n">_set_node_class</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">create_for_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
@@ -1214,50 +1149,46 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">NodeListField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Map an XPath expression to a list of</span>
-<span class="sd">    :class:`~neuxml.xmlmap.XmlObject` subclass instances. If the XPath</span>
+<span class="sd">    :class:`~eulxml.xmlmap.XmlObject` subclass instances. If the XPath</span>
 <span class="sd">    expression evalues to an empty NodeList, a NodeListField evaluates</span>
 <span class="sd">    to an empty list.</span>
 
 <span class="sd">    Normally a ``NodeListField``&#39;s ``node_class`` is a class. As a special</span>
 <span class="sd">    exception, it may be the string ``&quot;self&quot;``, in which case it recursively</span>
-<span class="sd">    refers to objects of its containing :class:`~neuxml.xmlmap.XmlObject` class.</span>
+<span class="sd">    refers to objects of its containing :class:`~eulxml.xmlmap.XmlObject` class.</span>
 
-<span class="sd">    Actual return type is :class:`~neuxml.xmlmap.fields.NodeList`, which can be</span>
+<span class="sd">    Actual return type is :class:`~eulxml.xmlmap.fields.NodeList`, which can be</span>
 <span class="sd">    treated like a regular Python list, and includes set and delete functionality.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xpath</span><span class="p">,</span> <span class="n">node_class</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">NodeListField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">xpath</span><span class="p">,</span>
-            <span class="n">manager</span><span class="o">=</span><span class="n">NodeListManager</span><span class="p">(),</span>
-            <span class="n">mapper</span><span class="o">=</span><span class="n">NodeMapper</span><span class="p">(</span><span class="n">node_class</span><span class="p">),</span>
-            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">NodeListField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">xpath</span><span class="p">,</span>
+                <span class="n">manager</span> <span class="o">=</span> <span class="n">NodeListManager</span><span class="p">(),</span>
+                <span class="n">mapper</span> <span class="o">=</span> <span class="n">NodeMapper</span><span class="p">(</span><span class="n">node_class</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_node_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapper</span><span class="o">.</span><span class="n">node_class</span>
-
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_node_class</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mapper</span><span class="o">.</span><span class="n">node_class</span> <span class="o">=</span> <span class="n">val</span>
-
     <span class="n">node_class</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">_get_node_class</span><span class="p">,</span> <span class="n">_set_node_class</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">ItemField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Access the results of an XPath expression directly. An ItemField does no</span>
 <span class="sd">    conversion on the result of evaluating the XPath expression.&quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xpath</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">ItemField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">xpath</span><span class="p">,</span> <span class="n">manager</span><span class="o">=</span><span class="n">SingleNodeManager</span><span class="p">(),</span> <span class="n">mapper</span><span class="o">=</span><span class="n">NullMapper</span><span class="p">(),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-        <span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ItemField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">xpath</span><span class="p">,</span>
+                <span class="n">manager</span> <span class="o">=</span> <span class="n">SingleNodeManager</span><span class="p">(),</span>
+                <span class="n">mapper</span> <span class="o">=</span> <span class="n">NullMapper</span><span class="p">(),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">SchemaField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Schema-based field.  At class definition time, a SchemaField will be</span>
-<span class="sd">    **replaced** with the appropriate :class:`neuxml.xmlmap.fields.Field` type</span>
+<span class="sd">    **replaced** with the appropriate :class:`eulxml.xmlmap.fields.Field` type</span>
 <span class="sd">    based on the schema type definition.</span>
 
 <span class="sd">    Takes an xpath (which will be passed on to the real Field init) and a schema</span>
@@ -1276,30 +1207,26 @@
 
 <span class="sd">    Currently only supports simple string-based schema types.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xpath</span><span class="p">,</span> <span class="n">schema_type</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">xpath</span> <span class="o">=</span> <span class="n">xpath</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">schema_type</span> <span class="o">=</span> <span class="n">schema_type</span>
 
-        <span class="nb">super</span><span class="p">(</span><span class="n">SchemaField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">xpath</span><span class="p">,</span> <span class="n">manager</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mapper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-        <span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SchemaField</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">xpath</span><span class="p">,</span> <span class="n">manager</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mapper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="c1"># SchemaField does not use common Field init logic; handle creation counter</span>
-        <span class="c1"># self.creation_counter = Field.creation_counter</span>
-        <span class="c1"># Field.creation_counter += 1</span>
+        <span class="c1">#self.creation_counter = Field.creation_counter</span>
+        <span class="c1">#Field.creation_counter += 1</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schema</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the requested type definition from the schema and return the</span>
-<span class="sd">        appropriate :class:`~neuxml.xmlmap.fields.Field`.</span>
+<span class="sd">        appropriate :class:`~eulxml.xmlmap.fields.Field`.</span>
 
-<span class="sd">        :param schema: instance of :class:`neuxml.xmlmap.core.XsdSchema`</span>
-<span class="sd">        :rtype: :class:`neuxml.xmlmap.fields.Field`</span>
+<span class="sd">        :param schema: instance of :class:`eulxml.xmlmap.core.XsdSchema`</span>
+<span class="sd">        :rtype: :class:`eulxml.xmlmap.fields.Field`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">type</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">get_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_type</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="s2">&quot;Found schema type </span><span class="si">%s</span><span class="s2">; base type </span><span class="si">%s</span><span class="s2">, restricted values </span><span class="si">%s</span><span class="s2">&quot;</span>
-            <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_type</span><span class="p">,</span> <span class="nb">type</span><span class="o">.</span><span class="n">base_type</span><span class="p">(),</span> <span class="nb">type</span><span class="o">.</span><span class="n">restricted_values</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Found schema type </span><span class="si">%s</span><span class="s1">; base type </span><span class="si">%s</span><span class="s1">, restricted values </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> \
+                     <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_type</span><span class="p">,</span> <span class="nb">type</span><span class="o">.</span><span class="n">base_type</span><span class="p">(),</span> <span class="nb">type</span><span class="o">.</span><span class="n">restricted_values</span><span class="p">))</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="nb">type</span><span class="o">.</span><span class="n">restricted_values</span><span class="p">:</span>
             <span class="c1"># field has a restriction with enumerated values - pass as choices to field</span>
@@ -1309,24 +1236,22 @@
             <span class="n">choices</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">type</span><span class="o">.</span><span class="n">restricted_values</span><span class="p">)</span>
             <span class="c1"># restricted values could include a blank</span>
             <span class="c1"># if it&#39;s there, remove it so we don&#39;t get two</span>
-            <span class="k">if</span> <span class="s2">&quot;&quot;</span> <span class="ow">in</span> <span class="n">choices</span><span class="p">:</span>
-                <span class="n">choices</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-            <span class="n">choices</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>  <span class="c1"># add blank choice at the beginning of the list</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;choices&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">choices</span>
+            <span class="k">if</span> <span class="s1">&#39;&#39;</span> <span class="ow">in</span> <span class="n">choices</span><span class="p">:</span>
+                <span class="n">choices</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">choices</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>   <span class="c1"># add blank choice at the beginning of the list</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;choices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">choices</span>
 
         <span class="c1"># TODO: possibly also useful to look for pattern restrictions</span>
 
         <span class="n">basetype</span> <span class="o">=</span> <span class="nb">type</span><span class="o">.</span><span class="n">base_type</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">basetype</span> <span class="o">==</span> <span class="s2">&quot;string&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">basetype</span> <span class="o">==</span> <span class="s1">&#39;string&#39;</span><span class="p">:</span>
             <span class="n">newfield</span> <span class="o">=</span> <span class="n">StringField</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xpath</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">required</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="c1"># copy original creation counter to newly created field</span>
             <span class="c1"># to preserve declaration order</span>
             <span class="n">newfield</span><span class="o">.</span><span class="n">creation_counter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">creation_counter</span>
             <span class="k">return</span> <span class="n">newfield</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-                <span class="s2">&quot;basetype </span><span class="si">%s</span><span class="s2"> is not yet supported by SchemaField&quot;</span> <span class="o">%</span> <span class="n">basetype</span>
-            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;basetype </span><span class="si">%s</span><span class="s2"> is not yet supported by SchemaField&quot;</span> <span class="o">%</span> <span class="n">basetype</span><span class="p">)</span>
 </pre></div>
 
           </div>
