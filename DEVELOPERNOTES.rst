@@ -2,8 +2,6 @@ Developer notes
 ===============
 
 
-
-
 Local Solr setup
 ----------------
 Install Solr via `brew <https://formulae.brew.sh/formula/solr>`::
@@ -119,9 +117,16 @@ or load a targeted subset of page content.
 Partial text data
 ^^^^^^^^^^^^^^^^^
 
-If for some reason you don't want to copy all the data, you can
-configure your local settings to use the PPA staging server as the
-HathiTrust rsync server and import content that way.
+PPA draws content from three different sources. Depending on the development
+work you are doing, you may not need all three.
+
+HathiTrust
+""""""""""
+
+The HathiTrust data is fairly large; for many development tasks, it is 
+sufficient to work with a subset of the data. To import specific volumes
+available in PPA staging, you can configure your local settings to use the 
+PPA staging server as the HathiTrust rsync server:
 
 Use these settings::
 
@@ -133,10 +138,16 @@ the admin interface to import specific HathiTrust records by id.
 Note that the application will make calls to the HathiTrust bibliographic API
 for metadata, which is used in tandem with local full-text content.
 
+Gale/ECCO
+""""""""""
+
 Gale/ECCO records can also be imported by id using the ``gale_import``
 manage command.  Page content will be pulled from local OCR content when
-the files are available and the ``GALE_LOCAL_OCR`` path is configured.
-Access to the Gale API requires ``GALE_API_USERNAME`` to be configured.
+the ``GALE_LOCAL_OCR`` path is configured and files are available.
+Access to the Gale API requires a ``GALE_API_USERNAME`` to be configured.
+
+EEBO-TCP
+""""""""
 
 EEBO-TCP records can be imported using the ``eebo_import`` script; this
 requires a CSV file with the records to be imported.  A copy of the CSV
