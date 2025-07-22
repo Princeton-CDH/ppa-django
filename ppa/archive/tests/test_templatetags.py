@@ -345,12 +345,6 @@ def test_coins_data_raw_solr_fields():
     mock_item.last_page_s = "15"  # Raw Solr field name
     mock_item.source_id = "test123"
 
-    # Mock getattr to return None for clean field names, simulating broken aliasing
-    def mock_getattr(obj, name, default=None):
-        if hasattr(obj, name):
-            return getattr(obj, name)
-        return default
-
     # Make clean field names return None (simulating broken aliasing)
     mock_item.work_type = None
     mock_item.book_journal = None
