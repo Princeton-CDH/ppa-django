@@ -21,12 +21,14 @@ urlpatterns = [
         views.DigitizedWorkByRecordId.as_view(),
         name="record-id",
     ),
+    # For excerpts (e.g., /archive/mdp.39015043572422-p12/)
     # excerpt original page may be numeric or alpha (e.g., roman numerals)
     re_path(
         r"^(?P<source_id>[^-]+)-p(?P<start_page>[\da-zA-Z]+)/",
         views.DigitizedWorkDetailView.as_view(),
         name="detail",
     ),
+    # For full works (e.g., /archive/mdp.39015043572422/)
     re_path(
         r"^(?P<source_id>[^-]+)/",
         views.DigitizedWorkDetailView.as_view(),
