@@ -8,10 +8,8 @@ from ppa.archive.templatetags.ppa_tags import (
     coins_data,
     coins_encode,
     dict_item,
-    first_page,
     gale_page_url,
     hathi_page_url,
-    last_page,
     page_image_url,
     querystring_replace,
     solr_highlight,
@@ -107,34 +105,6 @@ Sbelley, <em>Prometheus</em>, II. v.
     # check that output is unchanged if autoescape is off
     highlighted = solr_highlight(val, autoescape=False)
     assert highlighted == val
-
-
-def test_first_page():
-    """Test the first_page template filter"""
-    # Simple range
-    assert first_page("10-15") == "10"
-    # Single page
-    assert first_page("42") == "42"
-    # Empty/None
-    assert first_page("") == ""
-    assert first_page(None) == ""
-    # Roman numerals
-    assert first_page("xii-xvi") == "xii"
-
-
-def test_last_page():
-    """Test the last_page template filter"""
-    # Simple range
-    assert last_page("10-15") == "15"
-    # Single page
-    assert last_page("42") == "42"
-    # Empty/None
-    assert last_page("") == ""
-    assert last_page(None) == ""
-    # Roman numerals
-    assert last_page("xii-xvi") == "xvi"
-    # Complex range with commas
-    assert last_page("10-15, 20-25") == "25"
 
 
 def test_coins_data_full_work():
