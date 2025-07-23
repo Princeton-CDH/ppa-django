@@ -6,9 +6,34 @@ CHANGELOG
 3.15
 ----
 
-Zotero Integration Enhancement: 
+Zotero Integration Enhancement:
 - Improve Zotero integration by changing the old method of MARC and unAPI to COinS metadata.
 - This allows Zotero to automatically detect and import citation data from the PPA archive with the correct item type, PPA URL, page range, etc.
+
+- As a researcher, I want to see the source of the works in my results, so that I can see where the texts are coming from.
+- Revise footer to make menu more flexible (and support moving Technical content page to "About" menu so it is easier to find)
+
+Editorial improvements:
+- As a content editor, I want to add tags to editorial essays so I can categorize and group essays for discovery.
+- As a content editor, I want a way to generating PDFs from editorial essays without developer assistance, so that I can deposit versions of the essays for DOIs.
+- As a user, I want to discover and navigate editorial essays by tag so I can find the content most relevant to my interests.
+- Revise print styles for images in editorial essays
+- Add configuration for DocRaptor API key in Wagtail settings
+
+Maintenance updates and bug fixes:
+- Upgraded to Python 3.12, Django 5.2, Wagtail 7.0
+- Replace deprecated calls in JS/TS code
+- bugfix: disallow requesting nonexistent result pages in archive search pagination
+- bugfix: Fix redirect logic for DigitizedWorkDetailView
+- bugfix: Help text "Displaying x digitized works or clusters of works" reverts
+  to "Displaying x digitized works" after search
+- bugfix: Browser in mobile view hides second hit for keyword search results with 2 hits
+- bugfix: Decrease responsiveness of title and author search fields only
+- bugfix: handle 500 error from Gale API when indexing pages
+
+Developer Documentation:
+- Document how to get PPA full-text content for local development
+
 
 3.14.1
 ----
