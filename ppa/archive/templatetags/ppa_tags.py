@@ -2,7 +2,7 @@ import re
 
 from django import template
 from django.template.defaultfilters import stringfilter
-from django.utils.html import conditional_escape, format_html
+from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from urllib.parse import urlencode
 
@@ -281,4 +281,4 @@ def coins_encode(coins_data):
             title_parts.append(f"{key}={encoded_value}")
 
     title_attr = "&amp;".join(str(part) for part in title_parts)
-    return format_html('<span class="Z3988" title="{}"></span>', title_attr)
+    return mark_safe(f'<span class="Z3988" title="{title_attr}"></span>')
