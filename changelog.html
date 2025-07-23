@@ -40,6 +40,32 @@
 <p>Zotero Integration Enhancement:
 - Improve Zotero integration by changing the old method of MARC and unAPI to COinS metadata.
 - This allows Zotero to automatically detect and import citation data from the PPA archive with the correct item type, PPA URL, page range, etc.</p>
+<ul class="simple">
+<li><p>As a researcher, I want to see the source of the works in my results, so that I can see where the texts are coming from.</p></li>
+<li><p>Revise footer to make menu more flexible (and support moving Technical content page to “About” menu so it is easier to find)</p></li>
+</ul>
+<p>Editorial improvements:
+- As a content editor, I want to add tags to editorial essays so I can categorize and group essays for discovery.
+- As a content editor, I want a way to generating PDFs from editorial essays without developer assistance, so that I can deposit versions of the essays for DOIs.
+- As a user, I want to discover and navigate editorial essays by tag so I can find the content most relevant to my interests.
+- Revise print styles for images in editorial essays
+- Add configuration for DocRaptor API key in Wagtail settings</p>
+<p>Maintenance updates and bug fixes:
+- Upgraded to Python 3.12, Django 5.2, Wagtail 7.0
+- Replace deprecated calls in JS/TS code
+- bugfix: disallow requesting nonexistent result pages in archive search pagination
+- bugfix: Fix redirect logic for DigitizedWorkDetailView
+- bugfix: Help text “Displaying x digitized works or clusters of works” reverts</p>
+<blockquote>
+<div><p>to “Displaying x digitized works” after search</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>bugfix: Browser in mobile view hides second hit for keyword search results with 2 hits</p></li>
+<li><p>bugfix: Decrease responsiveness of title and author search fields only</p></li>
+<li><p>bugfix: handle 500 error from Gale API when indexing pages</p></li>
+</ul>
+<p>Developer Documentation:
+- Document how to get PPA full-text content for local development</p>
 </section>
 <section id="id3">
 <h2>3.14.1<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h2>
