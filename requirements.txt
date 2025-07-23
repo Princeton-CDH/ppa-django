@@ -9,7 +9,7 @@ cached_property
 django-apptemplates
 progressbar2
 django-semanticui-forms
-lxml
+lxml>=5.4.0,<6.0.0
 eulxml
 wagtail>=5.2,<6.0
 django-taggit>=4.0
