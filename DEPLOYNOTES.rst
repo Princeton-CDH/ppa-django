@@ -5,8 +5,9 @@ Deploy and Upgrade notes
 
 3.15
 ----
-
 * The footer has been updated such that the Technical page must now be manually set to appear in menus in Wagtail.
+* Need to run `./manage.py index -i work` to update the index for the new COinS metadata for Zotero citation.
+* DocRaptor API key must be configured in Wagtail settings in order to generate PDFs of Editorial essays.
 
 3.14
 ----
