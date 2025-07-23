@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>django.forms.widgets &#8212; Princeton Prosody Archive 3.15.0-dev documentation</title>
+    <title>django.forms.widgets &#8212; Princeton Prosody Archive 3.14.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
-    <script src="../../../_static/documentation_options.js?v=7b7f12ef"></script>
+    <script src="../../../_static/documentation_options.js?v=408c3590"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -42,7 +42,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">graphlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">CycleError</span><span class="p">,</span> <span class="n">TopologicalSorter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">django.forms.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">flatatt</span><span class="p">,</span> <span class="n">to_current_timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.forms.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_current_timezone</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.templatetags.static</span><span class="w"> </span><span class="kn">import</span> <span class="n">static</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">formats</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.utils.choices</span><span class="w"> </span><span class="kn">import</span> <span class="n">normalize_choices</span>
@@ -56,7 +56,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.renderers</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_default_renderer</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">&quot;Script&quot;</span><span class="p">,</span>
     <span class="s2">&quot;Media&quot;</span><span class="p">,</span>
     <span class="s2">&quot;MediaDefiningClass&quot;</span><span class="p">,</span>
     <span class="s2">&quot;Widget&quot;</span><span class="p">,</span>
@@ -64,9 +63,6 @@
     <span class="s2">&quot;NumberInput&quot;</span><span class="p">,</span>
     <span class="s2">&quot;EmailInput&quot;</span><span class="p">,</span>
     <span class="s2">&quot;URLInput&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;ColorInput&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;SearchInput&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;TelInput&quot;</span><span class="p">,</span>
     <span class="s2">&quot;PasswordInput&quot;</span><span class="p">,</span>
     <span class="s2">&quot;HiddenInput&quot;</span><span class="p">,</span>
     <span class="s2">&quot;MultipleHiddenInput&quot;</span><span class="p">,</span>
@@ -93,53 +89,6 @@
 
 <span class="k">class</span><span class="w"> </span><span class="nc">MediaOrderConflictWarning</span><span class="p">(</span><span class="ne">RuntimeWarning</span><span class="p">):</span>
     <span class="k">pass</span>
-
-
-<span class="nd">@html_safe</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">MediaAsset</span><span class="p">:</span>
-    <span class="n">element_template</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{path}</span><span class="s2">&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">attributes</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">path</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span> <span class="o">=</span> <span class="n">attributes</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="c1"># Compare the path only, to ensure performant comparison in Media.merge.</span>
-        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span> <span class="ow">is</span> <span class="n">other</span><span class="o">.</span><span class="vm">__class__</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
-            <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">==</span> <span class="n">other</span>
-        <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># Hash the path only, to ensure performant comparison in Media.merge.</span>
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">format_html</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">element_template</span><span class="p">,</span>
-            <span class="n">path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
-            <span class="n">attributes</span><span class="o">=</span><span class="n">flatatt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">),</span>
-        <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__qualname__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="si">!r}</span><span class="s2">)&quot;</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Ensure an absolute path.</span>
-<span class="sd">        Relative paths are resolved via the {% static %} template tag.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">&quot;http://&quot;</span><span class="p">,</span> <span class="s2">&quot;https://&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">)):</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span>
-        <span class="k">return</span> <span class="n">static</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">)</span>
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">Script</span><span class="p">(</span><span class="n">MediaAsset</span><span class="p">):</span>
-    <span class="n">element_template</span> <span class="o">=</span> <span class="s1">&#39;&lt;script src=&quot;</span><span class="si">{path}</span><span class="s1">&quot;</span><span class="si">{attributes}</span><span class="s1">&gt;&lt;/script&gt;&#39;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="o">**</span><span class="n">attributes</span><span class="p">):</span>
-        <span class="c1"># Alter the signature to allow src to be passed as a keyword argument.</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="o">**</span><span class="n">attributes</span><span class="p">)</span>
 
 
 <span class="nd">@html_safe</span>
@@ -435,21 +384,6 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">URLInput</span><span class="p">(</span><span class="n">Input</span><span class="p">):</span>
     <span class="n">input_type</span> <span class="o">=</span> <span class="s2">&quot;url&quot;</span>
     <span class="n">template_name</span> <span class="o">=</span> <span class="s2">&quot;django/forms/widgets/url.html&quot;</span>
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">ColorInput</span><span class="p">(</span><span class="n">Input</span><span class="p">):</span>
-    <span class="n">input_type</span> <span class="o">=</span> <span class="s2">&quot;color&quot;</span>
-    <span class="n">template_name</span> <span class="o">=</span> <span class="s2">&quot;django/forms/widgets/color.html&quot;</span>
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">SearchInput</span><span class="p">(</span><span class="n">Input</span><span class="p">):</span>
-    <span class="n">input_type</span> <span class="o">=</span> <span class="s2">&quot;search&quot;</span>
-    <span class="n">template_name</span> <span class="o">=</span> <span class="s2">&quot;django/forms/widgets/search.html&quot;</span>
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">TelInput</span><span class="p">(</span><span class="n">Input</span><span class="p">):</span>
-    <span class="n">input_type</span> <span class="o">=</span> <span class="s2">&quot;tel&quot;</span>
-    <span class="n">template_name</span> <span class="o">=</span> <span class="s2">&quot;django/forms/widgets/tel.html&quot;</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">PasswordInput</span><span class="p">(</span><span class="n">Input</span><span class="p">):</span>
