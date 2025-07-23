@@ -59,7 +59,7 @@ at <a class="reference external" href="https://princeton-cdh.github.io/ppa-djang
 <p>This repo uses <a class="reference external" href="https://github.com/nvie/gitflow">git-flow</a> conventions; <strong>main</strong>
 contains the most recent release, and work in progress will be on the <strong>develop</strong> branch.
 Pull requests should be made against develop.</p>
-<p>Python 3.11 / Django 5.0 / Node 18.12 / Postgresql 15 / Solr 9</p>
+<p>Python 3.12 / Django 5.2 / Node 18.12 / Postgresql 15 / Solr 9</p>
 <section id="development-instructions">
 <h2>Development instructions<a class="headerlink" href="#development-instructions" title="Link to this heading">¶</a></h2>
 <p>Initial setup and installation:</p>
@@ -91,7 +91,7 @@ preferred core/collection name and the configset name you created.</p>
 <p>See developer notes for setup instructions for using docker with <cite>solr:8.4</cite> image.</p>
 </li>
 <li><p>Bulk import (<em>provisional</em>): requires a local copy of HathiTrust data as
-pairtree provided by rsync.  Configure the path in <cite>localsettings.py</cite>
+pairtree provided by rsync.  Configure the path in <cite>local_settings.py</cite>
 and then run:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">hathi_import</span>
 </pre></div>
