@@ -3,7 +3,14 @@
 CHANGELOG
 =========
 
-3.14
+3.15
+----
+
+Zotero Integration Enhancement: 
+- Improve Zotero integration by changing the old method of MARC and unAPI to COinS metadata.
+- This allows Zotero to automatically detect and import citation data from the PPA archive with the correct item type, PPA URL, page range, etc.
+
+3.14.1
 ----
 
 - Bug fix: Gale page indexing with local OCR now catches and logs a warning on JSON decode error
