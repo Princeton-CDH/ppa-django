@@ -135,6 +135,25 @@ class TestHathiImporter(TestCase):
         mock_isdir.return_value = True  # directory exists
         mock_glob.return_value = ["foo.zip"]  # zipfile exists
 
+        # simulate success
+        def fake_add_from_hathi(htid, *args, **kwargs):
+            """fake add_from_hathi method to create
+            a new digwork and corresponding log entry"""
+            digwork = DigitizedWork.objects.create(source_id=htid, page_count=1337)
+            # create log entry for record creation
+            LogEntry.objects.log_action(
+                user_id=User.objects.get(username=settings.SCRIPT_USERNAME).pk,
+                content_type_id=ContentType.objects.get_for_model(digwork).pk,
+                object_id=digwork.pk,
+                object_repr=str(digwork),
+                change_message="Created %s" % log_msg_src,
+                action_flag=ADDITION,
+            )
+
+            return digwork
+
+        mock_add_from_hathi.side_effect = fake_add_from_hathi
+
         with patch.object(htimporter, "rsync_data"):
             log_msg_src = "from unit test"
             htimporter.add_items(log_msg_src)

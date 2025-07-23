@@ -4,7 +4,7 @@ import requests
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import MultipleObjectsReturned, ValidationError
-from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.core.paginator import Paginator
 from django.http import (
     Http404,
     HttpResponsePermanentRedirect,
@@ -24,25 +24,11 @@ from ppa.archive.forms import (
     SearchWithinWorkForm,
 )
 from ppa.archive.import_util import GaleImporter, HathiImporter
-from ppa.archive.models import NO_COLLECTION_LABEL, DigitizedWork, SourceNote
+from ppa.archive.models import NO_COLLECTION_LABEL, DigitizedWork
 from ppa.archive.solr import ArchiveSearchQuerySet, PageSearchQuerySet
 from ppa.common.views import AjaxTemplateMixin
 
 logger = logging.getLogger(__name__)
-
-
-class GracefulPaginator(Paginator):
-    """Paginator override to gracefully handle out-of-range errors.
-    Adapted from https://forum.djangoproject.com/t/23037"""
-
-    def page(self, number):
-        """Get the page by the supplied number. Reset to 1 if the supplied page is out of
-        range."""
-        try:
-            number = self.validate_number(number)
-        except (PageNotAnInteger, EmptyPage):
-            number = 1
-        return super().page(number)
 
 
 class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
@@ -54,7 +40,6 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
     ajax_template_name = "archive/snippets/results_list.html"
     form_class = SearchForm
     paginate_by = 50
-    paginator_class = GracefulPaginator
     #: title for metadata / preview
     meta_title = "Princeton Prosody Archive"
     #: page description for metadata/preview
@@ -76,22 +61,6 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
 
         # otherwise, process response normally
         return super(DigitizedWorkListView, self).get(*args, **kwargs)
-
-    def paginate_queryset(self, queryset, page_size):
-        """Graceful paginate_queryset override to handle non-numeric inputs.
-        Adapted from https://stackoverflow.com/a/61214021/394067"""
-        try:
-            return super().paginate_queryset(queryset, page_size)
-        except Http404:
-            # handle a 404, e.g. a non-numeric page number was entered
-            paginator = self.get_paginator(
-                queryset,
-                page_size,
-                orphans=self.get_paginate_orphans(),
-                allow_empty_first_page=self.get_allow_empty(),
-            )
-            page = paginator.page(1)
-            return (paginator, page, page.object_list, page.has_other_pages())
 
     def get_queryset(self, **kwargs):
         form_opts = self.request.GET.copy()
@@ -292,11 +261,6 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
                 "NO_COLLECTION_LABEL": NO_COLLECTION_LABEL,
                 "page_title": self.meta_title,
                 "page_description": self.meta_description,
-                # dict of source tooltip notes keyed on source label
-                # (as that's what is indexed)
-                "source_notes": {
-                    sn.get_source_display(): sn.note for sn in SourceNote.objects.all()
-                },
             }
         )
         return context
@@ -350,9 +314,9 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
                 # (previously excerpt ids were based on digital page range)
                 digwork_oldid = source_qs.filter(
                     old_workid="%(source_id)s-p%(start_page)s" % self.kwargs
-                )
-                if digwork_oldid.exists():
-                    self.redirect_url = digwork_oldid.first().get_absolute_url()
+                ).first()
+                if digwork_oldid:
+                    self.redirect_url = source_qs.first().get_absolute_url()
 
         # otherwise, return a 404
         return qs
@@ -384,19 +348,6 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
         if digwork.is_suppressed:
             return context
 
-        # Fetch Solr data for COinS metadata (ignore if Solr unavailable)
-        try:
-            solr_results = list(
-                ArchiveSearchQuerySet().filter(id=digwork.index_id())[:1]
-            )
-            if solr_results:
-                context["solr_object"] = solr_results[0]
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.RequestException,
-        ):
-            pass
-
         context.update(
             {"page_title": digwork.title, "page_description": digwork.public_notes}
         )
@@ -424,7 +375,7 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
             )
 
             try:
-                paginator = GracefulPaginator(solr_pageq, per_page=self.paginate_by)
+                paginator = Paginator(solr_pageq, per_page=self.paginate_by)
                 page_num = self.request.GET.get("page", 1)
                 current_page = paginator.page(page_num)
                 paged_result = current_page.object_list

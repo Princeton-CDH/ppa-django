@@ -1,6 +1,6 @@
 {% extends "base.html"  %}
 {% load render_bundle from webpack_loader %}
-{% load static semanticui humanize ppa_tags%}
+{% load static semanticui humanize %}
 
 {% block js %}
 {% if object.has_fulltext %}
@@ -14,15 +14,11 @@
 <meta name="twitter:data1" content="{{ object.pub_date }}" />
 <meta name="twitter:label2" content="Author" />
 <meta name="twitter:data2" content="{{ object.author }}" />
-
-<!-- COinS for Zotero item type recognition and complete metadata -->
-{% if solr_object %}{% coins_data solr_object as coins_metadata %}{{ coins_metadata|coins_encode }}{% endif %}
-
 {% endblock %}
 
-
-
 {% block head_extras %}
+    <link rel="unapi-server" type="application/xml" title="unAPI"
+          href="{% url 'unapi' %}" />
     <noscript>
         <link rel="stylesheet" type="text/css" href="{% static 'css/noscript.css' %}"/>
     </noscript>
@@ -40,6 +36,9 @@
     <div class="work-type icon" aria-label="{{ object.get_item_type_display|lower }}"></div>
     {% endif %}
     <h1 class="header">{{ object.title }}</h1>
+    {% if object.item_type == object.FULL %} {# unapi metadata only available for full works #}
+    <abbr class="unapi-id" title="{{ object.index_id }}"></abbr>
+    {% endif %}
     <table class="metadata ui very basic table">
         <tbody>
             {% if object.subtitle %}

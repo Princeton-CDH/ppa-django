@@ -3,11 +3,6 @@
 Deploy and Upgrade notes
 ========================
 
-3.15
-----
-
-* The footer has been updated such that the Technical page must now be manually set to appear in menus in Wagtail.
-
 3.14
 ----
 

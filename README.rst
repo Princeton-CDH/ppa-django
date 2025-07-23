@@ -34,7 +34,7 @@ contains the most recent release, and work in progress will be on the **develop*
 Pull requests should be made against develop.
 
 
-Python 3.12 / Django 5.2 / Node 18.12 / Postgresql 15 / Solr 9
+Python 3.11 / Django 5.0 / Node 18.12 / Postgresql 15 / Solr 9
 
 
 Development instructions
@@ -68,7 +68,7 @@ Initial setup and installation:
   See developer notes for setup instructions for using docker with `solr:8.4` image.
 
 - Bulk import (*provisional*): requires a local copy of HathiTrust data as
-  pairtree provided by rsync.  Configure the path in `local_settings.py`
+  pairtree provided by rsync.  Configure the path in `localsettings.py`
   and then run::
 
     python manage.py hathi_import

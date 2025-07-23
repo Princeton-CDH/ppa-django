@@ -1,4 +1,4 @@
-import { map } from 'rxjs/operators'
+import { pluck } from 'rxjs/operators'
 
 import clearable from '../js/clearable'
 import ImageLazyLoader from '../js/modules/LazyLoad'
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // bindings
     keywordInput.state.subscribe(pageSearchForm.submit) // submit form when keyword changes
-    pageSearchForm.state.pipe(map((state) => state?.results)).subscribe(resultsOutput.update.bind(resultsOutput)) // pass updated results to the output
+    pageSearchForm.state.pipe(pluck('results')).subscribe(resultsOutput.update.bind(resultsOutput)) // pass updated results to the output
 
     // setup
     $('.question-popup').popup() // semantic ui popups

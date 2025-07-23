@@ -1,5 +1,3 @@
-{% load wagtailcore_tags %}
-
 {# Snippet to include authors and date attribution to editorial posts #}
 {% if page.authors %}
     <p class="author">
@@ -42,11 +40,4 @@
 {% if page.pdf %}
  <a href="{{ page.pdf }}" rel="alternate" class="pdf">PDF</a>
 {% endif %}
-{% if page.tags.exists %}
-    <p class="tags">
-        {% for tag in page.tags.all %}
-            <a href="{% pageurl page.get_parent %}?tag={{ tag.slug }}">{{ tag }}</a>
-        {% endfor %}
-    </p>
-    {% endif %}
 {% endif %}

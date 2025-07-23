@@ -66,7 +66,6 @@ $(function(){
             }))
             $('.workscount').removeClass('loading') // turn off the loader
             new ImageLazyLoader($('img[data-src]').get()) // re-bind lazy loaded images
-            $('.source-popup').popup({hoverable: true}) // initialize tooltip popups in results
         })
         advancedSearchIndicator()
     }
@@ -118,7 +117,6 @@ $(function(){
         updateHistogram(JSON.parse($('.ajax-container script#facets').html())) // render the histogram initially
         $$collectionInputs.filter(':disabled').parent().addClass('disabled') // disable empty collections
         $('.question-popup').popup() // initialize the question popup
-        $('.source-popup').popup({hoverable: true}) // initialize the source popup
         $$sortDropdown.dropdown('setting', {
             onChange: () => $$sortInput[0].dispatchEvent(new Event('input')) // make sure sort changes trigger a submission
         })

@@ -11,7 +11,7 @@ import pytest
 import requests
 from django.conf import settings
 from django.test import TestCase, override_settings
-from neuxml.xmlmap import load_xmlobject_from_file
+from eulxml.xmlmap import load_xmlobject_from_file
 from pairtree import pairtree_client, pairtree_path, storage_exceptions
 
 from ppa import __version__
@@ -352,14 +352,6 @@ class TestHathiObject:
             my_ptree_client = Mock(spec=pairtree_client.PairtreeStorageClient)
             hobj.metsfile_path(my_ptree_client)
             mock_ptree_obj_meth.assert_called_with(ptree_client=my_ptree_client)
-
-    @patch("neuxml.xmlmap.load_xmlobject_from_file")
-    def test_mets_xml(self, mock_xml_load):
-        hobj = hathi.HathiObject(hathi_id="chi.79279237")
-        with patch.object(hobj, "metsfile_path") as mock_metsfile_path:
-            # should call load_xmlobject_from_file
-            hobj.mets_xml()
-            mock_xml_load.assert_called_once_with(mock_metsfile_path.return_value,hathi.MinimalMETS)
 
     def test_delete_pairtree_data(self):
         hobj = hathi.HathiObject(hathi_id="chi.79279237")

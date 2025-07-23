@@ -13,6 +13,7 @@ from wagtail import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
 
 from ppa.archive.sitemaps import ArchiveViewsSitemap, DigitizedWorkSitemap
+from ppa.unapi.views import UnAPIView
 
 # sitemap configuration for sections of the site
 sitemaps = {
@@ -35,6 +36,8 @@ urlpatterns = [
     # pucas urls for CAS login
     path("accounts/", include("pucas.cas_urls")),
     path("archive/", include("ppa.archive.urls", namespace="archive")),
+    # unapi service endpoint for Zotero
+    path("unapi/", UnAPIView.as_view(), name="unapi"),
     path("cms/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
     # sitemaps

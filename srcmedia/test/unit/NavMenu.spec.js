@@ -29,14 +29,14 @@ describe('NavMenu', () => {
         it('binds handler to keypress event for $aboutMenu', function() {
             // minimal test to ensure binding happened
             const e = $.Event('keydown')
-            e.code = 'ArrowDown'
+            e.keyCode = 40
             this.an.$textSelector.trigger(e)
-            expect(document.activeElement.getAttribute('href')).toBe('/history/')
+            expect($(':focus').length).toBe(1)
         })
 
     })
 
-    describe('keydownHandler()', () => {
+    describe('feedbackHandler()', () => {
 
         beforeEach(function () {
             loadFixtures('nav-menu.html')
@@ -44,32 +44,33 @@ describe('NavMenu', () => {
         })
 
         it('moves up and down the menu based on arrow keys', function() {
-            const text = document.querySelector('.about > .text')
-            const historyLink = document.querySelector('a[href="/history/"]')
-            const prosodyLink = document.querySelector('a[href="/prosody/"]')
-
-            spyOn(historyLink, 'focus').and.callThrough()
-            const e1 = $.Event('keydown', { code: 'ArrowDown' })
-
+            const down = 40
+            const up = 38
+            const e = $.Event('keydown',
+                {
+                    keyCode: down,
+                    // set about as currentTarget and target for initial state
+                    currentTarget: document.getElementsByClassName('.about')[0],
+                    target: document.getElementsByClassName('.about')[0]
+                }
+            )
             // start at about and walk down two
-            $(text).trigger(e1);
-            expect(historyLink.focus).toHaveBeenCalled()
-
+            this.an.$textSelector.trigger(e)
+            expect($(':focus').attr('href')).toBe('/history/')
             // get current focused DOM node and simulate the keydown correctly
-            spyOn(prosodyLink, 'focus').and.callThrough()
-            const e2 = $.Event('keydown', { code: 'ArrowDown' })
-            $(historyLink).trigger(e2)
-            expect(prosodyLink.focus).toHaveBeenCalled()
-
+            e.target = $(':focus').get(0)
+            this.an.$textSelector.trigger(e)
+            expect($(':focus').attr('href')).toBe('/prosody/')
             // now walk back up
-            const e3 = $.Event('keydown', { code: 'ArrowUp' })
-            $(prosodyLink).trigger(e3)
-            expect(document.activeElement.getAttribute('href')).toBe('/history/')
-
+            e.keyCode = up
+            e.target = $(':focus').get(0)
+            $(':focus').trigger(e)
+            expect($(':focus').attr('href')).toBe('/history/')
+            e.target = $(':focus').get(0)
+            this.an.$textSelector.trigger(e)
             // back to text (about)
-            const e4 = $.Event('keydown', { code: 'ArrowUp' })
-            $(historyLink).trigger(e4)
-            expect(document.activeElement.classList.contains('text')).toBe(true)
+            expect($(':focus').hasClass('text')).toBeTruthy()
+
 
         })
     })

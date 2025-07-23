@@ -162,47 +162,6 @@ class TestGaleAPI(TestCase):
             stream=True,
         )
 
-        # test 500 server error response; now handling same as 401
-        error_response = Mock(status_code=requests.codes.server_error)
-        error_response.elapsed.total_seconds.return_value = 1
-        # reuse ok_response from above
-        # reset mock so count will be accurate
-        mock_get_api_key.reset_mock()
-        mock_get_api_key.side_effect = ("testkey1", "testkey2", "testkey3", "testkey4")
-
-        gale_api.session.get.side_effect = [error_response, ok_response]
-        # clear stored API key to trigger refresh
-        gale_api._api_key = None
-        print(f"session api key is {gale_api.api_key}")
-        gale_api._make_request("foo", requires_api_key=True)
-        # should be called twice: once for initial request, then for retry
-        assert mock_get_api_key.call_count == 2
-        gale_api.session.get.assert_any_call(
-            "%s/foo" % gale_api.api_root, params={"api_key": "testkey1"}, stream=False
-        )
-        # same request but with the new key
-        gale_api.session.get.assert_any_call(
-            "%s/foo" % gale_api.api_root, params={"api_key": "testkey2"}, stream=False
-        )
-
-        # retry should preserve parameters and streaming option
-        gale_api.session.reset_mock()
-        gale_api.session.get.side_effect = [unauth_response, ok_response]
-        gale_api._make_request(
-            "foo", params={"bar": "baz"}, stream=True, requires_api_key=True
-        )
-        gale_api.session.get.assert_any_call(
-            "%s/foo" % gale_api.api_root,
-            params={"api_key": "testkey2", "bar": "baz"},
-            stream=True,
-        )
-        # same request but with the new key
-        gale_api.session.get.assert_any_call(
-            "%s/foo" % gale_api.api_root,
-            params={"api_key": "testkey3", "bar": "baz"},
-            stream=True,
-        )
-
         # ** test cases where retry should not happen
 
         # request that does not require api key
@@ -302,7 +261,7 @@ class TestGaleAPI(TestCase):
             {
                 "pageNumber": "0001",
                 "folioNumber": "i",
-                "image": {"id": "09876001234567", "url": "http://example.com/img/1"},
+                "image": {"id": "09876001234567", "url": "http://example.com/img/1"}
                 # some pages have no ocr text
             },
             {
@@ -324,7 +283,7 @@ class TestGaleAPI(TestCase):
         # Set up get_local_ocr so that only the 3rd page's text is found
         mock_get_local_ocr.return_value = {"0003": "local ocr text"}
         page_data = list(gale_api.get_item_pages(item_id))
-        mock_get_item.assert_called_once()
+        mock_get_item.called_once()
         # called once per volume
         assert mock_get_local_ocr.call_count == 1
         assert len(page_data) == 3
@@ -342,7 +301,7 @@ class TestGaleAPI(TestCase):
             "0765400456789",
         ]
         assert [p["image_url_s"] for p in page_data] == [
-            f"http://example.com/img/{i + 1}" for i in range(3)
+            f"http://example.com/img/{i+1}" for i in range(3)
         ]
 
         # page present but content empty should set local ocr tag

@@ -94,12 +94,8 @@
 		font-size: 1rem;
 	}
 
-	main, #editorial p, #editorial h2, #editorial h3, #editorial li {
-	    font-size: 16px;
-	}
-
-	#editorial figcaption *, #editorial .footnotes * {
-		font-size: 12px;
+	main, #editorial p, #editorial h2, #editorial h3 {
+	    font-size: 20px;
 	}
 
 	h1 {
@@ -148,8 +144,7 @@
 				display: none !important;
 			}
 		}
-		.pdf, // hide link to pdf (since this is used to generate pdf)
-		.tags { // hide tags
+		.pdf {  // hide link to pdf (since this is used to generate pdf)
 			display: none;
 		}
 	}

@@ -25,6 +25,7 @@
 
         @media (min-width: 420px) {
             flex-direction: row;
+            margin-bottom: 0;
         }
 
         .item {
@@ -42,11 +43,18 @@
         @media (min-width: $tablet) {
             flex-flow: row wrap;
             justify-content: center;
-            gap: 1rem 2rem;
-            padding-bottom: 1rem;
+
+            a {
+                padding-left: 2rem;
+		
+		&:first-child {
+			padding-left: 0;
+		}
+            }
         }
 
         @media (min-width: $computer) {
+            flex-flow: row nowrap;
             justify-content: space-evenly;
             padding-bottom: 2rem;
         }

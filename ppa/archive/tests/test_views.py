@@ -12,20 +12,14 @@ from django.utils.http import urlencode
 from parasolr.django import SolrClient, SolrQuerySet
 
 from ppa.archive.forms import ImportForm, ModelMultipleChoiceFieldWithEmpty, SearchForm
-from ppa.archive.models import (
-    NO_COLLECTION_LABEL,
-    Collection,
-    DigitizedWork,
-    Page,
-    SourceNote,
-)
+from ppa.archive.models import NO_COLLECTION_LABEL, Collection, DigitizedWork, Page
 from ppa.archive.solr import ArchiveSearchQuerySet
 from ppa.archive.templatetags.ppa_tags import (
     gale_page_url,
     hathi_page_url,
     page_image_url,
 )
-from ppa.archive.views import DigitizedWorkListView, GracefulPaginator, ImportView
+from ppa.archive.views import DigitizedWorkListView, ImportView
 
 
 class TestDigitizedWorkDetailView(TestCase):
@@ -213,6 +207,24 @@ class TestDigitizedWorkDetailView(TestCase):
         self.assertContains(response, article.title)
         self.assertContains(response, article.book_journal)
 
+    def test_unapi(self):
+        response = self.client.get(self.dial_url)
+        # unapi server link present
+        self.assertContains(
+            response,
+            """<link rel="unapi-server" type="application/xml"
+            title="unAPI" href="%s" />"""
+            % reverse("unapi"),
+            msg_prefix="unapi server link should be set",
+            html=True,
+        )
+        # unapi id present
+        self.assertContains(
+            response,
+            '<abbr class="unapi-id" title="%s"></abbr>' % self.dial.source_id,
+            msg_prefix="unapi id should be embedded for each work",
+        )
+
     def test_admin_display(self):
         # get the detail view page and check that the response is 200
         response = self.admin_client.get(self.dial_url)
@@ -388,7 +400,7 @@ class TestDigitizedWorkDetailView(TestCase):
 
     def test_search_within_error(self):
         # test raising a generic solr error
-        with patch("ppa.archive.views.GracefulPaginator") as mock_page:
+        with patch("ppa.archive.views.Paginator") as mock_page:
             mock_page.side_effect = requests.exceptions.ConnectionError
             response = self.client.get(self.dial_url, {"query": "knobs"})
             self.assertContains(response, "Something went wrong.")
@@ -534,15 +546,18 @@ class TestDigitizedWorkListRequest(TestCase):
         # NOTE: without a sleep, even with commit=True and/or low
         # commitWithin settings, indexed data isn't reliably available
         index_checks = 0
-        while (
-            SolrQuerySet().search(item_type="work").count() == 0 and index_checks <= 10
-        ):
+        while SolrQuerySet().search(item_type="work").count() == 0:
             # sleep until we get records back; 0.1 seems to be enough
             # for local dev with local Solr
             sleep(0.1)
             # to avoid infinite loop when there's something wrong here,
             # bail out after a certain number of attempts
             index_checks += 1
+            if index_checks > 10:
+                raise Exception(
+                    "fixture index data not available after 10 tries, "
+                    + "something is probably wrong"
+                )
 
     def setUp(self):
         # get a work and its detail page to test with
@@ -574,6 +589,16 @@ class TestDigitizedWorkListRequest(TestCase):
             response,
             '<p class="result-number">2</p>',
             msg_prefix="results have multiple numbers",
+        )
+
+        # unapi server link present
+        self.assertContains(
+            response,
+            """<link rel="unapi-server" type="application/xml"
+            title="unAPI" href="%s" />"""
+            % reverse("unapi"),
+            msg_prefix="unapi server link should be set",
+            html=True,
         )
 
         # should not have scores for all results, as not logged in
@@ -955,27 +980,6 @@ class TestDigitizedWorkListRequest(TestCase):
             assert "paginator" in response.context
             self.assertContains(response, "Something went wrong.")
 
-    def test_coins_metadata_full_work(self):
-        """Test COinS metadata generation for full works"""
-        response = self.client.get(self.url)
-        assert response.status_code == 200
-
-        # Check for COinS Z3988 spans
-        self.assertContains(response, 'class="Z3988"')
-        self.assertContains(response, "ctx_ver=Z39.88-2004")
-        self.assertContains(response, "rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook")
-        self.assertContains(response, "rft.genre=book")
-
-    def test_coins_absolute_urls(self):
-        """Test that COinS metadata includes absolute URLs"""
-        response = self.client.get(self.url)
-        assert response.status_code == 200
-
-        # Check that COinS includes absolute URLs with rft_id parameter
-        self.assertContains(response, "rft_id=http")
-        # Should contain the domain
-        self.assertContains(response, "testserver")
-
 
 @pytest.mark.django_db
 def test_archive_list_empty_solr(client, empty_solr):
@@ -1151,7 +1155,7 @@ class TestAddToCollection(TestCase):
         # check that the error message rendered for a missing Collection
         self.assertContains(
             response,
-            '<ul class="errorlist" id="id_collections_error"><li>Please select at least one '
+            '<ul class="errorlist"><li>Please select at least one '
             "Collection</li></ul>",
             html=True,
         )
@@ -1164,26 +1168,6 @@ class TestAddToCollection(TestCase):
             "<p> Please select digitized works from the admin interface. </p>",
             html=True,
         )
-
-
-class TestGracefulPaginator:
-    @patch("ppa.archive.views.Paginator.page")
-    def test_page(self, mock_super_page):
-        objects = [Mock() for _ in range(100)]
-        paginator = GracefulPaginator(objects, 10)
-        paginator.page(1)
-        mock_super_page.assert_called_with(1)
-        paginator.page(5)
-        mock_super_page.assert_called_with(5)
-        # should be 1 for all out of range numbers
-        paginator.page(100)
-        mock_super_page.assert_called_with(1)
-        paginator.page(-1)
-        mock_super_page.assert_called_with(1)
-        paginator.page(1.5)
-        mock_super_page.assert_called_with(1)
-        paginator.page("not a number")
-        mock_super_page.assert_called_with(1)
 
 
 class TestDigitizedWorkListView(TestCase):
@@ -1229,23 +1213,6 @@ class TestDigitizedWorkListView(TestCase):
             mock_qs.get_response.assert_called_with(rows=100)
             assert highlights == mock_qs.get_highlighting()
 
-    def test_paginate_queryset(self):
-        with patch("ppa.archive.views.GracefulPaginator") as mock_paginator:
-            digworkview = DigitizedWorkListView()
-            digworkview.paginator_class = mock_paginator
-            qs = DigitizedWork.objects.all()
-
-            # numeric page number
-            digworkview.kwargs = {"page": 10}
-            digworkview.paginate_queryset(qs, digworkview.paginate_by)
-            mock_paginator.return_value.page.assert_called_once_with(10)
-
-            # non-numeric page number: should use page 1
-            mock_paginator.reset_mock()
-            digworkview.kwargs = {"page": "fake"}
-            digworkview.paginate_queryset(qs, digworkview.paginate_by)
-            mock_paginator.return_value.page.assert_called_once_with(1)
-
     @pytest.mark.usefixtures("mock_solr_queryset")
     def test_get_queryset(self):
         digworkview = DigitizedWorkListView()
@@ -1285,39 +1252,6 @@ class TestDigitizedWorkListView(TestCase):
         assert self.client.get(archive_list_url, {"cluster": "one"}).status_code == 200
         # no cluster should also be fine
         assert self.client.get(archive_list_url).status_code == 200
-
-    @pytest.mark.usefixtures("mock_solr_queryset")
-    def test_source_notes(self):
-        # create a source note
-        sn = SourceNote.objects.create(source=DigitizedWork.HATHI, note="Example note")
-        hathi_key = dict(DigitizedWork.SOURCE_CHOICES)[DigitizedWork.HATHI]
-        assert str(sn) == hathi_key
-        # set up various mocks for DigitizedWorkListView.get_context_data
-        with patch(
-            "ppa.archive.views.ArchiveSearchQuerySet", new=self.mock_solr_queryset()
-        ) as mock_queryset_cls:
-            mock_qs = mock_queryset_cls.return_value
-            mock_facets = Mock()
-            mock_facets.facet_fields = {}
-            mock_facets.facet_ranges = {"pub_date": {"end": 2025}}
-            mock_qs.get_facets.return_value = mock_facets
-            mock_page_obj = Mock()
-            mock_page_obj.object_list = mock_qs
-            digworkview = DigitizedWorkListView()
-            digworkview.object_list = mock_qs
-            digworkview.form = Mock(is_valid=Mock(return_value=True))
-            digworkview.kwargs = {}
-            with patch.object(
-                digworkview,
-                "paginate_queryset",
-                return_value=(Mock(), mock_page_obj, mock_qs, Mock()),
-            ):
-                with patch.object(digworkview, "get_pages", return_value=({}, {})):
-                    context = digworkview.get_context_data()
-                    # note should be in context var, keyed on source display
-                    assert "source_notes" in context
-                    assert hathi_key in context["source_notes"]
-                    assert context["source_notes"][hathi_key] == sn.note
 
 
 class TestImportView(TestCase):

@@ -11,7 +11,7 @@ Example usage::
     # import from a csv file
     python manage.py gale_import -c path/to/import.csv
     # import specific items
-    python manage.py gale_import galeid1 galeid2 galeid3
+    python manage.py hathi_import galeid1 galeid2 galeid3
 
 When using a CSV file for import, it *must* include an **ID** field;
 it may also include **NOTES** (any contents will be imported into private notes),
@@ -31,14 +31,18 @@ import csv
 import logging
 from collections import Counter
 
+from django.conf import settings
+from django.contrib.admin.models import ADDITION, LogEntry
+from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand, CommandError
 from django.template.defaultfilters import pluralize, truncatechars
 from parasolr.django.signals import IndexableSignalHandler
 
-from ppa.archive.gale import GaleAPI, GaleAPIError, MARCRecordNotFound
+from ppa.archive.gale import GaleAPI, GaleAPIError, MARCRecordNotFound, get_marc_record
 from ppa.archive.import_util import GaleImporter
-from ppa.archive.models import Collection, DigitizedWork
+from ppa.archive.models import Collection, DigitizedWork, Page
 
 logger = logging.getLogger(__name__)
 

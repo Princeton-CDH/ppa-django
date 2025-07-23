@@ -1,18 +1,4 @@
 ignore:
 - "**/node_modules/"
-- "**/settings/**"
-- "ppa/archive/management/commands/check_hathi_excerpts.py"
-- "ppa/archive/management/commands/import_clusters.py"
+- "**/settings.py"
 - "sitemedia/semantic/"
-coverage:
-  status:
-    project:
-      default: false  # disable default status check
-      all:  # custom target for app+tests
-        # target: auto
-        target: 94  # override auto target since current coverage is lower
-      tests:  # declare a new status context  for "tests"
-        target: 100%  # we always want 100% coverage here
-        paths: # only include coverage in "tests" folders and "tests.py" files
-          - "**/tests/**"
-          - "**/tests.py"

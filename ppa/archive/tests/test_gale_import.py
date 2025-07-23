@@ -17,6 +17,13 @@ from ppa.archive.models import Collection, DigitizedWork
 
 @pytest.mark.django_db
 class TestGaleImportCommand:
+    @override_settings()
+    def test_config_error(self):
+        cmd = gale_import.Command()
+        del settings.GALE_API_USERNAME
+        with pytest.raises(CommandError):
+            cmd.handle(ids=[], csv=None)
+
     @override_settings(GALE_API_USERNAME="galeuser123")
     @patch("ppa.archive.management.commands.gale_import.Command.import_record")
     def test_import_ids(self, mock_import_record):
