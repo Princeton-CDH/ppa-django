@@ -584,6 +584,11 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         HathiTrust, Gale, or EEBO-TCP)."""
         return self.source in [self.HATHI, self.GALE, self.EEBO]
 
+    @property
+    def work_type(self):
+        """Work type formatted for COinS metadata (matches Solr field format)."""
+        return self.get_item_type_display().lower().replace(" ", "-")
+
     @cached_property
     def hathi(self):
         """:class:`ppa.archive.hathi.HathiObject` for HathiTrust records,
