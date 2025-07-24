@@ -216,14 +216,68 @@ class TestGaleAPI(TestCase):
         assert gale_api.session.get.call_count == 1
 
         # already on a retry (no infinite loops requesting new keys!)
+        # With retry limit of 3, need to use retry=3 to test no more retries
         mock_get_api_key.reset_mock()
         gale_api.session.reset_mock()
         gale_api.session.get.side_effect = [unauth_response, ok_response]
         with pytest.raises(gale.GaleUnauthorized):
-            gale_api._make_request("foo", requires_api_key=True, retry=1)
+            gale_api._make_request("foo", requires_api_key=True, retry=3)
         # should not get a new key; should only make the request once
         mock_get_api_key.assert_not_called()
         assert gale_api.session.get.call_count == 1
+
+    @patch("ppa.archive.gale.GaleAPI.get_api_key")
+    def test_make_request_multiple_retries(self, mock_get_api_key, mockrequests):
+        # test that the new 3-retry logic works correctly
+        gale_api = gale.GaleAPI()
+        gale_api._api_key = None
+        gale_api.api_root = "http://example.com/api"
+        mockrequests.codes = requests.codes
+        mock_get_api_key.side_effect = ("key1", "key2", "key3", "key4")
+
+        # simulate 3 failures followed by success on 4th attempt (3rd retry)
+        unauth_response = Mock(status_code=requests.codes.unauthorized)
+        unauth_response.elapsed.total_seconds.return_value = 1
+        ok_response = Mock(status_code=requests.codes.ok)
+        ok_response.elapsed.total_seconds.return_value = 3
+
+        gale_api.session.get.side_effect = [
+            unauth_response,  # initial request fails
+            unauth_response,  # retry 1 fails
+            unauth_response,  # retry 2 fails
+            ok_response,  # retry 3 succeeds
+        ]
+
+        # should succeed after 3 retries
+        gale_api._make_request("foo", requires_api_key=True)
+
+        # should call get_api_key 4 times: initial + 3 retries
+        assert mock_get_api_key.call_count == 4
+        # should make 4 HTTP requests: initial + 3 retries
+        assert gale_api.session.get.call_count == 4
+
+        # test case where all 3 retries fail
+        mock_get_api_key.reset_mock()
+        gale_api.session.reset_mock()
+        gale_api._api_key = None
+        mock_get_api_key.side_effect = ("key1", "key2", "key3", "key4")
+
+        # all requests fail
+        gale_api.session.get.side_effect = [
+            unauth_response,  # initial request fails
+            unauth_response,  # retry 1 fails
+            unauth_response,  # retry 2 fails
+            unauth_response,  # retry 3 fails
+        ]
+
+        # should raise exception after exhausting all retries
+        with pytest.raises(gale.GaleUnauthorized):
+            gale_api._make_request("foo", requires_api_key=True)
+
+        # should call get_api_key 4 times: initial + 3 retries
+        assert mock_get_api_key.call_count == 4
+        # should make 4 HTTP requests: initial + 3 retries
+        assert gale_api.session.get.call_count == 4
 
     def test_get_api_key(self, mockrequests):
         gale_api = gale.GaleAPI()

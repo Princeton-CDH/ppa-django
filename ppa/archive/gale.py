@@ -160,23 +160,57 @@ class GaleAPI:
             requests.codes.unauthorized,
             requests.codes.server_error,
         ]:
+            # Extract item ID from the URL (format: .../v1/item/GALE%7C{item_id})
+            item_id = None
+            if "GALE%7C" in rqst_url:
+                item_id = rqst_url.split("GALE%7C")[-1]
+
             # occasionally we get a 500 error when indexing all pages
             # refreshing API key and trying again, but log the error
             if resp.status_code == requests.codes.server_error:
-                # Not sure yet if response has any meaningful content
-                logger.error(f"500 error on {rqst_url}: {resp.content}")
+                # Log concise error info (status, URL, item ID)
+                logger.error(
+                    f"500 server error on {rqst_url}, Item ID: {item_id or 'N/A'}"
+                )
 
             # If we get a 401 or 500 on a request that requires an api key,
-            # get a fresh key and then try the same request again
-            if requires_api_key and retry < 1:
+            # get a fresh key and then try the same request again (up to 3 retry attempts)
+            if requires_api_key and retry < 3:
+                # Log retry attempt for debugging - helps track API key refresh success
+                current_attempt = retry + 1
+                logger.info(
+                    f"Retrying after refreshing API key (attempt {current_attempt}/3) "
+                    f"- Status: {resp.status_code}, Item ID: {item_id or 'N/A'}"
+                )
+
                 self.refresh_api_key()
-                return self._make_request(
+
+                retry_response = self._make_request(
                     url,
                     params=params,
                     requires_api_key=requires_api_key,
                     stream=stream,
                     retry=retry + 1,
                 )
+
+                # Log successful retry - confirms API key refresh worked and API call succeeded
+                logger.info(
+                    f"Retry succeeded with HTTP {retry_response.status_code} "
+                    f"(attempt {current_attempt}/3) - Item ID: {item_id or 'N/A'}"
+                )
+
+                return retry_response
+            else:
+                # Log when we decide not to retry (doesn't require API key or max retries)
+                if requires_api_key and retry >= 3:
+                    logger.warning(
+                        f"Not retrying - 3 retries exhausted, Item ID: {item_id or 'N/A'}"
+                    )
+                elif not requires_api_key:
+                    logger.warning(
+                        f"Not retrying - no API key required, Item ID: {item_id or 'N/A'}"
+                    )
+
             # response is html error, not json; could try
             # extracting h1, but not sure it's worth parsing
             raise GaleUnauthorized()
