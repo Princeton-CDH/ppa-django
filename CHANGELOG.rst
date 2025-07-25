@@ -8,7 +8,7 @@ CHANGELOG
 
 Minor Improvements:
 
-- Handle 500 error from Gale API when indexing pages with clear logging to determine whether retry succeeded.
+- Handle 500 error from Gale API when indexing pages with improved logging to document whether retry succeeded.
 - Simplify CoinS generation logic for Zotero integration.
 
 
