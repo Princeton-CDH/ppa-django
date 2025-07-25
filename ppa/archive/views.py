@@ -384,19 +384,6 @@ class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailVi
         if digwork.is_suppressed:
             return context
 
-        # Fetch Solr data for COinS metadata (ignore if Solr unavailable)
-        try:
-            solr_results = list(
-                ArchiveSearchQuerySet().filter(id=digwork.index_id())[:1]
-            )
-            if solr_results:
-                context["solr_object"] = solr_results[0]
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.RequestException,
-        ):
-            pass
-
         context.update(
             {"page_title": digwork.title, "page_description": digwork.public_notes}
         )

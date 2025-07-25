@@ -79,6 +79,9 @@ class GaleAPI:
     #: base URL for all API requests
     api_root = "https://api.gale.com/api"
 
+    #: maximum number of retry attempts for API requests
+    max_retries = 3
+
     #: shared singleton instance; populated on first instantiation
     instance = None
 
@@ -142,11 +145,15 @@ class GaleAPI:
             rqst_opts["params"]["api_key"] = self.api_key
 
         resp = self.session.get(rqst_url, stream=stream, **rqst_opts)
-        logger.debug(
-            "get %s %s: %f sec",
+        # Log request - use info level for retries, debug for initial attempts
+        log_level = logger.info if retry > 0 else logger.debug
+        retry_info = f" (retry {retry}/{self.max_retries})" if retry > 0 else ""
+        log_level(
+            "get %s %s: %f sec%s",
             rqst_url,
             resp.status_code,
             resp.elapsed.total_seconds(),
+            retry_info,
         )
         if resp.status_code == requests.codes.ok:
             return resp
@@ -163,13 +170,14 @@ class GaleAPI:
             # occasionally we get a 500 error when indexing all pages
             # refreshing API key and trying again, but log the error
             if resp.status_code == requests.codes.server_error:
-                # Not sure yet if response has any meaningful content
-                logger.error(f"500 error on {rqst_url}: {resp.content}")
+                # Log concise error info (status, URL)
+                logger.error(f"500 server error on {rqst_url}")
 
             # If we get a 401 or 500 on a request that requires an api key,
-            # get a fresh key and then try the same request again
-            if requires_api_key and retry < 1:
+            # get a fresh key and then try the same request again (up to max_retries attempts)
+            if requires_api_key and retry < self.max_retries:
                 self.refresh_api_key()
+
                 return self._make_request(
                     url,
                     params=params,
@@ -177,6 +185,15 @@ class GaleAPI:
                     stream=stream,
                     retry=retry + 1,
                 )
+
+            # Log when we decide not to retry
+            if requires_api_key and retry >= self.max_retries:
+                logger.warning(
+                    f"Not retrying - {self.max_retries} retries exhausted, URL: {rqst_url}"
+                )
+            elif not requires_api_key:
+                logger.warning(f"Not retrying - no API key required, URL: {rqst_url}")
+
             # response is html error, not json; could try
             # extracting h1, but not sure it's worth parsing
             raise GaleUnauthorized()
