@@ -526,7 +526,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         url_opts = {"source_id": self.source_id}
         # start page must be specified if set but must not be included if empty
         if self.pages_orig:
-            url_opts["start_page"] = self.first_page()
+            url_opts["start_page"] = self.first_page
         return reverse("archive:detail", kwargs=url_opts)
 
     def __str__(self):
@@ -583,6 +583,11 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         """Checks if an item has full text (i.e., items from
         HathiTrust, Gale, or EEBO-TCP)."""
         return self.source in [self.HATHI, self.GALE, self.EEBO]
+
+    @property
+    def work_type(self):
+        """Work type formatted for COinS metadata (matches Solr field format)."""
+        return self.get_item_type_display().lower().replace(" ", "-")
 
     @cached_property
     def hathi(self):
@@ -671,7 +676,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 
         # if original page range is set, check that first page is unique
         if self.pages_orig:
-            first_page = self.first_page_original()
+            first_page = self.first_page_original
             # check for other excerpts in this work with the same first page
             other_excerpts = DigitizedWork.objects.filter(
                 source_id=self.source_id
@@ -882,11 +887,13 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         },
     }
 
+    @property
     def first_page(self):
         """Number of the first page in range, if this is an excerpt
         (first of original page range, not digital)"""
-        return self.first_page_original()
+        return self.first_page_original
 
+    @property
     def first_page_digital(self):
         """Number of the first page in range (digital pages / page index),
         if this is an excerpt.
@@ -897,6 +904,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         if self.pages_digital:
             return list(self.page_span)[0]
 
+    @property
     def first_page_original(self):
         """Number of the first page in range (original page numbering)
         if this is an excerpt
@@ -909,11 +917,13 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         if match:
             return match.group(1)
 
+    @property
     def last_page(self):
         """Number of the last page in range, if this is an excerpt
         (last of original page range, not digital)"""
-        return self.last_page_original()
+        return self.last_page_original
 
+    @property
     def last_page_digital(self):
         """Number of the last page in range (digital pages / page index),
         if this is an excerpt.
@@ -924,6 +934,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         if self.pages_digital:
             return list(self.page_span)[-1]
 
+    @property
     def last_page_original(self):
         """Number of the last page in range (original page numbering) if this is an excerpt
 
@@ -937,7 +948,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
 
     def index_id(self):
         """use source id + first page in range (if any) as solr identifier"""
-        first_page = self.first_page()
+        first_page = self.first_page
         if first_page:
             return "%s-p%s" % (self.source_id, first_page)
         return self.source_id
@@ -982,8 +993,8 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         return {
             "id": index_id,
             "source_id": self.source_id,
-            "first_page_s": self.first_page(),
-            "last_page_s": self.last_page(),
+            "first_page_s": self.first_page,
+            "last_page_s": self.last_page,
             "group_id_s": index_id,  # for grouping pages by work or excerpt
             "source_t": self.get_source_display(),
             "source_url": self.source_url,
@@ -1006,9 +1017,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             # hard-coded to distinguish from & sort with pages
             "item_type": "work",
             "order": "0",
-            "work_type_s": self.get_item_type_display()
-            .lower()
-            .replace(" ", "-"),  # full-work, excerpt, or article
+            "work_type_s": self.work_type,
             "book_journal_s": self.book_journal,
         }
 

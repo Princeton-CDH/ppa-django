@@ -16,7 +16,7 @@
 <meta name="twitter:data2" content="{{ object.author }}" />
 
 <!-- COinS for Zotero item type recognition and complete metadata -->
-{% if solr_object %}{% coins_data solr_object as coins_metadata %}{{ coins_metadata|coins_encode }}{% endif %}
+{% coins_data object as coins_metadata %}{{ coins_metadata|coins_encode }}
 
 {% endblock %}
 

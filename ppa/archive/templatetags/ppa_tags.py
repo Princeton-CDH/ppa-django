@@ -258,14 +258,7 @@ def coins_data(context, item):
     work_type_fields = _add_work_type_specific_fields(item, data, work_type_str)
     data.update(work_type_fields)
 
-    # Add rft. prefix to fields (except those already prefixed)
-    coins_fields = {
-        f"rft.{k}" if not k.startswith(("rft", "ctx_ver")) else k: v
-        for k, v in data.items()
-        if v is not None  # Skip None values
-    }
-
-    return coins_fields
+    return data
 
 
 @register.filter
@@ -274,11 +267,17 @@ def coins_encode(coins_data):
     if not coins_data:
         return ""
 
-    title_parts = []
-    for key, value in coins_data.items():
-        if value:
-            encoded_value = urlencode({"": str(value)})[1:]
-            title_parts.append(f"{key}={encoded_value}")
+    # Add rft. prefix to fields (except those already prefixed) and filter out None values
+    formatted_data = {
+        (f"rft.{k}" if not k.startswith(("rft", "ctx_ver")) else k): str(v)
+        for k, v in coins_data.items()
+        if v is not None
+    }
 
-    title_attr = "&amp;".join(str(part) for part in title_parts)
-    return mark_safe(f'<span class="Z3988" title="{title_attr}"></span>')
+    # URL encode the entire dictionary
+    encoded_params = urlencode(formatted_data)
+
+    # Replace & with &amp; for HTML attributes
+    encoded_title_content = encoded_params.replace("&", "&amp;")
+
+    return mark_safe(f'<span class="Z3988" title="{encoded_title_content}"></span>')
