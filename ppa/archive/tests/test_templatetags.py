@@ -133,14 +133,14 @@ def test_coins_data_full_work():
     # Verify COinS standard compliance
     assert result["ctx_ver"] == "Z39.88-2004"  # COinS version
     assert result["rft_val_fmt"] == "info:ofi/fmt:kev:mtx:book"  # Book format
-    assert result["rft.genre"] == "book"  # Full work type
+    assert result["genre"] == "book"  # Full work type
 
     # Verify bibliographic metadata mapping
-    assert result["rft.title"] == "Test Book"
-    assert result["rft.au"] == "Test Author"
-    assert result["rft.date"] == "1850"
-    assert result["rft.pub"] == "Test Publisher"
-    assert result["rft.place"] == "Cambridge"
+    assert result["title"] == "Test Book"
+    assert result["au"] == "Test Author"
+    assert result["date"] == "1850"
+    assert result["pub"] == "Test Publisher"
+    assert result["place"] == "Cambridge"
     assert result["rft_id"] == "http://testserver/archive/detail/test123/"
 
 
@@ -173,18 +173,18 @@ def test_coins_data_excerpt():
 
     # Verify excerpt-specific COinS formatting
     assert result["rft_val_fmt"] == "info:ofi/fmt:kev:mtx:book"
-    assert result["rft.genre"] == "bookitem"  # Excerpt type
+    assert result["genre"] == "bookitem"  # Excerpt type
 
     # Verify title mapping for excerpts
-    assert result["rft.atitle"] == "Test Excerpt"  # Article/excerpt title
-    assert result["rft.btitle"] == "Test Book"  # Containing book title
+    assert result["atitle"] == "Test Excerpt"  # Article/excerpt title
+    assert result["btitle"] == "Test Book"  # Containing book title
 
     # Verify page range information
-    assert result["rft.au"] == "Test Author"
-    assert result["rft.place"] == "Oxford"
-    assert result["rft.pages"] == "10-15"  # Full page range
-    assert result["rft.spage"] == "10"  # Start page
-    assert result["rft.epage"] == "15"  # End page
+    assert result["au"] == "Test Author"
+    assert result["place"] == "Oxford"
+    assert result["pages"] == "10-15"  # Full page range
+    assert result["spage"] == "10"  # Start page
+    assert result["epage"] == "15"  # End page
 
 
 def test_coins_data_article():
@@ -215,18 +215,18 @@ def test_coins_data_article():
 
     # Verify journal article COinS formatting
     assert result["rft_val_fmt"] == "info:ofi/fmt:kev:mtx:journal"  # Journal format
-    assert result["rft.genre"] == "article"  # Article type
+    assert result["genre"] == "article"  # Article type
 
     # Verify journal-specific metadata mapping
-    assert result["rft.atitle"] == "Test Article"  # Article title
-    assert result["rft.jtitle"] == "Test Journal"  # Journal title
-    assert result["rft.au"] == "Test Author"
-    assert result["rft.volume"] == "Vol. 5"  # Volume/issue info
+    assert result["atitle"] == "Test Article"  # Article title
+    assert result["jtitle"] == "Test Journal"  # Journal title
+    assert result["au"] == "Test Author"
+    assert result["volume"] == "Vol. 5"  # Volume/issue info
 
     # Verify page range for articles
-    assert result["rft.pages"] == "25-30"
-    assert result["rft.spage"] == "25"
-    assert result["rft.epage"] == "30"
+    assert result["pages"] == "25-30"
+    assert result["spage"] == "25"
+    assert result["epage"] == "30"
 
 
 def test_coins_data_solr_object_excerpt():
@@ -258,9 +258,9 @@ def test_coins_data_solr_object_excerpt():
 
     # Verify basic excerpt functionality with Solr objects
     assert result["rft_val_fmt"] == "info:ofi/fmt:kev:mtx:book"
-    assert result["rft.genre"] == "bookitem"
-    assert result["rft.atitle"] == "Test Excerpt"
-    assert result["rft.btitle"] == "Test Book"
+    assert result["genre"] == "bookitem"
+    assert result["atitle"] == "Test Excerpt"
+    assert result["btitle"] == "Test Book"
 
 
 def test_coins_data_dictionary():
@@ -293,9 +293,9 @@ def test_coins_data_dictionary():
 
     # Verify dictionary input produces correct article metadata
     assert result["rft_val_fmt"] == "info:ofi/fmt:kev:mtx:journal"
-    assert result["rft.genre"] == "article"
-    assert result["rft.atitle"] == "Test Article"
-    assert result["rft.jtitle"] == "Test Journal"
+    assert result["genre"] == "article"
+    assert result["atitle"] == "Test Article"
+    assert result["jtitle"] == "Test Journal"
 
 
 def test_coins_encode():
@@ -305,7 +305,7 @@ def test_coins_encode():
         "rft_val_fmt": "info:ofi/fmt:kev:mtx:book",
         "rft.genre": "book",
         "rft.title": "Test & Title",  # Contains special character
-        "au": "Test Author",
+        "rft.au": "Test Author",
         "rft_id": "http://example.com/test?param=value",  # Contains URL characters
     }
 
@@ -364,8 +364,8 @@ def test_coins_data_raw_solr_fields():
     # If the code only looks for clean field names, this should fail
     # because work_type would be None, defaulting to "full-work"
     # But we want it to find work_type_s and use "excerpt"
-    assert result["rft.genre"] == "bookitem"  # Should be excerpt behavior
-    assert result["rft.atitle"] == "Test Excerpt"
+    assert result["genre"] == "bookitem"  # Should be excerpt behavior
+    assert result["atitle"] == "Test Excerpt"
 
 
 def test_coins_data_mixed_field_names():
@@ -399,5 +399,45 @@ def test_coins_data_mixed_field_names():
         result = coins_data(context, mock_item)
 
     assert result["rft_val_fmt"] == "info:ofi/fmt:kev:mtx:journal"
-    assert result["rft.genre"] == "article"
-    assert result["rft.atitle"] == "Test Article"
+    assert result["genre"] == "article"
+    assert result["atitle"] == "Test Article"
+
+
+def test_coins_data_django_model():
+    """Test coins_data with Django model objects.
+    This tests the functionality where the tag can work directly with
+    DigitizedWork model instances using properties.
+    """
+    # Mock Django model object with properties
+    mock_model = Mock()
+    mock_model.work_type = "excerpt"  # Property we added
+    mock_model.title = "Django Model Test"
+    mock_model.author = "Model Author"
+    mock_model.book_journal = "Test Book Journal"
+    mock_model.pub_place = "Model City"
+    mock_model.source_id = "django123"
+
+    # Mock properties
+    mock_model.first_page = "5"
+    mock_model.last_page = "10"
+
+    mock_request = Mock()
+    mock_request.build_absolute_uri.return_value = (
+        "http://testserver/archive/detail/django123/"
+    )
+    context = {"request": mock_request}
+
+    with patch("django.urls.reverse") as mock_reverse:
+        mock_reverse.return_value = "/archive/detail/django123/"
+        result = coins_data(context, mock_model)
+
+    # Verify Django model functionality
+    assert result["rft_val_fmt"] == "info:ofi/fmt:kev:mtx:book"
+    assert result["genre"] == "bookitem"  # Excerpt type
+    assert result["atitle"] == "Django Model Test"  # Article/excerpt title
+    assert result["btitle"] == "Test Book Journal"  # Containing book title
+    assert result["au"] == "Model Author"
+    assert result["place"] == "Model City"
+    assert result["spage"] == "5"  # From first_page property
+    assert result["epage"] == "10"  # From last_page property
+    assert result["pages"] == "5-10"  # Constructed range

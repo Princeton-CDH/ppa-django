@@ -57,7 +57,7 @@ class Command(BaseCommand):  # pragma: no cover
                     "pages_orig": digwork.pages_orig,
                     "pages_digital": digwork.pages_digital,
                     "old_hathi_start": hathi_page_url(
-                        digwork.source_id, digwork.first_page_digital()
+                        digwork.source_id, digwork.first_page_digital
                     ),
                 }
                 # NOTE: mets loading copied from hathi_page_index_data method
@@ -85,9 +85,9 @@ class Command(BaseCommand):  # pragma: no cover
                 # that would be included with current digital range (1-based index)
 
                 try:
-                    excerpt_first_page = page_info[digwork.first_page_digital() - 1]
+                    excerpt_first_page = page_info[digwork.first_page_digital - 1]
                 except IndexError:
-                    if digwork.first_page_digital() >= len(page_info):
+                    if digwork.first_page_digital >= len(page_info):
                         excerpt_first_page[-1]
                         info["notes"] = "digital page out of range; trying last page"
 
@@ -105,12 +105,12 @@ class Command(BaseCommand):  # pragma: no cover
 
                 # check if METS page label for the first page in range
                 # matches the desired first original page
-                if excerpt_first_page["label"] != str(digwork.first_page_original()):
+                if excerpt_first_page["label"] != str(digwork.first_page_original):
                     info["orig_label_match"] = "N"
                     # if they don't match, can we calculate the offset?
                     # (only works for numeric page labels)
                     try:
-                        diff = int(digwork.first_page_original()) - int(
+                        diff = int(digwork.first_page_original) - int(
                             excerpt_first_page["label"]
                         )
                         # calculate the expected new digital page range
