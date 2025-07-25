@@ -168,7 +168,7 @@ class TestDigitizedWorkDetailView(TestCase):
         self.assertContains(response, excerpt.title)
         self.assertContains(response, excerpt.book_journal)
         self.assertContains(
-            response, hathi_page_url(excerpt.source_id, excerpt.first_page())
+            response, hathi_page_url(excerpt.source_id, excerpt.first_page)
         )
 
     @patch("ppa.archive.models.DigitizedWork.index_items")
@@ -188,7 +188,7 @@ class TestDigitizedWorkDetailView(TestCase):
         response = self.client.get(excerpt.get_absolute_url())
         self.assertContains(
             response,
-            gale_page_url(excerpt.source_url, excerpt.first_page()).replace(
+            gale_page_url(excerpt.source_url, excerpt.first_page).replace(
                 "&", "&amp;"  # without escaping the ampersand, check fails
             ),
         )
@@ -476,7 +476,7 @@ class TestDigitizedWorkDetailView(TestCase):
                 "archive:detail",
                 kwargs={
                     "source_id": excerpt.source_id,
-                    "start_page": excerpt.first_page_digital(),
+                    "start_page": excerpt.first_page_digital,
                 },
             )
         )

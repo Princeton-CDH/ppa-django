@@ -405,10 +405,10 @@ def test_coins_data_mixed_field_names():
 
 def test_coins_data_django_model():
     """Test coins_data with Django model objects.
-    This tests the new functionality where the tag can work directly with
-    DigitizedWork model instances by handling model methods and property conversion.
+    This tests the functionality where the tag can work directly with
+    DigitizedWork model instances using properties.
     """
-    # Mock Django model object with methods and properties
+    # Mock Django model object with properties
     mock_model = Mock()
     mock_model.work_type = "excerpt"  # Property we added
     mock_model.title = "Django Model Test"
@@ -417,9 +417,9 @@ def test_coins_data_django_model():
     mock_model.pub_place = "Model City"
     mock_model.source_id = "django123"
 
-    # Mock methods that need to be called
-    mock_model.first_page = Mock(return_value="5")
-    mock_model.last_page = Mock(return_value="10")
+    # Mock properties
+    mock_model.first_page = "5"
+    mock_model.last_page = "10"
 
     mock_request = Mock()
     mock_request.build_absolute_uri.return_value = (
@@ -438,11 +438,6 @@ def test_coins_data_django_model():
     assert result["btitle"] == "Test Book Journal"  # Containing book title
     assert result["au"] == "Model Author"
     assert result["place"] == "Model City"
-    assert result["spage"] == "5"  # From first_page() method
-    assert result["epage"] == "10"  # From last_page() method
+    assert result["spage"] == "5"  # From first_page property
+    assert result["epage"] == "10"  # From last_page property
     assert result["pages"] == "5-10"  # Constructed range
-
-    # Verify methods were called
-    # first_page is called twice: once for URL generation, once for page metadata
-    assert mock_model.first_page.call_count == 2
-    mock_model.last_page.assert_called_once()
