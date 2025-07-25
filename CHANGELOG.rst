@@ -3,6 +3,15 @@
 CHANGELOG
 =========
 
+3.15.1
+----
+
+Minor Improvements:
+
+- Handle 500 error from Gale API when indexing pages with clear logging to determine whether retry succeeded.
+- Simplify CoinS generation logic for Zotero integration.
+
+
 3.15
 ----
 
@@ -16,7 +25,7 @@ User Experience Improvements:
 - As a researcher, I want to see the source of the works in my results, so that I can see where the texts are coming from.
 - Revise footer to make menu more flexible (and support moving Technical content page to "About" menu so it is easier to find)
 
-Editorial improvements:
+Editorial Improvements:
 
 - As a content editor, I want to add tags to editorial essays so I can categorize and group essays for discovery.
 - As a content editor, I want a way to generating PDFs from editorial essays without developer assistance, so that I can deposit versions of the essays for DOIs.
