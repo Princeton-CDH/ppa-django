@@ -129,15 +129,7 @@ def _get_item_value(obj, key, default=None):
         # Try clean field name first (from aliasing)
         value = getattr(obj, key, None)
         if value is not None:
-            # If it's a method (Django model method), call it
-            if callable(value):
-                try:
-                    return value()
-                except TypeError:
-                    # Method requires arguments, skip it
-                    pass
-            else:
-                return value
+            return value
 
         # Fall back to raw Solr field name with _s suffix
         raw_field_name = f"{key}_s"
