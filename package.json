@@ -31,10 +31,9 @@
         "fomantic-ui": "^2.9.0",
         "fomantic-ui-less": "^2.9.4",
         "mkdirp": "^3.0.1",
-        "pa11y-ci": "^4.0.1",
         "parallax-js": "^3.1.0",
         "postcss": "^8.5.6",
-        "postcss-loader": "^8.0.0",
+        "postcss-loader": "^8.2.0",
         "rxjs": "^7.8.1",
         "sass": "^1.70.0",
         "sass-loader": "^14.0.0",
@@ -64,10 +63,11 @@
         "mini-css-extract-plugin": "^2.9.2",
         "style-loader": "^4.0.0",
         "ts-jest": "^29.1.2",
-        "webpack-dev-server": "^5.2.2"
+        "webpack-dev-server": "^5.2.2",
+        "pa11y-ci": "^4.0.1",
     },
     "volta": {
         "node": "20.19.3",
-        "npm": "10.9.3"
+        "npm": "10.8.3"
     }
 }
