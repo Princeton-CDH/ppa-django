@@ -1,5 +1,7 @@
 import PitBar from './pitbar'
 import NavMenu from './modules/NavMenu'
+import 'fomantic-ui-less/semantic.less'
+import 'fomantic-ui/dist/semantic.min.js'
 
 document.firstElementChild.classList.remove('no-js') // remove the no-js class
 
