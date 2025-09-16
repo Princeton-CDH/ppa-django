@@ -1,15 +1,16 @@
-from unittest.mock import patch
-import pytest
-from collections import deque
-import types
-from django.core.management import call_command
-from django.core.management.base import CommandError
-from datetime import datetime, timedelta
-import os
-import orjsonl
 import csv
 import json
-import tempfile
+import os
+import types
+from collections import deque
+from datetime import datetime, timedelta
+from unittest.mock import patch
+
+import orjsonl
+import pytest
+from django.core.management import call_command
+from django.core.management.base import CommandError
+
 from ppa.archive.management.commands import generate_textcorpus
 
 # TODO: this should use sample works data and actual model index data
@@ -140,53 +141,52 @@ def patched_pages_solr_queryset(mock_solr_queryset):
         yield mock_qs
 
 
-def test_iter_solr_pages(patched_pages_solr_queryset):
-    with tempfile.TemporaryDirectory() as tdir:
-        cmd = init_cmd(path=tdir)
-        page_iter = cmd.iter_solr()
-        assert isinstance(page_iter, types.GeneratorType)
+def test_iter_solr_pages(tmp_path, patched_pages_solr_queryset):
+    cmd = init_cmd(path=tmp_path)
+    page_iter = cmd.iter_solr()
+    assert isinstance(page_iter, types.GeneratorType)
 
-        for i, d in enumerate(page_iter):
-            assert type(d) is dict
-            assert d
-            assert set(d.keys()) == set(cmd.FIELDLIST["page"].keys())
-            assert d["id"]
-            assert "." in d["id"]
-            assert d["id"].split(".")[-1].isdigit()
+    for i, d in enumerate(page_iter):
+        assert type(d) is dict
+        assert d
+        assert set(d.keys()) == set(cmd.FIELDLIST["page"].keys())
+        assert d["id"]
+        assert "." in d["id"]
+        assert d["id"].split(".")[-1].isdigit()
 
-        assert i + 1 == len(mock_page_docs)
+    assert i + 1 == len(mock_page_docs)
 
-        # assertion needs to test after we begin/consume generator
-        cmd.query_set.filter.assert_called_with(item_type="page")
-        cmd.query_set.order_by.assert_called_with("id")
-        cmd.query_set.only.assert_called_with(**cmd.FIELDLIST["page"])
+    # assertion needs to test after we begin/consume generator
+    cmd.query_set.filter.assert_called_with(item_type="page")
+    cmd.query_set.order_by.assert_called_with("id")
+    cmd.query_set.only.assert_called_with(**cmd.FIELDLIST["page"])
 
 
-def test_iter_solr_works(patched_works_solr_queryset):
-    with tempfile.TemporaryDirectory() as tdir:
-        cmd = init_cmd(path=tdir)
+def test_iter_solr_works(tmp_path, patched_works_solr_queryset):
+    cmd = init_cmd(path=tmp_path)
 
-        work_iter = cmd.iter_solr(item_type="work")
-        assert isinstance(work_iter, types.GeneratorType)
+    work_iter = cmd.iter_solr(item_type="work")
+    assert isinstance(work_iter, types.GeneratorType)
 
-        for i, d in enumerate(work_iter):
-            assert type(d) is dict
-            assert d
-            assert set(d.keys()) == set(cmd.FIELDLIST["work"].keys())
-            assert d["work_id"]
+    for i, d in enumerate(work_iter):
+        assert type(d) is dict
+        assert d
+        assert set(d.keys()) == set(cmd.FIELDLIST["work"].keys())
+        assert d["work_id"]
 
-        assert i + 1 == len(mock_work_docs)
+    assert i + 1 == len(mock_work_docs)
 
-        # assertion needs to test after we begin/consume generator
-        cmd.query_set.filter.assert_called_with(item_type="work")
-        cmd.query_set.order_by.assert_called_with("id")
-        cmd.query_set.only.assert_called_with(**cmd.FIELDLIST["work"])
+    # assertion needs to test after we begin/consume generator
+    cmd.query_set.filter.assert_called_with(item_type="work")
+    cmd.query_set.order_by.assert_called_with("id")
+    cmd.query_set.only.assert_called_with(**cmd.FIELDLIST["work"])
 
 
 @patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_solr")
 def test_iter_works(mock_iter_solr):
     mock_iter_solr.return_value = (d for d in mock_work_docs)
     cmd = generate_textcorpus.Command()
+    cmd.set_params()  # includes queryset initialization
 
     work_iter = cmd.iter_works()
     assert isinstance(work_iter, types.GeneratorType)
@@ -199,36 +199,28 @@ def test_iter_works(mock_iter_solr):
     mock_iter_solr.assert_called_with(item_type="work")
 
 
-def test_iter_pages():
-    with patch(
-        "ppa.archive.management.commands.generate_textcorpus.Command.iter_solr"
-    ) as mock_iter_solr:
-        mock_iter_solr.return_value = (d for d in mock_page_docs)
-        cmd = init_cmd()
-        page_iter = cmd.iter_pages()
-        assert isinstance(page_iter, types.GeneratorType)
+@patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_solr")
+def test_iter_pages(mock_iter_solr):
+    mock_iter_solr.return_value = (d for d in mock_page_docs)
+    cmd = init_cmd()
+    page_iter = cmd.iter_pages()
+    assert isinstance(page_iter, types.GeneratorType)
 
-        res = list(page_iter)
-        assert res, "No pages returned"
-        assert len(res) == len(mock_page_docs)
-        mock_iter_solr.assert_called_with(item_type="page")
+    res = list(page_iter)
+    assert res, "No pages returned"
+    assert len(res) == len(mock_page_docs)
+    mock_iter_solr.assert_called_with(item_type="page")
 
 
-def test_progressbar(patched_pages_solr_queryset):
-    with patch(
-        "ppa.archive.management.commands.generate_textcorpus.progressbar"
-    ) as mock_iter_progress:
-        cmd = init_cmd(progress=True, dry_run=True)
-        # call the iterator and convert to list to consume
-        list(cmd.iter_pages())
-        mock_iter_progress.assert_called()
+@patch("ppa.archive.management.commands.generate_textcorpus.progressbar")
+def test_progressbar(mock_iter_progress, patched_pages_solr_queryset):
+    # call the iterator and convert to list to consume
+    list(init_cmd(progress=True, dry_run=True).iter_pages())
+    mock_iter_progress.assert_called()
 
-    with patch(
-        "ppa.archive.management.commands.generate_textcorpus.progressbar"
-    ) as mock_iter_progress:
-        cmd = init_cmd(progressbar=False, dry_run=True)
-        list(cmd.iter_pages())
-        mock_iter_progress.assert_not_called()
+    mock_iter_progress.reset_mock()
+    list(init_cmd(progressbar=False, dry_run=True).iter_pages())
+    mock_iter_progress.assert_not_called()
 
 
 def test_no_solr():
@@ -281,29 +273,26 @@ def test_save_metadata(mock_iter_solr, tmp_path):
     mock_iter_solr.assert_called_with(item_type="work")
 
 
-def test_save_pages():
-    with patch(
-        "ppa.archive.management.commands.generate_textcorpus.Command.iter_solr"
-    ) as mock_iter_solr:
-        mock_iter_solr.return_value = (d for d in mock_page_docs)
+@patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_solr")
+def test_save_pages(mock_iter_solr, tmp_path):
+    mock_iter_solr.return_value = (d for d in mock_page_docs)
 
-        with tempfile.TemporaryDirectory() as tdir:
-            cmd = init_cmd(path=tdir)
-            assert cmd.path == tdir
-            cmd.save_pages()
-            assert not os.path.exists(cmd.path_works_json)
-            assert not os.path.exists(cmd.path_works_csv)
-            assert os.path.exists(cmd.path_pages_json)
+    cmd = init_cmd(path=tmp_path)
+    assert cmd.path == tmp_path
+    cmd.save_pages()
+    assert not os.path.exists(cmd.path_works_json)
+    assert not os.path.exists(cmd.path_works_csv)
+    assert os.path.exists(cmd.path_pages_json)
 
-            pages_ld_out = list(cmd.iter_pages())
-            assert len(pages_ld_out) == 0, "generator should be spent"
+    pages_ld_out = list(cmd.iter_pages())
+    assert len(pages_ld_out) == 0, "generator should be spent"
 
-            pages_json = orjsonl.load(cmd.path_pages_json)
-            assert len(pages_json) == len(mock_page_docs)
+    pages_json = orjsonl.load(cmd.path_pages_json)
+    assert len(pages_json) == len(mock_page_docs)
 
-            for json_d, mock_d in zip(pages_json, mock_page_docs_copy):
-                assert json_d["id"] == mock_d["id"]
-                assert json_d == mock_d  # no change, keys were same
+    for json_d, mock_d in zip(pages_json, mock_page_docs_copy):
+        assert json_d["id"] == mock_d["id"]
+        assert json_d == mock_d  # no change, keys were same
 
 
 # test: options and expected resulting attributes on the command
@@ -365,76 +354,63 @@ def test_default_args(mock_iter_works, mock_iter_pages, tmp_path):
     assert cmd.batch_size == generate_textcorpus.DEFAULT_BATCH_SIZE
 
 
-def test_handle(tmp_path):
-    with (
-        patch(
-            "ppa.archive.management.commands.generate_textcorpus.Command.iter_works",
-        ) as mock_iter_works,
-        patch(
-            "ppa.archive.management.commands.generate_textcorpus.Command.iter_pages",
-        ) as mock_iter_pages,
-    ):
-        mock_iter_works.return_value = (d for d in mock_work_docs)
-        mock_iter_pages.return_value = (d for d in mock_page_docs)
+@patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_works")
+@patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_pages")
+def test_handle(mock_iter_pages, mock_iter_works, tmp_path):
+    mock_iter_works.return_value = (d for d in mock_work_docs)
+    mock_iter_pages.return_value = (d for d in mock_page_docs)
 
-        cmd = generate_textcorpus.Command()
-        # use call command so default args are set properly
-        call_command(cmd, path=str(tmp_path))
-        assert cmd.path == str(tmp_path)
-        assert os.path.exists(cmd.path_works_json)
-        assert os.path.exists(cmd.path_works_csv)
-        assert os.path.exists(cmd.path_pages_json)
+    cmd = generate_textcorpus.Command()
+    # use call command so default args are set properly
+    call_command(cmd, path=str(tmp_path))
+    assert cmd.path == str(tmp_path)
+    assert os.path.exists(cmd.path_works_json)
+    assert os.path.exists(cmd.path_works_csv)
+    assert os.path.exists(cmd.path_pages_json)
 
-        meta_ld_out = list(cmd.iter_pages())
-        assert len(meta_ld_out) == 0, "generator should be spent"
+    meta_ld_out = list(cmd.iter_pages())
+    assert len(meta_ld_out) == 0, "generator should be spent"
 
-        with open(cmd.path_works_json) as f:
-            json_meta = json.load(f)
+    with open(cmd.path_works_json) as f:
+        json_meta = json.load(f)
 
-        with open(cmd.path_works_csv, newline="") as csvfile:
-            reader = csv.DictReader(csvfile)
-            csv_meta = list(reader)
+    with open(cmd.path_works_csv, newline="") as csvfile:
+        reader = csv.DictReader(csvfile)
+        csv_meta = list(reader)
 
-        assert len(json_meta) == len(csv_meta)
-        assert len(json_meta) == len(mock_work_docs)
+    assert len(json_meta) == len(csv_meta)
+    assert len(json_meta) == len(mock_work_docs)
 
-        for json_d, csv_d, mock_d in zip(json_meta, csv_meta, mock_work_docs_copy):
-            assert json_d == csv_d
-            assert json_d["work_id"] == mock_d["work_id"]
-            assert json_d["source"] == mock_d["source"]
+    for json_d, csv_d, mock_d in zip(json_meta, csv_meta, mock_work_docs_copy):
+        assert json_d == csv_d
+        assert json_d["work_id"] == mock_d["work_id"]
+        assert json_d["source"] == mock_d["source"]
 
-        pages_ld_out = list(cmd.iter_pages())
-        assert len(pages_ld_out) == 0, "generator should be spent"
+    pages_ld_out = list(cmd.iter_pages())
+    assert len(pages_ld_out) == 0, "generator should be spent"
 
-        pages_json = orjsonl.load(cmd.path_pages_json)
-        assert len(pages_json) == len(mock_page_docs)
+    pages_json = orjsonl.load(cmd.path_pages_json)
+    assert len(pages_json) == len(mock_page_docs)
 
-        for json_d, mock_d in zip(pages_json, mock_page_docs_copy):
-            assert json_d["id"] == mock_d["id"]
-            assert json_d == mock_d  # no change, keys were same
+    for json_d, mock_d in zip(pages_json, mock_page_docs_copy):
+        assert json_d["id"] == mock_d["id"]
+        assert json_d == mock_d  # no change, keys were same
 
 
-def test_dry_run():
-    with (
-        patch(
-            "ppa.archive.management.commands.generate_textcorpus.Command.iter_works",
-        ) as mock_iter_works,
-        patch(
-            "ppa.archive.management.commands.generate_textcorpus.Command.iter_pages",
-        ) as mock_iter_pages,
-    ):
-        mock_iter_works.return_value = (d for d in mock_work_docs)
-        mock_iter_pages.return_value = (d for d in mock_page_docs)
+@patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_works")
+@patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_pages")
+def test_dry_run(mock_iter_pages, mock_iter_works, tmp_path):
+    mock_iter_works.return_value = (d for d in mock_work_docs)
+    mock_iter_pages.return_value = (d for d in mock_page_docs)
 
-        with tempfile.TemporaryDirectory() as tdir:
-            path = os.path.join(tdir, "corpus")
-            cmd = init_cmd()
-            cmd.handle(path=path, dry_run=True, verbosity=1)
-            assert cmd.path == path
-            assert not os.path.exists(path)
-            assert not os.path.exists(cmd.path_works_json)
-            assert not os.path.exists(cmd.path_works_json)
-            assert not os.path.exists(cmd.path_pages_json)
+    path = tmp_path / "corpus"
+    cmd = init_cmd()
+    cmd.handle(path=path, dry_run=True, verbosity=1)
+    assert cmd.path == path
+    assert not os.path.exists(path)
+    assert not os.path.exists(cmd.path_works_json)
+    assert not os.path.exists(cmd.path_works_json)
+    assert not os.path.exists(cmd.path_pages_json)
 
 
 def test_nowstr():
