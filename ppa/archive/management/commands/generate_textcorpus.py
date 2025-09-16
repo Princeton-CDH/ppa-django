@@ -219,7 +219,8 @@ class Command(BaseCommand):
         ready for output to CSV: converts list field (collections) into
         a delimited string.
         """
-        for record in data:
+        for row in data:
+            record = row.copy()  # make a copy; don't modify the original
             # convert list field to delimited string
             record["collections"] = self.multival_delimiter.join(record["collections"])
             yield record
