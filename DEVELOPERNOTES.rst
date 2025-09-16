@@ -326,3 +326,23 @@ or simply set ``ALLOWED_HOSTS = ["*"]``.
 Note that this will not work in Webpack dev mode.
 
 When finished, set the default Site back to ``localhost`` and port 8000.
+
+
+Upgrading Fomantic UI
+---------------------
+
+In order to upgrade to newer versions of Fomantic UI:
+
+1. Bump both ``fomantic-ui`` and ``fomantic-ui-less`` packages to the same
+   version number.
+2. Replace the contents of ``sitemedia/semantic/src/themes/default`` with the
+   new version's ``default`` theme. This can be found either in the
+   `Fomantic-UI-LESS repo <https://github.com/fomantic/Fomantic-UI-LESS>`_
+   or in ``node_modules/fomantic-ui-less/themes/default`` after installing the
+   new version.
+3. Check for deprecations or major changes between versions to see if any new
+   site or ``theme.config`` variables are required, or if behaviors have
+   changed.
+4. To test locally, rebuild with ``npm run build`` and collect static files
+   with ``python manage.py collectstatic``, then restart your dev server. Then
+   you can test the update locally (check styles, fonts, UI behaviors).

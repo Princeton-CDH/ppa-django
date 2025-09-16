@@ -34,7 +34,7 @@ contains the most recent release, and work in progress will be on the **develop*
 Pull requests should be made against develop.
 
 
-Python 3.12 / Django 5.2 / Node 18.12 / Postgresql 15 / Solr 9
+Python 3.12 / Django 5.2 / Node 20 / Postgresql 15 / Solr 9
 
 
 Development instructions
@@ -89,18 +89,10 @@ before running the server.
     npm install
     npm run build
 
-Alternatively, you can rebuild just the custom files or fomantic independently.
-This is useful if you make small changes and need to recompile once::
+You can also run a development server with hot reload if you'll be changing
+assets frequently::
 
-    npm run build:qa # just the custom files, with sourcemaps
-    npm run build:prod # just the custom files, no sourcemaps
-    npm run build:semantic # just fomantic UI
-
-Finally, you can run a development server with hot reload if you'll be changing
-either set of assets frequently. These two processes are separate as well::
-
-    npm run dev # serve just the custom files from memory, with hot reload
-    npm run dev:semantic # serve just fomantic UI files and recompile on changes
+    npm run dev # serve built code from memory, with hot reload
 
 Tests
 ~~~~~
