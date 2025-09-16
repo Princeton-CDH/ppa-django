@@ -85,6 +85,9 @@ class Command(BaseCommand):
         },
     }
 
+    #: multivalue delimiter for CSV output (only applies to collections)
+    multival_delimiter = ";"
+
     # Argument parsing
     def add_arguments(self, parser):
         """
@@ -212,9 +215,10 @@ class Command(BaseCommand):
 
             # save csv
             with open(self.path_works_csv, "w", newline="") as csvfile:
-                # fieldnames we already know
-                fieldnames = list(self.FIELDLIST["work"].keys())
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                # fieldnames are set on the class
+                writer = csv.DictWriter(
+                    csvfile, fieldnames=self.FIELDLIST["work"].keys()
+                )
                 writer.writeheader()
                 writer.writerows(data)
 
