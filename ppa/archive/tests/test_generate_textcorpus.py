@@ -26,7 +26,7 @@ sample_page_content = [
 
 
 @pytest.fixture()
-def sample_works(db):
+def sample_works(db, empty_solr):
     # load fixture works and index works and pages in Solr
     call_command("loaddata", "sample_digitized_works")
     # index in Solr
