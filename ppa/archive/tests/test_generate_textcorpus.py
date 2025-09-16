@@ -249,9 +249,12 @@ def test_iter_works(sample_works):
     for result in solr_works:
         result_fields = set(result.keys())
         # Solr doesn't return subtitle when empty;
-        # only one fixture volume has a subtitle
+        # only one fixture has a subtitle
         if result["source_id"] == "uc1.$b14645":
-            assert result_fields == expected_work_fields
+            # subtitle is present, but book journal and volume are not
+            assert result_fields == expected_work_fields.difference(
+                {"book_journal", "volume"}
+            )
         else:
             assert result_fields.issubset(expected_work_fields)
 
@@ -337,12 +340,24 @@ def test_save_metadata(sample_works, tmp_path):
         # these should be equivalent once split
         assert json_collections == csv_collections.split(cmd.multival_delimiter)
 
+        # assert enumcron (when present) is output as volume
+        if digwork.enumcron:
+            assert json_data["volume"] == digwork.enumcron
+        else:
+            # if not present, remove from csv for comparison with json
+            csv_data.pop("volume")
+
+        # no fixture works have book/journal field set
+        # assert present, then remove before comparing the two versions
+        assert "book_journal" in csv_data
+        csv_data.pop("book_journal")
+
         # remaining data should match
         # solr and json omit empty fields; check and remove for comparison
         if not digwork.subtitle:
             # only one work has a subtitle
             csv_data.pop("subtitle")
-        if not digwork.author:  # some sample fixutre works have no author
+        if not digwork.author:  # some sample fixture works have no author
             csv_data.pop("author")
         assert json_data == csv_data
 

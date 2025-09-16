@@ -87,11 +87,15 @@ class Command(BaseCommand):
             "source_url": "source_url",
             "sort_title": "sort_title",
             "subtitle": "subtitle",
+            "volume": "enumcron",
+            "book_journal": "book_journal_s",
         },
     }
 
     #: multivalue delimiter for CSV output (only applies to collections)
     multival_delimiter = ";"
+    #: optional behavior to generate metadata export only
+    metadata_only = False
 
     # Argument parsing
     def add_arguments(self, parser):
@@ -271,7 +275,7 @@ class Command(BaseCommand):
         self.path_works_csv = os.path.join(self.path, "ppa_metadata.csv")
         jsonl_ext = "jsonl.gz" if options.get("gzip") else "jsonl"
         self.path_pages_json = os.path.join(self.path, f"ppa_pages.{jsonl_ext}")
-        self.metadata_only = options.get("metadata_only")
+        self.metadata_only = options.get("metadata_only", False)
         self.is_dry_run = options.get("dry_run")
         self.doclimit = options.get("doc_limit")
         self.verbosity = options.get("verbosity", self.verbosity)
