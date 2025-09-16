@@ -50,7 +50,11 @@ def sample_works(db):
     # NOTE: without a sleep, even with commit=True and/or low
     # commitWithin settings, indexed data isn't reliably available
     index_checks = 0
-    while SolrQuerySet().search(item_type="work").count() == 0 and index_checks <= 10:
+    while (
+        SolrQuerySet().search(item_type="work").count() == 0
+        or SolrQuerySet().search(item_type="page").count() == 0
+        and index_checks <= 10
+    ):
         # sleep until we get records back; 0.1 seems to be enough
         # for local dev with local Solr
         sleep(0.1)
@@ -69,7 +73,7 @@ def init_cmd(**kwargs):
     return cmd
 
 
-def test_iter_solr_pages():
+def test_iter_solr_pages(sample_works):
     cmd = init_cmd()
     page_data = cmd.iter_solr(item_type="page")
     assert isinstance(page_data, types.GeneratorType)
@@ -342,6 +346,18 @@ def test_handle(sample_works, tmp_path, capsys):
     assert captured.out == f"Saving files in {output_dir}\n"
 
 
+def test_handle_metadata_only(sample_works, tmp_path, capsys):
+    output_dir = tmp_path / "output"
+    cmd = generate_textcorpus.Command()
+    # use call command so default args are set properly
+    call_command(cmd, path=str(output_dir), metadata_only=True)
+    # metadata output files are created
+    assert os.path.exists(cmd.path_works_json)
+    assert os.path.exists(cmd.path_works_csv)
+    # page output file are NOT created
+    assert not os.path.exists(cmd.path_pages_json)
+
+
 @patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_works")
 @patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_pages")
 def test_dry_run(mock_iter_pages, mock_iter_works, tmp_path):
@@ -368,3 +384,22 @@ def test_nowstr():
     )
     time_diff = datetime_there - datetime_now
     assert time_diff < timedelta(seconds=5)
+
+
+def test_metadata_for_csv():
+    cmd = init_cmd()
+    input_data = [
+        {"id": "one", "collections": ["a", "b", "cd"]},
+        {"id": "two3", "collections": ["foo", "bar"]},
+        {"id": "four", "collections": []},
+    ]
+    output_data = cmd.metadata_for_csv(input_data)
+    assert isinstance(output_data, types.GeneratorType)
+    output_data = list(output_data)
+    for i, input_row in enumerate(input_data):
+        # collection list converted to delimited string
+        assert output_data[i]["collections"] == cmd.multival_delimiter.join(
+            input_row["collections"]
+        )
+        # other fields unchanged
+        assert output_data[i]["id"] == input_row["id"]
