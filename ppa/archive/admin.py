@@ -32,6 +32,8 @@ class DigitizedWorkResource(resources.ModelResource):
     status = fields.Field(
         attribute="get_status_display",
     )
+    # output alpha cluster id instead of numeric database id
+    cluster = fields.Field(attribute="cluster", column_name="cluster_id")
 
     class Meta:
         model = DigitizedWork
@@ -65,8 +67,6 @@ class DigitizedWorkResource(resources.ModelResource):
         widgets = {
             # customize many-to-many output for collections
             "collections": {"separator": "; ", "field": "name"},
-            # output cluster id instead of pk
-            "cluster": {"field": "cluster_id"},
         }
 
     def get_queryset(self):
