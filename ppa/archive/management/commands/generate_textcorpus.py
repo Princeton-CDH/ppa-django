@@ -1,39 +1,44 @@
 """
 **generate_textcorpus** is a custom manage command to generate a plain
-text corpus from Solr.  It should be run *after* content has been indexed
-into Solr via the **index** manage command.
+text corpus from Solr with accompanying work-level metadata.  Because
+it relies on Solr for full-text content, it should be run *after*
+page contents have been indexed in Solr via the **index_pages** manage command.
 
 The full text corpus is generated from Solr; it does not include content
 for suppressed works or their pages (note that this depends on Solr
 content being current).
 
-Examples:
+Example usage:
 
-    - Expected use:
+    - Default behavior::
+
         python manage.py generate_textcorpus
 
-    - Specify a path:
+    - Specify output path::
+
         python manage.py generate_textcorpus --path ~/ppa_solr_corpus
 
-    - Dry run (do not create any files or folders):
+    - Dry run (do not create any files or folders)::
+
         python manage.py generate_textcorpus --dry-run
 
-    - Partial run (save only N rows, for testing):
+    - Partial run (save only N rows, for testing)::
+
         python manage.py generate_textcorpus --doc-limit 100
 
-    - Cron-style run (no progress bar, but logs)
+    - Suppress progress bar and increase verbosity:
+
         python manage.py generate_textcorpus --no-progress --verbosity 2
 
 Notes:
 
     - Default path is `ppa_corpus_{timestamp}` in the current working directory
-
-    - Default batch size is 10,000, meaning 10,000 records are pulled 
-      from solr at a time. Usage testing revealed that this default 
-      iterates over the collection the quickest.
+    - Default batch size is 10,000 (Solr record iteration size;
+      this default was chosen for performance based on testing.)
 
 """
 
+from collections.abc import Generator
 import argparse
 import os
 from datetime import datetime
@@ -96,8 +101,7 @@ class Command(BaseCommand):
         # add --path argument for output
         parser.add_argument(
             "--path",
-            help="Directory path to save corpus file(s). "
-            "Defaults to ./ppa_corpus_{timestamp}",
+            help="Directory path to save corpus file(s). Defaults to ./ppa_corpus_{timestamp}",
             default=None,
         )
 
@@ -126,7 +130,13 @@ class Command(BaseCommand):
             action=argparse.BooleanOptionalAction,
             default=True,
         )
-
+        # add option to skip pages and output metadata only
+        parser.add_argument(
+            "--metadata-only",
+            action="store_true",
+            help="Only generate metadata export (skip page export)",
+            default=False,
+        )
         # add --dry-run argument (don't save anything, just iterate)
         parser.add_argument(
             "--dry-run",
@@ -199,28 +209,40 @@ class Command(BaseCommand):
         """
         yield from self.iter_solr(item_type="page")
 
+    def metadata_for_csv(self, data: Generator | list) -> Generator:
+        """
+        Takes a list or iterator of metadata records and yields a version
+        ready for output to CSV: converts list field (collections) into
+        a delimited string.
+        """
+        for record in data:
+            # convert list field to delimited string
+            record["collections"] = self.multival_delimiter.join(record["collections"])
+            yield record
+
     ### saving to file
     def save_metadata(self):
         """
         Save the work-level metadata as a json file
         """
-        # get the data from solr
+        # get the data from solr;
+        # convert to a list so we can output twice
         data = list(self.iter_works())
 
         # save if not a dry run
         if not self.is_dry_run:
-            # save json
+            # save data as json
             with open(self.path_works_json, "w") as of:
                 json.dump(data, of, indent=2)
 
-            # save csv
+            # save data as csv
             with open(self.path_works_csv, "w", newline="") as csvfile:
                 # fieldnames are set on the class
                 writer = csv.DictWriter(
                     csvfile, fieldnames=self.FIELDLIST["work"].keys()
                 )
                 writer.writeheader()
-                writer.writerows(data)
+                writer.writerows(self.metadata_for_csv(data))
 
     def save_pages(self):
         """
@@ -249,6 +271,7 @@ class Command(BaseCommand):
         self.path_works_csv = os.path.join(self.path, "ppa_metadata.csv")
         jsonl_ext = "jsonl.gz" if options.get("gzip") else "jsonl"
         self.path_pages_json = os.path.join(self.path, f"ppa_pages.{jsonl_ext}")
+        self.metadata_only = options.get("metadata_only")
         self.is_dry_run = options.get("dry_run")
         self.doclimit = options.get("doc_limit")
         self.verbosity = options.get("verbosity", self.verbosity)
@@ -268,8 +291,9 @@ class Command(BaseCommand):
         # save metadata
         self.save_metadata()
 
-        # save pages
-        self.save_pages()
+        # save pages unless running in metadata-only mode
+        if not self.metadata_only:
+            self.save_pages()
 
 
 # helper func

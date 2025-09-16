@@ -28,7 +28,7 @@ mock_work_docs = [
         "pub_year": "pub_date",
         "publisher": "publisher",
         "pub_place": "pub_place",
-        "collections": "collections_exact",
+        "collections": ["collections_exact"],
         "work_type": "work_type_s",
         "source": "Gale",
         "source_url": "source_url",
@@ -44,7 +44,7 @@ mock_work_docs = [
         "pub_year": "pub_date",
         "publisher": "publisher",
         "pub_place": "pub_place",
-        "collections": "collections_exact",
+        "collections": ["collections_exact"],
         "work_type": "work_type_s",
         "source": "Hathi",
         "source_url": "source_url",
@@ -60,7 +60,7 @@ mock_work_docs = [
         "pub_year": "pub_date",
         "publisher": "publisher",
         "pub_place": "pub_place",
-        "collections": "collections_exact",
+        "collections": ["collections_exact"],
         "work_type": "work_type_s",
         "source": "source_t",
         "source_url": "source_url",
@@ -333,10 +333,9 @@ def test_save_metadata(sample_works, tmp_path):
         # JSON is a list; csv value is a delimited string
         json_collections = json_data.pop("collections")
         assert isinstance(json_collections, list)
-        csv_data.pop("collections")
-        # they should be equivalent once split
-        # TODO: uncomment once bug is fixed
-        # assert json_collections == csv_collections.split(cmd.multival_delimiter)
+        csv_collections = csv_data.pop("collections")
+        # these should be equivalent once split
+        assert json_collections == csv_collections.split(cmd.multival_delimiter)
 
         # remaining data should match
         # solr and json omit empty fields; check and remove for comparison
@@ -426,47 +425,22 @@ def test_default_args(mock_iter_works, mock_iter_pages, tmp_path):
     assert cmd.batch_size == generate_textcorpus.DEFAULT_BATCH_SIZE
 
 
-@patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_works")
-@patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_pages")
-def test_handle(mock_iter_pages, mock_iter_works, tmp_path):
-    mock_iter_works.return_value = (d for d in mock_work_docs)
-    mock_iter_pages.return_value = (d for d in mock_page_docs)
-
+def test_handle(sample_works, tmp_path, capsys):
+    output_dir = tmp_path / "output"
     cmd = generate_textcorpus.Command()
     # use call command so default args are set properly
-    call_command(cmd, path=str(tmp_path))
-    assert cmd.path == str(tmp_path)
+    call_command(cmd, path=str(output_dir))
+    assert cmd.path == str(output_dir)
+    # output directory created
+    assert output_dir.is_dir()
+    # output files are created
     assert os.path.exists(cmd.path_works_json)
     assert os.path.exists(cmd.path_works_csv)
     assert os.path.exists(cmd.path_pages_json)
+    # actual logic tested elsewhere
 
-    meta_ld_out = list(cmd.iter_pages())
-    assert len(meta_ld_out) == 0, "generator should be spent"
-
-    with open(cmd.path_works_json) as f:
-        json_meta = json.load(f)
-
-    with open(cmd.path_works_csv, newline="") as csvfile:
-        reader = csv.DictReader(csvfile)
-        csv_meta = list(reader)
-
-    assert len(json_meta) == len(csv_meta)
-    assert len(json_meta) == len(mock_work_docs)
-
-    for json_d, csv_d, mock_d in zip(json_meta, csv_meta, mock_work_docs_copy):
-        assert json_d == csv_d
-        assert json_d["work_id"] == mock_d["work_id"]
-        assert json_d["source"] == mock_d["source"]
-
-    pages_ld_out = list(cmd.iter_pages())
-    assert len(pages_ld_out) == 0, "generator should be spent"
-
-    pages_json = orjsonl.load(cmd.path_pages_json)
-    assert len(pages_json) == len(mock_page_docs)
-
-    for json_d, mock_d in zip(pages_json, mock_page_docs_copy):
-        assert json_d["id"] == mock_d["id"]
-        assert json_d == mock_d  # no change, keys were same
+    captured = capsys.readouterr()
+    assert captured.out == f"Saving files in {output_dir}\n"
 
 
 @patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_works")
