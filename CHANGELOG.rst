@@ -3,8 +3,15 @@
 CHANGELOG
 =========
 
+3.15.2
+------
+
+- Upgrade to node v20 / npm v10
+- Replace gulp build with a webpack build
+
+
 3.15.1
-----
+------
 
 Minor Improvements:
 
