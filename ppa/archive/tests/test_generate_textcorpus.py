@@ -16,100 +16,9 @@ from parasolr.django import SolrClient, SolrQuerySet
 from ppa.archive.management.commands import generate_textcorpus
 from ppa.archive.models import DigitizedWork, Page
 
-# TODO: this should use sample works data and actual model index data
-# to ensure it actually tests against current indexing logic
-mock_work_docs = [
-    {
-        "work_id": "text1",
-        "source_id": "source1",
-        "cluster_id": "cluster1",
-        "title": "title",
-        "author": "author_exact",
-        "pub_year": "pub_date",
-        "publisher": "publisher",
-        "pub_place": "pub_place",
-        "collections": ["collections_exact"],
-        "work_type": "work_type_s",
-        "source": "Gale",
-        "source_url": "source_url",
-        "sort_title": "sort_title",
-        "subtitle": "subtitle",
-    },
-    {
-        "work_id": "text2",
-        "source_id": "source1",
-        "cluster_id": "cluster_id_s",
-        "title": "title",
-        "author": "author_exact",
-        "pub_year": "pub_date",
-        "publisher": "publisher",
-        "pub_place": "pub_place",
-        "collections": ["collections_exact"],
-        "work_type": "work_type_s",
-        "source": "Hathi",
-        "source_url": "source_url",
-        "sort_title": "sort_title",
-        "subtitle": "subtitle",
-    },
-    {
-        "work_id": "text3",
-        "source_id": "source_id",
-        "cluster_id": "cluster_id_s",
-        "title": "title",
-        "author": "author_exact",
-        "pub_year": "pub_date",
-        "publisher": "publisher",
-        "pub_place": "pub_place",
-        "collections": ["collections_exact"],
-        "work_type": "work_type_s",
-        "source": "source_t",
-        "source_url": "source_url",
-        "sort_title": "sort_title",
-        "subtitle": "subtitle",
-    },
-]
-mock_work_docs_copy = [{**d} for d in mock_work_docs]
-
-mock_page_docs = [
-    {
-        "id": "text1.000001",
-        "work_id": "text1",
-        "order": 0,
-        "label": "label",
-        "tags": "tags",
-        "text": "content",
-    },
-    {
-        "id": "text1.000002",
-        "work_id": "text1",
-        "order": 1,
-        "label": "label",
-        "tags": ["tags"],
-        "text": "content",
-    },
-    {
-        "id": "text2.00001",
-        "work_id": "group_id_s",
-        "order": 2,
-        "label": "label",
-        "tags": ["tags"],
-        "text": "content",
-    },
-    {
-        "id": "text2.00002",
-        "work_id": "group_id_s",
-        "order": 3,
-        "label": "label",
-        "tags": ["tags"],
-        "text": "content",
-    },
-]
-
-# need this because dicts are altered
-mock_page_docs_copy = [{**d} for d in mock_page_docs]
-
-# text, tags
+# fixture test content; indexed by sample_works fixture
 sample_page_content = [
+    # text, tags
     ("something about dials and clocks", []),
     ("knobs and buttons", ["unusual_page"]),
     ("something else extra", ["local_ocr", "titlepage"]),
@@ -158,34 +67,6 @@ def init_cmd(**kwargs):
     cmd = generate_textcorpus.Command()
     cmd.set_params(**kwargs)
     return cmd
-
-
-@pytest.fixture
-def patched_works_solr_queryset(mock_solr_queryset):
-    # local fixture that uses parasolr queryset mock
-    # and patches in test docs & facets
-    with patch(
-        "ppa.archive.management.commands.generate_textcorpus.SolrQuerySet",
-        new=mock_solr_queryset(),
-    ) as mock_queryset_cls:
-        mock_qs = mock_queryset_cls.return_value
-        mock_qs.only.return_value.count.return_value = len(mock_work_docs)
-        mock_qs.only.return_value.__getitem__.return_value = mock_work_docs
-        yield mock_qs
-
-
-@pytest.fixture
-def patched_pages_solr_queryset(mock_solr_queryset):
-    # local fixture that uses parasolr queryset mock
-    # and patches in test docs & facets
-    with patch(
-        "ppa.archive.management.commands.generate_textcorpus.SolrQuerySet",
-        new=mock_solr_queryset(),
-    ) as mock_queryset_cls:
-        mock_qs = mock_queryset_cls.return_value
-        mock_qs.only.return_value.count.return_value = len(mock_page_docs)
-        mock_qs.only.return_value.__getitem__.return_value = mock_page_docs
-        yield mock_qs
 
 
 def test_iter_solr_pages():
@@ -267,7 +148,7 @@ def test_iter_pages(mock_iter_solr):
 
 
 @patch("ppa.archive.management.commands.generate_textcorpus.progressbar")
-def test_progressbar(mock_iter_progress, patched_pages_solr_queryset):
+def test_progressbar(mock_iter_progress, sample_works):
     # call the iterator and convert to list to consume
     list(init_cmd(progress=True, dry_run=True).iter_pages())
     mock_iter_progress.assert_called()
@@ -362,23 +243,26 @@ def test_save_metadata(sample_works, tmp_path):
         assert json_data == csv_data
 
 
-@patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_solr")
-def test_save_pages(mock_iter_solr, tmp_path):
-    mock_iter_solr.return_value = (d for d in mock_page_docs)
-
+def test_save_pages(sample_works, tmp_path):
     cmd = init_cmd(path=tmp_path)
     cmd.save_pages()
+    # only creates pages and not metadata files
     assert not os.path.exists(cmd.path_works_json)
     assert not os.path.exists(cmd.path_works_csv)
     assert os.path.exists(cmd.path_pages_json)
 
+    # check that output was generated as expected
     pages_json = orjsonl.load(cmd.path_pages_json)
-    assert len(pages_json) == len(mock_page_docs)
+    assert len(pages_json) == len(sample_page_content)
 
-    for json_d, mock_d in zip(pages_json, mock_page_docs_copy):
-        # confirm we are comparing corresponding pages (preserves order)
-        assert json_d["id"] == mock_d["id"]
-        assert json_d == mock_d  # no change, keys were same
+    for json_data, fixture_data in zip(pages_json, sample_page_content):
+        # text content should match
+        assert json_data["text"] == fixture_data[0]
+        # tag content should match when present or be omitted
+        if fixture_data[1]:
+            assert json_data["tags"] == fixture_data[1]
+        else:
+            assert "tags" not in json_data
 
 
 # test: options and expected resulting attributes on the command
@@ -461,14 +345,16 @@ def test_handle(sample_works, tmp_path, capsys):
 @patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_works")
 @patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_pages")
 def test_dry_run(mock_iter_pages, mock_iter_works, tmp_path):
-    mock_iter_works.return_value = (d for d in mock_work_docs)
-    mock_iter_pages.return_value = (d for d in mock_page_docs)
+    # mock content does not matter in dry run, consumes generator but doesn't save
+    mock_iter_works.return_value = [1, 2, 3, 4, 5]
+    mock_iter_pages.return_value = ["a", "b", "c", "d"]
 
-    path = tmp_path / "corpus"
+    output_path = tmp_path / "corpus"
     cmd = init_cmd()
-    cmd.handle(path=path, dry_run=True, verbosity=1)
-    assert cmd.path == path
-    assert not os.path.exists(path)
+    cmd.handle(path=output_path, dry_run=True, verbosity=1)
+
+    assert cmd.path == output_path
+    assert not os.path.exists(output_path)
     assert not os.path.exists(cmd.path_works_json)
     assert not os.path.exists(cmd.path_works_json)
     assert not os.path.exists(cmd.path_pages_json)
