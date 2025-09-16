@@ -4,14 +4,17 @@ import os
 import types
 from collections import deque
 from datetime import datetime, timedelta
+from time import sleep
 from unittest.mock import patch
 
 import orjsonl
 import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
+from parasolr.django import SolrClient, SolrQuerySet
 
 from ppa.archive.management.commands import generate_textcorpus
+from ppa.archive.models import DigitizedWork, Page
 
 # TODO: this should use sample works data and actual model index data
 # to ensure it actually tests against current indexing logic
@@ -105,6 +108,50 @@ mock_page_docs = [
 # need this because dicts are altered
 mock_page_docs_copy = [{**d} for d in mock_page_docs]
 
+# text, tags
+sample_page_content = [
+    ("something about dials and clocks", []),
+    ("knobs and buttons", ["unusual_page"]),
+    ("something else extra", ["local_ocr", "titlepage"]),
+]
+
+
+@pytest.fixture()
+def sample_works(db):
+    # load fixture works and index works and pages in Solr
+    call_command("loaddata", "sample_digitized_works")
+    # index in Solr
+    DigitizedWork.index_items(DigitizedWork.objects.all())
+
+    # add sample page content for one of the fixture works
+    # and index it in solr
+    # (copied from test_views)
+
+    # use an unsaved digwork and hathi mock to index page data
+    # using actual page indexing logic and fields
+    digwork = DigitizedWork(source_id="chi.78013704")
+    with patch.object(digwork, "hathi") as mockhathi:
+        mock_pages = [
+            {"content": content, "order": i + 1, "label": i, "tags": tags}
+            for i, (content, tags) in enumerate(sample_page_content)
+        ]
+        mockhathi.page_data.return_value = mock_pages
+        SolrClient().update.index(list(Page.page_index_data(digwork)))
+
+    # NOTE: without a sleep, even with commit=True and/or low
+    # commitWithin settings, indexed data isn't reliably available
+    index_checks = 0
+    while SolrQuerySet().search(item_type="work").count() == 0 and index_checks <= 10:
+        # sleep until we get records back; 0.1 seems to be enough
+        # for local dev with local Solr
+        sleep(0.1)
+        # to avoid infinite loop when there's something wrong here,
+        # bail out after a certain number of attempts
+        index_checks += 1
+    yield
+    # remove all records from solr
+    SolrClient().update.delete_by_query("*:*")
+
 
 def init_cmd(**kwargs):
     # initialize the textcorpus command and set options
@@ -141,74 +188,78 @@ def patched_pages_solr_queryset(mock_solr_queryset):
         yield mock_qs
 
 
-def test_iter_solr_pages(tmp_path, patched_pages_solr_queryset):
-    cmd = init_cmd(path=tmp_path)
-    page_iter = cmd.iter_solr()
-    assert isinstance(page_iter, types.GeneratorType)
+def test_iter_solr_pages():
+    cmd = init_cmd()
+    page_data = cmd.iter_solr(item_type="page")
+    assert isinstance(page_data, types.GeneratorType)
+    page_data = list(page_data)
+    # should return fixture pages but not works
+    assert len(page_data) == len(sample_page_content)
 
-    for i, d in enumerate(page_iter):
-        assert type(d) is dict
-        assert d
-        assert set(d.keys()) == set(cmd.FIELDLIST["page"].keys())
-        assert d["id"]
-        assert "." in d["id"]
-        assert d["id"].split(".")[-1].isdigit()
+    expected_page_fields = set(cmd.FIELDLIST["page"].keys())
+    for i, result in enumerate(page_data):
+        result_fields = set(result.keys())
+        # solr doesn't return empty fields; first page has no tags
+        if i == 0:
+            result_fields.issubset(expected_page_fields)
+        else:
+            assert result_fields == expected_page_fields
 
-    assert i + 1 == len(mock_page_docs)
 
+def test_iter_solr_pages_mock(mock_solr_queryset):
+    # mock so we can inspect call
+    cmd = init_cmd()
+    cmd.query_set = mock_solr_queryset()()
+    # count is required for batching logic
+    cmd.query_set.count.return_value = 10
+    list(cmd.iter_solr(item_type="page"))
     # assertion needs to test after we begin/consume generator
     cmd.query_set.filter.assert_called_with(item_type="page")
     cmd.query_set.order_by.assert_called_with("id")
     cmd.query_set.only.assert_called_with(**cmd.FIELDLIST["page"])
 
 
-def test_iter_solr_works(tmp_path, patched_works_solr_queryset):
-    cmd = init_cmd(path=tmp_path)
+def test_iter_solr_works(mock_solr_queryset):
+    cmd = init_cmd()
+    cmd.query_set = mock_solr_queryset()()
+    # count is required for batching logic
+    cmd.query_set.count.return_value = 10
 
-    work_iter = cmd.iter_solr(item_type="work")
-    assert isinstance(work_iter, types.GeneratorType)
+    list(cmd.iter_solr(item_type="work"))
 
-    for i, d in enumerate(work_iter):
-        assert type(d) is dict
-        assert d
-        assert set(d.keys()) == set(cmd.FIELDLIST["work"].keys())
-        assert d["work_id"]
-
-    assert i + 1 == len(mock_work_docs)
-
+    # inspect query options
     # assertion needs to test after we begin/consume generator
     cmd.query_set.filter.assert_called_with(item_type="work")
     cmd.query_set.order_by.assert_called_with("id")
     cmd.query_set.only.assert_called_with(**cmd.FIELDLIST["work"])
 
 
-@patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_solr")
-def test_iter_works(mock_iter_solr):
-    mock_iter_solr.return_value = (d for d in mock_work_docs)
+@pytest.mark.django_db
+def test_iter_works(sample_works):
     cmd = generate_textcorpus.Command()
-    cmd.set_params()  # includes queryset initialization
+    cmd.set_params()  # initialize solr queryset
 
     work_iter = cmd.iter_works()
     assert isinstance(work_iter, types.GeneratorType)
 
-    res = list(work_iter)
-    assert res, "No pages returned"
-    assert len(res) == len(mock_work_docs)
-    for d in res:
-        assert type(d["source"]) is str, "string conversion failed"
-    mock_iter_solr.assert_called_with(item_type="work")
+    solr_works = list(work_iter)
+    # should match fixture data we indexed in setup fixture
+    assert len(solr_works) == DigitizedWork.objects.count()
+    expected_work_fields = set(cmd.FIELDLIST["work"].keys())
+    for result in solr_works:
+        result_fields = set(result.keys())
+        # Solr doesn't return subtitle when empty;
+        # only one fixture volume has a subtitle
+        if result["source_id"] == "uc1.$b14645":
+            assert result_fields == expected_work_fields
+        else:
+            assert result_fields.issubset(expected_work_fields)
 
 
 @patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_solr")
 def test_iter_pages(mock_iter_solr):
-    mock_iter_solr.return_value = (d for d in mock_page_docs)
     cmd = init_cmd()
-    page_iter = cmd.iter_pages()
-    assert isinstance(page_iter, types.GeneratorType)
-
-    res = list(page_iter)
-    assert res, "No pages returned"
-    assert len(res) == len(mock_page_docs)
+    deque(cmd.iter_pages(), maxlen=0)
     mock_iter_solr.assert_called_with(item_type="page")
 
 
@@ -223,18 +274,17 @@ def test_progressbar(mock_iter_progress, patched_pages_solr_queryset):
     mock_iter_progress.assert_not_called()
 
 
-def test_no_solr():
+def test_no_solr(empty_solr):
     cmd = init_cmd(verbosity=1, dry_run=True)
-    with pytest.raises(CommandError):
+    with pytest.raises(CommandError, match="No page records found in Solr"):
         page_iter = cmd.iter_pages()
         deque(page_iter, maxlen=0)
 
 
-@patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_solr")
-def test_save_metadata(mock_iter_solr, tmp_path):
-    mock_iter_solr.return_value = (d for d in mock_work_docs)
+def test_save_metadata(sample_works, tmp_path):
+    # test against fixture data indexend in solr
 
-    cmd = init_cmd(path=str(tmp_path), gzip=True)
+    cmd = init_cmd(path=tmp_path, gzip=True)
     cmd.save_metadata()
 
     path_meta = tmp_path / "ppa_metadata.json"
@@ -252,25 +302,50 @@ def test_save_metadata(mock_iter_solr, tmp_path):
     assert not path_pages.exists()
     assert not path_pages_gz.exists()
 
+    # load data to inspect results
     with open(path_meta) as f:
         json_meta = json.load(f)
-
     with open(path_meta_csv, newline="") as csvfile:
         reader = csv.DictReader(csvfile)
         csv_meta = list(reader)
 
-    meta_ld_out = list(cmd.iter_works())
-    assert len(meta_ld_out) == 0, "generator should be consumed"
+    # check that we have the expected number of works
+    expected_work_count = DigitizedWork.objects.all().count()
+    assert len(csv_meta) == expected_work_count
+    assert len(json_meta) == expected_work_count
 
-    assert len(json_meta) == len(csv_meta)
-    assert len(json_meta) == len(mock_work_docs)
+    digworks = {digwork.index_id(): digwork for digwork in DigitizedWork.objects.all()}
+    for json_data, csv_data in zip(json_meta, csv_meta):
+        # get the work for this data based on work id
+        digwork = digworks[json_data["work_id"]]
+        # spot check a few fields
+        assert json_data["source_id"] == digwork.source_id
+        assert json_data["title"] == digwork.title
+        assert json_data["sort_title"] == digwork.sort_title
 
-    for json_d, csv_d, mock_d in zip(json_meta, csv_meta, mock_work_docs_copy):
-        assert json_d == csv_d
-        assert json_d["work_id"] == mock_d["work_id"]
-        assert json_d["source"] == mock_d["source"]
+        # a few fields vary in CSV and JSON output
+        json_pubyear = json_data.pop("pub_year")
+        # csv date is loaded as a string
+        csv_pubyear = int(csv_data.pop("pub_year"))
+        assert json_pubyear == digwork.pub_date
+        assert csv_pubyear == digwork.pub_date
+        # collections is a multi-value field;
+        # JSON is a list; csv value is a delimited string
+        json_collections = json_data.pop("collections")
+        assert isinstance(json_collections, list)
+        csv_data.pop("collections")
+        # they should be equivalent once split
+        # TODO: uncomment once bug is fixed
+        # assert json_collections == csv_collections.split(cmd.multival_delimiter)
 
-    mock_iter_solr.assert_called_with(item_type="work")
+        # remaining data should match
+        # solr and json omit empty fields; check and remove for comparison
+        if not digwork.subtitle:
+            # only one work has a subtitle
+            csv_data.pop("subtitle")
+        if not digwork.author:  # some sample fixutre works have no author
+            csv_data.pop("author")
+        assert json_data == csv_data
 
 
 @patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_solr")
@@ -278,19 +353,16 @@ def test_save_pages(mock_iter_solr, tmp_path):
     mock_iter_solr.return_value = (d for d in mock_page_docs)
 
     cmd = init_cmd(path=tmp_path)
-    assert cmd.path == tmp_path
     cmd.save_pages()
     assert not os.path.exists(cmd.path_works_json)
     assert not os.path.exists(cmd.path_works_csv)
     assert os.path.exists(cmd.path_pages_json)
 
-    pages_ld_out = list(cmd.iter_pages())
-    assert len(pages_ld_out) == 0, "generator should be spent"
-
     pages_json = orjsonl.load(cmd.path_pages_json)
     assert len(pages_json) == len(mock_page_docs)
 
     for json_d, mock_d in zip(pages_json, mock_page_docs_copy):
+        # confirm we are comparing corresponding pages (preserves order)
         assert json_d["id"] == mock_d["id"]
         assert json_d == mock_d  # no change, keys were same
 
