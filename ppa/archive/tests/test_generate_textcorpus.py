@@ -120,11 +120,10 @@ def test_iter_solr_works(mock_solr_queryset):
 
 
 @pytest.mark.django_db
-def test_iter_works(sample_works):
+def test_work_metadata(sample_works):
     cmd = generate_textcorpus.Command()
-    cmd.set_params()  # initialize solr queryset
 
-    work_iter = cmd.iter_works()
+    work_iter = cmd.work_metadata()
     assert isinstance(work_iter, types.GeneratorType)
 
     solr_works = list(work_iter)
@@ -136,9 +135,9 @@ def test_iter_works(sample_works):
         # Solr doesn't return subtitle when empty;
         # only one fixture has a subtitle
         if result["source_id"] == "uc1.$b14645":
-            # subtitle is present, but book journal and volume are not
+            # subtitle is present, but book/journal, volume, and cluster id are not set
             assert result_fields == expected_work_fields.difference(
-                {"book_journal", "volume"}
+                {"book_journal", "volume", "cluster_id"}
             )
         else:
             assert result_fields.issubset(expected_work_fields)
@@ -210,6 +209,12 @@ def test_save_metadata(sample_works, tmp_path):
         assert json_data["source_id"] == digwork.source_id
         assert json_data["title"] == digwork.title
         assert json_data["sort_title"] == digwork.sort_title
+        # cluster id should be the string name or not present
+        if digwork.cluster:
+            assert json_data["cluster_id"] == digwork.cluster.cluster_id
+            assert isinstance(json_data["cluster_id"], str)
+        else:
+            assert "cluster_id" not in json_data
 
         # a few fields vary in CSV and JSON output
         json_pubyear = json_data.pop("pub_year")
@@ -237,13 +242,16 @@ def test_save_metadata(sample_works, tmp_path):
         assert "book_journal" in csv_data
         csv_data.pop("book_journal")
 
-        # remaining data should match
         # solr and json omit empty fields; check and remove for comparison
         if not digwork.subtitle:
             # only one work has a subtitle
             csv_data.pop("subtitle")
         if not digwork.author:  # some sample fixture works have no author
             csv_data.pop("author")
+        # one work is not in a cluster
+        if not digwork.cluster:
+            csv_data.pop("cluster_id")
+        # remaining data should match
         assert json_data == csv_data
 
 
@@ -311,9 +319,9 @@ def test_set_params(options, expected, tmp_path):
         assert attr_value == expected_value
 
 
-@patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_works")
+@patch("ppa.archive.management.commands.generate_textcorpus.Command.work_metadata")
 @patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_pages")
-def test_default_args(mock_iter_works, mock_iter_pages, tmp_path):
+def test_default_args(mock_iter_pages, mock_work_metadata, tmp_path):
     # testing default args requires running with call_commmand
     cmd = generate_textcorpus.Command()
     # change working directory to temp path to avoid accumulating empty
@@ -358,11 +366,11 @@ def test_handle_metadata_only(sample_works, tmp_path, capsys):
     assert not os.path.exists(cmd.path_pages_json)
 
 
-@patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_works")
+@patch("ppa.archive.management.commands.generate_textcorpus.Command.work_metadata")
 @patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_pages")
-def test_dry_run(mock_iter_pages, mock_iter_works, tmp_path):
+def test_dry_run(mock_iter_pages, mock_work_metadata, tmp_path):
     # mock content does not matter in dry run, consumes generator but doesn't save
-    mock_iter_works.return_value = [1, 2, 3, 4, 5]
+    mock_work_metadata.return_value = [1, 2, 3, 4, 5]
     mock_iter_pages.return_value = ["a", "b", "c", "d"]
 
     output_path = tmp_path / "corpus"
