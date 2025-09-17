@@ -215,6 +215,8 @@ def test_save_metadata(sample_works, tmp_path):
             assert isinstance(json_data["cluster_id"], str)
         else:
             assert "cluster_id" not in json_data
+        # work type should be display value instead of slugified version
+        assert json_data["work_type"] == digwork.get_item_type_display()
 
         # a few fields vary in CSV and JSON output
         json_pubyear = json_data.pop("pub_year")
