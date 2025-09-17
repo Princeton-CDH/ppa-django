@@ -204,7 +204,7 @@ class Command(BaseCommand):
         # yield from this generator
         yield from batch_iterator
 
-    def iter_works(self) -> Generator[dict[str, str | list[str]]]:
+    def work_metadata(self) -> Generator[dict[str, str | list[str]]]:
         """
         Returns a generator of dictionaries with work-level metadata.
         """
@@ -214,21 +214,20 @@ class Command(BaseCommand):
         for digwork in DigitizedWork.items_to_index().order_by(
             "source_id", "pages_orig"
         ):
+            # use Solr index data as starting point
             work_data = digwork.index_data()
-            # use indexdata to fields dict to filter and rename index data
+            # use index data to fields dict to filter and rename index data
             work_data = {
                 indexdata_to_fields[key]: val
                 for key, val in work_data.items()
                 if key in indexdata_to_fields
             }
-            # filter out blank fields, to omit from json
+            # override solr index cluster with cluster id name
+            work_data["cluster_id"] = str(digwork.cluster) if digwork.cluster else None
+            # filter out any empty values
             work_data = {key: val for key, val in work_data.items() if val}
-            # TODO: additional field cleanup aad overrides here
 
             yield work_data
-
-        # TODO: use queryset for public books + index data to start
-        # yield from self.iter_solr(item_type="work")
 
     # save pages
     def iter_pages(self):
@@ -264,9 +263,9 @@ class Command(BaseCommand):
         """
         Save the work-level metadata as a json file
         """
-        # get the data from solr;
+        # get work-level metadata
         # convert to a list so we can output twice
-        data = list(self.iter_works())
+        data = list(self.work_metadata())
 
         # save if not a dry run
         if not self.is_dry_run:
