@@ -44,10 +44,14 @@ import os
 from datetime import datetime
 import json
 import csv
+
 from django.core.management.base import BaseCommand, CommandError
 from parasolr.django import SolrQuerySet
 from progressbar import progressbar
 import orjsonl
+
+from ppa.archive.models import DigitizedWork
+
 
 DEFAULT_BATCH_SIZE = 10000
 TIMESTAMP_FMT = "%Y-%m-%d_%H%M"
@@ -77,11 +81,11 @@ class Command(BaseCommand):
             "source_id": "source_id",
             "cluster_id": "cluster_id_s",
             "title": "title",
-            "author": "author_exact",
+            "author": "author",
             "pub_year": "pub_date",
             "publisher": "publisher",
             "pub_place": "pub_place",
-            "collections": "collections_exact",
+            "collections": "collections",
             "work_type": "work_type_s",
             "source": "source_t",
             "source_url": "source_url",
@@ -200,11 +204,31 @@ class Command(BaseCommand):
         # yield from this generator
         yield from batch_iterator
 
-    def iter_works(self):
+    def iter_works(self) -> Generator[dict[str, str | list[str]]]:
         """
-        Yield results from :meth:`iter_solr` with `item_type=work`
+        Returns a generator of dictionaries with work-level metadata.
         """
-        yield from self.iter_solr(item_type="work")
+        indexdata_to_fields = {val: key for key, val in self.FIELDLIST["work"].items()}
+
+        # sort by id (index id = source id + first page), to match previous implementation
+        for digwork in DigitizedWork.items_to_index().order_by(
+            "source_id", "pages_orig"
+        ):
+            work_data = digwork.index_data()
+            # use indexdata to fields dict to filter and rename index data
+            work_data = {
+                indexdata_to_fields[key]: val
+                for key, val in work_data.items()
+                if key in indexdata_to_fields
+            }
+            # filter out blank fields, to omit from json
+            work_data = {key: val for key, val in work_data.items() if val}
+            # TODO: additional field cleanup aad overrides here
+
+            yield work_data
+
+        # TODO: use queryset for public books + index data to start
+        # yield from self.iter_solr(item_type="work")
 
     # save pages
     def iter_pages(self):
@@ -212,6 +236,16 @@ class Command(BaseCommand):
         Yield results from :meth:`iter_solr` with `item_type=page`
         """
         yield from self.iter_solr(item_type="page")
+
+    def prep_metadata(self, data: Generator | list) -> Generator:
+        # generate lookup dict for work item type slug to display
+        pass  # define this on digwork
+        # use slugify for work_type; store once and lookup by display
+
+    #     @property
+    # def work_type(self):
+    #     """Work type formatted for COinS metadata (matches Solr field format)."""
+    #     return self.get_item_type_display().lower().replace(" ", "-")
 
     def metadata_for_csv(self, data: Generator | list) -> Generator:
         """
