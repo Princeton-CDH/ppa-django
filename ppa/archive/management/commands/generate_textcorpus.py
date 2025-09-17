@@ -224,6 +224,8 @@ class Command(BaseCommand):
             }
             # override solr index cluster with cluster id name
             work_data["cluster_id"] = str(digwork.cluster) if digwork.cluster else None
+            # override work type with display value instead of slugified version
+            work_data["work_type"] = digwork.get_item_type_display()
             # filter out any empty values
             work_data = {key: val for key, val in work_data.items() if val}
 
