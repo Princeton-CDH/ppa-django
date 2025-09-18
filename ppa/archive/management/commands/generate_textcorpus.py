@@ -1,48 +1,57 @@
 """
 **generate_textcorpus** is a custom manage command to generate a plain
-text corpus from Solr.  It should be run *after* content has been indexed
-into Solr via the **index** manage command.
+text corpus from Solr with accompanying work-level metadata.  Because
+it relies on Solr for full-text content, it should be run *after*
+page contents have been indexed in Solr via the **index_pages** manage command.
 
 The full text corpus is generated from Solr; it does not include content
 for suppressed works or their pages (note that this depends on Solr
 content being current).
 
-Examples:
+Example usage:
 
-    - Expected use:
+    - Default behavior::
+
         python manage.py generate_textcorpus
 
-    - Specify a path:
+    - Specify output path::
+
         python manage.py generate_textcorpus --path ~/ppa_solr_corpus
 
-    - Dry run (do not create any files or folders):
+    - Dry run (do not create any files or folders)::
+
         python manage.py generate_textcorpus --dry-run
 
-    - Partial run (save only N rows, for testing):
+    - Partial run (save only N rows, for testing)::
+
         python manage.py generate_textcorpus --doc-limit 100
 
-    - Cron-style run (no progress bar, but logs)
+    - Suppress progress bar and increase verbosity:
+
         python manage.py generate_textcorpus --no-progress --verbosity 2
 
 Notes:
 
     - Default path is `ppa_corpus_{timestamp}` in the current working directory
-
-    - Default batch size is 10,000, meaning 10,000 records are pulled 
-      from solr at a time. Usage testing revealed that this default 
-      iterates over the collection the quickest.
+    - Default batch size is 10,000 (Solr record iteration size;
+      this default was chosen for performance based on testing.)
 
 """
 
+from collections.abc import Generator
 import argparse
 import os
 from datetime import datetime
 import json
 import csv
+
 from django.core.management.base import BaseCommand, CommandError
 from parasolr.django import SolrQuerySet
 from progressbar import progressbar
 import orjsonl
+
+from ppa.archive.models import DigitizedWork
+
 
 DEFAULT_BATCH_SIZE = 10000
 TIMESTAMP_FMT = "%Y-%m-%d_%H%M"
@@ -66,24 +75,47 @@ class Command(BaseCommand):
             "label": "label",
             "tags": "tags",
             "text": "content",
-        },
-        "work": {
-            "work_id": "group_id_s",
-            "source_id": "source_id",
-            "cluster_id": "cluster_id_s",
-            "title": "title",
-            "author": "author_exact",
-            "pub_year": "pub_date",
-            "publisher": "publisher",
-            "pub_place": "pub_place",
-            "collections": "collections_exact",
-            "work_type": "work_type_s",
-            "source": "source_t",
-            "source_url": "source_url",
-            "sort_title": "sort_title",
-            "subtitle": "subtitle",
-        },
+        }
     }
+    work_fields = [
+        "work_id",
+        "source_id",
+        "cluster_id",
+        "title",
+        "author",
+        "pub_year",
+        "publisher",
+        "pub_place",
+        "collections",
+        "work_type",
+        "source",
+        "source_url",
+        "sort_title",
+        "subtitle",
+        "volume",
+        "book_journal",
+        "record_id",
+        "pages_orig",
+        "pages_digital",
+        "page_count",
+        "added",
+        "updated",
+    ]
+    # dictionary of index data keys that need to be renamed
+    work_indexdata_rename = {
+        "group_id_s": "work_id",
+        "cluster_id_s": "cluster_id",
+        "pub_date": "pub_year",
+        "work_type_s": "work_type",
+        "source_t": "source",
+        "enumcron": "volume",
+        "book_journal_s": "book_journal",
+    }
+
+    #: multivalue delimiter for CSV output (only applies to collections)
+    multival_delimiter = ";"
+    #: optional behavior to generate metadata export only
+    metadata_only = False
 
     # Argument parsing
     def add_arguments(self, parser):
@@ -93,8 +125,7 @@ class Command(BaseCommand):
         # add --path argument for output
         parser.add_argument(
             "--path",
-            help="Directory path to save corpus file(s). "
-            "Defaults to ./ppa_corpus_{timestamp}",
+            help="Directory path to save corpus file(s). Defaults to ./ppa_corpus_{timestamp}",
             default=None,
         )
 
@@ -123,7 +154,13 @@ class Command(BaseCommand):
             action=argparse.BooleanOptionalAction,
             default=True,
         )
-
+        # add option to skip pages and output metadata only
+        parser.add_argument(
+            "--metadata-only",
+            action="store_true",
+            help="Only generate metadata export (skip page export)",
+            default=False,
+        )
         # add --dry-run argument (don't save anything, just iterate)
         parser.add_argument(
             "--dry-run",
@@ -183,11 +220,45 @@ class Command(BaseCommand):
         # yield from this generator
         yield from batch_iterator
 
-    def iter_works(self):
+    def work_metadata(self) -> Generator[dict[str, str | list[str] | int]]:
         """
-        Yield results from :meth:`iter_solr` with `item_type=work`
+        Returns a generator of dictionaries with work-level metadata.
         """
-        yield from self.iter_solr(item_type="work")
+        # sort by id (index id = source id + first page), to match previous implementation
+        for digwork in DigitizedWork.items_to_index().order_by(
+            "source_id", "pages_orig"
+        ):
+            # use Solr index data as starting point
+            work_data = digwork.index_data()
+            # rename index data fields to output field names
+            work_data = {
+                self.work_indexdata_rename.get(key, key): val
+                for key, val in work_data.items()
+            }
+            work_data.update(
+                {
+                    # override solr index cluster with cluster id name
+                    "cluster_id": str(digwork.cluster) if digwork.cluster else None,
+                    # override work type with display value instead of slugified version
+                    "work_type": digwork.get_item_type_display(),
+                    # add database fields not indexed in Solr
+                    "record_id": digwork.record_id,
+                    "pages_orig": str(digwork.pages_orig),  # convert from intspan
+                    "pages_digital": str(digwork.pages_digital),  # convert from intspan
+                    "page_count": digwork.page_count,
+                    "added": digwork.added.isoformat(),  # convert from datetime
+                    "updated": digwork.updated.isoformat(),  # convert from datetime
+                }
+            )
+
+            # create a new dict based on defined field order; exclude empty values
+            work_data = {
+                field: work_data[field]
+                for field in self.work_fields
+                if work_data.get(field)
+            }
+
+            yield work_data
 
     # save pages
     def iter_pages(self):
@@ -196,27 +267,49 @@ class Command(BaseCommand):
         """
         yield from self.iter_solr(item_type="page")
 
+    def prep_metadata(self, data: Generator | list) -> Generator:
+        # generate lookup dict for work item type slug to display
+        pass  # define this on digwork
+        # use slugify for work_type; store once and lookup by display
+
+    #     @property
+    # def work_type(self):
+    #     """Work type formatted for COinS metadata (matches Solr field format)."""
+    #     return self.get_item_type_display().lower().replace(" ", "-")
+
+    def metadata_for_csv(self, data: Generator | list) -> Generator:
+        """
+        Takes a list or iterator of metadata records and yields a version
+        ready for output to CSV: converts list field (collections) into
+        a delimited string.
+        """
+        for row in data:
+            record = row.copy()  # make a copy; don't modify the original
+            # convert list field to delimited string
+            record["collections"] = self.multival_delimiter.join(record["collections"])
+            yield record
+
     ### saving to file
     def save_metadata(self):
         """
         Save the work-level metadata as a json file
         """
-        # get the data from solr
-        data = list(self.iter_works())
+        # get work-level metadata
+        # convert to a list so we can output twice
+        data = list(self.work_metadata())
 
         # save if not a dry run
         if not self.is_dry_run:
-            # save json
+            # save data as json
             with open(self.path_works_json, "w") as of:
                 json.dump(data, of, indent=2)
 
-            # save csv
+            # save data as csv
             with open(self.path_works_csv, "w", newline="") as csvfile:
-                # fieldnames we already know
-                fieldnames = list(self.FIELDLIST["work"].keys())
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                # fieldnames are defined on the class
+                writer = csv.DictWriter(csvfile, fieldnames=self.work_fields)
                 writer.writeheader()
-                writer.writerows(data)
+                writer.writerows(self.metadata_for_csv(data))
 
     def save_pages(self):
         """
@@ -245,6 +338,7 @@ class Command(BaseCommand):
         self.path_works_csv = os.path.join(self.path, "ppa_metadata.csv")
         jsonl_ext = "jsonl.gz" if options.get("gzip") else "jsonl"
         self.path_pages_json = os.path.join(self.path, f"ppa_pages.{jsonl_ext}")
+        self.metadata_only = options.get("metadata_only", False)
         self.is_dry_run = options.get("dry_run")
         self.doclimit = options.get("doc_limit")
         self.verbosity = options.get("verbosity", self.verbosity)
@@ -264,8 +358,9 @@ class Command(BaseCommand):
         # save metadata
         self.save_metadata()
 
-        # save pages
-        self.save_pages()
+        # save pages unless running in metadata-only mode
+        if not self.metadata_only:
+            self.save_pages()
 
 
 # helper func
