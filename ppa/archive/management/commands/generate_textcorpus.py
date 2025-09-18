@@ -75,25 +75,41 @@ class Command(BaseCommand):
             "label": "label",
             "tags": "tags",
             "text": "content",
-        },
-        "work": {
-            "work_id": "group_id_s",
-            "source_id": "source_id",
-            "cluster_id": "cluster_id_s",
-            "title": "title",
-            "author": "author",
-            "pub_year": "pub_date",
-            "publisher": "publisher",
-            "pub_place": "pub_place",
-            "collections": "collections",
-            "work_type": "work_type_s",
-            "source": "source_t",
-            "source_url": "source_url",
-            "sort_title": "sort_title",
-            "subtitle": "subtitle",
-            "volume": "enumcron",
-            "book_journal": "book_journal_s",
-        },
+        }
+    }
+    work_fields = [
+        "work_id",
+        "source_id",
+        "cluster_id",
+        "title",
+        "author",
+        "pub_year",
+        "publisher",
+        "pub_place",
+        "collections",
+        "work_type",
+        "source",
+        "source_url",
+        "sort_title",
+        "subtitle",
+        "volume",
+        "book_journal",
+        "record_id",
+        "pages_orig",
+        "pages_digital",
+        "page_count",
+        "added",
+        "updated",
+    ]
+    # dictionary of index data keys that need to be renamed
+    work_indexdata_rename = {
+        "group_id_s": "work_id",
+        "cluster_id_s": "cluster_id",
+        "pub_date": "pub_year",
+        "work_type_s": "work_type",
+        "source_t": "source",
+        "enumcron": "volume",
+        "book_journal_s": "book_journal",
     }
 
     #: multivalue delimiter for CSV output (only applies to collections)
@@ -204,30 +220,43 @@ class Command(BaseCommand):
         # yield from this generator
         yield from batch_iterator
 
-    def work_metadata(self) -> Generator[dict[str, str | list[str]]]:
+    def work_metadata(self) -> Generator[dict[str, str | list[str] | int]]:
         """
         Returns a generator of dictionaries with work-level metadata.
         """
-        indexdata_to_fields = {val: key for key, val in self.FIELDLIST["work"].items()}
-
         # sort by id (index id = source id + first page), to match previous implementation
         for digwork in DigitizedWork.items_to_index().order_by(
             "source_id", "pages_orig"
         ):
             # use Solr index data as starting point
             work_data = digwork.index_data()
-            # use index data to fields dict to filter and rename index data
+            # rename index data fields to output field names
             work_data = {
-                indexdata_to_fields[key]: val
+                self.work_indexdata_rename.get(key, key): val
                 for key, val in work_data.items()
-                if key in indexdata_to_fields
             }
-            # override solr index cluster with cluster id name
-            work_data["cluster_id"] = str(digwork.cluster) if digwork.cluster else None
-            # override work type with display value instead of slugified version
-            work_data["work_type"] = digwork.get_item_type_display()
-            # filter out any empty values
-            work_data = {key: val for key, val in work_data.items() if val}
+            work_data.update(
+                {
+                    # override solr index cluster with cluster id name
+                    "cluster_id": str(digwork.cluster) if digwork.cluster else None,
+                    # override work type with display value instead of slugified version
+                    "work_type": digwork.get_item_type_display(),
+                    # add database fields not indexed in Solr
+                    "record_id": digwork.record_id,
+                    "pages_orig": str(digwork.pages_orig),  # convert from intspan
+                    "pages_digital": str(digwork.pages_digital),  # convert from intspan
+                    "page_count": digwork.page_count,
+                    "added": digwork.added.isoformat(),  # convert from datetime
+                    "updated": digwork.updated.isoformat(),  # convert from datetime
+                }
+            )
+
+            # create a new dict based on defined field order; exclude empty values
+            work_data = {
+                field: work_data[field]
+                for field in self.work_fields
+                if work_data.get(field)
+            }
 
             yield work_data
 
@@ -277,10 +306,8 @@ class Command(BaseCommand):
 
             # save data as csv
             with open(self.path_works_csv, "w", newline="") as csvfile:
-                # fieldnames are set on the class
-                writer = csv.DictWriter(
-                    csvfile, fieldnames=self.FIELDLIST["work"].keys()
-                )
+                # fieldnames are defined on the class
+                writer = csv.DictWriter(csvfile, fieldnames=self.work_fields)
                 writer.writeheader()
                 writer.writerows(self.metadata_for_csv(data))
 

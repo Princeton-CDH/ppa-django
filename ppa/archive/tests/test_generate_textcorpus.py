@@ -104,43 +104,22 @@ def test_iter_solr_pages_mock(mock_solr_queryset):
     cmd.query_set.only.assert_called_with(**cmd.FIELDLIST["page"])
 
 
-def test_iter_solr_works(mock_solr_queryset):
-    cmd = init_cmd()
-    cmd.query_set = mock_solr_queryset()()
-    # count is required for batching logic
-    cmd.query_set.count.return_value = 10
-
-    list(cmd.iter_solr(item_type="work"))
-
-    # inspect query options
-    # assertion needs to test after we begin/consume generator
-    cmd.query_set.filter.assert_called_with(item_type="work")
-    cmd.query_set.order_by.assert_called_with("id")
-    cmd.query_set.only.assert_called_with(**cmd.FIELDLIST["work"])
-
-
 @pytest.mark.django_db
 def test_work_metadata(sample_works):
     cmd = generate_textcorpus.Command()
 
-    work_iter = cmd.work_metadata()
-    assert isinstance(work_iter, types.GeneratorType)
+    work_data = cmd.work_metadata()
+    assert isinstance(work_data, types.GeneratorType)
 
-    solr_works = list(work_iter)
+    work_data = list(work_data)
     # should match fixture data we indexed in setup fixture
-    assert len(solr_works) == DigitizedWork.objects.count()
-    expected_work_fields = set(cmd.FIELDLIST["work"].keys())
-    for result in solr_works:
-        result_fields = set(result.keys())
-        # Solr doesn't return subtitle when empty;
-        # only one fixture has a subtitle
-        if result["source_id"] == "uc1.$b14645":
-            # subtitle is present, but book/journal, volume, and cluster id are not set
-            assert result_fields == expected_work_fields.difference(
-                {"book_journal", "volume", "cluster_id"}
-            )
-        else:
-            assert result_fields.issubset(expected_work_fields)
+    assert len(work_data) == DigitizedWork.objects.count()
+    for result in work_data:
+        result_fields = list(result.keys())
+        # for whatever fields are present, order should match
+        assert result_fields == list([f for f in result_fields if f in cmd.work_fields])
+        # should only include fields from the expected list
+        assert set(result_fields).issubset(set(cmd.work_fields))
 
 
 @patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_solr")
@@ -205,56 +184,82 @@ def test_save_metadata(sample_works, tmp_path):
     for json_data, csv_data in zip(json_meta, csv_meta):
         # get the work for this data based on work id
         digwork = digworks[json_data["work_id"]]
-        # spot check a few fields
-        assert json_data["source_id"] == digwork.source_id
-        assert json_data["title"] == digwork.title
-        assert json_data["sort_title"] == digwork.sort_title
+        # check field values; string fields should match
+        for field in [
+            "source_id",
+            "title",
+            "publisher",
+            "pub_place",
+            "source_url",
+            "sort_title",
+        ]:
+            assert json_data[field] == getattr(digwork, field)
+            assert csv_data[field] == getattr(digwork, field)
+
         # cluster id should be the string name or not present
         if digwork.cluster:
             assert json_data["cluster_id"] == digwork.cluster.cluster_id
             assert isinstance(json_data["cluster_id"], str)
+            assert csv_data["cluster_id"] == digwork.cluster.cluster_id
         else:
             assert "cluster_id" not in json_data
+            assert csv_data["cluster_id"] == ""
         # work type should be display value instead of slugified version
         assert json_data["work_type"] == digwork.get_item_type_display()
+        assert csv_data["work_type"] == digwork.get_item_type_display()
 
-        # a few fields vary in CSV and JSON output
-        json_pubyear = json_data.pop("pub_year")
-        # csv date is loaded as a string
-        csv_pubyear = int(csv_data.pop("pub_year"))
-        assert json_pubyear == digwork.pub_date
-        assert csv_pubyear == digwork.pub_date
+        # check json field order
+        json_fields = list(json_data.keys())
+        # for whatever fields are present, order should match
+        assert json_fields == list([f for f in cmd.work_fields if f in json_fields])
+        # pub date is renamed pub year in output; csv values are strings
+        assert json_data["pub_year"] == digwork.pub_date
+        assert csv_data["pub_year"] == str(digwork.pub_date)
+
         # collections is a multi-value field;
         # JSON is a list; csv value is a delimited string
-        json_collections = json_data.pop("collections")
-        assert isinstance(json_collections, list)
-        csv_collections = csv_data.pop("collections")
-        # these should be equivalent once split
-        assert json_collections == csv_collections.split(cmd.multival_delimiter)
+        assert isinstance(json_data["collections"], list)
+        if digwork.collections.count():
+            assert json_data["collections"] == [
+                c.name for c in digwork.collections.all()
+            ]
+            assert csv_data["collections"] == cmd.multival_delimiter.join(
+                [c.name for c in digwork.collections.all()]
+            )
+        else:
+            assert json_data["collections"] == ["Uncategorized"]
+            assert csv_data["collections"] == "Uncategorized"
 
         # assert enumcron (when present) is output as volume
         if digwork.enumcron:
             assert json_data["volume"] == digwork.enumcron
+            assert csv_data["volume"] == digwork.enumcron
         else:
-            # if not present, remove from csv for comparison with json
-            csv_data.pop("volume")
+            assert "volume" not in json_data
+            assert csv_data["volume"] == ""
 
-        # no fixture works have book/journal field set
-        # assert present, then remove before comparing the two versions
-        assert "book_journal" in csv_data
-        csv_data.pop("book_journal")
+        # some fields are optional
+        for optional_field in ["book_journal", "subtitle", "author", "record_id"]:
+            attr_value = getattr(digwork, optional_field)
+            if attr_value:
+                assert json_data[optional_field] == attr_value
+                assert csv_data[optional_field] == attr_value
+            else:
+                assert optional_field not in json_data
+                assert csv_data[optional_field] == ""
 
-        # solr and json omit empty fields; check and remove for comparison
-        if not digwork.subtitle:
-            # only one work has a subtitle
-            csv_data.pop("subtitle")
-        if not digwork.author:  # some sample fixture works have no author
-            csv_data.pop("author")
-        # one work is not in a cluster
-        if not digwork.cluster:
-            csv_data.pop("cluster_id")
-        # remaining data should match
-        assert json_data == csv_data
+        # check numeric field
+        assert json_data["page_count"] == digwork.page_count
+        assert csv_data["page_count"] == str(digwork.page_count)
+
+        # check datetime fields
+        for field in ["added", "updated"]:
+            value = getattr(digwork, field).isoformat()
+            assert json_data[field] == value
+            assert csv_data[field] == value
+
+        # not explicitly tested: original/digital page span converted to string
+        # (currently no excerpt fixtures)
 
 
 def test_save_pages(sample_works, tmp_path):
