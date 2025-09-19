@@ -38,20 +38,19 @@ Notes:
 
 """
 
-from collections.abc import Generator
 import argparse
-import os
-from datetime import datetime
-import json
 import csv
+import json
+import os
+from collections.abc import Generator
+from datetime import datetime
 
+import orjsonl
 from django.core.management.base import BaseCommand, CommandError
 from parasolr.django import SolrQuerySet
 from progressbar import progressbar
-import orjsonl
 
 from ppa.archive.models import DigitizedWork
-
 
 DEFAULT_BATCH_SIZE = 10000
 TIMESTAMP_FMT = "%Y-%m-%d_%H%M"
@@ -80,24 +79,24 @@ class Command(BaseCommand):
     work_fields = [
         "work_id",
         "source_id",
-        "cluster_id",
-        "title",
-        "author",
-        "pub_year",
-        "publisher",
-        "pub_place",
-        "collections",
-        "work_type",
-        "source",
-        "source_url",
-        "sort_title",
-        "subtitle",
-        "volume",
-        "book_journal",
         "record_id",
+        "author",
+        "title",
+        "subtitle",
+        "sort_title",
+        "work_type",
+        "book_journal",
+        "volume",
+        "pub_year",
+        "pub_place",
+        "publisher",
         "pages_orig",
         "pages_digital",
         "page_count",
+        "collections",
+        "cluster_id",
+        "source",
+        "source_url",
         "added",
         "updated",
     ]
