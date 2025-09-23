@@ -53,7 +53,7 @@ from progressbar import progressbar
 from ppa.archive.models import DigitizedWork
 
 DEFAULT_BATCH_SIZE = 10000
-TIMESTAMP_FMT = "%Y-%m-%d_%H%M"
+TIMESTAMP_FMT = "%Y-%m-%d_%H%M%S"
 
 
 class Command(BaseCommand):
