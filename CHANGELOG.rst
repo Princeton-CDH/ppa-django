@@ -9,7 +9,6 @@ CHANGELOG
 - Upgrade to node v20 / npm v10
 - Replace gulp build with a webpack build
 
-
 3.15.1
 ------
 
@@ -17,7 +16,6 @@ Minor Improvements:
 
 - Handle 500 error from Gale API when indexing pages with clear logging to determine whether retry succeeded.
 - Simplify CoinS generation logic for Zotero integration.
-
 
 3.15
 ----
