@@ -3,6 +3,16 @@
 CHANGELOG
 =========
 
+3.16
+----
+
+- Improve work-level metadata for full-text data export
+   - Only include cluster id for works in clusters
+   - Format work collection membership as string-delimited list
+   - Include database fields
+- bugfix: admin data export cluster field should use alpha cluster id, not numeric db id
+- Update zenodo.json file to include all current contributors
+
 3.15.2
 ------
 
