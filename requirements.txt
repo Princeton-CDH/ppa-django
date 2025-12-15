@@ -10,8 +10,7 @@ django-apptemplates
 progressbar2
 django-semanticui-forms
 lxml>=5.4.0,<6.0.0
-# TODO: switch to released neuxml when 1.0.0 is out
-git+https://github.com/Princeton-CDH/neuxml@main
+neuxml>=1.0.0
 # neuxml
 wagtail>=7.0,<7.1
 django-taggit>=4.0
@@ -30,7 +29,7 @@ django-import-export
 psycopg2-binary
 multiprocess
 django-split-settings
-# only needed for the 'generate_textcorpus' manage command
+# needed for the 'generate_textcorpus' manage command
 orjsonl
-# TODO: Switch to tagged version when we have one
-git+https://github.com/Princeton-CDH/ppa-nlp@develop#egg=corppa
+# corppa is not published on pypi, but install a tagged version
+git+https://github.com/Princeton-CDH/ppa-nlp@0.4#egg=corppa
