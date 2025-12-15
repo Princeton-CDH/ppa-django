@@ -1,5 +1,6 @@
 import csv
 import json
+import pathlib
 import os
 import types
 from collections import deque
@@ -158,10 +159,10 @@ def test_save_metadata(sample_works, tmp_path):
     path_pages = tmp_path / "ppa_pages.jsonl"
     path_pages_gz = tmp_path / "ppa_pages.jsonl.gz"
 
-    assert cmd.path_works_json == str(path_meta)
-    assert cmd.path_works_csv == str(path_meta_csv)
+    assert cmd.path_works_json == path_meta
+    assert cmd.path_works_csv == path_meta_csv
     # compression enabled by default for pages jsonl
-    assert cmd.path_pages_json == str(path_pages_gz)
+    assert cmd.path_pages_json == path_pages_gz
 
     assert path_meta.exists()
     assert path_meta_csv.exists()
@@ -169,9 +170,9 @@ def test_save_metadata(sample_works, tmp_path):
     assert not path_pages_gz.exists()
 
     # load data to inspect results
-    with open(path_meta) as f:
+    with path_meta.open() as f:
         json_meta = json.load(f)
-    with open(path_meta_csv, newline="") as csvfile:
+    with path_meta_csv.open(newline="") as csvfile:
         reader = csv.DictReader(csvfile)
         csv_meta = list(reader)
 
@@ -287,10 +288,15 @@ def test_save_pages(sample_works, tmp_path):
 # test: options and expected resulting attributes on the command
 test_options = [
     (
-        {"path": "tmpdir_123", "gzip": False, "dry_run": True, "verbosity": 0},
         {
-            "path": "tmpdir_123",
-            "path_pages_json": "tmpdir_123/ppa_pages.jsonl",
+            "path": pathlib.Path("tmpdir_123"),
+            "gzip": False,
+            "dry_run": True,
+            "verbosity": 0,
+        },
+        {
+            "path": pathlib.Path("tmpdir_123"),
+            "path_pages_json": pathlib.Path("tmpdir_123/ppa_pages.jsonl"),
             "is_dry_run": True,
             "verbosity": 0,
         },
@@ -335,11 +341,11 @@ def test_default_args(mock_iter_pages, mock_work_metadata, tmp_path):
     # export directories in the project working director
     os.chdir(tmp_path)
     call_command(cmd)
-    assert cmd.path == "ppa_corpus_" + generate_textcorpus.nowstr()
+    assert cmd.path == pathlib.Path("ppa_corpus_" + generate_textcorpus.nowstr())
     assert cmd.doclimit is None
     assert cmd.verbosity == cmd.v_normal
     # compression for page output enabled by  default
-    assert cmd.path_pages_json.endswith(".gz")
+    assert cmd.path_pages_json.suffix == ".gz"
     assert cmd.batch_size == generate_textcorpus.DEFAULT_BATCH_SIZE
 
 
@@ -347,14 +353,14 @@ def test_handle(sample_works, tmp_path, capsys):
     output_dir = tmp_path / "output"
     cmd = generate_textcorpus.Command()
     # use call command so default args are set properly
-    call_command(cmd, path=str(output_dir))
-    assert cmd.path == str(output_dir)
+    call_command(cmd, path=output_dir)
+    assert cmd.path == output_dir
     # output directory created
     assert output_dir.is_dir()
     # output files are created
-    assert os.path.exists(cmd.path_works_json)
-    assert os.path.exists(cmd.path_works_csv)
-    assert os.path.exists(cmd.path_pages_json)
+    assert cmd.path_works_json.exists()
+    assert cmd.path_works_csv.exists()
+    assert cmd.path_pages_json.exists()
     # actual logic tested elsewhere
 
     captured = capsys.readouterr()
@@ -365,12 +371,12 @@ def test_handle_metadata_only(sample_works, tmp_path, capsys):
     output_dir = tmp_path / "output"
     cmd = generate_textcorpus.Command()
     # use call command so default args are set properly
-    call_command(cmd, path=str(output_dir), metadata_only=True)
+    call_command(cmd, path=output_dir, metadata_only=True)
     # metadata output files are created
-    assert os.path.exists(cmd.path_works_json)
-    assert os.path.exists(cmd.path_works_csv)
+    assert cmd.path_works_json.exists()
+    assert cmd.path_works_csv.exists()
     # page output file are NOT created
-    assert not os.path.exists(cmd.path_pages_json)
+    assert not cmd.path_pages_json.exists()
 
 
 @patch("ppa.archive.management.commands.generate_textcorpus.Command.work_metadata")

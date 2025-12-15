@@ -41,7 +41,7 @@ Notes:
 import argparse
 import csv
 import json
-import os
+import pathlib
 from collections.abc import Generator
 from datetime import datetime
 
@@ -49,6 +49,7 @@ import orjsonl
 from django.core.management.base import BaseCommand, CommandError
 from parasolr.django import SolrQuerySet
 from progressbar import progressbar
+
 
 from ppa.archive.models import DigitizedWork
 
@@ -126,6 +127,7 @@ class Command(BaseCommand):
             "--path",
             help="Directory path to save corpus file(s). Defaults to ./ppa_corpus_{timestamp}",
             default=None,
+            type=pathlib.Path,
         )
 
         # add --doc-limit argument (determines how many results to retrieve from solr)
@@ -266,16 +268,6 @@ class Command(BaseCommand):
         """
         yield from self.iter_solr(item_type="page")
 
-    def prep_metadata(self, data: Generator | list) -> Generator:
-        # generate lookup dict for work item type slug to display
-        pass  # define this on digwork
-        # use slugify for work_type; store once and lookup by display
-
-    #     @property
-    # def work_type(self):
-    #     """Work type formatted for COinS metadata (matches Solr field format)."""
-    #     return self.get_item_type_display().lower().replace(" ", "-")
-
     def metadata_for_csv(self, data: Generator | list) -> Generator:
         """
         Takes a list or iterator of metadata records and yields a version
@@ -331,12 +323,12 @@ class Command(BaseCommand):
         # options
         self.path = options.get("path")
         if not self.path:
-            self.path = os.path.join(f"ppa_corpus_{nowstr()}")
+            self.path = pathlib.Path(f"ppa_corpus_{nowstr()}")
 
-        self.path_works_json = os.path.join(self.path, "ppa_metadata.json")
-        self.path_works_csv = os.path.join(self.path, "ppa_metadata.csv")
+        self.path_works_json = self.path / "ppa_metadata.json"
+        self.path_works_csv = self.path / "ppa_metadata.csv"
         jsonl_ext = "jsonl.gz" if options.get("gzip") else "jsonl"
-        self.path_pages_json = os.path.join(self.path, f"ppa_pages.{jsonl_ext}")
+        self.path_pages_json = self.path / f"ppa_pages.{jsonl_ext}"
         self.metadata_only = options.get("metadata_only", False)
         self.is_dry_run = options.get("dry_run")
         self.doclimit = options.get("doc_limit")
@@ -352,7 +344,7 @@ class Command(BaseCommand):
         if not self.is_dry_run:
             if self.verbosity >= self.v_normal:
                 print(f"Saving files in {self.path}")
-            os.makedirs(self.path, exist_ok=True)
+            self.path.mkdir(exist_ok=True)
 
         # save metadata
         self.save_metadata()
