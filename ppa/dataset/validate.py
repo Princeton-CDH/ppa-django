@@ -2,29 +2,35 @@ import pathlib
 
 import polars as pl
 
-NORMAL_VERBOSITY: int = 1
-
 
 def check_pagecount(
-    metadata_csv: pathlib.Path, pages_jsonl: pathlib.Path, verbosity: int = 1
-):
+    metadata_csv: pathlib.Path, pages_jsonl: pathlib.Path, verbose: bool = False
+) -> list[bool]:
     # check & report on page counts in the exported data
+    checks = []
 
     # load metadata csv file
     meta_df = pl.read_csv(metadata_csv)
-    # load page jsonlines (gzipped or not), group by work, and count # pages
+    # load page json lines (gzipped or not); group by work, and count # pages
     pages_pagecount_df = pl.read_ndjson(pages_jsonl).group_by("work_id").len()
     # check they are equal length (= same # of work ids)
     total_meta_works = len(meta_df)
     total_page_works = len(pages_pagecount_df)
+    total_works_ok = False
     if total_meta_works == total_page_works:
-        check_passed = True
-    else:
-        if verbosity >= NORMAL_VERBOSITY:
+        total_works_ok = True
+        if verbose:
             print(
-                f"Warning: mismatch between total works in metadata ({total_meta_works:,})"
-                + f" and page data ({total_page_works:,})"
+                "✅ Total number of works matches "
+                + f"(metadata + page data; {total_meta_works})"
             )
+    else:
+        print(
+            "❌ Total works in metadata does not match page data "
+            + f"({total_meta_works:,}, {total_page_works:,})"
+        )
+    checks.append(total_works_ok)
+
     # join on work id to compare
     pagecount_compare_df = meta_df.join(pages_pagecount_df, on="work_id", how="left")
     # identify any works where the page count differs with actual page data
@@ -33,15 +39,22 @@ def check_pagecount(
     ).with_columns(diff=pl.col("page_count").sub(pl.col("len")))
 
     total_pagecount_diff = len(pagecount_diff)
+    pagecount_ok = False
     if total_pagecount_diff == 0:
-        check_passed = check_passed & True
+        pagecount_ok = True
+        if verbose:
+            print("✅ No discrepancies in page counts")
     else:
-        print(f"{total_pagecount_diff} works have page count discrepancies")
+        plural = "s" if total_pagecount_diff != 1 else ""
+        print(f"{total_pagecount_diff} work{plural} with page count discrepancy")
         # in increased verbosity mode, report on the works
-        if verbosity > NORMAL_VERBOSITY:
+        if verbose:
             for work in pagecount_diff.iter_rows(named=True):
                 print(
                     "  {work_id}: page_count {page_count}; {len} pages ({diff:+})".format(
                         **work
                     )
                 )
+    checks.append(pagecount_ok)
+
+    return checks
