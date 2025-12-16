@@ -48,11 +48,11 @@ from datetime import datetime
 import orjsonl
 from django.core.management.base import BaseCommand, CommandError
 from parasolr.django import SolrQuerySet
-import polars as pl
 from progressbar import progressbar
 
 
 from ppa.archive.models import DigitizedWork
+from ppa.dataset.validate import check_pagecount
 
 DEFAULT_BATCH_SIZE = 10000
 TIMESTAMP_FMT = "%Y-%m-%d_%H%M%S"
@@ -322,42 +322,6 @@ class Command(BaseCommand):
             # save to jsonl or jsonl.gz
             orjsonl.save(self.path_pages_json, self.iter_pages())
 
-    def check_pagecount(self):
-        # check & report on page counts in the exported data
-        meta_df = pl.read_csv(self.path_works_csv)
-        pages_pagecount_df = (
-            pl.read_ndjson(self.path_pages_json).group_by("work_id").len()
-        )
-        pagecount_compare_df = meta_df.join(
-            pages_pagecount_df, on="work_id", how="left"
-        )
-        # check they are equal length (= same # of work ids)
-        total_meta_works = len(meta_df)
-        total_page_works = len(pages_pagecount_df)
-        if total_meta_works != total_page_works:
-            self.stdout.write(
-                f"Warning: mismatch between total works in metadata ({total_meta_works:,})"
-                + f" and page data ({total_page_works:,})"
-            )
-        # identify any works where the page count differs with actual page data?
-        pagecount_diff = pagecount_compare_df.filter(
-            pl.col("len") != pl.col("page_count")
-        ).with_columns(diff=pl.col("page_count").sub(pl.col("len")))
-
-        total_pagecount_diff = len(pagecount_diff)
-        if total_pagecount_diff:
-            self.stdout.write(
-                f"{total_pagecount_diff} works have page count discrepancies"
-            )
-            # in increased verbosity mode, report on the works
-            if self.verbosity > self.v_normal:
-                for work in pagecount_diff.iter_rows(named=True):
-                    print(
-                        "  {work_id}: page_count {page_count}; {len} pages ({diff:+})".format(
-                            **work
-                        )
-                    )
-
     ### running script
 
     def set_params(self, *args, **options):
@@ -422,8 +386,11 @@ class Command(BaseCommand):
                     + f"Missing files: {missing_str}"
                 )
 
-        # validate the data files
-        self.check_pagecount()
+        # validate the data files, unless running in metadata-only mode
+        if not self.metadata_only:
+            check_pagecount(
+                self.path_works_csv, self.path_pages_json, verbosity=self.verbosity
+            )
 
 
 # helper func
