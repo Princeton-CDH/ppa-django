@@ -48,6 +48,7 @@ from datetime import datetime
 import orjsonl
 from django.core.management.base import BaseCommand, CommandError
 from parasolr.django import SolrQuerySet
+import polars as pl
 from progressbar import progressbar
 
 
@@ -175,6 +176,13 @@ class Command(BaseCommand):
             help="Show progress",
             action=argparse.BooleanOptionalAction,
             default=True,
+        )
+        # validate the output
+        parser.add_argument(
+            "--validate-only",
+            help="Validate existing output, do not export (files must exist)",
+            action=argparse.BooleanOptionalAction,
+            default=False,
         )
 
     #### SOLR ####
@@ -314,6 +322,42 @@ class Command(BaseCommand):
             # save to jsonl or jsonl.gz
             orjsonl.save(self.path_pages_json, self.iter_pages())
 
+    def check_pagecount(self):
+        # check & report on page counts in the exported data
+        meta_df = pl.read_csv(self.path_works_csv)
+        pages_pagecount_df = (
+            pl.read_ndjson(self.path_pages_json).group_by("work_id").len()
+        )
+        pagecount_compare_df = meta_df.join(
+            pages_pagecount_df, on="work_id", how="left"
+        )
+        # check they are equal length (= same # of work ids)
+        total_meta_works = len(meta_df)
+        total_page_works = len(pages_pagecount_df)
+        if total_meta_works != total_page_works:
+            self.stdout.write(
+                f"Warning: mismatch between total works in metadata ({total_meta_works:,})"
+                + f" and page data ({total_page_works:,})"
+            )
+        # identify any works where the page count differs with actual page data?
+        pagecount_diff = pagecount_compare_df.filter(
+            pl.col("len") != pl.col("page_count")
+        ).with_columns(diff=pl.col("page_count").sub(pl.col("len")))
+
+        total_pagecount_diff = len(pagecount_diff)
+        if total_pagecount_diff:
+            self.stdout.write(
+                f"{total_pagecount_diff} works have page count discrepancies"
+            )
+            # in increased verbosity mode, report on the works
+            if self.verbosity > self.v_normal:
+                for work in pagecount_diff.iter_rows(named=True):
+                    print(
+                        "  {work_id}: page_count {page_count}; {len} pages ({diff:+})".format(
+                            **work
+                        )
+                    )
+
     ### running script
 
     def set_params(self, *args, **options):
@@ -329,12 +373,14 @@ class Command(BaseCommand):
         self.path_works_csv = self.path / "ppa_metadata.csv"
         jsonl_ext = "jsonl.gz" if options.get("gzip") else "jsonl"
         self.path_pages_json = self.path / f"ppa_pages.{jsonl_ext}"
+
         self.metadata_only = options.get("metadata_only", False)
         self.is_dry_run = options.get("dry_run")
         self.doclimit = options.get("doc_limit")
         self.verbosity = options.get("verbosity", self.verbosity)
         self.progress = options.get("progress")
         self.batch_size = options.get("batch_size", DEFAULT_BATCH_SIZE)
+        self.validate_only = options.get("validate_only")
         self.query_set = SolrQuerySet()
 
     def handle(self, *args, **options):
@@ -343,15 +389,41 @@ class Command(BaseCommand):
         # ensure output path exists
         if not self.is_dry_run:
             if self.verbosity >= self.v_normal:
-                print(f"Saving files in {self.path}")
+                if self.validate_only:
+                    action = "Validating"
+                else:
+                    action = "Saving"
+                self.stdout.write(f"{action} files in {self.path}")
             self.path.mkdir(exist_ok=True)
 
-        # save metadata
-        self.save_metadata()
+        if not self.validate_only:
+            # save metadata
+            self.save_metadata()
 
-        # save pages unless running in metadata-only mode
-        if not self.metadata_only:
-            self.save_pages()
+            # save pages unless running in metadata-only mode
+            if not self.metadata_only:
+                self.save_pages()
+
+        # if validating a previous export, check that expected files are present
+        if self.validate_only:
+            missing = []
+            for data_file in [
+                self.path_works_csv,
+                self.path_works_json,
+                self.path_pages_json,
+            ]:
+                if not data_file.exists():
+                    missing.append(data_file)
+            # if any are missing, report and exit
+            if missing:
+                missing_str = ", ".join([str(p) for p in missing])
+                raise CommandError(
+                    "Cannot validate because not all files are present. "
+                    + f"Missing files: {missing_str}"
+                )
+
+        # validate the data files
+        self.check_pagecount()
 
 
 # helper func
