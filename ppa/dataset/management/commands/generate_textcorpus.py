@@ -42,17 +42,19 @@ import argparse
 import csv
 import json
 import pathlib
+import shutil
 from collections.abc import Generator
 from datetime import datetime
 
 import orjsonl
 from django.core.management.base import BaseCommand, CommandError
+from frictionless import Package
 from parasolr.django import SolrQuerySet
 from progressbar import progressbar
 
 
 from ppa.archive.models import DigitizedWork
-from ppa.dataset.validate import check_pagecount
+from ppa.dataset.validate import check_pagecount, data_package_path
 
 DEFAULT_BATCH_SIZE = 10000
 TIMESTAMP_FMT = "%Y-%m-%d_%H%M%S"
@@ -388,11 +390,33 @@ class Command(BaseCommand):
 
         # validate the data files, unless running in metadata-only mode
         if not self.metadata_only:
+            self.stdout.write("Checking work and page counts...")
             check_pagecount(
                 self.path_works_csv,
                 self.path_pages_json,
                 verbose=self.verbosity > self.v_normal,
             )
+
+            # copy data package file to export dir (replaces if already present)
+            export_datapackage = self.path / data_package_path.name
+            shutil.copy(data_package_path, export_datapackage)
+
+            # NOTE: if we add stats, we would need to update (easier to omit)
+            # NOTE: pages path & compression depends on gzip flag
+            # run frictionless validation on the package
+            print("Validating datapackage...")
+            pkg = Package(export_datapackage)
+            report = pkg.validate()
+            if report.valid:
+                if self.verbosity >= self.v_normal:
+                    self.stdout.write("✅ datapackage is valid")
+            else:
+                self.stdout.write(
+                    f"❌ datapackage failed validation with {report.stats['errors']} errors(s)"
+                )
+                self.stdout.write(
+                    f"Run manually to see details: frictionless validate {export_datapackage}"
+                )
 
 
 # helper func
