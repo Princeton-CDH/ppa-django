@@ -9,7 +9,12 @@ data_package_path = app_dir / "ppa_datapackage.json"
 def check_pagecount(
     metadata_csv: pathlib.Path, pages_jsonl: pathlib.Path, verbose: bool = False
 ) -> list[bool]:
-    # check & report on page counts in the exported data
+    """
+    Check that work and page counts match in the exported metadata and page data.
+    Returns a list of boolean values indicating the status of the checks:
+    - total works match
+    - page counts match
+    """
     checks = []
 
     # load metadata csv file
