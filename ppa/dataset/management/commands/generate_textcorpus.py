@@ -389,7 +389,9 @@ class Command(BaseCommand):
         # validate the data files, unless running in metadata-only mode
         if not self.metadata_only:
             check_pagecount(
-                self.path_works_csv, self.path_pages_json, verbosity=self.verbosity
+                self.path_works_csv,
+                self.path_pages_json,
+                verbose=self.verbosity > self.v_normal,
             )
 
 
