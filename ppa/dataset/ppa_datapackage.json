@@ -1,0 +1,211 @@
+{
+  "resources": [
+    {
+      "name": "ppa_metadata",
+      "type": "table",
+      "path": "ppa_metadata.csv",
+      "scheme": "file",
+      "format": "csv",
+      "mediatype": "text/csv",
+      "encoding": "utf-8",
+      "schema": {
+        "fields": [
+          {
+            "name": "work_id",
+            "type": "string",
+            "format": "default",
+            "title": "PPA Work identifier"
+          },
+          {
+            "name": "source_id",
+            "type": "string",
+            "format": "default",
+            "title": "Source identifier",
+            "description": "Identifier from original source (HathiTrust, Gale/ECCO, or EEBO-TCP)\n"
+          },
+          {
+            "name": "record_id",
+            "type": "string",
+            "format": "default"
+          },
+          {
+            "name": "author",
+            "type": "string",
+            "format": "default"
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "format": "default"
+          },
+          {
+            "name": "subtitle",
+            "type": "string",
+            "format": "default"
+          },
+          {
+            "name": "sort_title",
+            "type": "string",
+            "format": "default"
+          },
+          {
+            "name": "work_type",
+            "type": "string",
+            "format": "default"
+          },
+          {
+            "name": "book_journal",
+            "type": "string",
+            "format": "default"
+          },
+          {
+            "name": "volume",
+            "type": "any",
+            "format": "default"
+          },
+          {
+            "name": "pub_year",
+            "type": "year",
+            "format": "default"
+          },
+          {
+            "name": "pub_place",
+            "type": "string",
+            "format": "default"
+          },
+          {
+            "name": "publisher",
+            "type": "string",
+            "format": "default"
+          },
+          {
+            "name": "pages_orig",
+            "type": "string",
+            "format": "default"
+          },
+          {
+            "name": "pages_digital",
+            "type": "string",
+            "format": "default"
+          },
+          {
+            "name": "page_count",
+            "type": "integer",
+            "format": "default"
+          },
+          {
+            "name": "collections",
+            "type": "string",
+            "format": "default"
+          },
+          {
+            "name": "cluster_id",
+            "type": "string",
+            "format": "default"
+          },
+          {
+            "name": "source",
+            "type": "string",
+            "format": "default"
+          },
+          {
+            "name": "source_url",
+            "type": "string",
+            "format": "uri"
+          },
+          {
+            "name": "added",
+            "type": "datetime",
+            "format": "default",
+            "description": "Date added to PPA database"
+          },
+          {
+            "name": "updated",
+            "type": "datetime",
+            "format": "default",
+            "description": "Date last modified in PPA database"
+          }
+        ],
+        "primaryKey": "work_id"
+      },
+      "profile": "tabular-data-resource"
+    },
+    {
+      "name": "ppa_pages",
+      "type": "table",
+      "path": "ppa_pages.jsonl.gz",
+      "scheme": "file",
+      "format": "jsonl",
+      "mediatype": "text/jsonl",
+      "compression": "gz",
+      "encoding": "utf-8",
+      "dialect": {
+        "delimiter": ",",
+        "doubleQuote": true,
+        "lineTerminator": "\r\n",
+        "quoteChar": "\"",
+        "skipInitialSpace": true,
+        "header": true,
+        "caseSensitiveHeader": false,
+        "json": {
+          "keyed": true
+        }
+      },
+      "schema": {
+        "fields": [
+          {
+            "name": "label",
+            "type": "string",
+            "format": "default",
+            "title": "page label",
+            "description": "Page number in original source, if available"
+          },
+          {
+            "name": "tags",
+            "type": "array",
+            "format": "default",
+            "description": "Page tags if any"
+          },
+          {
+            "name": "id",
+            "type": "string",
+            "format": "default"
+          },
+          {
+            "name": "order",
+            "type": "integer",
+            "format": "default",
+            "description": "page sequence"
+          },
+          {
+            "name": "text",
+            "type": "string",
+            "format": "default",
+            "description": "full-text content of the page"
+          },
+          {
+            "name": "work_id",
+            "type": "string",
+            "format": "default",
+            "description": "PPA work identifier for the work this page belongs to"
+          }
+        ],
+        "primaryKey": "id",
+        "foreignKeys": [
+          {
+            "fields": "work_id",
+            "reference": {
+              "resource": "ppa_metadata",
+              "fields": "work_id"
+            }
+          }
+        ]
+      },
+      "profile": "tabular-data-resource"
+    }
+  ],
+  "name": "ppa-fulltext",
+  "title": "PPA fulltext dataset",
+  "homepage": "https://prosody.princeton.edu",
+  "version": "1.0"
+}
