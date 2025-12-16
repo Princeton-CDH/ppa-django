@@ -2,6 +2,9 @@ import pathlib
 
 import polars as pl
 
+app_dir = pathlib.Path(__file__).parent
+data_package_path = app_dir / "ppa_datapackage.json"
+
 
 def check_pagecount(
     metadata_csv: pathlib.Path, pages_jsonl: pathlib.Path, verbose: bool = False
