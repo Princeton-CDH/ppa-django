@@ -14,7 +14,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from parasolr.django import SolrClient, SolrQuerySet
 
-from ppa.archive.management.commands import generate_textcorpus
+from ppa.dataset.management.commands import generate_textcorpus
 from ppa.archive.models import DigitizedWork, Page
 
 # fixture test content; indexed by sample_works fixture
@@ -123,14 +123,14 @@ def test_work_metadata(sample_works):
         assert set(result_fields).issubset(set(cmd.work_fields))
 
 
-@patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_solr")
+@patch("ppa.dataset.management.commands.generate_textcorpus.Command.iter_solr")
 def test_iter_pages(mock_iter_solr):
     cmd = init_cmd()
     deque(cmd.iter_pages(), maxlen=0)
     mock_iter_solr.assert_called_with(item_type="page")
 
 
-@patch("ppa.archive.management.commands.generate_textcorpus.progressbar")
+@patch("ppa.dataset.management.commands.generate_textcorpus.progressbar")
 def test_progressbar(mock_iter_progress, sample_works):
     # call the iterator and convert to list to consume
     list(init_cmd(progress=True, dry_run=True).iter_pages())
@@ -332,8 +332,8 @@ def test_set_params(options, expected, tmp_path):
         assert attr_value == expected_value
 
 
-@patch("ppa.archive.management.commands.generate_textcorpus.Command.work_metadata")
-@patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_pages")
+@patch("ppa.dataset.management.commands.generate_textcorpus.Command.work_metadata")
+@patch("ppa.dataset.management.commands.generate_textcorpus.Command.iter_pages")
 def test_default_args(mock_iter_pages, mock_work_metadata, tmp_path):
     # testing default args requires running with call_commmand
     cmd = generate_textcorpus.Command()
@@ -379,8 +379,8 @@ def test_handle_metadata_only(sample_works, tmp_path, capsys):
     assert not cmd.path_pages_json.exists()
 
 
-@patch("ppa.archive.management.commands.generate_textcorpus.Command.work_metadata")
-@patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_pages")
+@patch("ppa.dataset.management.commands.generate_textcorpus.Command.work_metadata")
+@patch("ppa.dataset.management.commands.generate_textcorpus.Command.iter_pages")
 def test_dry_run(mock_iter_pages, mock_work_metadata, tmp_path):
     # mock content does not matter in dry run, consumes generator but doesn't save
     mock_work_metadata.return_value = [1, 2, 3, 4, 5]

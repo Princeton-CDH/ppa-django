@@ -181,6 +181,12 @@ class Command(BaseCommand):
         )
         # validate the output
         parser.add_argument(
+            "--validate",
+            help="Validate exported files",
+            action=argparse.BooleanOptionalAction,
+            default=False,
+        )
+        parser.add_argument(
             "--validate-only",
             help="Validate existing output, do not export (files must exist)",
             action=argparse.BooleanOptionalAction,
@@ -347,6 +353,8 @@ class Command(BaseCommand):
         self.progress = options.get("progress")
         self.batch_size = options.get("batch_size", DEFAULT_BATCH_SIZE)
         self.validate_only = options.get("validate_only")
+        # validate only implies validate
+        self.validate = options.get("validate") or self.validate_only
         self.query_set = SolrQuerySet()
 
     def handle(self, *args, **options):
@@ -389,7 +397,7 @@ class Command(BaseCommand):
                 )
 
         # validate the data files, unless running in metadata-only mode
-        if not self.metadata_only:
+        if self.validate and not self.metadata_only:
             self.stdout.write("Checking work and page counts...")
             check_pagecount(
                 self.path_works_csv,
