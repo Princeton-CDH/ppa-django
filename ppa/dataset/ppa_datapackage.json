@@ -1,0 +1,256 @@
+{
+  "resources": [
+    {
+      "name": "ppa_metadata",
+      "type": "table",
+      "path": "ppa_metadata.csv",
+      "scheme": "file",
+      "format": "csv",
+      "mediatype": "text/csv",
+      "encoding": "utf-8",
+      "schema": {
+        "fields": [
+          {
+            "name": "work_id",
+            "type": "string",
+            "format": "default",
+            "title": "PPA Work identifier",
+            "description": "Unique work identifier comprised of source identifier and (for excerpts) starting page number"
+          },
+          {
+            "name": "source_id",
+            "type": "string",
+            "format": "default",
+            "title": "Source identifier",
+            "description": "Work identifier from original source (HathiTrust, Gale/ECCO, or EEBO-TCP)"
+          },
+          {
+            "name": "record_id",
+            "type": "string",
+            "format": "default",
+            "description": "Identifier used to associate individual volumes with MARC records",
+            "title": "Record identifier"
+          },
+          {
+            "name": "author",
+            "type": "string",
+            "format": "default",
+            "title": "Author",
+            "description": "Author name in \"Last, First, lifespan (if known)\" format"
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "format": "default",
+            "title": "Title",
+            "description": "Title of the work"
+          },
+          {
+            "name": "subtitle",
+            "type": "string",
+            "format": "default",
+            "title": "Subtitle",
+            "description": "Subtitle of the work"
+          },
+          {
+            "name": "sort_title",
+            "type": "string",
+            "format": "default",
+            "title": "Sort title",
+            "description": "Title of the work without leading stop words"
+          },
+          {
+            "name": "work_type",
+            "type": "string",
+            "format": "default",
+            "title": "Work type",
+            "description": "Full work, Excerpt, or Article"
+          },
+          {
+            "name": "book_journal",
+            "type": "string",
+            "format": "default",
+            "title": "Book or journal title",
+            "description": "For excerpts and articles only: title of book or journal in which the excerpt or article appears"
+          },
+          {
+            "name": "volume",
+            "type": "any",
+            "format": "default",
+            "title": "Volume",
+            "description": "Book or journal volume number (if applicable)"
+          },
+          {
+            "name": "pub_year",
+            "type": "year",
+            "format": "default",
+            "title": "Publication year",
+            "description": "Year of the work's publication"
+          },
+          {
+            "name": "pub_place",
+            "type": "string",
+            "format": "default",
+            "title": "Publication place",
+            "description": "City of the work's publication"
+          },
+          {
+            "name": "publisher",
+            "type": "string",
+            "format": "default",
+            "title": "Publisher",
+            "description": "Name of the work's publisher"
+          },
+          {
+            "name": "pages_orig",
+            "type": "string",
+            "format": "default",
+            "title": "Pages original",
+            "description": "For excerpts and articles only: physical printed page numbers, used for citation purposes"
+          },
+          {
+            "name": "pages_digital",
+            "type": "string",
+            "format": "default",
+            "title": "Pages digital",
+            "description": "For excerpts and articles only: digital page numbers based on scanning sequence, used for determining the bounds of the range"
+          },
+          {
+            "name": "page_count",
+            "type": "integer",
+            "format": "default",
+            "title": "Page count",
+            "description": "Total number of pages in the full work, excerpt, or article"
+          },
+          {
+            "name": "collections",
+            "type": "string",
+            "format": "default",
+            "title": "Collections",
+            "description": "Dictionaries, Linguistic, Literary, Original Bibliography, Typographically Unique, Word Lists (if multiple, separated by semicolons)"
+          },
+          {
+            "name": "cluster_id",
+            "type": "string",
+            "format": "default",
+            "title": "Cluster identifier",
+            "description": "Custom identifier to group together reprints of functionally identical works"
+          },
+          {
+            "name": "source",
+            "type": "string",
+            "format": "default",
+            "title": "Source",
+            "description": "Source provider of the work: HathiTrust, Gale/ECCO, or EEBO-TCP"
+          },
+          {
+            "name": "source_url",
+            "type": "string",
+            "format": "uri",
+            "title": "Source URL",
+            "description": "URL to view the work directly on HathiTrust, Gale/EECO, or EEBO-TCP"
+          },
+          {
+            "name": "added",
+            "type": "datetime",
+            "format": "default",
+            "description": "Date added to PPA database",
+            "title": "Added"
+          },
+          {
+            "name": "updated",
+            "type": "datetime",
+            "format": "default",
+            "description": "Date last modified in PPA database",
+            "title": "Updated"
+          }
+        ],
+        "primaryKey": "work_id"
+      },
+      "profile": "tabular-data-resource"
+    },
+    {
+      "name": "ppa_pages",
+      "type": "table",
+      "path": "ppa_pages.jsonl.gz",
+      "scheme": "file",
+      "format": "jsonl",
+      "mediatype": "text/jsonl",
+      "compression": "gz",
+      "encoding": "utf-8",
+      "dialect": {
+        "delimiter": ",",
+        "doubleQuote": true,
+        "lineTerminator": "\r\n",
+        "quoteChar": "\"",
+        "skipInitialSpace": true,
+        "header": true,
+        "caseSensitiveHeader": false,
+        "json": {
+          "keyed": true
+        }
+      },
+      "schema": {
+        "fields": [
+          {
+            "name": "label",
+            "type": "string",
+            "format": "default",
+            "title": "Page label",
+            "description": "Page number in original source, if available"
+          },
+          {
+            "name": "tags",
+            "type": "array",
+            "format": "default",
+            "description": "Page tags if any",
+            "title": "Tags"
+          },
+          {
+            "name": "id",
+            "type": "string",
+            "format": "default",
+            "title": "Page identifier",
+            "description": "Unique page identifier"
+          },
+          {
+            "name": "order",
+            "type": "integer",
+            "format": "default",
+            "description": "Page number in scanning sequence",
+            "title": "Page order"
+          },
+          {
+            "name": "text",
+            "type": "string",
+            "format": "default",
+            "description": "Full-text content of the page",
+            "title": "Text"
+          },
+          {
+            "name": "work_id",
+            "type": "string",
+            "format": "default",
+            "description": "Unique identifier used to connect pages back to the work",
+            "title": "Work identifier"
+          }
+        ],
+        "primaryKey": "id",
+        "foreignKeys": [
+          {
+            "fields": "work_id",
+            "reference": {
+              "resource": "ppa_metadata",
+              "fields": "work_id"
+            }
+          }
+        ]
+      },
+      "profile": "tabular-data-resource"
+    }
+  ],
+  "name": "ppa-fulltext",
+  "title": "PPA fulltext dataset",
+  "homepage": "https://prosody.princeton.edu",
+  "version": "1.0"
+}

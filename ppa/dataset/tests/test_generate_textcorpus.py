@@ -1,5 +1,6 @@
 import csv
 import json
+import pathlib
 import os
 import types
 from collections import deque
@@ -11,9 +12,10 @@ import orjsonl
 import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
+from frictionless import Package
 from parasolr.django import SolrClient, SolrQuerySet
 
-from ppa.archive.management.commands import generate_textcorpus
+from ppa.dataset.management.commands import generate_textcorpus
 from ppa.archive.models import DigitizedWork, Page
 
 # fixture test content; indexed by sample_works fixture
@@ -122,14 +124,14 @@ def test_work_metadata(sample_works):
         assert set(result_fields).issubset(set(cmd.work_fields))
 
 
-@patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_solr")
+@patch("ppa.dataset.management.commands.generate_textcorpus.Command.iter_solr")
 def test_iter_pages(mock_iter_solr):
     cmd = init_cmd()
     deque(cmd.iter_pages(), maxlen=0)
     mock_iter_solr.assert_called_with(item_type="page")
 
 
-@patch("ppa.archive.management.commands.generate_textcorpus.progressbar")
+@patch("ppa.dataset.management.commands.generate_textcorpus.progressbar")
 def test_progressbar(mock_iter_progress, sample_works):
     # call the iterator and convert to list to consume
     list(init_cmd(progress=True, dry_run=True).iter_pages())
@@ -158,10 +160,10 @@ def test_save_metadata(sample_works, tmp_path):
     path_pages = tmp_path / "ppa_pages.jsonl"
     path_pages_gz = tmp_path / "ppa_pages.jsonl.gz"
 
-    assert cmd.path_works_json == str(path_meta)
-    assert cmd.path_works_csv == str(path_meta_csv)
+    assert cmd.path_works_json == path_meta
+    assert cmd.path_works_csv == path_meta_csv
     # compression enabled by default for pages jsonl
-    assert cmd.path_pages_json == str(path_pages_gz)
+    assert cmd.path_pages_json == path_pages_gz
 
     assert path_meta.exists()
     assert path_meta_csv.exists()
@@ -169,9 +171,9 @@ def test_save_metadata(sample_works, tmp_path):
     assert not path_pages_gz.exists()
 
     # load data to inspect results
-    with open(path_meta) as f:
+    with path_meta.open() as f:
         json_meta = json.load(f)
-    with open(path_meta_csv, newline="") as csvfile:
+    with path_meta_csv.open(newline="") as csvfile:
         reader = csv.DictReader(csvfile)
         csv_meta = list(reader)
 
@@ -287,10 +289,15 @@ def test_save_pages(sample_works, tmp_path):
 # test: options and expected resulting attributes on the command
 test_options = [
     (
-        {"path": "tmpdir_123", "gzip": False, "dry_run": True, "verbosity": 0},
         {
-            "path": "tmpdir_123",
-            "path_pages_json": "tmpdir_123/ppa_pages.jsonl",
+            "path": pathlib.Path("tmpdir_123"),
+            "gzip": False,
+            "dry_run": True,
+            "verbosity": 0,
+        },
+        {
+            "path": pathlib.Path("tmpdir_123"),
+            "path_pages_json": pathlib.Path("tmpdir_123/ppa_pages.jsonl"),
             "is_dry_run": True,
             "verbosity": 0,
         },
@@ -326,20 +333,26 @@ def test_set_params(options, expected, tmp_path):
         assert attr_value == expected_value
 
 
-@patch("ppa.archive.management.commands.generate_textcorpus.Command.work_metadata")
-@patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_pages")
-def test_default_args(mock_iter_pages, mock_work_metadata, tmp_path):
+@patch("ppa.dataset.management.commands.generate_textcorpus.Command.work_metadata")
+@patch("ppa.dataset.management.commands.generate_textcorpus.Command.iter_pages")
+@patch("ppa.dataset.management.commands.generate_textcorpus.nowstr")
+def test_default_args(mock_nowstr, mock_iter_pages, mock_work_metadata, tmp_path):
+    # use mock to specify return value to avoid possible mismatch
+    timestamp = "2001-01-01_120101"
+    mock_nowstr.return_value = timestamp
+
     # testing default args requires running with call_commmand
     cmd = generate_textcorpus.Command()
     # change working directory to temp path to avoid accumulating empty
     # export directories in the project working director
     os.chdir(tmp_path)
     call_command(cmd)
-    assert cmd.path == "ppa_corpus_" + generate_textcorpus.nowstr()
+
+    assert cmd.path == pathlib.Path(f"ppa_corpus_{timestamp}")
     assert cmd.doclimit is None
     assert cmd.verbosity == cmd.v_normal
     # compression for page output enabled by  default
-    assert cmd.path_pages_json.endswith(".gz")
+    assert cmd.path_pages_json.suffix == ".gz"
     assert cmd.batch_size == generate_textcorpus.DEFAULT_BATCH_SIZE
 
 
@@ -347,14 +360,14 @@ def test_handle(sample_works, tmp_path, capsys):
     output_dir = tmp_path / "output"
     cmd = generate_textcorpus.Command()
     # use call command so default args are set properly
-    call_command(cmd, path=str(output_dir))
-    assert cmd.path == str(output_dir)
+    call_command(cmd, path=output_dir)
+    assert cmd.path == output_dir
     # output directory created
     assert output_dir.is_dir()
     # output files are created
-    assert os.path.exists(cmd.path_works_json)
-    assert os.path.exists(cmd.path_works_csv)
-    assert os.path.exists(cmd.path_pages_json)
+    assert cmd.path_works_json.exists()
+    assert cmd.path_works_csv.exists()
+    assert cmd.path_pages_json.exists()
     # actual logic tested elsewhere
 
     captured = capsys.readouterr()
@@ -365,16 +378,75 @@ def test_handle_metadata_only(sample_works, tmp_path, capsys):
     output_dir = tmp_path / "output"
     cmd = generate_textcorpus.Command()
     # use call command so default args are set properly
-    call_command(cmd, path=str(output_dir), metadata_only=True)
+    call_command(cmd, path=output_dir, metadata_only=True)
     # metadata output files are created
-    assert os.path.exists(cmd.path_works_json)
-    assert os.path.exists(cmd.path_works_csv)
+    assert cmd.path_works_json.exists()
+    assert cmd.path_works_csv.exists()
     # page output file are NOT created
-    assert not os.path.exists(cmd.path_pages_json)
+    assert not cmd.path_pages_json.exists()
 
 
-@patch("ppa.archive.management.commands.generate_textcorpus.Command.work_metadata")
-@patch("ppa.archive.management.commands.generate_textcorpus.Command.iter_pages")
+@patch("ppa.dataset.management.commands.generate_textcorpus.Package", spec=Package)
+@patch("ppa.dataset.management.commands.generate_textcorpus.check_pagecount")
+def test_handle_validate(
+    mock_check_pagecount, mock_package, sample_works, tmp_path, capsys
+):
+    output_dir = tmp_path / "output"
+    mock_package.validate.return_value.valid = True
+    cmd = generate_textcorpus.Command()
+    call_command(cmd, path=output_dir, validate=True)
+    # datapackage file should be present
+    export_datapackage_path = output_dir / "ppa_datapackage.json"
+    assert export_datapackage_path.exists()
+    mock_check_pagecount.assert_called_with(
+        cmd.path_works_csv, cmd.path_pages_json, verbose=False
+    )
+    mock_package.assert_called_with(export_datapackage_path)
+    captured = capsys.readouterr()
+    assert "datapackage is valid" in captured.out
+
+    # increased verbosity mode
+    call_command(cmd, path=output_dir, validate=True, verbosity=2)
+    mock_check_pagecount.assert_called_with(
+        cmd.path_works_csv, cmd.path_pages_json, verbose=True
+    )
+
+
+def test_handle_validate_only(sample_works, tmp_path, capsys):
+    # if files are not present, should error
+    output_dir = tmp_path / "output"
+    cmd = generate_textcorpus.Command()
+    with pytest.raises(CommandError, match="Cannot validate"):
+        call_command(cmd, path=output_dir, validate_only=True)
+
+    # output text should be validating rather than saving
+    captured = capsys.readouterr()
+    assert f"Validating files in {output_dir}" in captured.out
+
+    # run to generate output without validation
+    call_command(cmd, path=output_dir)
+    # then validate
+    call_command(cmd, path=output_dir, validate_only=True)
+    # datapackage file should be present
+    assert (output_dir / "ppa_datapackage.json").exists()
+
+    # sample data does not pass validation
+    captured = capsys.readouterr()
+    assert "Total works in metadata does not match page data" in captured.out
+    assert "datapackage failed validation" in captured.out
+
+    # simulate valid data
+    with patch(
+        "ppa.dataset.management.commands.generate_textcorpus.Package", spec=Package
+    ) as mock_package:
+        mock_package.validate.return_value.valid = True
+        call_command(cmd, path=output_dir, validate_only=True)
+        captured = capsys.readouterr()
+        assert "datapackage is valid" in captured.out
+
+
+@patch("ppa.dataset.management.commands.generate_textcorpus.Command.work_metadata")
+@patch("ppa.dataset.management.commands.generate_textcorpus.Command.iter_pages")
 def test_dry_run(mock_iter_pages, mock_work_metadata, tmp_path):
     # mock content does not matter in dry run, consumes generator but doesn't save
     mock_work_metadata.return_value = [1, 2, 3, 4, 5]
