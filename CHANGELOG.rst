@@ -10,6 +10,7 @@ CHANGELOG
    - Only include cluster id for works in clusters
    - Format work collection membership as string-delimited list
    - Include database fields
+- Add datapackage file and optional validation to `generate_textcorpus` command
 - bugfix: admin data export cluster field should use alpha cluster id, not numeric db id
 - Update zenodo.json file to include all current contributors
 
