@@ -408,8 +408,7 @@ class Command(BaseCommand):
             # copy data package file to export dir (replaces if already present)
             export_datapackage = self.path / data_package_path.name
             shutil.copy(data_package_path, export_datapackage)
-
-            # NOTE: if we add stats, we would need to update (easier to omit)
+            # NOTE: we omit stats from datapackage to avoid having to update
             # NOTE: pages path & compression depends on gzip flag
             # run frictionless validation on the package
             print("Validating datapackage...")
