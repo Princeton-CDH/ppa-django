@@ -335,14 +335,20 @@ def test_set_params(options, expected, tmp_path):
 
 @patch("ppa.dataset.management.commands.generate_textcorpus.Command.work_metadata")
 @patch("ppa.dataset.management.commands.generate_textcorpus.Command.iter_pages")
-def test_default_args(mock_iter_pages, mock_work_metadata, tmp_path):
+@patch("ppa.dataset.management.commands.generate_textcorpus.nowstr")
+def test_default_args(mock_nowstr, mock_iter_pages, mock_work_metadata, tmp_path):
+    # use mock to specify return value to avoid possible mismatch
+    timestamp = "2001-01-01_120101"
+    mock_nowstr.return_value = timestamp
+
     # testing default args requires running with call_commmand
     cmd = generate_textcorpus.Command()
     # change working directory to temp path to avoid accumulating empty
     # export directories in the project working director
     os.chdir(tmp_path)
     call_command(cmd)
-    assert cmd.path == pathlib.Path("ppa_corpus_" + generate_textcorpus.nowstr())
+
+    assert cmd.path == pathlib.Path(f"ppa_corpus_{timestamp}")
     assert cmd.doclimit is None
     assert cmd.verbosity == cmd.v_normal
     # compression for page output enabled by  default
