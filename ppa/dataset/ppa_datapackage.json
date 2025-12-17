@@ -14,7 +14,8 @@
             "name": "work_id",
             "type": "string",
             "format": "default",
-            "title": "PPA Work identifier"
+            "title": "PPA Work identifier",
+            "description": "Numeric PPA database ID, 1 - 7248 (total number of public + suppressed records in PPA)."
           },
           {
             "name": "source_id",
