@@ -30,11 +30,19 @@ Example usage:
 
         python manage.py generate_textcorpus --no-progress --verbosity 2
 
+    - Export data for publication (includes datapackage file) and validate:
+
+        python manage.py generate_textcorpus --validate
+
+    - Validate a previous export (all files must be present):
+
+        python manage.py generate_textcorpus --validate-only --path ~/ppa_solr_corpus
+
 Notes:
 
     - Default path is `ppa_corpus_{timestamp}` in the current working directory
-    - Default batch size is 10,000 (Solr record iteration size;
-      this default was chosen for performance based on testing.)
+    - Default batch size is 10,000 (Solr record iteration size, chosen 
+      based on performance.)
 
 """
 
