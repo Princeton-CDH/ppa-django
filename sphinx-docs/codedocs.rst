@@ -79,16 +79,28 @@ Gale Import
 .. automodule:: ppa.archive.management.commands.gale_import
     :members:
 
-Generate Corpus
-~~~~~~~~~~~~~~~
-
-.. automodule:: ppa.archive.management.commands.generate_textcorpus
-    :members:
 
 EEBO-TCP Import
 ~~~~~~~~~~~~~~~
 
 .. automodule:: ppa.archive.management.commands.eebo_import
+    :members:
+
+Dataset
+-------
+.. automodule:: ppa.dataset
+    :members:
+
+.. automodule:: ppa.dataset.validate
+    :members:
+
+Manage Commands
+^^^^^^^^^^^^^^^    
+
+Generate Corpus
+~~~~~~~~~~~~~~~
+
+.. automodule:: ppa.dataset.management.commands.generate_textcorpus
     :members:
 
 Common
