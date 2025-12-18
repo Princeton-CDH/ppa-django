@@ -30,27 +30,39 @@ Example usage:
 
         python manage.py generate_textcorpus --no-progress --verbosity 2
 
+    - Export data for publication (includes datapackage file) and validate:
+
+        python manage.py generate_textcorpus --validate
+
+    - Validate a previous export (all files must be present):
+
+        python manage.py generate_textcorpus --validate-only --path ~/ppa_solr_corpus
+
 Notes:
 
     - Default path is `ppa_corpus_{timestamp}` in the current working directory
-    - Default batch size is 10,000 (Solr record iteration size;
-      this default was chosen for performance based on testing.)
+    - Default batch size is 10,000 (Solr record iteration size, chosen 
+      based on performance.)
 
 """
 
 import argparse
 import csv
 import json
-import os
+import pathlib
+import shutil
 from collections.abc import Generator
 from datetime import datetime
 
 import orjsonl
 from django.core.management.base import BaseCommand, CommandError
+from frictionless import Package
 from parasolr.django import SolrQuerySet
 from progressbar import progressbar
 
+
 from ppa.archive.models import DigitizedWork
+from ppa.dataset.validate import check_pagecount, data_package_path
 
 DEFAULT_BATCH_SIZE = 10000
 TIMESTAMP_FMT = "%Y-%m-%d_%H%M%S"
@@ -126,6 +138,7 @@ class Command(BaseCommand):
             "--path",
             help="Directory path to save corpus file(s). Defaults to ./ppa_corpus_{timestamp}",
             default=None,
+            type=pathlib.Path,
         )
 
         # add --doc-limit argument (determines how many results to retrieve from solr)
@@ -173,6 +186,19 @@ class Command(BaseCommand):
             help="Show progress",
             action=argparse.BooleanOptionalAction,
             default=True,
+        )
+        # validate the output
+        parser.add_argument(
+            "--validate",
+            help="Validate exported files",
+            action=argparse.BooleanOptionalAction,
+            default=False,
+        )
+        parser.add_argument(
+            "--validate-only",
+            help="Validate existing output, do not export (files must exist)",
+            action=argparse.BooleanOptionalAction,
+            default=False,
         )
 
     #### SOLR ####
@@ -266,16 +292,6 @@ class Command(BaseCommand):
         """
         yield from self.iter_solr(item_type="page")
 
-    def prep_metadata(self, data: Generator | list) -> Generator:
-        # generate lookup dict for work item type slug to display
-        pass  # define this on digwork
-        # use slugify for work_type; store once and lookup by display
-
-    #     @property
-    # def work_type(self):
-    #     """Work type formatted for COinS metadata (matches Solr field format)."""
-    #     return self.get_item_type_display().lower().replace(" ", "-")
-
     def metadata_for_csv(self, data: Generator | list) -> Generator:
         """
         Takes a list or iterator of metadata records and yields a version
@@ -331,18 +347,22 @@ class Command(BaseCommand):
         # options
         self.path = options.get("path")
         if not self.path:
-            self.path = os.path.join(f"ppa_corpus_{nowstr()}")
+            self.path = pathlib.Path(f"ppa_corpus_{nowstr()}")
 
-        self.path_works_json = os.path.join(self.path, "ppa_metadata.json")
-        self.path_works_csv = os.path.join(self.path, "ppa_metadata.csv")
+        self.path_works_json = self.path / "ppa_metadata.json"
+        self.path_works_csv = self.path / "ppa_metadata.csv"
         jsonl_ext = "jsonl.gz" if options.get("gzip") else "jsonl"
-        self.path_pages_json = os.path.join(self.path, f"ppa_pages.{jsonl_ext}")
+        self.path_pages_json = self.path / f"ppa_pages.{jsonl_ext}"
+
         self.metadata_only = options.get("metadata_only", False)
         self.is_dry_run = options.get("dry_run")
         self.doclimit = options.get("doc_limit")
         self.verbosity = options.get("verbosity", self.verbosity)
         self.progress = options.get("progress")
         self.batch_size = options.get("batch_size", DEFAULT_BATCH_SIZE)
+        self.validate_only = options.get("validate_only")
+        # validate only implies validate
+        self.validate = options.get("validate") or self.validate_only
         self.query_set = SolrQuerySet()
 
     def handle(self, *args, **options):
@@ -351,15 +371,67 @@ class Command(BaseCommand):
         # ensure output path exists
         if not self.is_dry_run:
             if self.verbosity >= self.v_normal:
-                print(f"Saving files in {self.path}")
-            os.makedirs(self.path, exist_ok=True)
+                if self.validate_only:
+                    action = "Validating"
+                else:
+                    action = "Saving"
+                self.stdout.write(f"{action} files in {self.path}")
+            self.path.mkdir(exist_ok=True)
 
-        # save metadata
-        self.save_metadata()
+        if not self.validate_only:
+            # save metadata
+            self.save_metadata()
 
-        # save pages unless running in metadata-only mode
-        if not self.metadata_only:
-            self.save_pages()
+            # save pages unless running in metadata-only mode
+            if not self.metadata_only:
+                self.save_pages()
+
+        # if validating a previous export, check that expected files are present
+        if self.validate_only:
+            missing = []
+            for data_file in [
+                self.path_works_csv,
+                self.path_works_json,
+                self.path_pages_json,
+            ]:
+                if not data_file.exists():
+                    missing.append(data_file)
+            # if any are missing, report and exit
+            if missing:
+                missing_str = ", ".join([str(p) for p in missing])
+                raise CommandError(
+                    "Cannot validate because not all files are present. "
+                    + f"Missing files: {missing_str}"
+                )
+
+        # validate the data files, unless running in metadata-only mode
+        if self.validate and not self.metadata_only:
+            self.stdout.write("Checking work and page counts...")
+            check_pagecount(
+                self.path_works_csv,
+                self.path_pages_json,
+                verbose=self.verbosity > self.v_normal,
+            )
+
+            # copy data package file to export dir (replaces if already present)
+            export_datapackage = self.path / data_package_path.name
+            shutil.copy(data_package_path, export_datapackage)
+            # NOTE: we omit stats from datapackage to avoid having to update
+            # NOTE: pages path & compression depends on gzip flag
+            # run frictionless validation on the package
+            print("Validating datapackage...")
+            pkg = Package(export_datapackage)
+            report = pkg.validate()
+            if report.valid:
+                if self.verbosity >= self.v_normal:
+                    self.stdout.write("✅ datapackage is valid")
+            else:
+                self.stdout.write(
+                    f"❌ datapackage failed validation with {report.stats['errors']} errors(s)"
+                )
+                self.stdout.write(
+                    f"Run manually to see details: frictionless validate {export_datapackage}"
+                )
 
 
 # helper func

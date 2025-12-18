@@ -34,3 +34,5 @@ django-split-settings
 orjsonl
 # TODO: Switch to tagged version when we have one
 git+https://github.com/Princeton-CDH/ppa-nlp@develop#egg=corppa
+polars>=1.36.1
+frictionless[json]
