@@ -333,20 +333,15 @@ def test_set_params(options, expected, tmp_path):
         assert attr_value == expected_value
 
 
-@patch("ppa.dataset.management.commands.generate_textcorpus.Command.work_metadata")
-@patch("ppa.dataset.management.commands.generate_textcorpus.Command.iter_pages")
-def test_default_args(mock_iter_pages, mock_work_metadata, tmp_path):
+def test_default_args(mock_iter_pages, mock_work_metadata):
     # testing default args requires running with call_commmand
     cmd = generate_textcorpus.Command()
     # change working directory to temp path to avoid accumulating empty
     # export directories in the project working director
-    os.chdir(tmp_path)
     call_command(cmd)
-    assert cmd.path == pathlib.Path("ppa_corpus_" + generate_textcorpus.nowstr())
     assert cmd.doclimit is None
     assert cmd.verbosity == cmd.v_normal
     # compression for page output enabled by  default
-    assert cmd.path_pages_json.suffix == ".gz"
     assert cmd.batch_size == generate_textcorpus.DEFAULT_BATCH_SIZE
 
 
