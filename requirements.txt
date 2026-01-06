@@ -33,5 +33,3 @@ django-split-settings
 orjsonl
 # corppa is not published on pypi, but install a tagged version
 git+https://github.com/Princeton-CDH/ppa-nlp@0.4#egg=corppa
-polars>=1.36.1
-frictionless[json]
