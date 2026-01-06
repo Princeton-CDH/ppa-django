@@ -407,10 +407,11 @@ class Command(index_pages.Command):
         else:
             total_work_mismatches = len(page_mismatches)
             plural = "s" if total_work_mismatches != 1 else ""
+            total = sum(page_mismatches.values())
             self.stdout.write(
                 self.style.WARNING(
                     f"{total_work_mismatches} work{plural} with page count"
-                    + " difference between DB and Solr"
+                    + f" difference{plural} ({total:+,})"
                 )
             )
             # in increased verbosity mode, get_digwork_page_count_mismatches
@@ -430,8 +431,7 @@ class Command(index_pages.Command):
                 self.stdout.write(f"Saving files in {self.path}")
             self.path.mkdir(exist_ok=True)
 
-        # save metadata (always)
-        print("***saving metadata")
+        # save metadata
         self.save_metadata()
         # save pages unless running in metadata-only mode
         if not self.metadata_only:
