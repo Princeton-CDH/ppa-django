@@ -41,7 +41,7 @@ Example usage:
 Notes:
 
     - Default path is `ppa_corpus_{timestamp}` in the current working directory
-    - Default batch size is 10,000 (Solr record iteration size, chosen 
+    - Default batch size is 10,000 (Solr record iteration size, chosen
       based on performance.)
 
 """
@@ -55,23 +55,31 @@ from collections.abc import Generator
 from datetime import datetime
 
 import orjsonl
-from django.core.management.base import BaseCommand, CommandError
-from frictionless import Package
+from django.core.management.base import CommandError
 from parasolr.django import SolrQuerySet
 from progressbar import progressbar
 
 
 from ppa.archive.models import DigitizedWork
-from ppa.dataset.validate import check_pagecount, data_package_path
+from ppa.archive.management.commands import index_pages
+from ppa.archive.solr import PageSearchQuerySet
 
 DEFAULT_BATCH_SIZE = 10000
 TIMESTAMP_FMT = "%Y-%m-%d_%H%M%S"
 
 
-class Command(BaseCommand):
+# dataset/management/command -> dataset
+app_dir = pathlib.Path(__file__).parent.parent.parent
+data_package_path = app_dir / "ppa_datapackage.json"
+
+
+class Command(index_pages.Command):
     """
     Custom manage command to generate a text corpus from text indexed in Solr.
     """
+
+    # extends index pages command to re-use logic for checking
+    # page count discrepancies between db and Solr index
 
     #: normal verbosity level
     v_normal = 1
@@ -187,16 +195,10 @@ class Command(BaseCommand):
             action=argparse.BooleanOptionalAction,
             default=True,
         )
-        # validate the output
+        # check the data before exporting
         parser.add_argument(
-            "--validate",
-            help="Validate exported files",
-            action=argparse.BooleanOptionalAction,
-            default=False,
-        )
-        parser.add_argument(
-            "--validate-only",
-            help="Validate existing output, do not export (files must exist)",
+            "--check",
+            help="Check that work and page totals in Database and Solr match",
             action=argparse.BooleanOptionalAction,
             default=False,
         )
@@ -347,7 +349,7 @@ class Command(BaseCommand):
         # options
         self.path = options.get("path")
         if not self.path:
-            self.path = pathlib.Path(f"ppa_corpus_{nowstr()}")
+            self.path = pathlib.Path(f"ppa_corpus_{timestamp()}")
 
         self.path_works_json = self.path / "ppa_metadata.json"
         self.path_works_csv = self.path / "ppa_metadata.csv"
@@ -360,81 +362,97 @@ class Command(BaseCommand):
         self.verbosity = options.get("verbosity", self.verbosity)
         self.progress = options.get("progress")
         self.batch_size = options.get("batch_size", DEFAULT_BATCH_SIZE)
-        self.validate_only = options.get("validate_only")
-        # validate only implies validate
-        self.validate = options.get("validate") or self.validate_only
+        self.check = options.get("check")
         self.query_set = SolrQuerySet()
+
+    def check_workcount(self):
+        """
+        Check that works represented by pages indexed in Solr matches
+        expected number of works in the database that will be included
+        in the dataset.
+        """
+        # facet pages on group id and then count unique groups
+        facets = (
+            PageSearchQuerySet()
+            .filter(item_type="page")
+            .facet("group_id", limit=-1)
+            .get_facets()
+        )
+        total_solr_page_works = len(facets.facet_fields["group_id"])
+        total_works = DigitizedWork.items_to_index().count()
+        if total_works == total_solr_page_works:
+            self.stdout.write(
+                self.style.SUCCESS(
+                    "Total works in database matches works with "
+                    + f"pages in Solr ({total_works:,})"
+                )
+            )
+        else:
+            self.stdout.write(
+                self.style.WARNING(
+                    "Total works in database does not match works with pages"
+                    + f" in Solr: {total_works - total_solr_page_works:+}"
+                )
+            )
+
+    def check_pagecount(self):
+        """
+        Check that the number of pages indexed in Solr matches
+        expected number of pages for works in the database.
+        """
+        page_mismatches = self.get_digwork_page_count_mismatches()
+        # if dict is empty, all page counts match
+        if not page_mismatches:
+            self.stdout.write(self.style.SUCCESS("No discrepancies in page counts"))
+        else:
+            total_work_mismatches = len(page_mismatches)
+            plural = "s" if total_work_mismatches != 1 else ""
+            self.stdout.write(
+                self.style.WARNING(
+                    f"{total_work_mismatches} work{plural} with page count"
+                    + " difference between DB and Solr"
+                )
+            )
+            # in increased verbosity mode, get_digwork_page_count_mismatches
+            # reports on the specific works and the discrepancy
 
     def handle(self, *args, **options):
         self.set_params(*args, **options)
 
+        # when requested, check totals for works and pages before exporting
+        if self.check:
+            self.check_workcount()
+            self.check_pagecount()
+
         # ensure output path exists
         if not self.is_dry_run:
             if self.verbosity >= self.v_normal:
-                if self.validate_only:
-                    action = "Validating"
-                else:
-                    action = "Saving"
-                self.stdout.write(f"{action} files in {self.path}")
+                self.stdout.write(f"Saving files in {self.path}")
             self.path.mkdir(exist_ok=True)
 
-        if not self.validate_only:
-            # save metadata
-            self.save_metadata()
+        # save metadata (always)
+        print("***saving metadata")
+        self.save_metadata()
+        # save pages unless running in metadata-only mode
+        if not self.metadata_only:
+            self.save_pages()
 
-            # save pages unless running in metadata-only mode
-            if not self.metadata_only:
-                self.save_pages()
-
-        # if validating a previous export, check that expected files are present
-        if self.validate_only:
-            missing = []
-            for data_file in [
-                self.path_works_csv,
-                self.path_works_json,
-                self.path_pages_json,
-            ]:
-                if not data_file.exists():
-                    missing.append(data_file)
-            # if any are missing, report and exit
-            if missing:
-                missing_str = ", ".join([str(p) for p in missing])
-                raise CommandError(
-                    "Cannot validate because not all files are present. "
-                    + f"Missing files: {missing_str}"
-                )
-
-        # validate the data files, unless running in metadata-only mode
-        if self.validate and not self.metadata_only:
-            self.stdout.write("Checking work and page counts...")
-            check_pagecount(
-                self.path_works_csv,
-                self.path_pages_json,
-                verbose=self.verbosity > self.v_normal,
-            )
-
+        # copy datapackage file to output folder, unless running in
+        #  metadata-only mode or dry-run
+        if not self.metadata_only and not self.is_dry_run:
             # copy data package file to export dir (replaces if already present)
             export_datapackage = self.path / data_package_path.name
             shutil.copy(data_package_path, export_datapackage)
-            # NOTE: we omit stats from datapackage to avoid having to update
-            # NOTE: pages path & compression depends on gzip flag
-            # run frictionless validation on the package
-            print("Validating datapackage...")
-            pkg = Package(export_datapackage)
-            report = pkg.validate()
-            if report.valid:
-                if self.verbosity >= self.v_normal:
-                    self.stdout.write("✅ datapackage is valid")
-            else:
+            # NOTE: pages path & compression in depends on gzip flag
+            # alert user to update manually
+            if self.path_pages_json.suffix != ".gz":
                 self.stdout.write(
-                    f"❌ datapackage failed validation with {report.stats['errors']} errors(s)"
-                )
-                self.stdout.write(
-                    f"Run manually to see details: frictionless validate {export_datapackage}"
+                    "NOTE: datapackage for pages must be updated manually "
+                    + "(default: .gz + compression)"
                 )
 
 
 # helper func
-def nowstr():
+def timestamp():
     """helper method to generate timestamp for use in output filename"""
     return datetime.now().strftime(TIMESTAMP_FMT)
