@@ -30,13 +30,9 @@ Example usage:
 
         python manage.py generate_textcorpus --no-progress --verbosity 2
 
-    - Export data for publication (includes datapackage file) and validate:
+    - Check work and page totals before exporting:
 
-        python manage.py generate_textcorpus --validate
-
-    - Validate a previous export (all files must be present):
-
-        python manage.py generate_textcorpus --validate-only --path ~/ppa_solr_corpus
+        python manage.py generate_textcorpus --check
 
 Notes:
 
