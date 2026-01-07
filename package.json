@@ -28,6 +28,7 @@
         "@types/semantic-ui": "^2.2.9",
         "autoprefixer": "^10.4.17",
         "babel-loader": "^8.2.2",
+        "baseline-browser-mapping": "^2.9.7",
         "clean-webpack-plugin": "^4.0.0",
         "core-js": "^3.12.1",
         "css-loader": "^7.1.2",
@@ -70,9 +71,8 @@
         "ts-jest": "^29.1.2",
         "webpack-dev-server": "^5.2.2"
     },
-    "volta":
-    {
-        "node": "20.19.3",
-        "npm": "10.8.3"
+    "volta": {
+        "node": "22.21.1",
+        "npm": "11.7.0"
     }
 }
