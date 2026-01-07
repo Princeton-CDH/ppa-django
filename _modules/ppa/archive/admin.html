@@ -4,13 +4,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ppa.archive.admin &#8212; Princeton Prosody Archive 3.15.2 documentation</title>
+    <title>ppa.archive.admin &#8212; Princeton Prosody Archive 3.16.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
-    <script src="../../../_static/documentation_options.js?v=06a1f5a3"></script>
-    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/documentation_options.js?v=075e253b"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
    
@@ -67,6 +67,8 @@
     <span class="n">status</span> <span class="o">=</span> <span class="n">fields</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span>
         <span class="n">attribute</span><span class="o">=</span><span class="s2">&quot;get_status_display&quot;</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="c1"># output alpha cluster id instead of numeric database id</span>
+    <span class="n">cluster</span> <span class="o">=</span> <span class="n">fields</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">attribute</span><span class="o">=</span><span class="s2">&quot;cluster&quot;</span><span class="p">,</span> <span class="n">column_name</span><span class="o">=</span><span class="s2">&quot;cluster_id&quot;</span><span class="p">)</span>
 
     <span class="k">class</span><span class="w"> </span><span class="nc">Meta</span><span class="p">:</span>
         <span class="n">model</span> <span class="o">=</span> <span class="n">DigitizedWork</span>
@@ -100,8 +102,6 @@
         <span class="n">widgets</span> <span class="o">=</span> <span class="p">{</span>
             <span class="c1"># customize many-to-many output for collections</span>
             <span class="s2">&quot;collections&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;separator&quot;</span><span class="p">:</span> <span class="s2">&quot;; &quot;</span><span class="p">,</span> <span class="s2">&quot;field&quot;</span><span class="p">:</span> <span class="s2">&quot;name&quot;</span><span class="p">},</span>
-            <span class="c1"># output cluster id instead of pk</span>
-            <span class="s2">&quot;cluster&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;field&quot;</span><span class="p">:</span> <span class="s2">&quot;cluster_id&quot;</span><span class="p">},</span>
         <span class="p">}</span>
 
 <div class="viewcode-block" id="DigitizedWorkResource.get_queryset">
@@ -533,7 +533,7 @@
       &#169;2024, CDH @ Princeton University.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
     </div>
