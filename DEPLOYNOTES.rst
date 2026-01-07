@@ -3,6 +3,13 @@
 Deploy and Upgrade notes
 ========================
 
+3.16
+----
+
+* Before generating text corpus export, update page counts for HathiTrust works
+  to match current rsync data by running `./manage.py update_hathi_pagecounts`
+
+
 3.15
 ----
 * The footer has been updated such that the Technical page must now be manually set to appear in menus in Wagtail.
@@ -25,7 +32,7 @@ configure the full plausible javascript url with any options you want as `PLAUSI
 ----
 
 * To use local OCR for Gale page content, configure **GALE_LOCAL_OCR** path in local settings.
-* This release updates Gale image url logic to rely on image URLs from the API, which are (or will be) encrypted and rotated periodically. 
+* This release updates Gale image url logic to rely on image URLs from the API, which are (or will be) encrypted and rotated periodically.
 * Gale pages should be indexed after this deploy to load the new local OCR and to update page image urls, and then periodically via cron job to update page image urls::
 
   python manage.py index_pages --source Gale

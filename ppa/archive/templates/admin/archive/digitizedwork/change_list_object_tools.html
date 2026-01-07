@@ -4,6 +4,6 @@
   {% if perms.archive.add_digitizedwork %}
     <li><a class="addlink" href="{% url 'admin:import' %}">Import</a></li>
   {% endif %}
-  {% include "admin/import_export/change_list_export_item.html" %}
+  {# export button is already included in template, adding here results in two #}
   {{ block.super }}
 {% endblock %}
