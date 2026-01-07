@@ -207,52 +207,14 @@ class Command(BaseCommand):
 
         if kwargs.get("expedite"):
             # find works with missing pages
-            facets = (
-                PageSearchQuerySet()
-                .filter(item_type="page")
-                .facet("group_id", limit=-1)
-                .get_facets()
-            )
-            mismatches = []
-            pages_per_work = facets.facet_fields["group_id"]
-            for digwork in DigitizedWork.items_to_index():
-                solr_page_count = pages_per_work.get(digwork.index_id(), 0)
-                # it indicates an error, but page count could be null;
-                # if so, assume page count mismatch
-                if digwork.page_count is None:
-                    # add to list of works to index
-                    mismatches.append(digwork)
-                    # warn about the missing page count
-                    if self.verbosity >= self.v_normal:
-                        self.stdout.write(
-                            self.style.WARNING(
-                                f"Warning: {digwork} page count is not set in database"
-                            )
-                        )
-
-                elif digwork.page_count != solr_page_count:
-                    # add to list of works to index
-                    mismatches.append(digwork)
-
-                    # in verbose mode, report details
-                    if self.verbosity > self.v_normal:
-                        diff_msg = ""
-                        if digwork.page_count > solr_page_count:
-                            diff_msg = f"missing {digwork.page_count - solr_page_count}"
-                        else:
-                            diff_msg = f"extra {solr_page_count - digwork.page_count}"
-
-                        self.stdout.write(
-                            f"{digwork} : {diff_msg} "
-                            + f"(db: {digwork.page_count}, solr: {solr_page_count})"
-                        )
+            mismatches = self.get_digwork_page_count_mismatches()
 
             if self.verbosity >= self.v_normal:
                 self.stdout.write(
                     f"Indexing pages for {len(mismatches)} works with page count mismatches"
                 )
             # only index works with page count mismatches
-            digiworks = mismatches
+            digiworks = mismatches.keys()
 
         for digwork in digiworks:
             self.work_q.put(digwork)
@@ -333,3 +295,47 @@ class Command(BaseCommand):
 
         # if facets or facet_fields not set, count for all types is zero
         return {}
+
+    def get_digwork_page_count_mismatches(self):
+        """
+        Identify works where page count in the database does not
+        match the number of pages indexed in Solr. Returns a dictionary
+        where key is the DigitizedWork and the value is the difference
+        between the database count and the number of pages indexed in Solr.
+        """
+        facets = (
+            PageSearchQuerySet()
+            .filter(item_type="page")
+            .facet("group_id", limit=-1)
+            .get_facets()
+        )
+        mismatches = {}
+        pages_per_work = facets.facet_fields["group_id"]
+        for digwork in DigitizedWork.items_to_index():
+            solr_page_count = pages_per_work.get(digwork.index_id(), 0)
+            # it indicates an error, but page count could be null;
+            # if so, assume page count mismatch
+            if digwork.page_count is None:
+                # add to list of works to index
+                mismatches[digwork] = solr_page_count
+                # warn about the missing page count
+                if self.verbosity >= self.v_normal:
+                    self.stdout.write(
+                        self.style.WARNING(
+                            f"Warning: {digwork} page count is not set in database"
+                        )
+                    )
+
+            elif digwork.page_count != solr_page_count:
+                page_diff = digwork.page_count - solr_page_count
+                # add to dictionary of works to be index with count
+                mismatches[digwork] = page_diff
+
+                # in verbose mode, report details
+                if self.verbosity > self.v_normal:
+                    self.stdout.write(
+                        f"{digwork} : {page_diff:+} "
+                        + f"(db: {digwork.page_count}, solr: {solr_page_count})"
+                    )
+
+        return mismatches
