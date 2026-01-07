@@ -26,19 +26,20 @@ Example usage:
 
         python manage.py generate_textcorpus --doc-limit 100
 
-    - Suppress progress bar and increase verbosity:
+    - Suppress progress bar and increase verbosity::
 
         python manage.py generate_textcorpus --no-progress --verbosity 2
 
-    - Check work and page totals before exporting:
+    - Check work and page totals before exporting::
 
         python manage.py generate_textcorpus --check
 
 Notes:
 
-    - Default path is `ppa_corpus_{timestamp}` in the current working directory
+    - Default path is ``ppa_corpus_DATETIME`` in the current working directory,
+      where DATETIME is the export date + time as YYYY-MM-DD_hh:mm:ss.
     - Default batch size is 10,000 (Solr record iteration size, chosen
-      based on performance.)
+      based on performance).
 
 """
 
