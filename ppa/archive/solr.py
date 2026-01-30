@@ -1,6 +1,6 @@
 import logging
 
-from parasolr.django import AliasedSolrQuerySet, SolrQuerySet
+from ppa.solr_factory import AliasedSolrQuerySet, SolrQuerySet
 
 logger = logging.getLogger(__name__)
 

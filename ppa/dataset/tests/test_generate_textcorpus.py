@@ -12,7 +12,7 @@ import orjsonl
 import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
-from parasolr.django import SolrClient, SolrQuerySet
+from ppa.solr_factory import SolrClient, SolrQuerySet
 
 from ppa.dataset.management.commands import generate_textcorpus
 from ppa.archive.models import DigitizedWork, Page

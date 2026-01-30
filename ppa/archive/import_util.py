@@ -334,6 +334,13 @@ class HathiImporter(DigitizedWorkImporter):
         :params user: optional user to be included in log entry message
 
         """
+        from ppa.flags import is_flag_enabled
+
+        if not is_flag_enabled("ENABLE_HATHI"):
+            raise RuntimeError(
+                "Hathi functionality is disabled (ENABLE_HATHI=False). "
+                "Enable in local_settings.py or via waffle switch to use HathiImporter."
+            )
         # initialize a bibliographic api client to use the same
         # session when adding multiple items
         self.bib_api = hathi.HathiBibliographicAPI()

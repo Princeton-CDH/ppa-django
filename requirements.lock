@@ -24,7 +24,6 @@ distlib==0.4.0
 Django==5.2.4
 django-adminlogentries==0.1.3
 django-apptemplates==1.5
-django-cas-ng==5.0.1
 django-csp==4.0
 django-dbml==0.10.1
 django-debug-toolbar==5.2.0
@@ -89,7 +88,6 @@ polars-runtime-32==1.36.1
 pre_commit==4.2.0
 progressbar2==4.5.0
 psycopg2-binary==2.9.10
-pucas==0.9.1
 py-flags==1.1.4
 pyasn1==0.6.1
 pydantic==2.12.5

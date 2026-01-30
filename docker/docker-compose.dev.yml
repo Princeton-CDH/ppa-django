@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ppa
+      POSTGRES_USER: ppa
+      POSTGRES_PASSWORD: ppa
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  solr:
+    image: solr:9
+    command: solr-precreate ppa
+    ports:
+      - "8983:8983"
+    volumes:
+      - solr-data:/var/solr
+
+volumes:
+  db-data:
+  solr-data:
+
+

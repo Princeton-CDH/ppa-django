@@ -10,7 +10,7 @@ import progressbar
 from django.core.management.base import BaseCommand
 from django.db import models
 from django.template.defaultfilters import pluralize
-from parasolr.django import SolrClient, SolrQuerySet
+from ppa.solr_factory import SolrClient, SolrQuerySet
 from multiprocess import Process, JoinableQueue, cpu_count
 
 from ppa.archive.models import DigitizedWork, Page

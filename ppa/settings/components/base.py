@@ -12,6 +12,14 @@ PROJECT_APP = PROJECT_APP_PATH.name
 # base dir is one level up from that (ppa-django-reuse)
 BASE_DIR = PROJECT_APP_PATH.parent
 
+# Archive type / runtime feature flags
+# These can be overridden in `ppa/settings/local_settings.py`
+ARCHIVE_TYPE = "ppa"
+# Keep ENABLE_PUCAS default so local_settings can override it at load time.
+# This is required because inclusion of pucas in INSTALLED_APPS happens
+# during settings module import (before local_settings is included).
+ENABLE_PUCAS = False
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
@@ -68,8 +76,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.redirects",
     "django.contrib.sitemaps",
-    "django_cas_ng",
-    "pucas",
     "semanticuiforms",
     "webpack_loader",
     # 'wagtail.contrib.forms',
@@ -98,6 +104,9 @@ INSTALLED_APPS = [
     "ppa.dataset",
 ]
 
+# waffle is required for runtime feature flags
+INSTALLED_APPS += ["waffle"]
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -111,17 +120,18 @@ MIDDLEWARE = [
     "csp.middleware.CSPMiddleware",
 ]
 
-AUTHENTICATION_BACKENDS = (
-    "django.contrib.auth.backends.ModelBackend",
-    "django_cas_ng.backends.CASBackend",
-)
+# ensure waffle middleware is present as the first middleware so switches/flags
+# are available per request
+MIDDLEWARE = ["waffle.middleware.WaffleMiddleware"] + MIDDLEWARE
+
+AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",)
 
 ROOT_URLCONF = "ppa.urls"
 
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],
+        "DIRS": [BASE_DIR / f"templates/{ARCHIVE_TYPE}", BASE_DIR / "templates"],
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.debug",
@@ -217,15 +227,9 @@ SCRIPT_USERNAME = "script"
 
 # PUCAS configuration for CAS/LDAP login and user provisioning.
 # Only includes non-sensitive configurations that do not change
-PUCAS_LDAP = {
-    # basic user profile attributes
-    "ATTRIBUTES": ["givenName", "sn", "mail"],
-    "ATTRIBUTE_MAP": {
-        "first_name": "givenName",
-        "last_name": "sn",
-        "email": "mail",
-    },
-}
+# PUCAS (institutional CAS/LDAP) configuration removed to keep core generic.
+# If a deployment requires CAS/LDAP, add a site-specific adapter or local
+# configuration in `ppa/settings/local_settings.py`.
 
 # Django webpack loader
 WEBPACK_LOADER = {

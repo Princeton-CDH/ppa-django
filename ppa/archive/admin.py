@@ -7,7 +7,7 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from import_export import fields, resources
 from import_export.admin import ExportActionMixin, ExportMixin
-from parasolr.django import SolrClient
+from ppa.solr_factory import SolrClient
 
 from ppa.archive.models import (
     Cluster,

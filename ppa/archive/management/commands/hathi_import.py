@@ -89,6 +89,14 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **kwargs):
+        # guard: allow disabling Hathi functionality for generalized deployments
+        from ppa.flags import is_flag_enabled
+
+        if not is_flag_enabled("ENABLE_HATHI"):
+            raise CommandError(
+                "Hathi functionality is disabled (ENABLE_HATHI=False). "
+                "Enable in local_settings.py or via waffle switch to run this command."
+            )
         # disconnect signal handler for on-demand indexing, for efficiency
         # (index in bulk after an update, not one at a time)
         IndexableSignalHandler.disconnect()

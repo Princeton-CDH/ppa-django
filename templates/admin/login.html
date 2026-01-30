@@ -3,15 +3,9 @@
 
 {% block extrastyle %}
   {{ block.super }}
-  <link type="text/css" rel="stylesheet" href="{% static 'pucas/pu-login.css' %}"/>
-  <style type="text/css">
-  .cas-login a {
-    padding-bottom: 4em;
-  }
-  </style>
+  {{ block.super }}
 {% endblock %}
 
 {% block content %}
-    {% include 'pucas/pu-cas-login.html' %}
     {{ block.super }}
 {% endblock %}

@@ -15,7 +15,7 @@ from flags import Flags
 from intspan import ParseError as IntSpanParseError
 from intspan import intspan
 from pairtree import storage_exceptions
-from parasolr.django import SolrQuerySet
+from ppa.solr_factory import SolrQuerySet
 from parasolr.django.indexing import ModelIndexable
 from parasolr.indexing import Indexable
 from wagtail.admin.panels import FieldPanel
@@ -103,24 +103,31 @@ class Collection(TrackChangesModel):
         """
 
         # NOTE: if we *only* want counts, could just do a regular facet
-        sqs = (
-            SolrQuerySet()
-            .stats("{!tag=piv1 min=true max=true}pub_date")
-            .facet(pivot="{!stats=piv1}collections_exact")
-        )
-        facet_pivot = sqs.get_facets().facet_pivot
-        # simplify the pivot stat data for display
-        stats = {}
-        for collection in facet_pivot.collections_exact:
-            pub_date_stats = collection.stats.stats_fields.pub_date
-            stats[collection.value] = {
-                "count": collection.count,
-                "dates": "%(min)d–%(max)d" % pub_date_stats
-                if pub_date_stats.max != pub_date_stats.min
-                else "%d" % (pub_date_stats.min or 0,),
-            }
-
-        return stats
+        try:
+            sqs = (
+                SolrQuerySet()
+                .stats("{!tag=piv1 min=true max=true}pub_date")
+                .facet(pivot="{!stats=piv1}collections_exact")
+            )
+            facet_pivot = sqs.get_facets().facet_pivot
+            # simplify the pivot stat data for display
+            stats = {}
+            for collection in facet_pivot.collections_exact:
+                pub_date_stats = collection.stats.stats_fields.pub_date
+                stats[collection.value] = {
+                    "count": collection.count,
+                    "dates": "%(min)d–%(max)d" % pub_date_stats
+                    if pub_date_stats.max != pub_date_stats.min
+                    else "%d" % (pub_date_stats.min or 0,),
+                }
+            return stats
+        except Exception:
+            # If Solr is unreachable or any Solr-related error occurs, log and
+            # return empty stats so the site can still render in development.
+            logger.exception(
+                "Unable to fetch collection stats from Solr; returning empty stats"
+            )
+            return {}
 
 
 class Cluster(TrackChangesModel):

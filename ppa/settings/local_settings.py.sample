@@ -21,6 +21,16 @@ SECRET_KEY = ''
 # DATABASES["default"]["USER"] = ""
 DATABASES["default"]["PASSWORD"] = "pass!@#$"
 
+# Runtime feature toggles:
+# Feature flags are managed via django-waffle switches (see README). Create
+# waffle switches in the admin or via the shell to enable runtime features.
+# Keep ENABLE_PUCAS here as a convenience for environments that prefer
+# toggling PU-CAS via settings instead of waffle.
+ENABLE_PUCAS = False
+
+# Archive type for theming/templates
+# ARCHIVE_TYPE = "ppa"
+
 # override default Solr configuration as needed
 # default collection and configset are both "ppa"
 SOLR_CONNECTIONS["default"].update(

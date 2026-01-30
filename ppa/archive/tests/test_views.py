@@ -9,7 +9,7 @@ from django.contrib.auth.models import Permission
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.utils.http import urlencode
-from parasolr.django import SolrClient, SolrQuerySet
+from ppa.solr_factory import SolrClient, SolrQuerySet
 
 from ppa.archive.forms import ImportForm, ModelMultipleChoiceFieldWithEmpty, SearchForm
 from ppa.archive.models import (

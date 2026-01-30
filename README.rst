@@ -9,6 +9,46 @@ Django web application for `Princeton Prosody Archive
 Code and architecture documentation for the current release available
 at `<https://princeton-cdh.github.io/ppa-django-reuse/>`_.
 
+Generalization goals and roadmap
+--------------------------------
+This fork is being generalized to a reusable archival platform. See
+`GENERALIZATION_GOALS.rst` for design goals, adapter ideas, and the
+developer roadmap.
+
+Feature flags and runtime toggles
+--------------------------------
+This project supports runtime feature flags via `django-waffle`. To enable:
+
+- Install requirements: `pip install -r requirements.txt`
+- Enable waffle in `ppa/settings/local_settings.py`: `ENABLE_WAFFLE = True`
+- Create waffle switches in the Django admin to toggle features such as:
+  - `enable_solr_indexing`
+  - `enable_hathi`
+  - `enable_corppa`
+
+This project requires `django-waffle` for runtime feature flags. Feature flags
+are the single source of truth; the boolean `ENABLE_*` settings in
+`ppa/settings/components/base.py` are retained for historical reasons but are
+not used as fallbacks. Ensure waffle is installed and migrated in each
+environment.
+
+Creating switches from the command line
+-------------------------------------
+You can create waffle switches from the Django shell (useful for provisioning
+environments without using the admin UI). Example:
+
+```bash
+python manage.py shell -c "from waffle.models import Switch; Switch.objects.update_or_create(name='enable_solr_indexing', defaults={'active':False})"
+python manage.py shell -c "from waffle.models import Switch; Switch.objects.update_or_create(name='enable_hathi', defaults={'active':False})"
+python manage.py shell -c "from waffle.models import Switch; Switch.objects.update_or_create(name='enable_corppa', defaults={'active':False})"
+```
+
+Testing flags at runtime
+------------------------
+In code, use `ppa.flags.is_flag_enabled('ENABLE_HATHI', request)` to check whether
+the feature should be enabled for the current request. This checks waffle
+switches/flags when waffle is enabled and falls back to the boolean settings.
+
 .. image:: https://zenodo.org/badge/110731137.svg
    :target: https://doi.org/10.5281/zenodo.2400704
    :alt: DOI: 10.5281/zenodo.2400704

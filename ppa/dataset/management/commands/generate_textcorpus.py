@@ -53,7 +53,7 @@ from datetime import datetime
 
 import orjsonl
 from django.core.management.base import CommandError
-from parasolr.django import SolrQuerySet
+from ppa.solr_factory import SolrQuerySet
 from progressbar import progressbar
 
 

@@ -11,7 +11,11 @@ def template_globals(request):
         "site": Site.objects.get_current(),
         "GTAGS_ANALYTICS_ID": getattr(settings, "GTAGS_ANALYTICS_ID", False),
         "INCLUDE_ANALYTICS": getattr(settings, "INCLUDE_ANALYTICS", False),
-        "PLAUSIBLE_ANALYTICS_SCRIPT": getattr(settings, "PLAUSIBLE_ANALYTICS_SCRIPT", False),
-        "PLAUSIBLE_ANALYTICS_404s": getattr(settings, "PLAUSIBLE_ANALYTICS_404s", False),
+        "PLAUSIBLE_ANALYTICS_SCRIPT": getattr(
+            settings, "PLAUSIBLE_ANALYTICS_SCRIPT", False
+        ),
+        "PLAUSIBLE_ANALYTICS_404s": getattr(
+            settings, "PLAUSIBLE_ANALYTICS_404s", False
+        ),
     }
     return context_extras
