@@ -5,11 +5,11 @@ Django settings for ppa project.
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-# called from ppa-django/ppa/settings/__init__.py
+# called from ppa-django-reuse/ppa/settings/__init__.py
 # do NOT import this module directly, the path will be different
 PROJECT_APP_PATH = Path(__file__).resolve().parent.parent
 PROJECT_APP = PROJECT_APP_PATH.name
-# base dir is one level up from that (ppa-django)
+# base dir is one level up from that (ppa-django-reuse)
 BASE_DIR = PROJECT_APP_PATH.parent
 
 # SECURITY WARNING: don't run with debug turned on in production!

@@ -111,7 +111,7 @@ class GaleAPI:
         self.session = requests.Session()
         # set a user-agent header, but  preserve requests version information
         headers = {
-            "User-Agent": "ppa-django/%s (%s)"
+            "User-Agent": "ppa-django-reuse/%s (%s)"
             % (ppa_version, self.session.headers["User-Agent"])
         }
         # include technical contact as From header, if set

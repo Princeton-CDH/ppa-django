@@ -108,7 +108,7 @@ html_theme = "alabaster"
 html_theme_options = {
     "description": 'Django web application for "Princeton Prosody Archive" CDH project',
     "github_user": "Princeton-CDH",
-    "github_repo": "ppa-django",
+    "github_repo": "ppa-django-reuse",
     "github_button": True,
     "logo": "ppa_logo.png",
     "logo_name": True,

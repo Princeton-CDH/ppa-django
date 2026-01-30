@@ -185,7 +185,7 @@ class TestHathiBaseAPI(TestCase):
             base_api = hathi.HathiBaseAPI()
             mockrequests.Session.assert_any_call()
             assert base_api.session == mockrequests.Session.return_value
-            assert "ppa-django" in base_api.session.headers["User-Agent"]
+            assert "ppa-django-reuse" in base_api.session.headers["User-Agent"]
             assert __version__ in base_api.session.headers["User-Agent"]
             assert "(%s)" % base_user_agent in base_api.session.headers["User-Agent"]
             assert "From" not in base_api.session.headers
@@ -359,7 +359,9 @@ class TestHathiObject:
         with patch.object(hobj, "metsfile_path") as mock_metsfile_path:
             # should call load_xmlobject_from_file
             hobj.mets_xml()
-            mock_xml_load.assert_called_once_with(mock_metsfile_path.return_value,hathi.MinimalMETS)
+            mock_xml_load.assert_called_once_with(
+                mock_metsfile_path.return_value, hathi.MinimalMETS
+            )
 
     def test_delete_pairtree_data(self):
         hobj = hathi.HathiObject(hathi_id="chi.79279237")

@@ -1,4 +1,4 @@
-ppa-django
+ppa-django-reuse
 ==========
 
 .. sphinx-start-marker-do-not-remove
@@ -7,22 +7,22 @@ Django web application for `Princeton Prosody Archive
 <https://prosody.princeton.edu/>`_ version 3.x.
 
 Code and architecture documentation for the current release available
-at `<https://princeton-cdh.github.io/ppa-django/>`_.
+at `<https://princeton-cdh.github.io/ppa-django-reuse/>`_.
 
 .. image:: https://zenodo.org/badge/110731137.svg
    :target: https://doi.org/10.5281/zenodo.2400705
    :alt: DOI: 10.5281/zenodo.2400705
 
-.. image:: https://github.com/Princeton-CDH/ppa-django/actions/workflows/unit-tests.yml/badge.svg
-   :target: https://github.com/Princeton-CDH/ppa-django/actions/workflows/unit-tests.yml
+.. image:: https://github.com/Princeton-CDH/ppa-django-reuse/actions/workflows/unit-tests.yml/badge.svg
+   :target: https://github.com/Princeton-CDH/ppa-django-reuse/actions/workflows/unit-tests.yml
    :alt: Unit test status
 
-.. image:: https://codecov.io/gh/Princeton-CDH/ppa-django/branch/main/graph/badge.svg
-   :target: https://codecov.io/gh/Princeton-CDH/ppa-django
+.. image:: https://codecov.io/gh/Princeton-CDH/ppa-django-reuse/branch/main/graph/badge.svg
+   :target: https://codecov.io/gh/Princeton-CDH/ppa-django-reuse
    :alt: Code coverage
 
-.. image:: https://www.codefactor.io/repository/github/princeton-cdh/ppa-django/badge
-   :target: https://www.codefactor.io/repository/github/princeton-cdh/ppa-django
+.. image:: https://www.codefactor.io/repository/github/princeton-cdh/ppa-django-reuse/badge
+   :target: https://www.codefactor.io/repository/github/princeton-cdh/ppa-django-reuse
    :alt: CodeFactor
 
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
@@ -191,7 +191,7 @@ documentation coverage on pull requests.
 
 License
 -------
-This project is licensed under the `Apache 2.0 License <https://github.com/Princeton-CDH/ppa-django/blob/main/LICENSE>`_.
+This project is licensed under the `Apache 2.0 License <https://github.com/Princeton-CDH/ppa-django-reuse/blob/main/LICENSE>`_.
 
 ©2019-2024 Trustees of Princeton University.  Permission granted via
 Princeton Docket #20-3624 for distribution online under a standard Open Source

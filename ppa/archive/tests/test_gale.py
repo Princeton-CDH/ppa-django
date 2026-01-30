@@ -65,7 +65,7 @@ class TestGaleAPI(TestCase):
             gale_api = gale.GaleAPI()
             mockrequests.Session.assert_any_call()
             assert gale_api.session == mockrequests.Session.return_value
-            assert "ppa-django" in gale_api.session.headers["User-Agent"]
+            assert "ppa-django-reuse" in gale_api.session.headers["User-Agent"]
             assert __version__ in gale_api.session.headers["User-Agent"]
             assert "(%s)" % base_user_agent in gale_api.session.headers["User-Agent"]
             assert "From" not in gale_api.session.headers

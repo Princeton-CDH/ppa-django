@@ -1,12 +1,12 @@
 {
-    "name": "ppa-django",
+    "name": "ppa-django-reuse",
     "description": "Django web application for the Princeton Prosody Archive",
     "author": "The Center for Digital Humanities at Princeton <cdhdevteam@princeton.edu>",
     "license": "Apache-2.0",
     "private": true,
     "repository": {
         "type": "git",
-        "url": "https://github.com/Princeton-CDH/ppa-django.git"
+        "url": "https://github.com/Princeton-CDH/ppa-django-reuse.git"
     },
     "scripts": {
         "dev": "webpack serve --progress --hot",
