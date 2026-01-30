@@ -95,6 +95,7 @@ INSTALLED_APPS = [
     "ppa.common",
     "ppa.pages",
     "ppa.editorial",
+    "ppa.dataset",
 ]
 
 MIDDLEWARE = [

@@ -53,16 +53,26 @@
         },
         {
             "orcid": "0000-0002-4542-0899",
-            "affiliation": "Princeton University",
             "name": "Budak, Nick"
         },
         {
+            "orcid": "0000-0002-4155-4961",
+            "name": "Heuser, Ryan"
+        },
+        {
+            "orcid": "0000-0001-5752-054X",
+            "name": "Thompsone, Laure"
+        },
+        {
+            "orcid": "0009-0004-6472-3678",
+            "name": "Hao, Tan"
+        },
+        {
             "orcid": "0000-0002-9973-560X",
-            "name": "Hicks, Benjamin W."
+            "name": "Hicks, Meg"
         },
         {
             "orcid": "0000-0002-6702-6964",
-            "affiliation": "Princeton University",
             "name": "Doroudian, Gissoo"
         },
         {
@@ -71,7 +81,6 @@
         },
         {
             "orcid": "0000-0003-2577-8102",
-            "affiliation": "Princeton University",
             "name": "McElwee, Kevin"
         }
     ],

@@ -3,14 +3,31 @@
 CHANGELOG
 =========
 
-3.15.1
+3.16
 ----
+
+- Improve work-level metadata for full-text data export
+   - Only include cluster id for works in clusters
+   - Format work collection membership as string-delimited list
+   - Include additional database fields
+- Add datapackage file and optional checks to `generate_textcorpus` command
+- bugfix: admin data export cluster field should use alpha cluster id, not numeric db id
+- Update zenodo.json file to include all current contributors
+- Upgrade to node v22 / npm v11
+
+3.15.2 
+------
+
+- Upgrade to node v20 / npm v10
+- Replace gulp build with a webpack build
+
+3.15.1
+------
 
 Minor Improvements:
 
 - Handle 500 error from Gale API when indexing pages with clear logging to determine whether retry succeeded.
 - Simplify CoinS generation logic for Zotero integration.
-
 
 3.15
 ----
