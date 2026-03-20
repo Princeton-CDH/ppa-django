@@ -1777,6 +1777,9 @@ what is needed to support page indexing for <code class="xref py py-mod docutils
 <p>Requires <strong>GALE_API_USERNAME</strong> configured in Django settings. Automatically
 uses the configured username to retrieve an API key when needed, and has
 logic to refresh the API key when it expires (30 minutes).</p>
+<p>Optionally supports <strong>GALE_API_LOCATION_ID</strong> and <strong>GALE_API_SECRET</strong> for
+Basic Auth (required as of April 2026). When both settings are configured,
+a Basic Authorization header will be added to all API requests.</p>
 <p>If <strong>TECHNICAL_CONTACT</strong> is configured in Django settings, it will
 be included in request headers when making API calls.</p>
 <p>Implemented as a singleton; instanciating the class will return the
@@ -2591,7 +2594,7 @@ description, for use in previews on the site and plain-text metadata
 previews.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags">
-<span class="sig-name descname"><span class="pre">allowed_tags</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['li',</span> <span class="pre">'abbr',</span> <span class="pre">'blockquote',</span> <span class="pre">'i',</span> <span class="pre">'p',</span> <span class="pre">'code',</span> <span class="pre">'strong',</span> <span class="pre">'ol',</span> <span class="pre">'acronym',</span> <span class="pre">'ul',</span> <span class="pre">'em',</span> <span class="pre">'b']</span></span><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">allowed_tags</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['code',</span> <span class="pre">'i',</span> <span class="pre">'ul',</span> <span class="pre">'li',</span> <span class="pre">'ol',</span> <span class="pre">'strong',</span> <span class="pre">'acronym',</span> <span class="pre">'abbr',</span> <span class="pre">'blockquote',</span> <span class="pre">'p',</span> <span class="pre">'em',</span> <span class="pre">'b']</span></span><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags" title="Link to this definition">¶</a></dt>
 <dd><p>allowed tags for bleach html stripping in description</p>
 </dd></dl>
 
