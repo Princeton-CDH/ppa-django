@@ -31,8 +31,7 @@
           <div class="body" role="main">
             
   <h1>Source code for ppa.archive.gale</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">base64</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pathlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
@@ -120,10 +119,6 @@
 <span class="sd">    uses the configured username to retrieve an API key when needed, and has</span>
 <span class="sd">    logic to refresh the API key when it expires (30 minutes).</span>
 
-<span class="sd">    Optionally supports **GALE_API_LOCATION_ID** and **GALE_API_SECRET** for</span>
-<span class="sd">    Basic Auth (required as of April 2026). When both settings are configured,</span>
-<span class="sd">    a Basic Authorization header will be added to all API requests.</span>
-
 <span class="sd">    If **TECHNICAL_CONTACT** is configured in Django settings, it will</span>
 <span class="sd">    be included in request headers when making API calls.</span>
 
@@ -151,10 +146,6 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">instance</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># Prevent re-initialization for singleton</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;session&#39;</span><span class="p">):</span>
-            <span class="k">return</span>
-
         <span class="c1"># NOTE: copied from hathi.py base api class; should be generalized</span>
         <span class="c1"># into a common base class if/when we add a third provider</span>
 
@@ -166,10 +157,6 @@
                 <span class="s2">&quot;GALE_API_USERNAME configuration is required for Gale API&quot;</span>
             <span class="p">)</span>
 
-        <span class="c1"># Get optional Basic Auth credentials (required as of April 2026)</span>
-        <span class="n">location_id</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="s1">&#39;GALE_API_LOCATION_ID&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">secret</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="s1">&#39;GALE_API_SECRET&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-
         <span class="c1"># create a request session, for request pooling</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
         <span class="c1"># set a user-agent header, but  preserve requests version information</span>
@@ -177,14 +164,6 @@
             <span class="s2">&quot;User-Agent&quot;</span><span class="p">:</span> <span class="s2">&quot;ppa-django/</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span>
             <span class="o">%</span> <span class="p">(</span><span class="n">ppa_version</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;User-Agent&quot;</span><span class="p">])</span>
         <span class="p">}</span>
-
-        <span class="c1"># Add Basic Auth header if credentials are configured</span>
-        <span class="k">if</span> <span class="n">location_id</span> <span class="ow">and</span> <span class="n">secret</span><span class="p">:</span>
-            <span class="n">auth_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">location_id</span><span class="si">}</span><span class="s2">;</span><span class="si">{</span><span class="n">secret</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="n">auth_bytes</span> <span class="o">=</span> <span class="n">auth_string</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
-            <span class="n">auth_b64</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">auth_bytes</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
-            <span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Authorization&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Basic </span><span class="si">{</span><span class="n">auth_b64</span><span class="si">}</span><span class="s2">&quot;</span>
-
         <span class="c1"># include technical contact as From header, if set</span>
         <span class="n">tech_contact</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="s2">&quot;TECHNICAL_CONTACT&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">tech_contact</span><span class="p">:</span>
