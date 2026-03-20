@@ -41,6 +41,10 @@ HATHI_DATA = '/path/to/hathi_pairtree_root'
 # username for Gale API access
 GALE_API_USERNAME = ''
 
+# Gale API Basic Auth credentials (required as of April 2026)
+GALE_API_LOCATION_ID = ''
+GALE_API_SECRET = ''
+
 # local path for cached marc record; needed for Gale/ECCO import
 MARC_DATA = ''
 
