@@ -1,4 +1,3 @@
-import base64
 import json
 import os.path
 from unittest.mock import Mock, patch
@@ -76,82 +75,6 @@ class TestGaleAPI(TestCase):
         with override_settings(TECHNICAL_CONTACT=tech_contact):
             gale_api = gale.GaleAPI()
             assert gale_api.session.headers["From"] == tech_contact
-
-    def test_init_basic_auth(self, mockrequests):
-        # test Basic Auth header generation
-        base_user_agent = "requests/v123"
-        mockrequests.Session.return_value.headers = {"User-Agent": base_user_agent}
-
-        # Both settings configured - should add Authorization header
-        with override_settings(
-            GALE_API_LOCATION_ID="prin77918",
-            GALE_API_SECRET="40c15487-2b51-45c6-8044-d7c37ce49eec",
-        ):
-            # Clear singleton to force re-initialization
-            gale.GaleAPI.instance = None
-            gale_api = gale.GaleAPI()
-
-            # Verify Authorization header is present
-            assert "Authorization" in gale_api.session.headers
-            auth_header = gale_api.session.headers["Authorization"]
-            assert auth_header.startswith("Basic ")
-
-            # Verify correct encoding
-            expected_string = "prin77918;40c15487-2b51-45c6-8044-d7c37ce49eec"
-            expected_b64 = base64.b64encode(expected_string.encode('utf-8')).decode('utf-8')
-            assert auth_header == f"Basic {expected_b64}"
-
-        # Only location ID configured - should NOT add Authorization header
-        with override_settings(GALE_API_LOCATION_ID="prin77918"):
-            gale.GaleAPI.instance = None
-            gale_api = gale.GaleAPI()
-            assert "Authorization" not in gale_api.session.headers
-
-        # Only secret configured - should NOT add Authorization header
-        with override_settings(GALE_API_SECRET="40c15487-2b51-45c6-8044-d7c37ce49eec"):
-            gale.GaleAPI.instance = None
-            gale_api = gale.GaleAPI()
-            assert "Authorization" not in gale_api.session.headers
-
-        # Neither setting configured - should NOT add Authorization header
-        with override_settings():
-            if hasattr(settings, 'GALE_API_LOCATION_ID'):
-                del settings.GALE_API_LOCATION_ID
-            if hasattr(settings, 'GALE_API_SECRET'):
-                del settings.GALE_API_SECRET
-            gale.GaleAPI.instance = None
-            gale_api = gale.GaleAPI()
-            assert "Authorization" not in gale_api.session.headers
-
-    def test_singleton_no_reinit(self, mockrequests):
-        # test that singleton doesn't reinitialize session on subsequent calls
-        base_user_agent = "requests/v123"
-        mockrequests.Session.return_value.headers = {"User-Agent": base_user_agent}
-
-        with override_settings(
-            GALE_API_LOCATION_ID="prin77918",
-            GALE_API_SECRET="40c15487-2b51-45c6-8044-d7c37ce49eec",
-        ):
-            # Clear singleton to force fresh initialization
-            gale.GaleAPI.instance = None
-
-            # First instantiation
-            gale_api1 = gale.GaleAPI()
-            session1 = gale_api1.session
-            auth_header1 = gale_api1.session.headers.get("Authorization")
-
-            # Second instantiation should return same instance
-            gale_api2 = gale.GaleAPI()
-            session2 = gale_api2.session
-            auth_header2 = gale_api2.session.headers.get("Authorization")
-
-            # Verify same instance
-            assert gale_api1 is gale_api2
-            # Verify session wasn't recreated
-            assert session1 is session2
-            # Verify Authorization header persists
-            assert auth_header1 == auth_header2
-            assert auth_header2 is not None
 
     @override_settings()
     def test_config_error(self, mockrequests):

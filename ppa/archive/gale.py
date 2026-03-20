@@ -1,4 +1,3 @@
-import base64
 import json
 import logging
 import pathlib
@@ -70,10 +69,6 @@ class GaleAPI:
     uses the configured username to retrieve an API key when needed, and has
     logic to refresh the API key when it expires (30 minutes).
 
-    Optionally supports **GALE_API_LOCATION_ID** and **GALE_API_SECRET** for
-    Basic Auth (required as of April 2026). When both settings are configured,
-    a Basic Authorization header will be added to all API requests.
-
     If **TECHNICAL_CONTACT** is configured in Django settings, it will
     be included in request headers when making API calls.
 
@@ -101,10 +96,6 @@ class GaleAPI:
         return cls.instance
 
     def __init__(self):
-        # Prevent re-initialization for singleton
-        if hasattr(self, 'session'):
-            return
-
         # NOTE: copied from hathi.py base api class; should be generalized
         # into a common base class if/when we add a third provider
 
@@ -116,10 +107,6 @@ class GaleAPI:
                 "GALE_API_USERNAME configuration is required for Gale API"
             )
 
-        # Get optional Basic Auth credentials (required as of April 2026)
-        location_id = getattr(settings, 'GALE_API_LOCATION_ID', None)
-        secret = getattr(settings, 'GALE_API_SECRET', None)
-
         # create a request session, for request pooling
         self.session = requests.Session()
         # set a user-agent header, but  preserve requests version information
@@ -127,14 +114,6 @@ class GaleAPI:
             "User-Agent": "ppa-django/%s (%s)"
             % (ppa_version, self.session.headers["User-Agent"])
         }
-
-        # Add Basic Auth header if credentials are configured
-        if location_id and secret:
-            auth_string = f"{location_id};{secret}"
-            auth_bytes = auth_string.encode('utf-8')
-            auth_b64 = base64.b64encode(auth_bytes).decode('utf-8')
-            headers["Authorization"] = f"Basic {auth_b64}"
-
         # include technical contact as From header, if set
         tech_contact = getattr(settings, "TECHNICAL_CONTACT", None)
         if tech_contact:
