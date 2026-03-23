@@ -7,9 +7,9 @@ Deploy and Upgrade notes
 ----
 
 * Gale Content API now requires Basic Auth credentials for API access.
-  **GALE_API_LOCATION_ID** and **GALE_API_SECRET** must be configured in
-  local settings with the credentials provided by Gale. The existing
-  **GALE_API_USERNAME** setting is still required for API key generation.
+  **GALE_API_SECRET** must be configured in local settings with the secret
+  provided by Gale. The existing **GALE_API_USERNAME** setting (which corresponds
+  to the location ID) is still required for both API key generation and Basic Auth.
   Both authentication mechanisms (Basic Auth and API key) work together.
 
 3.16
