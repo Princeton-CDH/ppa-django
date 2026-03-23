@@ -420,6 +420,9 @@ class GaleImporter(DigitizedWorkImporter):
         self.digwork_contentype = ContentType.objects.get_for_model(DigitizedWork)
         self.gale_api = GaleAPI()
 
+        # disconnect indexing signal handler before adding new content
+        IndexableSignalHandler.disconnect()
+
     def import_digitizedwork(
         self, gale_id, log_msg_src="", user=None, collections=None, **kwargs
     ):
@@ -497,7 +500,7 @@ class GaleImporter(DigitizedWorkImporter):
         # create log entry to document import
         change_message = "Created from Gale API"
         if log_msg_src:
-            change_message = "Created from Gale API %s" % log_msg_src
+            change_message = ("Created from Gale API %s" % log_msg_src,)
         LogEntry.objects.log_action(
             user_id=user.pk,
             content_type_id=self.digwork_contentype.pk,
