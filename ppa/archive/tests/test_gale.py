@@ -82,6 +82,8 @@ class TestGaleAPI(TestCase):
         # technical contact configured
         tech_contact = "webmaster@example.com"
         with override_settings(TECHNICAL_CONTACT=tech_contact):
+            # Clear singleton to force re-initialization with new settings
+            gale.GaleAPI.instance = None
             gale_api = gale.GaleAPI()
             assert gale_api.session.headers["From"] == tech_contact
 
