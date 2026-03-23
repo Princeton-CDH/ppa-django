@@ -54,6 +54,10 @@ def test_get_local_ocr_invalid_id():
 class TestGaleAPI(TestCase):
     # NOTE: must extend django's test case to use override_settings on class
 
+    def setUp(self):
+        # Clear singleton instance before each test to avoid test interference
+        gale.GaleAPI.instance = None
+
     def test_new(self, mockrequests):
         # test singleton behavior;
         # initializing multiple times should return the same instance
