@@ -101,7 +101,7 @@ class GaleAPI:
         return cls.instance
 
     def __init__(self):
-        # Prevent re-initialization for singleton
+        # Prevent re-initialization for singleton to ensure Auth header persist across instantiations
         if hasattr(self, 'session'):
             return
 
@@ -134,7 +134,6 @@ class GaleAPI:
         }
 
         # Add Basic Auth header
-        auth_b64 = base64.b64encode(f"{location_id};{secret}".encode('utf-8')).decode('utf-8')
         headers["Authorization"] = f"Basic {auth_b64}"
 
         # include technical contact as From header, if set
