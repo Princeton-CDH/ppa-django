@@ -101,27 +101,36 @@ class TestGaleAPI(TestCase):
             expected_b64 = base64.b64encode(expected_string.encode('utf-8')).decode('utf-8')
             assert auth_header == f"Basic {expected_b64}"
 
-        # Only location ID configured - should NOT add Authorization header
-        with override_settings(GALE_API_LOCATION_ID="test_location_id"):
-            gale.GaleAPI.instance = None
-            gale_api = gale.GaleAPI()
-            assert "Authorization" not in gale_api.session.headers
+    def test_init_basic_auth_missing_config(self, mockrequests):
+        # test that missing Basic Auth config raises error
+        base_user_agent = "requests/v123"
+        mockrequests.Session.return_value.headers = {"User-Agent": base_user_agent}
 
-        # Only secret configured - should NOT add Authorization header
-        with override_settings(GALE_API_SECRET="***REMOVED***"):
-            gale.GaleAPI.instance = None
-            gale_api = gale.GaleAPI()
-            assert "Authorization" not in gale_api.session.headers
-
-        # Neither setting configured - should NOT add Authorization header
+        # Missing both settings - should raise ImproperlyConfigured
         with override_settings():
             if hasattr(settings, 'GALE_API_LOCATION_ID'):
                 del settings.GALE_API_LOCATION_ID
             if hasattr(settings, 'GALE_API_SECRET'):
                 del settings.GALE_API_SECRET
             gale.GaleAPI.instance = None
-            gale_api = gale.GaleAPI()
-            assert "Authorization" not in gale_api.session.headers
+            with pytest.raises(ImproperlyConfigured):
+                gale.GaleAPI()
+
+        # Only location ID configured - should raise ImproperlyConfigured
+        with override_settings(GALE_API_LOCATION_ID="test_location_id"):
+            if hasattr(settings, 'GALE_API_SECRET'):
+                del settings.GALE_API_SECRET
+            gale.GaleAPI.instance = None
+            with pytest.raises(ImproperlyConfigured):
+                gale.GaleAPI()
+
+        # Only secret configured - should raise ImproperlyConfigured
+        with override_settings(GALE_API_SECRET="***REMOVED***"):
+            if hasattr(settings, 'GALE_API_LOCATION_ID'):
+                del settings.GALE_API_LOCATION_ID
+            gale.GaleAPI.instance = None
+            with pytest.raises(ImproperlyConfigured):
+                gale.GaleAPI()
 
     def test_singleton_no_reinit(self, mockrequests):
         # test that singleton doesn't reinitialize session on subsequent calls
