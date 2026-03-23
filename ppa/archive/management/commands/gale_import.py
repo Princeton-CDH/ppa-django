@@ -146,9 +146,21 @@ class Command(BaseCommand):
             self.import_record(item["ID"], **item_info)
 
         summary = (
-            f"\nProcessed {self.stats['total']:,d} item{pluralize(self.stats['total'])} for import."
-            f"\nImported {self.stats['imported']:,d}; {self.stats['no_marc']:,d} missing MARC record{pluralize(self.stats['no_marc'])}; "
-            f"skipped {self.stats['skipped']:,d}; {self.stats['error']:,d} error{pluralize(self.stats['error'])}; imported {self.stats['pages']:,d} page{pluralize(self.stats['pages'])}."
+            "\nProcessed {:,d} item{} for import."
+            + "\nImported {:,d}; {:,d} missing MARC record{}; "
+            + "skipped {:,d}; {:,d} error{}; imported {:,d} page{}."
+        )
+        summary = summary.format(
+            self.stats["total"],
+            pluralize(self.stats["total"]),
+            self.stats["imported"],
+            self.stats["no_marc"],
+            pluralize(self.stats["no_marc"]),
+            self.stats["skipped"],
+            self.stats["error"],
+            pluralize(self.stats["error"]),
+            self.stats["pages"],
+            pluralize(self.stats["pages"]),
         )
         self.stdout.write(summary)
 
