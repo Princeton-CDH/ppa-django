@@ -1,3 +1,4 @@
+import base64
 import json
 import os.path
 from unittest.mock import Mock, patch
@@ -44,10 +45,17 @@ def test_get_local_ocr_invalid_id():
         gale.get_local_ocr("AB12345")
 
 
-@override_settings(GALE_API_USERNAME="galeuser123")
+@override_settings(
+    GALE_API_USERNAME="galeuser123",
+    GALE_API_SECRET="test_secret_key_12345",
+)
 @patch("ppa.archive.gale.requests")
 class TestGaleAPI(TestCase):
     # NOTE: must extend django's test case to use override_settings on class
+
+    def setUp(self):
+        # Clear singleton instance before each test to avoid test interference
+        gale.GaleAPI.instance = None
 
     def test_new(self, mockrequests):
         # test singleton behavior;
@@ -73,8 +81,95 @@ class TestGaleAPI(TestCase):
         # technical contact configured
         tech_contact = "webmaster@example.com"
         with override_settings(TECHNICAL_CONTACT=tech_contact):
+            # Clear singleton to force re-initialization with new settings
+            gale.GaleAPI.instance = None
             gale_api = gale.GaleAPI()
             assert gale_api.session.headers["From"] == tech_contact
+
+    def test_init_basic_auth(self, mockrequests):
+        # test Basic Auth header generation
+        base_user_agent = "requests/v123"
+        mockrequests.Session.return_value.headers = {"User-Agent": base_user_agent}
+
+        # Both settings configured - should add Authorization header
+        with override_settings(
+            GALE_API_USERNAME="test_username",
+            GALE_API_SECRET="test_secret_key_12345",
+        ):
+            # Clear singleton to force re-initialization
+            gale.GaleAPI.instance = None
+            gale_api = gale.GaleAPI()
+
+            # Verify Authorization header is present
+            assert "Authorization" in gale_api.session.headers
+            auth_header = gale_api.session.headers["Authorization"]
+            assert auth_header.startswith("Basic ")
+
+            # Verify correct encoding (username is used as location_id)
+            expected_string = "test_username;test_secret_key_12345"
+            expected_b64 = base64.b64encode(expected_string.encode('utf-8')).decode('utf-8')
+            assert auth_header == f"Basic {expected_b64}"
+
+    def test_init_basic_auth_missing_config(self, mockrequests):
+        # test that missing Basic Auth config raises error
+        base_user_agent = "requests/v123"
+        mockrequests.Session.return_value.headers = {"User-Agent": base_user_agent}
+
+        # Missing both settings - should raise ImproperlyConfigured
+        with override_settings():
+            if hasattr(settings, 'GALE_API_USERNAME'):
+                del settings.GALE_API_USERNAME
+            if hasattr(settings, 'GALE_API_SECRET'):
+                del settings.GALE_API_SECRET
+            gale.GaleAPI.instance = None
+            with pytest.raises(ImproperlyConfigured):
+                gale.GaleAPI()
+
+        # Only username configured - should raise ImproperlyConfigured
+        with override_settings(GALE_API_USERNAME="test_username"):
+            if hasattr(settings, 'GALE_API_SECRET'):
+                del settings.GALE_API_SECRET
+            gale.GaleAPI.instance = None
+            with pytest.raises(ImproperlyConfigured):
+                gale.GaleAPI()
+
+        # Only secret configured - should raise ImproperlyConfigured
+        with override_settings(GALE_API_SECRET="test_secret_key_12345"):
+            if hasattr(settings, 'GALE_API_USERNAME'):
+                del settings.GALE_API_USERNAME
+            gale.GaleAPI.instance = None
+            with pytest.raises(ImproperlyConfigured):
+                gale.GaleAPI()
+
+    def test_singleton_no_reinit(self, mockrequests):
+        # test that singleton doesn't reinitialize session on subsequent calls
+        base_user_agent = "requests/v123"
+        mockrequests.Session.return_value.headers = {"User-Agent": base_user_agent}
+
+        with override_settings(
+            GALE_API_USERNAME="test_username",
+            GALE_API_SECRET="test_secret_key_12345",
+        ):
+            # Clear singleton to force fresh initialization
+            gale.GaleAPI.instance = None
+
+            # First instantiation
+            gale_api1 = gale.GaleAPI()
+            session1 = gale_api1.session
+            auth_header1 = gale_api1.session.headers.get("Authorization")
+
+            # Second instantiation should return same instance
+            gale_api2 = gale.GaleAPI()
+            session2 = gale_api2.session
+            auth_header2 = gale_api2.session.headers.get("Authorization")
+
+            # Verify same instance
+            assert gale_api1 is gale_api2
+            # Verify session wasn't recreated
+            assert session1 is session2
+            # Verify Authorization header persists
+            assert auth_header1 == auth_header2
+            assert auth_header2 is not None
 
     @override_settings()
     def test_config_error(self, mockrequests):

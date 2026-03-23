@@ -1,3 +1,4 @@
+import base64
 import json
 import logging
 import pathlib
@@ -65,9 +66,13 @@ class GaleItemNotFound(GaleAPIError):
 class GaleAPI:
     """Minimal Gale API client with functionality need for PPA import.
 
-    Requires **GALE_API_USERNAME** configured in Django settings. Automatically
-    uses the configured username to retrieve an API key when needed, and has
-    logic to refresh the API key when it expires (30 minutes).
+    Requires **GALE_API_USERNAME** and **GALE_API_SECRET** configured in
+    Django settings. The username corresponds to the location ID for API access.
+    Automatically uses the configured username to retrieve an API key when needed,
+    and has logic to refresh the API key when it expires (30 minutes).
+
+    Basic Auth is required as of April 2026. A Basic Authorization header
+    will be added to all API requests using the username (location ID) and secret.
 
     If **TECHNICAL_CONTACT** is configured in Django settings, it will
     be included in request headers when making API calls.
@@ -96,15 +101,28 @@ class GaleAPI:
         return cls.instance
 
     def __init__(self):
+        # Prevent re-initialization for singleton to ensure Auth header persist across instantiations
+        if hasattr(self, 'session'):
+            return
+
         # NOTE: copied from hathi.py base api class; should be generalized
         # into a common base class if/when we add a third provider
 
         # first make sure we have a username configured
+        # (username corresponds to location ID for API access)
         try:
             self.username = settings.GALE_API_USERNAME
         except AttributeError:
             raise ImproperlyConfigured(
                 "GALE_API_USERNAME configuration is required for Gale API"
+            )
+
+        # Get Basic Auth secret (required as of April 2026)
+        try:
+            secret = settings.GALE_API_SECRET
+        except AttributeError:
+            raise ImproperlyConfigured(
+                "GALE_API_SECRET configuration is required for Gale API"
             )
 
         # create a request session, for request pooling
@@ -114,6 +132,12 @@ class GaleAPI:
             "User-Agent": "ppa-django/%s (%s)"
             % (ppa_version, self.session.headers["User-Agent"])
         }
+
+        # Add Basic Auth header (required as of April 2026)
+        # username corresponds to location ID for API access
+        auth_b64 = base64.b64encode(f"{self.username};{secret}".encode('utf-8')).decode('utf-8')
+        headers["Authorization"] = f"Basic {auth_b64}"
+
         # include technical contact as From header, if set
         tech_contact = getattr(settings, "TECHNICAL_CONTACT", None)
         if tech_contact:
