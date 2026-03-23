@@ -47,7 +47,6 @@ def test_get_local_ocr_invalid_id():
 
 @override_settings(
     GALE_API_USERNAME="galeuser123",
-    GALE_API_LOCATION_ID="test_location_id",
     GALE_API_SECRET="test_secret_key_12345",
 )
 @patch("ppa.archive.gale.requests")
@@ -94,7 +93,7 @@ class TestGaleAPI(TestCase):
 
         # Both settings configured - should add Authorization header
         with override_settings(
-            GALE_API_LOCATION_ID="test_location_id",
+            GALE_API_USERNAME="test_username",
             GALE_API_SECRET="test_secret_key_12345",
         ):
             # Clear singleton to force re-initialization
@@ -106,8 +105,8 @@ class TestGaleAPI(TestCase):
             auth_header = gale_api.session.headers["Authorization"]
             assert auth_header.startswith("Basic ")
 
-            # Verify correct encoding
-            expected_string = "test_location_id;test_secret_key_12345"
+            # Verify correct encoding (username is used as location_id)
+            expected_string = "test_username;test_secret_key_12345"
             expected_b64 = base64.b64encode(expected_string.encode('utf-8')).decode('utf-8')
             assert auth_header == f"Basic {expected_b64}"
 
@@ -118,16 +117,16 @@ class TestGaleAPI(TestCase):
 
         # Missing both settings - should raise ImproperlyConfigured
         with override_settings():
-            if hasattr(settings, 'GALE_API_LOCATION_ID'):
-                del settings.GALE_API_LOCATION_ID
+            if hasattr(settings, 'GALE_API_USERNAME'):
+                del settings.GALE_API_USERNAME
             if hasattr(settings, 'GALE_API_SECRET'):
                 del settings.GALE_API_SECRET
             gale.GaleAPI.instance = None
             with pytest.raises(ImproperlyConfigured):
                 gale.GaleAPI()
 
-        # Only location ID configured - should raise ImproperlyConfigured
-        with override_settings(GALE_API_LOCATION_ID="test_location_id"):
+        # Only username configured - should raise ImproperlyConfigured
+        with override_settings(GALE_API_USERNAME="test_username"):
             if hasattr(settings, 'GALE_API_SECRET'):
                 del settings.GALE_API_SECRET
             gale.GaleAPI.instance = None
@@ -136,8 +135,8 @@ class TestGaleAPI(TestCase):
 
         # Only secret configured - should raise ImproperlyConfigured
         with override_settings(GALE_API_SECRET="test_secret_key_12345"):
-            if hasattr(settings, 'GALE_API_LOCATION_ID'):
-                del settings.GALE_API_LOCATION_ID
+            if hasattr(settings, 'GALE_API_USERNAME'):
+                del settings.GALE_API_USERNAME
             gale.GaleAPI.instance = None
             with pytest.raises(ImproperlyConfigured):
                 gale.GaleAPI()
@@ -148,7 +147,7 @@ class TestGaleAPI(TestCase):
         mockrequests.Session.return_value.headers = {"User-Agent": base_user_agent}
 
         with override_settings(
-            GALE_API_LOCATION_ID="test_location_id",
+            GALE_API_USERNAME="test_username",
             GALE_API_SECRET="test_secret_key_12345",
         ):
             # Clear singleton to force fresh initialization

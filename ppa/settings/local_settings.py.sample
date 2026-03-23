@@ -38,11 +38,10 @@ HATHI_DATA = '/path/to/hathi_pairtree_root'
 # HATHITRUST_RSYNC_SERVER = ''
 # HATHITRUST_RSYNC_PATH = ''
 
-# username for Gale API access
+# username for Gale API access (corresponds to location ID)
 GALE_API_USERNAME = ''
 
-# Gale API Basic Auth credentials
-GALE_API_LOCATION_ID = ''
+# Gale API Basic Auth secret
 GALE_API_SECRET = ''
 
 # local path for cached marc record; needed for Gale/ECCO import
