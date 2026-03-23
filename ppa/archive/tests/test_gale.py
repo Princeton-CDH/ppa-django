@@ -48,7 +48,7 @@ def test_get_local_ocr_invalid_id():
 @override_settings(
     GALE_API_USERNAME="galeuser123",
     GALE_API_LOCATION_ID="test_location_id",
-    GALE_API_SECRET="***REMOVED***",
+    GALE_API_SECRET="test_secret_key_12345",
 )
 @patch("ppa.archive.gale.requests")
 class TestGaleAPI(TestCase):
@@ -95,7 +95,7 @@ class TestGaleAPI(TestCase):
         # Both settings configured - should add Authorization header
         with override_settings(
             GALE_API_LOCATION_ID="test_location_id",
-            GALE_API_SECRET="***REMOVED***",
+            GALE_API_SECRET="test_secret_key_12345",
         ):
             # Clear singleton to force re-initialization
             gale.GaleAPI.instance = None
@@ -107,7 +107,7 @@ class TestGaleAPI(TestCase):
             assert auth_header.startswith("Basic ")
 
             # Verify correct encoding
-            expected_string = "test_location_id;***REMOVED***"
+            expected_string = "test_location_id;test_secret_key_12345"
             expected_b64 = base64.b64encode(expected_string.encode('utf-8')).decode('utf-8')
             assert auth_header == f"Basic {expected_b64}"
 
@@ -135,7 +135,7 @@ class TestGaleAPI(TestCase):
                 gale.GaleAPI()
 
         # Only secret configured - should raise ImproperlyConfigured
-        with override_settings(GALE_API_SECRET="***REMOVED***"):
+        with override_settings(GALE_API_SECRET="test_secret_key_12345"):
             if hasattr(settings, 'GALE_API_LOCATION_ID'):
                 del settings.GALE_API_LOCATION_ID
             gale.GaleAPI.instance = None
@@ -149,7 +149,7 @@ class TestGaleAPI(TestCase):
 
         with override_settings(
             GALE_API_LOCATION_ID="test_location_id",
-            GALE_API_SECRET="***REMOVED***",
+            GALE_API_SECRET="test_secret_key_12345",
         ):
             # Clear singleton to force fresh initialization
             gale.GaleAPI.instance = None
