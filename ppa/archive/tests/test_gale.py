@@ -45,7 +45,11 @@ def test_get_local_ocr_invalid_id():
         gale.get_local_ocr("AB12345")
 
 
-@override_settings(GALE_API_USERNAME="galeuser123")
+@override_settings(
+    GALE_API_USERNAME="galeuser123",
+    GALE_API_LOCATION_ID="test_location_id",
+    GALE_API_SECRET="***REMOVED***",
+)
 @patch("ppa.archive.gale.requests")
 class TestGaleAPI(TestCase):
     # NOTE: must extend django's test case to use override_settings on class
