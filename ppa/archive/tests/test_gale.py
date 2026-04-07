@@ -268,7 +268,6 @@ class TestGaleAPI(TestCase):
         gale_api.session.get.side_effect = [error_response, ok_response]
         # clear stored API key to trigger refresh
         gale_api._api_key = None
-        print(f"session api key is {gale_api.api_key}")
         gale_api._make_request("foo", requires_api_key=True)
         # should be called twice: once for initial request, then for retry
         assert mock_get_api_key.call_count == 2
