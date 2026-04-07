@@ -135,8 +135,7 @@ class GaleAPI:
 
         # Add Basic Auth header (required as of April 2026).
         # Gale uses a non-standard credential format: "location_id;secret" joined
-        # with a semicolon rather than the colon separator defined in RFC 7617.
-        # requests.auth.HTTPBasicAuth always uses a colon, so we encode manually.
+        # with a semicolon rather than the standard colon separator, so we encode manually
         auth_b64 = base64.b64encode(f"{self.username};{secret}".encode('utf-8')).decode('utf-8')
         headers["Authorization"] = f"Basic {auth_b64}"
 
