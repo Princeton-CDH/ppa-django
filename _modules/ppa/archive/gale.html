@@ -31,7 +31,8 @@
           <div class="body" role="main">
             
   <h1>Source code for ppa.archive.gale</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">base64</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pathlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
@@ -115,9 +116,13 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">GaleAPI</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Minimal Gale API client with functionality need for PPA import.</span>
 
-<span class="sd">    Requires **GALE_API_USERNAME** configured in Django settings. Automatically</span>
-<span class="sd">    uses the configured username to retrieve an API key when needed, and has</span>
-<span class="sd">    logic to refresh the API key when it expires (30 minutes).</span>
+<span class="sd">    Requires **GALE_API_USERNAME** and **GALE_API_SECRET** configured in</span>
+<span class="sd">    Django settings. The username corresponds to the location ID for API access.</span>
+<span class="sd">    Automatically uses the configured username to retrieve an API key when needed,</span>
+<span class="sd">    and has logic to refresh the API key when it expires (30 minutes).</span>
+
+<span class="sd">    Basic Auth is required as of April 2026. A Basic Authorization header</span>
+<span class="sd">    will be added to all API requests using the username (location ID) and secret.</span>
 
 <span class="sd">    If **TECHNICAL_CONTACT** is configured in Django settings, it will</span>
 <span class="sd">    be included in request headers when making API calls.</span>
@@ -146,15 +151,28 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">instance</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Prevent re-initialization for singleton to ensure Auth header persist across instantiations</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;session&#39;</span><span class="p">):</span>
+            <span class="k">return</span>
+
         <span class="c1"># NOTE: copied from hathi.py base api class; should be generalized</span>
         <span class="c1"># into a common base class if/when we add a third provider</span>
 
         <span class="c1"># first make sure we have a username configured</span>
+        <span class="c1"># (username corresponds to location ID for API access)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">GALE_API_USERNAME</span>
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">ImproperlyConfigured</span><span class="p">(</span>
                 <span class="s2">&quot;GALE_API_USERNAME configuration is required for Gale API&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Get Basic Auth secret (required as of April 2026)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">secret</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">GALE_API_SECRET</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ImproperlyConfigured</span><span class="p">(</span>
+                <span class="s2">&quot;GALE_API_SECRET configuration is required for Gale API&quot;</span>
             <span class="p">)</span>
 
         <span class="c1"># create a request session, for request pooling</span>
@@ -164,6 +182,13 @@
             <span class="s2">&quot;User-Agent&quot;</span><span class="p">:</span> <span class="s2">&quot;ppa-django/</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span>
             <span class="o">%</span> <span class="p">(</span><span class="n">ppa_version</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;User-Agent&quot;</span><span class="p">])</span>
         <span class="p">}</span>
+
+        <span class="c1"># Add Basic Auth header (required as of April 2026).</span>
+        <span class="c1"># Gale uses a non-standard credential format: &quot;location_id;secret&quot; joined</span>
+        <span class="c1"># with a semicolon rather than the standard colon separator, so we encode manually</span>
+        <span class="n">auth_b64</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">;</span><span class="si">{</span><span class="n">secret</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Authorization&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Basic </span><span class="si">{</span><span class="n">auth_b64</span><span class="si">}</span><span class="s2">&quot;</span>
+
         <span class="c1"># include technical contact as From header, if set</span>
         <span class="n">tech_contact</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="s2">&quot;TECHNICAL_CONTACT&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">tech_contact</span><span class="p">:</span>
