@@ -1774,12 +1774,9 @@ what is needed to support page indexing for <code class="xref py py-mod docutils
 <dt class="sig sig-object py" id="ppa.archive.gale.GaleAPI">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ppa.archive.gale.</span></span><span class="sig-name descname"><span class="pre">GaleAPI</span></span><a class="reference internal" href="_modules/ppa/archive/gale.html#GaleAPI"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ppa.archive.gale.GaleAPI" title="Link to this definition">¶</a></dt>
 <dd><p>Minimal Gale API client with functionality need for PPA import.</p>
-<p>Requires <strong>GALE_API_USERNAME</strong> and <strong>GALE_API_SECRET</strong> configured in
-Django settings. The username corresponds to the location ID for API access.
-Automatically uses the configured username to retrieve an API key when needed,
-and has logic to refresh the API key when it expires (30 minutes).</p>
-<p>Basic Auth is required as of April 2026. A Basic Authorization header
-will be added to all API requests using the username (location ID) and secret.</p>
+<p>Requires <strong>GALE_API_USERNAME</strong> configured in Django settings. Automatically
+uses the configured username to retrieve an API key when needed, and has
+logic to refresh the API key when it expires (30 minutes).</p>
 <p>If <strong>TECHNICAL_CONTACT</strong> is configured in Django settings, it will
 be included in request headers when making API calls.</p>
 <p>Implemented as a singleton; instanciating the class will return the
@@ -2594,7 +2591,7 @@ description, for use in previews on the site and plain-text metadata
 previews.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags">
-<span class="sig-name descname"><span class="pre">allowed_tags</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['p',</span> <span class="pre">'acronym',</span> <span class="pre">'blockquote',</span> <span class="pre">'ul',</span> <span class="pre">'b',</span> <span class="pre">'ol',</span> <span class="pre">'li',</span> <span class="pre">'abbr',</span> <span class="pre">'code',</span> <span class="pre">'em',</span> <span class="pre">'i',</span> <span class="pre">'strong']</span></span><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">allowed_tags</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['acronym',</span> <span class="pre">'li',</span> <span class="pre">'blockquote',</span> <span class="pre">'em',</span> <span class="pre">'strong',</span> <span class="pre">'b',</span> <span class="pre">'code',</span> <span class="pre">'ul',</span> <span class="pre">'ol',</span> <span class="pre">'p',</span> <span class="pre">'i',</span> <span class="pre">'abbr']</span></span><a class="headerlink" href="#ppa.pages.models.PagePreviewDescriptionMixin.allowed_tags" title="Link to this definition">¶</a></dt>
 <dd><p>allowed tags for bleach html stripping in description</p>
 </dd></dl>
 
