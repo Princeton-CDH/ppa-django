@@ -3,6 +3,11 @@
 CHANGELOG
 =========
 
+3.16.1
+----
+
+- Update DOI in the readme to use the DOI for all versions of the code
+
 3.16
 ----
 
