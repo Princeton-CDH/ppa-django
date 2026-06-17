@@ -10,8 +10,8 @@ Code and architecture documentation for the current release available
 at `<https://princeton-cdh.github.io/ppa-django/>`_.
 
 .. image:: https://zenodo.org/badge/110731137.svg
-   :target: https://doi.org/10.5281/zenodo.2400705
-   :alt: DOI: 10.5281/zenodo.2400705
+   :target: https://doi.org/10.5281/zenodo.2400704
+   :alt: DOI: 10.5281/zenodo.2400704
 
 .. image:: https://github.com/Princeton-CDH/ppa-django/actions/workflows/unit-tests.yml/badge.svg
    :target: https://github.com/Princeton-CDH/ppa-django/actions/workflows/unit-tests.yml
