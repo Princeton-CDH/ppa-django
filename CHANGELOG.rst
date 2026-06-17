@@ -6,7 +6,6 @@ CHANGELOG
 3.16.1
 ----
 
-- Update Gale Content API integration to support Basic Auth in addition to API key authentication
 - Update DOI in the readme to use the DOI for all versions of the code
 
 3.16
