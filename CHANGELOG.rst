@@ -3,7 +3,7 @@
 CHANGELOG
 =========
 
-3.17
+3.16.1
 ----
 
 - Update Gale Content API integration to use Basic Auth in addition to API key authentication
