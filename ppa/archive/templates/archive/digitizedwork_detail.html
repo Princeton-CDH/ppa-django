@@ -151,6 +151,25 @@
         </tbody>
     </table>
 
+    {% if adapter_display_fields and adapter_display_fields.detail_view %}
+    <table class="adapter-metadata ui very basic table">
+        <tbody>
+            {% for field_config in adapter_display_fields.detail_view %}
+                {% if field_config.type == "passage" %}
+                    {# passage fields are rendered below the table #}
+                {% else %}
+                    {% render_adapter_field_table object field_config %}
+                {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+    {% for field_config in adapter_display_fields.detail_view %}
+        {% if field_config.type == "passage" %}
+            {% render_adapter_passage object field_config %}
+        {% endif %}
+    {% endfor %}
+    {% endif %}
+
     {# if cluster  is set, this work is part of a reprint/edition group #}
     {% if object.cluster %}
     {# TODO: if we can get count from solr, here's how to get count from db #}
@@ -168,7 +187,10 @@
             <legend class="sr-only">text search fields</legend>
             <div class="twelve wide column">
                 {% render_field search_form.query %}
-                <span class="question-popup" data-html="{{ search_form.QUESTION_POPUP_TEXT }}" data-position="top center">
+                <span class="question-popup"
+                      data-controller="tooltip"
+                      data-tooltip-content-value="{{ search_form.QUESTION_POPUP_TEXT }}"
+                      data-tooltip-position-value="top">
                     <i class="ui question circle icon"></i>
                 </span>
             </div>

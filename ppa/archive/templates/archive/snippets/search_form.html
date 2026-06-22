@@ -1,5 +1,7 @@
 {% load semanticui humanize static %}
-<form class="ui form{% if error %} error{% endif %}">
+<form class="ui form{% if error %} error{% endif %}"
+      data-search-target="form"
+      data-action="keydown->search#preventEnterSubmit">
     <div class="ui vertical stackable grid segment">
         {# include hidden cluster field value for form submission #}
         {{ search_form.cluster }}
@@ -15,8 +17,18 @@
         {% endif %}
 
         <div class="twelve wide column">
-            {% render_field search_form.query %}
-            <span class="question-popup" data-html="{{ search_form.QUESTION_POPUP_TEXT }}" data-position="top center">
+            <div data-controller="clearable">
+                {% render_field search_form.query %}
+                <button type="button"
+                        class="clear-input"
+                        data-clearable-target="button"
+                        data-action="click->clearable#clear"
+                        aria-label="Clear search">✕</button>
+            </div>
+            <span class="question-popup"
+                  data-controller="tooltip"
+                  data-tooltip-content-value="{{ search_form.QUESTION_POPUP_TEXT }}"
+                  data-tooltip-position-value="top">
                 <i class="ui question circle icon"></i>
             </span>
         </div>
@@ -30,15 +42,18 @@
     <div class="ui vertical stackable grid segment advanced">
         <div class="four wide column" id="publication">
             {% render_field search_form.pub_date %}
-            <span class="validation">
+            <span class="validation" data-search-target="validation">
                 {{ search_form.pubdate_validation_msg }}
             </span>
-            <button class="clear-selection" type="button">Reset Dates</button>
+            <button class="clear-selection" type="button"
+                    data-action="click->search#clearDates">Reset Dates</button>
         </div>
-        <div class="eight wide column" id="histogram">
-            <canvas class="visualization" height="60" width="600"></canvas>
-            <span class="min-date"></span>
-            <span class="max-date"></span>
+        <div class="eight wide column" id="histogram"
+             data-controller="histogram"
+             data-histogram-target="canvas minDate maxDate">
+            <canvas data-histogram-target="canvas" class="visualization" height="60" width="600"></canvas>
+            <span data-histogram-target="minDate" class="min-date"></span>
+            <span data-histogram-target="maxDate" class="max-date"></span>
         </div>
     </div>
     <div class="ui vertical stackable basic grid segment">
@@ -74,14 +89,15 @@
         {% endcomment %}
     </div>
     <div class="ui vertical basic segment show-advanced">
-        <button type="button">
+        <button type="button"
+                data-action="click->search#toggleAdvancedSearch">
             <img class="dropdown icon" src="{% static 'img/icons/RightChevron.svg' %}" alt="">
             Advanced Search
-            <span class="search-active">●</span>
+            <span class="search-active" data-search-target="advancedSearchIndicator">●</span>
         </button>
     </div>
     <input type="submit" class="sr-only sr-only-focusable" aria-label="submit search">
-    <div class="workscount ui center aligned text container">
+    <div class="workscount ui center aligned text container" data-search-target="workscount">
         <p class="count">Displaying {{ paginator.count|intcomma }} digitized work{{ paginator.count|pluralize }}{% if not search_form.cluster.value %} or cluster{{ paginator.count|pluralize }} of works{% endif %}</p>
         <p class="zotero">Work citations can be exported to <a href="https://www.zotero.org/support/getting_stuff_into_your_library">Zotero</a></p>
         <div class="loader">

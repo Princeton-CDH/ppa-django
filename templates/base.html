@@ -38,16 +38,20 @@ by default; use page_rdf_type to override with a webpage subclass.
     {% block css %}{% endblock %} {# add any additional css here #}
 
     <!-- scripts -->
-    <script
-        src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"
-        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-        crossorigin="anonymous">
-    </script>
     {% if not request.is_preview and GTAGS_ANALYTICS_ID %}
         {% include 'snippets/analytics.html' %}
     {% endif %}
     {% render_bundle 'main' 'js' %}
     {% block js %}{% endblock %} {# add any additional javascript here #}
+
+    {% if adapter_frontend %}
+      {% if adapter_frontend.css %}
+        <link rel="stylesheet" href="{% static adapter_frontend.css %}">
+      {% endif %}
+      {% if adapter_frontend.js %}
+        <script src="{% static adapter_frontend.js %}" defer></script>
+      {% endif %}
+    {% endif %}
 
     {% include "snippets/plausible_analytics.html" %}
 

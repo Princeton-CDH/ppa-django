@@ -22,10 +22,9 @@
     {
         "@babel/core": "^7.23.9",
         "@babel/preset-env": "^7.23.9",
+        "@hotwired/stimulus": "^3.2.2",
         "@types/jest": "^24.9.1",
-        "@types/jquery": "^3.5.29",
         "@types/node": "^20.11.6",
-        "@types/semantic-ui": "^2.2.9",
         "autoprefixer": "^10.4.17",
         "babel-loader": "^8.2.2",
         "baseline-browser-mapping": "^2.9.7",

@@ -1,9 +1,62 @@
+// Trigger icons — keep existing visual positioning
 .question-popup {
     position: absolute;
     top: 1rem;
     right: 1rem;
     color: $azure;
+    cursor: help;
 }
 .source-popup {
     color: $french-blue;
+    cursor: help;
+}
+
+// Tooltip element rendered by TooltipController into document.body
+.ppa-tooltip {
+    position: absolute;
+    z-index: 1000;
+    max-width: 280px;
+    padding: 0.5rem 0.75rem;
+    background: $black;
+    color: $white-two;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+
+    // Arrow via CSS pseudo-element
+    &::after {
+        content: '';
+        position: absolute;
+        border: 5px solid transparent;
+    }
+
+    &--top::after {
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border-top-color: $black;
+    }
+
+    &--bottom::after {
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border-bottom-color: $black;
+    }
+
+    &--left::after {
+        left: 100%;
+        top: 50%;
+        transform: translateY(-50%);
+        border-left-color: $black;
+    }
+
+    &--right::after {
+        right: 100%;
+        top: 50%;
+        transform: translateY(-50%);
+        border-right-color: $black;
+    }
 }

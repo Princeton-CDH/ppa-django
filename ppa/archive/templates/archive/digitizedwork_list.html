@@ -2,10 +2,6 @@
 {% load render_bundle from webpack_loader %}
 {% load static humanize ppa_tags %}
 
-{% block js %}
-{% render_bundle 'search' 'js' %}
-{% endblock %}
-
 {% block head_extras %}
 <noscript>  
     <link rel="stylesheet" type="text/css" href="{% static 'css/noscript.css' %}"/>
@@ -20,12 +16,14 @@
 {% endblock %}
 
 {% block content %}
+<div data-controller="search">
 <h1 class="sr-only">Archive</h1>
 <section class="ui search basic vertical segment container">
     {% include 'archive/snippets/search_form.html' %}
     {% include 'archive/snippets/jump_top.html' with anchor='search' %}
 </section>
-<div class="ajax-container">
+<div class="ajax-container" data-search-target="results">
     {% include 'archive/snippets/results_list.html' %}
+</div>
 </div>
 {% endblock %}

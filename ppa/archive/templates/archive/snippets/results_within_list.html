@@ -12,7 +12,7 @@
         {% include 'archive/snippets/pagination.html' with page_obj=current_results %}
     </div>
     {% endif %}
-    <div class="results-list ui container">
+    <div class="results-list ui container" data-controller="lazy-load">
         {% for page in current_results.object_list %}
             {% with highlights=page_highlights|dict_item:page.id%}
             <div class="ui page item">

@@ -1,7 +1,8 @@
 {% load static wagtailcore_tags %}
 
 <!-- mobile navigation -->
-<nav class="ui top sidebar vertical borderless menu {{ style }}" id="mobile-nav">
+<nav class="ui top sidebar vertical borderless menu {{ style }}" id="mobile-nav"
+     data-nav-target="menu">
     {% include 'snippets/about.html' %}
     <a class="item" href="{% slugurl 'editorial' %}">Editorial</a>
     <a class="item" href="{% slugurl 'collections'%}">Collections</a>
@@ -13,8 +14,11 @@
 </nav>
 
 <!-- main navigation -->
-<nav class="ui top fixed borderless menu {{ style }}" id="main-nav">
-    <a class="toc item" id="toc">
+<nav class="ui top fixed borderless menu {{ style }}" id="main-nav"
+     data-controller="nav">
+    <a class="toc item" id="toc"
+       data-nav-target="toggle"
+       data-action="click->nav#toggle">
         <img class="menu icon" src="{% static 'img/icons/Menu.svg' %}"
             alt="open menu">
         <img class="close icon" src="{% static 'img/icons/Delete.svg' %}"

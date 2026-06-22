@@ -59,7 +59,10 @@
                         <dt>Source</dt>
                         <dd>
                             {{ item.source }}{% if source_notes|dict_item:item.source %}
-                            <span class="source-popup" data-html="{{ source_notes|dict_item:item.source }}" data-position="top center">
+                            <span class="source-popup"
+                                  data-controller="tooltip"
+                                  data-tooltip-content-value="{{ source_notes|dict_item:item.source }}"
+                                  data-tooltip-position-value="top">
                                 <i class="ui question circle icon"></i>
                             </span>{% endif %}
                         </dd>
@@ -84,6 +87,13 @@
                     </div>
                     {% endif %}
                 </dl>
+                {% if adapter_display_fields and adapter_display_fields.list_view %}
+                <dl class="adapter-fields grid">
+                    {% for field_config in adapter_display_fields.list_view %}
+                        {% render_adapter_field item field_config %}
+                    {% endfor %}
+                </dl>
+                {% endif %}
                 <div class="buttons">
                     {% if item.pk %} {# database object with many-to-many #}
                         {% for collection in item.collections.all %}

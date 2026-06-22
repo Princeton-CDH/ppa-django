@@ -1,7 +1,8 @@
 {% load static %}
 
-<div class="about ui simple item dropdown{% if active == 'about' %} triangle{% endif %}">
-    <div class="text">About</div>
+<div class="about ui simple item dropdown{% if active == 'about' %} triangle{% endif %}"
+     data-controller="about-nav">
+    <div class="text" data-about-nav-target="text" tabindex="0">About</div>
     <img class="dropdown icon" src="{% static 'img/icons/RightChevron.svg' %}" alt="">
     <div class="menu submenu">
         {# NOTE: currently relies on editorial not having show_in_menu set #}

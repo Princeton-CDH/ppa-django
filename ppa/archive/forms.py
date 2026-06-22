@@ -216,6 +216,8 @@ class SearchForm(forms.Form):
                 "placeholder": "Search full-text and metadata, including approximate titles.",
                 "_icon": "search",
                 "_align": "left",
+                "data-clearable-target": "input",
+                "data-action": "input->clearable#update",
             }
         ),
     )

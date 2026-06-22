@@ -842,7 +842,7 @@ class TestDigitizedWorkListRequest(TestCase):
     def test_relevance_sort_enabled(self):
         # - check that a query allows relevance as sort order toggle in form
         response = self.client.get(self.url, {"query": "foo", "sort": "title_asc"})
-        enabled_input = '<div class="item " data-value="relevance">Relevance</div>'
+        enabled_input = '<option value="relevance">Relevance</option>'
         self.assertContains(response, enabled_input, html=True)
         response = self.client.get(self.url, {"title": "foo", "sort": "title_asc"})
         self.assertContains(response, enabled_input, html=True)
@@ -853,7 +853,7 @@ class TestDigitizedWorkListRequest(TestCase):
         response = self.client.get(self.url, {"sort": "title_asc"})
         self.assertContains(
             response,
-            '<div class="item disabled" data-value="relevance">Relevance</div>',
+            '<option value="relevance" disabled>Relevance</option>',
             html=True,
         )
 
