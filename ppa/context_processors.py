@@ -15,3 +15,18 @@ def template_globals(request):
         "PLAUSIBLE_ANALYTICS_404s": getattr(settings, "PLAUSIBLE_ANALYTICS_404s", False),
     }
     return context_extras
+
+
+def adapter_context(request):
+    """Add adapter configuration to template context."""
+    from ppa.adapters.loader import get_adapter
+
+    try:
+        adapter = get_adapter()
+        return {
+            "adapter": adapter,
+            "adapter_display_fields": adapter.display_fields if adapter else None,
+            "adapter_frontend": adapter.frontend if adapter else None,
+        }
+    except Exception:
+        return {"adapter": None, "adapter_display_fields": None, "adapter_frontend": None}

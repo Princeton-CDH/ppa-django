@@ -128,6 +128,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "ppa.context_extras",
                 "ppa.context_processors.template_globals",
+                "ppa.context_processors.adapter_context",
                 "wagtail.contrib.settings.context_processors.settings",
             ],
             "loaders": [
@@ -140,6 +141,23 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "ppa.wsgi.application"
+
+# Adapter settings
+import os as _os
+ADAPTERS_DIR = _os.environ.get("ADAPTERS_DIR", str(BASE_DIR / "examples" / "adapters"))
+ARCHIVE_ADAPTER = _os.environ.get("ARCHIVE_ADAPTER", None)
+
+# If an adapter is configured, prepend its templates dir so Django resolves
+# adapter-specific templates before the default ones.
+if ARCHIVE_ADAPTER:
+    adapter_templates = _os.path.join(str(ADAPTERS_DIR), ARCHIVE_ADAPTER, "templates")
+    if _os.path.isdir(adapter_templates) and adapter_templates not in TEMPLATES[0]["DIRS"]:
+        TEMPLATES[0]["DIRS"].insert(0, adapter_templates)
+
+    # Expose adapter static files under /static/adapters/<name>/
+    adapter_static = _os.path.join(str(ADAPTERS_DIR), ARCHIVE_ADAPTER, "static")
+    if _os.path.isdir(adapter_static):
+        STATICFILES_DIRS.append((f"adapters/{ARCHIVE_ADAPTER}", adapter_static))
 
 DATABASES = {
     "default": {
