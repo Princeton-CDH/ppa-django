@@ -96,9 +96,10 @@ INSTALLED_APPS = [
     "ppa.pages",
     "ppa.editorial",
     "ppa.dataset",
+    "waffle",
 ]
 
-MIDDLEWARE = [
+MIDDLEWARE = ["waffle.middleware.WaffleMiddleware"] + [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
