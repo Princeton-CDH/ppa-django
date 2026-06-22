@@ -1,0 +1,33 @@
+name: cookbook
+display_name: Historical Cookbook Adapter
+supported_languages:
+  - en
+field_map:
+  title: title
+  cookbook_ingredients: metadata.ingredients
+  cookbook_cook_time: metadata.cook_time
+  cookbook_passage: metadata.passage
+templates_dir: templates
+display_fields:
+  list_view:
+    - field: cookbook_cook_time
+      label: "Cook Time"
+    - field: cookbook_ingredients
+      label: "Ingredients"
+  detail_view:
+    - field: cookbook_cook_time
+      label: "Cook Time"
+      source: "metadata.cook_time"
+    - field: cookbook_ingredients
+      label: "Ingredients"
+      source: "metadata.ingredients"
+    - field: cookbook_passage
+      label: "Passage"
+      source: "metadata.passage"
+      type: passage
+solr_schema:
+  fields:
+    - name: cookbook_ingredients_exact
+      type: string
+      multiValued: true
+

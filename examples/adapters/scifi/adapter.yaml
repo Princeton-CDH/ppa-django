@@ -1,0 +1,61 @@
+name: scifi
+display_name: Science Fiction Books
+supported_languages:
+  - en
+  - fr
+  - de
+field_map:
+  title: title
+  author: author
+  pub_date: pub_date
+  scifi_subgenre: metadata.subgenre
+  scifi_rating_score: metadata.rating_score
+  scifi_rating_votes: metadata.rating_votes
+  scifi_genres: metadata.genres
+  scifi_description: metadata.description
+  scifi_goodreads_url: metadata.goodreads_url
+  scifi_passage: metadata.passage
+templates_dir: templates
+frontend:
+  js: adapters/scifi/scifi_controller.js
+  stimulus_controllers:
+    - scifi-rating
+display_fields:
+  list_view:
+    - field: scifi_subgenre
+      label: "Subgenre"
+    - field: scifi_rating_score
+      label: "Rating"
+    - field: scifi_genres
+      label: "Genres"
+  detail_view:
+    - field: scifi_subgenre
+      label: "Subgenre"
+      source: "metadata.subgenre"
+    - field: scifi_rating_score
+      label: "Goodreads Rating"
+      source: "metadata.rating_score"
+    - field: scifi_rating_votes
+      label: "Rating Votes"
+      source: "metadata.rating_votes"
+    - field: scifi_genres
+      label: "Genres"
+      source: "metadata.genres"
+    - field: scifi_description
+      label: "Description"
+      source: "metadata.description"
+    - field: scifi_goodreads_url
+      label: "Goodreads URL"
+      source: "metadata.goodreads_url"
+    - field: scifi_passage
+      label: "Passage"
+      source: "metadata.passage"
+      type: passage
+solr_schema:
+  fields:
+    - name: scifi_subgenre_exact
+      type: string
+      multiValued: false
+    - name: scifi_genres_exact
+      type: string
+      multiValued: true

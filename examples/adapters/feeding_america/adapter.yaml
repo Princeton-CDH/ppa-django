@@ -1,0 +1,32 @@
+name: feeding_america
+display_name: Feeding America Historical Cookbooks
+supported_languages:
+  - en
+field_map:
+  title: title
+  author: author
+  pub_date: pub_date
+  pub_place: pub_place
+  feeding_america_recipes: metadata.recipes
+  feeding_america_source_info: metadata.source
+  feeding_america_dataset: metadata.dataset
+  feeding_america_passage: metadata.passage
+templates_dir: templates
+description: Adapter for the Feeding America historical cookbook dataset from MSU
+display_fields:
+  list_view:
+    - field: feeding_america_source_info
+      label: "Source"
+    - field: feeding_america_dataset
+      label: "Dataset"
+  detail_view:
+    - field: feeding_america_source_info
+      label: "Source"
+      source: "metadata.source"
+    - field: feeding_america_dataset
+      label: "Dataset"
+      source: "metadata.dataset"
+    - field: feeding_america_passage
+      label: "Passage"
+      source: "metadata.passage"
+      type: passage

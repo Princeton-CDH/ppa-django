@@ -1,0 +1,641 @@
+<!--***************************************************-->
+<!--***************************************************-->
+<!--                                                   -->
+<!--                   COOKBOOK.DTD                    -->
+<!--                                                   -->
+<!--        System identifier: "cookbook.dtd"          -->
+<!--               Public identifier:                  -->
+<!--"-//Michigan State University, Digital & Multimedia-->
+<!--           Center//DTD -//cookbook 1.0//EN"        -->
+<!--                                                   -->
+<!--***************************************************-->
+<!--***************************************************-->
+
+
+<!--***************************************************-->
+<!--BASIC STRUCTURAL & BIBLIOGRAPHIC ELEMENTS         -->
+<!--***************************************************-->
+
+
+<!ELEMENT cookbook (meta, front, body, back?)>
+
+<!ATTLIST cookbook
+	type (general|charity|famous|frugal|restaurant|
+		invalid|histperiod|encyclopedia) #REQUIRED
+	chefschool CDATA #IMPLIED
+	histperiod CDATA #IMPLIED
+	class1 (fruitvegbeans|meatfishgame|eggscheesedairy|
+		breadsweets|soups|accompaniments|beverages|
+		marketing|generalfood|menus|medhealth|
+		household|farmgarden|childrear|etiquette|
+		restaurant|servants|generalnonfood|
+		foodandnonfood) #REQUIRED
+	class2 (fruitvegbeans|meatfishgame|eggscheesedairy|
+		breadsweets|soups|accompaniments|beverages|
+		marketing|generalfood|menus|medhealth|
+		household|farmgarden|childrear|etiquette|
+		restaurant|servants|generalnonfood|
+		foodandnonfood) #IMPLIED
+	region (west|midwest|south|northeast|ethnic|
+		general) #REQUIRED
+	subregion CDATA #IMPLIED
+	ethnicgroup CDATA #IMPLIED
+	occasion (Thanksgiving|Christmas|wedding|birthday|
+		patriotic|spring|summer|fall|winter|other)
+		#IMPLIED
+	bookID CDATA #REQUIRED>
+
+<!ELEMENT front (div)*>
+
+<!ELEMENT back (div)*>
+
+<!ELEMENT div (#PCDATA|subdiv|hd|p|pb|lb|gap|unclear|emph|alt|
+		ednote|list|table|illustration|ref|doctitle|
+		docauthor|docimprint)*>
+
+<!ATTLIST div 
+	type (advertisement|appendix|backcover|contents|
+		copyrightstmt|dedication|frontcover|glossary|
+		halftitlepage|illustration|introduction|index|
+		preface|titlepage|other) #REQUIRED
+	id ID #IMPLIED
+	divID CDATA #IMPLIED>
+
+<!ELEMENT subdiv (#PCDATA|hd|p|pb|lb|emph|alt|ednote|list|
+	table|illustration|ref|gap|unclear)*>
+	
+<!ATTLIST subdiv
+	subdivID CDATA #IMPLIED>	
+
+<!ELEMENT doctitle (#PCDATA|lb|emph|alt|ednote|ref|gap|unclear
+	)*>
+
+<!ATTLIST doctitle
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED>
+
+<!ELEMENT docauthor (#PCDATA|lb|emph|alt|ednote|ref|gap|unclear
+	)*>
+
+<!ATTLIST docauthor
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED>
+
+<!ELEMENT docimprint (#PCDATA|lb|emph|alt|ednote|ref|gap|unclear
+	)*>
+
+<!ATTLIST docimprint
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED>
+	
+
+
+<!--**************************************************-->
+<!--ELEMENTS FOR GENERIC TEXTUAL FEATURES             -->
+<!--**************************************************-->
+
+
+<!ELEMENT hd (#PCDATA|lb|emph|alt|ref|ednote|gap|unclear
+	)*>
+
+<!ATTLIST hd
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED
+	hdID CDATA #IMPLIED>
+
+<!ELEMENT p (#PCDATA|hd|pb|lb|emph|alt|ednote|list|table|term|
+	definition|illustration|ref|purpose|process|ingredient|
+	implement|measurement|variation|contributor|attribution|
+	gap|unclear)*>
+
+<!ATTLIST p 
+	id ID #IMPLIED
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED
+	pID CDATA #IMPLIED>
+	
+<!ELEMENT pb EMPTY>
+
+<!ATTLIST pb
+	n CDATA #REQUIRED
+	id ID #REQUIRED>
+
+<!ELEMENT lb EMPTY>
+
+<!ELEMENT emph (#PCDATA|pb|lb|alt|ednote|ref|hd|purpose|
+	process|ingredient|implement|measurement|gap|unclear)*>
+
+<!ATTLIST emph
+	rend (bold|italic|ornate|other) #REQUIRED
+	align (center|right|indent1|indent2) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED>
+
+<!ELEMENT alt (#PCDATA|pb|lb|emph|ednote|ref|gap|unclear)*>
+
+<!ATTLIST alt
+	synonym1 CDATA #REQUIRED
+	synonym2 CDATA #IMPLIED
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED>
+
+<!ELEMENT list (#PCDATA|hd|pb|lb|emph|alt|ednote|ref|item|
+	purpose|process|ingredient|implement|measurement|
+	contributor|variation|attribution|gap|unclear|
+	illustration)*>
+
+<!ATTLIST list
+	id ID #IMPLIED
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED
+	listID CDATA #IMPLIED>
+
+<!ELEMENT item (#PCDATA|pb|lb|emph|alt|ednote|ref|purpose|
+	process|ingredient|implement|measurement|contributor|
+	variation|attribution|term|definition|gap|unclear|
+	illustration)*>
+
+<!ATTLIST item
+	id ID #IMPLIED
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED>
+
+<!ELEMENT term (#PCDATA|pb|lb|emph|alt|ednote|ref|gap|unclear)*>
+
+<!ATTLIST term
+	id ID #IMPLIED
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED>
+
+<!ELEMENT definition (#PCDATA|p|pb|lb|emph|alt|ednote|list|
+	illustration|ref|purpose|process|implement|ingredient|
+	measurement|variation|contributor|attribution|gap|
+	unclear)*>
+
+<!ATTLIST definition 
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED>
+
+<!ELEMENT table (hd|row|illustration|pb)*>
+
+<!ATTLIST table 
+	columns (2|3|4|5|6|7|8|9|10|11|12|13|14) #REQUIRED
+	tableID CDATA #IMPLIED>
+
+<!ELEMENT row (cell|illustration)*>
+
+<!ELEMENT cell (#PCDATA|p|lb|alt|ednote|ref|emph|illustration
+	|gap|unclear)*>
+
+<!ATTLIST cell
+	rend (bold|italic|ornate) #IMPLIED
+	align (center|right|indent1|indent2) #IMPLIED
+	colspan CDATA #IMPLIED
+	rowspan CDATA #IMPLIED>
+
+<!ELEMENT ref (#PCDATA|pb|lb|emph|alt|ednote|gap|unclear)*>
+
+<!ATTLIST ref
+	target IDREF #IMPLIED
+	xref CDATA #IMPLIED
+	item CDATA #IMPLIED
+	height (subscript|superscript) #IMPLIED
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED>
+
+<!ELEMENT illustration (caption?, description+)>
+
+<!ATTLIST illustration
+	id ID #IMPLIED
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	illustrationID CDATA #IMPLIED>
+
+<!ELEMENT caption (#PCDATA|hd|lb|emph|alt|ednote|ref|gap|unclear
+	)*>
+
+<!ELEMENT description (#PCDATA)>
+
+<!ELEMENT ednote (#PCDATA)>
+
+<!ELEMENT gap EMPTY>
+
+<!ATTLIST gap extent CDATA #REQUIRED>
+
+<!ELEMENT unclear (#PCDATA)>
+
+
+<!--**************************************************-->
+<!--STRUCTURAL ELEMENTS FOR COOKBOOK CONTENT          -->
+<!--**************************************************-->
+
+<!ELEMENT body (hd|p|pb|lb|emph|alt|ednote|list|table|
+	illustration|ref|chapter|recipe|formula|gap|unclear)*>
+
+<!ELEMENT chapter (hd|p|pb|lb|emph|contributor|alt|ednote|list|
+	table|illustration|ref|section|recipe|formula|gap|unclear)*>
+
+<!ATTLIST chapter 
+	class1 (fruitvegbeans|meatfishgame|eggscheesedairy|
+		breadsweets|soups|accompaniments|beverages|
+		marketing|generalfood|menus|medhealth|household|
+		farmgarden|childrear|etiquette|restaurant|
+		servants|generalnonfood|foodandnonfood) 
+		#IMPLIED
+	class2 (fruitvegbeans|meatfishgame|eggscheesedairy|
+		breadsweets|soups|accompaniments|beverages|
+		marketing|generalfood|menus|medhealth|household|
+		farmgarden|childrear|etiquette|restaurant|
+		servants|generalnonfood|foodandnonfood) 
+		#IMPLIED
+	region (west|midwest|south|northeast|ethnic) #IMPLIED
+	subregion CDATA #IMPLIED
+	ethnicgroup CDATA #IMPLIED
+	occasion (Thanksgiving|Christmas|wedding|birthday|
+		patriotic|spring|summer|fall|winter|other)
+		#IMPLIED
+	id ID #IMPLIED
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	chapterID CDATA #IMPLIED>
+
+<!ELEMENT section (hd|p|pb|lb|emph|contributor|alt|ednote|list|
+	table|illustration|ref|subsection|recipe|formula|gap|unclear)*>
+
+<!ATTLIST section 
+	class1 (fruitvegbeans|meatfishgame|eggscheesedairy|
+		breadsweets|soups|accompaniments|beverages|
+		marketing|generalfood|menus|medhealth|household|
+		farmgarden|childrear|etiquette|restaurant|
+		servants|generalnonfood|foodandnonfood) 
+		#IMPLIED
+	class2 (fruitvegbeans|meatfishgame|eggscheesedairy|
+		breadsweets|soups|accompaniments|beverages|
+		marketing|generalfood|menus|medhealth|household|
+		farmgarden|childrear|etiquette|restaurant|
+		servants|generalnonfood|foodandnonfood) 
+		#IMPLIED
+	region (west|midwest|south|northeast|ethnic) #IMPLIED
+	subregion CDATA #IMPLIED
+	ethnicgroup CDATA #IMPLIED
+	occasion (Thanksgiving|Christmas|wedding|birthday|
+		patriotic|spring|summer|fall|winter|other)
+		#IMPLIED
+	id ID #IMPLIED
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	sectionID CDATA #IMPLIED>
+
+<!ELEMENT subsection (hd|p|pb|lb|emph|alt|ednote|list|
+	contributor|table|illustration|ref|recipe|formula|gap|
+	unclear)*>
+
+<!ATTLIST subsection 
+	class1 (fruitvegbeans|meatfishgame|eggscheesedairy|
+		breadsweets|soups|accompaniments|beverages|
+		marketing|generalfood|menus|medhealth|household|
+		farmgarden|childrear|etiquette|restaurant|
+		servants|generalnonfood|foodandnonfood) 
+		#IMPLIED
+	class2 (fruitvegbeans|meatfishgame|eggscheesedairy|
+		breadsweets|soups|accompaniments|beverages|
+		marketing|generalfood|menus|medhealth|household|
+		farmgarden|childrear|etiquette|restaurant|
+		servants|generalnonfood|foodandnonfood) 
+		#IMPLIED
+	region (west|midwest|south|northeast|ethnic) #IMPLIED
+	subregion CDATA #IMPLIED
+	ethnicgroup CDATA #IMPLIED
+	occasion (Thanksgiving|Christmas|wedding|birthday|
+		patriotic|spring|summer|fall|winter|other)
+		#IMPLIED
+	id ID #IMPLIED
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	subsectionID CDATA #IMPLIED>
+
+<!ELEMENT recipe (p|pb|illustration|ednote)+>
+
+<!ATTLIST recipe 
+	class1 (fruitvegbeans|meatfishgame|eggscheesedairy|
+		breadsweets|soups|accompaniments|beverages|
+		medhealth) #REQUIRED
+	class2 (fruitvegbeans|meatfishgame|eggscheesedairy|
+		breadsweets|soups|accompaniments|beverages|
+		medhealth) #IMPLIED
+	region (west|midwest|south|northeast|ethnic) #IMPLIED
+	subregion CDATA #IMPLIED
+	ethnicgroup CDATA #IMPLIED
+	occasion (Thanksgiving|Christmas|wedding|birthday|
+		patriotic|spring|summer|fall|winter|other)
+		#IMPLIED
+	alcoholic (yes|no) #IMPLIED
+	id ID #IMPLIED
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED
+	recID CDATA #IMPLIED>
+
+<!ELEMENT formula (p|pb|illustration|ednote)+>
+
+<!ATTLIST formula 
+	class (medhealth|household|farmgarden|childrear|
+		etiquette|restaurant|servants|generalnonfood) 
+		#REQUIRED
+	region (west|midwest|south|northeast|ethnic) #IMPLIED
+	subregion CDATA #IMPLIED
+	ethnicgroup CDATA #IMPLIED
+	occasion (Thanksgiving|Christmas|wedding|birthday|
+		patriotic|spring|summer|fall|winter|other)
+		#IMPLIED
+	id ID #IMPLIED
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED
+	formID CDATA #IMPLIED>
+
+
+
+<!--**************************************************-->
+<!--SPECIFIC ELEMENTS FOR COOKBOOK MARKUP             -->
+<!--**************************************************-->
+
+
+<!ELEMENT purpose (#PCDATA|pb|lb|term|emph|alt|ednote|ref|ingredient|gap|
+	unclear)*>
+
+<!ATTLIST purpose
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED>
+
+<!ELEMENT process (#PCDATA|pb|lb|emph|alt|ednote|ref|gap|unclear)*>
+
+<!ATTLIST process
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED>
+
+<!ELEMENT ingredient (#PCDATA|pb|lb|emph|alt|ednote|ref|gap|term|unclear)*>
+
+<!ATTLIST ingredient
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED>
+
+<!ELEMENT implement (#PCDATA|pb|lb|emph|alt|ednote|ref|gap|term|unclear)*>
+
+<!ATTLIST implement
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED>
+
+<!ELEMENT measurement (#PCDATA|pb|lb|emph|alt|ednote|ref|gap|unclear
+	|term)*>
+
+<!ATTLIST measurement
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED>
+
+<!ELEMENT contributor (#PCDATA|pb|lb|emph|alt|ednote|ref|gap|unclear
+	)*>
+
+<!ATTLIST contributor
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED>
+
+<!ELEMENT attribution (#PCDATA|pb|lb|emph|alt|ednote|ref|gap|unclear
+	)*>
+
+<!ATTLIST attribution
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED>
+
+<!ELEMENT variation (#PCDATA|hd|pb|lb|emph|alt|ednote|list|table|
+	illustration|ref|purpose|process|ingredient|implement|
+	measurement|variation|contributor|attribution|gap|
+	unclear)*>
+
+<!ATTLIST variation
+	id ID #IMPLIED
+	xref (authors|essays|objects|glossary) #IMPLIED
+	item CDATA #IMPLIED
+	align (center|right|indent1|indent2) #IMPLIED
+	rend (bold|italic|ornate) #IMPLIED
+	size (larger|smaller) #IMPLIED
+	placement (heading|inline) #IMPLIED>
+
+
+<!--*******************-->
+<!--ENTITY DECLARATIONS-->
+<!--*******************-->
+
+<!ENTITY % ISOlat1 PUBLIC "ISO 8879-1986//ENTITIES 
+Added Latin 1//EN" > %ISOlat1;
+
+<!ENTITY % ISOlat2 PUBLIC "ISO 8879-1986//ENTITIES 
+Added Latin 2//EN" > %ISOlat2;
+
+<!ENTITY % ISOnum PUBLIC "ISO 8879-1986//ENTITIES 
+Numeric and Special Graphic//EN" > %ISOnum;
+
+<!ENTITY % ISOpub PUBLIC "ISO 8879-1986//ENTITIES 
+Publishing//EN" > %ISOpub;
+
+
+<!--**************************************************-->
+<!--METADATA ELEMENTS             -->
+<!--**************************************************-->
+
+<!ELEMENT meta (dcTitle*, dcCreator*, dcSubject*, 
+dcDescription*, dcPublisher*, dcContributor*, dcDate*, 
+dcType*, dcFormat*, dcIdentifier*, dcSource*, dcLanguage*,
+dcRelation*, dcCoverage*, dcRights*)>
+
+<!ELEMENT dcTitle (#PCDATA)*>
+
+<!ELEMENT dcCreator (#PCDATA)*>
+
+<!ELEMENT dcSubject (#PCDATA)*>
+
+<!ELEMENT dcDescription (#PCDATA)*>
+
+<!ELEMENT dcPublisher (#PCDATA)*>
+
+<!ELEMENT dcContributor (#PCDATA)*>
+
+<!ELEMENT dcDate (#PCDATA)*>
+
+<!ELEMENT dcType (#PCDATA)*>
+
+<!ELEMENT dcFormat (#PCDATA)*>
+
+<!ELEMENT dcIdentifier (#PCDATA)*>
+
+<!ELEMENT dcSource (#PCDATA)*>
+
+<!ELEMENT dcLanguage (#PCDATA)*>
+
+<!ELEMENT dcRelation (#PCDATA)*>
+
+<!ELEMENT dcCoverage (#PCDATA)*>
+
+<!ELEMENT dcRights (#PCDATA)*>
+
+
+<!--************************************************************-->
+<!--	Document History
+		26 Feb 2002 - original version
+		28 Feb 2002 - added table, row, cell elements
+		03 Mar 2002 - added ednote element               
+		12 Mar 2002 - added #PCDATA to "item" content model
+		14 Mar 2002 - added "marketing" to list of classes
+						for chapter, section, passage          
+		14 Mar 2002 - created 2nd (optional) "class" attribute
+						for cookbook, chapter, section, and recipe  
+		14 Mar 2002 - created 2nd (optional) synonym for alt      
+		19 Mar 2002 - fixed error in doctitle attribute list;
+		              added ingredient to "purpose" content model 
+		09 May 2002 - changed value "fruitveg" to "fruitvegbeans" 
+		09 May 2002 - added <subsection> within <section>
+		09 May 2002 - made all attributes in <chapter>, <section>,
+						and <subsection> #IMPLIED
+		09 May 2002 - rewrote <recipe> and <formula> content 
+						model to include only <p>; all other elements
+						needed to mark up recipes are within <p>
+		09 May 2002 - removed <passage> element; use <chapter> etc
+						to classify text
+		09 May 2002 - removed type attribute from <chapter> etc.
+		13 May 2002 - changed "seasoningsmisc" to "accompaniments"
+		13 May 2002 - added Dublin Core metadata elements
+		21 May 2002 - fixed recipe & formula content model to 
+						include page break
+		21 May 2002 - expanded content model for variation
+		21 May 2002 - added "specialpurpose" attribute to recipe	
+		22 May 2002 - fixed typos in meta content model
+		7 June 2002 - deleted "specialpurpose" attribute from recipe
+						and added "medhealth" category to enumerated
+						values for class attribute to allow marking of
+						recipes that are remedies for various conditions
+		19 June 2002 - added <gap> and <unclear> 	
+		15 Aug 2002 - changed <head> to <hd> to avoid confusion in
+						Perl script with the word "head" in texts
+		15 Aug 2002 - removed colons from dc: element names; having
+						trouble with IE/namespace confusion.
+		27 Sept 2002 - added bookID attribute to <cookbook>, recID
+						to <recipe>, formID to <formula>, and so on for
+						the following elements: cookbook, div, subdiv,
+						chapter, section, subsection, recipe, formula, 
+						illustration, list, table, p and hd. This is to 
+						uniquely identify segments of the text for 
+						indexing.
+		20 Dec 2002 - added <pb> to <table> content model; added
+						<illustration> and <ednote> to <recipe>
+		28 Feb 2003 - added colspan and rowspan to the attlist for
+						table cells
+		2 Apr 2003  - added illustration and ednote to the content
+						model for <formula>
+		3 Apr 2003  - added contributor to the content model for
+						<chapter> <section> and <subsection>
+		23 May 2003 - added illustration to the content model for
+						<list> and <table> and to their child elements,
+						<item>, <row> and <cell>
+		30 May 2003 - increased number of columns allowed in a table
+						to 14
+		17 June 2003 - added <term> and <definition> to content model
+						for <paragraph>
+		12 April 2004 - added <term> to content model for <implement>
+						and <ingredient>
+		19 April 2004 - added <term> to content model for <measurement>
+		26 May 2004 - corrected content model for all elements containing PCDATA;
+						PCDATA should appear at beginning of content model instead
+						of at end
+		26 May 2004 - added <term> to content model for <purpose>						
+									  											    -->
+<!--************************************************************-->
+
+
+<!--************************************************************-->
+<!--************************************************************-->
+<!--                                                            -->
+<!--                        COOKBOOK.DTD                        -->
+<!--                  Written by Ruth Ann Jones                 -->
+<!--                 Digital & Multimedia Center                -->
+<!--             Michigan State University Libraries            -->
+<!--                        February 2002                       -->
+<!--                                                            -->
+<!--************************************************************-->
+<!--************************************************************-->
+
+
+
+
+
+
+

@@ -1,0 +1,11 @@
+{# minimal adapter template override for cookbook search results #}
+<h2>Cookbook search results (adapter override)</h2>
+{% for result in results %}
+  <article>
+    <h3>{{ result.title }}</h3>
+    {% if result.ingredients %}
+      <p><strong>Ingredients:</strong> {{ result.ingredients }}</p>
+    {% endif %}
+  </article>
+{% endfor %}
+
