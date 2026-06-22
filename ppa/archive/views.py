@@ -256,6 +256,28 @@ class DigitizedWorkListView(SolrConnectionFallbackMixin, AjaxTemplateMixin, Solr
 
         page_groups = facet_ranges = None
 
+        # Get adapter info based on selected collections
+        from ppa.adapters.loader import get_adapter
+
+        adapter = None
+        adapter_display_fields = None
+        selected_collections = self.form.cleaned_data.get("collections", [])
+
+        # If only one collection is selected, use its adapter
+        try:
+            selected_len = len(selected_collections)
+        except TypeError:
+            selected_len = 0
+        if selected_collections and selected_len == 1:
+            collection = selected_collections[0]
+            if not isinstance(collection, str) and collection.adapter_name:
+                adapter = get_adapter(collection.adapter_name)
+                if adapter:
+                    if collection.list_view_fields:
+                        adapter_display_fields = {"list_view": collection.list_view_fields}
+                    else:
+                        adapter_display_fields = adapter.display_fields
+
         # @NOTE: Here is the logic that may need to change->
 
         try:
@@ -318,6 +340,8 @@ class DigitizedWorkListView(SolrConnectionFallbackMixin, AjaxTemplateMixin, Solr
                 "source_notes": {
                     sn.get_source_display(): sn.note for sn in SourceNote.objects.all()
                 },
+                "adapter": adapter,
+                "adapter_display_fields": adapter_display_fields,
             }
         )
         return context
@@ -404,6 +428,37 @@ class DigitizedWorkDetailView(SolrConnectionFallbackMixin, AjaxTemplateMixin, So
         # if suppressed, don't do any further processing
         if digwork.is_suppressed:
             return context
+
+        # Get work-specific adapter based on collection parameter or work's collections
+        from ppa.adapters.loader import get_adapters_for_work, get_adapter
+
+        collection_id = self.request.GET.get("collection")
+        work_adapter = None
+        current_collection = None
+
+        if collection_id:
+            try:
+                from ppa.archive.models import Collection
+                collection = Collection.objects.get(id=collection_id)
+                if collection in digwork.collections.all() and collection.adapter_name:
+                    work_adapter = get_adapter(collection.adapter_name)
+                    current_collection = collection
+            except Collection.DoesNotExist:
+                pass
+
+        if not work_adapter:
+            adapters = get_adapters_for_work(digwork)
+            if adapters:
+                context["all_adapters"] = adapters
+                context["show_all_fields"] = True
+            else:
+                work_adapter = get_adapter()
+
+        if work_adapter:
+            context["adapter"] = work_adapter
+            context["adapter_display_fields"] = work_adapter.display_fields
+        if current_collection:
+            context["current_collection"] = current_collection
 
         context.update(
             {"page_title": digwork.title, "page_description": digwork.public_notes}

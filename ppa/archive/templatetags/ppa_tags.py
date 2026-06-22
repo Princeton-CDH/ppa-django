@@ -281,3 +281,105 @@ def coins_encode(coins_data):
     encoded_title_content = encoded_params.replace("&", "&amp;")
 
     return mark_safe(f'<span class="Z3988" title="{encoded_title_content}"></span>')
+
+
+def _get_item_value(obj, key, default=None):
+    """Get value from Solr object or dictionary."""
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    else:
+        value = getattr(obj, key, None)
+        if value is not None:
+            return value
+        raw_field_name = f"{key}_s"
+        return getattr(obj, raw_field_name, default)
+
+
+@register.inclusion_tag("archive/snippets/adapter_field.html")
+def render_adapter_field(item, field_config):
+    """
+    Render a single adapter field based on configuration.
+
+    Args:
+        item: Solr result object or database model instance
+        field_config: Dict with 'field', 'label', 'source', 'type', etc.
+    """
+    field_name = field_config.get("field")
+    label = field_config.get("label", field_name)
+    source_path = field_config.get("source", field_name)
+
+    value = None
+    if hasattr(item, "get_adapter_field"):
+        value = item.get_adapter_field(source_path)
+    elif isinstance(item, dict):
+        value = item.get(field_name)
+    elif hasattr(item, field_name):
+        value = getattr(item, field_name, None)
+
+    if value and isinstance(value, list):
+        separator = field_config.get("separator", ", ")
+        value = separator.join(str(v) for v in value)
+
+    return {
+        "field_name": field_name,
+        "label": label,
+        "value": value,
+        "has_value": value is not None and value != "",
+        "field_type": field_config.get("type"),
+        "controller": field_config.get("controller"),
+    }
+
+
+@register.inclusion_tag("archive/snippets/adapter_field_table.html")
+def render_adapter_field_table(item, field_config):
+    """Render a single adapter field as a table row."""
+    field_name = field_config.get("field")
+    label = field_config.get("label", field_name)
+    source_path = field_config.get("source", field_name)
+
+    value = None
+    if hasattr(item, "get_adapter_field"):
+        value = item.get_adapter_field(source_path)
+    elif isinstance(item, dict):
+        value = item.get(field_name)
+    elif hasattr(item, field_name):
+        value = getattr(item, field_name, None)
+
+    if value and isinstance(value, list):
+        separator = field_config.get("separator", ", ")
+        value = separator.join(str(v) for v in value)
+
+    field_type = field_config.get("type", "")
+    return {
+        "field_name": field_name,
+        "label": label,
+        "value": value,
+        "has_value": value is not None and value != "",
+        "field_type": field_type,
+    }
+
+
+@register.inclusion_tag("archive/snippets/passage_section.html")
+def render_adapter_passage(item, field_config):
+    """Render a passage field as a standalone section."""
+    field_name = field_config.get("field")
+    label = field_config.get("label", field_name)
+    source_path = field_config.get("source", field_name)
+
+    value = None
+    if hasattr(item, "get_adapter_field"):
+        value = item.get_adapter_field(source_path)
+    elif isinstance(item, dict):
+        value = item.get(field_name)
+    elif hasattr(item, field_name):
+        value = getattr(item, field_name, None)
+
+    if value and isinstance(value, list):
+        separator = field_config.get("separator", "\n")
+        value = separator.join(str(v) for v in value)
+
+    return {
+        "label": label,
+        "value": value,
+        "has_value": value is not None and value != "",
+    }

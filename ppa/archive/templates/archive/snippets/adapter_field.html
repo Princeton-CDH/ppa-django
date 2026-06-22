@@ -1,0 +1,6 @@
+{% if has_value %}
+<div class="{{ field_name }}"{% if controller %} data-controller="{{ controller }}" data-{{ controller }}-score-value="{{ value }}"{% endif %}>
+    <dt>{{ label }}</dt>
+    <dd>{{ value }}</dd>
+</div>
+{% endif %}
