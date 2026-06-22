@@ -1,8 +1,63 @@
 import logging
+import os
+from pathlib import Path
 
-from parasolr.django import AliasedSolrQuerySet, SolrQuerySet
+from django.conf import settings
+
+try:
+    from parasolr.django import AliasedSolrQuerySet, SolrQuerySet
+except Exception:
+    from ppa.solr_factory import AliasedSolrQuerySet, SolrQuerySet
 
 logger = logging.getLogger(__name__)
+
+# Maps ISO 639-1 codes to Solr field suffix
+_LANG_FIELD_SUFFIX = {
+    "ar": "ar", "bg": "bg", "ca": "ca", "cz": "cz",
+    "da": "da", "de": "de", "el": "el", "en": "en", "es": "es",
+    "et": "et", "eu": "eu", "fa": "fa", "fi": "fi", "fr": "fr",
+    "ga": "ga", "gl": "gl", "hi": "hi", "hu": "hu", "hy": "hy",
+    "id": "id", "it": "it", "ja": "ja", "ko": "ko", "lv": "lv",
+    "nl": "nl", "no": "no", "pt": "pt", "ro": "ro", "ru": "ru",
+    "sv": "sv", "th": "th", "tr": "tr",
+    "zh": "cjk",
+}
+
+_LOW_BOOST_LANGS = {"ja", "ko", "ar", "zh"}
+
+
+def _build_language_qf():
+    """Build a keyword_qf string covering all adapter supported_languages.
+
+    Returns None if no adapters declare supported_languages.
+    """
+    from ppa.adapters.loader import get_adapter
+
+    supported = set()
+    adapters_dir = getattr(settings, "ADAPTERS_DIR", None)
+    if adapters_dir and os.path.exists(adapters_dir):
+        for item in Path(adapters_dir).iterdir():
+            if item.is_dir() and (item / "adapter.yaml").exists():
+                adapter = get_adapter(item.name)
+                if adapter and adapter.supported_languages:
+                    supported.update(adapter.supported_languages)
+
+    if not supported:
+        return None
+
+    lang_fields = []
+    for lang in sorted(supported):
+        suffix = _LANG_FIELD_SUFFIX.get(lang, lang)
+        boost = "^10" if lang in _LOW_BOOST_LANGS else "^20"
+        lang_fields.append(f"title_txt_{suffix}{boost}")
+        lang_fields.append(f"notes_txt_{suffix}{boost}")
+        lang_fields.append(f"content_txt_{suffix}")
+
+    return (
+        "title^20 subtitle^15 author^80 notes^20 "
+        + " ".join(lang_fields)
+        + " pub_date enumcron pub_place publisher source_id^10 content"
+    )
 
 
 class ArchiveSearchQuerySet(AliasedSolrQuerySet):
@@ -57,6 +112,34 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
     within_cluster_id = None
 
     def __init__(self, solr=None):
+        # Create instance copy of return_fields to avoid modifying class variable
+        self.return_fields = self.return_fields.copy()
+
+        # Add fields from ALL configured adapters to return_fields
+        try:
+            from ppa.adapters.loader import get_adapter
+
+            adapters_dir = getattr(settings, "ADAPTERS_DIR", None)
+            adapter_names = set()
+
+            if adapters_dir and os.path.exists(adapters_dir):
+                for item in Path(adapters_dir).iterdir():
+                    if item.is_dir() and (item / "adapter.yaml").exists():
+                        adapter_names.add(item.name)
+
+            global_adapter_name = getattr(settings, "ARCHIVE_ADAPTER", None)
+            if global_adapter_name:
+                adapter_names.add(global_adapter_name)
+
+            for adapter_name in adapter_names:
+                adapter = get_adapter(adapter_name)
+                if adapter and adapter.field_map:
+                    for field_name in adapter.field_map.keys():
+                        if field_name not in self.return_fields:
+                            self.return_fields.append(field_name)
+        except Exception:
+            pass
+
         # field aliases: keys return the fields that will be returned
         # from Solr for search page; values provide an aliased name if
         # it should be different than solr index field.
@@ -90,8 +173,6 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
 
     def keyword_search(self, query):
         """add keyword search"""
-        # *store* that there is a keyword present but don't do anything
-        # with it yet
         self.keyword_query = query
         # Apply language-aware qf if any adapter declares supported_languages
         if hasattr(self, "raw_params"):
