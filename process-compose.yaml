@@ -1,0 +1,17 @@
+version: "0.5"
+
+processes:
+  solr:
+    command: "SOLR_MODULES=analysis-extras /opt/homebrew/bin/solr start -f -p 8983"
+    shutdown:
+      command: "/opt/homebrew/bin/solr stop -p 8983"
+    availability:
+      restart: "on_failure"
+    readiness_probe:
+      http_get:
+        host: "localhost"
+        port: 8983
+        path: "/solr/ppa/admin/ping"
+      initial_delay_seconds: 5
+      period_seconds: 5
+      failure_threshold: 10

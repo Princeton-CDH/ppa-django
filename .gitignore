@@ -1,5 +1,6 @@
 # local / project specific ignores
 data/
+CHANGES_SUMMARY.md
 
 # Webpack files
 webpack-stats.json

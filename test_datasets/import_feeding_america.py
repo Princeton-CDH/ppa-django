@@ -21,12 +21,13 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ppa.settings")
 django.setup()
 
 # Import after django.setup()
-from django.db.models.signals import post_save, pre_delete  # noqa: E402
+from django.db.models.signals import post_save, pre_delete, m2m_changed  # noqa: E402
 from ppa.archive.models import DigitizedWork, Collection  # noqa: E402
 
 # Disconnect Solr indexing signals to speed up import
 post_save.receivers = []
 pre_delete.receivers = []
+m2m_changed.receivers = []
 
 print("🔌 Disconnected Solr indexing signals")
 
