@@ -68,8 +68,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.redirects",
     "django.contrib.sitemaps",
-    "django_cas_ng",
-    "pucas",
     "semanticuiforms",
     "webpack_loader",
     # 'wagtail.contrib.forms',
@@ -114,7 +112,6 @@ MIDDLEWARE = ["waffle.middleware.WaffleMiddleware"] + [
 
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
-    "django_cas_ng.backends.CASBackend",
 )
 
 ROOT_URLCONF = "ppa.urls"

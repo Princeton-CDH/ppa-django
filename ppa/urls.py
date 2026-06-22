@@ -32,8 +32,6 @@ urlpatterns = [
         RedirectView.as_view(url="/static/favicon.ico", permanent=True),
     ),
     path("admin/", admin.site.urls),
-    # pucas urls for CAS login
-    path("accounts/", include("pucas.cas_urls")),
     path("archive/", include("ppa.archive.urls", namespace="archive")),
     path("cms/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),

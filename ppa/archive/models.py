@@ -77,11 +77,26 @@ class Collection(TrackChangesModel):
     exclude = models.BooleanField(
         default=False, help_text="Exclude by default on public search."
     )
+    #: name of the adapter to use for works in this collection
+    adapter_name = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+        help_text="Name of the adapter to use for works in this collection (optional)",
+    )
+    #: custom list view fields configuration (overrides adapter defaults)
+    list_view_fields = models.JSONField(
+        blank=True,
+        null=True,
+        help_text="Custom fields to display in list view (JSON array). Leave empty to use adapter defaults.",
+    )
 
     # configure for editing in wagtail admin
     panels = [
         FieldPanel("name"),
         FieldPanel("description"),
+        FieldPanel("adapter_name"),
+        FieldPanel("list_view_fields"),
     ]
 
     class Meta:
@@ -89,6 +104,46 @@ class Collection(TrackChangesModel):
 
     def __str__(self):
         return self.name
+
+    def clean(self):
+        """Validate adapter_name and list_view_fields configuration."""
+        super().clean()
+
+        if self.adapter_name:
+            from ppa.adapters.loader import get_adapter
+            adapter = get_adapter(self.adapter_name)
+            if adapter is None:
+                from django.core.exceptions import ValidationError
+                raise ValidationError(
+                    {"adapter_name": f'Adapter "{self.adapter_name}" not found or invalid'}
+                )
+
+        if self.list_view_fields:
+            from django.core.exceptions import ValidationError
+
+            if not isinstance(self.list_view_fields, list):
+                raise ValidationError({"list_view_fields": "Must be a JSON array (list)"})
+
+            for idx, field_config in enumerate(self.list_view_fields):
+                if not isinstance(field_config, dict):
+                    raise ValidationError(
+                        {"list_view_fields": f'Item {idx + 1} must be an object with "field" and "label" properties'}
+                    )
+                if "field" not in field_config:
+                    raise ValidationError(
+                        {"list_view_fields": f'Item {idx + 1} is missing required property "field"'}
+                    )
+                if "label" not in field_config:
+                    raise ValidationError(
+                        {"list_view_fields": f'Item {idx + 1} is missing required property "label"'}
+                    )
+                field_name = field_config["field"]
+                if self.adapter_name and not field_name.startswith(f"{self.adapter_name}_"):
+                    common_fields = ["title", "author", "pub_date", "pub_place", "publisher"]
+                    if field_name not in common_fields:
+                        raise ValidationError(
+                            {"list_view_fields": f'Field "{field_name}" should start with adapter prefix "{self.adapter_name}_"'}
+                        )
 
     @property
     def name_changed(self):
@@ -499,6 +554,8 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         + "identified by start of digital page range",
         blank=True,
     )
+    #: generic JSON metadata for adapter-specific fields
+    metadata = models.JSONField(default=dict, blank=True)
 
     # use custom queryset
     objects = DigitizedWorkQuerySet.as_manager()
@@ -989,6 +1046,13 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         if self.status == self.SUPPRESSED:
             return {"id": self.source_id}
 
+        # Allow adapter-provided mapping to extend or override the default index data
+        try:
+            from ppa.solr_factory import map_model_to_solr
+            adapter_doc = map_model_to_solr(self)
+        except Exception:
+            adapter_doc = {}
+
         index_id = self.index_id()
         return {
             "id": index_id,
@@ -1019,7 +1083,7 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
             "order": "0",
             "work_type_s": self.work_type,
             "book_journal_s": self.book_journal,
-        }
+        } | adapter_doc
 
     def remove_from_index(self):
         """Remove the current work and associated pages from Solr index"""
@@ -1097,6 +1161,27 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
         if self.source == DigitizedWork.OTHER:
             return "View external record"
         return f"View on {self.get_source_display()}"
+
+    def get_adapter_field(self, path, default=None):
+        """
+        Resolve a dotted path like 'metadata.ingredients' or 'title'.
+
+        Args:
+            path: Dotted path (e.g., 'metadata.cook_time' or 'title')
+            default: Default value if path not found
+        """
+        parts = path.split(".")
+
+        if parts[0] == "metadata":
+            cur = self.metadata
+            for p in parts[1:]:
+                if isinstance(cur, dict) and p in cur:
+                    cur = cur[p]
+                else:
+                    return default
+            return cur
+
+        return getattr(self, path, default)
 
     @staticmethod
     def add_from_hathi(htid, bib_api=None, update=False, log_msg_src=None, user=None):
