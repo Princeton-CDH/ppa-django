@@ -93,6 +93,11 @@ class ArchiveSearchQuerySet(AliasedSolrQuerySet):
         # *store* that there is a keyword present but don't do anything
         # with it yet
         self.keyword_query = query
+        # Apply language-aware qf if any adapter declares supported_languages
+        if hasattr(self, "raw_params"):
+            qf = _build_language_qf()
+            if qf:
+                self.raw_params.update(keyword_qf=qf)
 
     def _clone(self):
         # preserve local fields when cloning

@@ -15,7 +15,7 @@ from flags import Flags
 from intspan import ParseError as IntSpanParseError
 from intspan import intspan
 from pairtree import storage_exceptions
-from parasolr.django import SolrQuerySet
+from ppa.solr_factory import SolrQuerySet
 from parasolr.django.indexing import ModelIndexable
 from parasolr.indexing import Indexable
 from wagtail.admin.panels import FieldPanel

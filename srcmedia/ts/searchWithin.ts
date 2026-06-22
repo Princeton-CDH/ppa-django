@@ -24,7 +24,9 @@ document.addEventListener('DOMContentLoaded', () => {
     pageSearchForm.state.pipe(map((state) => state?.results)).subscribe(resultsOutput.update.bind(resultsOutput)) // pass updated results to the output
 
     // setup
-    $('.question-popup').popup() // semantic ui popups
-    $('#id_query').get().map(clearable) // clearable inputs
+    document.querySelectorAll('.question-popup').forEach(el => {
+        (el as any).popup?.()
+    }) // semantic ui popups
+    document.querySelectorAll('#id_query').forEach(el => clearable(el as HTMLInputElement)) // clearable inputs
     new ImageLazyLoader(Array.from($pagePreviews)) // lazy load images
 })

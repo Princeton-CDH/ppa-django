@@ -31,6 +31,16 @@ from ppa.common.views import AjaxTemplateMixin
 logger = logging.getLogger(__name__)
 
 
+class SolrConnectionFallbackMixin:
+    """Override last_modified() to handle ConnectionError gracefully when Solr is down."""
+
+    def last_modified(self):
+        try:
+            return super().last_modified()
+        except requests.exceptions.ConnectionError:
+            return None
+
+
 class GracefulPaginator(Paginator):
     """Paginator override to gracefully handle out-of-range errors.
     Adapted from https://forum.djangoproject.com/t/23037"""
@@ -45,7 +55,7 @@ class GracefulPaginator(Paginator):
         return super().page(number)
 
 
-class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
+class DigitizedWorkListView(SolrConnectionFallbackMixin, AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
     """Search and browse digitized works.  Based on Solr index
     of works and pages."""
 
@@ -259,10 +269,21 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
             page_groups, page_highlights = self.get_pages(solrq)
 
             facet_dict = solrq.get_facets()
-            self.form.set_choices_from_facets(facet_dict.facet_fields)
+            # Handle both dict and object formats for facets (real vs fake Solr)
+            facet_fields = (
+                facet_dict.get("facet_fields", {})
+                if isinstance(facet_dict, dict)
+                else facet_dict.facet_fields
+            )
+            self.form.set_choices_from_facets(facet_fields)
             # needs to be inside try/catch or it will re-trigger any error
             # @NOTE/@TODO: attrdict's as_dict wasn't working here? casting now
-            facet_ranges = dict(facet_dict.facet_ranges)
+            facet_ranges_raw = (
+                facet_dict.get("facet_ranges", {})
+                if isinstance(facet_dict, dict)
+                else facet_dict.facet_ranges
+            )
+            facet_ranges = dict(facet_ranges_raw)
             # facet ranges are used for display; when sending to solr we
             # increase the end bound by one so that year is included;
             # subtract it back so display matches user entered dates
@@ -302,7 +323,7 @@ class DigitizedWorkListView(AjaxTemplateMixin, SolrLastModifiedMixin, ListView):
         return context
 
 
-class DigitizedWorkDetailView(AjaxTemplateMixin, SolrLastModifiedMixin, DetailView):
+class DigitizedWorkDetailView(SolrConnectionFallbackMixin, AjaxTemplateMixin, SolrLastModifiedMixin, DetailView):
     """Display details for a single digitized work. If a work has been
     surpressed, returns a 410 Gone response."""
 
