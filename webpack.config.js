@@ -26,7 +26,7 @@ module.exports = env => ({
     },
     output: {
         path: path.resolve(__dirname, 'bundles'), // where to output bundles
-        publicPath: devMode ? 'http://localhost:3000/' : '/static/', // tell Django where to serve bundles from
+        publicPath: '/static/', // Django serves bundles via STATICFILES_DIRS
         filename: devMode ? 'js/[name].js' : 'js/[name]-[contenthash].min.js', // append hashes in prod
         clean: true,
     },
@@ -60,11 +60,16 @@ module.exports = env => ({
                         loader: 'sass-loader', options: {
                             // Material Design prefers Dart Sass
                             implementation: require("sass"),
+                            api: 'modern',
 
                             // See https://github.com/webpack-contrib/sass-loader/issues/804
                             webpackImporter: false,
                             sassOptions: {
-                                includePaths: ["./node_modules"],
+                                // modern API uses loadPaths instead of includePaths
+                                loadPaths: ["./node_modules"],
+                                // @import is deprecated in Dart Sass 3.0; silenced until
+                                // the codebase is migrated to @use / @forward
+                                silenceDeprecations: ['import'],
                             },
                         }
                     },
