@@ -1,0 +1,29 @@
+{{/* Content adapter: reads ia_prosody_works.json and generates one page per work.
+     Hugo content adapters: https://gohugo.io/content-management/content-adapters/ */}}
+
+{{ $data := dict }}
+{{ with resources.Get "data/ia_prosody_works.json" }}
+  {{ $data = . | transform.Unmarshal }}
+{{ end }}
+
+{{ range $data }}
+  {{ $params := dict
+    "title"       .title
+    "author"      .author
+    "pub_date"    .pub_date
+    "pub_place"   .pub_place
+    "publisher"   .publisher
+    "subject"     .subject
+    "description" .description
+    "ia_url"      .ia_url
+    "ia_id"       .ia_id
+    "has_fulltext" .has_fulltext
+    "adapter"     .adapter
+  }}
+  {{ $.AddPage (dict
+    "kind"    "page"
+    "path"    .slug
+    "title"   .title
+    "params"  $params
+  ) }}
+{{ end }}

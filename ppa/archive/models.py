@@ -22,7 +22,7 @@ from wagtail.admin.panels import FieldPanel
 from wagtail.fields import RichTextField
 from wagtail.snippets.models import register_snippet
 
-from ppa.archive import eebo_tcp
+from ppa.archive import eebo_tcp, internet_archive
 from ppa.archive.gale import GaleAPI
 from ppa.archive.hathi import HathiBibliographicAPI, HathiObject
 
@@ -384,11 +384,13 @@ class DigitizedWork(ModelIndexable, TrackChangesModel):
     HATHI = "HT"
     GALE = "G"
     EEBO = "E"
+    INTERNET_ARCHIVE = "IA"
     OTHER = "O"
     SOURCE_CHOICES = (
         (HATHI, "HathiTrust"),
         (GALE, "Gale"),
         (EEBO, "EEBO-TCP"),
+        (INTERNET_ARCHIVE, "Internet Archive"),
         (OTHER, "Other"),
     )
     #: source of the record, HathiTrust or elsewhere
@@ -1325,6 +1327,10 @@ class Page(Indexable):
             pages = GaleAPI().get_item_pages(digwork.source_id, gale_record=gale_record)
         elif digwork.source == digwork.EEBO:
             pages = eebo_tcp.page_data(digwork.source_id)
+        elif digwork.source == digwork.INTERNET_ARCHIVE:
+            pages = internet_archive.InternetArchiveAPI().get_item_pages(
+                digwork.source_id
+            )
         else:
             # no other sources currently support full-text indexing
             return

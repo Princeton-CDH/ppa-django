@@ -31,10 +31,37 @@ or admin interface::
     Switch.objects.update_or_create(name='enable_solr_indexing', defaults={'active': False})
     Switch.objects.update_or_create(name='enable_hathi', defaults={'active': False})
     Switch.objects.update_or_create(name='enable_corppa', defaults={'active': False})
+    Switch.objects.update_or_create(name='enable_internet_archive', defaults={'active': False})
     "
 
 Set ``enable_solr_indexing`` to ``True`` before indexing content or running
 the development server with live search.
+
+The ``enable_internet_archive`` switch gates the Internet Archive import
+command.  Set it to ``True`` when you are ready to import IA content.
+
+**Internet Archive import**
+
+To import items from the Internet Archive by identifier::
+
+    python manage.py ia_import scienceofenglish00laniuoft orthometrytreati00brewrich
+
+To import the bundled prosody reference dataset (10 verified texts, 1801–1910)::
+
+    python manage.py ia_import -c examples/adapters/ia_prosody/ia_prosody_import.csv
+
+To import from any CSV file (must contain an ``id`` column; optional ``notes``
+column)::
+
+    python manage.py ia_import -c path/to/ia_items.csv
+
+No API key is required for public-domain metadata.  For downloading restricted
+items, set ``IA_ACCESS_KEY`` and ``IA_SECRET_KEY`` in ``local_settings.py``.
+
+After import, run the Solr schema update and reindex if new fields were added::
+
+    python manage.py solr_schema
+    python manage.py index -i work
 
 **Adapter system**
 

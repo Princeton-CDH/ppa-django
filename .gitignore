@@ -4,6 +4,9 @@ CHANGES_SUMMARY.md
 GENERALIZATION_GOALS.rst
 IMPLEMENTATION_GUIDE.md
 
+# Hugo prototype data files are tracked (small JSON samples, not bulk data)
+!hugo-static-prototype/assets/data/
+
 # Hugo static prototype build output
 hugo-static-prototype/public/
 hugo-static-prototype/resources/

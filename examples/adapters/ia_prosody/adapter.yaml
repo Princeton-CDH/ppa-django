@@ -1,0 +1,44 @@
+name: ia_prosody
+display_name: "Internet Archive — English Prosody"
+description: >
+  Historical English-language texts on prosody, versification, and the study
+  of poetic meter, sourced from the Internet Archive (archive.org).
+  Covers works from the early 1800s through the early 1900s, all in the
+  public domain and carrying machine-readable OCR text.
+
+supported_languages:
+  - en
+
+field_map:
+  title: title
+  author: author
+  pub_date: pub_date
+  pub_place: pub_place
+  publisher: publisher
+  ia_prosody_ia_id: metadata.ia_id
+  ia_prosody_subject: metadata.subject
+  ia_prosody_description: metadata.description
+  ia_prosody_ia_url: metadata.ia_url
+
+display_fields:
+  list_view:
+    - field: ia_prosody_subject
+      label: "Subject"
+    - field: pub_place
+      label: "Place of Publication"
+  detail_view:
+    - field: ia_prosody_subject
+      label: "Subject"
+      source: "metadata.subject"
+    - field: ia_prosody_description
+      label: "Description"
+      source: "metadata.description"
+    - field: ia_prosody_ia_url
+      label: "Internet Archive"
+      source: "metadata.ia_url"
+
+solr_schema:
+  fields:
+    - name: ia_prosody_subject_exact
+      type: string
+      multiValued: true

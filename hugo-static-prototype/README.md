@@ -32,15 +32,21 @@ See [STATIC_SITE_LIMITATIONS.md](STATIC_SITE_LIMITATIONS.md) for the full analys
 
 ## Data
 
-The prototype uses two real datasets from the adapter system:
+The prototype uses three real datasets from the adapter system:
 
 - **cookbooks** — 76 historical American cookbooks from Michigan State
   University Library Digital & Multimedia Center (`assets/data/cookbook_works.json`)
 - **scifi** — 14,974 science fiction works from Goodreads
   (`assets/data/scifi_works.json`)
+- **ia_prosody** — 10 verified historical English prosody texts from the
+  Internet Archive (`assets/data/ia_prosody_works.json`), spanning 1801–1910.
+  This is the reference dataset for the IA integration: all items carry
+  machine-readable DjVu XML OCR and match the LCSH subject heading
+  `"English language -- Versification"`.
 
 These are the same datasets used by the Django adapter examples in
-`examples/adapters/cookbook/` and `examples/adapters/scifi/`.
+`examples/adapters/cookbook/`, `examples/adapters/scifi/`, and
+`examples/adapters/ia_prosody/`.
 
 ## Quick start
 
@@ -69,6 +75,9 @@ content/adapters/
 ├── cookbook/
 │   ├── _content.gotmpl    ← reads cookbook_works.json, creates 76 pages
 │   └── _index.md          ← section front matter
+├── ia_prosody/
+│   ├── _content.gotmpl    ← reads ia_prosody_works.json, creates 10 pages
+│   └── _index.md
 └── scifi/
     ├── _content.gotmpl    ← reads scifi_works.json, creates 14,974 pages
     └── _index.md
@@ -99,6 +108,7 @@ hugo-static-prototype/
 │   ├── css/main.css                   # site styles
 │   ├── data/
 │   │   ├── cookbook_works.json        # 76 cookbook records
+│   │   ├── ia_prosody_works.json      # 10 verified IA prosody texts (1801–1910)
 │   │   └── scifi_works.json           # 14,974 scifi records
 │   └── js/search.js                   # client-side title/author filter
 ├── STATIC_SITE_LIMITATIONS.md         # limitations analysis

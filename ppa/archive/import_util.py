@@ -30,6 +30,13 @@ from ppa.archive.gale import (
     MARCRecordNotFound,
     get_marc_record,
 )
+from ppa.archive.internet_archive import (
+    IAError,
+    IAItemNotFound,
+    IANoFullText,
+    InternetArchiveAPI,
+    _is_valid_ia_id,
+)
 from ppa.archive.models import DigitizedWork, Page
 
 logger = logging.getLogger(__name__)
@@ -529,4 +536,114 @@ class GaleImporter(DigitizedWorkImporter):
 
     def index(self):
         # gale records are indexed at import time, to avoid making multiple API calls
+        pass
+
+
+class IAImporter(DigitizedWorkImporter):
+    """Logic for creating new :class:`~ppa.archive.models.DigitizedWork`
+    records from the Internet Archive.  For use in views and manage commands."""
+
+    #: augment base status messages with IA-specific codes and messages
+    status_message = DigitizedWorkImporter.status_message.copy()
+    status_message.update(
+        {
+            IAItemNotFound: "Item not found in Internet Archive",
+            IANoFullText: "Item found but has no machine-readable full text",
+            IAError: "Error accessing Internet Archive API",
+        }
+    )
+
+    def filter_invalid_ids(self):
+        """Remove identifiers that fail the IA format check."""
+        invalid_ids = [ia_id for ia_id in self.source_ids if not _is_valid_ia_id(ia_id)]
+        for ia_id in invalid_ids:
+            self.results[ia_id] = self.INVALID_ID
+        self.source_ids = set(self.source_ids) - set(invalid_ids)
+
+    def add_item_prep(self, user=None):
+        """Prepare for adding new items from the Internet Archive."""
+        IndexableSignalHandler.disconnect()
+
+        if user is None:
+            self.script_user = User.objects.get(username=settings.SCRIPT_USERNAME)
+
+        self.digwork_contenttype = ContentType.objects.get_for_model(DigitizedWork)
+        self.ia_api = InternetArchiveAPI()
+
+    def import_digitizedwork(
+        self, ia_id, log_msg_src="", user=None, collections=None, **kwargs
+    ):
+        """Import a single work from the Internet Archive.
+
+        Fetches metadata via the IA Metadata API, creates a
+        :class:`~ppa.archive.models.DigitizedWork` record, and indexes work +
+        pages immediately.
+        """
+        from ppa.archive.internet_archive import DETAILS_URL  # avoid circular at module level
+
+        try:
+            ia_metadata = self.ia_api.get_metadata(ia_id)
+        except IAItemNotFound as err:
+            self.results[ia_id] = err
+            return
+        except IAError as err:
+            self.results[ia_id] = err
+            return
+
+        fields = InternetArchiveAPI.parse_metadata(ia_metadata)
+
+        digwork = DigitizedWork(
+            source_id=ia_id,
+            source=DigitizedWork.INTERNET_ARCHIVE,
+            source_url="%s/%s" % (DETAILS_URL, ia_id),
+            title=fields["title"] or ia_id,
+            author=fields["author"],
+            pub_date=fields["pub_date"],
+            publisher=fields["publisher"],
+            pub_place=fields["pub_place"],
+            notes=kwargs.get("notes", "").strip(),
+        )
+
+        # page count: count files listed in metadata if available, otherwise 0
+        file_list = ia_metadata.get("files", [])
+        digwork.page_count = len(
+            [f for f in file_list if f.get("name", "").endswith(".jp2")]
+        ) or None
+
+        digwork.save()
+        self.imported_works.append(digwork)
+
+        user = user or self.script_user
+
+        change_message = "Created from Internet Archive"
+        if log_msg_src:
+            change_message = "Created from Internet Archive %s" % log_msg_src
+        LogEntry.objects.log_action(
+            user_id=user.pk,
+            content_type_id=self.digwork_contenttype.pk,
+            object_id=digwork.pk,
+            object_repr=str(digwork),
+            change_message=change_message,
+            action_flag=ADDITION,
+        )
+
+        self.results[ia_id] = self.SUCCESS
+
+        if collections:
+            digwork.collections.set(collections)
+
+        # Index work record
+        DigitizedWork.index_items([digwork])
+
+        # Index pages; ia_metadata passed to avoid a second API call
+        try:
+            pages = self.ia_api.get_item_pages(ia_id, ia_metadata=ia_metadata)
+            DigitizedWork.index_items(Page.page_index_data(digwork))
+        except IANoFullText as err:
+            logger.warning("No full text for %s: %s", ia_id, err)
+
+        return digwork
+
+    def index(self):
+        # IA records are indexed at import time
         pass
