@@ -265,7 +265,7 @@ export default class SearchController extends Controller {
         fieldset.addEventListener('blur', e => {
             if (e.target.type === 'checkbox') e.target.parentElement?.classList.remove('focus')
         }, true)
-        fieldset.addEventListener('keypress', e => {
+        fieldset.addEventListener('keydown', e => {
             if (e.target.type === 'checkbox' && e.key === 'Enter') e.target.click()
         })
 

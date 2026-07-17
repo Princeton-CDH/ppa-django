@@ -16,20 +16,26 @@ const sessionStorageMock = (() => {
 })()
 Object.defineProperty(window, 'sessionStorage', { value: sessionStorageMock, writable: false })
 
-// Build a minimal DOM with all IDs and targets SearchController needs
+// Build a minimal DOM with all IDs and targets SearchController needs.
+// Collections start pre-checked/active to match real page behaviour (server
+// pre-selects all collections on initial load).
 function buildDOM() {
     document.body.innerHTML = `
         <div data-controller="search">
             <form data-search-target="form">
                 <input type="text" name="query" data-search-target="textInput" value="">
                 <div id="collections">
-                    <label class="ui button">
-                        <input type="checkbox" name="collections" value="col1">
+                    <label class="ui button active">
+                        <input type="checkbox" name="collections" value="col1" checked>
                         Collection 1
                     </label>
-                    <label class="ui button">
-                        <input type="checkbox" name="collections" value="col2" disabled>
+                    <label class="ui button active">
+                        <input type="checkbox" name="collections" value="col2" checked>
                         Collection 2
+                    </label>
+                    <label class="ui button">
+                        <input type="checkbox" name="collections" value="col3" disabled>
+                        Collection 3 (disabled)
                     </label>
                 </div>
                 <input type="number" id="id_pub_date_0" value="">
@@ -192,32 +198,53 @@ describe('SearchController — collection inputs', () => {
         document.body.innerHTML = ''
     })
 
-    test('checking a collection checkbox adds "active" to its parent label', () => {
+    test('collections start with active class matching pre-checked state', () => {
         makeSearchController()
-        const checkbox = document.querySelector('#collections input[value="col1"]')
-        const label = checkbox.parentElement
-        checkbox.checked = true
-        checkbox.dispatchEvent(new Event('change', { bubbles: true }))
-        expect(label.classList.contains('active')).toBe(true)
+        const checked = document.querySelector('#collections input[value="col1"]')
+        const uncheckedLabel = document.querySelector('#collections input[value="col3"]').parentElement
+        expect(checked.parentElement.classList.contains('active')).toBe(true)
+        expect(uncheckedLabel.classList.contains('active')).toBe(false)
     })
 
-    test('unchecking a collection checkbox removes "active" from its parent label', () => {
+    test('unchecking a pre-checked checkbox removes "active" from its parent label', () => {
         makeSearchController()
         const checkbox = document.querySelector('#collections input[value="col1"]')
         const label = checkbox.parentElement
-        // check first
-        checkbox.checked = true
-        checkbox.dispatchEvent(new Event('change', { bubbles: true }))
-        // then uncheck
+        // starts checked/active — simulate user unchecking
         checkbox.checked = false
         checkbox.dispatchEvent(new Event('change', { bubbles: true }))
         expect(label.classList.contains('active')).toBe(false)
+    })
+
+    test('re-checking a checkbox adds "active" back to its parent label', () => {
+        makeSearchController()
+        const checkbox = document.querySelector('#collections input[value="col1"]')
+        const label = checkbox.parentElement
+        // uncheck
+        checkbox.checked = false
+        checkbox.dispatchEvent(new Event('change', { bubbles: true }))
+        expect(label.classList.contains('active')).toBe(false)
+        // re-check
+        checkbox.checked = true
+        checkbox.dispatchEvent(new Event('change', { bubbles: true }))
+        expect(label.classList.contains('active')).toBe(true)
     })
 
     test('disabled checkboxes get "disabled" class on parent label on connect', () => {
         makeSearchController()
         const disabledCheckbox = document.querySelector('#collections input[disabled]')
         expect(disabledCheckbox.parentElement.classList.contains('disabled')).toBe(true)
+    })
+
+    test('Enter keydown on a checkbox calls click() to toggle it', () => {
+        makeSearchController()
+        const checkbox = document.querySelector('#collections input[value="col1"]')
+        const label = checkbox.parentElement
+        // spy on checkbox.click
+        let clicked = false
+        checkbox.addEventListener('click', () => { clicked = true })
+        checkbox.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+        expect(clicked).toBe(true)
     })
 })
 
