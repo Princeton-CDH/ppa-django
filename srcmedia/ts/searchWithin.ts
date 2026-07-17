@@ -1,6 +1,5 @@
 import { map } from 'rxjs/operators'
 
-import clearable from '../js/clearable'
 import ImageLazyLoader from '../js/modules/LazyLoad'
 import PageSearchForm from './components/PageSearchForm'
 import { RxTextInput } from './lib/input'
@@ -24,9 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     pageSearchForm.state.pipe(map((state) => state?.results)).subscribe(resultsOutput.update.bind(resultsOutput)) // pass updated results to the output
 
     // setup
-    document.querySelectorAll('.question-popup').forEach(el => {
-        (el as any).popup?.()
-    }) // semantic ui popups
-    document.querySelectorAll('#id_query').forEach(el => clearable(el as HTMLInputElement)) // clearable inputs
+    // tooltips are handled by TooltipController via data-controller="tooltip" attributes
+    // clearable inputs are handled by ClearableController
     new ImageLazyLoader(Array.from($pagePreviews)) // lazy load images
 })

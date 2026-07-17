@@ -170,6 +170,21 @@ _LANG_FIELD_SUFFIX = {
     "zh": "cjk",
 }
 
+# Maps human-readable language names (as found in metadata.language) to ISO 639-1 codes.
+# Used to skip langdetect when the dataset already provides language metadata.
+_LANG_NAME_TO_CODE = {
+    "afrikaans": "af", "arabic": "ar", "bulgarian": "bg", "catalan": "ca",
+    "chinese": "zh", "croatian": "hr", "czech": "cz", "danish": "da",
+    "dutch": "nl", "english": "en", "estonian": "et", "finnish": "fi",
+    "french": "fr", "galician": "gl", "german": "de", "greek": "el",
+    "hebrew": "he", "hindi": "hi", "hungarian": "hu", "indonesian": "id",
+    "italian": "it", "japanese": "ja", "korean": "ko", "latvian": "lv",
+    "lithuanian": "lt", "norwegian": "no", "persian": "fa", "polish": "pl",
+    "portuguese": "pt", "romanian": "ro", "russian": "ru", "slovak": "sk",
+    "slovenian": "sl", "spanish": "es", "swedish": "sv", "thai": "th",
+    "turkish": "tr", "ukrainian": "uk", "vietnamese": "vi",
+}
+
 
 def map_model_to_solr(instance, adapter=None):
     """
@@ -206,19 +221,33 @@ def map_model_to_solr(instance, adapter=None):
     if not supported:
         return doc
 
-    text_for_detection = " ".join(filter(None, [
-        _resolve_instance_value(instance, "title"),
-        _resolve_instance_value(instance, "notes"),
-    ]))
+    # Prefer language metadata already present in the record over running langdetect.
+    # metadata.language may be a human-readable name ("English") or an ISO 639-1 code ("en").
+    lang = None
+    raw_lang = _resolve_instance_value(instance, "metadata.language")
+    if raw_lang and str(raw_lang).lower() != "none":
+        raw_lower = str(raw_lang).strip().lower()
+        # Try direct ISO code first, then name lookup
+        if raw_lower in _LANG_FIELD_SUFFIX:
+            lang = raw_lower
+        else:
+            lang = _LANG_NAME_TO_CODE.get(raw_lower)
 
-    if not text_for_detection.strip():
-        return doc
+    # Fall back to langdetect when no language metadata is available
+    if lang is None:
+        text_for_detection = " ".join(filter(None, [
+            _resolve_instance_value(instance, "title"),
+            _resolve_instance_value(instance, "notes"),
+        ]))
 
-    try:
-        from langdetect import detect
-        lang = detect(text_for_detection)
-    except Exception:
-        return doc
+        if not text_for_detection.strip():
+            return doc
+
+        try:
+            from langdetect import detect
+            lang = detect(text_for_detection)
+        except Exception:
+            return doc
 
     if lang not in supported:
         lang = "en"

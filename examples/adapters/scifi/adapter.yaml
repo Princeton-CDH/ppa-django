@@ -4,6 +4,15 @@ supported_languages:
   - en
   - fr
   - de
+  - ja
+  - es
+  - nl
+  - it
+  - sv
+  - ru
+  - fi
+  - ar
+  - zh
 field_map:
   title: title
   author: author
