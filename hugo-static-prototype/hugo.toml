@@ -1,0 +1,18 @@
+baseURL = "https://example.com/"
+languageCode = "en-us"
+title = "PPA Static Prototype"
+
+# Disable date-based URL routing — we use slugs from the data
+disablePathToLower = false
+disableKinds = ["taxonomy", "term", "RSS", "sitemap", "robotsTXT", "404"]
+
+[params]
+  description = "A Hugo static-site prototype of the Princeton Prosody Archive, built to stress-test the limits of a static approach."
+  siteSubtitle = "Static Site Prototype"
+
+[build]
+  # Required to allow content adapters to write pages
+  writeStats = true
+
+[markup.goldmark.renderer]
+  unsafe = true

@@ -1,0 +1,98 @@
+{{/*
+  Sidebar filters partial.
+
+  ── LIMITATION: STATIC FACETED FILTERING ──────────────────────────────────
+  In the Django+Solr version, facets are computed server-side at query time:
+  Solr counts how many documents match each facet value *for the current query*.
+  So if you search "robot" AND filter by "Aliens", you get counts only for
+  the subset that matches both.
+
+  Hugo can pre-build per-facet-value index pages (one page per subgenre,
+  one per subject). But it cannot:
+    - Count only the documents matching the current query
+    - Combine multiple facet filters (subgenre=Aliens AND pub_date=2011)
+    - Recompute counts after a keyword search
+
+  What you see below is a static list of all known facet values —
+  pre-computed at build time. Counts are total counts, not query-scoped.
+────────────────────────────────────────────────────────────────────────── */}}
+
+<section class="filters-panel">
+  <h2>Browse by</h2>
+
+  {{/* Collect unique subgenre values from all pages in current section */}}
+  {{ $subgenres := slice }}
+  {{ range .Pages }}
+    {{ with .Params.subgenre }}
+      {{ if not (in $subgenres .) }}
+        {{ $subgenres = $subgenres | append . }}
+      {{ end }}
+    {{ end }}
+  {{ end }}
+
+  {{ if $subgenres }}
+  <div class="filter-group">
+    <h3>Subgenre</h3>
+    <ul>
+      {{ range sort $subgenres }}
+      <li>
+        <a href="{{ "/subgenres/" | relURL }}{{ . | urlize }}/">{{ . }}</a>
+      </li>
+      {{ end }}
+    </ul>
+    <p class="filter-limitation">
+      <em>Counts shown are pre-built totals, not query-scoped.
+      Combining with other filters requires a search backend.</em>
+    </p>
+  </div>
+  {{ end }}
+
+  {{/* Collect unique subjects */}}
+  {{ $subjects := slice }}
+  {{ range .Pages }}
+    {{ range .Params.subjects }}
+      {{ if not (in $subjects .) }}
+        {{ $subjects = $subjects | append . }}
+      {{ end }}
+    {{ end }}
+  {{ end }}
+
+  {{ if $subjects }}
+  <div class="filter-group">
+    <h3>Subject</h3>
+    <ul>
+      {{ range sort $subjects }}
+      <li>
+        <a href="{{ "/subjects/" | relURL }}{{ . | urlize }}/">{{ . }}</a>
+      </li>
+      {{ end }}
+    </ul>
+  </div>
+  {{ end }}
+
+  {{/* Date range — static links to pre-built year pages */}}
+  {{ $years := slice }}
+  {{ range .Pages }}
+    {{ with .Params.pub_date }}
+      {{ if not (in $years .) }}
+        {{ $years = $years | append . }}
+      {{ end }}
+    {{ end }}
+  {{ end }}
+
+  {{ if $years }}
+  <div class="filter-group">
+    <h3>Publication Year</h3>
+    <ul>
+      {{ range sort $years }}
+      <li><a href="{{ "/years/" | relURL }}{{ . }}/">{{ . }}</a></li>
+      {{ end }}
+    </ul>
+    <p class="filter-limitation">
+      <em>Date range slider (e.g. 2005–2015) requires JavaScript or a
+      server-side query engine.</em>
+    </p>
+  </div>
+  {{ end }}
+
+</section>

@@ -1,0 +1,26 @@
+{{/* Content adapter: reads cookbook_works.json and generates one page per work.
+     Hugo content adapters: https://gohugo.io/content-management/content-adapters/ */}}
+
+{{ $data := dict }}
+{{ with resources.Get "data/cookbook_works.json" }}
+  {{ $data = . | transform.Unmarshal }}
+{{ end }}
+
+{{ range $data }}
+  {{ $params := dict
+    "title"       .title
+    "subtitle"    .subtitle
+    "author"      .author
+    "pub_date"    .pub_date
+    "pub_info"    .pub_info
+    "subjects"    .subjects
+    "control_num" .control_num
+    "adapter"     .adapter
+  }}
+  {{ $.AddPage (dict
+    "kind"    "page"
+    "path"    .slug
+    "title"   .title
+    "params"  $params
+  ) }}
+{{ end }}

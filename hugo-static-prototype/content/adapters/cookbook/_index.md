@@ -1,0 +1,4 @@
+---
+title: "Cookbooks"
+adapter: "cookbook"
+---

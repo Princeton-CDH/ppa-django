@@ -3,6 +3,139 @@
 Deploy and Upgrade notes
 ========================
 
+ppa-reuse (develop branch)
+---------------------------
+
+This section covers changes introduced in the ``ppa-reuse`` fork relative to
+the upstream ``Princeton-CDH/ppa-django`` codebase.
+
+**Database migrations**
+
+New fields on ``DigitizedWork`` and ``Collection`` require running migrations::
+
+    python manage.py migrate
+
+New fields added:
+
+* ``DigitizedWork.metadata`` — JSONField for adapter-specific metadata
+* ``Collection.adapter_name`` — links a collection to a named adapter
+* ``Collection.list_view_fields`` — per-collection override of adapter list fields
+
+**Waffle feature flags**
+
+Install ``django-waffle`` and create the required switches via the Django shell
+or admin interface::
+
+    python manage.py shell -c "
+    from waffle.models import Switch
+    Switch.objects.update_or_create(name='enable_solr_indexing', defaults={'active': False})
+    Switch.objects.update_or_create(name='enable_hathi', defaults={'active': False})
+    Switch.objects.update_or_create(name='enable_corppa', defaults={'active': False})
+    "
+
+Set ``enable_solr_indexing`` to ``True`` before indexing content or running
+the development server with live search.
+
+**Adapter system**
+
+Set the following environment variables (or ``local_settings.py``) to configure
+the adapter system:
+
+* ``ADAPTERS_DIR`` — path to the directory containing adapter subdirectories
+  (default: ``<BASE_DIR>/examples/adapters``)
+* ``ARCHIVE_ADAPTER`` — name of the global default adapter, if any (optional)
+
+Each adapter subdirectory must contain an ``adapter.yaml`` file.  See
+``examples/adapters/cookbook/`` for a minimal example.
+
+To associate a collection with an adapter, set ``Collection.adapter_name`` in
+the Django admin to match the adapter's directory name.
+
+**Solr schema**
+
+New adapter fields (e.g. ``cookbook_cook_time``, ``scifi_rating_score``) must
+be added to the Solr schema before indexing adapter data::
+
+    python manage.py solr_schema
+
+After updating the schema, reindex all works::
+
+    python manage.py index -i work
+
+**Removed dependencies**
+
+``pucas`` and ``django_cas_ng`` (Princeton CAS authentication) have been
+removed.  If your deployment previously relied on CAS, configure an alternative
+authentication backend in ``local_settings.py`` before deploying.
+
+**Frontend — jQuery removed**
+
+jQuery has been removed from the frontend entirely.  The ``base.html`` template
+no longer loads a jQuery CDN script.  All interactive behaviour is handled by
+Stimulus controllers bundled via webpack.  Rebuild frontend assets after deploy::
+
+    npm install
+    npm run build
+    python manage.py collectstatic --noinput
+
+**Frontend test suite**
+
+Two-layer frontend test coverage is now in place:
+
+* **Jest unit tests** (56 controller tests, no server required)::
+
+    npm run test:unit
+
+* **Playwright E2E tests** (requires ``devbox run dev`` running in a separate
+  terminal)::
+
+    npm run test:e2e
+
+  Playwright and the Chromium browser must be installed once per machine::
+
+    npx playwright install chromium
+
+  The E2E suite includes a regression suite for collection checkbox behaviour
+  (``tests/e2e/collections.spec.ts``) and keyboard navigation tests
+  (``tests/e2e/about_nav.spec.ts``) that do not require Solr and can be run
+  against a ``dev:lite`` server.
+
+**Hugo static site prototype**
+
+A Hugo static site prototype lives in ``hugo-static-prototype/``.  It was
+built to answer the question *"Why not just use a static site?"* and
+documents what a static generator can and cannot do for a corpus archive.
+
+To run the prototype locally, install `Hugo extended
+<https://gohugo.io/installation/>`_ v0.112 or later, then::
+
+    cd hugo-static-prototype
+    hugo server          # dev server at http://localhost:1313
+
+Or build to static files::
+
+    hugo build           # output in hugo-static-prototype/public/
+
+The ``public/`` directory is git-ignored.  The limitations analysis is at
+``hugo-static-prototype/STATIC_SITE_LIMITATIONS.md``.
+
+**devbox development environment**
+
+A complete local development environment is provided via ``devbox.json``.
+First-time setup::
+
+    devbox run setup:quick   # migrate, create admin user, configure waffle switches
+    devbox run dev           # start Django + Docker DB + Solr
+
+Available commands:
+
+* ``devbox run dev`` — full stack with Solr (enables ``enable_solr_indexing``)
+* ``devbox run dev:lite`` — database only, Solr disabled (faster frontend iteration)
+* ``devbox run test`` — pytest + npm test
+* ``devbox run test:e2e`` — Playwright E2E tests (server must already be running)
+* ``devbox run verify`` — environment health check
+* ``devbox run clean`` — remove containers and build artefacts
+
 3.16
 ----
 

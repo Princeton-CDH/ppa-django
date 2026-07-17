@@ -1,0 +1,28 @@
+<li class="work-card" data-title="{{ .Title | lower }}" data-author="{{ .Params.author | lower }}">
+  <a href="{{ .RelPermalink }}">
+    <h3 class="work-title">{{ .Title }}</h3>
+  </a>
+  <p class="work-author">{{ .Params.author }}</p>
+
+  {{ with .Params.pub_date }}
+  <p class="work-date">{{ . }}</p>
+  {{ end }}
+
+  {{ with .Params.subgenre }}
+  <p class="work-subgenre">
+    <a href="{{ "/subgenres/" | relURL }}{{ . | urlize }}/">{{ . }}</a>
+  </p>
+  {{ end }}
+
+  {{ with .Params.subjects }}
+  <ul class="work-subjects">
+    {{ range . }}
+    <li><a href="{{ "/subjects/" | relURL }}{{ . | urlize }}/">{{ . }}</a></li>
+    {{ end }}
+  </ul>
+  {{ end }}
+
+  {{ with .Params.rating }}
+  <p class="work-rating">★ {{ . }}</p>
+  {{ end }}
+</li>

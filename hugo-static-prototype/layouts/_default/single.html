@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="{{ site.Language.Lang }}">
+<head>
+  {{ partial "head.html" . }}
+</head>
+<body>
+  {{ partial "header.html" . }}
+  <main class="detail-layout">
+
+    <article class="work-detail">
+      <header class="work-header">
+        <h1>{{ .Title }}</h1>
+        {{ with .Params.subtitle }}<p class="subtitle">{{ . }}</p>{{ end }}
+        <p class="author">{{ .Params.author }}</p>
+      </header>
+
+      <dl class="work-metadata">
+
+        {{ with .Params.pub_date }}
+        <div class="field">
+          <dt>Publication Date</dt>
+          <dd>{{ . }}</dd>
+        </div>
+        {{ end }}
+
+        {{ with .Params.pub_info }}
+        <div class="field">
+          <dt>Publication Info</dt>
+          <dd>{{ . }}</dd>
+        </div>
+        {{ end }}
+
+        {{ with .Params.subjects }}
+        <div class="field">
+          <dt>Subjects</dt>
+          <dd>
+            <ul class="tag-list">
+              {{/* ── LIMITATION: SUBJECT FILTERING ──────────────────────────
+                   Each subject links to a pre-built taxonomy page. Hugo can
+                   generate /subjects/cooking/ etc., but these are static
+                   lists. There is no "AND subject + date range" query — that
+                   requires combining two filter dimensions at runtime.
+              ─────────────────────────────────────────────────────────────── */}}
+              {{ range . }}
+              <li><a href="{{ "/subjects/" | relURL }}{{ . | urlize }}/">{{ . }}</a></li>
+              {{ end }}
+            </ul>
+          </dd>
+        </div>
+        {{ end }}
+
+        {{ with .Params.subgenre }}
+        <div class="field">
+          <dt>Subgenre</dt>
+          <dd><a href="{{ "/subgenres/" | relURL }}{{ . | urlize }}/">{{ . }}</a></dd>
+        </div>
+        {{ end }}
+
+        {{ with .Params.genres }}
+        <div class="field">
+          <dt>Genres</dt>
+          <dd>
+            <ul class="tag-list">
+              {{ range . }}
+              <li>{{ . }}</li>
+              {{ end }}
+            </ul>
+          </dd>
+        </div>
+        {{ end }}
+
+        {{ with .Params.rating }}
+        <div class="field">
+          <dt>Goodreads Rating</dt>
+          <dd>{{ . }} / 5
+            {{ with $.Params.rating_votes }}
+              <span class="votes">({{ . | lang.FormatNumber 0 }} votes)</span>
+            {{ end }}
+          </dd>
+        </div>
+        {{ end }}
+
+        {{ with .Params.language }}
+        <div class="field">
+          <dt>Language</dt>
+          <dd>{{ . }}</dd>
+        </div>
+        {{ end }}
+
+        {{ with .Params.source_url }}
+        <div class="field">
+          <dt>External Source</dt>
+          <dd><a href="{{ . }}" rel="noopener noreferrer">View on Goodreads</a></dd>
+        </div>
+        {{ end }}
+
+        {{ with .Params.control_num }}
+        <div class="field">
+          <dt>Control Number</dt>
+          <dd>{{ . }}</dd>
+        </div>
+        {{ end }}
+
+      </dl>
+
+      {{ with .Params.description }}
+      <section class="work-description">
+        <h2>Description</h2>
+        <p>{{ . }}</p>
+      </section>
+      {{ end }}
+
+      {{/* ── LIMITATION: NO PAGE-LEVEL TEXT / SEARCH-WITHIN ──────────────────
+           The Django PPA stores digitized page content in Solr and supports
+           "search within a work" — full-text search across thousands of pages
+           of a single volume. Hugo has no equivalent:
+             - Page content would have to be embedded in the HTML at build time
+               (file size explosion for large works)
+             - "Search within" requires a query engine, not static HTML
+           This is the most fundamental limitation: a static site cannot provide
+           the core research affordance of the archive.
+      ──────────────────────────────────────────────────────────────────────── */}}
+
+      <section class="search-within-placeholder">
+        <h2>Search Within This Work</h2>
+        <div class="limitation-notice">
+          <p><strong>Not available in static prototype.</strong>
+          Full-text search within individual volumes requires a search index
+          (Solr/Elasticsearch). A static site would need to embed all page
+          text at build time — impractical at archival scale — and still
+          could not rank results by relevance.</p>
+        </div>
+      </section>
+
+    </article>
+
+    <nav class="detail-nav">
+      <a href="{{ .Parent.RelPermalink }}">← Back to {{ .Parent.Title }}</a>
+    </nav>
+
+  </main>
+  {{ partial "footer.html" . }}
+</body>
+</html>

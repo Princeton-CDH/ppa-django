@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="{{ site.Language.Lang }}">
+<head>
+  {{ partial "head.html" . }}
+</head>
+<body>
+  {{ partial "header.html" . }}
+  <main class="archive-layout">
+
+    {{/* ── LIMITATION NOTE ──────────────────────────────────────────────────
+         Hugo builds static HTML at compile time. There is no server-side
+         query engine. "Filtering" here is implemented two ways:
+           1. Pre-built per-facet pages  (subject/subgenre index pages)
+           2. Client-side JS filter on the already-rendered page list
+         Neither replicates Solr's ranked full-text search, phrase proximity,
+         field boosting, or stemming across 15 k+ documents.
+    ─────────────────────────────────────────────────────────────────────── */}}
+
+    <aside class="filters">
+      {{ partial "filters.html" . }}
+    </aside>
+
+    <section class="results">
+      <header class="results-header">
+        <h1>{{ .Title }}</h1>
+        <p class="results-count">{{ len .Pages }} works</p>
+
+        {{/* Static sort: Hugo can only pre-sort at build time. No runtime
+             sort-by-relevance after a user types a query. */}}
+        <div class="sort-note">
+          <small>Sorted by title (A–Z). Runtime sorting requires JavaScript.</small>
+        </div>
+      </header>
+
+      {{/* Client-side search input — delegates to search.js */}}
+      <div class="search-bar">
+        <label for="static-search">Filter by title or author</label>
+        <input id="static-search"
+               type="search"
+               placeholder="Type to filter…"
+               data-search-target="input"
+               autocomplete="off">
+        <p class="search-limitation">
+          <em>Note: this filters only the titles already loaded on this page.
+          Full-text search across page content requires a search backend.</em>
+        </p>
+      </div>
+
+      <ul class="work-list" data-search-target="list">
+        {{ range .Pages.ByTitle }}
+          {{ partial "work-card.html" . }}
+        {{ end }}
+      </ul>
+
+      {{/* ── LIMITATION: NO PAGINATION ────────────────────────────────────
+           Hugo supports pagination via .Paginate, but each page combination
+           (page 2 + filter "Aliens") would need its own pre-built HTML file.
+           With 14,974 scifi works × N facet values, that means tens of
+           thousands of static pages — a build-time explosion.
+      ──────────────────────────────────────────────────────────────────── */}}
+      {{ if gt (len .Pages) 100 }}
+      <div class="pagination-warning">
+        <p>Showing all {{ len .Pages }} works. In a real deployment, paginating
+        a list this size with faceted filtering would require either a search
+        backend or pre-building O(N×F) static pages.</p>
+      </div>
+      {{ end }}
+
+    </section>
+  </main>
+  {{ partial "footer.html" . }}
+  {{ with resources.Get "js/search.js" }}
+  <script src="{{ .RelPermalink }}"></script>
+  {{ end }}
+</body>
+</html>

@@ -1,0 +1,29 @@
+{{/* Content adapter: reads scifi_works.json and generates one page per work.
+     Hugo content adapters: https://gohugo.io/content-management/content-adapters/ */}}
+
+{{ $data := dict }}
+{{ with resources.Get "data/scifi_works.json" }}
+  {{ $data = . | transform.Unmarshal }}
+{{ end }}
+
+{{ range $data }}
+  {{ $params := dict
+    "title"       .title
+    "author"      .author
+    "pub_date"    .pub_date
+    "subgenre"    .subgenre
+    "genres"      .genres
+    "rating"      .rating
+    "rating_votes" .rating_votes
+    "description" .description
+    "source_url"  .source_url
+    "language"    .language
+    "adapter"     .adapter
+  }}
+  {{ $.AddPage (dict
+    "kind"    "page"
+    "path"    .slug
+    "title"   .title
+    "params"  $params
+  ) }}
+{{ end }}

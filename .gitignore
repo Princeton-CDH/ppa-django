@@ -1,6 +1,14 @@
 # local / project specific ignores
 data/
 CHANGES_SUMMARY.md
+GENERALIZATION_GOALS.rst
+IMPLEMENTATION_GUIDE.md
+
+# Hugo static prototype build output
+hugo-static-prototype/public/
+hugo-static-prototype/resources/
+hugo-static-prototype/.hugo_build.lock
+hugo-static-prototype/hugo_stats.json
 
 # Webpack files
 webpack-stats.json
@@ -130,6 +138,10 @@ ENV/
 
 # ts lib files
 !srcmedia/ts/lib/
+
+# Playwright E2E test artifacts
+playwright-report/
+test-results/
 
 # osx thumbnails
 .DS_Store
