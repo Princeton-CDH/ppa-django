@@ -15,7 +15,8 @@ django-semanticui-forms
 lxml>=5.4.0,<6.0.0
 neuxml>=1.0.0
 # neuxml
-wagtail>=7.0,<7.1
+# wagtail: upper bound relaxed to 7.5 — review before upgrading past that
+wagtail>=7.0,<7.5
 django-taggit>=4.0
 bleach
 django-fullurl
@@ -25,8 +26,8 @@ django-webpack-loader==3.0.1
 requests_oauthlib
 wand
 intspan
-# specify bs4 version to avoid wagtail version conflict
-beautifulsoup4<=4.11
+# beautifulsoup4: upper bound removed — wagtail 7.x no longer has version conflict
+beautifulsoup4>=4.9
 django-adminlogentries
 django-import-export
 psycopg2-binary
