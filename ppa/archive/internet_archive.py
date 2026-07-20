@@ -334,16 +334,11 @@ class InternetArchiveAPI:
         if isinstance(publisher, list):
             publisher = "; ".join(publisher)
 
-        # place of publication
-        pub_place = meta.get("publisher") or meta.get("place_of_publication") or ""
+        # place of publication — IA uses `place_of_publication`; `publisher` is the
+        # publisher name and must NOT be used as a place fallback.
+        pub_place = meta.get("place_of_publication") or ""
         if isinstance(pub_place, list):
             pub_place = pub_place[0]
-        # IA often conflates publisher with place; prefer an explicit field
-        explicit_place = meta.get("place_of_publication") or ""
-        if isinstance(explicit_place, list):
-            explicit_place = explicit_place[0]
-        if explicit_place:
-            pub_place = explicit_place
 
         # language
         language = meta.get("language") or ""

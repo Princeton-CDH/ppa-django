@@ -1225,6 +1225,62 @@ class TestPage(TestCase):
         page_data = list(Page.page_index_data(gale_excerpt))
         assert len(page_data) == 2
 
+    @patch("ppa.archive.models.internet_archive.InternetArchiveAPI")
+    def test_ia_page_index_data(self, mock_ia_class):
+        """page_index_data routes IA source through InternetArchiveAPI.get_item_pages."""
+        ia_work = DigitizedWork(source=DigitizedWork.INTERNET_ARCHIVE, source_id="gutenberg-1234")
+        mock_pages = [
+            {"page_id": "p1", "content": "first page text", "label": "1"},
+            {"page_id": "p2", "content": "second page text", "label": "2"},
+            {"page_id": "p3", "content": None, "label": "3"},
+        ]
+        mock_ia_class.return_value.get_item_pages.return_value = iter(
+            [p.copy() for p in mock_pages]
+        )
+
+        page_data = list(Page.page_index_data(ia_work))
+
+        # IA API was called with the right source_id
+        mock_ia_class.return_value.get_item_pages.assert_called_once_with(ia_work.source_id)
+
+        assert len(page_data) == 3
+        for i, data in enumerate(page_data):
+            assert data["id"] == f"{ia_work.source_id}.{mock_pages[i]['page_id']}"
+            assert data["source_id"] == ia_work.source_id
+            assert data["order"] == i + 1
+            assert data["item_type"] == "page"
+            assert data["content"] == mock_pages[i]["content"]
+            assert data["label"] == mock_pages[i]["label"]
+            assert "page_id" not in data  # consumed during processing
+
+    @patch("ppa.archive.models.internet_archive.InternetArchiveAPI")
+    def test_ia_page_index_data_label_fallback(self, mock_ia_class):
+        """Pages without a label get a bracketed sequence number as fallback."""
+        ia_work = DigitizedWork(source=DigitizedWork.INTERNET_ARCHIVE, source_id="test-item")
+        mock_ia_class.return_value.get_item_pages.return_value = iter([
+            {"page_id": "p1", "content": "text", "label": None},
+        ])
+        page_data = list(Page.page_index_data(ia_work))
+        assert page_data[0]["label"] == "[1]"
+
+    @patch("ppa.archive.models.internet_archive.InternetArchiveAPI")
+    def test_ia_page_index_data_excerpt(self, mock_ia_class):
+        """page_index_data respects page_span for IA excerpts."""
+        ia_excerpt = DigitizedWork(
+            source=DigitizedWork.INTERNET_ARCHIVE,
+            source_id="test-item",
+            pages_digital="2-3",
+        )
+        mock_ia_class.return_value.get_item_pages.return_value = iter([
+            {"page_id": "p1", "content": "page one", "label": "1"},
+            {"page_id": "p2", "content": "page two", "label": "2"},
+            {"page_id": "p3", "content": "page three", "label": "3"},
+        ])
+        page_data = list(Page.page_index_data(ia_excerpt))
+        assert len(page_data) == 2
+        assert page_data[0]["label"] == "2"
+        assert page_data[1]["label"] == "3"
+
 
 def test_cluster_str():
     cluster_id = "group-one"

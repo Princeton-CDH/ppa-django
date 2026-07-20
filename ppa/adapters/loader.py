@@ -10,6 +10,30 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
+# Model fields that are valid top-level field_map targets (i.e. direct
+# attributes on DigitizedWork, not stored in metadata).
+_DIGITIZED_WORK_FIELDS = frozenset(
+    [
+        "title",
+        "subtitle",
+        "sort_title",
+        "author",
+        "pub_date",
+        "pub_place",
+        "publisher",
+        "enumcron",
+        "source_id",
+        "source_url",
+        "record_id",
+        "notes",
+        "public_notes",
+        "book_journal",
+        "pages_orig",
+        "pages_digital",
+        "item_type",
+    ]
+)
+
 
 @dataclass
 class AdapterFrontend:
@@ -49,6 +73,84 @@ def _resolve_adapter_path(path_or_name: str) -> Path:
     raise FileNotFoundError(f"Adapter directory not found: {path_or_name}")
 
 
+def _validate_field_map(field_map: dict, adapter_name: str) -> None:
+    """Validate field_map values are valid DigitizedWork paths.
+
+    Each value must be either:
+    - a direct model field name (e.g. ``title``, ``author``)
+    - a ``metadata.<key>`` dotted path (e.g. ``metadata.cook_time``)
+
+    Raises :exc:`RuntimeError` listing all invalid paths.
+    """
+    invalid = []
+    for solr_field, model_path in field_map.items():
+        if not isinstance(model_path, str):
+            invalid.append(
+                f"  {solr_field!r}: value must be a string, got {type(model_path).__name__}"
+            )
+            continue
+        parts = model_path.split(".", 1)
+        if parts[0] == "metadata":
+            if len(parts) < 2 or not parts[1]:
+                invalid.append(
+                    f"  {solr_field!r}: 'metadata.' must be followed by a key name"
+                )
+        elif parts[0] not in _DIGITIZED_WORK_FIELDS:
+            invalid.append(
+                f"  {solr_field!r}: '{model_path}' is not a recognised DigitizedWork field "
+                f"(use 'metadata.<key>' for custom fields)"
+            )
+    if invalid:
+        raise RuntimeError(
+            f"adapter '{adapter_name}' has invalid field_map entries:\n" + "\n".join(invalid)
+        )
+
+
+def _validate_solr_schema(solr_schema: dict, adapter_name: str) -> None:
+    """Validate solr_schema structure.
+
+    Each field entry must have a ``name`` and a ``type``.
+    Field names must not collide with core PPA schema fields.
+
+    Raises :exc:`RuntimeError` on structural problems.
+    """
+    if not isinstance(solr_schema, dict):
+        raise RuntimeError(
+            f"adapter '{adapter_name}': solr_schema must be a mapping, "
+            f"got {type(solr_schema).__name__}"
+        )
+    fields = solr_schema.get("fields", [])
+    if not isinstance(fields, list):
+        raise RuntimeError(
+            f"adapter '{adapter_name}': solr_schema.fields must be a list"
+        )
+
+    _CORE_SOLR_FIELDS = frozenset([
+        "id", "title", "author", "pub_date", "pub_place", "publisher",
+        "source_id", "source_url", "content", "label", "order",
+        "item_type", "group_id_s", "cluster_id_s", "last_modified",
+    ])
+
+    errors = []
+    for i, field in enumerate(fields):
+        if not isinstance(field, dict):
+            errors.append(f"  fields[{i}]: must be a mapping")
+            continue
+        if "name" not in field:
+            errors.append(f"  fields[{i}]: missing required 'name'")
+        if "type" not in field:
+            errors.append(f"  fields[{i}]: missing required 'type'")
+        name = field.get("name", "")
+        if name in _CORE_SOLR_FIELDS:
+            errors.append(
+                f"  fields[{i}]: '{name}' conflicts with a core PPA Solr field"
+            )
+    if errors:
+        raise RuntimeError(
+            f"adapter '{adapter_name}' has invalid solr_schema:\n" + "\n".join(errors)
+        )
+
+
 def load_adapter(path_or_name: str) -> Adapter:
     """Load and validate an adapter by directory name or path."""
     adapter_dir = _resolve_adapter_path(path_or_name)
@@ -63,9 +165,13 @@ def load_adapter(path_or_name: str) -> Adapter:
     field_map = data.get("field_map")
     if not isinstance(field_map, dict):
         raise RuntimeError("adapter.yaml must include a dictionary 'field_map'")
+    _validate_field_map(field_map, name)
+
     templates_dir = data.get("templates_dir", "templates")
     templates_path = str(adapter_dir / templates_dir)
     solr_schema = data.get("solr_schema")
+    if solr_schema is not None:
+        _validate_solr_schema(solr_schema, name)
     display_fields = data.get("display_fields")
     supported_languages = data.get("supported_languages") or None
 

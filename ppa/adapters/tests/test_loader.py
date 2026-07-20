@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 import yaml
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 
 from ppa.adapters.loader import (
     Adapter,
@@ -14,6 +14,8 @@ from ppa.adapters.loader import (
     get_adapters_for_work,
     get_primary_adapter_for_work,
     load_adapter,
+    _validate_field_map,
+    _validate_solr_schema,
 )
 
 
@@ -371,3 +373,142 @@ class TestRealCookbookAdapter(TestCase):
         adapter = load_adapter(str(scifi_dir))
         assert adapter.name == "scifi"
         assert "scifi_rating_score" in adapter.field_map
+
+
+# ---------------------------------------------------------------------------
+# _validate_field_map()
+# ---------------------------------------------------------------------------
+
+class TestValidateFieldMap(SimpleTestCase):
+
+    def test_direct_model_fields_accepted(self):
+        _validate_field_map({"title": "title", "author": "author"}, "test")
+
+    def test_metadata_path_accepted(self):
+        _validate_field_map({"foo_s": "metadata.foo", "bar_s": "metadata.bar.nested"}, "test")
+
+    def test_unknown_field_raises(self):
+        with self.assertRaises(RuntimeError) as cm:
+            _validate_field_map({"foo_s": "nonexistent_field"}, "test")
+        assert "nonexistent_field" in str(cm.exception)
+        assert "metadata.<key>" in str(cm.exception)
+
+    def test_bare_metadata_prefix_raises(self):
+        with self.assertRaises(RuntimeError) as cm:
+            _validate_field_map({"foo_s": "metadata."}, "test")
+        assert "metadata." in str(cm.exception)
+
+    def test_non_string_value_raises(self):
+        with self.assertRaises(RuntimeError) as cm:
+            _validate_field_map({"foo_s": 123}, "test")
+        assert "string" in str(cm.exception)
+
+    def test_multiple_errors_reported_together(self):
+        """All invalid entries are reported in a single RuntimeError, not one-by-one."""
+        with self.assertRaises(RuntimeError) as cm:
+            _validate_field_map(
+                {"a_s": "bad_field_one", "b_s": "bad_field_two"},
+                "test",
+            )
+        msg = str(cm.exception)
+        assert "bad_field_one" in msg
+        assert "bad_field_two" in msg
+
+    def test_adapter_name_in_error_message(self):
+        with self.assertRaises(RuntimeError) as cm:
+            _validate_field_map({"x_s": "unknown"}, "my_adapter")
+        assert "my_adapter" in str(cm.exception)
+
+
+# ---------------------------------------------------------------------------
+# _validate_solr_schema()
+# ---------------------------------------------------------------------------
+
+class TestValidateSolrSchema(SimpleTestCase):
+
+    def test_valid_schema_accepted(self):
+        _validate_solr_schema(
+            {"fields": [{"name": "foo_s", "type": "string", "multiValued": False}]},
+            "test",
+        )
+
+    def test_empty_fields_list_accepted(self):
+        _validate_solr_schema({"fields": []}, "test")
+
+    def test_non_dict_raises(self):
+        with self.assertRaises(RuntimeError) as cm:
+            _validate_solr_schema("not a dict", "test")
+        assert "mapping" in str(cm.exception)
+
+    def test_fields_not_list_raises(self):
+        with self.assertRaises(RuntimeError) as cm:
+            _validate_solr_schema({"fields": {"name": "foo_s", "type": "string"}}, "test")
+        assert "list" in str(cm.exception)
+
+    def test_missing_name_raises(self):
+        with self.assertRaises(RuntimeError) as cm:
+            _validate_solr_schema({"fields": [{"type": "string"}]}, "test")
+        assert "name" in str(cm.exception)
+
+    def test_missing_type_raises(self):
+        with self.assertRaises(RuntimeError) as cm:
+            _validate_solr_schema({"fields": [{"name": "foo_s"}]}, "test")
+        assert "type" in str(cm.exception)
+
+    def test_core_field_conflict_raises(self):
+        for core_field in ("title", "author", "content", "source_id"):
+            with self.subTest(field=core_field):
+                with self.assertRaises(RuntimeError) as cm:
+                    _validate_solr_schema(
+                        {"fields": [{"name": core_field, "type": "string"}]}, "test"
+                    )
+                assert core_field in str(cm.exception)
+                assert "conflicts" in str(cm.exception)
+
+    def test_adapter_name_in_error(self):
+        with self.assertRaises(RuntimeError) as cm:
+            _validate_solr_schema({"fields": [{"type": "string"}]}, "my_adapter")
+        assert "my_adapter" in str(cm.exception)
+
+
+# ---------------------------------------------------------------------------
+# load_adapter() — validation integration
+# ---------------------------------------------------------------------------
+
+class TestLoadAdapterValidation(SimpleTestCase):
+
+    def setUp(self):
+        clear_adapter_cache()
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.base = Path(self.tmpdir.name)
+
+    def tearDown(self):
+        clear_adapter_cache()
+        self.tmpdir.cleanup()
+
+    def test_invalid_field_map_path_raises_on_load(self):
+        bad = {**MINIMAL_YAML, "field_map": {"foo_s": "not_a_real_field"}}
+        adapter_dir = _write_adapter(self.base / "bad_fm", bad)
+        with self.assertRaises(RuntimeError) as cm:
+            load_adapter(str(adapter_dir))
+        assert "not_a_real_field" in str(cm.exception)
+
+    def test_invalid_solr_schema_raises_on_load(self):
+        bad = {
+            **MINIMAL_YAML,
+            "solr_schema": {"fields": [{"name": "title", "type": "string"}]},
+        }
+        adapter_dir = _write_adapter(self.base / "bad_schema", bad)
+        with self.assertRaises(RuntimeError) as cm:
+            load_adapter(str(adapter_dir))
+        assert "title" in str(cm.exception)
+        assert "conflicts" in str(cm.exception)
+
+    def test_valid_adapter_loads_without_error(self):
+        good = {
+            **MINIMAL_YAML,
+            "solr_schema": {"fields": [{"name": "my_adapter_foo_s", "type": "string"}]},
+        }
+        adapter_dir = _write_adapter(self.base / "good_adapter", good)
+        adapter = load_adapter(str(adapter_dir))
+        assert adapter.solr_schema is not None

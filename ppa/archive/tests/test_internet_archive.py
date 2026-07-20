@@ -265,3 +265,31 @@ def test_parse_metadata_non_numeric_date():
     raw = {"metadata": {"date": "undated"}}
     result = InternetArchiveAPI.parse_metadata(raw)
     assert result["pub_date"] is None
+
+
+def test_parse_metadata_pub_place_from_explicit_field():
+    """pub_place uses place_of_publication, not publisher."""
+    raw = {
+        "metadata": {
+            "publisher": "London Press",
+            "place_of_publication": "London",
+        }
+    }
+    result = InternetArchiveAPI.parse_metadata(raw)
+    assert result["pub_place"] == "London"
+    assert result["publisher"] == "London Press"
+
+
+def test_parse_metadata_pub_place_empty_when_no_place_field():
+    """pub_place is empty when place_of_publication is absent; publisher is not used as fallback."""
+    raw = {"metadata": {"publisher": "Oxford University Press"}}
+    result = InternetArchiveAPI.parse_metadata(raw)
+    assert result["pub_place"] == ""
+    assert result["publisher"] == "Oxford University Press"
+
+
+def test_parse_metadata_pub_place_list():
+    """place_of_publication as list uses first value."""
+    raw = {"metadata": {"place_of_publication": ["Boston", "New York"]}}
+    result = InternetArchiveAPI.parse_metadata(raw)
+    assert result["pub_place"] == "Boston"
