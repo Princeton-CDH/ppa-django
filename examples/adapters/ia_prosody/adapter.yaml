@@ -42,3 +42,11 @@ solr_schema:
     - name: ia_prosody_subject_exact
       type: string
       multiValued: true
+
+facets:
+  fields:
+    - solr_field: ia_prosody_subject_exact
+      label: "Subject"
+  range_fields:
+    - solr_field: pub_date
+      label: "Publication Date"

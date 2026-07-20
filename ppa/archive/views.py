@@ -136,6 +136,18 @@ class DigitizedWorkListView(SolrConnectionFallbackMixin, AjaxTemplateMixin, Solr
             .order_by(self.form.get_solr_sort_field())
         )
 
+        # If a global adapter is configured, request its extra facet fields
+        from ppa.adapters.loader import get_adapter as _get_adapter
+        self._active_adapter = _get_adapter()
+        if self._active_adapter and self._active_adapter.facets:
+            extra_fields = [
+                f["solr_field"]
+                for f in self._active_adapter.facets.fields
+                if "solr_field" in f
+            ]
+            if extra_fields:
+                solr_q = solr_q.facet(*extra_fields)
+
         # components of query to filter digitized works
         if self.form.is_valid():
             search_opts = self.form.cleaned_data
@@ -204,6 +216,23 @@ class DigitizedWorkListView(SolrConnectionFallbackMixin, AjaxTemplateMixin, Solr
                 hardend=True,
             )
 
+        # Add any extra range facets declared in the adapter
+        if self._active_adapter and self._active_adapter.facets:
+            for rf in self._active_adapter.facets.range_fields or []:
+                solr_field = rf.get("solr_field")
+                # skip pub_date — already handled above by the form's range_facets
+                if solr_field and solr_field not in self.form.range_facets:
+                    pubmin, pubmax = self.form.pub_date_minmax()
+                    start = pubmin or 0
+                    end = pubmax or 1922
+                    solr_q = solr_q.facet_range(
+                        solr_field,
+                        start=start,
+                        end=end + 1,
+                        gap=max(1, int((end - start) / 24)),
+                        hardend=True,
+                    )
+
         self.solrq = solr_q
         return solr_q
 
@@ -255,6 +284,7 @@ class DigitizedWorkListView(SolrConnectionFallbackMixin, AjaxTemplateMixin, Solr
             return context
 
         page_groups = facet_ranges = None
+        adapter_facet_data = []
 
         # Get adapter info based on selected collections
         from ppa.adapters.loader import get_adapter
@@ -309,7 +339,21 @@ class DigitizedWorkListView(SolrConnectionFallbackMixin, AjaxTemplateMixin, Solr
             # facet ranges are used for display; when sending to solr we
             # increase the end bound by one so that year is included;
             # subtract it back so display matches user entered dates
-            facet_ranges["pub_date"]["end"] -= 1
+            if "pub_date" in facet_ranges:
+                facet_ranges["pub_date"]["end"] -= 1
+
+            # Build adapter facet data for template rendering:
+            # list of {label, solr_field, counts} for term facets
+            adapter_facet_data = []
+            if self._active_adapter and self._active_adapter.facets:
+                for f in self._active_adapter.facets.fields:
+                    sf = f.get("solr_field")
+                    if sf and sf in facet_fields:
+                        adapter_facet_data.append({
+                            "label": f.get("label", sf),
+                            "solr_field": sf,
+                            "counts": facet_fields[sf],
+                        })
 
         except requests.exceptions.ConnectionError:
             # override object list with an empty list that can be paginated
@@ -342,6 +386,8 @@ class DigitizedWorkListView(SolrConnectionFallbackMixin, AjaxTemplateMixin, Solr
                 },
                 "adapter": adapter,
                 "adapter_display_fields": adapter_display_fields,
+                # term facet data from adapter (list of {label, solr_field, counts})
+                "adapter_facet_data": adapter_facet_data,
             }
         )
         return context

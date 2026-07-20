@@ -36,6 +36,23 @@ _DIGITIZED_WORK_FIELDS = frozenset(
 
 
 @dataclass
+class AdapterFacets:
+    """Facet configuration declared in adapter.yaml under ``facets:``."""
+
+    #: Additional term facets (list of dicts with ``solr_field`` and ``label``)
+    fields: List[Dict] = None
+    #: Range facets (list of dicts with ``solr_field`` and ``label``).
+    #: Defaults to include pub_date unless explicitly overridden.
+    range_fields: List[Dict] = None
+
+    def __post_init__(self):
+        if self.fields is None:
+            self.fields = []
+        if self.range_fields is None:
+            self.range_fields = [{"solr_field": "pub_date", "label": "Publication Date"}]
+
+
+@dataclass
 class AdapterFrontend:
     """Frontend asset configuration declared in adapter.yaml under `frontend:`."""
 
@@ -55,6 +72,7 @@ class Adapter:
     display_fields: Optional[Dict] = None
     frontend: Optional[AdapterFrontend] = None
     supported_languages: Optional[List[str]] = None
+    facets: Optional[AdapterFacets] = None
 
 
 _ADAPTER_CACHE: Dict[str, Adapter] = {}
@@ -175,6 +193,18 @@ def load_adapter(path_or_name: str) -> Adapter:
     display_fields = data.get("display_fields")
     supported_languages = data.get("supported_languages") or None
 
+    facets = None
+    facets_data = data.get("facets")
+    if isinstance(facets_data, dict):
+        facets = AdapterFacets(
+            fields=facets_data.get("fields") or [],
+            range_fields=facets_data.get("range_fields"),
+        )
+    elif facets_data is not None:
+        raise RuntimeError(
+            f"adapter '{name}': 'facets' must be a mapping, got {type(facets_data).__name__}"
+        )
+
     frontend = None
     frontend_data = data.get("frontend")
     if isinstance(frontend_data, dict):
@@ -194,6 +224,7 @@ def load_adapter(path_or_name: str) -> Adapter:
         display_fields=display_fields,
         frontend=frontend,
         supported_languages=supported_languages,
+        facets=facets,
     )
 
 

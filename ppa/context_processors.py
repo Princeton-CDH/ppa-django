@@ -18,15 +18,44 @@ def template_globals(request):
 
 
 def adapter_context(request):
-    """Add adapter configuration to template context."""
+    """Add adapter configuration to template context.
+
+    Resolution order:
+    1. If a ``collection`` query param is present and that collection has an
+       ``adapter_name``, use that collection's adapter (per-request routing).
+    2. Otherwise fall back to the global ``ARCHIVE_ADAPTER`` setting.
+    3. If neither is set, return empty adapter context.
+    """
     from ppa.adapters.loader import get_adapter
 
     try:
-        adapter = get_adapter()
+        adapter = None
+
+        # Per-request routing: single collection selected in search
+        collection_param = request.GET.getlist("collections")
+        if len(collection_param) == 1:
+            from ppa.archive.models import Collection
+            try:
+                col = Collection.objects.get(pk=collection_param[0])
+                if col.adapter_name:
+                    adapter = get_adapter(col.adapter_name)
+            except (Collection.DoesNotExist, ValueError):
+                pass
+
+        # Fallback: global adapter from settings
+        if adapter is None:
+            adapter = get_adapter()
+
         return {
             "adapter": adapter,
             "adapter_display_fields": adapter.display_fields if adapter else None,
             "adapter_frontend": adapter.frontend if adapter else None,
+            "adapter_facets": adapter.facets if adapter else None,
         }
     except Exception:
-        return {"adapter": None, "adapter_display_fields": None, "adapter_frontend": None}
+        return {
+            "adapter": None,
+            "adapter_display_fields": None,
+            "adapter_frontend": None,
+            "adapter_facets": None,
+        }

@@ -1,115 +1,125 @@
-# configurations that should not be checked into version control
-# Copy to ppa/settings/local_settings.py and configure
+# Local settings for ppa-reuse
+# Copy to ppa/settings/local_settings.py and fill in values.
+# This file must NOT be committed to version control.
 
 import os
 
-# SECURITY WARNING: keep the secret key used in production secret!
-# http://www.miniwebtool.com/django-secret-key-generator/
+# ---------------------------------------------------------------------------
+# Security
+# ---------------------------------------------------------------------------
+
+# REQUIRED in production. Generate with:
+#   python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 SECRET_KEY = ''
 
-# Email address for a technical contact.
-# If set, will be used in From header for HathiTrust API requests
-# TECHNICAL_CONTACT = ''
-
-# Turn this on in test/QA site to show test banner
-# SHOW_TEST_WARNING = True
-
+# ---------------------------------------------------------------------------
 # Database
-# override default database settings as needed
-# default name and user are both "ppa"
-# DATABASES["default"]["NAME"] = ""
-# DATABASES["default"]["USER"] = ""
-DATABASES["default"]["PASSWORD"] = "pass!@#$"
+# ---------------------------------------------------------------------------
 
-# override default Solr configuration as needed
-# default collection and configset are both "ppa"
+# Default name and user are both "ppa", host is localhost:5433 (Docker default).
+# Override only what differs from the base settings.
+# DATABASES["default"]["NAME"] = "ppa"
+# DATABASES["default"]["USER"] = "ppa"
+DATABASES["default"]["PASSWORD"] = "ppa"
+# DATABASES["default"]["HOST"] = "localhost"
+# DATABASES["default"]["PORT"] = "5433"
+
+# ---------------------------------------------------------------------------
+# Solr
+# ---------------------------------------------------------------------------
+
+# Default collection and configset are both "ppa" at http://localhost:8983/solr/
 SOLR_CONNECTIONS["default"].update(
     {
         "URL": "http://localhost:8983/solr/",
-#        "COLLECTION": "ppa",
-#        "CONFIGSET": "ppa",
+        # "COLLECTION": "ppa",
+        # "CONFIGSET": "ppa",
         "TEST": {"COMMITWITHIN": 100},
     }
 )
 
-# local path to hathi pairtree data provided via rsync
-HATHI_DATA = '/path/to/hathi_pairtree_root'
-# for development, optionally override HathiTrust dataset rsync server and path
-# HATHITRUST_RSYNC_SERVER = ''
-# HATHITRUST_RSYNC_PATH = ''
+# ---------------------------------------------------------------------------
+# Adapter system
+# ---------------------------------------------------------------------------
 
-# username for Gale API access
-GALE_API_USERNAME = ''
+# Directory that contains adapter subdirectories (each with an adapter.yaml).
+# Defaults to examples/adapters/ in the repo root.
+# ADAPTERS_DIR = "/path/to/your/adapters"
 
-# local path for cached marc record; needed for Gale/ECCO import
-MARC_DATA = ''
+# Name of the active adapter (must be a subdirectory under ADAPTERS_DIR).
+# Leave unset to run without any adapter (shows default PPA interface).
+# ARCHIVE_ADAPTER = "ia_prosody"
 
-# local path for Gale OCR data
-GALE_LOCAL_OCR = ''
+# ---------------------------------------------------------------------------
+# Internet Archive (optional)
+# ---------------------------------------------------------------------------
 
-# local path for importing and indexing selected EEBO-TCP content
-# should contain xml and marc files named by TCP id
-EEBO_DATA = ""
+# Email shown in HTTP From header for IA API requests (good practice).
+# TECHNICAL_CONTACT = "your-email@institution.edu"
 
+# S3-style credentials — only needed for restricted/non-public IA items.
+# Most public-domain texts do not require these.
+# IA_ACCESS_KEY = ""
+# IA_SECRET_KEY = ""
 
-# CAS login configuration
-CAS_SERVER_URL = ''
+# ---------------------------------------------------------------------------
+# HathiTrust (optional — only needed if enable_hathi waffle switch is on)
+# ---------------------------------------------------------------------------
 
-PUCAS_LDAP.update({
-    'SERVERS': [],
-    'SEARCH_BASE': '',
-    'SEARCH_FILTER': "(uid=%(user)s)",
-})
+# Local path to hathi pairtree data provided via rsync.
+# HATHI_DATA = "/path/to/hathi_pairtree_root"
 
-# Admin email configuration for error messages
-# ADMINS = [('name', 'email')]
-# SERVER_EMAIL = '
+# Optionally override the HathiTrust rsync server and path.
+# HATHITRUST_RSYNC_SERVER = ""
+# HATHITRUST_RSYNC_PATH = ""
 
-# Email configuration for sending messages
-# EMAIL_SUBJECT_PREFIX = '[PPA] '
+# ---------------------------------------------------------------------------
+# Gale / ECCO (optional — only needed if enable_hathi/gale switch is on)
+# ---------------------------------------------------------------------------
+
+# GALE_API_USERNAME = ""
+# MARC_DATA = ""           # local path for cached MARC records
+# GALE_LOCAL_OCR = ""      # local path for Gale OCR data
+
+# ---------------------------------------------------------------------------
+# EEBO-TCP (optional)
+# ---------------------------------------------------------------------------
+
+# Local path for EEBO-TCP XML and MARC files named by TCP id.
+# EEBO_DATA = ""
+
+# ---------------------------------------------------------------------------
+# Analytics (optional)
+# ---------------------------------------------------------------------------
 
 # INCLUDE_ANALYTICS = True
-
-# Turn on Google Analytics (or not) via property id
-# GTAGS_ANALYTICS_ID = 'UA-property-id'
-
-# Configure to enable Plausible analytics in production with desired options
-# PLAUSIBLE_ANALYTICS_SCRIPT = "https://plausible.io/js/script.file-downloads.hash.outbound-links.js"
+# GTAGS_ANALYTICS_ID = "G-XXXXXXXXXX"
+# PLAUSIBLE_ANALYTICS_SCRIPT = "https://plausible.io/js/script.outbound-links.js"
 # PLAUSIBLE_ANALYTICS_404s = True
 
-# Solution following https://stackoverflow.com/a/9541647
-# Sends a logging email even when DEBUG is on
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': True,
-    'formatters': {
-        'basic': {
-            'format': '[%(asctime)s] %(levelname)s:%(name)s::%(message)s',
-            'datefmt': '%d/%b/%Y %H:%M:%S',
-        },
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'basic',
-            'level': 'DEBUG'
+# ---------------------------------------------------------------------------
+# Email / admin notifications (optional)
+# ---------------------------------------------------------------------------
 
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'WARN'),
-        },
-        'ppa':  {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'parasolr':  {
-            'handlers': ['console'],
-            'level': 'WARN',
-            'propagate': False,
-        },
-    }
-}
+# ADMINS = [("Your Name", "your-email@institution.edu")]
+# SERVER_EMAIL = "server@institution.edu"
+# EMAIL_SUBJECT_PREFIX = "[PPA] "
+
+# ---------------------------------------------------------------------------
+# Development helpers (optional)
+# ---------------------------------------------------------------------------
+
+# Show a test-site warning banner.
+# SHOW_TEST_WARNING = True
+
+# Logging — uncomment to see debug output during development.
+# LOGGING = {
+#     "version": 1,
+#     "disable_existing_loggers": False,
+#     "handlers": {
+#         "console": {"class": "logging.StreamHandler", "level": "DEBUG"},
+#     },
+#     "loggers": {
+#         "ppa": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+#     },
+# }
