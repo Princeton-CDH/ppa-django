@@ -74,6 +74,9 @@ class DigitizedWorkListView(SolrConnectionFallbackMixin, AjaxTemplateMixin, Solr
 
     # keyword query; assume no search terms unless set
     query = None
+    # adapter resolved in get_queryset; default to None so get_context_data
+    # is safe to call without a prior get_queryset (e.g. in unit tests)
+    _active_adapter = None
 
     def get(self, *args, **kwargs):
         # a bug used to allow aggregation of multiple cluster params,

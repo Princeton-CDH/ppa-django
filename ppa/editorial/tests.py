@@ -154,7 +154,6 @@ class TestEditorialIndexPage(WagtailPageTestCase):
         self.assertNotContains(
             response,
             '<a href="%s"' % person_a.url,
-            html=True,
         )
         # the date of the post's publication should be present in readable form
         self.assertContains(
