@@ -1,3 +1,5 @@
+@use '../variables' as *;
+
 .page:not(.item) {
     width: 100%;
     display: flex;

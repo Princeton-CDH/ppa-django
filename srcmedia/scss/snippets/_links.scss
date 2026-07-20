@@ -1,3 +1,5 @@
+@use '../variables' as *;
+
 a:not(.ui):not(.card) {
     text-decoration: underline;
 }

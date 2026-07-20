@@ -1,3 +1,6 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
 #collections {
     h1 {
         @include underline-headline($light-grey-blue);

@@ -67,9 +67,6 @@ module.exports = env => ({
                             sassOptions: {
                                 // modern API uses loadPaths instead of includePaths
                                 loadPaths: ["./node_modules"],
-                                // @import is deprecated in Dart Sass 3.0; silenced until
-                                // the codebase is migrated to @use / @forward
-                                silenceDeprecations: ['import'],
                             },
                         }
                     },

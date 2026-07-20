@@ -1,3 +1,6 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
 .results-list .item {
 
     &:nth-child(even) {

@@ -1,5 +1,5 @@
 // print styles
-@import "variables";
+@use "variables" as *;
 
 @media print {
 	@page {

@@ -1,3 +1,6 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
 #mobile-nav,
 #main-nav {
     img { // icons

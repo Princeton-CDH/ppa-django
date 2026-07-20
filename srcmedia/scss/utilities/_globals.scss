@@ -1,3 +1,6 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
 * {
     // render fonts to match the spec
     @include font-smooth;

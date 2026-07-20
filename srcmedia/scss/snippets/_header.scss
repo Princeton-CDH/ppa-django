@@ -1,3 +1,6 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
 .pusher > header { // used mostly as space for banner images
     position: absolute;
     top: $nav-height-mobile;

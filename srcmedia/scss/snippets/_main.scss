@@ -1,3 +1,5 @@
+@use '../variables' as *;
+
 main {
     flex: 1;
     margin-top: $nav-height-mobile;

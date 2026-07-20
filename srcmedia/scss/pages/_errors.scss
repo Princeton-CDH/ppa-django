@@ -1,3 +1,6 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
 #error {
     @include content-page;
     padding-bottom: 4rem;
